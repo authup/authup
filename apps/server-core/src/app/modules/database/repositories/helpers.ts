@@ -121,11 +121,7 @@ export async function deleteInBatches<T extends ObjectLiteral & { id: string }>(
         // count the batch rather than returning 0.
         total += result.affected ?? rows.length;
 
-        if (result.affected === 0) {
-            break;
-        }
-
-        if (rows.length < batchSize) {
+        if ((result.affected === 0) || (rows.length < batchSize)) {
             break;
         }
     }
@@ -135,6 +131,7 @@ export async function deleteInBatches<T extends ObjectLiteral & { id: string }>(
 
 export function translateWhereConditions(where: Record<string, any>): Record<string, any> {
     const result: Record<string, any> = {};
+
     Object.entries(where).forEach(([key, value]) => {
         if (value === null) {
             result[key] = IsNull();
@@ -144,6 +141,7 @@ export function translateWhereConditions(where: Record<string, any>): Record<str
             result[key] = value;
         }
     });
+
     return result;
 }
 

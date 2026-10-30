@@ -22,6 +22,7 @@ export function createSMTPClient(options?: SMTPOptions | string) : SMTPClient {
         });
     } else {
         let auth: Record<string, any> | undefined;
+
         if (options.user && options.password) {
             auth = {
                 type: 'login',

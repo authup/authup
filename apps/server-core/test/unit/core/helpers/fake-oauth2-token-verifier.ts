@@ -33,6 +33,7 @@ export class FakeOAuth2TokenVerifier implements IOAuth2TokenVerifier {
         this.verifyCalls.push({ token, options });
 
         const payload = this.payloadsByToken.get(token);
+
         if (!payload) {
             throw JWTError.notActive();
         }
@@ -46,6 +47,7 @@ export class FakeOAuth2TokenVerifier implements IOAuth2TokenVerifier {
 
     async isInactive(token: string): Promise<boolean> {
         this.isInactiveCalls.push(token);
+
         return this.inactive.has(token);
     }
 }

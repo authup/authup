@@ -14,6 +14,7 @@ export function readConfigRawFromEnv<I extends ObjectLiteral>(
     options: ConfigReadEvnOptions<I> = {},
 ) : Partial<I> {
     const output = readSchemaFromEnv(schema);
+
     if (options.fn) {
         options.fn(output);
     }

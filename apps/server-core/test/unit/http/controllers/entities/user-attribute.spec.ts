@@ -6,10 +6,10 @@
  */
 
 import {
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { createTestApplication } from '../../../../app';
@@ -40,12 +40,15 @@ describe('src/http/controllers/user-attribute', () => {
         const { data: created } = await suite.client.userAttribute.create({ name, value: '123' });
 
         const { data: read } = await suite.client.userAttribute.getOne(created.id);
+
         expect(read.value).toBe('123');
 
         const { data: user } = await suite.client.user.getOne(created.userId);
+
         expect((user as Record<string, any>)[name]).toBe('123');
 
         const userInfo = await suite.client.userInfo.get<Record<string, any>>();
+
         expect(userInfo[name]).toBe('123');
 
         await suite.client.userAttribute.delete(created.id);
@@ -65,19 +68,20 @@ describe('src/http/controllers/user-attribute', () => {
 
         const response = await httpRequest(suite, 'POST', '/user-attributes', {
             headers: {
-                Authorization: `Basic ${Buffer.from('admin:start123').toString('base64')}`,
+                Authorization: `Basic ${Buffer.from('admin:start123').toBase64()}`,
                 'content-type': 'application/json',
             },
             body: JSON.stringify({
-                user: { id: target.id }, 
-                name, 
-                value: 'dark', 
+                user: { id: target.id },
+                name,
+                value: 'dark',
             }),
         });
 
         expect(response.status).toEqual(201);
 
         const { data: rows } = await suite.client.userAttribute.getMany({ filters: { name } });
+
         expect(rows).toHaveLength(1);
         expect(rows[0].userId).toEqual(target.id);
         expect(rows[0].realmId).toEqual(target.realmId);

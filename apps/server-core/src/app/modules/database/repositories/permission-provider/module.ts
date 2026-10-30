@@ -102,9 +102,11 @@ export class PermissionDatabaseProvider implements IPermissionProvider, IAuthori
             });
 
             const policies : BasePolicy[] = [];
+
             for (const junction of junctions) {
                 if (junction.policy) {
                     const tree = await this.policyRepository.findDescendantsTree(junction.policy);
+
                     if (tree) {
                         policies.push(tree);
                     }
@@ -134,6 +136,7 @@ export class PermissionDatabaseProvider implements IPermissionProvider, IAuthori
             permission,
             policyIds.map((policyId) => {
                 const tree = trees[policyId];
+
                 if (!tree) {
                     // served without the tree, the definition evaluates as if that
                     // restriction did not exist (issue #3634)
@@ -163,22 +166,26 @@ export class PermissionDatabaseProvider implements IPermissionProvider, IAuthori
      */
     protected async withCache<T>(identifier: string, read: () => Promise<T>) : Promise<T> {
         const cache = this.dataSource.queryResultCache;
+
         if (!cache) {
             return read();
         }
 
         const lookup = async (key: string) => {
             const entry = await cache.getFromCache({
-                identifier: key, 
-                query: '', 
-                duration: CATALOG_CACHE_DURATION, 
+                identifier: key,
+                query: '',
+                duration: CATALOG_CACHE_DURATION,
             });
+
             return entry && !cache.isExpired(entry) ? entry : undefined;
         };
 
         let epoch = (await lookup(AUTHORIZATION_EPOCH_CACHE_KEY))?.result as string | undefined;
+
         if (epoch) {
             const saved = (await lookup(identifier))?.result as CatalogCacheEntry<T> | undefined;
+
             if (saved && saved.epoch === epoch) {
                 return structuredClone(saved.value);
             }
@@ -194,6 +201,7 @@ export class PermissionDatabaseProvider implements IPermissionProvider, IAuthori
         }
 
         const value = await read();
+
         await cache.storeInCache({
             identifier,
             time: Date.now(),
@@ -212,6 +220,7 @@ export class PermissionDatabaseProvider implements IPermissionProvider, IAuthori
      */
     protected async readDefinitions() : Promise<DefinitionRows> {
         const entities = await this.repository.find();
+
         if (entities.length === 0) {
             return { permissions: [], trees: {} };
         }
@@ -240,6 +249,7 @@ export class PermissionDatabaseProvider implements IPermissionProvider, IAuthori
 
     protected async readGrantPolicies() : Promise<BasePolicy[]> {
         const ids = new Set<string>();
+
         for (const target of [RolePermissionEntity, UserPermissionEntity, ClientPermissionEntity]) {
             for (const id of await this.readGrantPolicyIds(target)) {
                 ids.add(id);

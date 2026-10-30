@@ -107,6 +107,7 @@ describe('src/adapters/http/middleware/built-in/authorization', () => {
             subKind: IdentityType.USER,
             realmId,
         });
+
         suite.tokenVerifier.seed(TOKEN, {
             kind: OAuth2TokenKind.ACCESS,
             realm_id: realmId,
@@ -155,6 +156,7 @@ describe('src/adapters/http/middleware/built-in/authorization', () => {
             subKind: IdentityType.USER,
             realmId,
         });
+
         suite.tokenVerifier.seed(TOKEN, {
             kind: OAuth2TokenKind.ACCESS,
             realm_id: realmId,
@@ -185,6 +187,7 @@ describe('src/adapters/http/middleware/built-in/authorization', () => {
             subKind: IdentityType.USER,
             realmId,
         });
+
         suite.tokenVerifier.seed(TOKEN, {
             kind: OAuth2TokenKind.ACCESS,
             realm_id: realmId,
@@ -215,6 +218,7 @@ describe('src/adapters/http/middleware/built-in/authorization', () => {
             subKind: IdentityType.USER,
             realmId: randomUUID(),
         });
+
         suite.tokenVerifier.seed(TOKEN, {
             kind: OAuth2TokenKind.ACCESS,
             realm_id: realmId,
@@ -256,9 +260,9 @@ describe('src/adapters/http/middleware/built-in/authorization (request grants)',
     async function runBearer(suite: ReturnType<typeof createSuite>) {
         const realmId = randomUUID();
         const user = {
-            id: randomUUID(), 
-            name: 'jdoe', 
-            realmId, 
+            id: randomUUID(),
+            name: 'jdoe',
+            realmId,
             active: true,
         } as User;
 
@@ -267,6 +271,7 @@ describe('src/adapters/http/middleware/built-in/authorization (request grants)',
             subKind: IdentityType.USER,
             realmId,
         });
+
         suite.tokenVerifier.seed(TOKEN, {
             kind: OAuth2TokenKind.ACCESS,
             realm_id: realmId,
@@ -278,6 +283,7 @@ describe('src/adapters/http/middleware/built-in/authorization (request grants)',
         suite.identityResolver.setIdentity({ type: IdentityType.USER, data: user });
 
         const event = createFakeEvent({ headers: { authorization: `Bearer ${TOKEN}` } });
+
         await suite.middleware.run(event);
 
         return { event, user };
@@ -305,6 +311,7 @@ describe('src/adapters/http/middleware/built-in/authorization (request grants)',
         const { event } = await runBearer(suite);
 
         const other = { type: IdentityType.USER, id: randomUUID() };
+
         await useRequestGrants(event, other);
 
         expect(suite.identityPermissionProvider.getForTokenCalls).toHaveLength(0);
@@ -314,9 +321,11 @@ describe('src/adapters/http/middleware/built-in/authorization (request grants)',
     it('resolves a request without a token as itself', async () => {
         const suite = createSuite();
         const event = createFakeEvent({});
+
         await suite.middleware.run(event);
 
         const identity = { type: IdentityType.USER, id: randomUUID() };
+
         await useRequestGrants(event, identity);
 
         expect(suite.identityPermissionProvider.getForTokenCalls).toHaveLength(0);

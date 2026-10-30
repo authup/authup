@@ -23,7 +23,8 @@ import { createTestApplication } from '../../../../../app';
 
 function decodeJwtPayload(token: string): OAuth2TokenPayload {
     const [, payload] = token.split('.');
-    return JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8'));
+
+    return JSON.parse(new TextDecoder().decode(Uint8Array.fromBase64(payload, { alphabet: 'base64url' })));
 }
 
 describe('src/http/controllers/token (id_token amr/acr claims)', () => {
@@ -46,8 +47,10 @@ describe('src/http/controllers/token (id_token amr/acr claims)', () => {
             authMethod: 'secret',
             tokenBindingMethod: 'none',
         }))).data;
+
         for (const name of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {
             const { data: scope } = await suite.client.scope.getOne(name);
+
             await suite.client.clientScope.create({
                 scopeId: scope.id,
                 clientId: oauthClient.id,
@@ -67,7 +70,9 @@ describe('src/http/controllers/token (id_token amr/acr claims)', () => {
 
     async function bearerFor(token: string): Promise<HTTPClient> {
         const client = new HTTPClient({ baseURL: suite.baseURL });
+
         client.setAuthorizationHeader({ type: 'Bearer', token });
+
         return client;
     }
 
@@ -104,9 +109,11 @@ describe('src/http/controllers/token (id_token amr/acr claims)', () => {
         const bearer = await bearerFor(login.access_token);
 
         const tokenResponse = await authorizeAndExchange(bearer);
+
         expect(tokenResponse.id_token).toBeDefined();
 
         const idToken = decodeJwtPayload(tokenResponse.id_token!);
+
         expect(idToken.amr).toEqual(['pwd']);
         expect(idToken.acr).toEqual('urn:authup:pwd');
         expect(idToken.sid).toBeDefined();
@@ -115,6 +122,7 @@ describe('src/http/controllers/token (id_token amr/acr claims)', () => {
         // deliberately on the access token too (resource servers read the
         // method without parsing an id_token)
         const accessToken = decodeJwtPayload(tokenResponse.access_token);
+
         expect(accessToken.amr).toEqual(['pwd']);
         expect(accessToken.acr).toEqual('urn:authup:pwd');
     });
@@ -131,10 +139,12 @@ describe('src/http/controllers/token (id_token amr/acr claims)', () => {
         // the ROPC grant issues the final tokens directly — they must carry the
         // derived method the same way the authorization_code exchange does.
         const accessToken = decodeJwtPayload(login.access_token);
+
         expect(accessToken.amr).toEqual(['pwd']);
         expect(accessToken.acr).toEqual('urn:authup:pwd');
 
         const refreshToken = decodeJwtPayload(login.refresh_token!);
+
         expect(refreshToken.amr).toEqual(['pwd']);
         expect(refreshToken.acr).toEqual('urn:authup:pwd');
     });
@@ -156,6 +166,7 @@ describe('src/http/controllers/token (id_token amr/acr claims)', () => {
             period: 30,
             secret: Secret.fromBase32(enrolled.meta.secret!),
         });
+
         await enrollBearer.userAuthenticator.confirm('@me', enrolled.data.id, { code: totp.generate() });
 
         // fresh login WITH the second factor — the session carries mfaAt
@@ -167,7 +178,9 @@ describe('src/http/controllers/token (id_token amr/acr claims)', () => {
                 otp: totp.generate(),
             },
         });
+
         expect(withOtp.status).toEqual(200);
+
         const withOtpBody = await withOtp.json();
         const bearer = await bearerFor(withOtpBody.access_token);
 
@@ -175,6 +188,7 @@ describe('src/http/controllers/token (id_token amr/acr claims)', () => {
         const tokenResponse = await authorizeAndExchange(bearer, { acr_values: 'urn:authup:mfa' });
 
         const idToken = decodeJwtPayload(tokenResponse.id_token!);
+
         expect(idToken.amr).toEqual(['pwd', 'otp']);
         expect(idToken.acr).toEqual('urn:authup:mfa');
     });

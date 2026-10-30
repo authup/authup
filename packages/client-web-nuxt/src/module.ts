@@ -28,6 +28,7 @@ export default defineNuxtModule<ModuleOptions>({
         await installModule('@pinia/nuxt');
 
         const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url));
+
         nuxt.options.build.transpile.push(runtimeDir);
 
         const resolver = createResolver(import.meta.url);
@@ -40,6 +41,7 @@ export default defineNuxtModule<ModuleOptions>({
         const { serverApiURL, ...runtimeOptions } = options;
 
         nuxt.options.runtimeConfig.public = nuxt.options.runtimeConfig.public || {};
+
         if (nuxt.options.runtimeConfig.public.authup) {
             nuxt.options.runtimeConfig.public.authup = merge(
                 nuxt.options.runtimeConfig.public.authup,

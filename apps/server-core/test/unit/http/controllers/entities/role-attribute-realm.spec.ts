@@ -48,13 +48,16 @@ describe('role attribute owner realm', () => {
         await suite.setup();
 
         const { data: ownRealm } = await suite.client.realm.create(createFakeRealm());
+
         ownRealmId = ownRealm.id;
+
         const { data: foreignRealm } = await suite.client.realm.create(createFakeRealm());
 
         const { data: role } = await suite.client.role.create({
             ...createFakeRole(),
             realmId: foreignRealm.id,
         });
+
         foreignRoleId = role.id;
 
         const secret = 'role-attribute-realm-secret';
@@ -66,6 +69,7 @@ describe('role attribute owner realm', () => {
         });
 
         const { data: permission } = await suite.client.permission.getOne(PermissionName.ROLE_UPDATE);
+
         await suite.client.clientPermission.create({
             clientId: client.id,
             permissionId: permission.id,
@@ -76,6 +80,7 @@ describe('role attribute owner realm', () => {
             client_id: client.id,
             client_secret: secret,
         });
+
         token = response.access_token;
     });
 
@@ -89,6 +94,7 @@ describe('role attribute owner realm', () => {
             name: 'by-id',
             value: 'v',
         });
+
         expect(response.status).toEqual(403);
     });
 
@@ -98,6 +104,7 @@ describe('role attribute owner realm', () => {
             name: 'by-object',
             value: 'v',
         });
+
         expect(response.status).toEqual(403);
     });
 
@@ -107,11 +114,13 @@ describe('role attribute owner realm', () => {
             name: 'by-bare-object',
             value: 'v',
         });
+
         expect(response.status).toEqual(403);
     });
 
     it('refuses a body naming no role with 400', async () => {
         const response = await create({ name: 'no-role', value: 'v' });
+
         expect(response.status).toEqual(400);
     });
 });

@@ -28,9 +28,9 @@ import { mountKitComponent } from '../../../utils';
 vi.mock('@vuecs/icon', () => ({ VCIcon: { name: 'VCIcon', render: () => null } }));
 
 const REALM = {
-    id: 'realm-x', 
-    name: 'master', 
-    displayName: 'Master', 
+    id: 'realm-x',
+    name: 'master',
+    displayName: 'Master',
 };
 
 function buildInfo(overrides: Partial<DeviceAuthorizationInfo['client']> = {}) : DeviceAuthorizationInfo {
@@ -51,6 +51,7 @@ function buildInfo(overrides: Partial<DeviceAuthorizationInfo['client']> = {}) :
 function oauth2Error(error: string, status = 400) {
     return () => {
         const e = new Error(error) as Error & { response?: unknown };
+
         e.response = {
             status,
             data: {
@@ -59,6 +60,7 @@ function oauth2Error(error: string, status = 400) {
                 message: error,
             },
         };
+
         throw e;
     };
 }
@@ -66,10 +68,12 @@ function oauth2Error(error: string, status = 400) {
 function loginCompleteError(body: Record<string, unknown>) {
     return () => {
         const e = new Error(String(body.message ?? 'the redemption failed')) as Error & { response?: unknown };
+
         e.response = {
             status: 400,
             data: body,
         };
+
         throw e;
     };
 }
@@ -99,6 +103,7 @@ function mountForm(
     });
 
     const store = injectStore(mounted.pinia, mounted.wrapper.vm.$.appContext.app);
+
     if (loggedIn) {
         store.accessToken = 'access-token';
         store.realm = { id: REALM.id, name: REALM.name };
@@ -131,11 +136,13 @@ describe('ADeviceVerifyForm', () => {
         const { wrapper, httpClient } = mountForm({ userCode: 'bcdf-ghjk' });
 
         const input = wrapper.find('input');
+
         expect((input.element as HTMLInputElement).value).toEqual('BCDF-GHJK');
 
         await submitCode(wrapper);
 
         const [lookup] = requestsTo(httpClient, '/device_authorization/lookup');
+
         expect(lookup).toBeDefined();
         expect(lookup.body).toEqual({ user_code: 'BCDFGHJK' });
 
@@ -157,6 +164,7 @@ describe('ADeviceVerifyForm', () => {
         await flushPromises();
 
         const [lookup] = requestsTo(httpClient, '/device_authorization/lookup');
+
         expect(lookup).toBeDefined();
         expect(lookup.body).toEqual({ user_code: 'BCDFGHJK' });
         expect(wrapper.text()).toContain('TV App');
@@ -168,6 +176,7 @@ describe('ADeviceVerifyForm', () => {
         await submitCode(wrapper);
 
         const loginForm = wrapper.findComponent(ALoginForm);
+
         expect(loginForm.exists()).toBe(true);
         expect(loginForm.props('deviceUserCode')).toEqual('BCDFGHJK');
     });
@@ -186,7 +195,9 @@ describe('ADeviceVerifyForm', () => {
         const { wrapper } = mountForm({ userCode: 'BCDFGHJK' }, {
             'POST /device_authorization/lookup': () => {
                 const e = new Error('throttled') as Error & { response?: unknown };
+
                 e.response = { data: JSON.parse(JSON.stringify(new DeviceVerificationThrottledError({ retryAfter: 42 }))) };
+
                 throw e;
             },
         });
@@ -206,6 +217,7 @@ describe('ADeviceVerifyForm', () => {
         expect(wrapper.findComponent(ALoginForm).exists()).toBe(false);
 
         const button = findButton(wrapper, 'Use another account');
+
         expect(button).toBeDefined();
         await button!.trigger('click');
         await flushPromises();
@@ -218,6 +230,7 @@ describe('ADeviceVerifyForm', () => {
         const { wrapper } = mountForm({ userCode: 'BCDFGHJK' }, {
             'POST /device_authorization/lookup': (request) => {
                 const { user_code: userCode } = request.body as { user_code: string };
+
                 if (userCode === 'BCDFGHJK') {
                     return buildInfo();
                 }
@@ -253,6 +266,7 @@ describe('ADeviceVerifyForm', () => {
         await submitCode(wrapper);
 
         const challenge = wrapper.findComponent(AMfaChallengeForm);
+
         expect(challenge.exists()).toBe(true);
         expect(challenge.props('kinds')).toEqual(['totp']);
         expect(findButton(wrapper, 'Authorize')).toBeUndefined();
@@ -298,6 +312,7 @@ describe('ADeviceVerifyForm', () => {
         await flushPromises();
 
         const [approve] = requestsTo(httpClient, '/device_authorization/approve');
+
         expect(approve).toBeDefined();
         expect(approve.body).toEqual({ user_code: 'BCDFGHJK' });
         expect(wrapper.emitted('done')).toEqual([['approved']]);
@@ -312,6 +327,7 @@ describe('ADeviceVerifyForm', () => {
         await flushPromises();
 
         const [deny] = requestsTo(httpClient, '/device_authorization/deny');
+
         expect(deny).toBeDefined();
         expect(deny.body).toEqual({ user_code: 'BCDFGHJK' });
         expect(requestsTo(httpClient, '/device_authorization/approve')).toHaveLength(0);
@@ -389,6 +405,7 @@ describe('ADeviceVerifyForm federated login', () => {
         expect(requestsTo(httpClient, '/device_authorization/lookup')).toHaveLength(0);
 
         const input = wrapper.find('input');
+
         expect((input.element as HTMLInputElement).value).toEqual('BCDF-GHJK');
         expect(wrapper.findComponent(ALoginForm).exists()).toBe(false);
     });
@@ -399,11 +416,13 @@ describe('ADeviceVerifyForm federated login', () => {
             federatedHandlers(),
             false,
         );
+
         await flushPromises();
 
         await submitCode(wrapper);
 
         const lookups = requestsTo(httpClient, '/device_authorization/lookup');
+
         expect(lookups).toHaveLength(1);
         expect(lookups[0].body).toEqual({ user_code: 'BCDFGHJK' });
     });
@@ -413,6 +432,7 @@ describe('ADeviceVerifyForm federated login', () => {
             { userCode: 'BCDFGHJK', federatedLogin: FEDERATED_LOGIN },
             federatedHandlers({ 'POST /identity-providers/p-1/login-complete': loginCompleteError({ message: 'The login request is unknown or expired.' }) }),
         );
+
         await flushPromises();
 
         expect(store.status).toEqual(StoreAuthStatus.UNAUTHENTICATED);
@@ -430,6 +450,7 @@ describe('ADeviceVerifyForm federated login', () => {
                 }),
             }),
         );
+
         await flushPromises();
 
         expect(store.status).toEqual(StoreAuthStatus.AUTHENTICATED);
@@ -438,12 +459,13 @@ describe('ADeviceVerifyForm federated login', () => {
     it('renders the access-denied card for the access_denied marker', async () => {
         const { wrapper, httpClient } = mountForm(
             {
-                userCode: 'BCDFGHJK', 
-                error: 'access_denied', 
-                federatedLogin: FEDERATED_LOGIN, 
+                userCode: 'BCDFGHJK',
+                error: 'access_denied',
+                federatedLogin: FEDERATED_LOGIN,
             },
             federatedHandlers(),
         );
+
         await flushPromises();
 
         expect(wrapper.text()).toContain('You are not permitted to access this application.');

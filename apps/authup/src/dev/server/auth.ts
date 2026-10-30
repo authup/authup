@@ -47,6 +47,7 @@ const CSS_SPECIAL_QUERY = /[?&](?:inline|raw|url|direct)\b/;
  */
 async function renderDevStyles(vite: ViteRenderContext) : Promise<string> {
     const entry = await vite.environments.ssr.moduleGraph.getModuleByUrl(SSR_ENTRY);
+
     if (!entry) {
         return '';
     }
@@ -69,6 +70,7 @@ async function renderDevStyles(vite: ViteRenderContext) : Promise<string> {
             sheets.push(mod);
         }
     };
+
     visit(entry);
 
     const tags = await Promise.all(sheets.map(async (sheet) => {
@@ -141,6 +143,7 @@ export function createViteRender(vite: ViteRenderContext, root: string) : Render
         }
 
         let body = replaceTemplateMarker(html, '<!--preload-links-->', preloadLinks);
+
         body = replaceTemplateMarker(body, '<!--app-html-->', appHtml);
         body = stampHtmlAttributes(body, preferences);
         body = await applyTheme(body, ctx.theme, basePath);

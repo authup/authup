@@ -6,9 +6,9 @@
  */
 import { describe, expect, it } from 'vitest';
 import type {
-    IdentityProviderAttributeMapping, 
-    OAuth2IdentityProvider, 
-    OpenIDIdentityProvider, 
+    IdentityProviderAttributeMapping,
+    OAuth2IdentityProvider,
+    OpenIDIdentityProvider,
     Realm,
 } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
@@ -76,7 +76,7 @@ function createAuthenticator(authorizeURL: string) {
     );
 }
 
-const encodeSegment = (input: Record<string, any>) => Buffer.from(JSON.stringify(input)).toString('base64url');
+const encodeSegment = (input: Record<string, any>) => Buffer.from(JSON.stringify(input)).toBase64({ alphabet: 'base64url', omitPadding: true });
 
 const encodeToken = (claims: Record<string, any>) => [
     encodeSegment({ alg: 'none', typ: 'JWT' }),
@@ -115,6 +115,7 @@ describe('IdentityProviderOAuth2Authenticator', () => {
         const url = authenticator.buildRedirectURL({ state: 'abc' });
 
         const parsed = new URL(url);
+
         expect(parsed.origin).toEqual('https://idp.example.com');
         expect(parsed.searchParams.get('state')).toEqual('abc');
     });
@@ -143,6 +144,7 @@ describe('IdentityProviderOAuth2Authenticator', () => {
         );
 
         const parsed = new URL(authenticator.buildRedirectURL({ state: 'abc' }));
+
         expect(parsed.searchParams.get('scope')).toEqual('foo bar');
     });
 
@@ -152,6 +154,7 @@ describe('IdentityProviderOAuth2Authenticator', () => {
         );
 
         const parsed = new URL(authenticator.buildRedirectURL({ state: 'abc' }));
+
         expect(parsed.searchParams.get('scope')).toBeNull();
     });
 });
@@ -163,6 +166,7 @@ describe('IdentityProviderOpenIDAuthenticator', () => {
         );
 
         const parsed = new URL(authenticator.buildRedirectURL({ state: 'abc' }));
+
         expect(parsed.searchParams.get('scope')).toEqual('openid profile email');
     });
 
@@ -172,6 +176,7 @@ describe('IdentityProviderOpenIDAuthenticator', () => {
         );
 
         const parsed = new URL(authenticator.buildRedirectURL({ state: 'abc' }));
+
         expect(parsed.searchParams.get('scope')).toEqual('openid custom');
     });
 
@@ -181,6 +186,7 @@ describe('IdentityProviderOpenIDAuthenticator', () => {
         );
 
         const parsed = new URL(authenticator.buildRedirectURL({ state: 'abc' }));
+
         expect(parsed.searchParams.get('scope')).toEqual('openid profile custom');
     });
 });
@@ -192,6 +198,7 @@ describe('IdentityProviderGoogleAuthenticator', () => {
         );
 
         const parsed = new URL(authenticator.buildRedirectURL({ state: 'abc' }));
+
         expect(parsed.origin).toEqual('https://accounts.google.com');
         expect(parsed.searchParams.get('scope')).toEqual('openid profile email');
     });
@@ -202,6 +209,7 @@ describe('IdentityProviderGoogleAuthenticator', () => {
         );
 
         const parsed = new URL(authenticator.buildRedirectURL({ state: 'abc' }));
+
         expect(parsed.searchParams.get('scope'))
             .toEqual('openid profile email https://www.googleapis.com/auth/calendar.readonly');
     });
@@ -296,6 +304,7 @@ describe('IdentityProviderOAuth2Authenticator (identity build)', () => {
         // the guard is load-bearing: the client carries no baseURL, so
         // hapic's `/userinfo` default would be a relative fetch URL
         const authenticator = createTestableAuthenticator();
+
         authenticator.failUserInfo(new Error('userinfo must not be called'));
 
         const identity = await authenticator.buildIdentity({ access_token: ACCESS_TOKEN } as TokenGrantResponse);
@@ -321,12 +330,14 @@ describe('IdentityProviderOAuth2Authenticator (identity build)', () => {
         const mapper = new IdentityProviderAttributeMapper({ findByProviderId: async () => [mapping] });
 
         const [element] = await mapper.execute(identity);
+
         expect(element.operation).toEqual(IdentityProviderMapperOperation.CREATE);
         expect(element.value).toEqual([true]);
     });
 
     it('should let userinfo claims win over the id_token', async () => {
         const authenticator = createTestableAuthenticator({ userInfoUrl: 'https://idp.example.com/userinfo' });
+
         authenticator.stubUserInfo({ sub: 'external-user-1', preferred_username: 'userinfo-user' });
 
         const identity = await authenticator.buildIdentity({
@@ -343,6 +354,7 @@ describe('IdentityProviderOAuth2Authenticator (identity build)', () => {
         // somebody else, and `auth_users.email` carries no unique constraint,
         // so that third party could then drive password recovery on it.
         const authenticator = createTestableAuthenticator({ userInfoUrl: 'https://idp.example.com/userinfo' });
+
         authenticator.stubUserInfo({
             sub: 'somebody-else',
             preferred_username: 'somebody-else',
@@ -360,6 +372,7 @@ describe('IdentityProviderOAuth2Authenticator (identity build)', () => {
 
     it('should discard a userinfo document without a subject', async () => {
         const authenticator = createTestableAuthenticator({ userInfoUrl: 'https://idp.example.com/userinfo' });
+
         authenticator.stubUserInfo({ groups: ['admins'] });
 
         const identity = await authenticator.buildIdentity({ access_token: ACCESS_TOKEN } as TokenGrantResponse);
@@ -371,9 +384,9 @@ describe('IdentityProviderOAuth2Authenticator (identity build)', () => {
         const identity = await createTestableAuthenticator().buildIdentity({
             access_token: ACCESS_TOKEN,
             id_token: encodeToken({
-                sub: 'somebody-else', 
-                name: 'somebody-else', 
-                groups: ['admins'], 
+                sub: 'somebody-else',
+                name: 'somebody-else',
+                groups: ['admins'],
             }),
         } as TokenGrantResponse);
 
@@ -400,6 +413,7 @@ describe('IdentityProviderOAuth2Authenticator (identity build)', () => {
 
     it('should degrade rather than fail the login when userinfo errors', async () => {
         const authenticator = createTestableAuthenticator({ userInfoUrl: 'https://idp.example.com/userinfo' });
+
         authenticator.failUserInfo(new Error('gateway timeout'));
 
         const identity = await authenticator.buildIdentity({

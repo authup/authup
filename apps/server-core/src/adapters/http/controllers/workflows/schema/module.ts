@@ -104,6 +104,7 @@ export class SchemaController {
             SCHEMA_COLLECTIONS[collection] :
             undefined;
         const data = name ? describeQuerySchemaByName(name) : undefined;
+
         if (!data) {
             throw new NotFoundError();
         }

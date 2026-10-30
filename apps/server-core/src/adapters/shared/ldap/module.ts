@@ -34,6 +34,7 @@ export class LdapClient implements ILdapClient {
                         (err) => {
                             if (err) {
                                 reject(err);
+
                                 return;
                             }
 
@@ -47,12 +48,14 @@ export class LdapClient implements ILdapClient {
 
             if (this.driver.connected) {
                 listener();
+
                 return;
             }
 
             const errorListener = (error?: Error | null) => {
                 if (error) {
                     reject(error);
+
                     return;
                 }
 
@@ -83,17 +86,20 @@ export class LdapClient implements ILdapClient {
 
                     if (!user) {
                         reject(new Error('User name not defined.'));
+
                         return;
                     }
 
                     if (!password) {
                         reject(new Error('User password not defined.'));
+
                         return;
                     }
 
                     this.driver.bind(user, password, (err) => {
                         if (err) {
                             reject(err);
+
                             return;
                         }
 
@@ -109,6 +115,7 @@ export class LdapClient implements ILdapClient {
             this.driver.unbind((err) => {
                 if (err) {
                     reject(err);
+
                     return;
                 }
 
@@ -122,6 +129,7 @@ export class LdapClient implements ILdapClient {
             this.driver.add(name, data, (err) => {
                 if (err) {
                     reject(err);
+
                     return;
                 }
 
@@ -135,6 +143,7 @@ export class LdapClient implements ILdapClient {
             this.driver.del(name, (err) => {
                 if (err) {
                     reject(err);
+
                     return;
                 }
 
@@ -148,6 +157,7 @@ export class LdapClient implements ILdapClient {
             this.driver.modify(name, change, (err) => {
                 if (err) {
                     reject(err);
+
                     return;
                 }
 
@@ -167,6 +177,7 @@ export class LdapClient implements ILdapClient {
                 (err, res) => {
                     if (err) {
                         reject(err);
+
                         return;
                     }
 
@@ -207,16 +218,19 @@ export class LdapClient implements ILdapClient {
 
         for (let i = 0; i <= input.length; i++) {
             const el = input[i];
+
             if (typeof el !== 'string') {
                 continue;
             }
 
             if (!output) {
                 output = el;
+
                 continue;
             }
 
             const dn = ldap.parseDN(output);
+
             if (dn.childOf(el) || dn.equals(el)) {
                 continue;
             }
@@ -239,6 +253,7 @@ export class LdapClient implements ILdapClient {
 
             if (typeof (ldap.DN as Record<string, any>).fromString === 'function') {
                 const dn = (ldap.DN as Record<string, any>).fromString(input);
+
                 return typeof dn !== 'undefined';
             }
 

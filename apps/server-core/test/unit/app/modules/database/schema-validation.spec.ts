@@ -119,6 +119,7 @@ describe('app/modules/database/repositories/schema-validation', () => {
             name: 'dotted-valid',
             sorts: { allowed: ['realm.name'] },
         });
+
         expect(() => assertSchemaMatchesEntity(valid, dataSource.getMetadata(RoleEntity)))
             .not.toThrow();
 
@@ -126,6 +127,7 @@ describe('app/modules/database/repositories/schema-validation', () => {
             name: 'dotted-invalid',
             sorts: { allowed: ['unknownRelation.name'] },
         });
+
         expect(() => assertSchemaMatchesEntity(invalid, dataSource.getMetadata(RoleEntity)))
             .toThrowError(/unknownRelation.name/);
     });
@@ -135,6 +137,7 @@ describe('app/modules/database/repositories/schema-validation', () => {
             name: 'filters-default-valid',
             filters: { default: and(eq('name', 'admin'), eq('realm.name', 'master')) },
         });
+
         expect(() => assertSchemaMatchesEntity(valid, dataSource.getMetadata(RoleEntity)))
             .not.toThrow();
 
@@ -142,6 +145,7 @@ describe('app/modules/database/repositories/schema-validation', () => {
             name: 'filters-default-invalid',
             filters: { default: and(eq('name', 'admin'), eq('renamedAway', 'x')) },
         });
+
         expect(() => assertSchemaMatchesEntity(invalid, dataSource.getMetadata(RoleEntity)))
             .toThrowError(/renamedAway/);
     });
@@ -151,6 +155,7 @@ describe('app/modules/database/repositories/schema-validation', () => {
             name: 'sort-default-valid',
             sorts: { default: { updatedAt: 'DESC' } },
         });
+
         expect(() => assertSchemaMatchesEntity(valid, dataSource.getMetadata(RoleEntity)))
             .not.toThrow();
 
@@ -158,6 +163,7 @@ describe('app/modules/database/repositories/schema-validation', () => {
             name: 'sort-default-invalid',
             sorts: { default: { renamedAway: 'DESC' } },
         });
+
         expect(() => assertSchemaMatchesEntity(invalid, dataSource.getMetadata(RoleEntity)))
             .toThrowError(/renamedAway/);
     });
@@ -167,6 +173,7 @@ describe('app/modules/database/repositories/schema-validation', () => {
             name: 'relations-ok',
             relations: { allowed: ['realm'] },
         });
+
         expect(() => assertSchemaMatchesEntity(relation, dataSource.getMetadata(RoleEntity)))
             .not.toThrow();
 
@@ -174,6 +181,7 @@ describe('app/modules/database/repositories/schema-validation', () => {
             name: 'relation-as-field',
             fields: { allowed: ['realm'] },
         });
+
         expect(() => assertSchemaMatchesEntity(field, dataSource.getMetadata(RoleEntity)))
             .toThrowError(/realm/);
     });

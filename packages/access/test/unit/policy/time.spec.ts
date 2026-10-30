@@ -24,12 +24,14 @@ describe('src/policy/time', () => {
 
         const evaluator = new TimePolicyEvaluator();
         const time = new Date();
+
         time.setHours(12, 0);
 
         let outcome = await evaluator.evaluate(
             config,
             definePolicyEvaluationContext({ data: new PolicyData({ [BuiltInPolicyType.TIME]: time }) }),
         );
+
         expect(outcome.success)
             .toBeTruthy();
 

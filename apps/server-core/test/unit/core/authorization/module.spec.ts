@@ -81,40 +81,41 @@ const globalPermission = (name: string) => ({
 const bindingDefinition = (name: string) : PermissionPolicies => [globalPermission(name), [systemDefault]];
 
 const custom = {
-    id: 'policy-custom', 
-    realmId: null, 
-    type: 'myType', 
+    id: 'policy-custom',
+    realmId: null,
+    type: 'myType',
 };
 const scoped = {
-    id: 'policy-scoped', 
-    type: 'identity', 
-    realmId, 
+    id: 'policy-scoped',
+    type: 'identity',
+    realmId,
 };
 const mixed = {
     id: 'policy-mixed',
     type: 'composite',
     decisionStrategy: 'unanimous',
     children: [{
-        id: 'policy-identity', 
-        realmId: null, 
-        type: 'identity', 
+        id: 'policy-identity',
+        realmId: null,
+        type: 'identity',
     }, scoped],
 };
 const realmless = { id: 'policy-realmless', type: 'identity' };
 const prototypeNamed = {
-    id: 'constructor', 
-    realmId: null, 
-    type: 'identity', 
+    id: 'constructor',
+    realmId: null,
+    type: 'identity',
 };
 const prototypePolluting = {
-    id: '__proto__', 
-    realmId: null, 
-    type: 'identity', 
+    id: '__proto__',
+    realmId: null,
+    type: 'identity',
 };
 
 describe('core/authorization/module', () => {
     it('emits every definition with its trees deduped and sorted by namespace', async () => {
         const ctx = setup();
+
         ctx.catalogRepository.setDefinitions([
             [
                 {
@@ -187,6 +188,7 @@ describe('core/authorization/module', () => {
 
     it('answers an empty catalog when nothing is defined', async () => {
         const catalog = await build(setup());
+
         expect(catalog).toEqual({
             policies: {},
             permissions: [],
@@ -195,6 +197,7 @@ describe('core/authorization/module', () => {
 
     it('carries a definition whose tree carries no id without its policies and warns once', async () => {
         const ctx = setup();
+
         ctx.catalogRepository.setDefinitions([
             [globalPermission('read'), [{ type: 'identity' }]],
             bindingDefinition('write'),
@@ -228,6 +231,7 @@ describe('core/authorization/module', () => {
 
     it('carries a definition whose policy is not a built-in type without its policies and keeps its sibling', async () => {
         const ctx = setup();
+
         ctx.catalogRepository.setDefinitions([
             [globalPermission('read'), [custom]],
             bindingDefinition('write'),
@@ -246,6 +250,7 @@ describe('core/authorization/module', () => {
 
     it('projects a policy whose id is named constructor', async () => {
         const ctx = setup();
+
         ctx.catalogRepository.setDefinitions([
             [globalPermission('read'), [prototypeNamed]],
         ]);
@@ -262,6 +267,7 @@ describe('core/authorization/module', () => {
     // does not carry and every consumer would read it as stale.
     it('projects a policy whose id is named __proto__', async () => {
         const ctx = setup();
+
         ctx.catalogRepository.setDefinitions([
             [globalPermission('read'), [prototypePolluting]],
         ]);
@@ -277,6 +283,7 @@ describe('core/authorization/module', () => {
 
     it('carries every grant policy once, deduped against the definition trees', async () => {
         const ctx = setup();
+
         ctx.catalogRepository.setDefinitions([bindingDefinition('read')]);
         ctx.catalogRepository.setGrantPolicies([systemDefault, visible, prototypeNamed]);
 
@@ -298,6 +305,7 @@ describe('core/authorization/module', () => {
 
     it('drops a grant policy the catalog cannot carry, warns per drop and keeps the rest', async () => {
         const ctx = setup();
+
         ctx.catalogRepository.setDefinitions([bindingDefinition('read')]);
         ctx.catalogRepository.setGrantPolicies([custom, { type: 'identity' }, visible]);
 
@@ -315,11 +323,12 @@ describe('core/authorization/module', () => {
     // that the consumer's copy is older than the definition.
     it('carries a definition of a realm out of reach without its policies', async () => {
         const ctx = setup();
+
         ctx.catalogRepository.setDefinitions([
             [{
-                name: 'read', 
-                realmId, 
-                clientId: null, 
+                name: 'read',
+                realmId,
+                clientId: null,
             }, [systemDefault]],
             bindingDefinition('write'),
         ]);
@@ -348,6 +357,7 @@ describe('core/authorization/module', () => {
 
     it('withholds a policy tree out of reach and denies the definition naming it', async () => {
         const ctx = setup();
+
         ctx.catalogRepository.setDefinitions([
             [globalPermission('read'), [scoped]],
             bindingDefinition('write'),
@@ -366,6 +376,7 @@ describe('core/authorization/module', () => {
     // child's configuration travels inside the parent's projection.
     it('withholds a tree whose child sits in a realm out of reach', async () => {
         const ctx = setup();
+
         ctx.catalogRepository.setDefinitions([
             [globalPermission('read'), [mixed]],
         ]);
@@ -382,6 +393,7 @@ describe('core/authorization/module', () => {
     // no realm for, so it is withheld rather than offered to every reader
     it('withholds a tree whose node carries no realm at all', async () => {
         const ctx = setup();
+
         ctx.catalogRepository.setDefinitions([
             [globalPermission('read'), [realmless]],
         ]);
@@ -394,6 +406,7 @@ describe('core/authorization/module', () => {
 
     it('withholds a grant policy out of reach', async () => {
         const ctx = setup();
+
         ctx.catalogRepository.setDefinitions([bindingDefinition('read')]);
         ctx.catalogRepository.setGrantPolicies([scoped, visible]);
 

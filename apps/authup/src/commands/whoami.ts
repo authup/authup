@@ -16,6 +16,7 @@ import type { HostCommandContext } from '../host/index.ts';
 
 function describeExpiry(expiresAt: number, now = Date.now()) : string {
     const seconds = Math.round((expiresAt - now) / 1000);
+
     if (seconds <= 0) {
         return 'expired';
     }
@@ -38,6 +39,7 @@ export function defineCLIWhoamiCommand(context: HostCommandContext = {}) {
             const opened = await openHost(args.server, context);
 
             const session = await opened.client.account.getSession();
+
             if (!session.active) {
                 throw new Error(`The sign-in to ${opened.host} is no longer active. Run \`authup login\` again.`);
             }

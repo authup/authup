@@ -12,8 +12,8 @@ import type {
     PolicyAPICheckResponse,
     PolicyCreatePayload,
     PolicyResponse,
-    PolicySavePayload, 
-    PolicyUpdatePayload, 
+    PolicySavePayload,
+    PolicyUpdatePayload,
 } from '@authup/core-http-kit';
 import { EntityType } from '@authup/core-kit';
 import { serializeError } from '@authup/errors';
@@ -32,14 +32,14 @@ import { useRequestQuery } from '@routup/basic/query';
 import type { IAppEvent } from 'routup';
 import type {
     IEntityStatsService,
-    IPolicyCheckerService, 
-    IPolicyService, 
+    IPolicyCheckerService,
+    IPolicyService,
 } from '../../../../../core/index.ts';
 import {
     RECORD_QUERY_PARAMETERS,
     STATS_QUERY_PARAMETERS,
-    describeQuerySchema, 
-    policySchema, 
+    describeQuerySchema,
+    policySchema,
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -151,6 +151,7 @@ export class PolicyController {
         );
 
         event.response.status = 202;
+
         if (result.success) {
             return { status: 'success' };
         }
@@ -168,6 +169,7 @@ export class PolicyController {
         @DContext() event: IAppEvent,
     ): Promise<EntityRecordResponse<PolicyResponse>> {
         applyRouteRealmIDToBody(event, data);
+
         const actor = buildActorContext(event);
         const entity = await this.service.update(
             id,
@@ -187,6 +189,7 @@ export class PolicyController {
         @DContext() event: IAppEvent,
     ): Promise<EntityRecordResponse<PolicyResponse>> {
         applyRouteRealmIDToBody(event, data);
+
         const actor = buildActorContext(event);
 
         const {
@@ -199,6 +202,7 @@ export class PolicyController {
         );
 
         event.response.status = created ? 201 : 202;
+
         return { data: entity, meta: {} };
     }
 
@@ -221,6 +225,7 @@ export class PolicyController {
         @DContext() event: IAppEvent,
     ): Promise<EntityRecordResponse<PolicyResponse>> {
         applyRouteRealmIDToBody(event, data);
+
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 

@@ -45,6 +45,7 @@ export class Signer {
 
     async sign(payload: Record<string, any>, keyId: string = SIGNER_KEY_ID) {
         const keyPair = await this.useKeyPair();
+
         return signToken(payload, {
             type: 'rsa',
             key: keyPair.privateKey,

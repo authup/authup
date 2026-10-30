@@ -17,11 +17,11 @@ import {
 import { ErrorCode } from '@authup/errors';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { IdentityProviderRoleMappingService } from '../../../../../src/core/entities/identity-provider-role-mapping/service.ts';
-import { 
-    FakeEntityRepository, 
-    createAllowAllActor, 
-    createDenyAllActor, 
-    createMasterRealmActor, 
+import {
+    FakeEntityRepository,
+    createAllowAllActor,
+    createDenyAllActor,
+    createMasterRealmActor,
 } from '@authup/server-test-kit';
 import { FakeIdentityPermissionProvider } from '../../helpers/fake-identity-permission-provider.ts';
 import { readEvaluatedRecordRealms } from '../../helpers/record-realm.ts';
@@ -44,15 +44,16 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
         roleRepository = new FakeEntityRepository<Role>();
         identityPermissionProvider = new FakeIdentityPermissionProvider();
         service = new IdentityProviderRoleMappingService({
-            repository, 
-            roleRepository, 
-            identityPermissionProvider, 
+            repository,
+            roleRepository,
+            identityPermissionProvider,
         });
     });
 
     describe('getMany', () => {
         it('should call preEvaluateOneOf with correct permissions', async () => {
             const actor = createAllowAllActor();
+
             await service.getMany({}, actor);
             expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
@@ -73,6 +74,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
         it('should return entity by id', async () => {
             const entity = repository.seed({});
             const result = await service.getOne(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
         });
 
@@ -96,6 +98,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
             };
 
             const result = await service.create(data, createMasterRealmActor());
+
             expect(result.id).toBeDefined();
             expect(result.providerRealmId).toBe(realmId);
             expect(result.roleRealmId).toBe(realmId);
@@ -108,6 +111,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
             });
 
             const actor = createAllowAllActor();
+
             await service.create({
                 providerId: randomUUID(),
                 roleId: randomUUID(),
@@ -200,16 +204,19 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
     describe('update reach (#3654)', () => {
         const restrict = () => {
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.method !== 'evaluate' || call.ctx.name !== PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE) {
                     return;
                 }
 
                 const attributes = call.ctx.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+
                 if (attributes.name !== 'reachable') {
                     throw PermissionError.denied('test');
                 }
             });
+
             return actor;
         };
 
@@ -231,28 +238,31 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
 
         it('should refuse moving an unreachable row into reach', async () => {
             const entity = repository.seed({
-                providerId: randomUUID(), 
-                roleId: randomUUID(), 
-                name: 'other', 
+                providerId: randomUUID(),
+                roleId: randomUUID(),
+                name: 'other',
             });
+
             await expect(service.update(entity.id, { name: 'reachable' }, restrict())).rejects.toBeInstanceOf(PermissionError);
         });
 
         it('should allow updating a row that stays in reach', async () => {
             const entity = repository.seed({
-                providerId: randomUUID(), 
-                roleId: randomUUID(), 
-                name: 'reachable', 
+                providerId: randomUUID(),
+                roleId: randomUUID(),
+                name: 'reachable',
             });
+
             await expect(service.update(entity.id, { value: 'changed' }, restrict())).resolves.toBeDefined();
         });
 
         it('should refuse moving a reachable row out of reach', async () => {
             const entity = repository.seed({
-                providerId: randomUUID(), 
-                roleId: randomUUID(), 
-                name: 'reachable', 
+                providerId: randomUUID(),
+                roleId: randomUUID(),
+                name: 'reachable',
             });
+
             await expect(service.update(entity.id, { name: 'other' }, restrict())).rejects.toBeInstanceOf(PermissionError);
         });
     });
@@ -267,6 +277,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
             });
 
             const result = await service.update(entity.id, { name: 'new-name', value: 'new-value' }, createAllowAllActor());
+
             expect(result.name).toBe('new-name');
             expect(result.value).toBe('new-value');
         });
@@ -280,12 +291,14 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
         it('should call preEvaluate with IDENTITY_PROVIDER_ROLE_UPDATE', async () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
+
             await service.update(entity.id, { name: 'test' }, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE });
         });
 
         it('should throw when actor lacks permission', async () => {
             const entity = repository.seed({});
+
             await expect(
                 service.update(entity.id, { name: 'test' }, createDenyAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
@@ -293,11 +306,13 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
 
         it('re-checks role ownership on update and blocks when the superset check fails (#3166)', async () => {
             const roleId = randomUUID();
+
             roleRepository.seed({ id: roleId, clientId: null } as Partial<Role>);
+
             const entity = repository.seed({
-                providerId: randomUUID(), 
-                roleId, 
-                name: 'old', 
+                providerId: randomUUID(),
+                roleId,
+                name: 'old',
             });
 
             identityPermissionProvider.setSuperset(false);
@@ -309,16 +324,19 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
 
         it('allows the update when the actor still owns the role', async () => {
             const roleId = randomUUID();
+
             roleRepository.seed({ id: roleId, clientId: null } as Partial<Role>);
+
             const entity = repository.seed({
-                providerId: randomUUID(), 
-                roleId, 
-                name: 'old', 
+                providerId: randomUUID(),
+                roleId,
+                name: 'old',
             });
 
             identityPermissionProvider.setSuperset(true);
 
             const result = await service.update(entity.id, { name: 'new' }, createMasterRealmActor());
+
             expect(result.name).toBe('new');
         });
 
@@ -333,12 +351,13 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
             const result = await service.update(
                 entity.id,
                 {
-                    providerId: randomUUID(), 
-                    roleId: randomUUID(), 
-                    name: 'updated', 
+                    providerId: randomUUID(),
+                    roleId: randomUUID(),
+                    name: 'updated',
                 },
                 createAllowAllActor(),
             );
+
             expect(result.providerId).toBe(originalProviderId);
             expect(result.roleId).toBe(originalRoleId);
         });
@@ -348,6 +367,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
         it('should delete an existing entity', async () => {
             const entity = repository.seed({});
             const result = await service.delete(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
         });
 
@@ -358,6 +378,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
         it('should call preEvaluate with IDENTITY_PROVIDER_ROLE_DELETE', async () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
+
             await service.delete(entity.id, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE });
         });

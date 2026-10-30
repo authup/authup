@@ -23,6 +23,7 @@ export class ProvisioningStrategyValidator extends Container<ProvisioningEntityS
         super.initialize();
 
         const mergeContainer = new Container<ProvisioningEntityMergeStrategy>();
+
         mergeContainer.mount('type', createValidator(
             z
                 .enum(['merge']),
@@ -35,6 +36,7 @@ export class ProvisioningStrategyValidator extends Container<ProvisioningEntityS
         this.mount(mergeContainer);
 
         const altContainer = new Container<ProvisioningEntityReplaceStrategy>();
+
         altContainer.mount('type', createValidator(
             z
                 .enum(['replace', 'createOnly', 'absent']),

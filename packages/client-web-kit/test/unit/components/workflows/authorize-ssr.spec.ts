@@ -69,6 +69,7 @@ async function render(
     });
 
     const app = createSSRApp({ render: () => h(AAuthorize, props) });
+
     app.use(pinia);
     app.use(vuecs, {});
     app.use({ install }, {
@@ -86,14 +87,15 @@ async function render(
         // the state the auth console's router guard leaves after resolving
         // the forwarded access token
         const store = app.runWithContext(() => injectStore());
+
         store.accessToken = 'access-token';
         store.realm = { id: 'realm-1', name: 'master' };
         store.sessionId = 'session-1';
         store.setUser({
-            id: 'user-1', 
-            name: 'jdoe', 
-            displayName: null, 
-            email: 'jdoe@example.com', 
+            id: 'user-1',
+            name: 'jdoe',
+            displayName: null,
+            email: 'jdoe@example.com',
         });
     }
 
@@ -120,9 +122,9 @@ describe('components/workflows/authorize (server render)', () => {
 
     it('renders a logged-out visitor the login form', async () => {
         const {
-            html, 
-            entries, 
-            requests, 
+            html,
+            entries,
+            requests,
         } = await render({
             codeRequest: CODE_REQUEST,
             client: buildClient(false),
@@ -135,9 +137,9 @@ describe('components/workflows/authorize (server render)', () => {
 
     it('resolves the second factor and the consent once, and hands both over', async () => {
         const {
-            html, 
-            entries, 
-            requests, 
+            html,
+            entries,
+            requests,
         } = await render({
             codeRequest: CODE_REQUEST,
             client: buildClient(false),

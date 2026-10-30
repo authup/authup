@@ -26,6 +26,7 @@ export class PermissionMemoryProvider implements IPermissionProvider {
         });
 
         const entry = this.items[key];
+
         if (entry) {
             return entry;
         }
@@ -37,7 +38,9 @@ export class PermissionMemoryProvider implements IPermissionProvider {
         this.items = aggregatePermissionPolicyBindings(input)
             .reduce((prev, current) => {
                 const key = buildPermissionKey(current.permission);
+
                 prev[key] = current;
+
                 return prev;
             }, {} as Record<string, PermissionPolicyBindingAggregated>);
     }

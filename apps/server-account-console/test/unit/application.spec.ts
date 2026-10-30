@@ -10,11 +10,11 @@ import type { IThemeProvider } from '@authup/server-console-kit';
 import type { Application } from 'orkos';
 import { App } from 'routup';
 import { serve } from 'routup/node';
-import { 
-    afterEach, 
-    describe, 
-    expect, 
-    it, 
+import {
+    afterEach,
+    describe,
+    expect,
+    it,
 } from 'vitest';
 import { createApplication } from '../../src';
 
@@ -81,6 +81,7 @@ describe('createApplication', () => {
         application = createApplication({
             config: () => {
                 calls += 1;
+
                 return buildConfig();
             },
         });
@@ -121,13 +122,15 @@ describe('createApplication', () => {
         const mounted = application.container.resolve(InjectionKey.App);
 
         const outer = new App();
+
         outer.use('/console/account', mounted);
 
         const server = serve(outer, {
-            port: 0, 
-            hostname: '127.0.0.1', 
-            silent: true, 
+            port: 0,
+            hostname: '127.0.0.1',
+            silent: true,
         });
+
         await server.ready();
 
         try {

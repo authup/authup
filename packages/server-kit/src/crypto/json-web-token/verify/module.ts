@@ -60,10 +60,12 @@ export async function verifyToken(
                 }
 
                 let key : string;
+
                 if (typeof context.key === 'string') {
                     key = encodeSPKIToPem(context.key);
                 } else {
                     const keyContainer = new AsymmetricKey(context.key);
+
                     key = await keyContainer.toPem();
                 }
 
@@ -72,6 +74,7 @@ export async function verifyToken(
                     validateNbf: true,
                     validateExp,
                 });
+
                 break;
             }
             case JWKType.OCT: {
@@ -84,10 +87,12 @@ export async function verifyToken(
                     ];
 
                 let key : string | Uint8Array;
+
                 if (typeof context.key === 'string') {
                     key = context.key;
                 } else {
                     const keyContainer = new SymmetricKey(context.key);
+
                     key = await keyContainer.toUint8Array();
                 }
 

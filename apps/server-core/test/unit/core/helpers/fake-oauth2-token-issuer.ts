@@ -23,17 +23,20 @@ export class FakeOAuth2TokenIssuer implements IOAuth2TokenIssuer {
         input: OAuth2TokenPayload,
     ): Promise<OAuth2TokenIssuerResponse> {
         this.issueCalls.push(input);
+
         const jti = randomUUID();
         const payload: OAuth2TokenPayload = {
             ...input,
             jti,
             exp: this.exp,
         } as OAuth2TokenPayload;
+
         return [`signed-token-${jti}`, payload];
     }
 
     buildExp(input?: OAuth2TokenPayload): number {
         this.buildExpCalls.push(input);
+
         return this.exp;
     }
 }

@@ -41,6 +41,7 @@ describe('src/http/controllers/workflows/authorize (info)', () => {
 
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
         const { data: created } = await suite.client.client.create(createFakeClient());
+
         await suite.client.clientScope.create({ scopeId: scope.id, clientId: created.id });
 
         client = created;
@@ -117,6 +118,7 @@ describe('src/http/controllers/workflows/authorize (info)', () => {
         // that the route is reachable by the anonymous visitor the page
         // serves. It also answers through the typed client.
         const anonymous = await request(buildQuery());
+
         expect(anonymous.status).toEqual(200);
 
         const typed = await suite.client.authorize.getInfo({
@@ -137,10 +139,12 @@ describe('src/http/controllers/workflows/authorize (info)', () => {
         const query = buildQuery({ state: 'a b&c' });
 
         const leading = await suite.client.authorize.getInfo(`?${query.toString()}`);
+
         expect(leading.codeRequest?.state).toEqual('a b&c');
         expect(leading.client?.id).toEqual(client.id);
 
         const bare = await suite.client.authorize.getInfo(query.toString());
+
         expect(bare.codeRequest?.state).toEqual('a b&c');
     });
 
@@ -165,6 +169,7 @@ describe('src/http/controllers/workflows/authorize (info)', () => {
 
         // a value that is not an id never reaches the renderer
         const injected = await (await request(buildQuery({ provider: '../token?' }))).json();
+
         expect(injected.federatedLogin).toBeUndefined();
     });
 
@@ -196,6 +201,7 @@ describe('src/http/controllers/workflows/authorize (info)', () => {
         // the federated callback bounces a disabled provider here with
         // this marker; the text is server-side, never request-derived
         let body = await (await request(buildQuery({ error: OAuth2ErrorCode.LOGIN_REQUIRED }))).json();
+
         expect(body.error).toMatchObject({
             code: ErrorCode.OAUTH_LOGIN_REQUIRED,
             message: 'The identity provider is not available. Return to the application and start the login again.',

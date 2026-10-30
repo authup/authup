@@ -69,6 +69,7 @@ describe('buildURL', () => {
 
     it('returns a mutable URL whose searchParams can be set', () => {
         const url = buildURL('https://example.com/api', 'authorize');
+
         url.searchParams.set('client_id', 'abc');
 
         expect(url.href).toBe('https://example.com/api/authorize?client_id=abc');

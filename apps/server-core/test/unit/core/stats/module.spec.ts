@@ -67,11 +67,13 @@ function makeActor(options: {
     id?: string
 } = { allow: true }): ActorContext {
     const evaluator = new FakePermissionEvaluator();
+
     if (!options.allow) {
         evaluator.denyAll();
     }
 
     const actor: ActorContext = { permissionEvaluator: evaluator };
+
     if (options.identity !== false) {
         actor.identity = {
             type: IdentityType.USER,
@@ -186,7 +188,9 @@ describe('EntityStatsService', () => {
 
     function allowed() {
         const actor = makeActor();
+
         evaluatorOf(actor).setCompileResult({ verdict: 'allow' });
+
         return actor;
     }
 
@@ -242,6 +246,7 @@ describe('EntityStatsService', () => {
         await service.getMany(wire(), allowed());
 
         const encoded = decodeURIComponent(buildQueryString(repository.aggregateCalls[0]));
+
         expect(encoded).toContain(`gte(createdAt,'${WEEK_AGO}')`);
         expect(encoded).toContain(`lt(createdAt,'${NOW}')`);
     });
@@ -291,10 +296,12 @@ describe('EntityStatsService', () => {
 
     it('refuses a read without a bucket or without a lower bound', async () => {
         const { group, ...ungrouped } = wire();
+
         expect(group).toBeDefined();
         await expect(service.getMany(ungrouped, allowed())).rejects.toSatisfy(isValidationError);
 
         const { filter, ...unbounded } = wire();
+
         expect(filter).toBeDefined();
         await expect(service.getMany(unbounded, allowed())).rejects.toSatisfy(isValidationError);
 
@@ -318,6 +325,7 @@ describe('EntityStatsService', () => {
         });
 
         const from = new Date(Date.now() - (8 * DAY_IN_MS)).toISOString();
+
         await expect(horizon.getMany(wire({ from, unit: 'hour' }), allowed()))
             .rejects.toSatisfy(isValidationError);
 
@@ -334,6 +342,7 @@ describe('EntityStatsService', () => {
             .rejects.toSatisfy(isValidationError);
 
         const { meta } = await horizon.getMany(wire({ from: new Date(Date.now() - (7 * DAY_IN_MS)).toISOString() }), allowed());
+
         expect(meta.from).toEqual(WEEK_AGO);
     });
 
@@ -376,6 +385,7 @@ describe('EntityStatsService', () => {
         seed({ realmId: otherRealmId, actorId: userId });
 
         const actor = makeActor();
+
         evaluatorOf(actor).setCompileResult({
             verdict: 'conditional',
             condition: eq('realmId', realmId),
@@ -392,6 +402,7 @@ describe('EntityStatsService', () => {
         seed();
 
         const actor = makeActor();
+
         evaluatorOf(actor).setCompileResult({
             verdict: 'conditional',
             condition: eq('realmId', realmId),
@@ -407,6 +418,7 @@ describe('EntityStatsService', () => {
         seed();
 
         const actor = makeActor();
+
         evaluatorOf(actor).setCompileResult({ verdict: 'post' });
 
         const { data } = await service.getMany(wire(), actor);
@@ -421,6 +433,7 @@ describe('EntityStatsService', () => {
         seed();
 
         const actor = makeActor();
+
         evaluatorOf(actor).setCompileResult({ verdict: 'deny' });
 
         const { data } = await service.getMany(wire(), actor);
@@ -432,6 +445,7 @@ describe('EntityStatsService', () => {
         seed();
 
         const actor = makeActor({ allow: true, identity: false });
+
         evaluatorOf(actor).setCompileResult({ verdict: 'deny' });
 
         const { data } = await service.getMany(wire(), actor);
@@ -455,7 +469,9 @@ describe('EntityStatsService', () => {
 
         const actor = allowed();
         const first = await service.getMany(wire(), actor);
+
         seed();
+
         const second = await service.getMany(wire(), actor);
 
         expect(second).toEqual(first);
@@ -467,6 +483,7 @@ describe('EntityStatsService', () => {
 
         const actor = allowed();
         const other = makeActor({ allow: true, id: otherUserId });
+
         evaluatorOf(other).setCompileResult({ verdict: 'allow' });
 
         await service.getMany(wire(), actor);
@@ -484,6 +501,7 @@ describe('EntityStatsService', () => {
         seed();
 
         const actor = allowed();
+
         await service.getMany(wire(), actor);
         await service.getMany({
             filter: { createdAt: `>=${WEEK_AGO}` },
@@ -499,19 +517,24 @@ describe('EntityStatsService', () => {
         seed();
 
         const { data: broadData } = await service.getMany(wire(), allowed());
+
         expect(broadData[0].count).toEqual(2);
 
         // the same identity, on a request whose token withholds the permission
         const { data: restrictedData } = await service.getMany(wire(), makeActor({ allow: false }));
+
         expect(restrictedData[0].count).toEqual(1);
 
         // the same identity, on a request whose grants lower to a condition
         const narrowed = makeActor();
+
         evaluatorOf(narrowed).setCompileResult({
             verdict: 'conditional',
             condition: eq('realmId', otherRealmId),
         });
+
         const { data: narrowedData } = await service.getMany(wire(), narrowed);
+
         expect(narrowedData[0].count).toEqual(1);
 
         expect(repository.aggregateCalls).toHaveLength(3);
@@ -521,6 +544,7 @@ describe('EntityStatsService', () => {
         seed();
 
         const permitted = makeActor({ allow: true, identity: false });
+
         evaluatorOf(permitted).setCompileResult({ verdict: 'allow' });
         await service.getMany(wire(), permitted);
         expect(repository.aggregateCalls).toHaveLength(1);
@@ -553,6 +577,7 @@ describe('EntityStatsService', () => {
         seed({ realmId: otherRealmId });
 
         const actor = makeActor();
+
         evaluatorOf(actor).setCompileResult({
             verdict: 'conditional',
             condition: eq('realmId', realmId),
@@ -576,6 +601,7 @@ describe('EntityStatsService', () => {
 
     it('narrows a post reach to nothing for an entity without an ownership term', async () => {
         const roles = new FakeEntityStatsRepository<Record<string, any>>();
+
         roles.seed({
             id: randomUUID(),
             realmId,
@@ -604,6 +630,7 @@ describe('EntityStatsService', () => {
 
     it('counts every row for an ungated definition', async () => {
         const realms = new FakeEntityStatsRepository<Record<string, any>>();
+
         realms.seed({ id: randomUUID(), createdAt: new Date(Date.now() - 60_000).toISOString() });
         realms.seed({ id: randomUUID(), createdAt: new Date(Date.now() - 60_000).toISOString() });
 
@@ -634,6 +661,7 @@ describe('EntityStatsService', () => {
         });
 
         await service.getMany(wire(), actor);
+
         const { data } = await otherStats.getMany(wire(), actor);
 
         expect(data).toHaveLength(0);
@@ -702,7 +730,9 @@ describe('EntityStatsService routing onto the rollups', () => {
 
     function allowed() {
         const actor = makeActor();
+
         evaluatorOf(actor).setCompileResult({ verdict: 'allow' });
+
         return actor;
     }
 
@@ -732,6 +762,7 @@ describe('EntityStatsService routing onto the rollups', () => {
         await service.getMany(wire(), allowed());
 
         const encoded = decodeURIComponent(buildQueryString(rollups.aggregateCalls[0]));
+
         expect(encoded).toContain('gte(date,\'2026-09-16\')');
         expect(encoded).toContain('lt(date,\'2026-09-24\')');
         expect(encoded).toContain('bucket(date,day)');
@@ -747,9 +778,9 @@ describe('EntityStatsService routing onto the rollups', () => {
 
         expect(repository.aggregateCalls).toHaveLength(0);
         expect(data).toEqual([{
-            createdAt: '2026-08-30T00:00:00.000Z', 
-            name: 'created', 
-            count: 3, 
+            createdAt: '2026-08-30T00:00:00.000Z',
+            name: 'created',
+            count: 3,
         }]);
     });
 
@@ -813,6 +844,7 @@ describe('EntityStatsService routing onto the rollups', () => {
             }),
             cache,
         });
+
         await within.getMany(wire({ from: '2026-08-24T00:00:00.000Z' }), allowed());
 
         expect(rollups.aggregateCalls).toHaveLength(0);
@@ -826,6 +858,7 @@ describe('EntityStatsService routing onto the rollups', () => {
             }),
             cache: new MemoryCache(),
         });
+
         await expect(past.getMany(wire({ from: '2026-08-24T00:00:00.000Z' }), allowed()))
             .rejects.toSatisfy(isValidationError);
     });
@@ -845,10 +878,12 @@ describe('EntityStatsService routing onto the rollups', () => {
 
     function bounded() {
         const actor = makeActor();
+
         evaluatorOf(actor).setCompileResult({
             verdict: 'conditional',
             condition: inArray('realmId', [realmId, null]),
         });
+
         return actor;
     }
 
@@ -875,6 +910,7 @@ describe('EntityStatsService routing onto the rollups', () => {
 
     it('answers a realm-bounded reader from raw events when the reach is not routable', async () => {
         const actor = makeActor();
+
         evaluatorOf(actor).setCompileResult({
             verdict: 'conditional',
             condition: eq('clientId', randomUUID()),
@@ -888,6 +924,7 @@ describe('EntityStatsService routing onto the rollups', () => {
 
     it.each(['post', 'deny'] as const)('answers own rows from raw events on a %s reach', async (verdict) => {
         const actor = makeActor();
+
         evaluatorOf(actor).setCompileResult({ verdict });
 
         await service.getMany(wire(), actor);
@@ -903,6 +940,7 @@ describe('EntityStatsService routing onto the rollups', () => {
         });
 
         const actor = allowed();
+
         await service.getMany(wire(), actor);
         await raw.getMany(wire(), actor);
 

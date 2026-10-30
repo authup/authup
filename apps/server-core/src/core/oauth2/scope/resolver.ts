@@ -53,6 +53,7 @@ export class OAuth2ScopeAttributesResolver {
 
             if (scope === ScopeName.GLOBAL) {
                 attributes.push(...Object.values(this.clientAttributes).flat());
+
                 break;
             }
         }
@@ -71,6 +72,7 @@ export class OAuth2ScopeAttributesResolver {
 
             if (scope === ScopeName.GLOBAL) {
                 attributes.push(...Object.values(this.userAttributes).flat());
+
                 break;
             }
         }

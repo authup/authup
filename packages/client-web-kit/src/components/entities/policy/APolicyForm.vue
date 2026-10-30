@@ -28,9 +28,9 @@ import AIdentityPolicyForm from './identity/AIdentityPolicyForm.vue';
 
 export default defineComponent({
     components: {
-        AFormSubmit, 
-        APolicyTypePicker, 
-        APolicyBasicForm, 
+        AFormSubmit,
+        APolicyTypePicker,
+        APolicyBasicForm,
     },
     props: {
         entity: { type: Object as PropType<Policy> },
@@ -82,6 +82,7 @@ export default defineComponent({
         const isInvalidComputed = computed(() => {
             const basic = v.$getResultsForChild('basic');
             const type = v.$getResultsForChild('type');
+
             return !typeComputed.value ||
                 !!basic?.$invalid.value ||
                 !!type?.$invalid.value;

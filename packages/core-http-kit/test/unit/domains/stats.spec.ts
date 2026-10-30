@@ -39,6 +39,7 @@ describe('src/domains/stats', () => {
             }
 
             const api = pickEntityAPI(client, type as keyof EntityTypeMap);
+
             if (!api) {
                 continue;
             }
@@ -68,6 +69,7 @@ describe('src/domains/stats', () => {
         expect(meta.total).toEqual(1);
 
         const url = new URL(client.requests[0].url, 'http://localhost');
+
         expect(url.pathname).toEqual('/users/@stats');
         expect(createURLCodec().decode(url.search.slice(1))).toMatchObject({
             filters: {

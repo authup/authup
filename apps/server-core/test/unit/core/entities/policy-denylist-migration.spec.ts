@@ -42,6 +42,7 @@ function loadProvisionedUserDenylistNames(): string[] {
     expect(entity!.attributes.invert).toBe(true);
 
     const { names } = (entity!.extraAttributes!);
+
     expect(Array.isArray(names)).toBe(true);
 
     return names;

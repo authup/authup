@@ -41,12 +41,15 @@ async function probe(directory: string) : Promise<ProbeTarget> {
         expect(request).toHaveBeenCalledTimes(1);
 
         const [target] = request.mock.calls[0];
+
         if (typeof target === 'string' || target instanceof URL) {
             const url = new URL(target);
+
             return { host: url.hostname, port: url.port };
         }
 
         const options = target as unknown as { host?: string, port?: number };
+
         return { host: options.host ?? '', port: String(options.port ?? '') };
     } finally {
         request.mockRestore();

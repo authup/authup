@@ -79,6 +79,7 @@ describe('core/entities/key/service', () => {
             repository.seed([buildKey()]);
 
             const result = await service.getMany({}, createAllowAllActor());
+
             expect(result.data).toHaveLength(1);
         });
 
@@ -91,18 +92,21 @@ describe('core/entities/key/service', () => {
 
             const actor = createAllowAllActor();
             let calls = 0;
+
             actor.permissionEvaluator.setBehavior(({ method }) => {
                 if (method !== 'evaluateOneOf') {
                     return;
                 }
 
                 calls += 1;
+
                 if (calls === 2) {
                     throw new PermissionError({ message: 'denied' });
                 }
             });
 
             const result = await service.getMany({}, actor);
+
             expect(result.data).toHaveLength(1);
             expect(result.meta.total).toEqual(1);
         });
@@ -111,6 +115,7 @@ describe('core/entities/key/service', () => {
             repository.seed([buildKey()]);
 
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setBehavior(({ method }) => {
                 if (method === 'evaluateOneOf') {
                     throw new Error('provider unavailable');
@@ -123,10 +128,12 @@ describe('core/entities/key/service', () => {
         it('pushes a compiled conditional into the row query and skips per-row evaluation', async () => {
             const realmA = randomUUID();
             const rows = [buildKey({ realmId: realmA }), buildKey()];
+
             repository.seed(rows);
 
             const spy = vi.spyOn(repository, 'findMany');
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setCompileResult({
                 verdict: 'conditional',
                 condition: eq('realmId', realmA),
@@ -138,6 +145,7 @@ describe('core/entities/key/service', () => {
             // the compiled condition by replaying it over the seeded rows
             const query = spy.mock.calls[0]![0];
             const applied = applyQuery(query, rows);
+
             expect(applied.data).toHaveLength(1);
             expect(applied.data[0]!.realmId).toEqual(realmA);
 
@@ -148,12 +156,15 @@ describe('core/entities/key/service', () => {
             repository.seed([buildKey(), buildKey()]);
 
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setCompileResult({ verdict: 'allow' });
 
             const result = await service.getMany({}, actor);
+
             expect(result.data).toHaveLength(2);
             expect(result.meta.total).toEqual(2);
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
+
             for (const entity of result.data) {
                 expect(entity.decryptionKey).toBeNull();
             }
@@ -161,16 +172,19 @@ describe('core/entities/key/service', () => {
 
         it('matches no row on a compiled deny', async () => {
             const rows = [buildKey(), buildKey()];
+
             repository.seed(rows);
 
             const spy = vi.spyOn(repository, 'findMany');
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setCompileResult({ verdict: 'deny' });
 
             await service.getMany({}, actor);
 
             const query = spy.mock.calls[0]![0];
             const applied = applyQuery(query, rows);
+
             expect(applied.data).toHaveLength(0);
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
@@ -223,9 +237,11 @@ describe('core/entities/key/service', () => {
 
         it('increments the priority above the realm\'s highest (generate = rotate)', async () => {
             const realmId = randomUUID();
+
             repository.seed([buildKey({ realmId, priority: 3 })]);
 
             const entity = await service.create({ use: JWKUse.SIGNATURE, realmId }, createAllowAllActor());
+
             expect(entity.priority).toEqual(4);
         });
 
@@ -243,6 +259,7 @@ describe('core/entities/key/service', () => {
 
         it('rejects a duplicate name per realm', async () => {
             const realmId = randomUUID();
+
             repository.seed([buildKey({ realmId, name: 'primary' })]);
 
             await expect(service.create({
@@ -254,6 +271,7 @@ describe('core/entities/key/service', () => {
 
         it('rejects an actor without KEY_CREATE', async () => {
             expect.assertions(1);
+
             try {
                 await service.create({ use: JWKUse.SIGNATURE, realmId: randomUUID() }, createDenyAllActor());
             } catch (e) {
@@ -263,11 +281,13 @@ describe('core/entities/key/service', () => {
 
         it('runs the full KEY_CREATE evaluation with attributes', async () => {
             const actor = createAllowAllActor();
+
             await service.create({ use: JWKUse.SIGNATURE, realmId: randomUUID() }, actor);
 
             const call = actor.permissionEvaluator.evaluateCalls.find(
                 (c) => c.name === PermissionName.KEY_CREATE,
             );
+
             expect(call).toBeDefined();
         });
     });
@@ -311,7 +331,7 @@ describe('core/entities/key/service', () => {
         it('rejects a certificate on imported encryption key material', async () => {
             await expect(service.create({
                 use: JWKUse.ENCRYPTION,
-                decryptionKey: Buffer.alloc(32, 7).toString('base64'),
+                decryptionKey: Buffer.alloc(32, 7).toBase64(),
                 certificate: CERTIFICATE,
                 realmId: randomUUID(),
             }, createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
@@ -366,8 +386,8 @@ describe('core/entities/key/service', () => {
         it('rejects garbage signature material', async () => {
             await expect(service.create({
                 use: JWKUse.SIGNATURE,
-                decryptionKey: Buffer.alloc(64, 1).toString('base64'),
-                encryptionKey: Buffer.alloc(64, 2).toString('base64'),
+                decryptionKey: Buffer.alloc(64, 1).toBase64(),
+                encryptionKey: Buffer.alloc(64, 2).toBase64(),
                 realmId: randomUUID(),
             }, createAllowAllActor())).rejects.toThrow(/could not be imported/);
         });
@@ -388,7 +408,7 @@ describe('core/entities/key/service', () => {
         it('imports 32 base64 bytes as an encryption key', async () => {
             const entity = await service.create({
                 use: JWKUse.ENCRYPTION,
-                decryptionKey: Buffer.alloc(32, 7).toString('base64'),
+                decryptionKey: Buffer.alloc(32, 7).toBase64(),
                 realmId: randomUUID(),
             }, createAllowAllActor());
 
@@ -399,7 +419,7 @@ describe('core/entities/key/service', () => {
         it('rejects enc material that is not 32 bytes', async () => {
             await expect(service.create({
                 use: JWKUse.ENCRYPTION,
-                decryptionKey: Buffer.alloc(16, 7).toString('base64'),
+                decryptionKey: Buffer.alloc(16, 7).toBase64(),
                 realmId: randomUUID(),
             }, createAllowAllActor())).rejects.toThrow(/32 base64-encoded bytes/);
         });
@@ -428,6 +448,7 @@ describe('core/entities/key/service', () => {
 
         it('rejects an unknown key', async () => {
             expect.assertions(1);
+
             try {
                 await service.update(randomUUID(), { name: 'renamed' }, createAllowAllActor());
             } catch (e) {
@@ -438,12 +459,14 @@ describe('core/entities/key/service', () => {
 
     const createRestrictedActor = (name: string, reachable: (attributes: Record<string, any>) => boolean) => {
         const actor = createAllowAllActor();
+
         actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
             if (method !== 'evaluate' || ctx.name !== name) {
                 return;
             }
 
             const attributes = ctx.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+
             if (!reachable(attributes)) {
                 throw PermissionError.denied(name);
             }
@@ -483,6 +506,7 @@ describe('core/entities/key/service', () => {
                 { name: 'team-b' },
                 createRestrictedActor(PermissionName.KEY_UPDATE, reachable),
             );
+
             expect(entity.name).toEqual('team-b');
         });
 
@@ -500,6 +524,7 @@ describe('core/entities/key/service', () => {
     describe('delete', () => {
         it('deletes a signature key without reference counting', async () => {
             const [seeded] = repository.seed([buildKey()]);
+
             repository.blobReferences = 5;
 
             await service.delete(seeded.id, createAllowAllActor());
@@ -509,13 +534,16 @@ describe('core/entities/key/service', () => {
 
         it('refuses to delete a referenced enc key without force (409 + count)', async () => {
             const [seeded] = repository.seed([buildKey({ use: JWKUse.ENCRYPTION, type: JWKType.OCT })]);
+
             repository.blobReferences = 3;
 
             expect.assertions(3);
+
             try {
                 await service.delete(seeded.id, createAllowAllActor());
             } catch (e) {
                 expect(isAuthupError(e)).toBeTruthy();
+
                 if (isAuthupError(e)) {
                     expect(e.code).toEqual(ErrorCode.ENTITY_CONFLICT);
                     expect(e.data).toEqual({ references: 3 });
@@ -525,6 +553,7 @@ describe('core/entities/key/service', () => {
 
         it('crypto-shreds a referenced enc key with force', async () => {
             const [seeded] = repository.seed([buildKey({ use: JWKUse.ENCRYPTION, type: JWKType.OCT })]);
+
             repository.blobReferences = 3;
 
             await service.delete(seeded.id, createAllowAllActor(), { force: true });
@@ -533,6 +562,7 @@ describe('core/entities/key/service', () => {
 
         it('deletes an unreferenced enc key without force', async () => {
             const [seeded] = repository.seed([buildKey({ use: JWKUse.ENCRYPTION, type: JWKType.OCT })]);
+
             repository.blobReferences = 0;
 
             await service.delete(seeded.id, createAllowAllActor());
@@ -545,10 +575,12 @@ describe('core/entities/key/service', () => {
 
         const buildActor = (actorId: string) => {
             const actor = createAllowAllActor();
+
             actor.identity = {
                 type: IdentityType.USER,
                 data: { id: actorId, name: 'admin' } as User,
             };
+
             return actor;
         };
 
@@ -576,7 +608,9 @@ describe('core/entities/key/service', () => {
             const entity = await service.create({ use: JWKUse.SIGNATURE, realmId }, buildActor(actorId));
 
             expect(eventService.recordCalls).toHaveLength(1);
+
             const [call] = eventService.recordCalls;
+
             expect(call).toMatchObject({
                 scope: EventScope.ENTITY,
                 name: EventName.CREATED,
@@ -596,7 +630,9 @@ describe('core/entities/key/service', () => {
                 use: JWKUse.SIGNATURE,
                 status: KeyStatus.ACTIVE,
             });
+
             const serialized = JSON.stringify(call);
+
             expect(serialized).not.toContain('decryptionKey');
             expect(serialized).not.toContain('encryptionKey');
             expect(serialized).not.toContain('certificate');
@@ -608,7 +644,9 @@ describe('core/entities/key/service', () => {
             await service.update(seeded.id, { status: KeyStatus.DISABLED }, buildActor(randomUUID()));
 
             expect(eventService.recordCalls).toHaveLength(1);
+
             const [call] = eventService.recordCalls;
+
             expect(call.name).toEqual(EventName.UPDATED);
             expect(call.data).toEqual({
                 name: 'primary',
@@ -629,12 +667,15 @@ describe('core/entities/key/service', () => {
 
         it('records a deleted event and flags a forced crypto-shred', async () => {
             const [seeded] = repository.seed([buildKey({ use: JWKUse.ENCRYPTION, type: JWKType.OCT })]);
+
             repository.blobReferences = 3;
 
             await service.delete(seeded.id, buildActor(randomUUID()), { force: true });
 
             expect(eventService.recordCalls).toHaveLength(1);
+
             const [call] = eventService.recordCalls;
+
             expect(call.name).toEqual(EventName.DELETED);
             expect(call.refId).toEqual(seeded.id);
             expect(call.data).toMatchObject({ use: JWKUse.ENCRYPTION, force: true });
@@ -661,7 +702,9 @@ describe('core/entities/key/service', () => {
         it('records nothing when the mutation fails', async () => {
             await expect(service.update(randomUUID(), { name: 'renamed' }, buildActor(randomUUID())))
                 .rejects.toThrow();
+
             const [seeded] = repository.seed([buildKey({ use: JWKUse.ENCRYPTION, type: JWKType.OCT })]);
+
             repository.blobReferences = 1;
             await expect(service.delete(seeded.id, buildActor(randomUUID())))
                 .rejects.toThrow();

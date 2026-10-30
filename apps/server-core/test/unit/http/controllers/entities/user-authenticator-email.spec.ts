@@ -45,18 +45,23 @@ describe('src/http/controllers/user-authenticator (email otp)', () => {
             password,
         });
         const bearer = new HTTPClient({ baseURL: suite.baseURL });
+
         bearer.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
 
         const enrolled = await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.EMAIL });
+
         expect(enrolled.data.kind).toEqual(UserAuthenticatorKind.EMAIL);
         expect(enrolled.data.confirmed).toBeTruthy();
 
         const challenge = await bearer.userAuthenticator.challenge();
+
         expect(challenge.required).toBeTruthy();
         expect(challenge.kinds).toContain(UserAuthenticatorKind.EMAIL);
 
         mailClient.clear();
+
         const send = await bearer.userAuthenticator.sendChallenge({ kind: UserAuthenticatorKind.EMAIL });
+
         expect(send.success).toBeTruthy();
         expect(mailClient.sent).toHaveLength(1);
         expect(mailClient.sent[0].to).toEqual(user.email);
@@ -67,6 +72,7 @@ describe('src/http/controllers/user-authenticator (email otp)', () => {
             kind: UserAuthenticatorKind.EMAIL,
             response: code,
         });
+
         expect(verified.verified).toBeTruthy();
     });
 });

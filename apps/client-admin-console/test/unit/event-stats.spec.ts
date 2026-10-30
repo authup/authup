@@ -51,6 +51,7 @@ function mountStats(handler: Handler) {
         handlers: {
             'GET /events/@stats': (request: { url: string }) => {
                 const url = decodeURIComponent(request.url);
+
                 requests.push(url);
 
                 return handler(url);
@@ -88,6 +89,7 @@ function mountStats(handler: Handler) {
 describe('src/composables/event-stats', () => {
     it('loads the default window scoped to the realm plus the global rows', async () => {
         const { stats, requests } = mountStats(() => answer(7, 'day', 3));
+
         await flushPromises();
 
         expect(requests).toHaveLength(1);
@@ -104,6 +106,7 @@ describe('src/composables/event-stats', () => {
         const { stats, requests } = mountStats((url) => (url.includes('bucket(createdAt,hour)') ?
             answer(1, 'hour', 9) :
             answer(7, 'day', 3)));
+
         await flushPromises();
 
         stats.window.value = '24h';
@@ -116,6 +119,7 @@ describe('src/composables/event-stats', () => {
 
     it('reloads when the realm changes', async () => {
         const { realmId, requests } = mountStats(() => answer(7, 'day', 3));
+
         await flushPromises();
 
         realmId.value = OTHER_REALM_ID;
@@ -129,12 +133,14 @@ describe('src/composables/event-stats', () => {
         let calls = 0;
         const { stats, errors } = mountStats(() => {
             calls += 1;
+
             if (calls > 1) {
                 throw new Error('down');
             }
 
             return answer(7, 'day', 3);
         });
+
         await flushPromises();
         expect(stats.response.value?.data[0].count).toEqual(3);
 
@@ -150,12 +156,14 @@ describe('src/composables/event-stats', () => {
         let calls = 0;
         const { stats, errors } = mountStats(() => {
             calls += 1;
+
             if (calls > 1) {
                 throw new Error('down');
             }
 
             return answer(7, 'day', 3);
         });
+
         await flushPromises();
 
         await stats.load();
@@ -170,6 +178,7 @@ describe('src/composables/event-stats', () => {
         const { stats } = mountStats(() => new Promise<EventStatsResponse>((resolve) => {
             pending.push(resolve);
         }));
+
         await flushPromises();
 
         stats.window.value = '24h';

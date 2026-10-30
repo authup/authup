@@ -146,12 +146,14 @@ function findPathRequests(httpClient: FakeClient) : FakeRequest[] {
 
 async function submit(entity: User, canManage: boolean) {
     const { wrapper, httpClient } = mountForm(entity, canManage);
+
     await flushPromises();
 
     wrapper.findComponent(AFormSubmit).vm.$emit('submit');
     await flushPromises();
 
     const request = findUpdateRequest(httpClient);
+
     expect(request).toBeDefined();
 
     return request!.body as Record<string, any>;
@@ -197,11 +199,13 @@ describe('AUserForm admin-only fields', () => {
 describe('AUserForm folder picker', () => {
     it('renders it for the realm of the user it edits', async () => {
         const { wrapper, httpClient } = mountForm(createEntity(), true);
+
         await flushPromises();
 
         expect(wrapper.findComponent(APathPicker).exists()).toBe(true);
 
         const requests = findPathRequests(httpClient);
+
         expect(requests.length).toBeGreaterThan(0);
         expect(decodeURIComponent(requests[0]!.url)).toContain('in(realmId,\'realm-1\')');
 
@@ -210,6 +214,7 @@ describe('AUserForm folder picker', () => {
 
     it('does not render or load it before a realm is known', async () => {
         const { wrapper, httpClient } = mountForm(undefined, true);
+
         await flushPromises();
 
         expect(wrapper.findComponent(APathPicker).exists()).toBe(false);

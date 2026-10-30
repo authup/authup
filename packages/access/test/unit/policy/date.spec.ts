@@ -28,6 +28,7 @@ describe('src/policy/date', () => {
             policy,
             definePolicyEvaluationContext({ data: new PolicyData({ [BuiltInPolicyType.DATE]: dateTime }) }),
         );
+
         expect(outcome.success).toBeTruthy();
 
         // march

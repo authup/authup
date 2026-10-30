@@ -57,6 +57,7 @@ describe('grant-authorize realm gate (layer 2)', () => {
         }))).data;
 
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
         await suite.client.clientScope.create({ scopeId: scope.id, clientId: clientB.id });
 
         codeIssuer = suite.container.resolve(OAuth2InjectionToken.AuthorizationCodeIssuer);

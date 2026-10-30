@@ -46,6 +46,7 @@ export function registerCorsMiddleware(router: IApp, input: CorsOptions | undefi
     };
 
     let trustedOrigin : string | undefined;
+
     try {
         trustedOrigin = new URL(ctx.baseURL).origin;
     } catch {
@@ -88,6 +89,7 @@ export function registerCorsMiddleware(router: IApp, input: CorsOptions | undefi
             origin === trustedOrigin;
 
         const response = handleCors(event, { ...options, credentials });
+
         if (response) {
             return response;
         }

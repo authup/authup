@@ -64,6 +64,7 @@ describe('src/http/controllers/token', () => {
         expect(response.url).toBeDefined();
 
         const url = new URL(response.url);
+
         expect(url.searchParams.get('access_token')).toBeFalsy();
         expect(url.searchParams.get('code')).toBeDefined();
         expect(url.searchParams.get('id_token')).toBeFalsy();
@@ -121,6 +122,7 @@ describe('src/http/controllers/token', () => {
 
     it('should reject an unknown response_type with a response_type issue', async () => {
         expect.assertions(2);
+
         try {
             await suite.client.authorize.confirm({
                 ...payload,
@@ -128,6 +130,7 @@ describe('src/http/controllers/token', () => {
             });
         } catch (e) {
             const { response } = (e as { response?: { status?: number, data?: { issues?: { path: string[] }[] } } });
+
             expect(response?.status).toEqual(400);
             expect(response?.data?.issues?.some(
                 (issue) => issue.path.includes('response_type'),
@@ -199,6 +202,7 @@ describe('src/http/controllers/token', () => {
 
         // Plan 082: the `web` system client is gone — new realms get none.
         const { data: webClients } = await suite.client.client.getMany({ filters: { name: 'web', realmId: realm.id } });
+
         expect(webClients).toHaveLength(0);
     });
 

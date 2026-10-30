@@ -69,6 +69,7 @@ export class PolicyAttributesValidator extends Container<Record<string, any>> {
             !hasOwnProperty(this.validators, data.type)
         ) {
             const options = Object.keys(data).filter((key) => !POLICY_KEYS.has(key));
+
             if (options.length > 0) {
                 throw new ValidationError(
                     `No validator is registered for policy type \`${String(data.type)}\`, so it accepts no options (${options.join(', ')}).`,

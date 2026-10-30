@@ -91,6 +91,7 @@ export class ConsentRepositoryAdapter implements IConsentRepository {
 
     async findAllBySubjectClient(clientId: string, owner: ConsentOwner): Promise<Consent[]> {
         const qb = this.repository.createQueryBuilder('consent');
+
         qb.where('consent.clientId = :clientId AND consent.sub = :sub AND consent.subKind = :subKind', {
             clientId,
             sub: owner.sub,

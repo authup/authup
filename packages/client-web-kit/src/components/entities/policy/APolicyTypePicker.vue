@@ -34,6 +34,7 @@ export default defineComponent({
 
         const buildLabel = (type: string) => {
             const key = POLICY_TYPE_TRANSLATION_KEYS[type as keyof typeof POLICY_TYPE_TRANSLATION_KEYS];
+
             if (key) {
                 return translationsClient[key];
             }

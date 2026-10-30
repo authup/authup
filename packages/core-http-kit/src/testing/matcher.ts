@@ -15,11 +15,13 @@ export type RouteMatch = {
 function matchPath(pattern: string, path: string) : Record<string, string> | null {
     const patternSegments = pattern.split('/').filter(Boolean);
     const pathSegments = path.split('/').filter(Boolean);
+
     if (patternSegments.length !== pathSegments.length) {
         return null;
     }
 
     const params : Record<string, string> = {};
+
     for (const [i, patternSegment] of patternSegments.entries()) {
         if (patternSegment.startsWith(':')) {
             params[patternSegment.slice(1)] = pathSegments[i];
@@ -41,22 +43,22 @@ export function matchRoute(
     let catchAll : RouteMatch | null = null;
 
     const keys = Object.keys(handlers);
+
     for (const key of keys) {
         if (key === '*') {
             catchAll = { handler: handlers[key], params: {} };
+
             continue;
         }
 
         const separatorIndex = key.indexOf(' ');
-        if (separatorIndex === -1) {
-            continue;
-        }
 
-        if (key.slice(0, separatorIndex).toUpperCase() !== method) {
+        if ((separatorIndex === -1) || (key.slice(0, separatorIndex).toUpperCase() !== method)) {
             continue;
         }
 
         const params = matchPath(key.slice(separatorIndex + 1), path);
+
         if (params) {
             return { handler: handlers[key], params };
         }

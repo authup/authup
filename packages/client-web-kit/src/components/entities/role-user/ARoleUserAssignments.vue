@@ -15,6 +15,7 @@ export default defineComponent({
     props: { entityId: { type: String, required: true } },
     setup(props, { slots }) {
         const forwardedSlots = computed(() => Object.fromEntries(Object.entries(slots).filter(([name]) => name !== 'itemActions')));
+
         return { forwardedSlots };
     },
 });

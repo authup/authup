@@ -96,9 +96,11 @@ export default defineComponent({
             if (forcedKind.value && forcedKind.value !== kind) {
                 return false;
             }
+
             if (managingOther.value && kind !== UserAuthenticatorKind.EMAIL) {
                 return false;
             }
+
             return true;
         };
 
@@ -151,6 +153,7 @@ export default defineComponent({
                 )
             ) {
                 emit('done', entity);
+
                 return;
             }
 
@@ -159,13 +162,16 @@ export default defineComponent({
                     filters: { kind: UserAuthenticatorKind.RECOVERY },
                     pagination: { limit: 1 },
                 });
+
                 if (meta.total > 0) {
                     emit('done', entity);
+
                     return;
                 }
             } catch {
                 // fail open — never block a completed enrollment on the nudge
                 emit('done', entity);
+
                 return;
             }
 
@@ -178,6 +184,7 @@ export default defineComponent({
             }
 
             const entity = recoveryNudge.value;
+
             recoveryNudge.value = null;
             emit('done', entity);
         };
@@ -189,6 +196,7 @@ export default defineComponent({
 
             busy.value = true;
             error.value = null;
+
             try {
                 // deliberately NOT enroll(): the nudge defers every `done`
                 // until the codes were acknowledged (close), so the parent
@@ -212,6 +220,7 @@ export default defineComponent({
 
             if (recoveryNudge.value) {
                 const entity = recoveryNudge.value;
+
                 recoveryNudge.value = null;
                 emit('done', entity);
             }
@@ -226,6 +235,7 @@ export default defineComponent({
 
             busy.value = true;
             error.value = null;
+
             try {
                 const response = await apiClient.userAuthenticator.enroll(props.userId, { kind });
 
@@ -235,6 +245,7 @@ export default defineComponent({
                     if (!response.meta.webauthn) {
                         throw new Error('The server did not return WebAuthn registration options.');
                     }
+
                     // the http-kit response type is intentionally framework-agnostic
                     // (Record<string, unknown>); assert the browser lib's shape here.
                     const optionsJSON = response.meta.webauthn as unknown as PublicKeyCredentialCreationOptionsJSON;
@@ -244,7 +255,9 @@ export default defineComponent({
                         response.data.id,
                         { code: JSON.stringify(attestation) },
                     );
+
                     await finishEnrollment(confirmed.data, kind);
+
                     return;
                 }
 
@@ -252,6 +265,7 @@ export default defineComponent({
                 // just signal completion (via the recovery nudge).
                 if (kind === UserAuthenticatorKind.EMAIL) {
                     await finishEnrollment(response.data, kind);
+
                     return;
                 }
 
@@ -277,12 +291,14 @@ export default defineComponent({
 
             busy.value = true;
             error.value = null;
+
             try {
                 const entity = await apiClient.userAuthenticator.confirm(
                     props.userId,
                     enrollment.value.data.id,
                     { code: confirmCode.value.trim() },
                 );
+
                 emit('done', entity.data);
                 reset();
             } catch (e) {
@@ -301,6 +317,7 @@ export default defineComponent({
             const blob = new Blob([enrollment.value.meta.codes.join('\n')], { type: 'text/plain' });
             const url = window.URL.createObjectURL(blob);
             const anchor = window.document.createElement('a');
+
             anchor.href = url;
             anchor.download = 'authup-recovery-codes.txt';
             anchor.click();

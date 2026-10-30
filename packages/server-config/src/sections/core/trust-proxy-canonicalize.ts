@@ -24,8 +24,10 @@ const INTEGER = /^\d+$/;
  */
 export function canonicalizeTrustProxy(raw: string): boolean | number | string {
     const normalized = raw.trim();
+
     if (INTEGER.test(normalized)) {
         const hops = Number.parseInt(normalized, 10);
+
         // The typed surface rejects an out-of-range hop count (zod's int() is
         // safe-integer bounded), so the string surface must not smuggle one
         // past it — canonicalization runs AFTER validation, and parseInt
@@ -39,9 +41,11 @@ export function canonicalizeTrustProxy(raw: string): boolean | number | string {
     }
 
     const lowered = normalized.toLowerCase();
+
     if (BOOLEAN_TRUE_WORDS.has(lowered)) {
         return true;
     }
+
     if (BOOLEAN_FALSE_WORDS.has(lowered)) {
         return false;
     }

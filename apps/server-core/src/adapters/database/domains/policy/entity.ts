@@ -8,12 +8,12 @@
 import {
     Column,
     CreateDateColumn,
-    Entity, 
+    Entity,
     Index,
     JoinColumn,
     ManyToOne,
-    PrimaryGeneratedColumn, 
-    Tree, 
+    PrimaryGeneratedColumn,
+    Tree,
     TreeChildren,
     TreeParent,
     Unique,
@@ -43,43 +43,43 @@ export class PolicyEntity implements Policy {
 
     @Index()
     @Column({
-        name: 'built_in', 
-        type: 'boolean', 
-        default: false, 
+        name: 'built_in',
+        type: 'boolean',
+        default: false,
     })
     builtIn: boolean;
 
     @Index()
     @Column({
         type: 'varchar',
-        length: 64, 
+        length: 64,
     })
     type: string;
 
     @Column({
         type: 'varchar',
-        length: 128, 
+        length: 128,
     })
     name: string;
 
     @Index()
     @Column({
-        name: 'display_name', 
-        type: 'varchar', 
-        length: 256, 
-        nullable: true, 
+        name: 'display_name',
+        type: 'varchar',
+        length: 256,
+        nullable: true,
     })
     displayName: string | null;
 
     @Column({
         type: 'text',
-        nullable: true, 
+        nullable: true,
     })
     description: string | null;
 
     @Column({
         type: 'boolean',
-        default: false, 
+        default: false,
     })
     invert: boolean;
 
@@ -100,7 +100,7 @@ export class PolicyEntity implements Policy {
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'realm_id' })
     realm: Realm | null;

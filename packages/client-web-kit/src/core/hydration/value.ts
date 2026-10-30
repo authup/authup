@@ -30,6 +30,7 @@ export function isServerRuntime() : boolean {
  */
 export function useHydratedValue<T>(ctx: HydratedValueContext<T>) : void {
     const store = injectHydrationStore();
+
     if (!store) {
         return;
     }
@@ -47,6 +48,7 @@ export function useHydratedValue<T>(ctx: HydratedValueContext<T>) : void {
             // renderer, and Node terminates the process over it.
             try {
                 const value = await ctx.resolve();
+
                 if (typeof value === 'undefined') {
                     return;
                 }
@@ -62,6 +64,7 @@ export function useHydratedValue<T>(ctx: HydratedValueContext<T>) : void {
     }
 
     const value = store.get<T>(ctx.key);
+
     if (typeof value !== 'undefined') {
         ctx.apply(value);
     }

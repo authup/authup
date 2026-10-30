@@ -44,7 +44,7 @@ npm install @authup/server-console-kit routup
 
 `routup` is a peer dependency: the helpers take a routup `IAppEvent` and your service owns the `App`.
 
-The package is ESM only and needs Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`.
+The package is ESM only and needs Node.js `>=26.0.0`.
 
 ## Usage
 

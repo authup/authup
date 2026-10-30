@@ -30,22 +30,26 @@ function indexByPath<T>(
     slots: Map<string, Slot>,
 ) : void {
     const keys = Object.keys(schema) as (keyof T)[];
+
     for (const key of keys) {
         const entry = schema[key];
         const name = key as string;
 
         if (isSchemaEntryInput(entry)) {
             slots.set(entry.path || name, {
-                entry, 
-                container: data, 
-                key: name, 
+                entry,
+                container: data,
+                key: name,
             });
+
             continue;
         }
 
         if (isSchemaInput(entry)) {
             const nested = (data[name] ??= {}) as Record<string, unknown>;
+
             indexByPath<any>(entry, nested, slots);
+
             continue;
         }
 
@@ -79,6 +83,7 @@ export function resolveSchemaData<T>(
     const output = { ...data } as Record<string, unknown>;
 
     const slots = new Map<string, Slot>();
+
     indexByPath(schema, output, slots);
 
     const resolved = new Set<string>();
@@ -86,6 +91,7 @@ export function resolveSchemaData<T>(
 
     const get = (path: string) : unknown => {
         const slot = slots.get(path);
+
         if (!slot) {
             throw new Error(
                 `The config key "${path}" is not part of this registry, so a resolver cannot read it. ` +
@@ -104,6 +110,7 @@ export function resolveSchemaData<T>(
         }
 
         visiting.push(path);
+
         try {
             if (slot.entry.resolve) {
                 slot.container[slot.key] = slot.entry.resolve({

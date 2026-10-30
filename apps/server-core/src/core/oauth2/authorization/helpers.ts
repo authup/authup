@@ -55,16 +55,19 @@ export function deriveAmrAcr(
     }
 
     const amr : string[] = [];
+
     switch (session.authMethod) {
         case SessionAuthMethod.PASSWORD:
         case SessionAuthMethod.LDAP: {
             // LDAP is still a password factor for amr — the finer
             // distinction lives in the authup-local authMethod.
             amr.push(OAuth2AuthenticationMethodReference.PASSWORD);
+
             break;
         }
         case SessionAuthMethod.EXTERNAL: {
             amr.push(OAuth2AuthenticationMethodReference.EXTERNAL);
+
             break;
         }
         default: {
@@ -99,6 +102,7 @@ export function generateOAuth2CodeVerifier() {
 
     let codeVerifier = '';
     const randomValues = new Uint8Array(length);
+
     crypto.getRandomValues(randomValues);
 
     for (let i = 0; i < length; i++) {
@@ -109,16 +113,7 @@ export function generateOAuth2CodeVerifier() {
 }
 
 export function base64URLEncode(arrayBuffer: ArrayBuffer) {
-    // Convert the ArrayBuffer to string using Uint8 array.
-    // btoa takes chars from 0-255 and base64 encodes.
-    // Then convert the base64 encoded to base64url encoded.
-    // (replace + with -, replace / with _, trim trailing =)
-    const charCode = Array.from(new Uint8Array(arrayBuffer));
-
-    return btoa(String.fromCharCode.apply(null, charCode))
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, '');
+    return new Uint8Array(arrayBuffer).toBase64({ alphabet: 'base64url', omitPadding: true });
 }
 
 // OIDC Core §3.1.3.6: at_hash / c_hash use the hash algorithm of the id_token's
@@ -141,6 +136,7 @@ export async function buildOAuth2TokenHash(
     const digest = alg ?
         TOKEN_HASH_DIGESTS[alg.slice(-3)] :
         TOKEN_HASH_DIGESTS['256'];
+
     if (!digest) {
         throw JWTError.headerPropertyInvalid('alg');
     }

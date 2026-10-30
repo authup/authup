@@ -19,6 +19,7 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
     const client = buildHTTPClient(options);
 
     const authenticationHook = injectHTTPClientAuthenticationHook(app);
+
     authenticationHook.attach(client);
 
     provideHTTPClient(client, app);

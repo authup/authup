@@ -17,7 +17,9 @@ export class FakeUserIdentityRepository implements IUserIdentityRepository {
             id: user.id || randomUUID(),
             ...user,
         } as User;
+
         this.users.set(entity.id, entity);
+
         return entity;
     }
 

@@ -16,11 +16,11 @@ import {
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { ClientRoleService } from '../../../../../src/core/entities/client-role/service.ts';
-import { 
-    FakeEntityRepository, 
-    createAllowAllActor, 
-    createDenyAllActor, 
-    createMasterRealmActor, 
+import {
+    FakeEntityRepository,
+    createAllowAllActor,
+    createDenyAllActor,
+    createMasterRealmActor,
 } from '@authup/server-test-kit';
 import { FakeIdentityPermissionProvider } from '../../helpers/fake-identity-permission-provider.ts';
 
@@ -44,6 +44,7 @@ describe('core/entities/client-role/service', () => {
     describe('getMany', () => {
         it('should call preCheckOneOf with correct permissions', async () => {
             const actor = createAllowAllActor();
+
             await service.getMany({}, actor);
             expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
@@ -63,6 +64,7 @@ describe('core/entities/client-role/service', () => {
         it('should return entity by id', async () => {
             const entity = repository.seed({});
             const result = await service.getOne(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
         });
 
@@ -87,6 +89,7 @@ describe('core/entities/client-role/service', () => {
             };
 
             const result = await service.create(data, createAllowAllActor());
+
             expect(result.id).toBeDefined();
             expect(result.clientRealmId).toBe(clientRealmId);
             expect(result.roleRealmId).toBe(roleRealmId);
@@ -94,9 +97,10 @@ describe('core/entities/client-role/service', () => {
 
         it('should call preCheck with CLIENT_ROLE_CREATE', async () => {
             const actor = createAllowAllActor();
+
             await service.create({
                 clientId: randomUUID(),
-                roleId: randomUUID(), 
+                roleId: randomUUID(),
             }, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.CLIENT_ROLE_CREATE });
         });
@@ -130,7 +134,9 @@ describe('core/entities/client-role/service', () => {
 
         it('should throw ForbiddenError when actor does not own role permissions (superset check)', async () => {
             const identityPermissionProviderDeny = new FakeIdentityPermissionProvider();
+
             identityPermissionProviderDeny.setSuperset(false);
+
             const svc = new ClientRoleService({ repository, identityPermissionProvider: identityPermissionProviderDeny });
 
             repository.onValidateJoinColumns((data: any) => {
@@ -162,12 +168,14 @@ describe('core/entities/client-role/service', () => {
         it('should delete an existing entity', async () => {
             const entity = repository.seed({});
             const result = await service.delete(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
         });
 
         it('should call preCheck with CLIENT_ROLE_DELETE', async () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
+
             await service.delete(entity.id, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.CLIENT_ROLE_DELETE });
         });

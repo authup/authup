@@ -121,6 +121,7 @@ describe('AIdentityProviderOAuth2Form', () => {
         await flushPromises();
 
         const nameInput = wrapper.findComponent(ANameInput);
+
         expect(nameInput.exists()).toBe(true);
         expect(nameInput.props('modelValue')).toEqual('old-name');
 
@@ -131,6 +132,7 @@ describe('AIdentityProviderOAuth2Form', () => {
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
+
         expect(request).toBeDefined();
         expect(request!.body).toMatchObject({ name: 'new-name' });
 
@@ -138,6 +140,7 @@ describe('AIdentityProviderOAuth2Form', () => {
         // the payload (a stale `name` copied into the client/endpoint
         // sub-forms previously clobbered the edited one on spread).
         const body = request!.body as Record<string, any>;
+
         expect(body).not.toHaveProperty('id');
         expect(body).not.toHaveProperty('realm');
         expect(body).not.toHaveProperty('createdAt');
@@ -146,6 +149,7 @@ describe('AIdentityProviderOAuth2Form', () => {
 
     it('should submit with an empty scope (blank optional emitted as null)', async () => {
         const entity = createEntity();
+
         delete (entity as Partial<OAuth2IdentityProvider>).scope;
 
         const { wrapper, httpClient } = mountForm(entity);
@@ -156,6 +160,7 @@ describe('AIdentityProviderOAuth2Form', () => {
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
+
         expect(request).toBeDefined();
         expect((request!.body as Record<string, any>).scope ?? null).toBeNull();
     });
@@ -173,12 +178,14 @@ describe('AIdentityProviderOAuth2Form', () => {
         await flushPromises();
 
         const body = findUpdateRequest(httpClient)!.body as Record<string, any>;
+
         expect(body.requiredAmr ?? null).toBeNull();
         expect(body.requiredAcr ?? null).toBeNull();
     });
 
     it('should hydrate and submit the assurance allow-lists', async () => {
         const entity = createEntity();
+
         (entity as OAuth2IdentityProvider).requiredAmr = 'mfa';
 
         const { wrapper, httpClient } = mountForm(entity);
@@ -187,6 +194,7 @@ describe('AIdentityProviderOAuth2Form', () => {
 
         const inputs = wrapper.findAllComponents(VCFormInput);
         const amrInput = inputs.find((input) => input.props('modelValue') === 'mfa');
+
         expect(amrInput).toBeDefined();
 
         amrInput!.vm.$emit('update:modelValue', 'mfa hwk');
@@ -208,12 +216,14 @@ describe('AIdentityProviderOAuth2Form', () => {
         await flushPromises();
 
         const body = findUpdateRequest(httpClient)!.body as Record<string, any>;
+
         expect(body.enrollmentEnabled).toBe(true);
         expect(body.enrollmentPolicyId ?? null).toBeNull();
     });
 
     it('should hydrate the enrollment gate and submit a re-enabled enrollment with its policy', async () => {
         const entity = createEntity();
+
         (entity as OAuth2IdentityProvider).enrollmentEnabled = false;
         (entity as OAuth2IdentityProvider).enrollmentPolicyId = '1b2c3d4e-5f60-4172-8394-a5b6c7d8e9f0';
 
@@ -225,9 +235,11 @@ describe('AIdentityProviderOAuth2Form', () => {
         // enrollment gate
         const toggles = wrapper.findAllComponents(VCFormSwitch);
         const enrollmentToggle = toggles.find((toggle) => toggle.props('modelValue') === false);
+
         expect(enrollmentToggle).toBeDefined();
 
         const picker = wrapper.findComponent({ name: 'APolicyPicker' });
+
         expect(picker.props('value')).toEqual('1b2c3d4e-5f60-4172-8394-a5b6c7d8e9f0');
         expect(picker.props('query')).toEqual(defineQuery({ filters: { realmId: ['realm-1', null] } }));
 
@@ -251,11 +263,13 @@ describe('AIdentityProviderOAuth2Form', () => {
 
         // one list input per scope token
         const scopeList = wrapper.findComponent(AFormInputList);
+
         expect(scopeList.exists()).toBe(true);
 
         const inputValues = wrapper
             .findAll('input')
             .map((i) => (i.element as HTMLInputElement).value);
+
         expect(inputValues).toContain('openid');
         expect(inputValues).toContain('profile');
 
@@ -266,6 +280,7 @@ describe('AIdentityProviderOAuth2Form', () => {
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
+
         expect(request).toBeDefined();
         expect(request!.body).toMatchObject({ scope: 'openid profile custom' });
     });

@@ -6,20 +6,20 @@
  */
 
 import type {
-    DataSource, 
-    DeepPartial, 
-    EntityManager, 
-    FindManyOptions, 
+    DataSource,
+    DeepPartial,
+    EntityManager,
+    FindManyOptions,
     FindOneOptions,
 } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
 import type { ObjectLiteral } from '@authup/kit';
 import { ExtraAttributesRepositoryAdapter } from './adapter.ts';
 import type {
-    EARepositoryEntityBase, 
-    EARepositoryFindOptions, 
-    EARepositoryOptions, 
-    EARepositorySaveOptions, 
+    EARepositoryEntityBase,
+    EARepositoryFindOptions,
+    EARepositoryOptions,
+    EARepositorySaveOptions,
     IEARepository,
 } from './types.ts';
 
@@ -66,20 +66,25 @@ export class EARepository<
         if (Array.isArray(entityLike)) {
             return super.create(entityLike).map((entity, i) => {
                 this.preserveExtraAttributes(entity, entityLike[i]);
+
                 return entity;
             });
         }
 
         const entity = super.create(entityLike);
+
         this.preserveExtraAttributes(entity, entityLike);
+
         return entity;
     }
 
     private preserveExtraAttributes(entity: T, source: DeepPartial<T>): void {
         const columns = new Set<string>();
+
         for (const col of this.metadata.columns) {
             columns.add(col.propertyName);
         }
+
         for (const rel of this.metadata.relations) {
             columns.add(rel.propertyName);
         }

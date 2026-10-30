@@ -35,6 +35,7 @@ export default defineComponent({
         // the IdP origin, or another origin under standalone hosting), so
         // this is a full navigation rather than a router push.
         const url = useAccountConsoleURL(PATH_MAP.get(key) ?? '/');
+
         onMounted(() => {
             window.location.replace(url);
         });

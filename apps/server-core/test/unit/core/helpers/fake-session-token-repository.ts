@@ -56,11 +56,13 @@ export class FakeSessionTokenRepository implements ISessionTokenRepository {
 
     async findOneById(id: string): Promise<SessionToken | null> {
         this.findOneByIdCalls.push(id);
+
         return this.rows.get(id) ?? null;
     }
 
     async findBySessionId(sessionId: string): Promise<SessionToken[]> {
         this.findBySessionIdCalls.push(sessionId);
+
         return this.rows.values().toArray().filter((row) => row.sessionId === sessionId);
     }
 
@@ -68,6 +70,7 @@ export class FakeSessionTokenRepository implements ISessionTokenRepository {
         this.markRefreshConsumedCalls.push({ id, at });
 
         const row = this.rows.get(id);
+
         if (
             !row ||
             row.kind !== 'refresh' ||
@@ -78,16 +81,19 @@ export class FakeSessionTokenRepository implements ISessionTokenRepository {
         }
 
         row.consumedAt = at;
+
         return true;
     }
 
     async hasConsumedChild(parentId: string): Promise<boolean> {
         this.hasConsumedChildCalls.push(parentId);
+
         for (const row of this.rows.values()) {
             if (row.parentId === parentId && row.consumedAt !== null) {
                 return true;
             }
         }
+
         return false;
     }
 
@@ -95,6 +101,7 @@ export class FakeSessionTokenRepository implements ISessionTokenRepository {
         this.revokeByIdCalls.push({ id, at });
 
         const row = this.rows.get(id);
+
         if (row && row.revokedAt === null) {
             row.revokedAt = at;
         }
@@ -104,9 +111,11 @@ export class FakeSessionTokenRepository implements ISessionTokenRepository {
         this.revokeBySessionIdCalls.push({ sessionId, at });
 
         const refs: SessionTokenRef[] = [];
+
         for (const row of this.rows.values()) {
             if (row.sessionId === sessionId) {
                 refs.push({ id: row.id, expiresAt: row.expiresAt });
+
                 if (row.revokedAt === null) {
                     row.revokedAt = at;
                 }
@@ -138,6 +147,7 @@ export class FakeSessionTokenRepository implements ISessionTokenRepository {
         this.deleteExpiredCalls.push(before);
 
         let count = 0;
+
         for (const [id, row] of this.rows.entries()) {
             if (row.expiresAt < before) {
                 this.rows.delete(id);

@@ -30,7 +30,9 @@ describe('session', () => {
 
     function bearer(token: string): HTTPClient {
         const client = new HTTPClient({ baseURL: suite.baseURL });
+
         client.setAuthorizationHeader({ type: 'Bearer', token });
+
         return client;
     }
 
@@ -45,15 +47,18 @@ describe('session', () => {
         const currentId = introspect.session_id!;
 
         const list = await client.session.getMany({ filters: { userId: adminId } });
+
         expect(list.data.length).toBeGreaterThanOrEqual(2);
         expect(list.data.every((s) => s.sub === adminId)).toBe(true);
 
         // revoke the OTHER (non-current) admin session
         const other = list.data.find((s) => s.id !== currentId);
+
         expect(other).toBeDefined();
         await client.session.delete(other!.id);
 
         const after = await client.session.getMany({ filters: { userId: adminId } });
+
         expect(after.data.some((s) => s.id === other!.id)).toBe(false);
         // the current session is untouched
         expect(after.data.some((s) => s.id === currentId)).toBe(true);
@@ -63,6 +68,7 @@ describe('session', () => {
     it('revokes every session of the actor except the current one', async () => {
         await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
         await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
+
         const current = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
 
         const client = bearer(current.access_token);
@@ -75,6 +81,7 @@ describe('session', () => {
         // only the current admin session remains
         const after = await client.session.getMany({ filters: { userId: adminId } });
         const own = after.data.filter((s) => s.sub === adminId);
+
         expect(own).toHaveLength(1);
         expect(own[0].id).toEqual(currentId);
     });
@@ -82,10 +89,12 @@ describe('session', () => {
     it('narrows the self-service revoke by a non-target filter (#3642)', async () => {
         const password = 'session-narrow-user-pw';
         const fakeUser = createFakeUser({ password });
+
         await suite.client.user.create(fakeUser);
 
         await suite.client.token.createWithPassword({ username: fakeUser.name, password });
         await suite.client.token.createWithPassword({ username: fakeUser.name, password });
+
         const current = await suite.client.token.createWithPassword({ username: fakeUser.name, password });
 
         const client = bearer(current.access_token);
@@ -94,22 +103,26 @@ describe('session', () => {
 
         const revoke = async (filter: string) => {
             const response = await httpRequest(suite, 'DELETE', `/sessions?${filter}`, { headers });
+
             return { status: response.status, body: await response.json() };
         };
 
         // every session expires in the future, so a ceiling in the past
         // selects none of them: nothing may be revoked
         const none = await revoke(`filter[expiresAt]=${encodeURIComponent('<')}${past}`);
+
         expect(none).toEqual({ status: 202, body: { count: 0 } });
         expect((await client.session.getMany()).data).toHaveLength(3);
 
         // a filter the schema would drop is refused rather than widened
         const refused = await revoke('filter[foobar]=x');
+
         expect(refused.status).toEqual(400);
         expect((await client.session.getMany()).data).toHaveLength(3);
 
         // a floor in the past selects them all, and the current one survives
         const all = await revoke(`filter[expiresAt]=${encodeURIComponent('>')}${past}`);
+
         expect(all).toEqual({ status: 202, body: { count: 2 } });
         expect((await client.session.getMany()).data).toHaveLength(1);
     });
@@ -117,6 +130,7 @@ describe('session', () => {
     it('scopes a non-privileged user to its own sessions', async () => {
         const password = 'session-self-user-pw';
         const fakeUser = createFakeUser({ password });
+
         await suite.client.user.create(fakeUser);
 
         const login = await suite.client.token.createWithPassword({
@@ -128,6 +142,7 @@ describe('session', () => {
         const introspect = await client.token.introspect({ token: login.access_token }, { authorizationHeaderInherit: true });
 
         const list = await client.session.getMany();
+
         // self-service: only the user's own sessions, never anyone else's
         expect(list.data.length).toBeGreaterThanOrEqual(1);
         expect(list.data.every((s) => s.sub === introspect.sub)).toBe(true);
@@ -146,13 +161,16 @@ describe('session', () => {
         await suite.client.token.createWithPassword({ username: fakeUser.name, password });
 
         const before = await suite.client.session.getMany({ filters: { userId: user.id } });
+
         expect(before.data.length).toBeGreaterThanOrEqual(2);
 
         const result = await suite.client.session.deleteMany({ filters: { userId: user.id } });
+
         expect(result.count).toBeGreaterThanOrEqual(2);
 
         // every session of the target user is gone
         const after = await suite.client.session.getMany({ filters: { userId: user.id } });
+
         expect(after.data).toHaveLength(0);
     });
 
@@ -167,10 +185,12 @@ describe('session', () => {
         await suite.client.token.createWithPassword({ username: second.name, password });
 
         const result = await suite.client.session.deleteMany({ filters: { userId: [userA.id, userB.id] } });
+
         expect(result.count).toBeGreaterThanOrEqual(2);
 
         const afterA = await suite.client.session.getMany({ filters: { userId: userA.id } });
         const afterB = await suite.client.session.getMany({ filters: { userId: userB.id } });
+
         expect(afterA.data).toHaveLength(0);
         expect(afterB.data).toHaveLength(0);
     });
@@ -195,6 +215,7 @@ describe('session', () => {
     it('denies a non-privileged user from force-logging-out another user', async () => {
         const password = 'session-nonpriv-pw';
         const fakeUser = createFakeUser({ password });
+
         await suite.client.user.create(fakeUser);
 
         const login = await suite.client.token.createWithPassword({ username: fakeUser.name, password });
@@ -208,6 +229,7 @@ describe('session', () => {
 
         // the no-arg self path is unaffected
         const result = await client.session.deleteMany();
+
         expect(result.count).toBeGreaterThanOrEqual(0);
     });
 });

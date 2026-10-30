@@ -26,10 +26,12 @@ describe('src/domains/entities/path', () => {
         });
 
         const created = await client.path.create({ name: 'berlin', parentId: 'p0' });
+
         expect(created.data.id).toBe('p1');
         expect(created.data.parentId).toBe('p0');
 
         const { data } = await client.path.getOne('p1');
+
         expect(data.path).toBe('sales/berlin');
 
         expect(client.requests).toHaveLength(2);

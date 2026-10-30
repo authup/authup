@@ -65,6 +65,7 @@ export function useToast() {
         ) {
             if (isObject(el)) {
                 showImpl(el as ToastShowOptions);
+
                 return;
             }
 

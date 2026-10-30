@@ -22,6 +22,7 @@ function buildHandlers(recoveryTotal: number) {
     return {
         'POST /users/:id/authenticators': (req: { body?: unknown }) => {
             const body = (req.body ?? {}) as Record<string, any>;
+
             if (body.kind === 'recovery') {
                 return {
                     data: {
@@ -56,6 +57,7 @@ describe('components/entities/user-authenticator/AUserAuthenticatorEnroll', () =
     // generate them before the enrollment completes.
     it('should nudge for recovery codes after an email enrollment and defer done until skip', async () => {
         const { wrapper } = mountKitComponent(AUserAuthenticatorEnroll, {}, buildHandlers(0));
+
         await flushPromises();
 
         await findButton(wrapper, 'Email code')!.trigger('click');
@@ -70,12 +72,14 @@ describe('components/entities/user-authenticator/AUserAuthenticatorEnroll', () =
         await flushPromises();
 
         const done = wrapper.emitted('done');
+
         expect(done).toBeTruthy();
         expect(done![0][0]).toMatchObject({ id: 'email-1', kind: 'email' });
     });
 
     it('should generate codes from the nudge and emit done once acknowledged', async () => {
         const { wrapper, httpClient } = mountKitComponent(AUserAuthenticatorEnroll, {}, buildHandlers(0));
+
         await flushPromises();
 
         await findButton(wrapper, 'Email code')!.trigger('click');
@@ -93,18 +97,21 @@ describe('components/entities/user-authenticator/AUserAuthenticatorEnroll', () =
                 request.url.includes('authenticators') &&
                 (request.body as Record<string, any>)?.kind === 'recovery',
         );
+
         expect(recoveryEnroll).toBeDefined();
 
         await findButton(wrapper, 'Close')!.trigger('click');
         await flushPromises();
 
         const done = wrapper.emitted('done');
+
         expect(done).toBeTruthy();
         expect(done![0][0]).toMatchObject({ id: 'email-1', kind: 'email' });
     });
 
     it('should not nudge when recovery codes already exist', async () => {
         const { wrapper } = mountKitComponent(AUserAuthenticatorEnroll, {}, buildHandlers(1));
+
         await flushPromises();
 
         await findButton(wrapper, 'Email code')!.trigger('click');
@@ -120,6 +127,7 @@ describe('components/entities/user-authenticator/AUserAuthenticatorEnroll', () =
             { userId: 'user-2' },
             buildHandlers(0),
         );
+
         await flushPromises();
 
         await findButton(wrapper, 'Email code')!.trigger('click');

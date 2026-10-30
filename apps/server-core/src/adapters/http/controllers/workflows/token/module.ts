@@ -19,11 +19,11 @@ import {
     deserializeOAuth2Scope,
     isJWTError,
 } from '@authup/specs';
-import { 
-    ClientAuthMethod, 
-    IdentityType, 
-    PermissionName, 
-    ScopeName, 
+import {
+    ClientAuthMethod,
+    IdentityType,
+    PermissionName,
+    ScopeName,
 } from '@authup/core-kit';
 import { reachesRecord } from '@authup/access';
 import { EntityNotFoundError } from '@authup/errors';
@@ -260,8 +260,10 @@ export class TokenController {
             // every token with both. Derived BEFORE the permission read so a
             // dead token never pays for one.
             let active : boolean;
+
             if (payload.jti && typeof payload.exp === 'number') {
                 const isInactive = await this.tokenVerifier.isInactive(payload.jti);
+
                 active = !isInactive && payload.exp * 1000 > Date.now();
             } else {
                 active = false;
@@ -275,6 +277,7 @@ export class TokenController {
                 const session = payload.session_id ?
                     await this.sessionManager.findOneById(payload.session_id) :
                     null;
+
                 active = !!session && isTokenSession(session, payload);
             }
 
@@ -313,7 +316,9 @@ export class TokenController {
                     ...subject.claims,
                     active: false,
                 };
+
                 delete response.permissions;
+
                 return response;
             }
 
@@ -367,8 +372,10 @@ export class TokenController {
         }
 
         const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);
+
         if (!clientId) {
             useRequestIdentityOrFail(event);
+
             return;
         }
 
@@ -380,6 +387,7 @@ export class TokenController {
             readRealmHint(body),
             certificateEvidence,
         );
+
         if (client.authMethod === ClientAuthMethod.NONE) {
             throw OAuth2ClientError.invalid();
         }
@@ -409,6 +417,7 @@ export class TokenController {
         payload: OAuth2TokenPayload,
     ) : Promise<boolean> {
         const identity = useRequestIdentity(event);
+
         if (!identity) {
             return false;
         }
@@ -438,6 +447,7 @@ export class TokenController {
             name: PermissionName.TOKEN_INTROSPECT,
             realm: payload.realm_id || null,
         });
+
         if (!allowed) {
             this.logger?.info(
                 `introspection denied: ${identity.type} ${identity.id} may not introspect the presented token`,
@@ -488,6 +498,7 @@ export class TokenController {
             const session = payload.session_id ?
                 await this.sessionManager.findOneById(payload.session_id) :
                 null;
+
             if (session && isTokenSession(session, payload)) {
                 await this.tokenRevoker.revoke(payload);
             }
@@ -496,6 +507,7 @@ export class TokenController {
             // 202 - within the 2xx family, so a client reading the class was
             // unaffected, but not the status the spec asks for.
             event.response.status = 200;
+
             return null;
         } catch (e) {
             // Same clause, the other half: "invalid tokens do not cause an
@@ -506,6 +518,7 @@ export class TokenController {
             // are indistinguishable.
             if (isJWTError(e)) {
                 event.response.status = 200;
+
                 return null;
             }
 
@@ -520,11 +533,13 @@ export class TokenController {
         await this.applyRouteRealm(event);
 
         const grantType = await guessOauth2GrantTypeByRequest(event);
+
         if (!grantType) {
             throw OAuth2GrantTypeError.unsupported();
         }
 
         const grant = this.tokenGrants[grantType];
+
         if (!grant) {
             throw OAuth2GrantTypeError.unsupported();
         }
@@ -552,11 +567,13 @@ export class TokenController {
      */
     protected async applyRouteRealm(event: IAppEvent) : Promise<void> {
         const realmId = getRequestRealmID(event);
+
         if (!realmId) {
             return;
         }
 
         const realm = await this.realmRepository.resolve(realmId);
+
         if (!realm) {
             throw new EntityNotFoundError(`realm '${realmId}' not found`);
         }
@@ -564,6 +581,7 @@ export class TokenController {
         // an array body parses (strict mode only refuses primitives) but is
         // no parameter set; refusing it keeps the route realm authoritative
         const body = await readRequestBody(event);
+
         if (!isObject(body)) {
             throw OAuth2RequestError.malformed('The request body must be an object.');
         }

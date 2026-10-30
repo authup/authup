@@ -38,6 +38,7 @@ import { createFakePath, createFakeUser } from '../../../../utils/domains/index.
 
 function createSelfActor(userId: string, userName?: string, realmId?: string): FakeActorContext {
     const rId = realmId || randomUUID();
+
     return {
         permissionEvaluator: new FakePermissionEvaluator(),
         identity: {
@@ -65,19 +66,22 @@ describe('core/entities/user/service', () => {
         realmRepository = new FakeRealmRepository();
         service = new UserService({
             repository,
-            realmRepository, 
+            realmRepository,
         });
     });
 
     describe('getMany', () => {
         it('should return entities when actor has permission', async () => {
             repository.seed([createFakeUser()]);
+
             const result = await service.getMany({}, createAllowAllActor());
+
             expect(result.data).toHaveLength(1);
         });
 
         it('should call preCheckOneOf with read/update/delete permissions', async () => {
             const actor = createAllowAllActor();
+
             await service.getMany({}, actor);
             expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
@@ -99,9 +103,11 @@ describe('core/entities/user/service', () => {
             ]);
 
             const actor = createSelfActor(selfUser.id);
+
             actor.permissionEvaluator.deny('evaluateOneOf');
 
             const result = await service.getMany({}, actor);
+
             expect(result.data).toHaveLength(1);
             expect(result.data[0].id).toBe(selfUser.id);
         });
@@ -110,9 +116,11 @@ describe('core/entities/user/service', () => {
             repository.seed([createFakeUser({ name: 'other' })]);
 
             const actor = createSelfActor(randomUUID());
+
             actor.permissionEvaluator.deny('evaluateOneOf');
 
             const result = await service.getMany({}, actor);
+
             expect(result.data).toHaveLength(0);
             expect(result.meta.total).toBe(0);
         });
@@ -121,6 +129,7 @@ describe('core/entities/user/service', () => {
             repository.seed([createFakeUser({ name: 'other' })]);
 
             const actor = createSelfActor(randomUUID());
+
             actor.permissionEvaluator.setBehavior(({ method }) => {
                 if (method === 'evaluateOneOf') {
                     throw new Error('provider unavailable');
@@ -141,18 +150,21 @@ describe('core/entities/user/service', () => {
             ]);
 
             const actor = createSelfActor(selfUser.id);
+
             actor.permissionEvaluator.setCompileResult({
                 verdict: 'conditional',
                 condition: eq('realmId', realmId),
             });
 
             const spy = vi.spyOn(repository, 'findMany');
+
             await service.getMany({}, actor);
 
             // the fake repository does not apply filters — replay the query the
             // service built over the seeded rows instead
             const query = spy.mock.calls[0]![0];
             const applied = applyQuery(query, [selfUser, foreignSameRealm, foreignOtherRealm]);
+
             expect(applied.data.map((row) => row.id).sort())
                 .toEqual([selfUser.id, foreignSameRealm.id].sort());
 
@@ -166,13 +178,16 @@ describe('core/entities/user/service', () => {
             ]);
 
             const actor = createSelfActor(selfUser.id);
+
             actor.permissionEvaluator.setCompileResult({ verdict: 'deny' });
 
             const spy = vi.spyOn(repository, 'findMany');
+
             await service.getMany({}, actor);
 
             const query = spy.mock.calls[0]![0];
             const applied = applyQuery(query, [selfUser, foreign]);
+
             expect(applied.data.map((row) => row.id)).toEqual([selfUser.id]);
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
@@ -182,6 +197,7 @@ describe('core/entities/user/service', () => {
         it('should return entity by id', async () => {
             const entity = repository.seed(createFakeUser({ name: 'test-user' }));
             const result = await service.getOne(entity.id, createAllowAllActor());
+
             expect(result.name).toBe('test-user');
         });
 
@@ -195,9 +211,11 @@ describe('core/entities/user/service', () => {
             const entity = repository.seed(createFakeUser({ name: 'self-user' }));
 
             const actor = createSelfActor(entity.id);
+
             actor.permissionEvaluator.deny('preEvaluateOneOf');
 
             const result = await service.getOne(entity.id, actor);
+
             expect(result.id).toBe(entity.id);
             expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toHaveLength(0);
         });
@@ -207,9 +225,11 @@ describe('core/entities/user/service', () => {
             const entity = repository.seed(createFakeUser({ name: userName }));
 
             const actor = createSelfActor(entity.id, userName);
+
             actor.permissionEvaluator.deny('preEvaluateOneOf');
 
             const result = await service.getOne(userName, actor);
+
             expect(result.id).toBe(entity.id);
         });
 
@@ -224,6 +244,7 @@ describe('core/entities/user/service', () => {
         it('should require permission when self-by-name resolves to a different user', async () => {
             const otherEntity = repository.seed(createFakeUser({ name: 'shared-name' }));
             const actor = createSelfActor(randomUUID(), 'shared-name');
+
             actor.permissionEvaluator.deny('preEvaluateOneOf');
 
             await expect(service.getOne('shared-name', actor)).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
@@ -237,7 +258,7 @@ describe('core/entities/user/service', () => {
                 {
                     name: 'new-user',
                     email: 'new@example.com',
-                    password: 'securepass123', 
+                    password: 'securepass123',
                 },
                 createAllowAllActor(),
             );
@@ -251,7 +272,7 @@ describe('core/entities/user/service', () => {
                 {
                     name: 'hashed-user',
                     email: 'hashed@example.com',
-                    password: 'plaintext123', 
+                    password: 'plaintext123',
                 },
                 createAllowAllActor(),
             );
@@ -262,9 +283,10 @@ describe('core/entities/user/service', () => {
 
         it('should call preCheck with USER_CREATE', async () => {
             const actor = createAllowAllActor();
+
             await service.create({
                 name: 'test-user',
-                email: 'test@example.com', 
+                email: 'test@example.com',
             }, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.USER_CREATE });
         });
@@ -273,7 +295,7 @@ describe('core/entities/user/service', () => {
             await expect(
                 service.create({
                     name: 'test-user',
-                    email: 'test@example.com', 
+                    email: 'test@example.com',
                 }, createDenyAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
@@ -286,6 +308,7 @@ describe('core/entities/user/service', () => {
                 name: 'realm-user',
                 email: 'realm@example.com',
             }, actor);
+
             expect(result.realmId).toBe(realmId);
         });
 
@@ -329,6 +352,7 @@ describe('core/entities/user/service', () => {
                 email: 'strict-pass@example.com',
                 password: 'a'.repeat(12),
             }, createAllowAllActor());
+
             expect(result.id).toBeDefined();
         });
     });
@@ -338,6 +362,7 @@ describe('core/entities/user/service', () => {
             const entity = repository.seed(createFakeUser({ name: 'old-name' }));
 
             const result = await service.update(entity.id, { displayName: 'New Display' }, createAllowAllActor());
+
             expect(result.displayName).toBe('New Display');
         });
 
@@ -349,6 +374,7 @@ describe('core/entities/user/service', () => {
 
         it('should open one repository transaction for the write and none on create (#3526)', async () => {
             const entity = await service.create(createFakeUser({ realmId: randomUUID() }), createAllowAllActor());
+
             expect(repository.transactionCalls).toBe(0);
 
             await service.update(entity.id, { displayName: 'New Display' }, createAllowAllActor());
@@ -482,6 +508,7 @@ describe('core/entities/user/service', () => {
             const entity = repository.seed(createFakeUser());
 
             const result = await service.update(entity.id, { password: 'new-pass-123' }, createAllowAllActor());
+
             expect(result.password).toMatch(/^\$2[aby]\$/);
         });
 
@@ -619,6 +646,7 @@ describe('core/entities/user/service', () => {
                     }
 
                     const attributes = call.ctx.data?.get(BuiltInPolicyType.ATTRIBUTES) as Partial<User>;
+
                     if (attributes.pathId !== reachable) {
                         throw PermissionError.denied('path');
                     }
@@ -644,6 +672,7 @@ describe('core/entities/user/service', () => {
                 const entity = repository.seed(createFakeUser({ realmId, pathId: reachable }));
 
                 const result = await service.update(entity.id, { displayName: 'New Display' }, actor);
+
                 expect(result.displayName).toBe('New Display');
             });
 
@@ -669,9 +698,11 @@ describe('core/entities/user/service', () => {
             const entity = repository.seed(createFakeUser({ name: 'self-user' }));
 
             const actor = createSelfActor(entity.id);
+
             denyOnlyUserUpdate(actor);
 
             const result = await service.update(entity.id, { displayName: 'Updated' }, actor);
+
             expect(result.displayName).toBe('Updated');
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.USER_SELF_MANAGE });
@@ -684,6 +715,7 @@ describe('core/entities/user/service', () => {
             const entity = repository.seed(createFakeUser({ name: 'self-user' }));
 
             const actor = createSelfActor(entity.id);
+
             denyOnlyUserUpdate(actor);
 
             await service.update(entity.id, { displayName: 'Updated' }, actor);
@@ -691,8 +723,11 @@ describe('core/entities/user/service', () => {
             const selfManageCall = actor.permissionEvaluator.evaluateCalls.find(
                 (c) => c.name === PermissionName.USER_SELF_MANAGE,
             );
+
             expect(selfManageCall).toBeDefined();
+
             const attrs = selfManageCall!.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+
             expect(attrs).toHaveProperty('displayName', 'Updated');
             expect(attrs).not.toHaveProperty('id');
             expect(attrs).not.toHaveProperty('active');
@@ -704,6 +739,7 @@ describe('core/entities/user/service', () => {
             const entity = repository.seed(createFakeUser({ name: 'self-realm-user', realmId }));
 
             const actor = createSelfActor(entity.id);
+
             denyOnlyUserUpdate(actor);
 
             await service.update(entity.id, { displayName: 'Updated' }, actor);
@@ -711,6 +747,7 @@ describe('core/entities/user/service', () => {
             const selfManageCall = actor.permissionEvaluator.evaluateCalls.find(
                 (c) => c.name === PermissionName.USER_SELF_MANAGE,
             );
+
             expect(selfManageCall!.data!.get(BuiltInPolicyType.REALM_MATCH)).toEqual(realmId);
         });
 
@@ -718,6 +755,7 @@ describe('core/entities/user/service', () => {
             const entity = repository.seed(createFakeUser({ name: 'other-user' }));
 
             const actor = createSelfActor(randomUUID());
+
             denyOnlyUserUpdate(actor);
 
             await expect(
@@ -729,6 +767,7 @@ describe('core/entities/user/service', () => {
             const entity = repository.seed(createFakeUser({ name: 'self-user' }));
 
             const actor = createSelfActor(entity.id);
+
             actor.permissionEvaluator.denyAll();
 
             await expect(
@@ -741,7 +780,7 @@ describe('core/entities/user/service', () => {
         it('should prevent name change when nameLocked is true and not unlocked', async () => {
             const entity = repository.seed(createFakeUser({
                 name: 'locked-name',
-                nameLocked: true, 
+                nameLocked: true,
             }));
 
             const result = await service.update(
@@ -756,14 +795,14 @@ describe('core/entities/user/service', () => {
         it('should allow name change when nameLocked is explicitly set to false', async () => {
             const entity = repository.seed(createFakeUser({
                 name: 'locked-name',
-                nameLocked: true, 
+                nameLocked: true,
             }));
 
             const result = await service.update(
                 entity.id,
                 {
                     name: 'new-name',
-                    nameLocked: false, 
+                    nameLocked: false,
                 },
                 createAllowAllActor(),
             );
@@ -775,14 +814,14 @@ describe('core/entities/user/service', () => {
         it('should prevent name change when re-locking with nameLocked: true', async () => {
             const entity = repository.seed(createFakeUser({
                 name: 'locked-name',
-                nameLocked: true, 
+                nameLocked: true,
             }));
 
             const result = await service.update(
                 entity.id,
                 {
                     name: 'new-name',
-                    nameLocked: true, 
+                    nameLocked: true,
                 },
                 createAllowAllActor(),
             );
@@ -793,7 +832,7 @@ describe('core/entities/user/service', () => {
         it('should allow name change when name was not locked', async () => {
             const entity = repository.seed(createFakeUser({
                 name: 'old-name',
-                nameLocked: false, 
+                nameLocked: false,
             }));
 
             const result = await service.update(
@@ -810,6 +849,7 @@ describe('core/entities/user/service', () => {
         it('should delete an existing user', async () => {
             const entity = repository.seed(createFakeUser());
             const result = await service.delete(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
         });
 
@@ -832,12 +872,14 @@ describe('core/entities/user/service', () => {
         it('should call preCheck with USER_DELETE', async () => {
             const entity = repository.seed(createFakeUser());
             const actor = createAllowAllActor();
+
             await service.delete(entity.id, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.USER_DELETE });
         });
 
         it('should throw when actor lacks permission', async () => {
             const entity = repository.seed(createFakeUser());
+
             await expect(service.delete(entity.id, createDenyAllActor())).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
@@ -845,13 +887,13 @@ describe('core/entities/user/service', () => {
     describe('save (upsert)', () => {
         it('should create when entity not found', async () => {
             const {
-                entity, 
-                created, 
+                entity,
+                created,
             } = await service.save(
                 undefined,
                 {
                     name: 'upserted-user',
-                    email: 'upsert@example.com', 
+                    email: 'upsert@example.com',
                 },
                 createAllowAllActor(),
             );

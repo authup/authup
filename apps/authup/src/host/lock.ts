@@ -29,8 +29,10 @@ async function acquire(file: string) : Promise<FileHandle> {
         }
 
         const stat = await fs.stat(file).catch(() => undefined);
+
         if (stat && Date.now() - stat.mtimeMs > HOSTS_LOCK_STALE_MS) {
             await fs.rm(file, { force: true });
+
             continue;
         }
 

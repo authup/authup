@@ -141,6 +141,7 @@ export default defineComponent({
             }
 
             busy.value = true;
+
             try {
                 const data: Record<string, unknown> = {
                     ...form,

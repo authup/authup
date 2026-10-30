@@ -9,9 +9,9 @@ import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
 import type { ClientScope } from '@authup/core-kit';
 import {
-    beforeEach, 
-    describe, 
-    expect, 
+    beforeEach,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
@@ -35,6 +35,7 @@ describe('core/entities/client-scope/service', () => {
     describe('getMany', () => {
         it('should call preCheckOneOf with client permissions', async () => {
             const actor = createAllowAllActor();
+
             await service.getMany({}, actor);
             expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
@@ -55,6 +56,7 @@ describe('core/entities/client-scope/service', () => {
         it('should return entity by id', async () => {
             const entity = repository.seed({});
             const result = await service.getOne(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
         });
 
@@ -79,6 +81,7 @@ describe('core/entities/client-scope/service', () => {
             };
 
             const result = await service.create(data, createAllowAllActor());
+
             expect(result.id).toBeDefined();
             expect(result.clientRealmId).toBe(clientRealmId);
             expect(result.scopeRealmId).toBe(scopeRealmId);
@@ -86,9 +89,10 @@ describe('core/entities/client-scope/service', () => {
 
         it('should call preCheck with CLIENT_SCOPE_CREATE', async () => {
             const actor = createAllowAllActor();
+
             await service.create({
                 clientId: randomUUID(),
-                scopeId: randomUUID(), 
+                scopeId: randomUUID(),
             }, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.CLIENT_SCOPE_CREATE });
         });
@@ -136,6 +140,7 @@ describe('core/entities/client-scope/service', () => {
         it('should delete an existing entity', async () => {
             const entity = repository.seed({});
             const result = await service.delete(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
         });
 
@@ -146,6 +151,7 @@ describe('core/entities/client-scope/service', () => {
         it('should call preCheck with CLIENT_SCOPE_DELETE', async () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
+
             await service.delete(entity.id, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.CLIENT_SCOPE_DELETE });
         });

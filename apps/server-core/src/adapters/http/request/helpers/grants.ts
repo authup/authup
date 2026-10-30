@@ -19,6 +19,7 @@ export type RequestGrantsResolver = (identity: IdentityPolicyData) => Promise<Pe
  */
 export function useRequestGrants(event: IAppEvent, identity: IdentityPolicyData): Promise<PermissionPolicyBinding[]> {
     const resolve = event.store[sym] as RequestGrantsResolver | undefined;
+
     if (!resolve) {
         throw new Error('The request grants are not initialised.');
     }

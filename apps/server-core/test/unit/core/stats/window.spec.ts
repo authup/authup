@@ -83,6 +83,7 @@ function expectRefusal(fn: () => unknown, message: string) {
     } catch (e) {
         expect(isValidationError(e)).toBe(true);
         expect((e as Error).message).toEqual(message);
+
         return;
     }
 
@@ -143,6 +144,7 @@ describe('resolveStatsWindow', () => {
 
     it('refuses more than 744 buckets', () => {
         const hour = new Date(NOW);
+
         hour.setUTCMinutes(0, 0, 0);
 
         expect(resolve(gte('createdAt', new Date(hour.getTime() - (743 * HOUR_IN_MS)).toISOString()), [bucket('createdAt', 'hour')]).buckets)

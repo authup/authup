@@ -68,10 +68,10 @@ export type BuildJunctionUpdateDataInput = {
  */
 export function buildJunctionUpdateData(input: BuildJunctionUpdateDataInput): Record<string, any> {
     const {
-        data, 
-        existingScope, 
-        actorScope, 
-        actorPolicyFree, 
+        data,
+        existingScope,
+        actorScope,
+        actorPolicyFree,
         actorPolicyId,
     } = input;
 

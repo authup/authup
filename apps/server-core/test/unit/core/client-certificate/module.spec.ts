@@ -41,6 +41,7 @@ const SELF_SIGNED_LEAF_PEM = readCertificate('non-ca-certificate.pem');
 
 function evidence(leafPEM: string, chainPEMs: string[] = []): ClientCertificateEvidence {
     const certificate = new X509Certificate(leafPEM);
+
     return {
         certificate,
         chain: chainPEMs.map((pem) => new X509Certificate(pem)),
@@ -104,6 +105,7 @@ describe('ClientCertificateValidator', () => {
                 }
 
                 const value = Reflect.get(target, property, target);
+
                 return typeof value === 'function' ? value.bind(target) : value;
             },
         });
@@ -147,6 +149,7 @@ describe('extractClientCertificateEvidence', () => {
             'client-cert-chain': structured(INTERMEDIATE_PEM),
         }), 'standard');
 
+        // eslint-disable-next-line unicorn/prefer-uint8array-base64 -- These are X509Certificate serializers, not Buffer encoders.
         expect(result?.certificate.toString('base64')).toEqual(new X509Certificate(LEAF_PEM).toString('base64'));
         expect(result?.chain).toHaveLength(1);
         expect(result?.thumbprint).toEqual(
@@ -156,6 +159,7 @@ describe('extractClientCertificateEvidence', () => {
 
     it('reads one URL-escaped forwarded PEM and rejects a forwarded chain', async () => {
         const result = await extractClientCertificateEvidence(event({ 'x-forwarded-tls-client-cert': encodeURIComponent(DIRECT_LEAF_PEM) }), 'forwarded');
+
         expect(result?.chain).toEqual([]);
 
         await expect(extractClientCertificateEvidence(event({ 'x-forwarded-tls-client-cert': encodeURIComponent(`${DIRECT_LEAF_PEM}${ROOT_PEM}`) }), 'forwarded')).rejects.toThrow();

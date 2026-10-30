@@ -18,10 +18,49 @@ export default eslintConfig(
             '@typescript-eslint/no-use-before-define': 'off',
             '@typescript-eslint/no-this-alias': 'off',
             '@typescript-eslint/only-throw-error': 'off',
+            // Authup keeps domain types beside their implementations and exposes
+            // compatibility entry points without moving or duplicating them.
+            '@tada5hi/type-declaration-location': 'off',
+            '@tada5hi/no-reexport-shims': 'off',
+            // Public interfaces and third-party module augmentations retain their names.
+            '@typescript-eslint/naming-convention': 'off',
             'unicorn/consistent-template-literal-escape': 'error',
             'unicorn/no-useless-iterator-to-array': 'error',
             'unicorn/prefer-simple-condition-first': 'error',
             'unicorn/switch-case-break-position': 'error',
+        },
+    },
+    {
+        files: [
+            'apps/client-*/**',
+            'packages/access/**',
+            'packages/client-*/**',
+            'packages/core-*/**',
+            'packages/errors/**',
+            'packages/kit/**',
+            'packages/specs/**',
+        ],
+        rules: {
+            // The Node runtime floor does not raise browser API requirements.
+            'unicorn/prefer-error-is-error': 'off',
+            'unicorn/prefer-promise-try': 'off',
+            'unicorn/prefer-regexp-escape': 'off',
+            'unicorn/prefer-uint8array-base64': 'off',
+            'unicorn/prefer-uint8array-hex': 'off',
+        },
+    },
+    {
+        files: ['**/test/**'],
+        rules: {
+            // Component harnesses and stubs intentionally share test files.
+            'vue/one-component-per-file': 'off',
+        },
+    },
+    {
+        files: ['apps/server-core/scripts/*.mjs'],
+        rules: {
+            // These maintenance scripts report their results on stdout/stderr.
+            'no-console': 'off',
         },
     },
     {

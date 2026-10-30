@@ -28,6 +28,7 @@ export function mergeSchemaData<T>(
     const output : Record<string, unknown> = {};
 
     const keys = Object.keys(schema) as (keyof T)[];
+
     for (const key of keys) {
         const entry = schema[key];
         const name = key as string;
@@ -48,8 +49,10 @@ export function mergeSchemaData<T>(
 
         for (let i = sources.length - 1; i >= 0; i--) {
             const value = (sources[i] as Record<string, unknown>)[name];
+
             if (typeof value !== 'undefined') {
                 output[name] = value;
+
                 break;
             }
         }

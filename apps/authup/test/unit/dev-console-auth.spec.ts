@@ -24,6 +24,7 @@ import { createViteRender } from '../../src/dev/index.ts';
 import { captureEvent } from '../utils/event.ts';
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'authup-dev-auth-'));
+
 fs.writeFileSync(
     path.join(root, 'index.html'),
     '<html><head><!--preload-links--></head><body><div id="app"><!--app-html--></div></body></html>',
@@ -39,9 +40,9 @@ type ViteRenderContext = Pick<
 };
 
 type FakeModule = {
-    id: string | null, 
-    url: string, 
-    importedModules: Set<FakeModule> 
+    id: string | null,
+    url: string,
+    importedModules: Set<FakeModule>
 };
 
 function createModuleGraph(entry?: FakeModule) : ViteRenderContext['environments'] {
@@ -102,7 +103,9 @@ describe('createViteRender', () => {
                     throw new Error('boom');
                 },
             }),
-            ssrFixStacktrace: () => { fixed = true; },
+            ssrFixStacktrace: () => {
+                fixed = true;
+            },
             environments: createModuleGraph(),
         };
 
@@ -122,7 +125,9 @@ describe('createViteRender', () => {
             ssrLoadModule: async () => {
                 throw new Error('entry is broken');
             },
-            ssrFixStacktrace: () => { fixed = true; },
+            ssrFixStacktrace: () => {
+                fixed = true;
+            },
             environments: createModuleGraph(),
         };
 
@@ -136,20 +141,21 @@ describe('createViteRender', () => {
 
     it('inlines the stylesheets the entry imports, so the markup paints styled before the client runs', async () => {
         const css : FakeModule = {
-            id: '/repo/src/tailwind.css', 
-            url: '/src/tailwind.css', 
-            importedModules: new Set(), 
+            id: '/repo/src/tailwind.css',
+            url: '/src/tailwind.css',
+            importedModules: new Set(),
         };
         const app : FakeModule = {
-            id: '/repo/src/app.ts', 
-            url: '/src/app.ts', 
-            importedModules: new Set([css]), 
+            id: '/repo/src/app.ts',
+            url: '/src/app.ts',
+            importedModules: new Set([css]),
         };
         const entry : FakeModule = {
-            id: '/repo/src/server.ts', 
-            url: '/src/server.ts', 
-            importedModules: new Set([app, css]), 
+            id: '/repo/src/server.ts',
+            url: '/src/server.ts',
+            importedModules: new Set([app, css]),
         };
+
         app.importedModules.add(entry);
 
         const loaded : string[] = [];
@@ -158,6 +164,7 @@ describe('createViteRender', () => {
             transformIndexHtml: async (_url, html) => html,
             ssrLoadModule: async (url) => {
                 loaded.push(url);
+
                 if (url === '/src/tailwind.css?inline') {
                     return { default: 'body{color:red}</style>' };
                 }
@@ -178,24 +185,24 @@ describe('createViteRender', () => {
 
     it('keeps the stylesheets in evaluation order and keeps their query', async () => {
         const base : FakeModule = {
-            id: '/repo/src/base.css', 
-            url: '/src/base.css', 
-            importedModules: new Set(), 
+            id: '/repo/src/base.css',
+            url: '/src/base.css',
+            importedModules: new Set(),
         };
         const app : FakeModule = {
-            id: '/repo/src/app.ts', 
-            url: '/src/app.ts', 
-            importedModules: new Set([base]), 
+            id: '/repo/src/app.ts',
+            url: '/src/app.ts',
+            importedModules: new Set([base]),
         };
         const overrides : FakeModule = {
-            id: '/repo/src/overrides.css?v=2', 
-            url: '/src/overrides.css?v=2', 
-            importedModules: new Set(), 
+            id: '/repo/src/overrides.css?v=2',
+            url: '/src/overrides.css?v=2',
+            importedModules: new Set(),
         };
         const entry : FakeModule = {
-            id: '/repo/src/server.ts', 
-            url: '/src/server.ts', 
-            importedModules: new Set([app, overrides]), 
+            id: '/repo/src/server.ts',
+            url: '/src/server.ts',
+            importedModules: new Set([app, overrides]),
         };
 
         const loaded : string[] = [];
@@ -204,6 +211,7 @@ describe('createViteRender', () => {
             transformIndexHtml: async (_url, html) => html,
             ssrLoadModule: async (url) => {
                 loaded.push(url);
+
                 if (url.includes('inline')) {
                     return { default: url };
                 }

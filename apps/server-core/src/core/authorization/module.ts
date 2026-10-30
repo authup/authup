@@ -26,6 +26,7 @@ type PolicyDrop = {
 
 export function readPolicyId(policy: BasePolicy) : string {
     const { id } = policy as { id?: unknown };
+
     if (typeof id !== 'string' || id.length === 0) {
         throw new InternalError('An authorization policy tree must carry its id.');
     }
@@ -41,6 +42,7 @@ export function readPolicyId(policy: BasePolicy) : string {
  */
 function readRealmId(row: BasePolicy) : string | null | undefined {
     const { realmId } = row as { realmId?: unknown };
+
     if (typeof realmId === 'string') {
         return realmId;
     }
@@ -59,6 +61,7 @@ function collectRealmIds(tree: BasePolicy, into: Set<string | null | undefined>)
     into.add(readRealmId(tree));
 
     const { children } = tree as { children?: BasePolicy[] };
+
     for (const child of children ?? []) {
         collectRealmIds(child, into);
     }
@@ -104,11 +107,13 @@ export async function buildAuthorizationCatalog(
     const reach = new Map<string | null, boolean>();
     const canReach = async (realmId: string | null) : Promise<boolean> => {
         const held = reach.get(realmId);
+
         if (typeof held !== 'undefined') {
             return held;
         }
 
         const result = await canReachRealm(realmId);
+
         reach.set(realmId, result);
 
         return result;
@@ -136,13 +141,17 @@ export async function buildAuthorizationCatalog(
 
     const project = async (trees: BasePolicy[]) : Promise<string[] | PolicyDrop> => {
         const projected : [string, AuthorizationPolicy][] = [];
+
         for (const tree of trees) {
             let id : string | undefined;
+
             try {
                 id = readPolicyId(tree);
+
                 if (!await canReachTree(tree)) {
                     withheld.add(id);
                     projected.push([id, { type: AUTHORIZATION_POLICY_WITHHELD_TYPE }]);
+
                     continue;
                 }
 
@@ -153,7 +162,7 @@ export async function buildAuthorizationCatalog(
             } catch (e) {
                 return {
                     policyId: id,
-                    message: e instanceof Error ? e.message : String(e),
+                    message: Error.isError(e) ? e.message : String(e),
                 };
             }
         }
@@ -167,6 +176,7 @@ export async function buildAuthorizationCatalog(
 
     const permissions : [string, AuthorizationDefinition][] = [];
     const definitions = await ctx.catalogRepository.findDefinitions();
+
     for (const [permission, trees] of definitions) {
         const entry : AuthorizationDefinition = {
             name: permission.name,
@@ -180,10 +190,12 @@ export async function buildAuthorizationCatalog(
         if (!await canReach(entry.realmId)) {
             entry.policies = null;
             permissions.push([key, entry]);
+
             continue;
         }
 
         const ids = await project(trees);
+
         if (!Array.isArray(ids)) {
             ctx.logger?.warn(
                 `Carried the definition of permission ${key} in the authorization catalog without its policies` +
@@ -192,13 +204,17 @@ export async function buildAuthorizationCatalog(
             );
         }
 
-        entry.policies = Array.isArray(ids) && ids.every((id) => !withheld.has(id)) ? ids : null;
+        const hasEvaluablePolicies = Array.isArray(ids) && ids.every((id) => !withheld.has(id));
+
+        entry.policies = hasEvaluablePolicies ? ids : null;
         permissions.push([key, entry]);
     }
 
     const grantPolicies = await ctx.catalogRepository.findGrantPolicies();
+
     for (const tree of grantPolicies) {
         const ids = await project([tree]);
+
         if (!Array.isArray(ids)) {
             ctx.logger?.warn(
                 `Dropped a grant policy${ids.policyId ? ` (${ids.policyId})` : ''} from the authorization catalog: ` +

@@ -25,9 +25,9 @@ export class FakeOAuth2DeviceCodeRepository implements IOAuth2DeviceCodeReposito
     public removeByIdCalls: string[] = [];
 
     public decideCalls: {
-        id: string, 
-        decision: OAuth2DeviceCodeDecision, 
-        expiresAt: number 
+        id: string,
+        decision: OAuth2DeviceCodeDecision,
+        expiresAt: number
     }[] = [];
 
     public removeUserCodeCalls: string[] = [];
@@ -57,6 +57,7 @@ export class FakeOAuth2DeviceCodeRepository implements IOAuth2DeviceCodeReposito
     seed(request: OAuth2DeviceCodeRequest): OAuth2DeviceCodeRequest {
         this.requests.set(request.id, request);
         this.userCodes.set(request.user_code, request.id);
+
         return request;
     }
 
@@ -75,11 +76,7 @@ export class FakeOAuth2DeviceCodeRepository implements IOAuth2DeviceCodeReposito
     async save(entity: OAuth2DeviceCodeRequest): Promise<boolean> {
         this.saveCalls.push(entity);
 
-        if (entity.expires_at <= Math.floor(Date.now() / 1000)) {
-            return false;
-        }
-
-        if (this.userCodes.has(entity.user_code)) {
+        if ((entity.expires_at <= Math.floor(Date.now() / 1000)) || this.userCodes.has(entity.user_code)) {
             return false;
         }
 
@@ -93,6 +90,7 @@ export class FakeOAuth2DeviceCodeRepository implements IOAuth2DeviceCodeReposito
         this.findOneByIdCalls.push(id);
 
         const request = this.requests.get(id);
+
         if (!request) {
             return null;
         }
@@ -104,11 +102,13 @@ export class FakeOAuth2DeviceCodeRepository implements IOAuth2DeviceCodeReposito
         this.findOneByUserCodeCalls.push(userCode);
 
         const id = this.userCodes.get(userCode);
+
         if (!id) {
             return null;
         }
 
         const request = this.requests.get(id);
+
         if (!request) {
             return null;
         }
@@ -120,6 +120,7 @@ export class FakeOAuth2DeviceCodeRepository implements IOAuth2DeviceCodeReposito
         this.popOneByIdCalls.push(id);
 
         const request = this.requests.get(id);
+
         if (!request) {
             return null;
         }
@@ -143,16 +144,12 @@ export class FakeOAuth2DeviceCodeRepository implements IOAuth2DeviceCodeReposito
 
     async decide(id: string, decision: OAuth2DeviceCodeDecision, expiresAt: number): Promise<boolean> {
         this.decideCalls.push({
-            id, 
-            decision, 
-            expiresAt, 
+            id,
+            decision,
+            expiresAt,
         });
 
-        if (expiresAt <= Math.floor(Date.now() / 1000)) {
-            return false;
-        }
-
-        if (this.decisions.has(id)) {
+        if ((expiresAt <= Math.floor(Date.now() / 1000)) || this.decisions.has(id)) {
             return false;
         }
 
@@ -183,6 +180,7 @@ export class FakeOAuth2DeviceCodeRepository implements IOAuth2DeviceCodeReposito
         this.lookupThrottleCalls.push(key);
 
         const deadline = this.locks.get(key);
+
         if (typeof deadline !== 'number') {
             return null;
         }
@@ -196,6 +194,7 @@ export class FakeOAuth2DeviceCodeRepository implements IOAuth2DeviceCodeReposito
         this.countLookupMissCalls.push({ key, limit });
 
         const count = (this.attempts.get(key) ?? 0) + 1;
+
         this.attempts.set(key, count);
 
         if (count >= limit) {

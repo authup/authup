@@ -30,16 +30,16 @@ import type {
     ClientSecretRotateResponse,
     ClientUpdatePayload,
     EntityCollectionResponse,
-    EntityRecordResponse, 
-    EntityStatsResponse, 
+    EntityRecordResponse,
+    EntityStatsResponse,
 } from '@authup/core-http-kit';
 import type { IClientRepository, IClientService, IEntityStatsService  } from '../../../../../core/index.ts';
 import {
     OAuth2ScopeAttributesResolver,
     RECORD_QUERY_PARAMETERS,
     STATS_QUERY_PARAMETERS,
-    clientSchema, 
-    describeQuerySchema, 
+    clientSchema,
+    describeQuerySchema,
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -118,6 +118,7 @@ export class ClientController {
         const identity = useRequestIdentity(event);
 
         let isMe = false;
+
         if (
             identity &&
             identity.type === 'client'
@@ -140,8 +141,10 @@ export class ClientController {
 
             for (const attribute of attributes) {
                 const attr = attribute as keyof Client;
+
                 if (attr === 'secret') {
                     const withSecret = await this.repository.findOneWithSecret({ id: entity.id });
+
                     if (withSecret) {
                         entity.secret = withSecret.secret;
                         await this.service.revealSecret(entity);
@@ -169,6 +172,7 @@ export class ClientController {
         @DContext() event: IAppEvent,
     ): Promise<EntityRecordResponse<Client>> {
         applyRouteRealmIDToBody(event, data);
+
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
@@ -184,6 +188,7 @@ export class ClientController {
         @DContext() event: IAppEvent,
     ): Promise<EntityRecordResponse<Client>> {
         applyRouteRealmIDToBody(event, data);
+
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
@@ -199,6 +204,7 @@ export class ClientController {
         @DContext() event: IAppEvent,
     ): Promise<EntityRecordResponse<Client>> {
         applyRouteRealmIDToBody(event, data);
+
         const actor = buildActorContext(event);
         const {
             entity,
@@ -210,6 +216,7 @@ export class ClientController {
         );
 
         event.response.status = created ? 201 : 202;
+
         return { data: entity, meta: {} };
     }
 
@@ -220,6 +227,7 @@ export class ClientController {
         @DContext() event: IAppEvent,
     ): Promise<ClientSecretRotateResponse> {
         const identity = useRequestIdentity(event);
+
         if (
             identity &&
             identity.type === 'client' &&

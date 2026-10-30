@@ -38,6 +38,7 @@ export default defineComponent({
         function assign(input: Partial<RealmMatchPolicy> = {}) {
             const { attributeName, ...data } = input;
             let names : string[] = [];
+
             if (attributeName) {
                 names = typeof attributeName === 'string' ? [attributeName] : attributeName;
             }
@@ -51,6 +52,7 @@ export default defineComponent({
         setup.expose({ assign });
 
         const updatedAt = useUpdatedAt(() => props.entity as Policy);
+
         onChange(updatedAt, () => assign(props.entity));
 
         assign(props.entity);

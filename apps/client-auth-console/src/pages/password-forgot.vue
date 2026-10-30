@@ -6,9 +6,9 @@
   -->
 <script lang="ts">
 import {
-    AAuthShell, 
-    APasswordForgotForm, 
-    AWorkflowDisabledNotice, 
+    AAuthShell,
+    APasswordForgotForm,
+    AWorkflowDisabledNotice,
     useTranslations,
 } from '@authup/client-web-kit';
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
@@ -41,13 +41,17 @@ export default defineComponent({
 
         const resetPath = (() => {
             const params = new URLSearchParams();
+
             if (payload.data.realmId) {
                 params.set('realmId', payload.data.realmId);
             }
+
             if (payload.data.redirect) {
                 params.set('redirect', payload.data.redirect);
             }
+
             const qs = params.toString();
+
             return withBasePath(`/password-reset${qs ? `?${qs}` : ''}`);
         })();
 

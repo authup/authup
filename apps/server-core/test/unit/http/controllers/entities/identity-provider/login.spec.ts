@@ -34,7 +34,7 @@ const USER_AGENT = 'login-spec-agent';
 const REDIRECT_URI = 'https://example.com/login/callback';
 const CODE_VERIFIER = 'aVeryLongCodeVerifierValueUsedByThePublicClient1234567890';
 
-const encode = (input: Record<string, any>) => Buffer.from(JSON.stringify(input)).toString('base64url');
+const encode = (input: Record<string, any>) => Buffer.from(JSON.stringify(input)).toBase64({ alphabet: 'base64url', omitPadding: true });
 
 // A code the fake provider rejects, so the token exchange fails the way a
 // real provider fails it: an answer, not a transport error.
@@ -56,7 +56,8 @@ describe('identity-provider login flow', () => {
 
     beforeAll(async () => {
         const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(CODE_VERIFIER));
-        codeChallenge = Buffer.from(new Uint8Array(digest)).toString('base64url');
+
+        codeChallenge = Buffer.from(new Uint8Array(digest)).toBase64({ alphabet: 'base64url', omitPadding: true });
 
         // A minimal external IdP. Unlike a permissive stub, its token
         // endpoint enforces the one thing RFC 6749 §4.1.3 makes
@@ -66,6 +67,7 @@ describe('identity-provider login flow', () => {
         idpServer = createServer((req, res) => {
             if (req.url && req.url.startsWith('/token')) {
                 let raw = '';
+
                 req.on('data', (chunk) => {
                     raw += chunk;
                 });
@@ -77,6 +79,7 @@ describe('identity-provider login flow', () => {
                     if (!tokenRequestBody.get('code')) {
                         res.statusCode = 400;
                         res.end(JSON.stringify({ error: 'invalid_request' }));
+
                         return;
                     }
 
@@ -86,6 +89,7 @@ describe('identity-provider login flow', () => {
                             error: 'invalid_grant',
                             error_description: 'the authorization code expired',
                         }));
+
                         return;
                     }
 
@@ -104,12 +108,14 @@ describe('identity-provider login flow', () => {
                         name: 'external-user',
                         email: 'external@example.com',
                     })}.x`;
+
                     res.end(JSON.stringify({
                         access_token: accessToken,
                         id_token: idToken,
                         token_type: 'Bearer',
                     }));
                 });
+
                 return;
             }
 
@@ -125,6 +131,7 @@ describe('identity-provider login flow', () => {
                     preferred_username: 'userinfo-user',
                     email: 'userinfo@example.com',
                 }));
+
                 return;
             }
 
@@ -152,7 +159,9 @@ describe('identity-provider login flow', () => {
             authMethod: 'none',
             redirectUri: 'https://example.com/**',
         }))).data;
+
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
         await suite.client.clientScope.create({ scopeId: scope.id, clientId: client.id });
     });
 
@@ -183,12 +192,15 @@ describe('identity-provider login flow', () => {
             headers: { 'user-agent': USER_AGENT },
             redirect: 'manual',
         });
+
         expect(response.status).toEqual(302);
 
         const location = response.headers.get('location');
+
         expect(location).toBeTruthy();
 
         const state = new URL(location as string).searchParams.get('state');
+
         expect(state).toBeTruthy();
 
         federatedCookie = readFederatedCookie(response);
@@ -198,6 +210,7 @@ describe('identity-provider login flow', () => {
 
     function readFederatedCookie(response: Response) : string | null {
         const header = response.headers.get('set-cookie');
+
         if (!header) {
             return null;
         }
@@ -227,6 +240,7 @@ describe('identity-provider login flow', () => {
             authorizeUrl: `${idpURL}/authorize`,
         });
         const disabled = (await suite.client.identityProvider.create(payload)).data;
+
         await suite.client.identityProvider.update(disabled.id, {
             ...payload,
             protocol: IdentityProviderProtocol.OAUTH2,
@@ -327,6 +341,7 @@ describe('identity-provider login flow', () => {
         expect(response.status).toEqual(502);
 
         const body = await response.json();
+
         expect(body.code).toEqual(ErrorCode.UPSTREAM_ERROR);
         // the outbound target must not be echoed back to the caller
         expect(JSON.stringify(body)).not.toContain(idpURL);
@@ -349,10 +364,12 @@ describe('identity-provider login flow', () => {
                 redirect: 'manual',
             },
         );
+
         expect(response.status).toEqual(302);
 
         // and not the remote subject, which is a UUID against another authup
         const { data: users } = await suite.client.user.getMany({ filters: { realmId: realm.id } });
+
         expect(users.map((user) => user.name)).toContain('external-user');
 
         // `email` is a select:false column, so no read surface returns it and
@@ -381,10 +398,12 @@ describe('identity-provider login flow', () => {
                 redirect: 'manual',
             },
         );
+
         expect(response.status).toEqual(302);
         expect(userInfoRequests).toEqual(1);
 
         const { data: users } = await suite.client.user.getMany({ filters: { realmId: realm.id } });
+
         // userinfo is the richest source, so its preferred_username wins the
         // ladder over the id_token's `name`
         expect(users.map((user) => user.name)).toContain('userinfo-user');
@@ -392,6 +411,7 @@ describe('identity-provider login flow', () => {
         // the account key stays the ACCESS token subject: deriving it from a
         // richer claim set would orphan every existing account row
         const { data: accounts } = await suite.client.identityProviderAccount.getMany({ filters: { providerId: userInfoProvider.id } });
+
         expect(accounts).toHaveLength(1);
         expect(accounts[0].providerUserId).toEqual('external-user-1');
     });
@@ -414,6 +434,7 @@ describe('identity-provider login flow', () => {
                 redirect: 'manual',
             },
         );
+
         expect(response.status).toEqual(302);
 
         return new URL(response.headers.get('location') as string);
@@ -436,11 +457,13 @@ describe('identity-provider login flow', () => {
 
         // the gate runs before the first write, so no account and no user
         const { data: accounts } = await suite.client.identityProviderAccount.getMany({ filters: { providerId: closed.id } });
+
         expect(accounts).toHaveLength(0);
 
         // the one trace: a LOGIN_FAILED row naming the provider and no actor
         const { data: events } = await suite.client.event.getMany({ filters: { name: EventName.LOGIN_FAILED, realmId: realm.id } });
         const row = events.find((event) => event.data?.providerId === closed.id);
+
         expect(row).toBeDefined();
         expect(row?.data).toEqual({ reason: 'enrollment', providerId: closed.id });
         expect(row?.actorId).toBeNull();
@@ -476,10 +499,12 @@ describe('identity-provider login flow', () => {
         }))).data;
 
         const deniedLocation = await completeAt(denied.id, 'external-code-5');
+
         expect(deniedLocation.searchParams.get('error')).toEqual(OAuth2ErrorCode.ACCESS_DENIED);
         expect(deniedLocation.searchParams.get('provider')).toBeNull();
 
         const { data: deniedAccounts } = await suite.client.identityProviderAccount.getMany({ filters: { providerId: denied.id } });
+
         expect(deniedAccounts).toHaveLength(0);
 
         const permitted = (await suite.client.identityProvider.create(createFakeOAuth2IdentityProvider({
@@ -490,10 +515,12 @@ describe('identity-provider login flow', () => {
         }))).data;
 
         const permittedLocation = await completeAt(permitted.id, 'external-code-6');
+
         expect(permittedLocation.searchParams.get('error')).toBeNull();
         expect(permittedLocation.searchParams.get('provider')).toEqual(permitted.id);
 
         const { data: permittedAccounts } = await suite.client.identityProviderAccount.getMany({ filters: { providerId: permitted.id } });
+
         expect(permittedAccounts).toHaveLength(1);
         expect(permittedAccounts[0].providerUserId).toEqual('external-user-1');
     });

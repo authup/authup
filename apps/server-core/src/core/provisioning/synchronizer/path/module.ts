@@ -82,6 +82,7 @@ export class PathProvisioningSynchronizer extends BaseProvisioningSynchronizer<P
             undefined;
 
         const attributes : Partial<Path> = {};
+
         for (const key of WRITABLE_ATTRIBUTES) {
             if (typeof input.attributes[key] === 'undefined') {
                 continue;

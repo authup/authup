@@ -41,7 +41,7 @@ describe('core/entities/role/service', () => {
         realmRepository = new FakeRealmRepository();
         service = new RoleService({
             repository,
-            realmRepository, 
+            realmRepository,
         });
     });
 
@@ -60,6 +60,7 @@ describe('core/entities/role/service', () => {
 
         it('should call preCheckOneOf with read/update/delete permissions', async () => {
             const actor = createAllowAllActor();
+
             await service.getMany({}, actor);
 
             expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
@@ -124,6 +125,7 @@ describe('core/entities/role/service', () => {
 
         it('should call preCheck with ROLE_CREATE permission', async () => {
             const actor = createAllowAllActor();
+
             await service.create({ name: 'new-role' }, actor);
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROLE_CREATE });
@@ -131,6 +133,7 @@ describe('core/entities/role/service', () => {
 
         it('should call check with ROLE_CREATE and PolicyData on create', async () => {
             const actor = createAllowAllActor();
+
             await service.create({ name: 'policy-role' }, actor);
 
             expect(actor.permissionEvaluator.evaluateCalls).toContainEqual(
@@ -160,6 +163,7 @@ describe('core/entities/role/service', () => {
             );
 
             const found = await repository.findOneById(result.id);
+
             expect(found).not.toBeNull();
             expect(found!.name).toBe('persisted-role');
         });
@@ -185,6 +189,7 @@ describe('core/entities/role/service', () => {
             const entity = repository.seed(createFakeRole({ name: 'old-name' }));
 
             const actor = createAllowAllActor();
+
             await service.update(entity.id, { name: 'new-name' }, actor);
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROLE_UPDATE });
@@ -194,12 +199,14 @@ describe('core/entities/role/service', () => {
     describe('update reach (#3654)', () => {
         const restrict = () => {
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (!(call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE)) {
                     return;
                 }
 
                 const attributes = call.ctx.data?.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+
                 if (!attributes || !`${attributes.name}`.startsWith('team-')) {
                     throw PermissionError.denied('reach');
                 }
@@ -230,6 +237,7 @@ describe('core/entities/role/service', () => {
             const entity = repository.seed(createFakeRole({ name: 'team-role' }));
 
             const result = await service.update(entity.id, { name: 'team-renamed' }, restrict());
+
             expect(result.name).toBe('team-renamed');
         });
 
@@ -245,8 +253,8 @@ describe('core/entities/role/service', () => {
     describe('save (upsert)', () => {
         it('should create when entity not found', async () => {
             const {
-                entity, 
-                created, 
+                entity,
+                created,
             } = await service.save(
                 undefined,
                 { name: 'upserted-role' },
@@ -261,8 +269,8 @@ describe('core/entities/role/service', () => {
             const seeded = repository.seed(createFakeRole({ name: 'old-name' }));
 
             const {
-                entity, 
-                created, 
+                entity,
+                created,
             } = await service.save(
                 seeded.id,
                 { name: 'updated-name' },
@@ -277,8 +285,8 @@ describe('core/entities/role/service', () => {
             repository.seed([createFakeRole({ name: 'find-by-name' })]);
 
             const {
-                entity, 
-                created, 
+                entity,
+                created,
             } = await service.save(
                 'find-by-name',
                 { description: 'updated' },
@@ -352,6 +360,7 @@ describe('core/entities/role/service', () => {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             };
+
             realmRepository.seed([realm]);
 
             const actor = createNonMasterRealmActor();
@@ -359,7 +368,7 @@ describe('core/entities/role/service', () => {
             const result = await service.create(
                 {
                     name: 'explicit-realm-role',
-                    realmId: explicitRealmId, 
+                    realmId: explicitRealmId,
                 },
                 actor,
             );
@@ -373,7 +382,7 @@ describe('core/entities/role/service', () => {
             const result = await service.create(
                 {
                     name: 'global-role',
-                    realmId: null, 
+                    realmId: null,
                 },
                 actor,
             );
@@ -449,6 +458,7 @@ describe('core/entities/role/service', () => {
             expect(result.id).toBe(entity.id);
 
             const found = await repository.findOneById(entity.id);
+
             expect(found).toBeNull();
         });
 
@@ -470,6 +480,7 @@ describe('core/entities/role/service', () => {
             const entity = repository.seed(createFakeRole());
 
             const actor = createAllowAllActor();
+
             await service.delete(entity.id, actor);
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROLE_DELETE });
@@ -501,9 +512,9 @@ describe('core/entities/role/service', () => {
             const global = seedEntity('name-scoped', null);
 
             return {
-                master, 
-                global, 
-                scoped, 
+                master,
+                global,
+                scoped,
             };
         }
 
@@ -568,11 +579,13 @@ describe('core/entities/role/service', () => {
         it('should address the client owned row when its client is given', async () => {
             const clientId = randomUUID();
             const clientRealmId = randomUUID();
+
             repository.onValidateJoinColumns((input) => {
                 if (input.clientId === clientId) {
                     input.client = { id: clientId, realmId: clientRealmId } as Role['client'];
                 }
             });
+
             const global = repository.seed(createFakeRole({ name: 'name-owned', realmId: null }));
             const owned = repository.seed(createFakeRole({
                 name: 'name-owned',
@@ -593,6 +606,7 @@ describe('core/entities/role/service', () => {
 
         it('should not look the client up for a caller who may not write', async () => {
             let lookups = 0;
+
             repository.onValidateJoinColumns(() => {
                 lookups++;
             });

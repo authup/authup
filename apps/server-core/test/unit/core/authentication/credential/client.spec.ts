@@ -80,9 +80,9 @@ describe('core/authentication/credential/client', () => {
 
         it('should encrypt into a realm cipher blob in encrypted mode', async () => {
             const stored = await encrypting.protect('start1234', {
-                secretHashed: false, 
-                secretEncrypted: true, 
-                realmId, 
+                secretHashed: false,
+                secretEncrypted: true,
+                realmId,
             });
 
             expect(isRealmCipherBlob(stored)).toBe(true);
@@ -91,14 +91,14 @@ describe('core/authentication/credential/client', () => {
 
         it('should decrypt and compare in encrypted mode', async () => {
             const stored = await encrypting.protect('start1234', {
-                secretHashed: false, 
-                secretEncrypted: true, 
-                realmId, 
+                secretHashed: false,
+                secretEncrypted: true,
+                realmId,
             });
             const client = buildClient({
-                secretEncrypted: true, 
-                secret: stored, 
-                realmId, 
+                secretEncrypted: true,
+                secret: stored,
+                realmId,
             });
 
             expect(await encrypting.verify('start1234', client)).toBe(true);
@@ -107,14 +107,14 @@ describe('core/authentication/credential/client', () => {
 
         it('should refuse a blob bound to another realm', async () => {
             const stored = await encrypting.protect('start1234', {
-                secretHashed: false, 
-                secretEncrypted: true, 
-                realmId, 
+                secretHashed: false,
+                secretEncrypted: true,
+                realmId,
             });
             const client = buildClient({
-                secretEncrypted: true, 
-                secret: stored, 
-                realmId: randomUUID(), 
+                secretEncrypted: true,
+                secret: stored,
+                realmId: randomUUID(),
             });
 
             expect(await encrypting.verify('start1234', client)).toBe(false);
@@ -122,9 +122,9 @@ describe('core/authentication/credential/client', () => {
 
         it('should compare a legacy encrypted-flagged plaintext as plain (the flag never encrypted it)', async () => {
             const client = buildClient({
-                secretEncrypted: true, 
-                secret: 'legacy', 
-                realmId, 
+                secretEncrypted: true,
+                secret: 'legacy',
+                realmId,
             });
 
             expect(await encrypting.verify('legacy', client)).toBe(true);
@@ -134,9 +134,9 @@ describe('core/authentication/credential/client', () => {
         it('should refuse to encrypt without a cipher', async () => {
             await expect(
                 service.protect('start1234', {
-                    secretHashed: false, 
-                    secretEncrypted: true, 
-                    realmId, 
+                    secretHashed: false,
+                    secretEncrypted: true,
+                    realmId,
                 }),
             ).rejects.toThrow();
         });

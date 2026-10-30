@@ -37,7 +37,9 @@ function toDay(input: Date): string {
 function translateCondition(condition: ICondition): ICondition | undefined {
     if (isFilters(condition)) {
         const children = condition.value.map((child) => translateCondition(child));
-        if (children.some((child) => !child)) {
+        const hasUntranslatedChild = children.some((child) => !child);
+
+        if (hasUntranslatedChild) {
             return undefined;
         }
 
@@ -49,6 +51,7 @@ function translateCondition(condition: ICondition): ICondition | undefined {
     }
 
     const date = new Date(condition.value as string);
+
     if (
         Number.isNaN(date.getTime()) ||
         date.getTime() % 86_400_000 !== 0 ||
@@ -70,11 +73,14 @@ function translateCondition(condition: ICondition): ICondition | undefined {
  */
 export function translateEventAggregateQuery(query: IQuery): IQuery | undefined {
     const aggregates = query.aggregates?.value ?? [];
-    if (aggregates.some((aggregate) => aggregate.lowering?.fn !== 'count' || !!aggregate.lowering.field)) {
+    const hasUnsupportedAggregate = aggregates.some((aggregate) => aggregate.lowering?.fn !== 'count' || !!aggregate.lowering.field);
+
+    if (hasUnsupportedAggregate) {
         return undefined;
     }
 
     const filters = translateCondition(query.filters);
+
     if (!filters) {
         return undefined;
     }
@@ -90,9 +96,9 @@ export function translateEventAggregateQuery(query: IQuery): IQuery | undefined 
                 name: 'bucket',
                 params: ['date', ...group.lowering.args],
                 lowering: {
-                    fn: 'bucket', 
-                    field: 'date', 
-                    args: group.lowering.args, 
+                    fn: 'bucket',
+                    field: 'date',
+                    args: group.lowering.args,
                 },
             });
         })),
@@ -100,9 +106,9 @@ export function translateEventAggregateQuery(query: IQuery): IQuery | undefined 
             name: 'sum',
             params: ['count'],
             lowering: {
-                fn: 'sum', 
-                field: 'count', 
-                args: [], 
+                fn: 'sum',
+                field: 'count',
+                args: [],
             },
         }))),
     });
@@ -113,9 +119,9 @@ export function translateEventAggregateQuery(query: IQuery): IQuery | undefined 
  */
 export function translateEventAggregateRow(row: Record<string, unknown>): Record<string, unknown> {
     const {
-        date, 
-        sumCount, 
-        ...rest 
+        date,
+        sumCount,
+        ...rest
     } = row;
 
     return {

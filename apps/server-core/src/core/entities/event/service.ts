@@ -76,6 +76,7 @@ export class EventService extends AbstractEntityService implements IEventService
     protected async resolveReadVisibility(actor: ActorContext): Promise<EventReadVisibility | undefined> {
         const actorRealmId = this.getActorRealmId(actor);
         let foreignRealmId = randomUUID();
+
         while (foreignRealmId === actorRealmId) {
             foreignRealmId = randomUUID();
         }
@@ -85,9 +86,11 @@ export class EventService extends AbstractEntityService implements IEventService
         }
 
         const realmIds: Array<string | null> = [];
+
         if (actorRealmId && await this.canReadRealm(actor, actorRealmId)) {
             realmIds.push(actorRealmId);
         }
+
         if (await this.canReadRealm(actor, null)) {
             realmIds.push(null);
         }
@@ -183,6 +186,7 @@ export class EventService extends AbstractEntityService implements IEventService
         // OR-alternative, and stands alone for an actor without the permission.
         // A non-expressible policy falls back to the probe + per-row loop below.
         const scope = await this.scopeRead(parsed, actor);
+
         if (!scope.post) {
             return this.repository.findMany(scope.query, realm);
         }
@@ -198,6 +202,7 @@ export class EventService extends AbstractEntityService implements IEventService
         for (const entity of entities) {
             if (this.isOwnedBy(entity, actor)) {
                 data.push(entity);
+
                 continue;
             }
 
@@ -206,6 +211,7 @@ export class EventService extends AbstractEntityService implements IEventService
                 realm: entity.realmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
+
             if (reached) {
                 data.push(entity);
             }
@@ -222,6 +228,7 @@ export class EventService extends AbstractEntityService implements IEventService
 
     async getOne(id: string, actor: ActorContext, options: EventServiceReadOptions = {}): Promise<Event> {
         const entity = await this.repository.findOneById(id);
+
         if (!entity || (options.realmId && entity.realmId !== options.realmId)) {
             throw new EntityNotFoundError();
         }

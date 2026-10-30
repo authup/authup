@@ -15,6 +15,7 @@ const sym = Symbol.for('AuthupStore');
 
 export function injectStore(pinia?: Pinia, app?: App) : Store {
     const instance = injectStoreFactory(app);
+
     if (!instance) {
         throw new Error('The store has not been injected in the app context.');
     }
@@ -24,6 +25,7 @@ export function injectStore(pinia?: Pinia, app?: App) : Store {
 
 export function injectStoreFactory(app?: App) : StoreDefinition {
     const instance = inject<StoreDefinition>(sym, app);
+
     if (!instance) {
         throw new Error('The store factory has not been injected in the app context.');
     }

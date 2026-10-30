@@ -34,8 +34,8 @@ import type {
     EntityStatsResponse,
     RealmCreatePayload,
     RealmRecordResponse,
-    RealmSavePayload, 
-    RealmUpdatePayload, 
+    RealmSavePayload,
+    RealmUpdatePayload,
 } from '@authup/core-http-kit';
 import type { Realm } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
@@ -43,8 +43,8 @@ import type { IEntityStatsService, IRealmService  } from '../../../../../core/in
 import {
     RECORD_QUERY_PARAMETERS,
     STATS_QUERY_PARAMETERS,
-    describeQuerySchema, 
-    realmSchema, 
+    describeQuerySchema,
+    realmSchema,
 } from '../../../../../core/index.ts';
 import type { KeyEntity } from '../../../../database/domains/index.ts';
 import { getJwkRouteHandler, getJwksRouteHandler } from '../../workflows/index.ts';
@@ -267,6 +267,7 @@ export class RealmController {
     @DGet('/:id/jwks', [])
     async getCerts(@DPath('id') id: string): Promise<{ keys: OAuth2JsonWebKey[] }> {
         const entity = await this.service.getOne(id);
+
         return getJwksRouteHandler(this.keyRepository, entity.id);
     }
 
@@ -276,6 +277,7 @@ export class RealmController {
         @DPath('keyId') keyId: string,
     ): Promise<OAuth2JsonWebKey> {
         const entity = await this.service.getOne(id);
+
         return getJwkRouteHandler(this.keyRepository, keyId, entity.id);
     }
 
@@ -314,6 +316,7 @@ export class RealmController {
         );
 
         event.response.status = created ? 201 : 202;
+
         return { data: entity, meta: {} };
     }
 

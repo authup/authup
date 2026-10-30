@@ -38,7 +38,9 @@ describe('src/http/controllers/user-authenticator', () => {
             password,
         });
         const client = new HTTPClient({ baseURL: suite.baseURL });
+
         client.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
+
         return { id: user.id, client };
     }
 
@@ -48,19 +50,23 @@ describe('src/http/controllers/user-authenticator', () => {
         // secret-bearing factors are self-enrollment only — the user enrolls
         // their own recovery set (the admin never sees the codes).
         const enrolled = await userClient.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.RECOVERY });
+
         expect(enrolled.meta.codes).toHaveLength(10);
         expect(enrolled.data.userId).toEqual(userId);
 
         // the admin can list it (secrets nulled) ...
         const list = await suite.client.userAuthenticator.getMany(userId);
+
         expect(list.data).toHaveLength(1);
         expect(list.data[0].codes ?? null).toBeNull();
 
         // ... and reset it by deleting (the sanctioned admin management path)
         const { data: deleted } = await suite.client.userAuthenticator.delete(userId, enrolled.data.id);
+
         expect(deleted.id).toEqual(enrolled.data.id);
 
         const after = await suite.client.userAuthenticator.getMany(userId);
+
         expect(after.data).toHaveLength(0);
     });
 
@@ -83,6 +89,7 @@ describe('src/http/controllers/user-authenticator', () => {
 
         // nothing was created on the target
         const list = await suite.client.userAuthenticator.getMany(userId);
+
         expect(list.data).toHaveLength(0);
     });
 
@@ -112,6 +119,7 @@ describe('src/http/controllers/user-authenticator', () => {
 
     it('keeps a non-user identity out of the challenge surface', async () => {
         const status = await suite.client.userAuthenticator.challenge();
+
         // suite.client authenticates via admin user basic auth — a user
         // without devices is simply not required to present a factor.
         expect(status.required).toBeFalsy();

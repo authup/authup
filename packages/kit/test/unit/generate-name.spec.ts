@@ -21,6 +21,7 @@ describe('generateName', () => {
 
     it('is practically unique across calls', () => {
         const names = new Set(Array.from({ length: 200 }, () => generateName()));
+
         expect(names.size).toBeGreaterThan(195);
     });
 
@@ -31,6 +32,7 @@ describe('generateName', () => {
 
     it('still produces a valid name when seeded', () => {
         const name = generateName('hydration-stable-id');
+
         expect(name).toMatch(/^[a-z]+-[a-z]+-[0-9a-f]{6}$/);
     });
 });

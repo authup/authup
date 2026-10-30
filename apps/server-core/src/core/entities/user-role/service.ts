@@ -65,6 +65,7 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
             name: READ_PERMISSION_NAMES,
             realmAttributeName: this.ownerRealmKey,
         });
+
         if (compiled.verdict === 'deny') {
             parsed = appendQueryConditions(parsed, inArray('id', []));
         } else if (compiled.verdict === 'conditional') {
@@ -86,8 +87,10 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
                 realm: this.junctionResourceRealm(entity),
                 data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -104,6 +107,7 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
         await actor.permissionEvaluator.preEvaluateOneOf({ name: READ_PERMISSION_NAMES });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -131,6 +135,7 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
             roleId: validated.roleId,
             userId: validated.userId,
         });
+
         if (existing) {
             throw new EntityConflictError({ entity: 'user-role' });
         }
@@ -151,6 +156,7 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
                     id: validated.roleId,
                 }),
             );
+
             if (!hasPermissions) {
                 throw new PermissionError({ message: 'You don\'t own the required permissions.' });
             }
@@ -164,6 +170,7 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
         });
 
         let entity = this.repository.create(validated);
+
         entity = await this.repository.save(entity);
 
         return entity;
@@ -176,6 +183,7 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_ROLE_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -188,6 +196,7 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
         });
 
         const { id: entityId } = entity;
+
         await this.repository.remove(entity);
         entity.id = entityId;
 

@@ -71,10 +71,12 @@ describe('grant-authorize (access policy backstop)', () => {
             tokenBindingMethod: 'none',
         }));
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: client.id,
         });
+
         return client;
     };
 
@@ -86,6 +88,7 @@ describe('grant-authorize (access policy backstop)', () => {
             scope: `${ScopeName.GLOBAL}`,
             state: generateOAuth2CodeVerifier(),
         });
+
         return new URL(response.url).searchParams.get('code')!;
     };
 
@@ -100,6 +103,7 @@ describe('grant-authorize (access policy backstop)', () => {
         const login = await suite.client.token.createWithPassword({ username: user.name, password });
 
         const bearer = new HTTPClient({ baseURL: suite.baseURL });
+
         bearer.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
 
         const introspection = await bearer.token.introspect(
@@ -107,6 +111,7 @@ describe('grant-authorize (access policy backstop)', () => {
             { authorizationHeaderInherit: true },
         );
         const sessionId = introspection.session_id as string;
+
         expect(sessionId).toBeDefined();
 
         const code = await issueCode(client.id, bearer);
@@ -132,6 +137,7 @@ describe('grant-authorize (access policy backstop)', () => {
         // AUTHORIZE_FAILED by name: the successful /authorize above already
         // recorded an AUTHORIZE row for this client.
         const { data: events } = await suite.client.event.getMany({ filters: { name: EventName.AUTHORIZE_FAILED, clientId: client.id } });
+
         expect(events).toHaveLength(1);
         expect(events[0].data).toEqual({
             reason: 'accessPolicy',

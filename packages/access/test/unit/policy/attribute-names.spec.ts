@@ -36,6 +36,7 @@ describe('src/policy/attribute-names', () => {
                 },
             }),
         }));
+
         expect(outcome.success)
             .toBeTruthy();
     });
@@ -66,6 +67,7 @@ describe('src/policy/attribute-names', () => {
         };
 
         const outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext());
+
         expect(outcome.success).toBeFalsy();
         expect(outcome.pending).toBeTruthy();
         expect(outcome.issues![0].code).toEqual(PolicyIssueCode.DATA_MISSING);
@@ -86,6 +88,7 @@ describe('src/policy/attribute-names', () => {
                 },
             }),
         }));
+
         expect(outcome.success).toBeFalsy();
     });
 
@@ -101,6 +104,7 @@ describe('src/policy/attribute-names', () => {
             policy,
             definePolicyEvaluationContext({ data: new PolicyData({ attributes: { user: { name: 'admin' } } }) }),
         );
+
         expect(outcome.success)
             .toBeTruthy();
     });
@@ -117,6 +121,7 @@ describe('src/policy/attribute-names', () => {
             policy,
             definePolicyEvaluationContext({ data: new PolicyData({ attributes: { user: { displayName: 'admin' } } }) }),
         );
+
         expect(outcome.success)
             .toBeFalsy();
     });
@@ -142,6 +147,7 @@ describe('src/policy/attribute-names', () => {
                 }),
             }),
         );
+
         expect(outcome.success).toBeFalsy();
     });
 
@@ -153,6 +159,7 @@ describe('src/policy/attribute-names', () => {
                 policy,
                 definePolicyEvaluationContext({ data: new PolicyData({ attributeNames: ['foo', 'bar'] }) }),
             );
+
             expect(outcome.success).toBeTruthy();
         });
 
@@ -163,6 +170,7 @@ describe('src/policy/attribute-names', () => {
                 policy,
                 definePolicyEvaluationContext({ data: new PolicyData({ attributeNames: ['foo', 'baz'] }) }),
             );
+
             expect(outcome.success).toBeFalsy();
             expect(outcome.issues).toHaveLength(1);
             expect(outcome.issues![0].code).toEqual(PolicyIssueCode.EVALUATION_DENIED);
@@ -179,6 +187,7 @@ describe('src/policy/attribute-names', () => {
                 policy,
                 definePolicyEvaluationContext({ data: new PolicyData({ attributeNames: ['secret'] }) }),
             );
+
             expect(outcome.success).toBeFalsy();
 
             outcome = await evaluator.evaluate(
@@ -195,6 +204,7 @@ describe('src/policy/attribute-names', () => {
                 policy,
                 definePolicyEvaluationContext({ data: new PolicyData({ attributeNames: [] }) }),
             );
+
             expect(outcome.success).toBeTruthy();
 
             outcome = await evaluator.evaluate(
@@ -211,6 +221,7 @@ describe('src/policy/attribute-names', () => {
                 policy,
                 definePolicyEvaluationContext({ data: new PolicyData({ attributeNames: { foo: true } }) }),
             );
+
             expect(outcome.success).toBeFalsy();
             expect(outcome.issues![0].code).toEqual(PolicyIssueCode.DATA_INVALID);
 
@@ -231,6 +242,7 @@ describe('src/policy/attribute-names', () => {
                     attributes: { secret: 'x' },
                 }),
             }));
+
             expect(outcome.success).toBeFalsy();
             expect(outcome.issues![0].path).toEqual(['secret']);
 
@@ -264,6 +276,7 @@ describe('src/policy/attribute-names', () => {
                     attributes: { secret: 'x' },
                 }),
             }));
+
             expect(outcome.success).toBeFalsy();
             expect(outcome.issues).toHaveLength(1);
         });
@@ -278,6 +291,7 @@ describe('src/policy/attribute-names', () => {
                 policy,
                 definePolicyEvaluationContext({ data: new PolicyData({ attributes: { name: 'admin' } }) }),
             );
+
             expect(outcome.success).toBeTruthy();
 
             outcome = await evaluator.evaluate(
@@ -300,6 +314,7 @@ describe('src/policy/attribute-names', () => {
                 const policy = definePolicyWithType(BuiltInPolicyType.ATTRIBUTE_NAMES, { names: ['foo'] } satisfies AttributeNamesPolicy);
 
                 const outcome = await engine.evaluate(policy, definePolicyEvaluationContext());
+
                 expect(outcome.success).toBeFalsy();
                 expect(outcome.pending).toBeTruthy();
             });
@@ -311,6 +326,7 @@ describe('src/policy/attribute-names', () => {
                     policy,
                     definePolicyEvaluationContext({ data: new PolicyData({ attributeNames: ['foo'] }) }),
                 );
+
                 expect(outcome.success).toBeTruthy();
                 expect(outcome.pending).toBeFalsy();
 
@@ -329,6 +345,7 @@ describe('src/policy/attribute-names', () => {
                     policy,
                     definePolicyEvaluationContext({ data: new PolicyData({ attributes: { foo: 'bar' } }) }),
                 );
+
                 expect(outcome.success).toBeTruthy();
                 expect(outcome.pending).toBeFalsy();
             });

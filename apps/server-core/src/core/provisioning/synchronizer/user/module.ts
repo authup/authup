@@ -6,9 +6,9 @@
  */
 
 import type {
-    Permission, 
-    Role, 
-    UserPermission, 
+    Permission,
+    Role,
+    UserPermission,
     UserRole,
 } from '@authup/core-kit';
 import { buildUserFakeEmail } from '@authup/core-kit';
@@ -78,6 +78,7 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
             if (attributes) {
                 await this.userRepository.remove(attributes);
             }
+
             return {
                 ...input,
                 attributes: attributes || input.attributes,
@@ -85,6 +86,7 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
         }
 
         let created = false;
+
         if (attributes) {
             switch (strategy.type) {
                 case ProvisioningEntityStrategyType.MERGE: {
@@ -114,6 +116,7 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
                     );
 
                     attributes = await this.userRepository.save(attributes);
+
                     break;
                 }
                 case ProvisioningEntityStrategyType.REPLACE:
@@ -124,11 +127,13 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
 
                     input.attributes.id = attributes.id;
                     attributes = await this.userRepository.save(this.userRepository.create(input.attributes));
+
                     break;
             }
         } else {
             created = true;
             await this.resolvePath(input);
+
             if (!input.attributes.email && input.attributes.name) {
                 input.attributes.email = buildUserFakeEmail(input.attributes.name);
             }
@@ -160,6 +165,7 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
 
         if (input.relations && input.relations.clientPermissions) {
             const clientKeys = Object.keys(input.relations.clientPermissions);
+
             for (const clientKey of clientKeys) {
                 const client = await this.clientRepository.findOneBy({
                     name: clientKey,
@@ -172,6 +178,7 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
                         attributes.realmId,
                         client.id,
                     );
+
                     permissions.push(...entities);
                 }
             }
@@ -201,6 +208,7 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
 
         if (input.relations && input.relations.clientRoles) {
             const clientKeys = Object.keys(input.relations.clientRoles);
+
             for (const clientKey of clientKeys) {
                 const client = await this.clientRepository.findOneBy({
                     name: clientKey,
@@ -213,6 +221,7 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
                         attributes.realmId,
                         client.id,
                     );
+
                     roles.push(...entities);
                 }
             }

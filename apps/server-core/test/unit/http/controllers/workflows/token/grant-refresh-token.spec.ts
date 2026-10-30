@@ -30,7 +30,8 @@ const RENDERER_USER_AGENT = 'node';
 
 function decodeJwtPayload(token: string): OAuth2TokenPayload {
     const [, payload] = token.split('.');
-    return JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8'));
+
+    return JSON.parse(new TextDecoder().decode(Uint8Array.fromBase64(payload, { alphabet: 'base64url' })));
 }
 
 describe('refresh-token', () => {
@@ -160,6 +161,7 @@ describe('refresh-token', () => {
         const introspected = await suite.client
             .token
             .introspect({ token: login.refresh_token! }, { authorizationHeaderInherit: true });
+
         expect(introspected.client_id).toEqual(publicClient.id);
 
         const refreshed = await suite.client
@@ -228,6 +230,7 @@ describe('refresh-token', () => {
         const { data: realm } = await suite.client.realm.create(createFakeRealm());
         const { name } = createFakeClient();
         const masterSecret = 'master-leg-secret';
+
         await suite.client.client.create(createFakeClient({
             name,
             secret: masterSecret,
@@ -306,6 +309,7 @@ describe('refresh-token', () => {
 
         // realm_name is honored and canonicalized on the refresh leg too
         passwordResponse = await login();
+
         const rawResponse = await httpRequest(suite, 'POST', '/token', {
             form: {
                 grant_type: 'refresh_token',
@@ -315,6 +319,7 @@ describe('refresh-token', () => {
                 realm_name: ` ${realm.name.toUpperCase()} `,
             },
         });
+
         expect(rawResponse.status).toEqual(200);
 
         // without a hint the name resolves in master, where the client does
@@ -462,6 +467,7 @@ describe('refresh-token', () => {
             .createWithRefreshToken({ refresh_token: rt1 });
 
         expect(rotated.refresh_token).toBeDefined();
+
         const rt2 = rotated.refresh_token!;
         const at2 = rotated.access_token;
 
@@ -481,6 +487,7 @@ describe('refresh-token', () => {
         const introspect = await suite.client
             .token
             .introspect({ token: at2 }, { authorizationHeaderInherit: true });
+
         expect(introspect.active).toBeFalsy();
     });
 
@@ -499,10 +506,13 @@ describe('refresh-token', () => {
                 password: 'start123',
             },
         });
+
         expect(login.status).toEqual(200);
+
         const grant = await login.json();
 
         const sessionId = decodeJwtPayload(grant.access_token).session_id!;
+
         expect(sessionId).toBeDefined();
 
         const refreshed = await httpRequest(suite, 'POST', '/token', {
@@ -512,20 +522,25 @@ describe('refresh-token', () => {
                 refresh_token: grant.refresh_token,
             },
         });
+
         expect(refreshed.status).toEqual(200);
+
         const rotated = await refreshed.json();
 
         // same session, still attributed to the browser it was created from
         const rotatedPayload = decodeJwtPayload(rotated.access_token);
+
         expect(rotatedPayload.session_id).toEqual(sessionId);
 
         const { data: session } = await suite.client.session.getOne(sessionId);
+
         expect(session.userAgent).toEqual(BROWSER_USER_AGENT);
 
         // the refresh itself is not lost: it is on the issuance
         const row = await suite.dataSource
             .getRepository(SessionTokenEntity)
             .findOne({ where: { id: rotatedPayload.jti! } });
+
         expect(row?.userAgent).toEqual(RENDERER_USER_AGENT);
     });
 

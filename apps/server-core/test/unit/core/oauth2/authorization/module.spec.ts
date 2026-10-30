@@ -39,6 +39,7 @@ const issueCalls: OAuth2AuthorizationCodeIssuerOptions[] = [];
 const codeIssuer: IOAuth2AuthorizationCodeIssuer = {
     issue: async (_input, _identity, options = {}) => {
         issueCalls.push(options);
+
         return {
             id: randomUUID(),
             sub: randomUUID(),
@@ -105,6 +106,7 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
 
     const seedSession = async (ageSeconds: number) => {
         const createdAt = new Date((Math.floor(Date.now() / 1000) - ageSeconds) * 1000).toISOString();
+
         await sessionManager.create({
             id: sessionId,
             sub: identity.data.id,
@@ -136,6 +138,7 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
         await seedSession(1);
 
         const result = await authorization.authorize(buildData({ prompt: 'login' }), identity, { sessionId });
+
         expect(result.redirectUri).toEqual('https://example.com/callback');
     });
 
@@ -147,6 +150,7 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
         await seedSession(30);
 
         const result = await authorization.authorize(buildData({ prompt: 'login' }), identity, { sessionId });
+
         expect(result.authorizationCode).toBeDefined();
     });
 
@@ -164,6 +168,7 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
         await seedSession(30);
 
         const viaPrompt = await authorization.authorize(buildData({ prompt: 'login' }), identity, { sessionId });
+
         expect(viaPrompt.authorizationCode).toBeDefined();
 
         await expect(
@@ -178,9 +183,11 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
             type: OAuth2SubKind.USER,
             data: { ...identity.data },
         };
+
         Reflect.deleteProperty(relationless.data, 'realm');
 
         const result = await authorization.authorize(buildData(), relationless, {});
+
         expect(result.authorizationCode).toBeDefined();
     });
 
@@ -192,6 +199,7 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
             type: OAuth2SubKind.USER,
             data: { ...identity.data },
         };
+
         Reflect.deleteProperty(realmless.data, 'realm');
         Reflect.deleteProperty(realmless.data, 'realmId');
 
@@ -202,6 +210,7 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
 
     it('should source auth_time from createdAt, never refreshed_at', async () => {
         const nowSeconds = Math.floor(Date.now() / 1000);
+
         await sessionManager.create({
             id: sessionId,
             sub: identity.data.id,
@@ -231,6 +240,7 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
         await seedSession(50);
 
         const result = await authorization.authorize(buildData({ max_age: 100 }), identity, { sessionId });
+
         expect(result.redirectUri).toEqual('https://example.com/callback');
     });
 
@@ -238,12 +248,14 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
         await seedSession(10_000);
 
         const result = await authorization.authorize(buildData(), identity, { sessionId });
+
         expect(result.redirectUri).toEqual('https://example.com/callback');
     });
 
     it('should treat a session-less request as freshly authenticated', async () => {
         // no session seeded / no sessionId → auth_time = now → passes
         const result = await authorization.authorize(buildData({ prompt: 'login', max_age: 0 }), identity, {});
+
         expect(result.redirectUri).toEqual('https://example.com/callback');
     });
 
@@ -261,11 +273,13 @@ describe('OAuth2Authorization prompt/max_age enforcement', () => {
 
     it('should issue an authorization code for response_type=code', async () => {
         const result = await authorization.authorize(buildData(), identity, {});
+
         expect(result.authorizationCode).toBeDefined();
     });
 
     it('should pass the session createdAt as authTime to the code issuer', async () => {
         const nowSeconds = Math.floor(Date.now() / 1000);
+
         await seedSession(300);
 
         await authorization.authorize(buildData(), identity, { sessionId });
@@ -349,6 +363,7 @@ describe('OAuth2Authorization MFA backstop + acr step-up', () => {
 
     it('should reject a confirmed-device user whose session carries no mfa proof', async () => {
         await seedSession({ mfaAt: null });
+
         const authorization = buildAuthorization(provider({ required: true }));
 
         await expect(authorization.authorize(buildData(), identity, { sessionId }))
@@ -364,14 +379,17 @@ describe('OAuth2Authorization MFA backstop + acr step-up', () => {
 
     it('should pass once the session carries the mfa proof', async () => {
         await seedSession({ mfaAt: new Date().toISOString() });
+
         const authorization = buildAuthorization(provider({ required: true }));
 
         const result = await authorization.authorize(buildData(), identity, { sessionId });
+
         expect(result.authorizationCode).toBeDefined();
     });
 
     it('should route a device-less user to enrollment under mfaRequired', async () => {
         await seedSession();
+
         const authorization = buildAuthorization(provider({ enrollmentRequired: true }));
 
         await expect(authorization.authorize(buildData(), identity, { sessionId }))
@@ -380,15 +398,18 @@ describe('OAuth2Authorization MFA backstop + acr step-up', () => {
 
     it('should not gate a user without devices (nothing required)', async () => {
         await seedSession();
+
         const authorization = buildAuthorization(provider({}));
 
         const result = await authorization.authorize(buildData(), identity, { sessionId });
+
         expect(result.authorizationCode).toBeDefined();
     });
 
     it('should enforce acr step-up freshness against the window', async () => {
         // proof present but older than the freshness window
         await seedSession({ mfaAt: new Date(Date.now() - 120_000).toISOString() });
+
         const authorization = buildAuthorization(provider({ required: true }), 60);
 
         await expect(authorization.authorize(
@@ -400,6 +421,7 @@ describe('OAuth2Authorization MFA backstop + acr step-up', () => {
 
     it('should satisfy acr step-up with a fresh proof', async () => {
         await seedSession({ mfaAt: new Date().toISOString() });
+
         const authorization = buildAuthorization(provider({ required: true }), 60);
 
         const result = await authorization.authorize(
@@ -407,11 +429,13 @@ describe('OAuth2Authorization MFA backstop + acr step-up', () => {
             identity,
             { sessionId },
         );
+
         expect(result.authorizationCode).toBeDefined();
     });
 
     it('should ignore an unsatisfiable acr request for a factor-less user (voluntary claim)', async () => {
         await seedSession();
+
         const authorization = buildAuthorization(provider({}), 60);
 
         const result = await authorization.authorize(
@@ -419,11 +443,13 @@ describe('OAuth2Authorization MFA backstop + acr step-up', () => {
             identity,
             { sessionId },
         );
+
         expect(result.authorizationCode).toBeDefined();
     });
 
     it('should ignore unknown acr tokens (forward-compat)', async () => {
         await seedSession({ mfaAt: new Date().toISOString() });
+
         const authorization = buildAuthorization(provider({ required: true }), 60);
 
         const result = await authorization.authorize(
@@ -431,11 +457,13 @@ describe('OAuth2Authorization MFA backstop + acr step-up', () => {
             identity,
             { sessionId },
         );
+
         expect(result.authorizationCode).toBeDefined();
     });
 
     it('should thread the session authMethod into the issued code', async () => {
         await seedSession({ authMethod: 'pwd' });
+
         const authorization = buildAuthorization();
 
         await authorization.authorize(buildData(), identity, { sessionId });
@@ -463,6 +491,7 @@ describe('OAuth2Authorization access policy gate (plan 052)', () => {
 
         async evaluate(policyId: string, subject: IdentityPolicyData): Promise<boolean> {
             this.calls.push({ policyId, subject });
+
             return this.allowed;
         }
 
@@ -483,6 +512,7 @@ describe('OAuth2Authorization access policy gate (plan 052)', () => {
 
     const buildClient = (data: Partial<Client> = {}): Client => {
         const now = new Date().toISOString();
+
         return {
             id: randomUUID(),
             active: true,
@@ -545,6 +575,7 @@ describe('OAuth2Authorization access policy gate (plan 052)', () => {
         const client = buildClient({ accessPolicyId: randomUUID() });
 
         expect.assertions(6);
+
         try {
             await authorization.authorize(buildData(), identity, {
                 client,
@@ -552,6 +583,7 @@ describe('OAuth2Authorization access policy gate (plan 052)', () => {
             });
         } catch (e) {
             expect(isOAuth2AccessDeniedError(e)).toBe(true);
+
             if (isOAuth2AccessDeniedError(e)) {
                 expect(e.code).toEqual(ErrorCode.OAUTH_ACCESS_DENIED);
                 expect(e.redirectUri).toEqual('https://example.com/callback');
@@ -573,6 +605,7 @@ describe('OAuth2Authorization access policy gate (plan 052)', () => {
         const client = buildClient({ accessPolicyId: randomUUID() });
 
         expect.assertions(3);
+
         try {
             await authorization.authorize(buildData(), identity, {
                 client,
@@ -580,6 +613,7 @@ describe('OAuth2Authorization access policy gate (plan 052)', () => {
             });
         } catch (e) {
             expect(isOAuth2AccessDeniedError(e)).toBe(true);
+
             if (isOAuth2AccessDeniedError(e)) {
                 expect(e.redirectUri).toBeNull();
                 expect(e.state).toBeNull();
@@ -589,7 +623,9 @@ describe('OAuth2Authorization access policy gate (plan 052)', () => {
 
     it('should issue a code when the policy permits the identity', async () => {
         const evaluator = new StubAccessPolicyEvaluator();
+
         evaluator.allowed = true;
+
         const authorization = new OAuth2Authorization({
             codeIssuer,
             sessionManager,
@@ -754,6 +790,7 @@ describe('OAuth2AuthorizationGate', () => {
     const evaluator: IOAuth2AccessPolicyEvaluator = {
         async evaluate(policyId: string, subject: IdentityPolicyData): Promise<boolean> {
             evaluatorCalls.push({ policyId, subject });
+
             return evaluatorAllowed;
         },
         async evaluateData(): Promise<boolean> {
@@ -763,16 +800,19 @@ describe('OAuth2AuthorizationGate', () => {
 
     it('should run only the identity, realm, MFA backstop and access-policy gates for a bare realm_id input', async () => {
         const sessionManager = new FakeSessionManager();
+
         evaluatorCalls.length = 0;
         evaluatorAllowed = true;
+
         let challengeCalls = 0;
         const mfaChallengeProvider: IUserAuthenticatorChallengeProvider = {
             challenge: async () => {
                 challengeCalls++;
+
                 return {
-                    required: true, 
-                    enrollmentRequired: false, 
-                    kinds: [], 
+                    required: true,
+                    enrollmentRequired: false,
+                    kinds: [],
                 };
             },
         };
@@ -790,6 +830,7 @@ describe('OAuth2AuthorizationGate', () => {
         const nowSeconds = Math.floor(Date.now() / 1000);
         const createdAt = new Date((nowSeconds - 3600) * 1000).toISOString();
         const mfaAt = new Date((nowSeconds - 3600) * 1000).toISOString();
+
         await sessionManager.create({
             id: sessionId,
             sub: userId,
@@ -820,6 +861,7 @@ describe('OAuth2AuthorizationGate', () => {
 
         // the MFA backstop still runs: no proof on the session refuses
         const bareSessionManager = new FakeSessionManager();
+
         await bareSessionManager.create({
             id: sessionId,
             sub: userId,
@@ -828,27 +870,35 @@ describe('OAuth2AuthorizationGate', () => {
             createdAt,
             mfaAt: null,
         });
+
         const bareGate = new OAuth2AuthorizationGate({
             sessionManager: bareSessionManager,
             mfaChallengeProvider,
             accessPolicyEvaluator: evaluator,
         });
+
         await expect(
             bareGate.evaluate({ realm_id: realmId }, identity, { sessionId, client }),
         ).rejects.toMatchObject({ code: ErrorCode.OAUTH_MFA_REQUIRED });
 
         // the access policy still decides, and its error carries no redirect
         evaluatorAllowed = false;
+
         let denied: unknown;
+
         try {
             await gate.evaluate({ realm_id: realmId }, identity, { sessionId, client });
         } catch (e) {
             denied = e;
         }
+
         expect(isOAuth2AccessDeniedError(denied)).toBe(true);
-        if (isOAuth2AccessDeniedError(denied)) {
-            expect(denied.redirectUri).toBeNull();
-            expect(denied.state).toBeNull();
+
+        if (!isOAuth2AccessDeniedError(denied)) {
+            return;
         }
+
+        expect(denied.redirectUri).toBeNull();
+        expect(denied.state).toBeNull();
     });
 });

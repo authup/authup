@@ -58,11 +58,13 @@ describe('core/entities/path/service', () => {
             });
 
             const result = await service.getMany({}, createAllowAllActor());
+
             expect(result.data).toHaveLength(1);
         });
 
         it('should call preCheckOneOf with path permissions', async () => {
             const actor = createAllowAllActor();
+
             await service.getMany({}, actor);
 
             expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
@@ -89,6 +91,7 @@ describe('core/entities/path/service', () => {
             });
 
             const result = await service.getOne(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
         });
 
@@ -99,6 +102,7 @@ describe('core/entities/path/service', () => {
             });
 
             const result = await service.getOne('sales/berlin', createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
         });
 
@@ -114,6 +118,7 @@ describe('core/entities/path/service', () => {
             const actor = createNonMasterRealmActor(realmId);
 
             const result = await service.create({ name: 'sales' }, actor);
+
             expect(result.name).toBe('sales');
             expect(result.path).toBe('sales');
             expect(result.parentId).toBeNull();
@@ -140,6 +145,7 @@ describe('core/entities/path/service', () => {
 
         it('should call preCheck with PATH_CREATE permission', async () => {
             const actor = createNonMasterRealmActor(realmId);
+
             await service.create({ name: 'sales' }, actor);
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.PATH_CREATE });
@@ -206,6 +212,7 @@ describe('core/entities/path/service', () => {
             });
 
             const result = await service.update(sales.id, { name: 'marketing' }, createAllowAllActor());
+
             expect(result.path).toBe('marketing');
 
             expect((await repository.findOneById(berlin.id))!.path).toBe('marketing/berlin');
@@ -229,6 +236,7 @@ describe('core/entities/path/service', () => {
                 path: 'sales/berlin',
                 parentId: sales.id,
             });
+
             seedPath({
                 name: 'east',
                 path: 'sales/berlin/east',
@@ -242,6 +250,7 @@ describe('core/entities/path/service', () => {
             // resolved parent and the descendant set (issue I1). A rename of an
             // ANCESTOR is the race the transaction's own re-read cannot see.
             const locked = repository.transactionRepository;
+
             expect(locked).toBeDefined();
             expect(locked!.lockRows).toBe(true);
             expect(locked!.reads).toContain('findOneBy');
@@ -285,6 +294,7 @@ describe('core/entities/path/service', () => {
             // and the transaction: the service holds a stale snapshot while
             // the store already reads `marketing`
             const stale : Path = { ...sales };
+
             sales.name = 'marketing';
             sales.path = 'marketing';
             berlin.path = 'marketing/berlin';
@@ -426,12 +436,14 @@ describe('core/entities/path/service', () => {
 
     const createRestrictedActor = (name: string, reachable: (attributes: Record<string, any>) => boolean) => {
         const actor = createAllowAllActor();
+
         actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
             if (method !== 'evaluate' || ctx.name !== name) {
                 return;
             }
 
             const attributes = ctx.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+
             if (!reachable(attributes)) {
                 throw PermissionError.denied(name);
             }
@@ -468,9 +480,9 @@ describe('core/entities/path/service', () => {
         it('should allow updating a folder that stays in reach', async () => {
             const analyses = seedPath({ name: 'analyses', path: 'analyses' });
             const a = seedPath({
-                name: 'a', 
-                path: 'analyses/a', 
-                parentId: analyses.id, 
+                name: 'a',
+                path: 'analyses/a',
+                parentId: analyses.id,
             });
 
             const result = await service.update(
@@ -478,15 +490,16 @@ describe('core/entities/path/service', () => {
                 { name: 'b' },
                 createRestrictedActor(PermissionName.PATH_UPDATE, reachable),
             );
+
             expect(result.path).toBe('analyses/b');
         });
 
         it('should refuse moving a reachable folder out of reach', async () => {
             const analyses = seedPath({ name: 'analyses', path: 'analyses' });
             const a = seedPath({
-                name: 'a', 
-                path: 'analyses/a', 
-                parentId: analyses.id, 
+                name: 'a',
+                path: 'analyses/a',
+                parentId: analyses.id,
             });
 
             await expect(service.update(
@@ -505,6 +518,7 @@ describe('core/entities/path/service', () => {
             });
 
             const result = await service.delete(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
 
             expect(await repository.findOneById(entity.id)).toBeNull();

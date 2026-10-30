@@ -6,12 +6,12 @@
  */
 
 import { ScopeName } from '@authup/core-kit';
-import { 
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
-    it, 
+import {
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
+    it,
 } from 'vitest';
 import { createFakeClient, createFakeOAuth2IdentityProvider, httpRequest } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
@@ -46,6 +46,7 @@ describe('identity-provider login cookie (sub-path deployment)', () => {
             redirectUri: 'https://app.example.com/**',
         }));
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
         await suite.client.clientScope.create({ scopeId: scope.id, clientId: client.id });
 
         const { data: provider } = await suite.client.identityProvider.create(
@@ -63,7 +64,7 @@ describe('identity-provider login cookie (sub-path deployment)', () => {
             state: 'rp-state',
             code_challenge: 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
             code_challenge_method: 'S256',
-        })).toString('base64url');
+        })).toBase64({ alphabet: 'base64url', omitPadding: true });
 
         const response = await httpRequest(
             suite,
@@ -75,6 +76,7 @@ describe('identity-provider login cookie (sub-path deployment)', () => {
         expect(response.status).toEqual(302);
 
         const setCookie = response.headers.get('set-cookie') ?? '';
+
         expect(setCookie).toContain('authup_federated_login=');
         expect(setCookie).toContain('Path=/auth/identity-providers');
         expect(setCookie).toContain('HttpOnly');

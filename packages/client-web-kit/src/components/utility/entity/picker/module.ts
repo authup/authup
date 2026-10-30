@@ -8,11 +8,11 @@
 import { SlotName, hasNormalizedSlot, normalizeSlot  } from '../../../../core';
 import type { PropType, Ref, VNodeChild } from 'vue';
 import {
-    computed, 
-    h, 
-    mergeProps, 
-    ref, 
-    toRef, 
+    computed,
+    h,
+    mergeProps,
+    ref,
+    toRef,
     watch,
 } from 'vue';
 import { APagination } from '../../pagination';
@@ -24,7 +24,7 @@ import type { EntityPickerContext, EntityPickerVEmitOptions, RecordWithID } from
 
 export function defineEntityPickerVEmitOptions<T>() : EntityPickerVEmitOptions<T> {
     return {
-         
+
         change: (_values: string[]) => true,
         ...defineEntityCollectionVEmitOptions<T>(),
     };
@@ -135,6 +135,7 @@ export function defineEntityPicker<T extends RecordWithID>({
                 slotProps: EntityCollectionVSlots<RecordWithID>['itemActions'],
             ) => {
                 let content : VNodeChild | undefined;
+
                 if (hasNormalizedSlot(SlotName.ITEM_ACTIONS, setup.slots)) {
                     content = normalizeSlot(SlotName.ITEM_ACTIONS, {
                         ...slotProps,

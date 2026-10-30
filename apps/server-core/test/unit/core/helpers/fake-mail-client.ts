@@ -14,9 +14,11 @@ export class FakeMailClient implements IMailClient {
 
     async send(options: MailSendOptions): Promise<void> {
         const error = this.queuedErrors.shift();
+
         if (error) {
             throw error;
         }
+
         this.sent.push(options);
     }
 

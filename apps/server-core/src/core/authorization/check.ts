@@ -73,6 +73,7 @@ function resolveTargetRealms(
     }
 
     const own = identity?.realmId ?? null;
+
     if (realms === RealmScope.OWN) {
         return own === null ? [] : [own];
     }
@@ -103,11 +104,13 @@ function resolveOwners(
     }
 
     const owners : Array<string | null> = own === null ? [] : [own];
+
     if (selector === RealmScope.OWN) {
         return owners;
     }
 
     owners.push(null);
+
     if (selector === AUTHORIZATION_CHECK_GRANTED) {
         for (const owner of granted()) {
             if (owner) {
@@ -141,6 +144,7 @@ function deniesWithoutGrant(policy: BasePolicy & Record<string, any>) : boolean 
     }
 
     const strategy = policy.decisionStrategy ?? DecisionStrategy.UNANIMOUS;
+
     if (strategy === DecisionStrategy.UNANIMOUS) {
         return policy.children.some((child: BasePolicy) => deniesWithoutGrant(child));
     }
@@ -212,6 +216,7 @@ export async function buildAuthorizationCheck(
     const bindings : PermissionPolicyBinding[] = [];
     const selected : BasePermission[] = [];
     const grantGated = new Set<string>();
+
     for (const [permission, policies] of definitions) {
         if (
             !realms.has(permission.realmId ?? null) ||
@@ -239,6 +244,7 @@ export async function buildAuthorizationCheck(
     }
 
     const targetRealms = resolveTargetRealms(request.targetRealms ?? RealmScope.OWN_OR_NULL, request.identity);
+
     if (selected.length === 0 || targetRealms.length === 0) {
         return { permissions: [] };
     }
@@ -248,6 +254,7 @@ export async function buildAuthorizationCheck(
     const grants = request.identity?.grants;
 
     const policyEngine = new PolicyEngine(PolicyDefaultEvaluators);
+
     policyEngine.registerEvaluator(
         BuiltInPolicyType.PERMISSION_BINDING,
         new IdentityPermissionBindingPolicyEvaluator(),
@@ -281,6 +288,7 @@ export async function buildAuthorizationCheck(
     const transitions = createPolicyTransitionCollector();
 
     const result : AuthorizationCheckPermissions = [];
+
     for (const permission of selected) {
         const { name } = permission;
         const realmId = permission.realmId ?? null;

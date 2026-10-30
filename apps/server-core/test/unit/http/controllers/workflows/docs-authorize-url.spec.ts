@@ -7,10 +7,10 @@
 
 import { createFakeClient as createFakeHTTPClient } from '@authup/core-http-kit/testing';
 import {
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { HTTPInjectionKey } from '../../../../../src/app';

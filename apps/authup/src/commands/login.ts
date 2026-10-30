@@ -53,6 +53,7 @@ export function defineCLILoginCommand(context: HostCommandContext = {}) {
             const previous = document.hosts[host];
 
             const clientId = args.client || previous?.clientId;
+
             if (!clientId) {
                 throw new Error(`No client is remembered for ${host}. Pass --client <id|name>, and --realm for a name outside the master realm.`);
             }
@@ -82,6 +83,7 @@ export function defineCLILoginCommand(context: HostCommandContext = {}) {
                     storage,
                     ...(realm ? { realm } : {}),
                 };
+
                 latest.hosts[host] = entry;
                 latest.current = host;
                 await store.write(latest);

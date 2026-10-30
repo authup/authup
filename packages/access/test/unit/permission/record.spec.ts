@@ -77,17 +77,20 @@ describe('src/permission/record', () => {
         const evaluator = await build([{ name: 'event_read', realm_scope: scope }]);
         const results = await Promise.all([realmA, realmB, null]
             .map((realm) => reachesRecord(evaluator, { name: 'event_read', realm })));
+
         expect(results).toEqual(expected);
     });
 
     it('requires every realm of a multi-realm record', async () => {
         const ownOrNull = await build([{ name: 'event_read', realm_scope: 'ownOrNull' }]);
+
         expect(await reachesRecord(ownOrNull, { name: 'event_read', realm: [realmA, null] })).toBe(true);
         expect(await reachesRecord(ownOrNull, { name: 'event_read', realm: [realmA, realmB] })).toBe(false);
     });
 
     it('throws when the realm is undefined, never a neutral pass', async () => {
         const evaluator = await build([{ name: 'event_read', realm_scope: 'any' }]);
+
         await expect(reachesRecord(evaluator, {
             name: 'event_read',
             realm: undefined as unknown as null,
@@ -96,6 +99,7 @@ describe('src/permission/record', () => {
 
     it('throws when the data already carries realmMatch', async () => {
         const evaluator = await build([{ name: 'event_read', realm_scope: 'any' }]);
+
         await expect(evaluateRecord(evaluator, {
             name: 'event_read',
             realm: realmA,
@@ -111,20 +115,22 @@ describe('src/permission/record', () => {
     it('never mutates the caller data', async () => {
         const evaluator = await build([{ name: 'event_read', realm_scope: 'own' }]);
         const data = new PolicyData({ custom: true });
+
         expect(await reachesRecord(evaluator, {
-            name: 'event_read', 
-            realm: realmA, 
-            data, 
+            name: 'event_read',
+            realm: realmA,
+            data,
         })).toBe(true);
         expect(await reachesRecord(evaluator, {
-            name: 'event_read', 
-            realm: realmB, 
-            data, 
+            name: 'event_read',
+            realm: realmB,
+            data,
         })).toBe(false);
         expect(data.has(BuiltInPolicyType.REALM_MATCH)).toBe(false);
         expect(data.has(BuiltInPolicyType.ATTRIBUTES)).toBe(false);
 
         const input = { custom: true };
+
         expect(await reachesRecord(evaluator, {
             name: 'event_read',
             realm: realmA,
@@ -139,6 +145,7 @@ describe('src/permission/record', () => {
             realm_scope: 'any',
             policies: ['visible'],
         }]);
+
         expect(await reachesRecord(evaluator, {
             name: 'event_read',
             realm: realmB,
@@ -160,6 +167,7 @@ describe('src/permission/record', () => {
             }]),
             policyEngine: new PolicyEngine(PolicyDefaultEvaluators),
         });
+
         expect(await reachesRecord(evaluator, { name: 'event_read', realm: realmB })).toBe(false);
         expect(await reachesRecord(evaluator, {
             name: 'event_read',
@@ -179,6 +187,7 @@ describe('src/permission/record', () => {
             { name: 'event_delete', realm_scope: 'any' },
         ]);
         const names = ['event_read', 'event_delete'];
+
         await expect(evaluateRecordOneOf(evaluator, { name: names, realm: realmB })).resolves.toBeUndefined();
         await expect(evaluateRecord(evaluator, { name: names, realm: realmB })).rejects.toSatisfy(isPermissionError);
         expect(await reachesRecordOneOf(evaluator, { name: names, realm: realmB })).toBe(true);
@@ -188,6 +197,7 @@ describe('src/permission/record', () => {
 
     it('refuses an update moving a record into or out of reach', async () => {
         const evaluator = await build([{ name: 'event_read', realm_scope: 'own' }]);
+
         await expect(evaluateRecordUpdate(evaluator, {
             name: 'event_read',
             current: { realm: realmA },
@@ -211,6 +221,7 @@ describe('src/permission/record', () => {
             realm_scope: 'any',
             policies: ['visible'],
         }]);
+
         await expect(evaluateRecordUpdate(evaluator, {
             name: 'event_read',
             current: { realm: realmB, data: { [BuiltInPolicyType.ATTRIBUTES]: { visible: true } } },
@@ -234,6 +245,7 @@ describe('src/permission/record', () => {
             { name: 'event_delete', realm_scope: 'any' },
         ]);
         const row = { realm: realmB, name: 'event_delete' };
+
         await expect(evaluateRecordUpdate(evaluator, {
             name: 'event_read',
             current: row,
@@ -248,6 +260,7 @@ describe('src/permission/record', () => {
             get: () => undefined,
             clone: () => foreign,
         };
+
         await expect(evaluateRecord(evaluator, {
             name: 'event_read',
             realm: realmA,
@@ -349,10 +362,17 @@ describe('src/permission/record', () => {
 
     it('propagates anything that is not a permission error', async () => {
         const failing = {
-            compile: async () => { throw new Error('catalog down'); },
-            evaluate: async () => { throw new Error('catalog down'); },
-            evaluateOneOf: async () => { throw new Error('catalog down'); },
+            compile: async () => {
+                throw new Error('catalog down');
+            },
+            evaluate: async () => {
+                throw new Error('catalog down');
+            },
+            evaluateOneOf: async () => {
+                throw new Error('catalog down');
+            },
         } as unknown as IPermissionEvaluator;
+
         await expect(reachesRecord(failing, { name: 'event_read', realm: realmA })).rejects.toThrow('catalog down');
         await expect(reachesRecordOneOf(failing, { name: 'event_read', realm: realmA })).rejects.toThrow('catalog down');
         await expect(hasUnboundedReach(failing, 'event_read')).rejects.toThrow('catalog down');

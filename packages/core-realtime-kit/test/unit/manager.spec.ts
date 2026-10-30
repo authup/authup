@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import {
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { createServer } from 'node:http';
@@ -23,6 +23,7 @@ describe('src/manager', () => {
 
     beforeAll(async () => {
         const httpServer = createServer();
+
         server = new Server(httpServer);
         server.use((socket, next) => {
             setTimeout(() => {
@@ -47,6 +48,7 @@ describe('src/manager', () => {
 
     it('should accept different url + path combinations', () => {
         let manager = new ClientManager({ url: `http://localhost:${port}` });
+
         expect(manager.options.path).toEqual('/socket.io');
 
         manager = new ClientManager({ url: `http://localhost:${port}/api/` });
@@ -71,6 +73,7 @@ describe('src/manager', () => {
     it('should connect to server', async () => {
         const manager = new ClientManager({ url: `http://localhost:${port}` });
         const socket = await manager.connect();
+
         expect(socket.connected).toBeTruthy();
 
         await manager.disconnect();
@@ -80,6 +83,7 @@ describe('src/manager', () => {
     it('should inject and eject', () => {
         const manager = new ClientManager({ url: `http://localhost:${port}` });
         const socket = manager.inject();
+
         expect(socket.connected).toBeFalsy();
 
         manager.eject();
@@ -89,6 +93,7 @@ describe('src/manager', () => {
         const manager = new ClientManager({ url: `http://localhost:${port}` });
 
         const socket = await manager.connect();
+
         expect(socket.connected).toBeTruthy();
 
         socket.disconnect();

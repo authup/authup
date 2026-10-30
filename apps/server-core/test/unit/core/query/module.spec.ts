@@ -127,6 +127,7 @@ describe('core/query', () => {
 
         it('should strip includes whose target read gate settles false', async () => {
             const evaluator = new FakePermissionEvaluator();
+
             evaluator.deny('preEvaluateOneOf');
 
             const parsed = await decodeQuery(
@@ -141,8 +142,10 @@ describe('core/query', () => {
 
         it('should strip only the denied include', async () => {
             const evaluator = new FakePermissionEvaluator();
+
             evaluator.setBehavior(({ ctx }) => {
                 const names = Array.isArray(ctx.name) ? ctx.name : [ctx.name];
+
                 if (names.includes(PermissionName.USER_READ)) {
                     throw new Error('denied');
                 }
@@ -158,6 +161,7 @@ describe('core/query', () => {
 
         it('should prune dotted keys riding a denied include', async () => {
             const evaluator = new FakePermissionEvaluator();
+
             evaluator.deny('preEvaluateOneOf');
 
             const parsed = await decodeQuery(
@@ -171,6 +175,7 @@ describe('core/query', () => {
 
         it('should gate a relation reached only via a dotted filter key (rapiq#815)', async () => {
             const evaluator = new FakePermissionEvaluator();
+
             evaluator.deny('preEvaluateOneOf');
 
             // `user.name` resolves through schemaMapping to the user schema's
@@ -203,6 +208,7 @@ describe('core/query', () => {
             );
 
             const conditions = collectFieldConditions(parsed.filters);
+
             expect(conditions).toHaveLength(1);
             expect(conditions[0][1]).toEqual('admin');
             expect(evaluator.preEvaluateOneOfCalls).toHaveLength(1);
@@ -210,6 +216,7 @@ describe('core/query', () => {
 
         it('should not gate an ungated target', async () => {
             const evaluator = new FakePermissionEvaluator();
+
             evaluator.denyAll();
 
             const parsed = await decodeQuery(
@@ -243,6 +250,7 @@ describe('core/query', () => {
 
         it('should keep the secret unconditioned for an allow verdict', async () => {
             const evaluator = new FakePermissionEvaluator();
+
             evaluator.setCompileResult({ verdict: 'allow' });
 
             const parsed = await decodeQuery(
@@ -251,6 +259,7 @@ describe('core/query', () => {
             );
 
             const field = findField(parsed, 'secret');
+
             expect(field).toBeDefined();
             expect(field!.condition).toBeUndefined();
             expect(evaluator.compileCalls.map((call) => call.name)).toEqual([CLIENT_PERMISSIONS]);
@@ -258,6 +267,7 @@ describe('core/query', () => {
 
         it('should attach a fail-closed condition for a conditional verdict', async () => {
             const evaluator = new FakePermissionEvaluator();
+
             evaluator.setCompileResult({
                 verdict: 'conditional',
                 condition: eq('realmId', 'realm-a'),
@@ -269,6 +279,7 @@ describe('core/query', () => {
             );
 
             const field = findField(parsed, 'secret');
+
             expect(field!.condition).toBeDefined();
             // realm presence guard, the null leg, then the compiled leg
             expect(collectFieldConditions(field!.condition!)).toEqual([
@@ -287,6 +298,7 @@ describe('core/query', () => {
             );
 
             const field = findField(parsed, 'secret');
+
             expect(collectFieldConditions(field!.condition!)).toEqual([
                 ['realmId', null],
                 ['secret', null],
@@ -295,7 +307,9 @@ describe('core/query', () => {
 
         it('should keep a client identity\'s own row visible via a self leg', async () => {
             const evaluator = new FakePermissionEvaluator();
+
             evaluator.setCompileResult({ verdict: 'deny' });
+
             const selfId = randomUUID();
 
             const actor: ActorContext = {
@@ -312,6 +326,7 @@ describe('core/query', () => {
             );
 
             const field = findField(parsed, 'secret');
+
             expect(collectFieldConditions(field!.condition!)).toEqual([
                 ['realmId', null],
                 ['secret', null],
@@ -321,6 +336,7 @@ describe('core/query', () => {
 
         it('should gate the secret at the include position of another schema', async () => {
             const evaluator = new FakePermissionEvaluator();
+
             evaluator.setCompileResult({
                 verdict: 'conditional',
                 condition: eq('realmId', 'realm-a'),
@@ -332,6 +348,7 @@ describe('core/query', () => {
             );
 
             const field = findField(parsed, 'client.secret');
+
             expect(field).toBeDefined();
             expect(field!.condition).toBeDefined();
             expect(collectFieldConditions(field!.condition!)).toContainEqual(['realmId', 'realm-a']);
@@ -369,12 +386,14 @@ describe('core/query', () => {
             );
 
             const field = findField(parsed, 'secret');
+
             expect(field).toBeDefined();
             expect(field!.condition).toBeUndefined();
         });
 
         it('should strip the field when the gate itself fails', async () => {
             const evaluator = new FakePermissionEvaluator();
+
             evaluator.compile = async () => {
                 throw new Error('compile failed');
             };

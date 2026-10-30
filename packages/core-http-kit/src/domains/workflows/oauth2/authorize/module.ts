@@ -34,8 +34,10 @@ export class OAuth2AuthorizeAPI extends AuthorizeAPI implements IOAuth2Authorize
             const params = new URLSearchParams();
 
             const entries = Object.entries(query || {});
+
             for (const [key, value] of entries) {
                 const values = Array.isArray(value) ? value : [value];
+
                 for (const item of values) {
                     if (typeof item !== 'undefined' && item !== null) {
                         params.append(key, `${item}`);

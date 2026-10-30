@@ -16,6 +16,7 @@ export class EntityCredentialsInvalidError extends AuthupError {
     constructor(input?: string | AuthupEntityErrorOptions) {
         const options: AuthupEntityErrorOptions = typeof input === 'string' ? { message: input } : (input ?? {});
         const { entity, ...rest } = options;
+
         super({
             code: ErrorCode.ENTITY_CREDENTIALS_INVALID,
             message: entity ? `The ${entity} credentials are invalid.` : 'Credentials are invalid.',

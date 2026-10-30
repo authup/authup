@@ -35,6 +35,7 @@ export class MailModule implements IModule {
         }
 
         const result = container.tryResolve(ConfigInjectionKey);
+
         if (!result.success || !result.data.smtp) {
             container.register(MailInjectionKey, { useFactory: () => new VoidMailClientAdapter() });
 

@@ -41,6 +41,7 @@ export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI
 
     getAuthorizeUri(id: IdentityProvider['id'], options: IdentityProviderAuthorizeUriOptions = {}): string {
         const url = cleanDoubleSlashes(`${this.client.getBaseURL()}/${buildIdentityProviderAuthorizePath(id)}`);
+
         if (options.codeRequest) {
             return `${url}?codeRequest=${base64URLEncode(JSON.stringify(options.codeRequest))}`;
         }

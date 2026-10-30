@@ -98,6 +98,7 @@ export const ROOT_SCHEMA = defineSchema<RootConfig, 'publicUrl' | 'internalUrl' 
         type: z.array(z.string().refine((value) => {
             try {
                 expandToOrigins(value);
+
                 return true;
             } catch {
                 return false;

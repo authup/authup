@@ -96,8 +96,10 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
                 realm: entity.realmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -121,6 +123,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         await actor.permissionEvaluator.preEvaluateOneOf({ name: PERMISSION_NAMES });
 
         const entity = await this.repository.findOneByIdOrName(idOrName, realm);
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -139,6 +142,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         actor: ActorContext,
     ): Promise<Policy> {
         const { entity } = await this.save(undefined, data, actor);
+
         return entity;
     }
 
@@ -148,6 +152,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         actor: ActorContext,
     ): Promise<Policy> {
         const { entity } = await this.save(idOrName, data, actor, { updateOnly: true });
+
         return entity;
     }
 
@@ -158,13 +163,15 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         options: { updateOnly?: boolean } = {},
     ): Promise<{
         entity: Policy,
-        created: boolean 
+        created: boolean
     }> {
         let group: string;
 
         let entity: Policy | null | undefined;
+
         if (idOrName) {
             const where: Record<string, any> = {};
+
             if (isUUID(idOrName)) {
                 where.id = idOrName;
             } else {
@@ -176,6 +183,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
                 // predicate would address a row of whichever realm holds the
                 // name.
                 const realm = await this.realmRepository.resolveOrFail(data.realmId);
+
                 entity = await this.repository.findOneBy({ ...where, realmId: realm.id });
             } else {
                 // No realm value means global on create, so a name key
@@ -187,6 +195,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
 
                 entity = await this.repository.findOneBy(where);
             }
+
             // Only a NAME key may upsert-create. A UUID addresses one specific
             // row, so a miss is a 404 (creating would write a different id).
             if (!entity && (options.updateOnly || where.id)) {
@@ -236,7 +245,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
 
             return {
                 entity,
-                created: false, 
+                created: false,
             };
         }
 
@@ -255,7 +264,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
 
         return {
             entity,
-            created: true, 
+            created: true,
         };
     }
 
@@ -269,6 +278,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         // `type` is create-only, so an update reads its options by the stored type
         const resolvedType = type ?? data.type;
         const attributes = await this.attributesValidator.run({ ...data, type: resolvedType });
+
         extendObject(validated, attributes);
 
         // each child is a policy of its own: validated here, with its own type's validator
@@ -277,6 +287,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
                 const promises = data.children.map(
                     (child) => this.validate(child, group),
                 );
+
                 validated.children = await Promise.all(promises);
             }
         }
@@ -291,6 +302,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }

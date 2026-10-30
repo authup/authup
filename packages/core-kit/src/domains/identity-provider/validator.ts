@@ -48,6 +48,7 @@ export class IdentityProviderValidator extends Container<IdentityProvider> {
         ));
 
         const enabledValidator = createValidator(zod.boolean());
+
         this.mount('enabled', { group: ValidatorGroup.CREATE }, enabledValidator);
         this.mount('enabled', {
             group: ValidatorGroup.UPDATE,

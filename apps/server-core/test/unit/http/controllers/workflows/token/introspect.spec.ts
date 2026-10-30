@@ -169,10 +169,12 @@ describe('token-introspect', () => {
         const introspection = await suite.client
             .token
             .introspect({ token }, { authorizationHeaderInherit: true });
+
         expect(introspection.active).toBe(true);
         expect(introspection.permissions!.length).toBeGreaterThan(0);
 
         const own = await client.account.getSession();
+
         expect(own.permissions!.length).toBeGreaterThan(0);
     });
 
@@ -198,7 +200,9 @@ describe('token-introspect', () => {
             expect(['none', 'own', 'ownOrNull', 'any']).toContain(entry.realm_scope);
             expect(Array.isArray(entry.policies)).toBe(true);
         }
+
         const userRead = introspection.permissions!.filter((entry: OAuth2TokenPermission) => entry.name === PermissionName.USER_READ);
+
         expect(userRead).toEqual([{
             name: PermissionName.USER_READ,
             realm_id: null,
@@ -211,9 +215,12 @@ describe('token-introspect', () => {
     it('should report one grant per junction row, so a namespace may repeat', async () => {
         const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_READ);
         const { data: role } = await suite.client.role.create(createFakeRole());
+
         await suite.client.rolePermission.create({ roleId: role.id, permissionId: permission.id });
+
         const password = 'start123-introspect';
         const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+
         await suite.client.userRole.create({ userId: user.id, roleId: role.id });
         await suite.client.userPermission.create({ userId: user.id, permissionId: permission.id });
 
@@ -225,8 +232,11 @@ describe('token-introspect', () => {
         );
 
         expect(introspection.active).toBe(true);
+
         const entries = introspection.permissions!.filter((entry: OAuth2TokenPermission) => entry.name === PermissionName.USER_READ);
+
         expect(entries).toHaveLength(2);
+
         for (const entry of entries) {
             expect(entry).toEqual({
                 name: PermissionName.USER_READ,
@@ -249,6 +259,7 @@ describe('token-introspect', () => {
         const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_READ);
         const password = 'start123-introspect';
         const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+
         await suite.client.userPermission.create({ userId: user.id, permissionId: permission.id });
 
         const secret = 'introspect-client-secret-1';
@@ -276,7 +287,9 @@ describe('token-introspect', () => {
         expect(introspection.active).toBe(true);
         // the precondition: without a client on the token the filter never ran
         expect(introspection.client_id).toEqual(client.id);
+
         const entries = introspection.permissions!.filter((entry: OAuth2TokenPermission) => entry.name === PermissionName.USER_READ);
+
         expect(entries).toEqual([{
             name: PermissionName.USER_READ,
             realm_id: null,
@@ -290,13 +303,16 @@ describe('token-introspect', () => {
         const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_READ);
         const { data: policy } = await suite.client.policy.create(createFakeTimePolicy());
         const { data: role } = await suite.client.role.create(createFakeRole());
+
         await suite.client.rolePermission.create({
             roleId: role.id,
             permissionId: permission.id,
             policyId: policy.id,
         });
+
         const password = 'start123-introspect';
         const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+
         await suite.client.userRole.create({ userId: user.id, roleId: role.id });
 
         const grant = await suite.client.token.createWithPassword({ username: user.name, password });
@@ -307,7 +323,9 @@ describe('token-introspect', () => {
         );
 
         expect(introspection.active).toBe(true);
+
         const entries = introspection.permissions!.filter((entry: OAuth2TokenPermission) => entry.name === PermissionName.USER_READ);
+
         expect(entries).toEqual([{
             name: PermissionName.USER_READ,
             realm_id: null,
@@ -321,13 +339,16 @@ describe('token-introspect', () => {
         const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_READ);
         const { data: policy } = await suite.client.policy.create({ name: randomUUID(), type: 'plan109custom' });
         const { data: role } = await suite.client.role.create(createFakeRole());
+
         await suite.client.rolePermission.create({
             roleId: role.id,
             permissionId: permission.id,
             policyId: policy.id,
         });
+
         const password = 'start123-introspect';
         const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+
         await suite.client.userRole.create({ userId: user.id, roleId: role.id });
 
         const grant = await suite.client.token.createWithPassword({ username: user.name, password });
@@ -472,10 +493,10 @@ describe('token-introspect', () => {
                 typ: 'JWT',
                 kid: '6b0f4a5c-0d2e-4f1a-9c3b-8e7d6f5a4b3c',
             }))
-            .toString('base64url');
+            .toBase64({ alphabet: 'base64url', omitPadding: true });
         const body = Buffer
             .from(JSON.stringify({ sub: 'someone', exp: Math.floor(Date.now() / 1000) + 3600 }))
-            .toString('base64url');
+            .toBase64({ alphabet: 'base64url', omitPadding: true });
 
         const introspection = await suite.client
             .token
@@ -564,6 +585,7 @@ describe('token-introspect authorization', () => {
             username: 'admin',
             password: 'start123',
         });
+
         accessToken = grant.access_token;
 
         const current = await suite.client
@@ -572,6 +594,7 @@ describe('token-introspect authorization', () => {
 
         const signer = suite.container.resolve(OAuth2InjectionToken.TokenSigner);
         const now = Math.floor(Date.now() / 1000);
+
         expiredToken = await signer.sign({
             jti: current.jti,
             sub: current.sub,
@@ -591,6 +614,7 @@ describe('token-introspect authorization', () => {
             secretHashed: false,
             secretEncrypted: false,
         });
+
         confidentialClientId = client.id;
         confidentialClientName = client.name;
 
@@ -598,6 +622,7 @@ describe('token-introspect authorization', () => {
         // server: introspecting FOREIGN tokens takes the TOKEN_INTROSPECT
         // grant (its default `own` reach covers same-realm tokens)
         const { data: permission } = await suite.client.permission.getOne(PermissionName.TOKEN_INTROSPECT);
+
         await suite.client.clientPermission.create({
             clientId: client.id,
             permissionId: permission.id,
@@ -647,7 +672,7 @@ describe('token-introspect authorization', () => {
     // RFC 7662 §2.1: the token travels in the form body, never in the url,
     // where access logs and proxies would keep it.
     it('should refuse a token passed in the query string', async () => {
-        const basic = Buffer.from('admin:start123').toString('base64');
+        const basic = Buffer.from('admin:start123').toBase64();
         const response = await httpRequest(suite, 'GET', `/token/introspect?token=${encodeURIComponent(accessToken)}`, { headers: { Authorization: `Basic ${basic}` } });
 
         expect(response.status).toEqual(400);
@@ -700,7 +725,9 @@ describe('token-introspect authorization', () => {
         });
 
         expect(response.status).toEqual(200);
+
         const body = await response.json();
+
         expect(body.active).toBe(true);
         expect(body.sub_kind).toEqual('user');
     });
@@ -724,14 +751,16 @@ describe('token-introspect authorization', () => {
     });
 
     it('should accept confidential client credentials as Basic', async () => {
-        const basic = Buffer.from(`${confidentialClientId}:${clientSecret}`).toString('base64');
+        const basic = Buffer.from(`${confidentialClientId}:${clientSecret}`).toBase64();
         const response = await httpRequest(suite, 'POST', '/token/introspect', {
             headers: { Authorization: `Basic ${basic}` },
             form: { token: expiredToken },
         });
 
         expect(response.status).toEqual(200);
+
         const body = await response.json();
+
         // the point of the gate: the expired report stays, for a caller that
         // proved who it is
         expect(body.active).toBe(false);
@@ -789,6 +818,7 @@ describe('token-introspect authorization', () => {
                 client_secret: clientSecret,
             }),
         });
+
         hook.attach(client);
 
         const introspection = await client.token.introspect(
@@ -850,7 +880,9 @@ describe('token-introspect authorization', () => {
         });
 
         expect(response.status).toEqual(200);
+
         const body = await response.json();
+
         expect(body.active).toBe(true);
         expect(body.client_id).toEqual(rp.id);
         expect(body.sub_kind).toEqual('user');
@@ -868,6 +900,7 @@ describe('token-introspect authorization', () => {
             secretEncrypted: false,
         });
         const { data: permission } = await suite.client.permission.getOne(PermissionName.TOKEN_INTROSPECT);
+
         await suite.client.clientPermission.create({
             clientId: foreign.id,
             permissionId: permission.id,

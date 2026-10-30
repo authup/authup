@@ -37,6 +37,7 @@ export function readCookie(name: string) : string | undefined {
 
     const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${escapeRegExp(name)}=([^;]+)`));
     const value = match?.[1];
+
     if (!value) {
         return undefined;
     }
@@ -86,6 +87,7 @@ export function createCookieRef(name: string, initial?: string, fallback = '') :
     }
 
     let source = refs.get(name);
+
     if (!source) {
         source = ref(initial || readCookie(name) || fallback);
 

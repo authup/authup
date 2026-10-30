@@ -15,6 +15,7 @@ export function createRealmResolverMiddleware(ctx: RealmResolverMiddlewareContex
 
     return defineCoreHandler(async (event) => {
         await middleware.run(event);
+
         return event.next();
     });
 }

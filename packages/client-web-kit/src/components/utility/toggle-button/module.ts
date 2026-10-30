@@ -22,6 +22,7 @@ export function renderToggleButton(
 ) {
     let iconName: string;
     let color: 'neutral' | 'error' | 'success';
+
     if (options.isBusy) {
         iconName = 'fa6-solid:question';
         color = 'neutral';

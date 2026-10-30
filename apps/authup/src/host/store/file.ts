@@ -11,6 +11,7 @@ export function createFileTokenStorage(store: IHostStore) : IHostTokenStorage {
     return {
         async read(host) {
             const entry = (await store.read()).hosts[host];
+
             if (!entry || !entry.accessToken || entry.expiresAt === undefined) {
                 return undefined;
             }
@@ -24,6 +25,7 @@ export function createFileTokenStorage(store: IHostStore) : IHostTokenStorage {
         async write(host, tokens) {
             const document = await store.read();
             const entry = document.hosts[host];
+
             if (!entry) {
                 throw new Error(`No entry for ${host} to keep the tokens on.`);
             }
@@ -35,6 +37,7 @@ export function createFileTokenStorage(store: IHostStore) : IHostTokenStorage {
         async remove(host) {
             const document = await store.read();
             const entry = document.hosts[host];
+
             if (!entry) {
                 return;
             }

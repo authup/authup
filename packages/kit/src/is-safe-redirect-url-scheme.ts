@@ -40,6 +40,7 @@ const UNSAFE_REDIRECT_URL_SCHEMES = new Set([
  */
 export function isSafeRedirectURLScheme(value: string) : boolean {
     let url : URL;
+
     try {
         url = new URL(value);
     } catch {

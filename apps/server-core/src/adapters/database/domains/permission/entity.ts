@@ -12,7 +12,7 @@ import {
     Index,
     JoinColumn,
     ManyToOne,
-    PrimaryGeneratedColumn, 
+    PrimaryGeneratedColumn,
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
@@ -38,39 +38,39 @@ export class PermissionEntity {
 
     @Index()
     @Column({
-        name: 'built_in', 
-        type: 'boolean', 
-        default: false, 
+        name: 'built_in',
+        type: 'boolean',
+        default: false,
     })
     builtIn: boolean;
 
     @Column({
         type: 'varchar',
-        length: 128, 
+        length: 128,
     })
     name: string;
 
     @Index()
     @Column({
-        name: 'display_name', 
-        type: 'varchar', 
-        length: 256, 
-        nullable: true, 
+        name: 'display_name',
+        type: 'varchar',
+        length: 256,
+        nullable: true,
     })
     displayName: string | null;
 
     @Column({
         type: 'text',
-        nullable: true, 
+        nullable: true,
     })
     description: string | null;
 
     @Column({
-        name: 'decision_strategy', 
-        type: 'varchar', 
-        length: 50, 
-        nullable: true, 
-        default: null, 
+        name: 'decision_strategy',
+        type: 'varchar',
+        length: 50,
+        nullable: true,
+        default: null,
     })
     decisionStrategy: `${DecisionStrategy}` | null;
 
@@ -82,7 +82,7 @@ export class PermissionEntity {
 
     @ManyToOne(() => ClientEntity, {
         onDelete: 'SET NULL',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'client_id' })
     client: Client | null;
@@ -95,7 +95,7 @@ export class PermissionEntity {
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'realm_id' })
     realm: Realm | null;

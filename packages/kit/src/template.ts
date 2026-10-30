@@ -18,6 +18,7 @@ export function template(
             match,
         ) => {
             const key = match[1];
+
             if (
                 key &&
                 hasOwnProperty(data, key) &&

@@ -16,14 +16,17 @@ export function setRequestRealmID(event: IAppEvent, id: string): void {
 
 export function getRequestRealmID(event: IAppEvent): string | undefined {
     const stored = event.store[sym] as string | undefined;
+
     if (stored) {
         return stored;
     }
+
     return getRequestStringParam(event, 'realmId');
 }
 
 export function applyRouteRealmIDToBody(event: IAppEvent, data: Record<string, any>): void {
     const routeRealmId = getRequestRealmID(event);
+
     if (routeRealmId) {
         data.realmId = routeRealmId;
     }

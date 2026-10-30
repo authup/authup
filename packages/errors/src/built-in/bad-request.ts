@@ -15,6 +15,7 @@ export const BAD_REQUEST_ERROR_INSTANCE = Symbol.for('@authup/errors/BadRequestE
 export class BadRequestError extends AuthupError {
     constructor(input?: string | AuthupErrorOptions) {
         const options: AuthupErrorOptions = typeof input === 'string' ? { message: input } : (input ?? {});
+
         super({
             code: ErrorCode.BAD_REQUEST,
             ...options,

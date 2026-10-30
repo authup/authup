@@ -85,12 +85,14 @@ function buildCookieOptions(runtimeConfig: RuntimeConfig) : CookieOptions {
     const options = runtimeConfig.public.authup as RuntimeOptions;
 
     let domain : string | undefined;
+
     if (options.cookieDomain) {
         domain = options.cookieDomain;
     }
 
     if (options.cookieDomainRuntimeKey) {
         const pathValue = getPathValue(runtimeConfig.public, options.cookieDomainRuntimeKey);
+
         if (typeof pathValue === 'string') {
             domain = pathValue;
         }
@@ -101,6 +103,7 @@ function buildCookieOptions(runtimeConfig: RuntimeConfig) : CookieOptions {
     }
 
     const cookieOptions : CookieOptions = {};
+
     if (domain) {
         cookieOptions.domain = domain;
     }
@@ -140,28 +143,38 @@ export default defineNuxtPlugin({
             cookieSecure: useRequestURL().protocol === 'https:',
             cookieSet: (key, value, options) => {
                 const app = tryUseNuxtApp();
-                if (app) {
-                    const cookie = useCookie(cookieName(key), {
-                        ...(options || {}),
-                        ...cookieOptions,
-                    });
-                    cookie.value = value;
+
+                if (!app) {
+                    return;
                 }
+
+                const cookie = useCookie(cookieName(key), {
+                    ...(options || {}),
+                    ...cookieOptions,
+                });
+
+                cookie.value = value;
             },
             cookieUnset: (key, options) => {
                 const app = tryUseNuxtApp();
-                if (app) {
-                    const cookie = useCookie(cookieName(key), {
-                        ...(options || {}),
-                        ...cookieOptions,
-                    });
-                    cookie.value = null;
+
+                if (!app) {
+                    return;
                 }
+
+                const cookie = useCookie(cookieName(key), {
+                    ...(options || {}),
+                    ...cookieOptions,
+                });
+
+                cookie.value = null;
             },
             cookieGet: (key) => {
                 const app = tryUseNuxtApp();
+
                 if (app) {
                     const cookie = useCookie(cookieName(key));
+
                     return cookie.value;
                 }
 

@@ -149,7 +149,7 @@ describe('readConfigFromEnv', () => {
      */
     it('should not inherit server-core own invariants', async () => {
         const cases : Record<string, string>[] = [
-            { SECRETS_ENCRYPTION_KEY: Buffer.alloc(16, 1).toString('base64') },
+            { SECRETS_ENCRYPTION_KEY: Buffer.alloc(16, 1).toBase64() },
             { MFA_REQUIRED: 'true' },
             { LOGIN_ATTEMPT_THROTTLE_ENABLED: 'true', EVENT_LOG_ENABLED: 'false' },
         ];

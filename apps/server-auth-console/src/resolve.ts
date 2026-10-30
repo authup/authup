@@ -36,11 +36,13 @@ export function resolvePackagePath(distPath?: string) : string | undefined {
  */
 export function resolveDistPath(distPath?: string) : string | undefined {
     const packagePath = resolvePackagePath(distPath);
+
     if (!packagePath) {
         return undefined;
     }
 
     const candidate = path.join(packagePath, 'dist');
+
     if (
         fs.existsSync(path.join(candidate, 'client', 'index.html')) &&
         fs.existsSync(path.join(candidate, 'server', 'server.js'))

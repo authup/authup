@@ -115,6 +115,7 @@ export function useSectionBreadcrumb(
 
         const path = normalizePath(route.path);
         const child = children.find((entry) => normalizePath(entry.url) === path);
+
         if (child) {
             items.push({ label: child.label, icon: child.icon });
         }

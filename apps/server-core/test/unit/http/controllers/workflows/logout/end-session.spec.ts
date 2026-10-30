@@ -52,6 +52,7 @@ describe('end-session (/logout)', () => {
 
         for (const scopeName of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {
             const { data: scope } = await suite.client.scope.getOne(scopeName);
+
             await suite.client.clientScope.create({ scopeId: scope.id, clientId: client.id });
         }
     });
@@ -74,6 +75,7 @@ describe('end-session (/logout)', () => {
         });
 
         const userClient = new HTTPClient({ baseURL: suite.baseURL });
+
         userClient.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
 
         const codeVerifier = generateOAuth2CodeVerifier();
@@ -89,6 +91,7 @@ describe('end-session (/logout)', () => {
         });
 
         const code = new URL(authorized.url).searchParams.get('code')!;
+
         return suite.client.token.createWithAuthorizationCode({
             client_id: client.name,
             redirect_uri: REDIRECT_URI,
@@ -105,6 +108,7 @@ describe('end-session (/logout)', () => {
                 client_id: client.name,
                 realm_id: realm.id,
             });
+
             return true;
         } catch {
             return false;
@@ -136,9 +140,11 @@ describe('end-session (/logout)', () => {
         // token twice.
         const revoked = await mintTokens();
         const survivor = await mintTokens();
+
         expect(revoked.id_token).toBeDefined();
 
         const body = await endSession({ id_token_hint: revoked.id_token! });
+
         expect(body.serverRevoked).toBe(true);
         expect(body.hintVerified).toBe(true);
         // the operands of the page's auto-clear gate
@@ -305,6 +311,7 @@ describe('end-session (/logout)', () => {
         expect(response.headers.get('cache-control')).toEqual('no-store');
 
         const location = new URL(response.headers.get('location') ?? '');
+
         expect(location.pathname.endsWith('/logout')).toBe(true);
         expect(location.searchParams.get('client_id')).toEqual(client.id);
         expect(location.searchParams.get('post_logout_redirect_uri')).toEqual(POST_LOGOUT_URI);
@@ -326,6 +333,7 @@ describe('end-session (/logout)', () => {
 
         // a 302 turns the POST into a GET, so the body has to survive as query
         const location = new URL(response.headers.get('location') ?? '');
+
         expect(location.searchParams.get('id_token_hint')).toEqual(tokens.id_token);
 
         // the hop itself decides nothing

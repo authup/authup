@@ -23,12 +23,13 @@ describe('src/http/controllers/entities/event', () => {
     const user = createFakeUser();
     let userId: string;
 
-    const adminAuthorization = `Basic ${Buffer.from('admin:start123').toString('base64')}`;
+    const adminAuthorization = `Basic ${Buffer.from('admin:start123').toBase64()}`;
 
     beforeAll(async () => {
         await suite.setup();
 
         const { data: created } = await suite.client.user.create(user);
+
         userId = created.id;
     });
 
@@ -41,12 +42,15 @@ describe('src/http/controllers/entities/event', () => {
             username: user.name,
             password: user.password!,
         });
+
         expect(response.access_token).toBeDefined();
 
         const { data } = await suite.client.event.getMany({ filters: { name: EventName.LOGIN, actorId: userId } });
+
         expect(data.length).toBeGreaterThanOrEqual(1);
 
         const [row] = data;
+
         expect(row.scope).toEqual(EventScope.OAUTH2);
         expect(row.name).toEqual(EventName.LOGIN);
         expect(row.actorType).toEqual(IdentityType.USER);
@@ -76,9 +80,11 @@ describe('src/http/controllers/entities/event', () => {
         );
 
         const { data } = await suite.client.event.getMany({ filters: { name: EventName.LOGIN_FAILED, actorName: user.name } });
+
         expect(data.length).toBeGreaterThanOrEqual(1);
 
         const [row] = data;
+
         expect(row.scope).toEqual(EventScope.OAUTH2);
         expect(row.actorId).toBeNull();
         expect(row.actorType).toBeNull();
@@ -99,21 +105,26 @@ describe('src/http/controllers/entities/event', () => {
 
     it('filters the collection by session id and projects the column', async () => {
         const { data } = await suite.client.event.getMany({ filters: { name: EventName.LOGIN, actorId: userId } });
+
         expect(data.length).toBeGreaterThanOrEqual(1);
 
         const [row] = data;
+
         expect(row.sessionId).toBeTruthy();
 
         const { data: filtered } = await suite.client.event.getMany({ filters: { sessionId: row.sessionId! } });
+
         expect(filtered.length).toBeGreaterThanOrEqual(1);
         expect(filtered.every((entry) => entry.sessionId === row.sessionId)).toBe(true);
     });
 
     it('reads a single audit event', async () => {
         const { data } = await suite.client.event.getMany({ filters: { name: EventName.LOGIN, actorId: userId } });
+
         expect(data.length).toBeGreaterThanOrEqual(1);
 
         const { data: row } = await suite.client.event.getOne(data[0].id);
+
         expect(row.id).toEqual(data[0].id);
         expect(row.name).toEqual(EventName.LOGIN);
     });
@@ -123,21 +134,26 @@ describe('src/http/controllers/entities/event', () => {
             headers: { Authorization: adminAuthorization },
             form: { name: 'login', scope: 'oauth2' },
         });
+
         expect([404, 405]).toContain(post.status);
 
         const { data } = await suite.client.event.getMany({ filters: { name: EventName.LOGIN, actorId: userId } });
+
         expect(data.length).toBeGreaterThanOrEqual(1);
 
         const del = await httpRequest(suite, 'DELETE', `/events/${data[0].id}`, { headers: { Authorization: adminAuthorization } });
+
         expect([404, 405]).toContain(del.status);
 
         // the row survives the delete attempt
         const { data: row } = await suite.client.event.getOne(data[0].id);
+
         expect(row.id).toEqual(data[0].id);
     });
 
     it('never throttles repeated failures with the default config (throttle off)', async () => {
         const victim = createFakeUser();
+
         await suite.client.user.create(victim);
 
         // default loginAttemptThreshold is 5 — go beyond it
@@ -149,6 +165,7 @@ describe('src/http/controllers/entities/event', () => {
                     password: 'definitely-wrong-password',
                 },
             });
+
             expect(response.status).toEqual(400);
         }
     });

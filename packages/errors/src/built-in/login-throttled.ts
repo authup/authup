@@ -22,6 +22,7 @@ export type LoginThrottledErrorOptions = AuthupErrorOptions & {
 export class LoginThrottledError extends AuthupError {
     constructor(input?: LoginThrottledErrorOptions) {
         const { retryAfter, ...rest } = input ?? {};
+
         super({
             code: ErrorCode.LOGIN_ATTEMPT_THROTTLED,
             message: 'Too many failed login attempts. Please try again later.',

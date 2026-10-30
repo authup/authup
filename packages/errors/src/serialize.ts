@@ -23,6 +23,7 @@ import { isObject } from '@ebec/core';
 export function serializeError(input: Error): Record<string, any> {
     if ('toJSON' in input && typeof input.toJSON === 'function') {
         const output = input.toJSON();
+
         if (isObject(output)) {
             return output;
         }

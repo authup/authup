@@ -8,7 +8,7 @@
 import {
     Column,
     CreateDateColumn,
-    Entity, 
+    Entity,
     Index,
     JoinColumn,
     ManyToOne,
@@ -33,16 +33,16 @@ export class IdentityProviderEntity implements IdentityProvider {
 
     @Column({
         type: 'varchar',
-        length: 128, 
+        length: 128,
     })
     name: string;
 
     @Index()
     @Column({
-        name: 'display_name', 
-        type: 'varchar', 
-        length: 256, 
-        nullable: true, 
+        name: 'display_name',
+        type: 'varchar',
+        length: 256,
+        nullable: true,
     })
     displayName: string | null;
 
@@ -50,21 +50,21 @@ export class IdentityProviderEntity implements IdentityProvider {
     @Column({
         type: 'varchar',
         length: 64,
-        nullable: true, 
+        nullable: true,
     })
     protocol: `${IdentityProviderProtocol}` | null;
 
     @Column({
         type: 'varchar',
         length: 64,
-        nullable: true, 
+        nullable: true,
     })
     preset: `${IdentityProviderPreset}` | null;
 
     @Index()
     @Column({
         type: 'boolean',
-        default: true, 
+        default: true,
     })
     enabled: boolean;
 

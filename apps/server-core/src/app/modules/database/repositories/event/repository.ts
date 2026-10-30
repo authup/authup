@@ -128,9 +128,11 @@ export class EventRepositoryAdapter implements IEventRepository {
                 constraints.push('event.realmId IN (:...visibleRealmIds)');
                 parameters.visibleRealmIds = realmIds;
             }
+
             if (options.visibility.realmIds.includes(null)) {
                 constraints.push('event.realmId IS NULL');
             }
+
             if (options.visibility.owner) {
                 constraints.push('(event.actorId = :visibleActorId AND event.actorType = :visibleActorType)');
                 parameters.visibleActorId = options.visibility.owner.actorId;

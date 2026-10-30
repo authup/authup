@@ -55,7 +55,9 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
 
     function ticketClient(ticket: string): HTTPClient {
         const client = new HTTPClient({ baseURL: suite.baseURL });
+
         client.setAuthorizationHeader({ type: 'Bearer', token: ticket });
+
         return client;
     }
 
@@ -72,13 +74,17 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
             password,
         });
         const bearer = new HTTPClient({ baseURL: suite.baseURL });
+
         bearer.setAuthorizationHeader({ type: 'Bearer', token: preLogin.access_token });
         await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.EMAIL });
 
         // 1) fresh credential-only login → mfa_required WITH an mfa ticket
         const rejected = await passwordGrant({ username: user.name, password });
+
         expect(rejected.status).toEqual(400);
+
         const rejectedBody = await rejected.json();
+
         expect(rejectedBody.code).toEqual(ErrorCode.OAUTH_MFA_REQUIRED);
         expect(rejectedBody.error).toEqual(OAuth2ErrorCode.MFA_REQUIRED);
         expect(rejectedBody.kinds).toEqual([UserAuthenticatorKind.EMAIL]);
@@ -94,6 +100,7 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
 
         // 2) DEFAULT-DENY: the ticket is refused as a bearer on the API
         const denied = await httpRequest(suite, 'GET', '/users/@me', { headers: { Authorization: `Bearer ${ticket}` } });
+
         expect(denied.status).toEqual(401);
 
         // ...and it is no introspection credential either (#3489): the
@@ -102,6 +109,7 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
             headers: { Authorization: `Bearer ${ticket}` },
             form: { token: ticket },
         });
+
         expect(deniedIntrospect.status).toEqual(401);
 
         // 3) the pending session is ticket-scoped: it self-expires with the
@@ -109,24 +117,33 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
         // holds two sessions here (the enrollment bearer + the pending one) —
         // the ticket-scoped one is the one expiring soonest.
         const pending = await suite.client.session.getMany({ filters: { userId: user.id } });
+
         expect(pending.data.length).toBeGreaterThan(1);
+
         const [pendingSession] = [...pending.data].sort(
             (a, b) => new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime(),
         );
+
         expect(pendingSession.mfaAt ?? null).toBeNull();
+
         const pendingExpiresIn = (new Date(pendingSession.expiresAt).getTime() - Date.now()) / 1_000;
+
         expect(pendingExpiresIn).toBeGreaterThan(MFA_TICKET_MAX_AGE - 120);
         expect(pendingExpiresIn).toBeLessThanOrEqual(MFA_TICKET_MAX_AGE + 60);
 
         // 4) ... but the challenge surface accepts it
         const status = await viaTicket.userAuthenticator.challenge();
+
         expect(status.required).toBeTruthy();
         expect(status.kinds).toEqual([UserAuthenticatorKind.EMAIL]);
 
         mailClient.clear();
+
         const send = await viaTicket.userAuthenticator.sendChallenge({ kind: UserAuthenticatorKind.EMAIL });
+
         expect(send.success).toBeTruthy();
         expect(mailClient.sent).toHaveLength(1);
+
         const code = /(\d{6})/.exec(mailClient.sent[0].text ?? '')![1];
 
         // 5) verify completes the login — the response carries the FULL grant
@@ -134,6 +151,7 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
             kind: UserAuthenticatorKind.EMAIL,
             response: code,
         });
+
         expect(verified.verified).toBeTruthy();
         expect(verified.token).toBeDefined();
         expect(verified.token!.access_token).toBeDefined();
@@ -142,8 +160,11 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
 
         // 6) the minted access token is a first-class bearer ...
         const loggedIn = new HTTPClient({ baseURL: suite.baseURL });
+
         loggedIn.setAuthorizationHeader({ type: 'Bearer', token: verified.token!.access_token });
+
         const me = await loggedIn.userInfo.get();
+
         expect(me.id).toEqual(user.id);
 
         // ... whose claims advertise the completed factor
@@ -151,8 +172,11 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
             headers: { Authorization: `Bearer ${verified.token!.access_token}` },
             form: { token: verified.token!.access_token },
         });
+
         expect(introspection.status).toEqual(200);
+
         const claims = await introspection.json();
+
         expect(claims.kind).toEqual(OAuth2TokenKind.ACCESS);
         expect(claims.acr).toEqual(OAuth2AuthenticationContextClass.MFA);
         expect(claims.amr).toContain(OAuth2AuthenticationMethodReference.OTP);
@@ -169,6 +193,7 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
             tokenBindingMethod: 'none',
         }));
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: oauthClient.id,
@@ -181,18 +206,25 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
             scope: `${ScopeName.GLOBAL}`,
             state: generateOAuth2CodeVerifier(),
         });
+
         expect(new URL(authorizeResponse.url).searchParams.get('code')).toBeTruthy();
 
         const { data: completed } = await suite.client.session.getOne(pendingSession.id);
+
         expect(completed.mfaAt).toBeTruthy();
+
         const completedExpiresIn = (new Date(completed.expiresAt).getTime() - Date.now()) / 1_000;
+
         expect(completedExpiresIn).toBeGreaterThan(MFA_TICKET_MAX_AGE + 60);
 
         // 8) the ticket is single use, consumed by the completion (the same
         // 401 + inactive_token shape as any revoked bearer on this API)
         const replay = await httpRequest(suite, 'GET', '/authenticators/challenge', { headers: { Authorization: `Bearer ${ticket}` } });
+
         expect(replay.status).toEqual(401);
+
         const replayBody = await replay.json();
+
         expect(replayBody.code).toEqual(ErrorCode.JWT_INACTIVE);
     });
 
@@ -207,6 +239,7 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
             password,
         });
         const bearer = new HTTPClient({ baseURL: suite.baseURL });
+
         bearer.setAuthorizationHeader({ type: 'Bearer', token: preLogin.access_token });
 
         const enrolled = await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.TOTP });
@@ -216,11 +249,15 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
             period: 30,
             secret: Secret.fromBase32(enrolled.meta.secret!),
         });
+
         await bearer.userAuthenticator.confirm('@me', enrolled.data.id, { code: totp.generate() });
 
         const rejected = await passwordGrant({ username: user.name, password });
+
         expect(rejected.status).toEqual(400);
+
         const rejectedBody = await rejected.json();
+
         expect(rejectedBody.code).toEqual(ErrorCode.OAUTH_MFA_REQUIRED);
         expect(rejectedBody.kinds).toEqual([UserAuthenticatorKind.TOTP]);
         expect(rejectedBody.mfa_token).toBeUndefined();
@@ -237,9 +274,11 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
             password,
         });
         const bearer = new HTTPClient({ baseURL: suite.baseURL });
+
         bearer.setAuthorizationHeader({ type: 'Bearer', token: preLogin.access_token });
 
         await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.EMAIL });
+
         const enrolled = await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.TOTP });
         const totp = new TOTP({
             algorithm: 'SHA1',
@@ -247,12 +286,14 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
             period: 30,
             secret: Secret.fromBase32(enrolled.meta.secret!),
         });
+
         // confirm with the PREVIOUS step's code so the verify below can use
         // the current one (each TOTP use advances the persisted step).
         await bearer.userAuthenticator.confirm('@me', enrolled.data.id, { code: totp.generate({ timestamp: Date.now() - 30_000 }) });
 
         const rejected = await passwordGrant({ username: user.name, password });
         const rejectedBody = await rejected.json();
+
         expect(rejectedBody.kinds).toEqual(
             expect.arrayContaining([UserAuthenticatorKind.EMAIL, UserAuthenticatorKind.TOTP]),
         );
@@ -263,6 +304,7 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
             kind: UserAuthenticatorKind.TOTP,
             response: totp.generate(),
         });
+
         expect(verified.verified).toBeTruthy();
         expect(verified.token!.access_token).toBeDefined();
     });
@@ -277,6 +319,7 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
             password,
         });
         const bearer = new HTTPClient({ baseURL: suite.baseURL });
+
         bearer.setAuthorizationHeader({ type: 'Bearer', token: preLogin.access_token });
         await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.EMAIL });
 
@@ -290,8 +333,11 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
             },
             body: JSON.stringify({ kind: UserAuthenticatorKind.EMAIL, response: '000000' }),
         });
+
         expect(response.status).toEqual(400);
+
         const body = await response.json();
+
         expect(body.code).toEqual(ErrorCode.ENTITY_CREDENTIALS_INVALID);
         expect(body.token).toBeUndefined();
     });
@@ -307,17 +353,20 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
             password,
         });
         const bearer = new HTTPClient({ baseURL: suite.baseURL });
+
         bearer.setAuthorizationHeader({ type: 'Bearer', token: preLogin.access_token });
         await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.EMAIL });
 
         const rejected = await passwordGrant({ username: user.name, password });
         const rejectedBody = await rejected.json();
+
         expect(typeof rejectedBody.mfa_token).toEqual('string');
 
         const introspection = await suite.client.token.introspect(
             { token: rejectedBody.mfa_token },
             { authorizationHeaderInherit: true },
         );
+
         expect(introspection).toEqual({ active: false });
     });
 });

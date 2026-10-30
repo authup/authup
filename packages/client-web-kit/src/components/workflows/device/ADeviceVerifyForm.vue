@@ -119,9 +119,11 @@ export default defineComponent({
         const info = ref<DeviceAuthorizationInfo | null>(null);
         const mfaStatus = ref<UserAuthenticatorChallengeResponse | null>(null);
         const accessDenied = ref<boolean>(props.error === OAuth2ErrorCode.ACCESS_DENIED);
+
         if (accessDenied.value) {
             step.value = 'done';
         }
+
         const decision = ref<'approved' | 'denied' | null>(null);
         const busy = ref<boolean>(false);
 
@@ -161,6 +163,7 @@ export default defineComponent({
 
         onMounted(async () => {
             const federated = props.federatedLogin;
+
             if (!federated || accessDenied.value) {
                 return;
             }
@@ -206,6 +209,7 @@ export default defineComponent({
             if (isDeviceVerificationThrottledError(ctx.data)) {
                 codeError.value = 'throttled';
                 step.value = 'code';
+
                 return;
             }
 
@@ -213,17 +217,21 @@ export default defineComponent({
                 case OAuth2ErrorCode.INVALID_GRANT:
                     codeError.value = 'invalid';
                     step.value = 'code';
+
                     return;
                 case OAuth2ErrorCode.LOGIN_REQUIRED:
                     step.value = 'realmMismatch';
+
                     return;
                 case OAuth2ErrorCode.MFA_REQUIRED:
                     await refreshMfaStatus();
                     step.value = 'mfa';
+
                     return;
                 case OAuth2ErrorCode.ACCESS_DENIED:
                     accessDenied.value = true;
                     step.value = 'done';
+
                     return;
                 default:
                     step.value = fallback;
@@ -239,6 +247,7 @@ export default defineComponent({
                 info.value = await httpClient.deviceAuthorization.lookup({ user_code: canonical.value });
             } catch (e) {
                 await handleRefusal(e, 'code');
+
                 return;
             }
 
@@ -246,11 +255,13 @@ export default defineComponent({
 
             if (mfaStatus.value?.required) {
                 step.value = 'mfa';
+
                 return;
             }
 
             if (mfaStatus.value?.enrollmentRequired) {
                 step.value = 'enroll';
+
                 return;
             }
 
@@ -266,11 +277,13 @@ export default defineComponent({
 
             if (!USER_CODE_PATTERN.test(canonical.value)) {
                 codeError.value = 'invalid';
+
                 return;
             }
 
             if (status.value !== StoreAuthStatus.AUTHENTICATED) {
                 step.value = 'login';
+
                 return;
             }
 
@@ -285,6 +298,7 @@ export default defineComponent({
         const approve = wrapFnWithBusyState(busy, async () => {
             try {
                 const response = await httpClient.deviceAuthorization.approve({ user_code: canonical.value });
+
                 decision.value = response.status;
                 step.value = 'done';
                 emit('done', response.status);
@@ -296,6 +310,7 @@ export default defineComponent({
         const deny = wrapFnWithBusyState(busy, async () => {
             try {
                 const response = await httpClient.deviceAuthorization.deny({ user_code: canonical.value });
+
                 decision.value = response.status;
                 step.value = 'done';
                 emit('done', response.status);

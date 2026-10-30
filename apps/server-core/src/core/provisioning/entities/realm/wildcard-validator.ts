@@ -34,6 +34,7 @@ export class RealmWildcardProvisioningValidator extends Container<RealmProvision
         this.mount('attributes', createValidator(
             z.looseObject({ name: z.literal(REALM_WILDCARD_NAME) }).check((ctx) => {
                 const keys = Object.keys(ctx.value);
+
                 if (keys.length > 1) {
                     ctx.issues.push({
                         code: 'custom',
@@ -55,6 +56,7 @@ export class RealmWildcardProvisioningValidator extends Container<RealmProvision
         ));
 
         const relationsValidator = new RealmProvisioningRelationsValidator();
+
         this.mount('relations', { optional: true }, relationsValidator);
     }
 
@@ -66,8 +68,10 @@ export class RealmWildcardProvisioningValidator extends Container<RealmProvision
 
         const issues : Issue[] = [];
         const clients = output.relations?.clients ?? [];
+
         clients.forEach((client, index) => {
             const name = client.attributes?.name;
+
             if (name && (CLIENT_RESERVED_NAMES as string[]).includes(name)) {
                 issues.push(defineIssueItem({
                     path: ['relations', 'clients', index, 'attributes', 'name'],

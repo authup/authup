@@ -95,7 +95,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
 
         // the code is mailed, only its digest is stored, so reading the table
         // yields nothing that resets a password.
-        const resetCode = randomBytes(32).toString('hex');
+        const resetCode = randomBytes(32).toHex();
         const merged = this.repository.merge(entity, {
             resetExpires,
             resetHash: digestSHA256(resetCode),
@@ -171,6 +171,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         };
 
         const entity = await this.repository.findOneByWithEmail(where);
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -243,6 +244,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         const validator = new Container<any>({});
 
         const oneOfContainer = new Container({ oneOf: true });
+
         oneOfContainer.mount(
             'email',
             createValidator(

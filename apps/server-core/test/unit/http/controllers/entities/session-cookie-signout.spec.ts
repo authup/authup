@@ -39,10 +39,13 @@ describe('session cookie sign-out on an https root deployment', () => {
     it('clears the prefixed cookie when the own session is deleted', async () => {
         const token = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
         const client = new HTTPClient({ baseURL: suite.baseURL });
+
         client.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
+
         const introspect = await client.token.introspect({ token: token.access_token }, { authorizationHeaderInherit: true });
 
         const secret = 'console-session-sign-out';
+
         await suite.dataSource
             .getRepository(SessionEntity)
             .update({ id: introspect.session_id! }, { secret: hashSessionSecret(secret) });
@@ -60,6 +63,7 @@ describe('session cookie sign-out on an https root deployment', () => {
         const setCookie = response.headers
             .getSetCookie()
             .find((value) => value.startsWith(`${COOKIE}=`)) as string;
+
         expect(setCookie).toBeDefined();
         expect(setCookie).toContain('Max-Age=0');
         expect(setCookie).toContain('Secure');

@@ -15,6 +15,7 @@ export class FakeOAuth2TokenSigner implements IOAuth2TokenSigner {
 
     async sign<T extends OAuth2TokenPayload>(payload: T): Promise<string> {
         this.signCalls.push(payload);
+
         return this.signature;
     }
 }

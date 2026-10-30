@@ -70,6 +70,7 @@ export function usePageError() {
     const capture = async (e: unknown, sink?: (value: Error) => void) => {
         if (extractErrorContext(e).status === 401) {
             await store.logout();
+
             return;
         }
 
@@ -80,6 +81,7 @@ export function usePageError() {
 
         if (sink) {
             sink(value);
+
             return;
         }
 
@@ -87,9 +89,9 @@ export function usePageError() {
     };
 
     return {
-        error, 
-        capture, 
-        reset, 
+        error,
+        capture,
+        reset,
     };
 }
 
@@ -105,6 +107,7 @@ export function isHttpURL(value: unknown): value is string {
     }
 
     let parsed: URL;
+
     try {
         parsed = new URL(value);
     } catch {

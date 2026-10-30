@@ -84,6 +84,7 @@ export class OAuth2Authorization {
             return result;
         } catch (e) {
             const outcome = classifyAuthorizeFailure(e);
+
             if (outcome === 'denied') {
                 await this.eventService?.record({
                     scope: EventScope.OAUTH2,
@@ -99,6 +100,7 @@ export class OAuth2Authorization {
                     data: { reason: 'accessPolicy' },
                 });
             }
+
             this.metrics?.recordAuthorize(outcome);
 
             throw e;
@@ -114,6 +116,7 @@ export class OAuth2Authorization {
         // supported — implicit/hybrid (token, id_token, none) were dropped
         // (plan 042 item 3). Defense in depth behind the request validator.
         let responseTypes : string[] = [];
+
         if (data.response_type) {
             responseTypes = Array.isArray(data.response_type) ?
                 data.response_type :

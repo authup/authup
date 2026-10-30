@@ -42,6 +42,7 @@ export function useLocaleControl(): LocaleControl {
 
     const code = computed<string>(() => {
         const source = manager ? manager.resolved.value : ilingo.value;
+
         return matchLocale(source) ?? ilingo.value;
     });
 
@@ -64,15 +65,18 @@ export function useLocaleControl(): LocaleControl {
  */
 export function syncTranslatorLocaleFromManager(app: App): void {
     const manager = app.runWithContext(() => tryUseLocaleManager());
+
     if (!manager) {
         return;
     }
 
     const ilingo = app.runWithContext(() => injectLocale());
+
     watch(
         manager.resolved,
         (value) => {
             const mapped = matchLocale(value);
+
             if (mapped && mapped !== ilingo.value) {
                 ilingo.value = mapped;
             }

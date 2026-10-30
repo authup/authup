@@ -34,6 +34,7 @@ export function extractValidupResultsFromChild<C extends ObjectLiteral = ObjectL
     keys?: string[],
 ): Record<string, any> {
     const child = composable.$getResultsForChild<C>(name);
+
     if (!child) {
         return {};
     }
@@ -41,11 +42,14 @@ export function extractValidupResultsFromChild<C extends ObjectLiteral = ObjectL
     const fieldKeys = keys ?? (Object.keys(child.fields) as string[]);
 
     const output: Record<string, any> = {};
+
     for (const key of fieldKeys) {
         const field = (child.fields as Record<string, { $model: { value: unknown } } | undefined>)[key];
+
         if (field) {
             output[key] = field.$model.value;
         }
     }
+
     return output;
 }

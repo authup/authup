@@ -7,9 +7,9 @@
 
 import { SymmetricAlgorithm } from './constants';
 import type {
-    SymmetricKeyCreateOptions, 
-    SymmetricKeyCreateOptionsInput, 
-    SymmetricKeyImportOptions, 
+    SymmetricKeyCreateOptions,
+    SymmetricKeyCreateOptionsInput,
+    SymmetricKeyImportOptions,
     SymmetricKeyImportOptionsInput,
 } from './types';
 

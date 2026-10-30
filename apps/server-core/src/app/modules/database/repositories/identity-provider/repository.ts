@@ -74,6 +74,7 @@ export class IdentityProviderRepositoryAdapter extends EntityRepositoryAdapter<I
             }
 
             const value = record[name];
+
             if (typeof value === 'string' && value.length > 0) {
                 own[name] = value;
                 record[name] = await this.protect(value, entity.realmId);
@@ -102,21 +103,27 @@ export class IdentityProviderRepositoryAdapter extends EntityRepositoryAdapter<I
 
     async findByProtocol(protocol: IdentityProviderProtocol, realmKey?: string): Promise<IdentityProvider[]> {
         const qb = this.repository.createQueryBuilder('provider');
+
         qb.where('provider.protocol = :protocol', { protocol });
 
         if (realmKey) {
             const realmId = await this.options.realmRepository?.resolveId(realmKey);
+
             if (!realmId) {
                 return [];
             }
+
             qb.andWhere('provider.realmId = :realmId', { realmId });
         }
 
         const entities = await qb.getMany();
+
         await this.repository.extendManyWithEA(entities);
+
         for (const entity of entities) {
             await this.reveal(entity);
         }
+
         return entities;
     }
 
@@ -149,12 +156,14 @@ export class IdentityProviderRepositoryAdapter extends EntityRepositoryAdapter<I
 
         for (const name of IDENTITY_PROVIDER_SECRET_ATTRIBUTES) {
             const value = record[name];
+
             if (typeof value !== 'string' || !isRealmCipherBlob(value)) {
                 continue;
             }
 
             if (!this.cipher) {
                 Reflect.deleteProperty(record, name);
+
                 continue;
             }
 

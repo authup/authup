@@ -133,8 +133,10 @@ export class Client extends BaseClient implements IClient {
 
         if (typeof baseURL === 'string') {
             const keys = Object.keys(options) as (keyof OAuth2APIOptions)[];
+
             for (const key of keys) {
                 const value = options[key];
+
                 if (typeof value === 'string') {
                     (options as Record<string, any>)[key] = buildURL(baseURL, value).href;
                 }
@@ -143,11 +145,11 @@ export class Client extends BaseClient implements IClient {
 
         this.authorize = new OAuth2AuthorizeAPI({
             client: this,
-            options, 
+            options,
         });
         this.token = new OAuth2TokenAPI({
             client: this,
-            options, 
+            options,
         });
 
         this.account = new AccountAPI({ client: this });
@@ -195,7 +197,7 @@ export class Client extends BaseClient implements IClient {
 
         this.userInfo = new OAuth2UserInfoAPI({
             client: this,
-            options, 
+            options,
         });
         this.userAttribute = new UserAttributeAPI({ client: this });
         this.userAuthenticator = new UserAuthenticatorAPI({ client: this });
@@ -231,6 +233,7 @@ export class Client extends BaseClient implements IClient {
 
     async getWellKnownOpenIDConfiguration() : Promise<OpenIDProviderMetadata> {
         const response = await this.get('/.well-known/openid-configuration');
+
         return response.data;
     }
 }

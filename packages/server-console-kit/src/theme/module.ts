@@ -81,6 +81,7 @@ export class ThemeProvider implements IThemeProvider {
         // valid theme — the operator may ship only a stylesheet) and as the
         // revalidation signature.
         this.manifestSignature = this.readSignature(this.manifestPath);
+
         if (this.manifestSignature) {
             this.manifest = await parseThemeManifest(await this.readManifest(), this.manifestPath);
         }
@@ -113,6 +114,7 @@ export class ThemeProvider implements IThemeProvider {
         const manifest = await this.getManifest();
 
         const cached = this.headCache.get(basePath);
+
         if (typeof cached === 'string') {
             return cached;
         }
@@ -122,6 +124,7 @@ export class ThemeProvider implements IThemeProvider {
             basePath,
             this.headFragment,
         );
+
         this.headCache.set(basePath, head);
 
         return head;
@@ -188,6 +191,7 @@ export class ThemeProvider implements IThemeProvider {
      */
     protected readFragment() : string | undefined {
         let raw : string;
+
         try {
             raw = fs.readFileSync(this.fragmentPath, 'utf-8');
         } catch {
@@ -215,9 +219,11 @@ export class ThemeProvider implements IThemeProvider {
      */
     protected async revalidate() : Promise<void> {
         const now = Date.now();
+
         if (now - this.revalidatedAt < THEME_MANIFEST_REVALIDATE_INTERVAL) {
             return;
         }
+
         this.revalidatedAt = now;
 
         // Re-resolved with the manifest, not captured at boot: a directory
@@ -233,6 +239,7 @@ export class ThemeProvider implements IThemeProvider {
 
     protected async revalidateManifest() : Promise<void> {
         const signature = this.readSignature(this.manifestPath);
+
         if (signature === this.manifestSignature) {
             return;
         }
@@ -254,6 +261,7 @@ export class ThemeProvider implements IThemeProvider {
             this.headCache.clear();
         } catch (e) {
             const reason = normalizeError(e).message;
+
             this.logger?.warn(`The theme manifest changed but is invalid, keeping the previous one.\n${reason}`);
         }
     }
@@ -264,6 +272,7 @@ export class ThemeProvider implements IThemeProvider {
         }
 
         const signature = this.readSignature(this.fragmentPath);
+
         if (signature === this.fragmentSignature) {
             return;
         }
@@ -294,6 +303,7 @@ export class ThemeProvider implements IThemeProvider {
         if (this.manifest) {
             const tokens = Object.keys(this.manifest.tokens ?? {}).length;
             const tokensDark = Object.keys(this.manifest.tokensDark ?? {}).length;
+
             this.logger.info(
                 `Theme manifest: loaded (${tokens} token(s), ${tokensDark} dark token(s))`,
             );
@@ -320,6 +330,7 @@ export class ThemeProvider implements IThemeProvider {
         }
 
         let files : string[];
+
         try {
             files = fs.readdirSync(this.assetsPath, { recursive: true, withFileTypes: true })
                 .filter((entry) => entry.isFile())

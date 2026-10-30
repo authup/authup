@@ -57,6 +57,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         // authorization runs as WHERE, so pagination and totals stay exact. A
         // non-expressible policy falls back to the per-row loop below.
         const compiled = await actor.permissionEvaluator.compile({ name: permissionNames });
+
         if (compiled.verdict === 'deny') {
             // no row can pass — a constant-false condition keeps the meta shape
             parsed = appendQueryConditions(parsed, inArray('id', []));
@@ -86,8 +87,10 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
                 realm: entity.realmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -98,8 +101,8 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             data,
             meta: {
                 ...meta,
-                total, 
-            }, 
+                total,
+            },
         };
     }
 
@@ -116,6 +119,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -147,6 +151,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         // the join-column validation loads. A `roleId` alongside it wins.
         if (typeof data.role !== 'undefined') {
             const relationId = isObject(data.role) ? data.role.id : undefined;
+
             data.roleId = data.roleId || relationId;
         }
 
@@ -196,6 +201,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         }
 
         let entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -210,7 +216,9 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         delete data.realmId;
 
         const current = { [entity.name]: entity.value };
+
         entity = this.repository.merge(entity, data);
+
         const realmId = entity.realmId ?? null;
 
         await this.evaluateUpdate(
@@ -233,6 +241,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_UPDATE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -244,6 +253,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         });
 
         const { id: entityId } = entity;
+
         await this.repository.remove(entity);
         entity.id = entityId;
 

@@ -31,7 +31,7 @@
 npm install @authup/client-web-kit-theme @vuecs/core @vuecs/design @vuecs/theme-tailwind @vuecs/tree tailwindcss
 ```
 
-The `@vuecs/*` packages and `tailwindcss` (`^4.3.2`) are peer dependencies. `@authup/client-web-kit` is an optional peer, declared so a pnpm install places it next to this package where the stylesheet looks for its class strings. You need a Tailwind v4 build step, for example `@tailwindcss/vite`. The package is ESM-only; build tooling needs Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`.
+The `@vuecs/*` packages and `tailwindcss` (`^4.3.2`) are peer dependencies. `@authup/client-web-kit` is an optional peer, declared so a pnpm install places it next to this package where the stylesheet looks for its class strings. You need a Tailwind v4 build step, for example `@tailwindcss/vite`. The package is ESM-only; build tooling needs Node.js `>=26.0.0`.
 
 ## Usage
 

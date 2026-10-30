@@ -15,6 +15,7 @@ export const OAUTH2_GRANT_TYPE_ERROR_INSTANCE = Symbol.for('@authup/specs/OAuth2
 export class OAuth2GrantTypeError extends OAuth2Error {
     constructor(input?: AuthupErrorInput) {
         const options = normalizeOAuth2ErrorInput(input);
+
         super({
             code: ErrorCode.OAUTH_GRANT_TYPE_UNSUPPORTED,
             message: 'The authorization grant type is not supported by the authorization server',

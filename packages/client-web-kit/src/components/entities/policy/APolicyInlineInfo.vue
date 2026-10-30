@@ -20,9 +20,9 @@ import APolicyDetailNav from './APolicyDetailNav.vue';
 
 export default defineComponent({
     components: {
-        APolicyTypeBadge, 
-        APolicyDetailNav, 
-        VCBadge, 
+        APolicyTypeBadge,
+        APolicyDetailNav,
+        VCBadge,
     },
     props: {
         entity: {

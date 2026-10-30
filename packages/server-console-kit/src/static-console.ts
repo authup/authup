@@ -61,6 +61,7 @@ export function defineStaticConsole(definition: StaticConsoleDefinition) : Stati
         }
 
         const packagePath = resolvePackagePath();
+
         if (packagePath) {
             const distPath = path.join(packagePath, 'dist');
 
@@ -78,6 +79,7 @@ export function defineStaticConsole(definition: StaticConsoleDefinition) : Stati
         }
 
         const distPath = resolveDistPath();
+
         if (!distPath) {
             throw new InternalError(
                 `The console bundle (${definition.packageName}) is not built or installed.`,

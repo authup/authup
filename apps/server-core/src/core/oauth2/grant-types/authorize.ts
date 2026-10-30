@@ -54,6 +54,7 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
         const identity = authorizationCode.sub && authorizationCode.sub_kind ?
             await this.identityResolver.resolve(authorizationCode.sub_kind, authorizationCode.sub) :
             null;
+
         if (!isTokenSubjectActive(identity, authorizationCode)) {
             throw OAuth2GrantError.invalid();
         }
@@ -142,6 +143,7 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
     ) : Promise<Session> {
         if (authorizationCode.session_id) {
             const existing = await this.sessionManager.findOneById(authorizationCode.session_id);
+
             if (!existing || !isTokenSession(existing, authorizationCode)) {
                 throw OAuth2GrantError.invalid('the session has been revoked');
             }

@@ -108,8 +108,10 @@ export class PermissionService extends AbstractEntityService implements IPermiss
                 realm: entity.realmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -133,6 +135,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         await actor.permissionEvaluator.preEvaluateOneOf({ name: PERMISSION_NAMES });
 
         const entity = await this.repository.findOneByIdOrName(idOrName, realm);
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -151,6 +154,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         actor: ActorContext,
     ): Promise<Permission> {
         const { entity } = await this.save(undefined, data, actor);
+
         return entity;
     }
 
@@ -160,6 +164,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         actor: ActorContext,
     ): Promise<Permission> {
         const { entity } = await this.save(idOrName, data, actor, { updateOnly: true });
+
         return entity;
     }
 
@@ -175,6 +180,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         let group: string;
 
         let entity: Permission | null | undefined;
+
         if (idOrName) {
             entity = await findClientOwnedRowForSave(idOrName, data, {
                 repository: this.repository,
@@ -185,6 +191,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
                     PermissionName.PERMISSION_UPDATE,
                 ],
             });
+
             // Only a NAME key may upsert-create. A UUID addresses one specific
             // row, so a miss is a 404 (creating would write a different id).
             if (!entity && (options.updateOnly || isUUID(idOrName))) {
@@ -276,6 +283,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             await this.assignDefaultPolicy(entity);
         } catch (e) {
             await this.repository.remove(entity).catch(() => { /* best-effort rollback */ });
+
             throw e;
         }
 
@@ -292,6 +300,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -307,6 +316,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         });
 
         const { id: entityId } = entity;
+
         await this.repository.remove(entity);
         entity.id = entityId;
 
@@ -320,6 +330,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
      */
     private async assignDefaultPolicy(permission: Permission): Promise<void> {
         const defaultPolicy = await this.policyRepository.findOneByName(SystemPolicyName.DEFAULT);
+
         if (!defaultPolicy) {
             throw new AuthupError(`The ${SystemPolicyName.DEFAULT} policy is not provisioned. Cannot create permissions without the default security policy.`);
         }
@@ -328,6 +339,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             permissionId: permission.id,
             policyId: defaultPolicy.id,
         });
+
         if (existing) {
             return;
         }
@@ -338,6 +350,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             policyId: defaultPolicy.id,
             policyRealmId: defaultPolicy.realmId,
         });
+
         await this.permissionPolicyRepository.save(entry);
     }
 
@@ -352,6 +365,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
      */
     private async assignToAdminRole(permission: Permission): Promise<void> {
         const adminRole = await this.roleRepository.findOneByName(ROLE_ADMIN_NAME);
+
         if (!adminRole) {
             throw new AuthupError(`The ${ROLE_ADMIN_NAME} role is not provisioned. Cannot grant the created permission to the administrator role.`);
         }
@@ -360,6 +374,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             roleId: adminRole.id,
             permissionId: permission.id,
         });
+
         if (existing) {
             return;
         }
@@ -372,6 +387,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             // Global admin: unrestricted realm reach.
             realmScope: RealmScope.ANY,
         });
+
         await this.rolePermissionRepository.save(entry);
     }
 
@@ -396,6 +412,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         }
 
         const isBuiltIn = (Object.values(PermissionName) as string[]).includes(permission.name);
+
         if (!isBuiltIn && !permission.realmId) {
             return;
         }
@@ -415,6 +432,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
                 roleId: role.id,
                 permissionId: permission.id,
             });
+
             if (existing) {
                 continue;
             }
@@ -426,6 +444,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
                 permissionRealmId: permission.realmId,
                 realmScope,
             });
+
             await this.rolePermissionRepository.save(entry);
         }
     }

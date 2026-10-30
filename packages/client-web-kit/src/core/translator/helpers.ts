@@ -36,6 +36,7 @@ export function useTranslations<const T extends readonly TranslationsInput[]>(
     elements: T,
 ): Record<OutputKey<T[number]>, string> {
     const output = {} as Record<string, Ref<string>>;
+
     for (const element of elements) {
         output[element.key] = useTranslation(element);
     }

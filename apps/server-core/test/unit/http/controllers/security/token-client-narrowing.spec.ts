@@ -55,9 +55,9 @@ describe('http/controllers/security (token client narrowing)', () => {
     let user : User;
 
     const tokens : Record<'x' | 'y' | 'none', string> = {
-        x: '', 
-        y: '', 
-        none: '', 
+        x: '',
+        y: '',
+        none: '',
     };
 
     function bearer(token: string) {
@@ -94,9 +94,11 @@ describe('http/controllers/security (token client narrowing)', () => {
             headers: authorization,
             form: { token },
         });
+
         expect(response.status).toEqual(200);
 
         const body = await response.json() as OAuth2TokenIntrospectionResponse;
+
         expect(body.active).toBe(true);
 
         return (body.permissions ?? []).map((entry) => entry.name);
@@ -118,10 +120,12 @@ describe('http/controllers/security (token client narrowing)', () => {
 
         // a role OWNED by X carrying a GLOBAL permission
         const { data: roleX } = await suite.client.role.create(createFakeRole({ clientId: clientX.id }));
+
         await suite.client.rolePermission.create({ roleId: roleX.id, permissionId: roleRead.id });
 
         // a global role carrying a global permission
         const { data: roleGlobal } = await suite.client.role.create(createFakeRole());
+
         await suite.client.rolePermission.create({ roleId: roleGlobal.id, permissionId: userRead.id });
 
         ({ data: user } = await suite.client.user.create(createFakeUser({ password })));
@@ -160,7 +164,7 @@ describe('http/controllers/security (token client narrowing)', () => {
         });
 
         it('should narrow by the introspected token, never by the caller', async () => {
-            const basic = Buffer.from('admin:start123').toString('base64');
+            const basic = Buffer.from('admin:start123').toBase64();
             const names = await introspectedNames(tokens.y, { authorization: `Basic ${basic}` });
 
             expect(names).not.toContain(permissionX.name);
@@ -169,6 +173,7 @@ describe('http/controllers/security (token client narrowing)', () => {
 
         it('should narrow GET /sessions/@me/introspect by the bearer\'s client', async () => {
             const response = await httpRequest(suite, 'GET', '/sessions/@me/introspect', { headers: bearer(tokens.y) });
+
             expect(response.status).toEqual(200);
 
             const body = await response.json() as OAuth2TokenIntrospectionResponse;
@@ -182,6 +187,7 @@ describe('http/controllers/security (token client narrowing)', () => {
         it('should gate a route on the grants the token reaches', async () => {
             const statuses = await Promise.all([tokens.x, tokens.y, tokens.none].map(async (token) => {
                 const response = await httpRequest(suite, 'GET', '/roles', { headers: bearer(token) });
+
                 return response.status;
             }));
 
@@ -194,9 +200,11 @@ describe('http/controllers/security (token client narrowing)', () => {
                     headers: { ...bearer(token), 'content-type': 'application/json' },
                     body: JSON.stringify({ names: [PermissionName.ROLE_READ] }),
                 });
+
                 expect(response.status).toEqual(200);
 
                 const body = await response.json() as { name: string }[];
+
                 return body.some((entry) => entry.name === PermissionName.ROLE_READ);
             }));
 
@@ -219,6 +227,7 @@ describe('http/controllers/security (token client narrowing)', () => {
                         clients,
                     }),
                 });
+
                 expect(response.status).toEqual(200);
 
                 return response.json();
@@ -230,6 +239,7 @@ describe('http/controllers/security (token client narrowing)', () => {
                 clientId: clientX.id,
                 targetRealms: expect.any(Array),
             }];
+
             expect(entries).toEqual(selected.map((item) => (item ? expected : [])));
         });
 
@@ -238,6 +248,7 @@ describe('http/controllers/security (token client narrowing)', () => {
         // subject's own token client alone; `granted` selects the other one.
         it('should select a foreign client-owned definition for a client subject by granted', async () => {
             const clientZ = await createConfidentialClient();
+
             await suite.client.clientPermission.create({
                 clientId: clientZ.id,
                 permissionId: permissionX.id,
@@ -257,6 +268,7 @@ describe('http/controllers/security (token client narrowing)', () => {
                         clients,
                     }),
                 });
+
                 expect(response.status).toEqual(200);
 
                 return response.json();
@@ -298,11 +310,13 @@ describe('http/controllers/security (token client narrowing)', () => {
 
             const { data: realm } = await suite.client.realm.getOne('master');
             const kick = await cookieRequest('GET', `/${segment}/login/start?realmId=${realm.id}`, { redirect: 'manual' });
+
             expect(kick.status).toEqual(302);
 
             const authorizeURL = new URL(kick.headers.get('location') as string);
 
             const userClient = new HTTPClient({ baseURL: suite.baseURL });
+
             userClient.setAuthorizationHeader({ type: 'Bearer', token: tokens.none });
 
             const authorized = await userClient.authorize.confirm({
@@ -320,6 +334,7 @@ describe('http/controllers/security (token client narrowing)', () => {
             const state = authorizeURL.searchParams.get('state') as string;
 
             const callback = await cookieRequest('GET', `/${segment}/callback?code=${code}&state=${state}`, { redirect: 'manual' });
+
             expect(callback.status).toEqual(302);
             expect(jar.get(SESSION_COOKIE)).toBeDefined();
 
@@ -332,6 +347,7 @@ describe('http/controllers/security (token client narrowing)', () => {
                         clients,
                     }),
                 });
+
                 expect(response.status).toEqual(200);
 
                 return response.json();
@@ -353,9 +369,11 @@ describe('http/controllers/security (token client narrowing)', () => {
                     headers: { ...bearer(token), 'content-type': 'application/json' },
                     body: JSON.stringify({}),
                 });
+
                 expect(response.status).toEqual(202);
 
                 const body = await response.json() as { status: string };
+
                 return body.status;
             }));
 
@@ -366,10 +384,12 @@ describe('http/controllers/security (token client narrowing)', () => {
     describe('delegation', () => {
         it('should not assign a role whose permissions the actor holds only through another client', async () => {
             const { data: userRoleCreate } = await suite.client.permission.getOne(PermissionName.USER_ROLE_CREATE);
+
             await suite.client.userPermission.create({ userId: user.id, permissionId: userRoleCreate.id });
 
             const { data: roleRead } = await suite.client.permission.getOne(PermissionName.ROLE_READ);
             const { data: role } = await suite.client.role.create(createFakeRole());
+
             await suite.client.rolePermission.create({ roleId: role.id, permissionId: roleRead.id });
 
             const { data: target } = await suite.client.user.create(createFakeUser());
@@ -409,6 +429,7 @@ describe('http/controllers/security (token client narrowing)', () => {
     describe('issuance', () => {
         beforeAll(async () => {
             const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
             await suite.client.clientScope.create({ clientId: clientX.id, scopeId: scope.id });
         });
 
@@ -426,9 +447,11 @@ describe('http/controllers/security (token client narrowing)', () => {
 
         async function expectRefusal(token: string) {
             const response = await authorize(token);
+
             expect(response.status).toEqual(400);
 
             const body = await response.json();
+
             expect(body.code).toEqual(ErrorCode.OAUTH_LOGIN_REQUIRED);
             expect(body.error).toEqual(OAuth2ErrorCode.LOGIN_REQUIRED);
         }
@@ -443,9 +466,11 @@ describe('http/controllers/security (token client narrowing)', () => {
 
         it('should issue a code for a token issued to no client', async () => {
             const response = await authorize(tokens.none);
+
             expect(response.status).toEqual(200);
 
             const { url } = await response.json() as { url: string };
+
             expect(new URL(url).searchParams.get('code')).toBeTruthy();
         });
     });

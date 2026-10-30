@@ -155,6 +155,7 @@ export async function createHandler(
     // report the actionable error. A resolved one is checked against the
     // render contract here, unless a substituted render never reads it.
     const distPath = resolveDistPath(config.distPath);
+
     if (distPath) {
         if (!render) {
             await assertRenderContract(distPath);

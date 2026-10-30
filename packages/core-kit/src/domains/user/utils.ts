@@ -10,7 +10,9 @@ import type { NameValidOptions } from '../../helpers';
 import { isNameValid } from '../../helpers';
 
 export function isUserNameValid(input: string, options: NameValidOptions = {}) : boolean {
-    if (!isNameValid(input, options)) return false;
+    if (!isNameValid(input, options)) {
+        return false;
+    }
 
     input = input.toLowerCase();
 

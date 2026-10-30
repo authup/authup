@@ -5,6 +5,16 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
+## Next release
+
+### Node.js 26 minimum
+
+All Authup packages require Node.js `>=26.0.0`. The Docker image and CI use Node.js 26.
+
+**Action required:** Upgrade Node.js before installing or updating a bare-metal deployment,
+CLI, or application that consumes Authup packages. Docker deployments receive the runtime
+with the updated image; no separate host Node.js upgrade is needed.
+
 ## Next release (after v1.0.0-beta.71)
 
 ### `POST /authorization/check` answers realm- and client-owned permissions

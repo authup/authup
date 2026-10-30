@@ -9,8 +9,8 @@ import type {
     EntityCollectionResponse,
     EntityRecordResponse,
     EntityStatsResponse,
-    TrustAnchorCreatePayload, 
-    TrustAnchorUpdatePayload, 
+    TrustAnchorCreatePayload,
+    TrustAnchorUpdatePayload,
 } from '@authup/core-http-kit';
 import type { TrustAnchor } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
@@ -30,8 +30,8 @@ import type { IEntityStatsService, ITrustAnchorService  } from '../../../../../c
 import {
     RECORD_QUERY_PARAMETERS,
     STATS_QUERY_PARAMETERS,
-    describeQuerySchema, 
-    trustAnchorSchema, 
+    describeQuerySchema,
+    trustAnchorSchema,
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -112,6 +112,7 @@ export class TrustAnchorController {
         @DContext() event: IAppEvent,
     ): Promise<EntityRecordResponse<TrustAnchor>> {
         applyRouteRealmIDToBody(event, data);
+
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 

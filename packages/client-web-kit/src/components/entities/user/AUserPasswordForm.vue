@@ -36,13 +36,16 @@ import { IFieldValidation } from '@ilingo/validup-vue';
 // validator surfaces its own message independently.
 const createSameAsPassword = (message: () => string): Validator => (ctx) => {
     const { value } = ctx;
+
     // If the value isn't a string at this point, the prior length
     // validator already failed — defer to its issue rather than adding
     // a confusing "doesn't match" alongside.
     if (typeof value !== 'string') {
         return value;
     }
+
     const { password } = ctx.data as { password?: unknown };
+
     if (value !== password) {
         // Bare-code path (defaults to `VALUE_INVALID`) + explicit
         // message. Parameterized `SAME_AS` would surface the contract
@@ -58,6 +61,7 @@ const createSameAsPassword = (message: () => string): Validator => (ctx) => {
             message: message(),
         })]);
     }
+
     return value;
 };
 
@@ -79,6 +83,7 @@ class UserPasswordValidator extends Container<{ password: string; passwordRepeat
         super.initialize();
 
         const passwordValidator = createValidator(z.string().min(5).max(100));
+
         this.mount('password', passwordValidator);
         this.mount('passwordRepeat', passwordValidator);
     }
@@ -144,8 +149,9 @@ export default defineComponent({
         const submit = wrapFnWithBusyState(busy, async () => {
             // `v.$invalid` already covers length + password-repeat match
             // (the `sameAsPassword` validator above).
-            if (v.$invalid.value) return;
-            if (!props.id) return;
+            if (v.$invalid.value || !props.id) {
+                return;
+            }
 
             try {
                 const user = await apiClient.user.update(props.id, {

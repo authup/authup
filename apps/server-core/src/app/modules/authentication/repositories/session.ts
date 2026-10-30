@@ -56,7 +56,7 @@ export class SessionRepository implements ISessionRepository {
         const session = await this.cache.get<Session>(
             buildCacheKey({
                 prefix: AuthenticationCachePrefix.SESSION,
-                key: id, 
+                key: id,
             }),
         );
 
@@ -148,6 +148,7 @@ export class SessionRepository implements ISessionRepository {
 
     async save(input: Partial<Session>): Promise<Session> {
         const session = this.repository.create(input);
+
         await this.repository.save(session);
         await this.cache.set(
             this.buildCacheKey(session.id),
@@ -168,6 +169,7 @@ export class SessionRepository implements ISessionRepository {
         // another column keeps its value.
         const cached = await this.cache.get<Session>(key);
         const next : Session = { ...(cached ?? session), ...patch };
+
         await this.cache.set(
             key,
             this.toCacheable(next),
@@ -178,6 +180,7 @@ export class SessionRepository implements ISessionRepository {
         // be older than the row. No row means the session is gone, and it is
         // never re-inserted.
         const { affected } = await this.repository.update({ id: session.id }, patch);
+
         if (!affected) {
             await this.cache.drop(key);
 
@@ -197,6 +200,7 @@ export class SessionRepository implements ISessionRepository {
      */
     protected toCacheable(session: Session): Session {
         const cacheable : Session = { ...session };
+
         delete cacheable.secret;
 
         return cacheable;

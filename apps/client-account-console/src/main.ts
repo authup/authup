@@ -119,6 +119,7 @@ router.beforeEach(async (to) => {
     // exchange: an error=access_denied return must not leave an entry
     // behind. Single use either way.
     const recoveredRef = loadAccountConsoleRef();
+
     if (recoveredRef) {
         setAccountConsoleRef(recoveredRef);
     }
@@ -130,16 +131,19 @@ router.beforeEach(async (to) => {
     const code = !config.cookieSession && typeof to.query.code === 'string' ?
         to.query.code :
         undefined;
+
     if (code) {
         // The login kick saved an authorization request carrying the PKCE
         // verifier + client/realm binding — the exchange must present them.
         // Single-use either way: consumed on success, dropped on failure
         // (a reload must not replay the code).
         const request = loadAuthorizationRequest();
+
         if (request) {
             const state = typeof to.query.state === 'string' ? to.query.state : undefined;
 
             let failed = false;
+
             try {
                 if (request.state !== state) {
                     throw new Error('The authorization request state does not match.');
@@ -158,6 +162,7 @@ router.beforeEach(async (to) => {
             clearAuthorizationRequest();
 
             const query = omitRecord(to.query, ['code', 'state']);
+
             if (failed) {
                 // Surfaced by the shell page as a readable error state; its
                 // presence also suppresses the automatic re-kick into the
@@ -272,10 +277,10 @@ app.use(installPagination);
 // date-fns locales so relative times follow the active UI locale.
 app.use(installTimeago, {
     locales: {
-        de, 
-        es, 
-        fr, 
-    }, 
+        de,
+        es,
+        fr,
+    },
 });
 
 router.isReady().then(() => {

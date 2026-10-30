@@ -32,39 +32,39 @@ export class UserEntity implements User {
     @Index()
     @Column({
         type: 'varchar',
-        length: 128, 
+        length: 128,
     })
     name: string;
 
     @Column({
-        name: 'name_locked', 
-        type: 'boolean', 
-        default: true, 
+        name: 'name_locked',
+        type: 'boolean',
+        default: true,
     })
     nameLocked: boolean;
 
     @Column({
-        name: 'first_name', 
-        type: 'varchar', 
-        length: 128, 
-        nullable: true, 
+        name: 'first_name',
+        type: 'varchar',
+        length: 128,
+        nullable: true,
     })
     firstName: string | null;
 
     @Column({
-        name: 'last_name', 
-        type: 'varchar', 
-        length: 128, 
-        nullable: true, 
+        name: 'last_name',
+        type: 'varchar',
+        length: 128,
+        nullable: true,
     })
     lastName: string | null;
 
     @Index()
     @Column({
-        name: 'display_name', 
-        type: 'varchar', 
-        length: 256, 
-        nullable: true, 
+        name: 'display_name',
+        type: 'varchar',
+        length: 256,
+        nullable: true,
     })
     displayName: string | null;
 
@@ -97,14 +97,14 @@ export class UserEntity implements User {
     @Column({
         type: 'varchar',
         length: 255,
-        nullable: true, 
+        nullable: true,
     })
     avatar: string | null;
 
     @Column({
         type: 'varchar',
         length: 255,
-        nullable: true, 
+        nullable: true,
     })
     cover: string | null;
 
@@ -122,22 +122,22 @@ export class UserEntity implements User {
     resetHash: string | null;
 
     @Column({
-        name: 'reset_at', 
-        type: 'varchar', 
-        length: 28, 
-        nullable: true, 
-        default: null, 
-        select: false, 
+        name: 'reset_at',
+        type: 'varchar',
+        length: 28,
+        nullable: true,
+        default: null,
+        select: false,
     })
     resetAt: string | null;
 
     @Column({
-        name: 'reset_expires', 
-        type: 'varchar', 
-        length: 28, 
-        nullable: true, 
-        default: null, 
-        select: false, 
+        name: 'reset_expires',
+        type: 'varchar',
+        length: 28,
+        nullable: true,
+        default: null,
+        select: false,
     })
     resetExpires: string | null;
 
@@ -152,11 +152,11 @@ export class UserEntity implements User {
     status: string | null;
 
     @Column({
-        name: 'status_message', 
-        type: 'varchar', 
-        length: 256, 
-        nullable: true, 
-        default: null, 
+        name: 'status_message',
+        type: 'varchar',
+        length: 256,
+        nullable: true,
+        default: null,
     })
     statusMessage: string | null;
 

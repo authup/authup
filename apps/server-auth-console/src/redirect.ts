@@ -30,6 +30,7 @@ export function sanitizeRelativeRedirect(input: unknown): string | undefined {
     }
 
     let decoded: string;
+
     try {
         decoded = decodeURIComponent(input);
     } catch {
@@ -48,9 +49,11 @@ export function sanitizeRelativeRedirect(input: unknown): string | undefined {
         if (!candidate.startsWith('/')) {
             return undefined;
         }
+
         if (candidate.length > 1 && (candidate[1] === '/' || candidate[1] === '\\')) {
             return undefined;
         }
+
         if (candidate.includes('\\')) {
             return undefined;
         }

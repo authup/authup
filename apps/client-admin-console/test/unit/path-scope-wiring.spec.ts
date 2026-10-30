@@ -93,9 +93,9 @@ async function mountScope(path: string, withRealm: boolean | MountOptions = true
     const component = defineComponent({
         setup() {
             scope = usePathScope({
-                realmId: realm, 
-                enabled, 
-                settled, 
+                realmId: realm,
+                enabled,
+                settled,
             });
 
             return () => h('div');
@@ -267,16 +267,18 @@ describe('src/composables/path-scope -> usePathScope', () => {
             handlers: {
                 'GET /paths': async (request: { url: string }) => {
                     const url = decodeURIComponent(request.url);
+
                     if (url.includes(REALM_ID)) {
                         await slow.promise;
+
                         return { data: [PATHS[0]], meta: { total: 1 } };
                     }
 
                     return {
                         data: [{
-                            id: 'id-ops', 
-                            path: 'ops', 
-                            realmId: OTHER_REALM_ID, 
+                            id: 'id-ops',
+                            path: 'ops',
+                            realmId: OTHER_REALM_ID,
                         }],
                         meta: { total: 1 },
                     };
@@ -288,6 +290,7 @@ describe('src/composables/path-scope -> usePathScope', () => {
             history: createMemoryHistory(),
             routes: [{ path: '/users', component: { render: () => null } }],
         });
+
         await router.push('/users');
 
         const realm = ref<string>(REALM_ID);

@@ -75,6 +75,7 @@ export default defineComponent({
 
         const isInvalid = computed(() => {
             const slots = ['basic', 'enrollment', 'connection', 'credentials', 'group', 'user'] as const;
+
             return slots.some((slot) => !!v.$getResultsForChild(slot)?.$invalid.value);
         });
 
@@ -84,6 +85,7 @@ export default defineComponent({
             }
 
             busy.value = true;
+
             try {
                 const data: Partial<IdentityProvider> = {
                     ...extractValidupResultsFromChild(v, 'basic'),

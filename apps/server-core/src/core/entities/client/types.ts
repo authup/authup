@@ -86,7 +86,7 @@ export interface IClientService extends IReadScoper {
         options?: { updateOnly?: boolean },
     ): Promise<{
         entity: Client,
-        created: boolean 
+        created: boolean
     }>;
     delete(id: string, actor: ActorContext): Promise<Client>;
     /**

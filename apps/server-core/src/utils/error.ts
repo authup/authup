@@ -55,6 +55,7 @@ export function sanitizeError(input: unknown): AuthupError {
 
     if (isValidupError(input)) {
         const paths = input.issues.map((issue) => stringifyPath(issue.path));
+
         return new AuthupError({
             code: ErrorCode.BAD_REQUEST,
             stack: input.stack,
@@ -199,8 +200,10 @@ function describeCauseLink(input: object): string {
     const parts: string[] = [`${name}: ${error.message}`];
 
     const details: string[] = [];
+
     for (const key of DESCRIBE_CAUSE_KEYS) {
         const value = (input as Record<string, unknown>)[key];
+
         if (typeof value === 'string' || typeof value === 'number') {
             details.push(`${key}=${value}`);
         }
@@ -255,9 +258,11 @@ export function describeError(input: unknown, headline?: string): string {
     const error = normalizeError(input);
 
     const lines: string[] = [];
+
     if (headline) {
         lines.push(headline);
     }
+
     lines.push(error.message);
 
     // hapic attaches the decoded body to the response through a getter, so
@@ -266,12 +271,14 @@ export function describeError(input: unknown, headline?: string): string {
         lines.push(`  upstream status: ${error.response.status}`);
 
         const body = describeBody(error.response.data);
+
         if (body) {
             lines.push(`  upstream body:   ${body}`);
         }
     }
 
     const causes = describeCauseChain(error);
+
     if (causes) {
         lines.push(`  cause:           ${causes}`);
     }

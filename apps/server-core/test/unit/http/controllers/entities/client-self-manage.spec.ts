@@ -39,9 +39,11 @@ describe('http/controllers/client (self-manage)', () => {
             secretHashed: false,
             secretEncrypted: false,
         });
+
         entity = created;
 
         const { data: permission } = await suite.client.permission.getOne(PermissionName.CLIENT_SELF_MANAGE);
+
         // an own-reach grant: a self-edit is evaluated against the STORED
         // row's realm, which an own grant reaches
         await suite.client.clientPermission.create({
@@ -84,6 +86,7 @@ describe('http/controllers/client (self-manage)', () => {
 
     it('should not move itself through a self-update of realm_id', async () => {
         const originalRealmId = entity.realmId;
+
         // a realm key scopes the lookup, and one naming no realm is refused
         await expectClientError(
             () => selfClient.client.update(entity.id, { realmId: '00000000-0000-0000-0000-000000000000' } as Partial<ClientEntity>),
@@ -91,6 +94,7 @@ describe('http/controllers/client (self-manage)', () => {
         );
 
         const { data: response } = await selfClient.client.update(entity.id, { realmId: originalRealmId } as Partial<ClientEntity>);
+
         expect(response.realmId).toBe(originalRealmId);
     });
 
@@ -130,6 +134,7 @@ describe('http/controllers/client (self-manage)', () => {
         );
 
         const { data: current } = await suite.client.client.getOne(entity.id);
+
         expect(current.pathId).toBeNull();
     });
 
@@ -145,6 +150,7 @@ describe('http/controllers/client (self-manage)', () => {
         );
 
         const { data: current } = await suite.client.client.getOne(entity.id);
+
         expect(current.grantTypes).toEqual(before.grantTypes);
     });
 

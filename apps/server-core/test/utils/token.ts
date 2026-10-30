@@ -39,11 +39,12 @@ export async function createScopeRestrictedClient(suite: TestHTTPApplication, sc
     });
 
     const client = new Client({ baseURL: suite.baseURL });
+
     client.setAuthorizationHeader({ type: 'Bearer', token });
 
     return {
-        client, 
-        payload, 
-        token, 
+        client,
+        payload,
+        token,
     };
 }

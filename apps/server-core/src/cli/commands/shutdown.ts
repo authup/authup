@@ -27,12 +27,14 @@ export function registerShutdownHandlers(app: { teardown(): Promise<unknown> }) 
         if (shuttingDown) {
             process.exit(1);
         }
+
         shuttingDown = true;
 
         const force = setTimeout(() => {
             process.stderr.write(`\n${signal} teardown timed out after ${FORCE_EXIT_TIMEOUT_MS}ms — forcing exit.\n`);
             process.exit(1);
         }, FORCE_EXIT_TIMEOUT_MS);
+
         force.unref();
 
         try {

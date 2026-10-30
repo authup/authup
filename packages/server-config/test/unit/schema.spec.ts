@@ -47,6 +47,7 @@ function collectDeclarations<T>(
 
         if (isSchemaEntryInput(entry)) {
             declarations.push({ key, entry });
+
             continue;
         }
 
@@ -101,6 +102,7 @@ describe('SCHEMA', () => {
      */
     it('maps every environment variable name onto exactly one key', () => {
         const names : string[] = [];
+
         for (const { entry } of DECLARATIONS) {
             if (typeof entry.env !== 'undefined') {
                 names.push(entry.env);
@@ -149,10 +151,13 @@ describe('SCHEMA', () => {
         expect((resolve({ core: { port: 4001 } } as Partial<AuthupConfig>) as any).core.worker.port).toEqual(4001);
 
         const file = readSchemaFromFileTree<AuthupConfig>({ core: { port: 4001, worker: { port: 4002 } } }, SCHEMA);
+
         expect((resolve(file) as any).core.worker.port).toEqual(4002);
 
         const previous = process.env.WORKER_PORT;
+
         process.env.WORKER_PORT = '4003';
+
         try {
             expect((resolve(file, readSchemaFromEnv<AuthupConfig>(SCHEMA)) as any).core.worker.port).toEqual(4003);
         } finally {
@@ -170,6 +175,7 @@ describe('SCHEMA', () => {
         for (const port of [0, 1, 4001, 65535]) {
             expect(type.safeParse(port).success).toBe(true);
         }
+
         for (const port of [-1, 4001.5, 65536]) {
             expect(type.safeParse(port).success).toBe(false);
         }
@@ -241,6 +247,7 @@ describe('SCHEMA', () => {
      */
     it('hands out a fresh array per call', () => {
         const first = buildSchemaDefaults<AuthupConfig>(SCHEMA);
+
         (first.trustedOrigins as string[]).push('https://evil.test');
 
         expect(buildSchemaDefaults<AuthupConfig>(SCHEMA).trustedOrigins).toEqual([]);
@@ -321,6 +328,7 @@ describe('buildSchemaJSONSchema(SCHEMA)', () => {
         // its keys sit at the paths their entries carry. Every key a service
         // reads now sits at the top level, so nothing wraps them.
         const properties = schema.properties as Record<string, unknown>;
+
         expect(properties).not.toHaveProperty('server');
 
         expect(resolveProperty('core.port')).toBeDefined();
@@ -341,16 +349,19 @@ describe('buildSchemaJSONSchema(SCHEMA)', () => {
 
     it('carries the env name and the static default, and omits a process-derived one', () => {
         const port = resolveProperty('core.port');
+
         expect(port['x-authup-env']).toEqual('PORT');
         expect(port.default).toEqual(3000);
 
         // rootPath defaults to the cwd, which is no value to publish.
         const rootPath = resolveProperty('rootPath');
+
         expect(rootPath).not.toHaveProperty('default');
     });
 
     it('publishes the event rollup retention, forever by default', () => {
         const retention = resolveProperty('core.eventLogAggregateRetentionDays');
+
         expect(retention['x-authup-env']).toEqual('EVENT_LOG_AGGREGATE_RETENTION_DAYS');
         expect(retention.default).toEqual(0);
     });

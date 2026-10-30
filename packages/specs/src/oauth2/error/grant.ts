@@ -15,6 +15,7 @@ export const OAUTH2_GRANT_ERROR_INSTANCE = Symbol.for('@authup/specs/OAuth2Grant
 export class OAuth2GrantError extends OAuth2Error {
     constructor(input?: AuthupErrorInput) {
         const options = normalizeOAuth2ErrorInput(input);
+
         super({
             code: ErrorCode.OAUTH_GRANT_INVALID,
             message: 'The provided authorization grant is invalid.',

@@ -70,6 +70,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
 
     async save(identity: IdentityProviderIdentity): Promise<IdentityProviderAccount> {
         let account = await this.repository.findOneByProviderIdentity(identity);
+
         if (account) {
             return this.update(identity, account);
         }
@@ -98,6 +99,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             // this request provisioned moments ago (unreferenced; best effort,
             // a leftover row must not fail the login).
             const raced = await this.repository.findOneByProviderIdentity(identity);
+
             if (!raced) {
                 throw e;
             }
@@ -140,6 +142,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
 
     async link(identity: IdentityProviderIdentity, userId: string): Promise<IdentityProviderAccount> {
         const user = await this.userRepository.findOneById(userId);
+
         if (!user) {
             throw new ValidationError('The linking user does not exist.');
         }
@@ -155,6 +158,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
         const providerUserEmail = this.pickCandidate(identity, 'email', 512);
 
         const existing = await this.repository.findOneByProviderIdentity(identity);
+
         if (existing) {
             if (existing.userId !== userId) {
                 throw new IdentityProviderAccountAlreadyLinkedError();
@@ -187,6 +191,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             // row means (providerId, userId), the user already holds a link
             // at this provider through another external account.
             const raced = await this.repository.findOneByProviderIdentity(identity);
+
             if (raced) {
                 if (raced.userId === userId) {
                     return raced;
@@ -205,6 +210,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
         maxLength: number,
     ): string | null {
         const candidates = identity.attributeCandidates?.[key] || [];
+
         for (const candidate of candidates) {
             if (typeof candidate === 'string' && candidate.length > 0) {
                 return candidate.slice(0, maxLength);
@@ -221,6 +227,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
      */
     protected async assertPathRealm(pathId: string, realmId: string | null): Promise<void> {
         const path = await this.pathRepository.findOneById(pathId);
+
         if (!path) {
             throw new ValidationError('The path does not exist.');
         }
@@ -294,6 +301,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
         );
 
         const entity : Record<string, any> = {};
+
         for (const attribute of attributes) {
             if (
                 attribute.key &&
@@ -312,6 +320,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
         }
 
         const attributesSelf = await this.validateAttributes(entity, identity, 10);
+
         if (!attributesSelf) {
             // todo: better error name
             throw new Error('Identity provider attributes could not be validated.');
@@ -343,6 +352,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
                     identity.provider.realmId,
                     joinPath('sources', identity.provider.name),
                 );
+
                 attributesSelf.pathId = folder.id;
             } catch (e) {
                 this.logger?.warn(describeError(e, 'The default identity provider folder could not be created.'));
@@ -361,8 +371,10 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
         const attributesExtra : Record<string, any> = {};
 
         const entityKeys = Object.keys(entity);
+
         for (const entityKey of entityKeys) {
             const index = attributesSelfKeys.indexOf(entityKey);
+
             if (index !== -1) {
                 continue;
             }
@@ -390,12 +402,14 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             // no email (select: false); a mapped address that differs from the
             // stored one drops its verification, as UserService.save does.
             const current = await this.userRepository.findOneById(user.id);
+
             if (current && current.email !== attributesSelf.email) {
                 attributesSelf.emailVerified = false;
             }
         }
 
         let output : User;
+
         if (user) {
             output = extendObject(user, attributesSelf);
         } else {
@@ -407,6 +421,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
         }
 
         let attempts = Math.max((identity.attributeCandidates?.name?.length || 0) + 1, 10);
+
         while (attempts > 0) {
             try {
                 // todo: we also need to remove existing ones via idp login flow ( but not other attributes!)
@@ -419,6 +434,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
                 }
 
                 const names = identity.attributeCandidates?.name || [];
+
                 if (names.length > 0) {
                     while (names.length > 0) {
                         output.name = `${names.shift()}`.trim().toLowerCase();
@@ -429,6 +445,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
                                     ValidatorGroup.CREATE :
                                     ValidatorGroup.UPDATE,
                             });
+
                             break;
                         } catch {
                             // todo: do nothing.
@@ -461,6 +478,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
         attempts: number,
     ) : Promise<User | null> {
         attempts--;
+
         if (attempts <= 0) {
             return null;
         }
@@ -477,6 +495,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             }
 
             let retry = false;
+
             for (let i = 0; i < e.issues.length; i++) {
                 const child = e.issues[i];
 
@@ -487,6 +506,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
                     entity[pathNormalized].length > 0
                 ) {
                     const [first, ...rest] = entity[pathNormalized];
+
                     entity[pathNormalized] = first;
 
                     if (rest.length > 0) {
@@ -502,6 +522,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
                     }
 
                     retry = true;
+
                     break;
                 }
 
@@ -512,6 +533,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
                 ) {
                     entity[pathNormalized] = identity.attributeCandidates[pathNormalized]!.shift();
                     retry = true;
+
                     break;
                 }
 
@@ -521,11 +543,13 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
                 ) {
                     entity[pathNormalized] = buildUserFakeEmail(entity.name);
                     retry = true;
+
                     break;
                 }
 
                 if (entity[pathNormalized]) {
                     entity[pathNormalized] = null;
+
                     break;
                 }
             }

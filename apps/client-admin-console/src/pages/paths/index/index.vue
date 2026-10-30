@@ -91,6 +91,7 @@ export default defineComponent({
         // this page held BEFORE the navigation, which is the very state
         // the reload exists to leave behind.
         const collection = ref<{ load: ListLoadFn<EntityListQueryInput<Path>>, busy: boolean } | null>(null);
+
         watch(query, () => {
             reloadCollection(() => collection.value);
         }, { flush: 'post' });
@@ -180,6 +181,7 @@ export default defineComponent({
 
             try {
                 const deleted = await httpClient.path.delete(row.id);
+
                 deletedCb({ ...deleted.data, id: row.id });
             } catch (e) {
                 emit('failed', e);

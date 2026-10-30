@@ -118,16 +118,20 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         let data = entities;
         let { total } = meta;
+
         if (scope.post) {
             data = [];
+
             for (const entity of entities) {
                 const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
                     name: CLIENT_READ_PERMISSIONS,
                     realm: entity.realmId,
                     data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
                 });
+
                 if (!reached) {
                     total -= 1;
+
                     continue;
                 }
 
@@ -160,12 +164,13 @@ export class ClientService extends AbstractEntityService implements IClientServi
         const entity = await this.repository.findOne(
             idOrName,
             await decodeQuery(query, {
-                schema: clientSchema, 
-                parameters: ['fields', 'relations'], 
-                actor, 
+                schema: clientSchema,
+                parameters: ['fields', 'relations'],
+                actor,
             }),
             realmId,
         );
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -201,6 +206,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         if (!this.cipher) {
             Reflect.deleteProperty(entity, 'secret');
+
             return;
         }
 
@@ -222,6 +228,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         actor: ActorContext,
     ): Promise<Client> {
         const { entity } = await this.save(undefined, data, actor);
+
         return entity;
     }
 
@@ -231,6 +238,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         actor: ActorContext,
     ): Promise<Client> {
         const { entity } = await this.save(idOrName, data, actor, { updateOnly: true });
+
         return entity;
     }
 
@@ -241,13 +249,15 @@ export class ClientService extends AbstractEntityService implements IClientServi
         options: { updateOnly?: boolean } = {},
     ): Promise<{
         entity: Client,
-        created: boolean 
+        created: boolean
     }> {
         let group: string;
 
         let entity: Client | null | undefined;
+
         if (idOrName) {
             const where: Record<string, any> = {};
+
             if (isUUID(idOrName)) {
                 where.id = idOrName;
             } else {
@@ -259,6 +269,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 // predicate would address a row of whichever realm holds the
                 // name.
                 const realm = await this.realmRepository.resolveOrFail(data.realmId);
+
                 where.realmId = realm.id;
                 entity = await this.repository.findOneWithSecret(where);
             } else if (where.id) {
@@ -270,10 +281,12 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 // without one cannot create here either, so it matches
                 // nothing.
                 const actorRealmId = this.getActorRealmId(actor);
+
                 entity = actorRealmId ?
                     await this.repository.findOneWithSecret({ ...where, realmId: actorRealmId }) :
                     null;
             }
+
             // Only a NAME key may upsert-create. A UUID addresses one specific
             // row, so a miss is a 404 (creating would write a different id).
             if (!entity && (options.updateOnly || where.id)) {
@@ -284,6 +297,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         }
 
         let isSelfEdit = false;
+
         if (entity) {
             try {
                 await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_UPDATE });
@@ -295,9 +309,11 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 ) {
                     throw e;
                 }
+
                 isSelfEdit = true;
                 await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_SELF_MANAGE });
             }
+
             group = ValidatorGroup.UPDATE;
         } else {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_CREATE });
@@ -311,6 +327,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         // the join-column lookup off a null on a non-nullable column.
         if (validated.realmId === null) {
             const input: Partial<Client> = validated;
+
             delete input.realmId;
         }
 
@@ -368,6 +385,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 !entity.realmId
             ) {
                 const actorRealmId = this.getActorRealmId(actor);
+
                 if (actorRealmId) {
                     validated.realmId = actorRealmId;
                 }
@@ -382,6 +400,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
             }
 
             const before: Partial<Client> = { ...entity };
+
             entity = this.repository.merge(entity, validated);
 
             if (!isSelfEdit) {
@@ -409,6 +428,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
             // fresh row is lock-read and this request's patch merged onto it,
             // so a concurrent writer's columns survive (#3526).
             const patch: Partial<Client> = { ...validated };
+
             // A field echoed back with the value this request read is no
             // intent to change it (the console posts its whole form), and
             // writing it would overwrite a concurrent change.
@@ -419,8 +439,10 @@ export class ClientService extends AbstractEntityService implements IClientServi
             }
 
             const { id } = entity;
+
             entity = await this.repository.transaction(async (repository) => {
                 const current = await repository.findOneWithSecret({ id });
+
                 if (!current) {
                     throw new EntityNotFoundError();
                 }
@@ -429,6 +451,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 // this request read: a concurrent switch to `secret` must not
                 // have its credential cleared by an unrelated edit racing it.
                 const merged = repository.merge(current, patch);
+
                 if (merged.authMethod !== ClientAuthMethod.SECRET) {
                     merged.secret = null;
                     merged.secretHashed = false;
@@ -446,12 +469,13 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
             return {
                 entity,
-                created: false, 
+                created: false,
             };
         }
 
         if (!validated.realmId) {
             const actorRealmId = this.getActorRealmId(actor);
+
             if (actorRealmId) {
                 validated.realmId = actorRealmId;
             }
@@ -487,7 +511,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         return {
             entity,
-            created: true, 
+            created: true,
         };
     }
 
@@ -500,6 +524,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         }
 
         const path = await this.pathRepository.findOneById(pathId);
+
         if (!path) {
             throw new ValidationError('The path does not exist.');
         }
@@ -519,6 +544,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
     // be global or of the client's own realm, never of another realm.
     protected assertAccessPolicyRealm(data: Partial<Client>, realmId: string | null): void {
         const policy = data.accessPolicyId ? data.accessPolicy : undefined;
+
         if (policy && !isRealmReachable(policy.realmId, realmId)) {
             throw new ValidationError('The access policy belongs to another realm.');
         }
@@ -536,6 +562,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         if (realmId) {
             const realm = await this.realmRepository.resolve(realmId);
+
             if (!realm) {
                 throw new EntityNotFoundError();
             }
@@ -544,6 +571,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         }
 
         const entity = await this.repository.findOneWithSecret(where);
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -553,6 +581,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
             actor.identity.data.id === entity.id;
 
         let isSelfEdit = false;
+
         try {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_UPDATE });
         } catch (e) {
@@ -620,6 +649,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         const { id } = entity;
         const saved = await this.repository.transaction(async (repository) => {
             const current = await repository.findOneWithSecret({ id });
+
             if (!current) {
                 throw new EntityNotFoundError();
             }
@@ -682,6 +712,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -693,6 +724,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         });
 
         const { id: entityId } = entity;
+
         await this.repository.remove(entity);
         entity.id = entityId;
 

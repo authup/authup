@@ -17,6 +17,7 @@ import { LoggerInjectionKey } from '../../../../../src/app/modules/logger';
 
 async function serve(health?: ComponentsHealth) {
     const container = new Container();
+
     container.register(LoggerInjectionKey, { useValue: createNoopLogger() });
 
     if (health) {
@@ -29,6 +30,7 @@ async function serve(health?: ComponentsHealth) {
         .withLogger()
         .withHTTP(module)
         .build({ container });
+
     await app.setup();
 
     const address = module.server!.address();
@@ -45,6 +47,7 @@ describe('app/modules/components/health', () => {
 
         try {
             const response = await fetch(`${baseURL}/`);
+
             expect(response.status).toEqual(200);
             expect(await response.json()).toEqual({ healthy: true, components: [] });
             expect((await fetch(`${baseURL}/`, { method: 'HEAD' })).status).toEqual(200);
@@ -57,10 +60,10 @@ describe('app/modules/components/health', () => {
         const health : ComponentsHealth = {
             healthy: false,
             components: [{
-                name: 'oauth2-cleaner', 
-                lastSuccessAt: null, 
-                runningSince: null, 
-                overdue: true, 
+                name: 'oauth2-cleaner',
+                lastSuccessAt: null,
+                runningSince: null,
+                overdue: true,
             }],
         };
 
@@ -68,6 +71,7 @@ describe('app/modules/components/health', () => {
 
         try {
             const response = await fetch(`${baseURL}/`);
+
             expect(response.status).toEqual(503);
             expect(await response.json()).toEqual(health);
 

@@ -35,6 +35,7 @@ const nextMidnight = new Date(2024, 3, 18);
 
 async function timeTransition(policy: TimePolicy) {
     const collector = createPolicyTransitionCollector();
+
     await new TimePolicyEvaluator().evaluate(
         policy,
         definePolicyEvaluationContext({ transitions: collector }),
@@ -45,6 +46,7 @@ async function timeTransition(policy: TimePolicy) {
 
 async function dateTransition(policy: DatePolicy) {
     const collector = createPolicyTransitionCollector();
+
     await new DatePolicyEvaluator().evaluate(
         policy,
         definePolicyEvaluationContext({ transitions: collector }),
@@ -80,7 +82,9 @@ describe('src/policy (clock transitions)', () => {
         it('should report the instant the verdict actually flips, whatever the seconds of the evaluation', async () => {
             const evaluate = async (now: Date) => {
                 vi.setSystemTime(now);
+
                 const result = await new TimePolicyEvaluator().evaluate(window, definePolicyEvaluationContext());
+
                 return result.success;
             };
 
@@ -134,18 +138,23 @@ describe('src/policy (clock transitions)', () => {
             it('should report the minute after the first occurrence of an end before the fold', async () => {
                 // 01:30 EDT, the first pass through the repeated hour.
                 const now = new Date('2024-11-03T05:30:00.000Z');
+
                 expect(now.getTimezoneOffset()).toBe(240);
 
                 vi.setSystemTime(now);
+
                 const next = await timeTransition({ end: '01:59' });
+
                 expect(next?.toISOString()).toBe('2024-11-03T06:00:00.000Z');
 
                 const evaluate = async (instant: Date) => {
                     vi.setSystemTime(instant);
+
                     const result = await new TimePolicyEvaluator().evaluate(
                         { end: '01:59' },
                         definePolicyEvaluationContext(),
                     );
+
                     return result.success;
                 };
 
@@ -163,6 +172,7 @@ describe('src/policy (clock transitions)', () => {
             vi.setSystemTime(at(12));
 
             const collector = createPolicyTransitionCollector();
+
             await new TimePolicyEvaluator().evaluate(
                 window,
                 definePolicyEvaluationContext({
@@ -201,6 +211,7 @@ describe('src/policy (clock transitions)', () => {
         vi.setSystemTime(at(6));
 
         const collector = createPolicyTransitionCollector();
+
         await new PolicyEngine(PolicyDefaultEvaluators).evaluate(
             definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
                 decisionStrategy: DecisionStrategy.UNANIMOUS,
@@ -231,6 +242,7 @@ describe('src/policy (clock transitions)', () => {
         });
 
         const collector = createPolicyTransitionCollector();
+
         await expect(evaluator.preEvaluate({
             name: 'office_hours',
             options: { transitions: collector },

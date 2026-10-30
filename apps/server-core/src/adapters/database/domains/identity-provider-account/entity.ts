@@ -17,11 +17,11 @@ import {
 } from 'typeorm';
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type {
- 
-    IdentityProvider, 
-    IdentityProviderAccount, 
-    Realm, 
-    User,  
+
+    IdentityProvider,
+    IdentityProviderAccount,
+    Realm,
+    User,
 } from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
 import { UserEntity } from '../user/index.ts';
@@ -56,27 +56,27 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
     refreshToken: string;
 
     @Column({
-        name: 'provider_user_id', 
-        type: 'varchar', 
-        length: 256, 
+        name: 'provider_user_id',
+        type: 'varchar',
+        length: 256,
     })
     providerUserId: string;
 
     @Column({
-        name: 'provider_user_name', 
-        type: 'varchar', 
-        length: 256, 
-        nullable: true, 
-        default: null, 
+        name: 'provider_user_name',
+        type: 'varchar',
+        length: 256,
+        nullable: true,
+        default: null,
     })
     providerUserName: string;
 
     @Column({
-        name: 'provider_user_email', 
-        type: 'varchar', 
-        length: 512, 
-        nullable: true, 
-        default: null, 
+        name: 'provider_user_email',
+        type: 'varchar',
+        length: 512,
+        nullable: true,
+        default: null,
     })
     providerUserEmail: string;
 
@@ -124,7 +124,7 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'user_realm_id' })
     userRealm: RealmEntity | null;
@@ -144,7 +144,7 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'provider_realm_id' })
     providerRealm: RealmEntity | null;

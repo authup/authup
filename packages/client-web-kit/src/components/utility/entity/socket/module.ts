@@ -155,6 +155,7 @@ function create<
         const socket = await socketManager.connect(namespace.value);
 
         let event : EventFullName<TYPE, `${EventNameSuffix.SUBSCRIBE}`> | undefined;
+
         if (ctx.buildSubscribeEventName) {
             event = ctx.buildSubscribeEventName();
         } else {
@@ -201,6 +202,7 @@ function create<
         const socket = await socketManager.connect(namespace.value);
 
         let event : EventFullName<TYPE, `${EventNameSuffix.UNSUBSCRIBE}`>;
+
         if (ctx.buildUnsubscribeEventName) {
             event = ctx.buildUnsubscribeEventName();
         } else {

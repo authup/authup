@@ -98,21 +98,20 @@ export function createRelationsReadGate(
 ) : KeyValidator<QueryDecodeContext | undefined> {
     return async (name, context) => {
         const target = mapping[name];
+
         if (!target) {
             return true;
         }
 
         const permissions = RELATION_TARGET_READ_GATES[target];
-        if (!permissions) {
-            return true;
-        }
 
-        if (!context || !context.actor) {
+        if (!permissions || !context || !context.actor) {
             return true;
         }
 
         try {
             await context.actor.permissionEvaluator.preEvaluateOneOf({ name: permissions });
+
             return true;
         } catch {
             return false;

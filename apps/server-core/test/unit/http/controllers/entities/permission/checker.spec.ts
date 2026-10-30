@@ -61,6 +61,7 @@ describe('http/controllers/entities/permission/checker', () => {
         }));
 
         const response = await suite.client.permission.check(permission.id);
+
         expect(response).toBeDefined();
         expect(response.status).toMatch(/^(success|error)$/);
     });
@@ -71,17 +72,21 @@ describe('http/controllers/entities/permission/checker', () => {
     // and naming anyone else still needs permission_check.
     it('answers a bearer without the global scope as its identity holding no grant, and refuses it naming another subject (#3604)', async () => {
         const control = await suite.client.permission.check(PermissionName.USER_UPDATE);
+
         expect(control.status).toEqual('success');
 
         const { client, payload } = await createScopeRestrictedClient(suite);
 
         const bare = await client.permission.check(PermissionName.USER_UPDATE);
+
         expect(bare.status).toEqual('error');
 
         const self = await client.permission.check(PermissionName.USER_UPDATE, { identity: { type: payload.sub_kind, id: payload.sub } });
+
         expect(self.status).toEqual('error');
 
         const { data: other } = await suite.client.user.create(createFakeUser());
+
         await expectClientError(
             () => client.permission.check(PermissionName.USER_UPDATE, { identity: { type: 'user', id: other.id } }),
             { status: 403 },
@@ -91,12 +96,15 @@ describe('http/controllers/entities/permission/checker', () => {
     it('answers for the subject a permission_check holder names (#3604)', async () => {
         const { data: subject } = await suite.client.user.create(createFakeUser());
         const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_READ);
+
         await suite.client.userPermission.create({ userId: subject.id, permissionId: permission.id });
 
         const held = await suite.client.permission.check(PermissionName.USER_READ, { identity: { type: 'user', id: subject.id } });
+
         expect(held.status).toEqual('success');
 
         const missing = await suite.client.permission.check(PermissionName.USER_UPDATE, { identity: { type: 'user', id: subject.id } });
+
         expect(missing.status).toEqual('error');
 
         await expectClientError(
@@ -118,9 +126,11 @@ describe('http/controllers/entities/permission/checker', () => {
 
     it('checks without any identity when the data sets it to null (#3604)', async () => {
         const requester = await suite.client.permission.check(PermissionName.USER_READ);
+
         expect(requester.status).toEqual('success');
 
         const none = await suite.client.permission.check(PermissionName.USER_READ, { identity: null });
+
         expect(none.status).toEqual('error');
     });
 
@@ -132,6 +142,7 @@ describe('http/controllers/entities/permission/checker', () => {
         const grant = await suite.client.token.createWithPassword({ username: user.name, password });
 
         const client = new Client({ baseURL: suite.baseURL });
+
         client.setAuthorizationHeader({ type: 'Bearer', token: grant.access_token });
 
         await expectClientError(
@@ -141,8 +152,11 @@ describe('http/controllers/entities/permission/checker', () => {
 
         // its own identity needs no grant
         const { data: userRead } = await suite.client.permission.getOne(PermissionName.USER_READ);
+
         await suite.client.userPermission.create({ userId: user.id, permissionId: userRead.id });
+
         const own = await client.permission.check(PermissionName.USER_READ, { identity: { type: 'user', id: user.id } });
+
         expect(own.status).toEqual('success');
 
         // refused before the lookup, so an unknown subject reads the same as a known one
@@ -157,25 +171,32 @@ describe('http/controllers/entities/permission/checker', () => {
 
         const password = 'start123-checker-own';
         const { data: checker } = await suite.client.user.create(createFakeUser({ password }));
+
         await suite.client.userPermission.create({
             userId: checker.id,
             permissionId: permission.id,
             realmScope: RealmScope.OWN,
         });
+
         const grant = await suite.client.token.createWithPassword({ username: checker.name, password });
 
         const client = new Client({ baseURL: suite.baseURL });
+
         client.setAuthorizationHeader({ type: 'Bearer', token: grant.access_token });
 
         // the checker holds no user_read itself, so a success can only be the subject's
         const { data: local } = await suite.client.user.create(createFakeUser());
         const { data: userRead } = await suite.client.permission.getOne(PermissionName.USER_READ);
+
         await suite.client.userPermission.create({ userId: local.id, permissionId: userRead.id });
+
         const inRealm = await client.permission.check(PermissionName.USER_READ, { identity: { type: 'user', id: local.id } });
+
         expect(inRealm.status).toEqual('success');
 
         const { data: realm } = await suite.client.realm.create(createFakeRealm());
         const { data: foreign } = await suite.client.user.create(createFakeUser({ realmId: realm.id }));
+
         await expectClientError(
             () => client.permission.check(PermissionName.USER_UPDATE, { identity: { type: 'user', id: foreign.id } }),
             { status: 403 },
@@ -209,6 +230,7 @@ describe('http/controllers/entities/permission/checker', () => {
             name: createNanoID(),
             realmId: admin.realmId,
         });
+
         // a global permission of the same name, granted to nobody
         await suite.client.permission.create({
             name: permission.name,
@@ -216,13 +238,16 @@ describe('http/controllers/entities/permission/checker', () => {
         });
 
         const { data: subject } = await suite.client.user.create(createFakeUser());
+
         await suite.client.userPermission.create({ userId: subject.id, permissionId: permission.id });
         await suite.client.userPermission.create({ userId: admin.id, permissionId: permission.id });
 
         const self = await suite.client.permission.check(permission.id);
+
         expect(self.status).toEqual('success');
 
         const other = await suite.client.permission.check(permission.id, { identity: { type: 'user', id: subject.id } });
+
         expect(other.status).toEqual('success');
     });
 });

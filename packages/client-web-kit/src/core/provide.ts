@@ -16,6 +16,7 @@ export function provide(
 ) {
     if (typeof app === 'undefined') {
         const val = inject(key);
+
         if (typeof val !== 'undefined') {
             return;
         }

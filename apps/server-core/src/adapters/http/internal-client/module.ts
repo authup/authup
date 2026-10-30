@@ -15,6 +15,7 @@ import type { InternalHttpClientContext } from './types.ts';
  */
 export function toDialableOrigin(url: string) : string {
     const parsed = new URL(url);
+
     if (parsed.hostname === '0.0.0.0' || parsed.hostname === '[::]') {
         parsed.hostname = '127.0.0.1';
     }

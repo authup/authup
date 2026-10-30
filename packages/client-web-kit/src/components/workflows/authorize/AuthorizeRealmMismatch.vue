@@ -69,11 +69,13 @@ export default defineComponent({
             }
 
             const url = new URL(props.redirectUri);
+
             url.searchParams.set('error', 'access_denied');
             url.searchParams.set(
                 'error_description',
                 'The resource owner or authorization server denied the request',
             );
+
             if (props.state) {
                 url.searchParams.set('state', props.state);
             }

@@ -93,6 +93,7 @@ export default defineComponent({
                 const state = createState();
 
                 const callback = new URL(`${config.basePath}/login/callback`, window.location.origin);
+
                 if (typeof redirect === 'string' && redirect) {
                     callback.searchParams.set('redirect', redirect);
                 }

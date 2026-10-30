@@ -136,6 +136,7 @@ describe('OAuth2AuthorizeGrant', () => {
 
     it('should reuse the bearer session when the code carries a matching session_id', async () => {
         const sessionId = randomUUID();
+
         // pre-seed a client-less bearer session (as created by the SSR password grant)
         await sessionManager.create({
             id: sessionId,
@@ -162,6 +163,7 @@ describe('OAuth2AuthorizeGrant', () => {
 
         // the issued tokens reference the reused session
         const payload = expect.objectContaining({ session_id: sessionId });
+
         expect(accessTokenIssuer.issueCalls).toContainEqual(payload);
         expect(refreshTokenIssuer.issueCalls).toContainEqual(payload);
 
@@ -176,6 +178,7 @@ describe('OAuth2AuthorizeGrant', () => {
     it('should never write the authorizing client onto the session subject FK', async () => {
         const sessionId = randomUUID();
         const firstClientId = randomUUID();
+
         // the session was already claimed by another application
         await sessionManager.create({
             id: sessionId,
@@ -196,19 +199,23 @@ describe('OAuth2AuthorizeGrant', () => {
         expect(sessionManager.refreshCalls[0]).toEqual(
             expect.objectContaining({ id: sessionId, clientId: firstClientId }),
         );
+
         const stored = await sessionManager.findOneById(sessionId);
+
         expect(stored?.clientId).toEqual(firstClientId);
         expect(stored?.clientId).not.toEqual(clientId);
 
         // ... while the tokens are minted for the authorizing application,
         // which is what their auth_session_tokens rows are attributed from.
         const payload = expect.objectContaining({ session_id: sessionId, client_id: clientId });
+
         expect(accessTokenIssuer.issueCalls).toContainEqual(payload);
         expect(refreshTokenIssuer.issueCalls).toContainEqual(payload);
     });
 
     it('should answer invalid_grant when the reused session ends before it is refreshed', async () => {
         const sessionId = randomUUID();
+
         await sessionManager.create({
             id: sessionId,
             sub: userId,
@@ -220,6 +227,7 @@ describe('OAuth2AuthorizeGrant', () => {
         };
 
         let error: unknown;
+
         try {
             await grant.runWith(buildCode({ session_id: sessionId }));
         } catch (e) {
@@ -232,6 +240,7 @@ describe('OAuth2AuthorizeGrant', () => {
 
     async function expectInvalidGrant(promise: Promise<unknown>) {
         let error: unknown;
+
         try {
             await promise;
         } catch (e) {
@@ -251,6 +260,7 @@ describe('OAuth2AuthorizeGrant', () => {
 
     it('should refuse the code when the referenced session belongs to another subject', async () => {
         const sessionId = randomUUID();
+
         await sessionManager.create({
             id: sessionId,
             sub: randomUUID(), // different subject
@@ -268,6 +278,7 @@ describe('OAuth2AuthorizeGrant', () => {
 
     it('should refuse the code when the referenced session belongs to another realm', async () => {
         const sessionId = randomUUID();
+
         await sessionManager.create({
             id: sessionId,
             sub: userId,
@@ -329,6 +340,7 @@ describe('OAuth2AuthorizeGrant', () => {
 
     it('should mint an id_token with sid = the reused session for an openid code', async () => {
         const sessionId = randomUUID();
+
         await sessionManager.create({
             id: sessionId,
             sub: userId,
@@ -347,7 +359,9 @@ describe('OAuth2AuthorizeGrant', () => {
         }));
 
         expect(openIdTokenIssuer.issueCalls).toHaveLength(1);
+
         const idTokenPayload = openIdTokenIssuer.issueCalls[0];
+
         // sid is the REUSED session, not the code's session_id by coincidence
         expect(idTokenPayload.sid).toEqual(sessionId);
         expect(idTokenPayload.auth_time).toEqual(authTime);
@@ -403,6 +417,7 @@ describe('OAuth2AuthorizeGrant', () => {
 
     it('should mint amr/acr from the reused session (password login)', async () => {
         const sessionId = randomUUID();
+
         await sessionManager.create({
             id: sessionId,
             sub: userId,
@@ -419,6 +434,7 @@ describe('OAuth2AuthorizeGrant', () => {
         }));
 
         const claims = expect.objectContaining({ amr: ['pwd'], acr: 'urn:authup:pwd' });
+
         expect(openIdTokenIssuer.issueCalls).toContainEqual(claims);
         // deliberately on the access token too
         expect(accessTokenIssuer.issueCalls).toContainEqual(claims);
@@ -426,6 +442,7 @@ describe('OAuth2AuthorizeGrant', () => {
 
     it('should mint the mfa acr once the session carries a second-factor proof', async () => {
         const sessionId = randomUUID();
+
         await sessionManager.create({
             id: sessionId,
             sub: userId,
@@ -448,6 +465,7 @@ describe('OAuth2AuthorizeGrant', () => {
 
     it('should mint no amr/acr for a pre-column session (null auth_method)', async () => {
         const sessionId = randomUUID();
+
         await sessionManager.create({
             id: sessionId,
             sub: userId,
@@ -462,6 +480,7 @@ describe('OAuth2AuthorizeGrant', () => {
         }));
 
         const [payload] = openIdTokenIssuer.issueCalls;
+
         expect(payload).not.toHaveProperty('amr');
         expect(payload).not.toHaveProperty('acr');
     });

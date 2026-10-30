@@ -21,6 +21,7 @@ async function requestThroughGuard(requestPath: string) : Promise<{ status: numb
     let reachedBehind = false;
 
     const app = new App();
+
     app.use(createOpenInEditorGuard());
     app.use(defineCoreHandler({
         method: 'get',
@@ -33,6 +34,7 @@ async function requestThroughGuard(requestPath: string) : Promise<{ status: numb
     }));
 
     const server = serve(app, { port: 0, silent: true });
+
     await server.ready();
 
     try {
@@ -98,6 +100,7 @@ describe('resolveHmrPort', () => {
         // Bound exactly as vite's own ws server binds it (no host, so every
         // interface), or it would not be the same question the resolver asks.
         const occupied = net.createServer();
+
         await new Promise<void>((resolve) => {
             occupied.listen(first, () => resolve());
         });

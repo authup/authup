@@ -46,6 +46,7 @@ export class PolicyCheckerService implements IPolicyCheckerService {
 
         try {
             await this.evaluate(idOrName, input, realm);
+
             return { success: true, data: null };
         } catch (e) {
             return { success: false, error: normalizeError(e) };
@@ -58,6 +59,7 @@ export class PolicyCheckerService implements IPolicyCheckerService {
         realm: string | undefined,
     ): Promise<void> {
         let criteria: Record<string, any>;
+
         if (isUUID(idOrName)) {
             criteria = { id: idOrName };
         } else {
@@ -65,19 +67,23 @@ export class PolicyCheckerService implements IPolicyCheckerService {
 
             if (realm) {
                 const realmId = await this.ctx.realmRepository.resolveId(realm);
+
                 if (!realmId) {
                     throw new EntityNotFoundError();
                 }
+
                 criteria.realmId = realmId;
             }
         }
 
         const entity = await this.ctx.repository.findOneBy(criteria);
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
 
         const engine = new PolicyEngine();
+
         await engine.evaluateOrFail(
             entity,
             definePolicyEvaluationContext({ data: new PolicyData(input) }),

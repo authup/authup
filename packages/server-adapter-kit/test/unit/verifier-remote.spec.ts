@@ -50,8 +50,10 @@ class SpyTokenCache implements ITokenCache {
 
 function createCreator() {
     let counter = 0;
+
     return vitest.fn(async () => {
         counter++;
+
         return {
             access_token: `client-token-${counter}`,
             expires_in: 3600,
@@ -134,11 +136,17 @@ describe('verifier remote', () => {
 
     it('re-mints once for concurrent introspections answered 401', async () => {
         const creator = createCreator();
+
         fetchMock.mockImplementation(async (_input: unknown, init?: RequestInit) => {
-            await new Promise((resolve) => { setTimeout(resolve, 10); });
+            await new Promise((resolve) => {
+                setTimeout(resolve, 10);
+            });
+
             const header = (init?.headers as Record<string, string>)?.authorization;
+
             return header === 'Bearer client-token-1' ? respond(401) : respond(200, TokenPayload);
         });
+
         const verifier = createRemote({ creator });
 
         await Promise.all(Array.from({ length: 10 }, () => verifier.verify(token)));
@@ -148,6 +156,7 @@ describe('verifier remote', () => {
 
     it('re-mints the token once after a 401', async () => {
         fetchMock.mockResolvedValueOnce(respond(401));
+
         const creator = createCreator();
         const verifier = createRemote({ creator });
 
@@ -166,11 +175,13 @@ describe('verifier remote', () => {
         await verifier.verify('opaque-token');
 
         const body = new URLSearchParams(String(fetchMock.mock.calls[0][1]?.body));
+
         expect(body.get('token')).toEqual('opaque-token');
     });
 
     it('reports an inactive token as inactive', async () => {
         fetchMock.mockResolvedValueOnce(respond(200, { active: false }));
+
         const verifier = createRemote();
 
         const error = await verifier.verify(token).catch((e) => e);
@@ -182,6 +193,7 @@ describe('verifier remote', () => {
 
     it('reports a failed introspection as invalid, naming the status', async () => {
         fetchMock.mockResolvedValue(respond(503));
+
         const verifier = createRemote();
 
         const error = await verifier.verify(token).catch((e) => e);

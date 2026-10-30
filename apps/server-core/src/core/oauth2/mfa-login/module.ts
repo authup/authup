@@ -125,6 +125,7 @@ export class OAuth2MfaLoginService implements IOAuth2MfaLoginService {
         // safer bias for a single-use login credential (the user re-authenticates).
         if (ticket.jti) {
             const claimed = await this.tokenRepository.claimInactive(ticket.jti, ticket.exp);
+
             if (!claimed) {
                 throw OAuth2GrantError.invalid('mfa login ticket has already been used');
             }

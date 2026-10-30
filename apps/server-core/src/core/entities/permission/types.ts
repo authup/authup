@@ -25,7 +25,7 @@ export interface IPermissionService extends IReadScoper {
         options?: { updateOnly?: boolean },
     ): Promise<{
         entity: Permission,
-        created: boolean 
+        created: boolean
     }>;
     delete(id: string, actor: ActorContext): Promise<Permission>;
 }

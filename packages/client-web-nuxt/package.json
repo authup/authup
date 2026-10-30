@@ -29,7 +29,7 @@
         "test": "nuxt-module-build prepare && cross-env NODE_ENV=test vitest run --config test/vitest.config.ts"
     },
     "engines": {
-        "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
+        "node": ">=26.0.0"
     },
     "dependencies": {
         "@authup/access": "^1.0.0-beta.72",

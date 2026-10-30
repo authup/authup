@@ -60,6 +60,7 @@ export class ClientScopeService extends JunctionEntityService implements IClient
             name: READ_PERMISSION_NAMES,
             realmAttributeName: this.ownerRealmKey,
         });
+
         if (compiled.verdict === 'deny') {
             parsed = appendQueryConditions(parsed, inArray('id', []));
         } else if (compiled.verdict === 'conditional') {
@@ -81,8 +82,10 @@ export class ClientScopeService extends JunctionEntityService implements IClient
                 realm: this.junctionResourceRealm(entity),
                 data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -99,6 +102,7 @@ export class ClientScopeService extends JunctionEntityService implements IClient
         await actor.permissionEvaluator.preEvaluateOneOf({ name: READ_PERMISSION_NAMES });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -126,6 +130,7 @@ export class ClientScopeService extends JunctionEntityService implements IClient
             clientId: validated.clientId,
             scopeId: validated.scopeId,
         });
+
         if (existing) {
             throw new EntityConflictError({ entity: 'client-scope' });
         }
@@ -146,6 +151,7 @@ export class ClientScopeService extends JunctionEntityService implements IClient
         });
 
         let entity = this.repository.create(validated);
+
         entity = await this.repository.save(entity);
 
         return entity;
@@ -158,6 +164,7 @@ export class ClientScopeService extends JunctionEntityService implements IClient
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_SCOPE_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -170,6 +177,7 @@ export class ClientScopeService extends JunctionEntityService implements IClient
         });
 
         const { id: entityId } = entity;
+
         await this.repository.remove(entity);
         entity.id = entityId;
 

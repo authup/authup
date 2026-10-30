@@ -40,11 +40,14 @@ describe.skipIf(type !== 'mysql' && type !== 'postgres')('adapters/database (utc
 
     async function stampRole(options: DataSourceOptions) : Promise<number> {
         const dataSource = new DataSource(options);
+
         await dataSource.initialize();
+
         try {
             const repository = dataSource.getRepository(RoleEntity);
             const saved = await repository.save(repository.create({ name: `tz-${randomUUID()}` }));
             const read = await repository.findOneByOrFail({ id: saved.id });
+
             await repository.delete({ id: saved.id });
 
             return Date.parse(read.createdAt as unknown as string);
@@ -61,6 +64,7 @@ describe.skipIf(type !== 'mysql' && type !== 'postgres')('adapters/database (utc
             await admin.query(`ALTER DATABASE "${env!.database}" SET timezone TO 'Pacific/Kiritimati'`);
         } else {
             const [row] = await admin.query('SELECT @@GLOBAL.time_zone AS zone');
+
             previous = row.zone;
             await admin.query('SET GLOBAL time_zone = \'+14:00\'');
         }
@@ -82,9 +86,11 @@ describe.skipIf(type !== 'mysql' && type !== 'postgres')('adapters/database (utc
 
     it('should shift without the fix (environment check)', async () => {
         const raw = new DataSourceOptionsBuilder().buildWith(env as DataSourceOptions) as Record<string, any>;
+
         delete raw.timezone;
         delete raw.dateStrings;
         delete raw.driver;
+
         if (raw.extra) {
             delete raw.extra.options;
             delete raw.extra.types;

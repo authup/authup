@@ -41,8 +41,10 @@ function toRouteLocation(destination: string) : RouteLocationRaw {
     const url = new URL(destination, 'http://localhost');
 
     const query : Record<string, string | string[]> = {};
+
     for (const key of new Set(url.searchParams.keys())) {
         const values = url.searchParams.getAll(key);
+
         query[key] = values.length > 1 ? values : values[0];
     }
 
@@ -95,6 +97,7 @@ export function createRoutingGuard(ctx: RoutingGuardContext) : RoutingGuard {
 
     const validatePermissions = async (route: RouteLocationNormalized) : Promise<boolean> => {
         let identity : IdentityPolicyData | undefined;
+
         if (storeRefs.userId.value) {
             identity = { type: 'user', id: storeRefs.userId.value };
         }
@@ -105,6 +108,7 @@ export function createRoutingGuard(ctx: RoutingGuardContext) : RoutingGuard {
             }
 
             const permissions = match.meta[LayoutKey.REQUIRED_PERMISSIONS] ?? [];
+
             if (permissions.length === 0) {
                 continue;
             }
@@ -130,6 +134,7 @@ export function createRoutingGuard(ctx: RoutingGuardContext) : RoutingGuard {
         const code = !ctx.config.cookieSession && typeof to.query.code === 'string' ?
             to.query.code :
             undefined;
+
         if (code) {
             // Single use either way: consumed on success, dropped on failure
             // (a reload must not replay the code).
@@ -144,6 +149,7 @@ export function createRoutingGuard(ctx: RoutingGuardContext) : RoutingGuard {
                 }
 
                 const state = typeof to.query.state === 'string' ? to.query.state : undefined;
+
                 if (request.state !== state) {
                     throw new Error('The authorization request state does not match.');
                 }

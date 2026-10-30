@@ -79,6 +79,7 @@ describe('src/cache/adapters/memory', () => {
 
         it('rejects when the key holds a non-numeric value', async () => {
             const cache = new MemoryCache();
+
             await cache.set('counter', { count: 1 }, {});
 
             await expect(cache.increment('counter')).rejects.toThrow();

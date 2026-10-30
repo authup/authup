@@ -62,6 +62,7 @@ function buildApp(options: {
 
     const pinia = createPinia();
     const app = createApp({ render: () => h('div') });
+
     app.use(pinia);
 
     // Mirrors the install order in src/module.ts.
@@ -147,9 +148,11 @@ describe('core/store/cookie-session', () => {
 
         // no token to introspect, and none to renew
         expect(store.accessToken).toBeNull();
+
         const paths = httpClient.requests.map(
             (request) => new URL(request.url, 'http://localhost').pathname,
         );
+
         expect(paths).toContain('/sessions/@me/introspect');
         expect(paths).not.toContain('/token/introspect');
         expect(paths).not.toContain('/token');
@@ -200,6 +203,7 @@ describe('core/store/cookie-session', () => {
         const introspects = () => httpClient.requests.filter(
             (request) => new URL(request.url, 'http://localhost').pathname === '/sessions/@me/introspect',
         ).length;
+
         expect(introspects()).toEqual(1);
 
         await nextMacroTask();
@@ -261,9 +265,9 @@ describe('core/store/cookie-session', () => {
 
     it('ends the session over the wire on logout, without clearing the origin token cookies', async () => {
         const {
-            store, 
-            httpClient, 
-            unsetCalls, 
+            store,
+            httpClient,
+            unsetCalls,
         } = buildApp({ cookieSession: true });
 
         await store.resolve();
@@ -284,6 +288,7 @@ describe('core/store/cookie-session', () => {
         const cleared = unsetCalls
             .filter((call) => call.options.path === '/')
             .map((call) => call.key);
+
         expect(cleared).not.toContain(CookieName.ACCESS_TOKEN);
         expect(cleared).not.toContain(CookieName.REFRESH_TOKEN);
         expect(cleared).not.toContain(CookieName.ID_TOKEN);

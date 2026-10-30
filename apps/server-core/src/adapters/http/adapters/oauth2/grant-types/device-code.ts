@@ -84,6 +84,7 @@ export class HTTPOAuth2DeviceCodeGrant extends OAuth2AuthorizeGrant implements I
         const query = useRequestQuery(event);
 
         const deviceCode = readStringField(body, 'device_code') ?? readStringField(query, 'device_code');
+
         if (!deviceCode) {
             throw OAuth2RequestError.malformed('device_code is required.');
         }

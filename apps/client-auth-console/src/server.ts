@@ -44,6 +44,7 @@ export async function render(ctx: RenderContext) : Promise<RenderResult> {
     // which we can then use to determine what files need to be preloaded for this
     // request.
     const preloadLinks = renderPreloadLinks(ssrContext.modules, ctx.manifest);
+
     return [
         html + createWindowPayloadHTML(ctx.payload),
         preloadLinks,
@@ -53,8 +54,10 @@ export async function render(ctx: RenderContext) : Promise<RenderResult> {
 function renderPreloadLinks(modules: string[], manifest: Record<string, string[]>) {
     let links = '';
     const seen = new Set();
+
     modules.forEach((id) => {
         const files = manifest[id];
+
         if (files) {
             files.forEach((file) => {
                 if (seen.has(file)) {
@@ -62,7 +65,9 @@ function renderPreloadLinks(modules: string[], manifest: Record<string, string[]
                 }
 
                 seen.add(file);
+
                 const filename = basename(file);
+
                 if (manifest[filename]) {
                     for (const depFile of manifest[filename]) {
                         links += renderPreloadLink(depFile);
@@ -74,25 +79,39 @@ function renderPreloadLinks(modules: string[], manifest: Record<string, string[]
             });
         }
     });
+
     return links;
 }
 
 function renderPreloadLink(file: string) {
     if (file.endsWith('.js')) {
         return `<link rel="modulepreload" crossorigin href="${file}">`;
-    } if (file.endsWith('.css')) {
+    }
+
+    if (file.endsWith('.css')) {
         return `<link rel="stylesheet" href="${file}">`;
-    } if (file.endsWith('.woff')) {
+    }
+
+    if (file.endsWith('.woff')) {
         return ` <link rel="preload" href="${file}" as="font" type="font/woff" crossorigin>`;
-    } if (file.endsWith('.woff2')) {
+    }
+
+    if (file.endsWith('.woff2')) {
         return ` <link rel="preload" href="${file}" as="font" type="font/woff2" crossorigin>`;
-    } if (file.endsWith('.gif')) {
+    }
+
+    if (file.endsWith('.gif')) {
         return ` <link rel="preload" href="${file}" as="image" type="image/gif">`;
-    } if (file.endsWith('.jpg') || file.endsWith('.jpeg')) {
+    }
+
+    if (file.endsWith('.jpg') || file.endsWith('.jpeg')) {
         return ` <link rel="preload" href="${file}" as="image" type="image/jpeg">`;
-    } if (file.endsWith('.png')) {
+    }
+
+    if (file.endsWith('.png')) {
         return ` <link rel="preload" href="${file}" as="image" type="image/png">`;
     }
+
     // TODO
     return '';
 }

@@ -29,6 +29,7 @@ async function renameKeys(
 
     for (const { value } of rows) {
         const next = transform(value);
+
         if (next === value) {
             continue;
         }

@@ -49,8 +49,10 @@ export class ListHandlers<T extends ObjectLiteral> {
         this.stackProcessing = true;
 
         const item = this.stack.shift();
+
         if (!item) {
             this.stackProcessing = false;
+
             return;
         }
 
@@ -67,12 +69,15 @@ export class ListHandlers<T extends ObjectLiteral> {
                         this.options.created(item.data);
                     }
                 }
+
                 break;
             }
             case 'updated': {
                 const existing = index !== -1 ? this.data.value[index] : undefined;
+
                 if (existing) {
                     const keys = Object.keys(item.data) as (keyof T)[];
+
                     for (const key of keys) {
                         existing[key] = item.data[key];
                     }
@@ -81,6 +86,7 @@ export class ListHandlers<T extends ObjectLiteral> {
                         this.options.updated(existing);
                     }
                 }
+
                 break;
             }
             case 'deleted': {
@@ -91,6 +97,7 @@ export class ListHandlers<T extends ObjectLiteral> {
                         this.options.deleted(output);
                     }
                 }
+
                 break;
             }
         }

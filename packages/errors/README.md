@@ -31,7 +31,7 @@ Every Authup workspace that throws or inspects an error imports this package: th
 npm install @authup/errors
 ```
 
-ESM only. Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`. It has one runtime dependency, `@ebec/core`, and no Node-specific APIs.
+ESM only. Node.js `>=26.0.0`. It has one runtime dependency, `@ebec/core`, and no Node-specific APIs.
 
 ## Usage
 

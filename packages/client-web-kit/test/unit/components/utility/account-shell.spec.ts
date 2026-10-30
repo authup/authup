@@ -30,6 +30,7 @@ describe('AAccountShell', () => {
         const { wrapper } = mountKitComponent(AAccountShell, { items });
 
         const links = wrapper.findAll('.a-account-shell-nav-link');
+
         expect(links).toHaveLength(2);
         expect(links[0].text()).toContain('Overview');
         expect(links[0].classes()).toContain('a-account-shell-nav-link--active');
@@ -48,6 +49,7 @@ describe('AAccountShell', () => {
         const { wrapper } = mountKitComponent(AAccountShell, { items, backLink: 'https://example.com/dashboard' });
 
         const link = wrapper.find('.a-account-shell-nav-link--back');
+
         expect(link.exists()).toBeTruthy();
         expect(link.attributes('href')).toEqual('https://example.com/dashboard');
         // Visible text stays short; the host rides the tooltip and the
@@ -62,6 +64,7 @@ describe('AAccountShell', () => {
         const { wrapper } = mountKitComponent(AAccountShell, { items, backLink: 'https://example.com/dashboard' });
 
         const links = wrapper.findAll('.a-account-shell-nav-link');
+
         expect(links).toHaveLength(items.length + 1);
         expect(links[0].classes()).toContain('a-account-shell-nav-link--back');
         expect(links[1].text()).toContain('Overview');

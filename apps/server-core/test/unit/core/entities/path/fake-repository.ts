@@ -43,11 +43,13 @@ export class FakePathRepository extends FakeEntityRepository<Path> implements IP
 
     async findOneById(id: string): Promise<Path | null> {
         this.reads.push('findOneById');
+
         return super.findOneById(id);
     }
 
     async findOneBy(where: Record<string, any>): Promise<Path | null> {
         this.reads.push('findOneBy');
+
         return super.findOneBy(where);
     }
 
@@ -79,6 +81,7 @@ export class FakePathRepository extends FakeEntityRepository<Path> implements IP
         // transaction and locking what it reads; the store is shared by
         // reference so a write inside is visible outside, as a commit is
         const locked = new FakePathRepository({ lockRows: true });
+
         locked.store = this.store;
         this.transactionRepository = locked;
 

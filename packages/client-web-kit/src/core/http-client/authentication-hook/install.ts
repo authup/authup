@@ -42,6 +42,7 @@ export function installHTTPClientAuthenticationHook(
             refreshTokenInUse = refreshToken.value;
 
             const client = buildClient();
+
             return client.token.createWithRefreshToken({ refresh_token: refreshTokenInUse });
         },
         timer: !options.isServer,
@@ -69,11 +70,14 @@ export function installHTTPClientAuthenticationHook(
             // no later logout() could reach them — revoke them best-effort
             // instead of orphaning a live server session.
             const client = buildClient();
+
             Promise.resolve()
                 .then(() => client.token.revoke({ token: response.access_token }))
                 .catch(() => { /* best-effort */ });
+
             if (response.refresh_token) {
                 const refresh = response.refresh_token;
+
                 Promise.resolve()
                     .then(() => client.token.revoke({ token: refresh }))
                     .catch(() => { /* best-effort */ });
@@ -124,6 +128,7 @@ export function installHTTPClientAuthenticationHook(
     const handleAccessTokenExpireDateEvent = () => {
         if (store.accessTokenExpireDate) {
             const expiresIn = Math.floor((store.accessTokenExpireDate.getTime() - Date.now()) / 1000);
+
             hook.setTimer(expiresIn);
         } else {
             // no expire date -> nothing to refresh against: a stale armed

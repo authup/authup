@@ -60,12 +60,14 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         // non-lowerable, and the self leg is the ownership term anyway. A
         // non-expressible USER_UPDATE policy falls back to the per-row loop.
         const compiled = await actor.permissionEvaluator.compile({ name: PermissionName.USER_UPDATE });
+
         if (compiled.verdict !== 'post') {
             const self = actor.identity && actor.identity.type === 'user' ?
                 eq('userId', actor.identity.data.id) :
                 null;
 
             let scoped = parsed;
+
             if (compiled.verdict === 'deny') {
                 scoped = appendQueryConditions(parsed, self ?? inArray('id', []));
             } else if (compiled.verdict === 'conditional') {
@@ -88,6 +90,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
 
         for (const entity of entities) {
             const canRead = await this.canReadUserAttribute(actor, entity);
+
             if (canRead) {
                 data.push(entity);
             } else {
@@ -116,11 +119,13 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
 
         const canRead = await this.canReadUserAttribute(actor, entity);
+
         if (!canRead) {
             throw new PermissionError();
         }
@@ -147,6 +152,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         // for another. Saying `user` at all has to mean naming one.
         if (typeof data.user !== 'undefined') {
             const relationId = isObject(data.user) ? data.user.id : undefined;
+
             if (!relationId && !data.userId) {
                 throw new ValidationError('The user-attribute owner must be named by userId.');
             }
@@ -163,12 +169,14 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             (!targetUserId || targetUserId === actor.identity.data.id);
 
         let isSelfFallback = false;
+
         try {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_UPDATE });
         } catch (e) {
             if (!isSelfTarget) {
                 throw e;
             }
+
             isSelfFallback = true;
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_SELF_MANAGE });
         }
@@ -226,6 +234,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         }
 
         let entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -243,12 +252,14 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             actor.identity.data.id === entity.userId;
 
         let isSelfFallback = false;
+
         try {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_UPDATE });
         } catch (e) {
             if (!isSelfTarget) {
                 throw e;
             }
+
             isSelfFallback = true;
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_SELF_MANAGE });
         }
@@ -263,6 +274,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         delete data.realmId;
 
         const before: UserAttribute = { ...entity };
+
         entity = this.repository.merge(entity, data);
 
         if (isSelfFallback) {
@@ -292,16 +304,19 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
 
         const canRead = await this.canReadUserAttribute(actor, entity);
+
         if (!canRead) {
             throw new PermissionError();
         }
 
         const { id: entityId } = entity;
+
         await this.repository.remove(entity);
         entity.id = entityId;
 

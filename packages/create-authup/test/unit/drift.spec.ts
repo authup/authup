@@ -126,6 +126,7 @@ describe('drift', () => {
     it('should emit only authup.yml keys the schema declares', () => {
         const configs = RENDERED
             .filter(([, files]) => 'authup.yml' in files);
+
         expect(configs.length).toBeGreaterThan(0);
 
         for (const [name, files] of configs) {
@@ -141,6 +142,7 @@ describe('drift', () => {
                 }
 
                 const names = collectEnvNames(content);
+
                 expect(names.length, `${file} of ${name}`).toBeGreaterThan(0);
                 expect(names.filter(isUnknownEnvName), `${file} of ${name}`).toEqual([]);
             }

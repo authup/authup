@@ -135,7 +135,10 @@ const httpError = (status: number, data: Record<string, any> = {}) => Object.ass
 
 describe('AuthorizeForm dead-bearer resilience', () => {
     it('emits loginRequired on a 401 (dead/expired bearer)', async () => {
-        const wrapper = mountForm(() => { throw httpError(401); });
+        const wrapper = mountForm(() => {
+            throw httpError(401);
+        });
+
         await flushPromises();
 
         expect(wrapper.emitted('loginRequired')).toBeTruthy();
@@ -147,6 +150,7 @@ describe('AuthorizeForm dead-bearer resilience', () => {
         const wrapper = mountForm(() => {
             throw httpError(400, { error: OAuth2ErrorCode.LOGIN_REQUIRED });
         });
+
         await flushPromises();
 
         expect(wrapper.emitted('loginRequired')).toBeTruthy();
@@ -154,7 +158,10 @@ describe('AuthorizeForm dead-bearer resilience', () => {
     });
 
     it('does NOT emit loginRequired on an unrelated error (falls back to manual consent)', async () => {
-        const wrapper = mountForm(() => { throw httpError(500); });
+        const wrapper = mountForm(() => {
+            throw httpError(500);
+        });
+
         await flushPromises();
 
         expect(wrapper.emitted('loginRequired')).toBeFalsy();
@@ -168,6 +175,7 @@ describe('AuthorizeForm dead-bearer resilience', () => {
         const wrapper = mountForm(() => {
             throw httpError(400, { error: OAuth2ErrorCode.INVALID_REQUEST });
         });
+
         await flushPromises();
 
         expect(wrapper.emitted('loginRequired')).toBeFalsy();
@@ -178,6 +186,7 @@ describe('AuthorizeForm dead-bearer resilience', () => {
         const wrapper = mountForm(() => {
             throw httpError(401, { error: OAuth2ErrorCode.INVALID_REQUEST });
         });
+
         await flushPromises();
 
         expect(wrapper.emitted('loginRequired')).toBeTruthy();
@@ -188,7 +197,10 @@ describe('AuthorizeForm dead-bearer resilience', () => {
         // a directly-thrown/non-transport error (no `.response`) has no status
         // and no body `.error` — extractErrorContext yields both as undefined,
         // so it must fall back to manual consent, not re-authentication.
-        const wrapper = mountForm(() => { throw new Error('boom'); });
+        const wrapper = mountForm(() => {
+            throw new Error('boom');
+        });
+
         await flushPromises();
 
         expect(wrapper.emitted('loginRequired')).toBeFalsy();
@@ -214,6 +226,7 @@ describe('AuthorizeForm abort redirect gate', () => {
             client: interactiveClient,
             redirectUriVerified: false,
         });
+
         await flushPromises();
         expect(wrapper.find('.scopes-stub').exists()).toBe(true);
 
@@ -229,6 +242,7 @@ describe('AuthorizeForm abort redirect gate', () => {
 
     it('defaults to NOT navigating when redirectUriVerified is not passed (fail-closed)', async () => {
         const wrapper = mountForm(() => ({}), { client: interactiveClient });
+
         await flushPromises();
 
         await wrapper.findAll('button')[0].trigger('click');
@@ -243,11 +257,13 @@ describe('AuthorizeForm abort redirect gate', () => {
             client: interactiveClient,
             redirectUriVerified: true,
         });
+
         await flushPromises();
 
         await wrapper.findAll('button')[0].trigger('click');
 
         const url = new URL(window.location.href);
+
         expect(`${url.origin}${url.pathname}`).toEqual('https://app.example.com/cb');
         expect(url.searchParams.get('error')).toEqual('access_denied');
         expect(url.searchParams.get('state')).toEqual('state-1');
@@ -260,10 +276,15 @@ describe('AuthorizeForm persisted-consent auto-consent (plan 055)', () => {
 
     it('auto-submits POST /authorize when consentGranted and no prompt=consent', async () => {
         let authorizeCalls = 0;
-        const wrapper = mountForm(() => { authorizeCalls += 1; return {}; }, {
+        const wrapper = mountForm(() => {
+            authorizeCalls += 1;
+
+            return {};
+        }, {
             client: interactiveClient,
             consentGranted: true,
         });
+
         await flushPromises();
 
         expect(authorizeCalls).toBe(1);
@@ -273,7 +294,11 @@ describe('AuthorizeForm persisted-consent auto-consent (plan 055)', () => {
 
     it('keeps the manual consent screen when prompt=consent forces re-approval', async () => {
         let authorizeCalls = 0;
-        const wrapper = mountForm(() => { authorizeCalls += 1; return {}; }, {
+        const wrapper = mountForm(() => {
+            authorizeCalls += 1;
+
+            return {};
+        }, {
             client: interactiveClient,
             consentGranted: true,
             codeRequest: {
@@ -281,6 +306,7 @@ describe('AuthorizeForm persisted-consent auto-consent (plan 055)', () => {
                 prompt: OAuth2AuthorizationPrompt.CONSENT,
             },
         });
+
         await flushPromises();
 
         // prompt=consent always re-prompts — union/keep happens server-side
@@ -290,7 +316,12 @@ describe('AuthorizeForm persisted-consent auto-consent (plan 055)', () => {
 
     it('does NOT auto-submit for a non-built_in client without consentGranted', async () => {
         let authorizeCalls = 0;
-        const wrapper = mountForm(() => { authorizeCalls += 1; return {}; }, { client: interactiveClient });
+        const wrapper = mountForm(() => {
+            authorizeCalls += 1;
+
+            return {};
+        }, { client: interactiveClient });
+
         await flushPromises();
 
         expect(authorizeCalls).toBe(0);
@@ -314,6 +345,7 @@ describe('AuthorizeForm access-policy denial', () => {
                 error: OAuth2ErrorCode.ACCESS_DENIED,
             });
         });
+
         await flushPromises();
 
         expect(wrapper.find('.denied-stub').exists()).toBe(true);
@@ -328,6 +360,7 @@ describe('AuthorizeForm access-policy denial', () => {
         const wrapper = mountForm(() => {
             throw httpError(400, { error: OAuth2ErrorCode.INVALID_REQUEST });
         });
+
         await flushPromises();
 
         expect(wrapper.find('.denied-stub').exists()).toBe(false);
@@ -337,6 +370,7 @@ describe('AuthorizeForm access-policy denial', () => {
     it('navigates the server-built error redirect on a verified denial (200 { url })', async () => {
         const deniedUrl = 'https://app.example.com/cb?error=access_denied&state=state-1';
         const wrapper = mountForm(() => ({ url: deniedUrl }));
+
         await flushPromises();
 
         expect(window.location.href).toEqual(deniedUrl);

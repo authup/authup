@@ -25,9 +25,11 @@ export class TestHTTPApplication extends TestApplication {
 
     get baseURL(): string {
         const httpServer = this.container.resolve<HTTPServer>(HTTPInjectionKey.Server);
+
         if (!httpServer.url) {
             throw new Error('HTTP server has no URL — was it started?');
         }
+
         return httpServer.url.replace(/\/$/, '');
     }
 

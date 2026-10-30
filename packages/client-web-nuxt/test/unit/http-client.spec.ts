@@ -41,9 +41,9 @@ function buildRuntimeConfig(
 }
 
 async function listen() : Promise<{
-    url: string, 
-    paths: string[], 
-    close: () => Promise<void> 
+    url: string,
+    paths: string[],
+    close: () => Promise<void>
 }> {
     const paths : string[] = [];
     const server = createServer((req, res) => {
@@ -86,6 +86,7 @@ describe('runtime/helpers/http-client', () => {
         );
 
         const { httpClient } = options;
+
         if (typeof httpClient !== 'function') {
             throw new Error('expected a client function');
         }
@@ -100,6 +101,7 @@ describe('runtime/helpers/http-client', () => {
         );
 
         const href = buildClient(options).identityProvider.getAuthorizeUri('e8c7d1a4-2b0f-4f8e-9c3a-1d2e3f4a5b6c');
+
         expect(href.startsWith(`${PUBLIC_URL}/identity-providers/`)).toBe(true);
         expect(href).not.toContain(SERVER_URL);
     });

@@ -14,8 +14,10 @@ export function getClientRequestRetryState(
     config: Partial<RequestOptions> & { retry?: Partial<RetryState> },
 ) : RetryState {
     const currentState = config.retry || {};
+
     currentState.retryCount = currentState.retryCount || 0;
 
     config.retry = currentState;
+
     return currentState as RetryState;
 }

@@ -54,6 +54,7 @@ function createInterceptor(overrides: Partial<StoreStub> = {}) {
     };
 
     const vueApp = createApp({});
+
     provideStoreFactory((() => store) as never, vueApp);
 
     const nuxtApp = {
@@ -71,6 +72,7 @@ describe('RoutingInterceptor', () => {
     describe('post-exchange destination', () => {
         beforeEach(() => {
             const storage = new Map<string, string>();
+
             vi.stubGlobal('sessionStorage', {
                 getItem: (key: string) => storage.get(key) ?? null,
                 setItem: (key: string, value: string) => storage.set(key, value),
@@ -92,6 +94,7 @@ describe('RoutingInterceptor', () => {
 
         it('should drop a code when no request was saved', async () => {
             const { interceptor, store } = createInterceptor();
+
             clearAuthorizationRequest();
 
             const result = await interceptor.execute(
@@ -118,9 +121,9 @@ describe('RoutingInterceptor', () => {
                 createRoute({
                     path: '/login/callback',
                     query: {
-                        code: 'the-code', 
-                        state: 'the-state', 
-                        redirect: '/users', 
+                        code: 'the-code',
+                        state: 'the-state',
+                        redirect: '/users',
                     },
                 }),
                 createRoute({ path: '/' }),
@@ -206,9 +209,9 @@ describe('RoutingInterceptor', () => {
                 createRoute({
                     path: '/login/callback',
                     query: {
-                        code: 'the-code', 
-                        state: 'the-state', 
-                        keep: 'me', 
+                        code: 'the-code',
+                        state: 'the-state',
+                        keep: 'me',
                     },
                 }),
                 createRoute({ path: '/' }),

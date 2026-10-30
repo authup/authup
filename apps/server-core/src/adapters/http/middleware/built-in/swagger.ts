@@ -48,9 +48,9 @@ type SwaggerMiddlewareOptions = SwaggerUIOptions & {
  */
 export function createSwaggerMiddleware(input: SwaggerMiddlewareOptions) : Plugin | undefined {
     const {
-        documentPath, 
-        schemaHash, 
-        logger, 
+        documentPath,
+        schemaHash,
+        logger,
         ...options
     } = input;
 
@@ -75,6 +75,7 @@ export function createSwaggerMiddleware(input: SwaggerMiddlewareOptions) : Plugi
 
     if (schemaHash) {
         const documentHash = document[SCHEMA_HASH_KEY];
+
         if (documentHash !== schemaHash) {
             const found = typeof documentHash === 'string' ? documentHash : 'none';
 

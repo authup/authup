@@ -43,25 +43,31 @@ export class FakeOAuth2TokenRepository implements IOAuth2TokenRepository {
 
     async claimInactive(id: string, exp?: number): Promise<boolean> {
         this.claimInactiveCalls.push({ id, exp });
+
         if (this.inactiveIds.has(id)) {
             return false;
         }
+
         this.inactiveIds.add(id);
+
         return true;
     }
 
     async isInactive(id: string): Promise<boolean> {
         this.isInactiveCalls.push(id);
+
         return this.inactiveIds.has(id);
     }
 
     async findOneById(id: string): Promise<OAuth2TokenPayload | null> {
         this.findOneByIdCalls.push(id);
+
         return this.byId.get(id) ?? null;
     }
 
     async findOneBySignature(token: string): Promise<OAuth2TokenPayload | null> {
         this.findOneBySignatureCalls.push(token);
+
         return this.bySignature.get(token) ?? null;
     }
 
@@ -84,25 +90,32 @@ export class FakeOAuth2TokenRepository implements IOAuth2TokenRepository {
 
     async insert(payload: OAuth2TokenPayload): Promise<OAuth2TokenPayload> {
         this.insertCalls.push(payload);
+
         const stored = { ...payload, jti: payload.jti ?? randomUUID() } as OAuth2TokenPayload;
+
         this.byId.set(stored.jti!, stored);
+
         return stored;
     }
 
     async save(payload: OAuth2TokenPayload): Promise<OAuth2TokenPayload> {
         this.saveCalls.push(payload);
+
         if (payload.jti) {
             this.byId.set(payload.jti, payload);
         }
+
         return payload;
     }
 
     async saveWithSignature(payload: OAuth2TokenPayload, signature: string): Promise<OAuth2TokenPayload> {
         this.saveWithSignatureCalls.push({ payload, signature });
         this.bySignature.set(signature, payload);
+
         if (payload.jti) {
             this.byId.set(payload.jti, payload);
         }
+
         return payload;
     }
 

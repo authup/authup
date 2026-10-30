@@ -36,6 +36,7 @@ function toDate(input: Date | string | number) : Date {
 function nextDateTransition(policy: DatePolicy, now: Date) : Date | undefined {
     if (policy.start) {
         const start = normalizeDate(toDate(policy.start));
+
         if (now < start) {
             return start;
         }
@@ -43,6 +44,7 @@ function nextDateTransition(policy: DatePolicy, now: Date) : Date | undefined {
 
     if (policy.end) {
         const end = normalizeDate(toDate(policy.end));
+
         if (now <= end) {
             return new Date(end.getFullYear(), end.getMonth(), end.getDate() + 1);
         }
@@ -80,6 +82,7 @@ export class DatePolicyEvaluator implements IPolicyEvaluator {
             // Only a verdict read off the real clock expires; a supplied date is fixed.
             if (ctx.transitions) {
                 const next = nextDateTransition(policy, now);
+
                 if (next) {
                     ctx.transitions.report(next);
                 }
@@ -88,6 +91,7 @@ export class DatePolicyEvaluator implements IPolicyEvaluator {
 
         if (policy.start) {
             const start = normalizeDate(toDate(policy.start));
+
             if (now < start) {
                 return { success: maybeInvertPolicyOutcome(false, policy.invert) };
             }
@@ -95,6 +99,7 @@ export class DatePolicyEvaluator implements IPolicyEvaluator {
 
         if (policy.end) {
             const end = normalizeDate(toDate(policy.end));
+
             if (now > end) {
                 return { success: maybeInvertPolicyOutcome(false, policy.invert) };
             }

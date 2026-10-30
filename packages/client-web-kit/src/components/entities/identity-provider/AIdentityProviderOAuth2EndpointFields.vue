@@ -72,12 +72,15 @@ export default defineComponent({
                 userInfoUrl: null,
             }, { fields: v.fields });
 
-            if (!props.entity) return;
+            if (!props.entity) {
+                return;
+            }
 
             assignFormProperties(form, props.entity as Partial<OAuth2IdentityProvider>, { fields: v.fields });
         }
 
         const updated = useUpdatedAt(() => props.entity as IdentityProvider);
+
         onChange(updated, () => init());
 
         init();

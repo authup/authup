@@ -171,6 +171,7 @@ export function createStorePreferenceSync(ctx: StorePreferenceSyncContext) {
             // The change belongs to whoever is signed in NOW, not to
             // whoever is signed in when the timer fires.
             const userId = ctx.userId();
+
             if (!userId) {
                 return;
             }
@@ -184,6 +185,7 @@ export function createStorePreferenceSync(ctx: StorePreferenceSyncContext) {
                 // Whatever the ref holds NOW: a seed that landed inside the
                 // window has already put the account's value back.
                 const current = preference.ref.value;
+
                 if (
                     owner !== generation ||
                     ctx.userId() !== userId ||
@@ -221,13 +223,16 @@ export function createStorePreferenceSync(ctx: StorePreferenceSyncContext) {
             }
 
             const value = introspection[preference.claim];
+
             if (value) {
                 preference.known = value;
                 preference.ref.value = value;
+
                 continue;
             }
 
             const current = preference.ref.value;
+
             if (
                 !userId ||
                 !current ||

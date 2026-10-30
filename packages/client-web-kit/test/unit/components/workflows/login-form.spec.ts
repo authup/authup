@@ -16,6 +16,7 @@ type LoginFormWrapper = ReturnType<typeof mountLoginForm>['wrapper'];
 
 async function submitWithCredentials(wrapper: LoginFormWrapper) {
     const inputs = wrapper.findAll('input');
+
     await inputs[0].setValue('admin');
     await wrapper.find('input[type="password"]').setValue('start123');
 
@@ -37,8 +38,10 @@ function tokenRequests(httpClient: FakeClient) {
 function mfaGatedTokenHandler(kinds: string[] = ['totp'], mfaToken?: string) {
     return (req: { body?: unknown }) => {
         const body = (req.body ?? {}) as Record<string, any>;
+
         if (!body.otp) {
             const error = new Error('Complete a second-factor challenge to continue.');
+
             (error as any).response = {
                 status: 400,
                 data: {
@@ -52,6 +55,7 @@ function mfaGatedTokenHandler(kinds: string[] = ['totp'], mfaToken?: string) {
                     } : {}),
                 },
             };
+
             throw error;
         }
 
@@ -67,9 +71,11 @@ function mfaGatedTokenHandler(kinds: string[] = ['totp'], mfaToken?: string) {
 describe('components/workflows/login', () => {
     it('should transmit picker-selected realm', async () => {
         const { wrapper, httpClient } = mountLoginForm();
+
         await flushPromises();
 
         const picker = wrapper.findComponent(ARealmPicker);
+
         expect(picker.exists()).toBe(true);
 
         picker.vm.$emit('change', ['realm-a']);
@@ -78,6 +84,7 @@ describe('components/workflows/login', () => {
         await submitWithCredentials(wrapper);
 
         const request = findTokenRequest(httpClient);
+
         expect(request).toBeDefined();
         expect(request!.body).toMatchObject({
             grant_type: 'password',
@@ -94,6 +101,7 @@ describe('components/workflows/login', () => {
                 realm_id: 'realm-b',
             },
         });
+
         await flushPromises();
 
         expect(wrapper.findComponent(ARealmPicker).exists()).toBe(false);
@@ -101,6 +109,7 @@ describe('components/workflows/login', () => {
         await submitWithCredentials(wrapper);
 
         const request = findTokenRequest(httpClient);
+
         expect(request).toBeDefined();
         expect(request!.body).toMatchObject({
             grant_type: 'password',
@@ -110,6 +119,7 @@ describe('components/workflows/login', () => {
 
     it('should adopt realm of late-arriving codeRequest', async () => {
         const { wrapper, httpClient } = mountLoginForm();
+
         await flushPromises();
 
         await wrapper.setProps({
@@ -123,6 +133,7 @@ describe('components/workflows/login', () => {
         await submitWithCredentials(wrapper);
 
         const request = findTokenRequest(httpClient);
+
         expect(request).toBeDefined();
         expect(request!.body).toMatchObject({
             grant_type: 'password',
@@ -132,14 +143,17 @@ describe('components/workflows/login', () => {
 
     it('should omit realm_id without selection or codeRequest', async () => {
         const { wrapper, httpClient } = mountLoginForm();
+
         await flushPromises();
 
         await submitWithCredentials(wrapper);
 
         const request = findTokenRequest(httpClient);
+
         expect(request).toBeDefined();
 
         const body = request!.body as Record<string, string>;
+
         expect(body.grant_type).toEqual('password');
         expect(body.username).toEqual('admin');
         expect(body.password).toEqual('start123');
@@ -153,6 +167,7 @@ describe('components/workflows/login', () => {
     // and the challenge was never collected.
     it('should present a second-factor step on mfa_required and complete with otp', async () => {
         const { wrapper, httpClient } = mountLoginForm({}, { 'POST /token': mfaGatedTokenHandler(['totp']) });
+
         await flushPromises();
 
         // credential-only submit → transitions to the challenge step, no failure
@@ -166,11 +181,13 @@ describe('components/workflows/login', () => {
 
         // the first token request carried NO otp
         const first = findTokenRequest(httpClient);
+
         expect(first!.body).toMatchObject({ grant_type: 'password', username: 'admin' });
         expect('otp' in (first!.body as Record<string, unknown>)).toBe(false);
 
         // enter the code and resubmit → the grant is retried WITH the otp
         const otpInput = wrapper.find('input');
+
         expect(otpInput.exists()).toBe(true);
         await otpInput.setValue('123456');
         await wrapper.find('form').trigger('submit');
@@ -179,6 +196,7 @@ describe('components/workflows/login', () => {
         const withOtp = tokenRequests(httpClient).find(
             (request) => (request.body as Record<string, unknown>).otp,
         );
+
         expect(withOtp).toBeDefined();
         expect(withOtp!.body).toMatchObject({
             grant_type: 'password',
@@ -195,6 +213,7 @@ describe('components/workflows/login', () => {
     // must not offer a useless code field to a user holding only those factors.
     it('should not render an otp field when only interactive factors are enrolled', async () => {
         const { wrapper } = mountLoginForm({}, { 'POST /token': mfaGatedTokenHandler(['webauthn']) });
+
         await flushPromises();
 
         await submitWithCredentials(wrapper);
@@ -223,6 +242,7 @@ describe('components/workflows/login', () => {
             'POST /authenticators/challenge/send': () => ({ success: true }),
             'POST /authenticators/challenge': () => ({ verified: true, token: grant }),
         });
+
         await flushPromises();
 
         await submitWithCredentials(wrapper);
@@ -233,6 +253,7 @@ describe('components/workflows/login', () => {
 
         // the interactive challenge form replaces the inline otp step
         const challengeForm = wrapper.findComponent(AMfaChallengeForm);
+
         expect(challengeForm.exists()).toBe(true);
 
         // email-only: no challenge-status fetch needed (webauthn-only material)
@@ -240,6 +261,7 @@ describe('components/workflows/login', () => {
             (request) => request.method === 'GET' &&
                 request.url.includes('authenticators/challenge'),
         );
+
         expect(statusRequests).toHaveLength(0);
 
         // request the code — the call carries the ticket, not a session bearer
@@ -250,6 +272,7 @@ describe('components/workflows/login', () => {
             (request) => request.method === 'POST' &&
                 request.url.includes('authenticators/challenge/send'),
         );
+
         expect(sendRequest).toBeDefined();
         expect(sendRequest!.headers.authorization).toEqual('Bearer ticket-123');
 
@@ -262,6 +285,7 @@ describe('components/workflows/login', () => {
             (request) => request.method === 'POST' &&
                 new URL(request.url, 'http://localhost').pathname === '/authenticators/challenge',
         );
+
         expect(verifyRequest).toBeDefined();
         expect(verifyRequest!.headers.authorization).toEqual('Bearer ticket-123');
         expect(verifyRequest!.body).toMatchObject({ kind: 'email', response: '123456' });
@@ -276,13 +300,16 @@ describe('components/workflows/login', () => {
         const { wrapper } = mountLoginForm({}, {
             'POST /token': () => {
                 const error = new Error('invalid credentials');
+
                 (error as any).response = {
                     status: 400,
                     data: { code: 'entity_credentials_invalid', message: 'invalid credentials' },
                 };
+
                 throw error;
             },
         });
+
         await flushPromises();
 
         await submitWithCredentials(wrapper);
@@ -306,11 +333,13 @@ describe('components/workflows/login', () => {
                 throw new Error('unable to get local issuer certificate');
             },
         });
+
         await flushPromises();
 
         expect(wrapper.find('form').exists()).toBe(true);
 
         const providers = wrapper.findComponent(AIdentityProviders);
+
         expect(providers.exists()).toBe(true);
         expect(providers.emitted('failed')).toBeTruthy();
     });
@@ -319,6 +348,7 @@ describe('components/workflows/login', () => {
         // authorize-out refuses a federated login that completes neither, so
         // a provider button would lead to a guaranteed 400.
         const { wrapper } = mountLoginForm();
+
         await flushPromises();
 
         expect(wrapper.find('form').exists()).toBe(true);
@@ -330,6 +360,7 @@ describe('components/workflows/login', () => {
     // postgres rejects on a uuid column.
     it('should offer no identity provider for a device user code before a realm is picked', async () => {
         const { wrapper } = mountLoginForm({ deviceUserCode: 'BCDFGHJK' });
+
         await flushPromises();
 
         expect(wrapper.findComponent(AIdentityProviders).exists()).toBe(false);
@@ -337,6 +368,7 @@ describe('components/workflows/login', () => {
 
     it('should offer identity providers for a device user code once a realm is picked', async () => {
         const { wrapper } = mountLoginForm({ deviceUserCode: 'BCDFGHJK' });
+
         await flushPromises();
 
         wrapper.findComponent(ARealmPicker).vm.$emit('change', ['realm-a']);
@@ -345,6 +377,7 @@ describe('components/workflows/login', () => {
         expect(wrapper.findComponent(AIdentityProviders).exists()).toBe(true);
 
         const url = (wrapper.vm as any).buildIdentityProviderURL('provider-1');
+
         expect(url).toContain('/identity-providers/provider-1/authorize-out');
         expect(url).toContain('user_code=BCDFGHJK');
         expect(url).not.toContain('codeRequest');

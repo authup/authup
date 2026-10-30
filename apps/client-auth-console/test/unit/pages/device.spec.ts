@@ -115,10 +115,12 @@ describe('device page', () => {
         const form = wrapper.findComponent(DeviceVerifyFormStub);
 
         const registerLink = form.props('registerLink') as { href: string };
+
         expect(registerLink.href.startsWith('/console/auth/register?')).toBeTruthy();
         expect(readRedirect(registerLink)).toEqual('/device?user_code=BCDFGHJK');
 
         const passwordForgotLink = form.props('passwordForgotLink') as { href: string };
+
         expect(passwordForgotLink.href.startsWith('/console/auth/password-forgot?')).toBeTruthy();
         expect(readRedirect(passwordForgotLink)).toEqual('/device?user_code=BCDFGHJK');
     });

@@ -100,9 +100,11 @@ function mountEndSession(
                     // the auto-logout gate.
                     install(app: App) {
                         const store = injectStore(pinia, app);
+
                         if (seedUser) {
                             store.user = createUser(seedUser);
                         }
+
                         logout = vi.spyOn(store, 'logout').mockResolvedValue(undefined);
                     },
                 },
@@ -117,12 +119,13 @@ describe('AEndSessionForm', () => {
     it('should auto-sign-out when the revoked subject is the current user', async () => {
         const { logout } = mountEndSession(
             {
-                serverRevoked: true, 
-                hintSub: 'user-1', 
-                hintSubKind: IdentityType.USER, 
+                serverRevoked: true,
+                hintSub: 'user-1',
+                hintSubKind: IdentityType.USER,
             },
             { id: 'user-1' },
         );
+
         await flushPromises();
 
         expect(logout()).toHaveBeenCalledTimes(1);
@@ -131,12 +134,13 @@ describe('AEndSessionForm', () => {
     it('should NOT auto-sign-out when the revoked subject differs from the current user (forced-logout CSRF guard)', async () => {
         const { logout } = mountEndSession(
             {
-                serverRevoked: true, 
-                hintSub: 'attacker', 
-                hintSubKind: IdentityType.USER, 
+                serverRevoked: true,
+                hintSub: 'attacker',
+                hintSubKind: IdentityType.USER,
             },
             { id: 'victim' },
         );
+
         await flushPromises();
 
         expect(logout()).not.toHaveBeenCalled();
@@ -148,6 +152,7 @@ describe('AEndSessionForm', () => {
             hintSub: 'user-1',
             hintSubKind: IdentityType.USER,
         });
+
         await flushPromises();
 
         expect(logout()).not.toHaveBeenCalled();
@@ -156,12 +161,13 @@ describe('AEndSessionForm', () => {
     it('should NOT auto-sign-out when the server did not revoke (click-gated)', async () => {
         const { logout } = mountEndSession(
             {
-                serverRevoked: false, 
-                hintSub: 'user-1', 
-                hintSubKind: IdentityType.USER, 
+                serverRevoked: false,
+                hintSub: 'user-1',
+                hintSubKind: IdentityType.USER,
             },
             { id: 'user-1' },
         );
+
         await flushPromises();
 
         expect(logout()).not.toHaveBeenCalled();
@@ -172,6 +178,7 @@ describe('AEndSessionForm', () => {
             { serverRevoked: true, hintSub: 'user-1' },
             { id: 'user-1' },
         );
+
         await flushPromises();
 
         expect(logout()).not.toHaveBeenCalled();
@@ -182,12 +189,13 @@ describe('AEndSessionForm', () => {
         // collision with the local user id must never count as identity.
         const { logout } = mountEndSession(
             {
-                serverRevoked: true, 
-                hintSub: 'user-1', 
-                hintSubKind: IdentityType.CLIENT, 
+                serverRevoked: true,
+                hintSub: 'user-1',
+                hintSubKind: IdentityType.CLIENT,
             },
             { id: 'user-1' },
         );
+
         await flushPromises();
 
         expect(logout()).not.toHaveBeenCalled();

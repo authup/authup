@@ -184,6 +184,7 @@ export default defineComponent({
                 const status = await apiClient.userAuthenticator.challenge({ authorizationHeader: { type: 'Bearer', token: ticket } });
 
                 mfaChallenge.value = status.challenge ?? null;
+
                 if (status.kinds.length > 0) {
                     mfaKinds.value = status.kinds;
                 }
@@ -204,6 +205,7 @@ export default defineComponent({
                     namespace: TranslatorTranslationNamespace.CLIENT,
                     key: TranslatorTranslationClientKey.LOGIN_FAILED,
                 });
+
                 return;
             }
 
@@ -323,6 +325,7 @@ export default defineComponent({
                     if (ticket && kinds.includes(UserAuthenticatorKind.WEBAUTHN)) {
                         Promise.resolve().then(() => loadMfaChallengeMaterial(ticket));
                     }
+
                     return;
                 }
 
@@ -334,6 +337,7 @@ export default defineComponent({
                         namespace: TranslatorTranslationNamespace.CLIENT,
                         key: TranslatorTranslationClientKey.LOGIN_FAILED,
                     });
+
                     return;
                 }
 

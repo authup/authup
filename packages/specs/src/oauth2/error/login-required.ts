@@ -15,6 +15,7 @@ export const OAUTH2_LOGIN_REQUIRED_ERROR_INSTANCE = Symbol.for('@authup/specs/OA
 export class OAuth2LoginRequiredError extends OAuth2Error {
     constructor(input?: AuthupErrorInput) {
         const options = normalizeOAuth2ErrorInput(input);
+
         super({
             code: ErrorCode.OAUTH_LOGIN_REQUIRED,
             message: 'Authentication is required to continue.',

@@ -28,6 +28,7 @@ function createAuthenticator(
         del: async () => undefined,
         search: async (options: SearchOptions) => {
             filters.push(options.filter);
+
             return filters.length === 1 ? entries : [];
         },
         resolveDn: (...input) => input.find((el) => !!el),
@@ -61,6 +62,7 @@ function createAuthenticator(
  */
 function wireValue(filter: any) : string {
     const { buffer } = filter.toBer();
+
     return buffer.subarray(buffer.length - Buffer.byteLength(filter.value)).toString();
 }
 
@@ -71,6 +73,7 @@ describe('core/identity/provider/ldap — search filter', () => {
         await expect(authenticator.authenticate('alice)(description=S*\\', 'pw')).rejects.toThrow();
 
         const [objectClass, uid] = filters[0].clauses;
+
         expect(filters[0].clauses).toHaveLength(2);
         expect(objectClass.value).toEqual('person');
         expect(uid.attribute).toEqual('uid');
@@ -111,6 +114,7 @@ describe('core/identity/provider/ldap — search filter', () => {
         await authenticator.authenticate('alice', 'pw');
 
         const member = filters[1].clauses[1];
+
         expect(member.attribute).toEqual('member');
         expect(wireValue(member)).toEqual(dn);
     });

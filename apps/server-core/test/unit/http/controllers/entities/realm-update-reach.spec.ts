@@ -34,8 +34,11 @@ describe('realm update and delete reach', () => {
         await suite.setup();
 
         const { data: ownRealm } = await suite.client.realm.create(createFakeRealm());
+
         ownRealmId = ownRealm.id;
+
         const { data: foreignRealm } = await suite.client.realm.create(createFakeRealm());
+
         foreignRealmId = foreignRealm.id;
 
         const secret = 'realm-update-reach-secret';
@@ -48,6 +51,7 @@ describe('realm update and delete reach', () => {
 
         for (const name of [PermissionName.REALM_UPDATE, PermissionName.REALM_DELETE]) {
             const { data: permission } = await suite.client.permission.getOne(name);
+
             await suite.client.clientPermission.create({
                 clientId: client.id,
                 permissionId: permission.id,
@@ -59,6 +63,7 @@ describe('realm update and delete reach', () => {
             client_id: client.id,
             client_secret: secret,
         });
+
         actor = new HTTPClient({ baseURL: suite.baseURL });
         actor.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
     });
@@ -69,6 +74,7 @@ describe('realm update and delete reach', () => {
 
     it('updates the actor\'s own realm', async () => {
         const { data } = await actor.realm.update(ownRealmId, { description: 'updated by its own realm' });
+
         expect(data.description).toEqual('updated by its own realm');
     });
 
@@ -79,6 +85,7 @@ describe('realm update and delete reach', () => {
         );
 
         const { data } = await suite.client.realm.getOne(foreignRealmId);
+
         expect(data.description).not.toEqual('updated from a foreign realm');
     });
 
@@ -89,11 +96,13 @@ describe('realm update and delete reach', () => {
         );
 
         const { data } = await suite.client.realm.getOne(foreignRealmId);
+
         expect(data.id).toEqual(foreignRealmId);
     });
 
     it('deletes the actor\'s own realm', async () => {
         const { data } = await actor.realm.delete(ownRealmId);
+
         expect(data.id).toEqual(ownRealmId);
     });
 });

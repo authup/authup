@@ -27,46 +27,46 @@ export class IdentityProviderAttributeMappingEntity implements IdentityProviderA
     id: string;
 
     @Column({
-        name: 'synchronization_mode', 
-        type: 'varchar', 
-        length: 64, 
-        nullable: true, 
+        name: 'synchronization_mode',
+        type: 'varchar',
+        length: 64,
+        nullable: true,
     })
     synchronizationMode: `${IdentityProviderMappingSyncMode}` | null;
 
     @Column({
         type: 'varchar',
         length: 64,
-        nullable: true, 
+        nullable: true,
     })
     name: string | null;
 
     @Column({
         type: 'varchar',
         length: 128,
-        nullable: true, 
+        nullable: true,
     })
     value: string | null;
 
     @Column({
-        name: 'value_is_regex', 
-        type: 'boolean', 
-        default: false, 
+        name: 'value_is_regex',
+        type: 'boolean',
+        default: false,
     })
     valueIsRegex: boolean;
 
     @Column({
-        name: 'target_name', 
-        type: 'varchar', 
-        length: 64, 
+        name: 'target_name',
+        type: 'varchar',
+        length: 64,
     })
     targetName: string;
 
     @Column({
-        name: 'target_value', 
-        type: 'varchar', 
-        length: 128, 
-        nullable: true, 
+        name: 'target_value',
+        type: 'varchar',
+        length: 128,
+        nullable: true,
     })
     targetValue: string | null;
 

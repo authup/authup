@@ -51,21 +51,21 @@ export class EventEntity implements Event {
     name: `${EventName}`;
 
     @Column({
-        name: 'ref_type', 
-        type: 'varchar', 
-        length: 64, 
-        nullable: true, 
-        default: null, 
+        name: 'ref_type',
+        type: 'varchar',
+        length: 64,
+        nullable: true,
+        default: null,
     })
     refType: string | null;
 
     @Index()
     @Column({
-        name: 'ref_id', 
-        type: 'varchar', 
-        length: 64, 
-        nullable: true, 
-        default: null, 
+        name: 'ref_id',
+        type: 'varchar',
+        length: 64,
+        nullable: true,
+        default: null,
     })
     refId: string | null;
 
@@ -89,75 +89,75 @@ export class EventEntity implements Event {
 
     @Index()
     @Column({
-        name: 'actor_type', 
-        type: 'varchar', 
-        length: 16, 
-        nullable: true, 
-        default: null, 
+        name: 'actor_type',
+        type: 'varchar',
+        length: 16,
+        nullable: true,
+        default: null,
     })
     actorType: `${IdentityType}` | null;
 
     @Index()
     @Column({
-        name: 'actor_id', 
-        type: 'uuid', 
-        nullable: true, 
-        default: null, 
+        name: 'actor_id',
+        type: 'uuid',
+        nullable: true,
+        default: null,
     })
     actorId: string | null;
 
     @Column({
         name: 'actor_name',
-        type: 'varchar', 
-        length: 128, 
-        nullable: true, 
-        default: null, 
+        type: 'varchar',
+        length: 128,
+        nullable: true,
+        default: null,
     })
     actorName: string | null;
 
     @Column({
-        name: 'request_path', 
-        type: 'varchar', 
-        length: 256, 
-        nullable: true, 
-        default: null, 
+        name: 'request_path',
+        type: 'varchar',
+        length: 256,
+        nullable: true,
+        default: null,
     })
     requestPath: string | null;
 
     @Column({
-        name: 'request_method', 
-        type: 'varchar', 
-        length: 10, 
-        nullable: true, 
-        default: null, 
+        name: 'request_method',
+        type: 'varchar',
+        length: 10,
+        nullable: true,
+        default: null,
     })
     requestMethod: string | null;
 
     @Index()
     @Column({
-        name: 'request_ip_address', 
-        type: 'varchar', 
-        length: 45, 
-        nullable: true, 
-        default: null, 
+        name: 'request_ip_address',
+        type: 'varchar',
+        length: 45,
+        nullable: true,
+        default: null,
     })
     requestIpAddress: string | null;
 
     @Column({
-        name: 'request_user_agent', 
-        type: 'varchar', 
-        length: 512, 
-        nullable: true, 
-        default: null, 
+        name: 'request_user_agent',
+        type: 'varchar',
+        length: 512,
+        nullable: true,
+        default: null,
     })
     requestUserAgent: string | null;
 
     @Index()
     @Column({
-        name: 'realm_id', 
-        type: 'uuid', 
-        nullable: true, 
-        default: null, 
+        name: 'realm_id',
+        type: 'uuid',
+        nullable: true,
+        default: null,
     })
     realmId: Realm['id'] | null;
 
@@ -186,11 +186,11 @@ export class EventEntity implements Event {
 
     @Index()
     @Column({
-        name: 'expires_at', 
-        type: 'varchar', 
-        length: 28, 
-        nullable: true, 
-        default: null, 
+        name: 'expires_at',
+        type: 'varchar',
+        length: 28,
+        nullable: true,
+        default: null,
     })
     expiresAt: string | null;
 

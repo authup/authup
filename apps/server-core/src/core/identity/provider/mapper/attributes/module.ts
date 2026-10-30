@@ -22,6 +22,7 @@ export class IdentityProviderAttributeMapper extends IdentityProviderAccountBase
         const entities = await this.repository.findByProviderId(identity.provider.id);
 
         const items : IdentityProviderMapperElement[] = [];
+
         for (const entity of entities) {
             const [operation, value] = this.resolve(identity, entity);
 

@@ -74,6 +74,7 @@ function buildStore(
     });
 
     let checks = 0;
+
     httpClient.authorization.checkWithMaxAge = async () => {
         checks += 1;
 
@@ -188,6 +189,7 @@ describe('core/store (check expiry)', () => {
         let calls = 0;
         const { store } = buildStore(async () => {
             calls += 1;
+
             if (calls === 2) {
                 release = gate.resolve;
                 await gate.promise;
@@ -214,6 +216,7 @@ describe('core/store (check expiry)', () => {
         let calls = 0;
         const { store, checks } = buildStore(() => {
             calls += 1;
+
             if (fail && calls > 1) {
                 throw new Error('Service unavailable.');
             }
@@ -242,6 +245,7 @@ describe('core/store (check expiry)', () => {
         let calls = 0;
         const { store, checks } = buildStore(() => {
             calls += 1;
+
             if (fail && calls > 1) {
                 throw new Error('Service unavailable.');
             }
@@ -281,9 +285,11 @@ describe('core/store (check expiry)', () => {
         await store.login({ name: 'admin', password: 'start123' });
 
         let outcome!: Ref<boolean>;
+
         mount(defineComponent({
             setup() {
                 const checker = createPermissionCheckerReactiveFn({ store });
+
                 outcome = checker({ name: 'user_read' });
 
                 return () => h('div');
@@ -311,9 +317,11 @@ describe('core/store (check expiry)', () => {
         await vi.advanceTimersByTimeAsync(0);
 
         let outcome!: Ref<boolean>;
+
         mount(defineComponent({
             setup() {
                 const checker = createPermissionCheckerReactiveFn({ store });
+
                 outcome = checker({ name: 'user_read' });
 
                 return () => h('div');
@@ -325,6 +333,7 @@ describe('core/store (check expiry)', () => {
 
         // a navigation reusing the memo does not re-evaluate
         const revision = store.permissionRevision;
+
         await store.resolve();
         await vi.advanceTimersByTimeAsync(0);
         expect(store.permissionRevision).toBe(revision);
@@ -367,9 +376,11 @@ describe('core/store (check expiry)', () => {
         await store.login({ name: 'admin', password: 'start123' });
 
         let outcome!: Ref<boolean>;
+
         mount(defineComponent({
             setup() {
                 const checker = createPermissionCheckerReactiveFn({ store });
+
                 outcome = checker({ name: 'user_read' });
 
                 return () => h('div');
@@ -380,6 +391,7 @@ describe('core/store (check expiry)', () => {
         expect(outcome.value).toBe(true);
 
         const seen : boolean[] = [];
+
         watch(outcome, (value) => {
             seen.push(value);
         }, { flush: 'sync' });
@@ -406,8 +418,10 @@ describe('core/store (check expiry)', () => {
         const { store, checks } = buildStore(
             async () => {
                 calls += 1;
+
                 const call = calls;
                 const gate = gates.get(call);
+
                 if (gate) {
                     await gate.promise;
                 }
@@ -425,9 +439,11 @@ describe('core/store (check expiry)', () => {
         await vi.advanceTimersByTimeAsync(0);
 
         let outcome!: Ref<boolean>;
+
         mount(defineComponent({
             setup() {
                 const checker = createPermissionCheckerReactiveFn({ store });
+
                 outcome = checker({ name: 'user_read' });
 
                 return () => h('div');
@@ -443,7 +459,9 @@ describe('core/store (check expiry)', () => {
 
         // a navigation with other grants replaces the memo
         grants = [];
+
         const resolving = store.resolve();
+
         await vi.advanceTimersByTimeAsync(0);
         expect(checks()).toBe(3);
 
@@ -467,9 +485,11 @@ describe('core/store (check expiry)', () => {
         await store.login({ name: 'admin', password: 'start123' });
 
         let owned!: Ref<boolean>;
+
         mount(defineComponent({
             setup() {
                 const checker = createPermissionCheckerReactiveFn({ store });
+
                 owned = checker({ name: 'owned_read', realmId: AUTHORIZATION_REALM });
 
                 return () => h('div');

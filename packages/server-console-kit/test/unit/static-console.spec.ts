@@ -36,6 +36,7 @@ async function captureEvent() : Promise<IAppEvent> {
     let captured : IAppEvent | undefined;
 
     const app = new App();
+
     app.use(basic({ cookie: true, query: true }));
     app.use(defineCoreHandler({
         method: 'get',
@@ -48,6 +49,7 @@ async function captureEvent() : Promise<IAppEvent> {
     }));
 
     const local = serve(app, { port: 0, silent: true });
+
     await local.ready();
 
     try {
@@ -74,6 +76,7 @@ describe('defineStaticConsole', () => {
         });
 
         const app = new App();
+
         app.use(basic({ cookie: true, query: true }));
         app.use(defineCoreHandler({
             method: 'get',

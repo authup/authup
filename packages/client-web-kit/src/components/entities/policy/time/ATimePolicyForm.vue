@@ -52,28 +52,28 @@ export default defineComponent({
 
         const translationsDefault = useTranslations([
             {
-                namespace: TranslatorTranslationNamespace.FIELD, 
-                key: TranslatorTranslationFieldKey.START, 
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.START,
             },
             {
-                namespace: TranslatorTranslationNamespace.FIELD, 
-                key: TranslatorTranslationFieldKey.END, 
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.END,
             },
             {
-                namespace: TranslatorTranslationNamespace.FIELD, 
-                key: TranslatorTranslationFieldKey.INTERVAL, 
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.INTERVAL,
             },
             {
-                namespace: TranslatorTranslationNamespace.FIELD, 
-                key: TranslatorTranslationFieldKey.DAY_OF_WEEK, 
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.DAY_OF_WEEK,
             },
             {
-                namespace: TranslatorTranslationNamespace.FIELD, 
-                key: TranslatorTranslationFieldKey.DAY_OF_MONTH, 
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.DAY_OF_MONTH,
             },
             {
-                namespace: TranslatorTranslationNamespace.FIELD, 
-                key: TranslatorTranslationFieldKey.DAY_OF_YEAR, 
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.DAY_OF_YEAR,
             },
         ]);
 
@@ -84,6 +84,7 @@ export default defineComponent({
         setup.expose({ assign });
 
         const updatedAt = useUpdatedAt(() => props.entity as Policy);
+
         onChange(updatedAt, () => assign(props.entity));
 
         assign(props.entity);
@@ -111,12 +112,15 @@ export default defineComponent({
             if (!isIntervalForDayOfWeek(value)) {
                 v.fields.dayOfWeek.$model.value = '';
             }
+
             if (!isIntervalForDayOfMonth(value)) {
                 v.fields.dayOfMonth.$model.value = '';
             }
+
             if (!isIntervalForDayOfYear(value)) {
                 v.fields.dayOfYear.$model.value = '';
             }
+
             handleUpdated();
         };
 

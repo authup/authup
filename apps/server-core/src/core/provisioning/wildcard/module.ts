@@ -36,6 +36,7 @@ export function extractWildcardRealmEntry(
     const wildcards = data.realms.filter(
         (entry) => entry.attributes.name === REALM_WILDCARD_NAME,
     );
+
     if (wildcards.length === 0) {
         return undefined;
     }
@@ -45,6 +46,7 @@ export function extractWildcardRealmEntry(
     );
 
     let folded = wildcards[0];
+
     for (let i = 1; i < wildcards.length; i++) {
         folded = mergeProvisioningEntity(folded, wildcards[i]) as RealmProvisioningEntity;
     }
@@ -133,6 +135,7 @@ export class WildcardRealmProvisioner implements IRealmProvisioner {
         if (!this.relationsByRealmName || !realm.name) {
             return false;
         }
+
         return this.relationsByRealmName.has(canonicalizeRealmName(realm.name));
     }
 
@@ -141,6 +144,7 @@ export class WildcardRealmProvisioner implements IRealmProvisioner {
             this.logger?.warn(
                 `Skipping wildcard realm provisioning for realm ${realm.id}: the realm carries no name.`,
             );
+
             return;
         }
 

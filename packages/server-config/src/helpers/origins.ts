@@ -38,6 +38,7 @@ export function expandToOrigins(value: string): string[] {
 
     if (SCHEME_REGEX.test(value)) {
         const url = new URL(value);
+
         if (!ALLOWED_PROTOCOLS.includes(url.protocol)) {
             throw new Error(`A trusted origin must use the http or https protocol, got: ${url.protocol}`);
         }

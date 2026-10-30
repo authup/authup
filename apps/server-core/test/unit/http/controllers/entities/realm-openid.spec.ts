@@ -29,6 +29,7 @@ function createController(realm: Realm, baseURL = 'https://auth.example.com') {
         save: notImplemented,
         delete: notImplemented,
     };
+
     return new RealmController({
         options: { baseURL },
         service,

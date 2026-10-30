@@ -49,6 +49,7 @@ const otherUserId = randomUUID();
 
 function createActor(): FakeActorContext {
     const evaluator = new FakePermissionEvaluator();
+
     evaluator.setCompileResult({ verdict: 'post' });
     evaluator.setBehavior(({ method }) => {
         if (method === 'evaluate' || method === 'evaluateOneOf') {
@@ -61,9 +62,9 @@ function createActor(): FakeActorContext {
         identity: {
             type: IdentityType.USER,
             data: {
-                id: randomUUID(), 
-                realmId, 
-                name: 'actor', 
+                id: randomUUID(),
+                realmId,
+                name: 'actor',
             } as User,
         },
     };
@@ -74,18 +75,25 @@ type Case = [string, () => (actor: FakeActorContext) => Promise<unknown>];
 const cases: Case[] = [
     ['role getMany', () => {
         const repository = new FakeRoleRepository();
+
         repository.seed([createFakeRole({ realmId })]);
+
         const service = new RoleService({ repository, realmRepository: new FakeRealmRepository() });
+
         return (actor) => service.getMany({}, actor);
     }],
     ['scope getMany', () => {
         const repository = new FakeScopeRepository();
+
         repository.seed([createFakeScope({ realmId })]);
+
         const service = new ScopeService({ repository, realmRepository: new FakeRealmRepository() });
+
         return (actor) => service.getMany({}, actor);
     }],
     ['event getMany', () => {
         const repository = new FakeEventRepository();
+
         repository.seed({
             scope: EventScope.OAUTH2,
             name: EventName.LOGIN,
@@ -93,60 +101,75 @@ const cases: Case[] = [
             actorId: otherUserId,
             realmId,
         });
+
         const service = new EventService({ repository });
+
         return (actor) => service.getMany({}, actor);
     }],
     ['session getMany', () => {
         const repository = new FakeSessionRepository();
+
         repository.seed({
             sub: otherUserId,
             subKind: IdentityType.USER,
             userId: otherUserId,
             realmId,
         });
+
         const sessionManager = new SessionManager({ repository, options: { maxAge: 3_600 } });
         const service = new SessionService({ repository, sessionManager });
+
         return (actor) => service.getMany({}, actor);
     }],
     ['session deleteMany (by query)', () => {
         const repository = new FakeSessionRepository();
+
         repository.seed({
             sub: otherUserId,
             subKind: IdentityType.USER,
             userId: otherUserId,
             realmId,
         });
+
         const sessionManager = new SessionManager({ repository, options: { maxAge: 3_600 } });
         const service = new SessionService({ repository, sessionManager });
+
         return (actor) => service.deleteMany(actor, { query: { filter: { userId: otherUserId } } });
     }],
     ['identity-provider-account getMany', () => {
         const repository = new FakeIdentityProviderAccountRepository();
+
         repository.seed({
             providerId: randomUUID(),
             providerUserId: 'external',
             userId: otherUserId,
             userRealmId: realmId,
         });
+
         const service = new IdentityProviderAccountService({
             repository,
             userRepository: new FakeUserIdentityRepository(),
             eventService: new FakeEventService(),
         });
+
         return (actor) => service.getMany({}, actor);
     }],
     ['client getMany', () => {
         const repository = new FakeClientRepository();
+
         repository.seed([createFakeClient({ realmId })]);
+
         const service = new ClientService({
             repository,
             realmRepository: new FakeRealmRepository(),
             cipher: createFakeRealmCipher(realmId),
         });
+
         return (actor) => service.getMany({}, actor);
     }],
     ['consent getMany', () => {
         const repository = new FakeConsentRepository();
+
         repository.seed({
             clientId: randomUUID(),
             realmId,
@@ -154,17 +177,22 @@ const cases: Case[] = [
             subKind: IdentityType.USER,
             scope: 'global',
         });
+
         const service = new ConsentService({ repository });
+
         return (actor) => service.getMany({}, actor);
     }],
     ['client-permission getMany', () => {
         const repository = new FakeEntityRepository<ClientPermission>();
+
         repository.seed({ clientRealmId: realmId } as Partial<ClientPermission>);
+
         const service = new ClientPermissionService({
             repository,
             permissionRepository: new FakeEntityRepository<Permission>(),
             identityPermissionProvider: new FakeIdentityPermissionProvider(),
         });
+
         return (actor) => service.getMany({}, actor);
     }],
 ];
@@ -172,6 +200,7 @@ const cases: Case[] = [
 describe('per-row drop loops on a post verdict', () => {
     it.each(cases)('%s propagates a non-permission failure of the record check', async (_, setup) => {
         const run = setup();
+
         await expect(run(createActor())).rejects.toThrow('provider unavailable');
     });
 });

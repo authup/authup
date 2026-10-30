@@ -70,8 +70,10 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
                     subKind = payload.sub_kind;
                     sessionId = payload.sid ?? payload.session_id ?? undefined;
                     hintRealmId = payload.realm_id ?? undefined;
+
                     // aud may be a single string or an array (JWT spec).
                     const { aud } = payload;
+
                     if (Array.isArray(aud)) {
                         audiences = aud.filter((entry): entry is string => typeof entry === 'string');
                     } else if (typeof aud === 'string') {
@@ -89,6 +91,7 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
         const clientId = data.client_id ?? (audiences.length === 1 ? audiences[0] : undefined);
 
         let client: Client | null = null;
+
         if (clientId) {
             // Scope a name-identified client to the request's realm hint; a
             // VERIFIED hint's own realm claim serves as fallback (claims from an
@@ -119,6 +122,7 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
         // resolve, counts as unverified.
         if (hintVerified && data.client_id) {
             const expected = isUUID(data.client_id) ? data.client_id : client?.id;
+
             if (!expected || audiences.length === 0 || !audiences.includes(expected)) {
                 hintVerified = false;
                 sub = undefined;
@@ -136,6 +140,7 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
         // honors a registered post-logout redirect.
         if (client) {
             clientName = client.name;
+
             if (
                 data.post_logout_redirect_uri &&
                 this.isValidPostLogoutRedirect(client.postLogoutRedirectUri, data.post_logout_redirect_uri)
@@ -160,13 +165,10 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
 
     async revoke(sessionId: string, sub: string, subKind: string, realmId: string): Promise<boolean> {
         const session = await this.sessionManager.findOneById(sessionId);
-        if (!session) {
-            return false;
-        }
 
         // Never revoke a session that does not belong to the hint's subject
         // and realm.
-        if (!isTokenSession(session, {
+        if (!session || !isTokenSession(session, {
             sub,
             sub_kind: subKind as OAuth2TokenPayload['sub_kind'],
             realm_id: realmId,
@@ -207,6 +209,7 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
         }
 
         const nowSeconds = Math.floor(Date.now() / 1000);
+
         return nowSeconds - payload.exp <= this.hintGracePeriod;
     }
 
@@ -220,24 +223,20 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
         candidate: string,
     ): boolean {
         let parsed: URL;
+
         try {
             parsed = new URL(candidate);
         } catch {
             return false;
         }
 
-        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-            return false;
-        }
-
         // The matcher canonicalizes the candidate (userinfo dropped) while the
         // redirect is built from the raw value, so a credential blob would
         // ride the Location header (#3455).
-        if (parsed.username || parsed.password) {
-            return false;
-        }
-
-        if (!registered) {
+        if (
+            !registered || parsed.username || parsed.password ||
+            (parsed.protocol !== 'http:' && parsed.protocol !== 'https:')
+        ) {
             return false;
         }
 

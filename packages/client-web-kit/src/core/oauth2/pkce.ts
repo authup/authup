@@ -15,6 +15,7 @@ export type PKCE = {
 
 function strFromBytes(bytes: Uint8Array) : string {
     let str = '';
+
     for (const byte of bytes) {
         str += String.fromCharCode(byte);
     }
@@ -24,6 +25,7 @@ function strFromBytes(bytes: Uint8Array) : string {
 
 function randomString(length = 64): string {
     const bytes = new Uint8Array(length);
+
     crypto.getRandomValues(bytes);
 
     return base64URLEncode(
@@ -36,7 +38,7 @@ export function createState(): string {
 }
 
 export async function createPKCE(): Promise<PKCE> {
-    const codeVerifier = randomString(64);
+    const codeVerifier = randomString();
 
     const digest = await crypto.subtle.digest(
         'SHA-256',

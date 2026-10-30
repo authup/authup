@@ -38,7 +38,7 @@ A Socket.IO server sees no `Authorization` header per message: the caller proves
 npm install @authup/server-adapter-socket-io @authup/server-adapter-kit
 ```
 
-`TokenVerifier` comes from `@authup/server-adapter-kit`, which you import directly. The package is ESM-only, does not depend on `socket.io` itself (it types the socket structurally), has no peer dependencies and needs Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`.
+`TokenVerifier` comes from `@authup/server-adapter-kit`, which you import directly. The package is ESM-only, does not depend on `socket.io` itself (it types the socket structurally), has no peer dependencies and needs Node.js `>=26.0.0`.
 
 ## Usage
 

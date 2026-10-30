@@ -8,11 +8,11 @@
 import {
     Column,
     CreateDateColumn,
-    Entity, 
+    Entity,
     Index,
-    JoinColumn, 
+    JoinColumn,
     ManyToOne,
-    PrimaryGeneratedColumn, 
+    PrimaryGeneratedColumn,
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
@@ -30,7 +30,7 @@ export class UserAttributeEntity implements UserAttribute {
 
     @Column({
         type: 'varchar',
-        length: 255, 
+        length: 255,
     })
     name: string;
 

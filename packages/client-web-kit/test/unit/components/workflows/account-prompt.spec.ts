@@ -44,11 +44,13 @@ function mountPrompt(identityName = 'jdoe') {
 describe('AAccountPrompt', () => {
     it('renders both a continue and a switch action', () => {
         const wrapper = mountPrompt();
+
         expect(wrapper.findAll('button')).toHaveLength(2);
     });
 
     it('emits continue on the primary button (continue as X)', async () => {
         const wrapper = mountPrompt();
+
         await wrapper.findAll('button')[0].trigger('click');
         expect(wrapper.emitted('continue')).toBeTruthy();
         expect(wrapper.emitted('switch')).toBeFalsy();
@@ -56,6 +58,7 @@ describe('AAccountPrompt', () => {
 
     it('emits switch on the secondary button (use another account)', async () => {
         const wrapper = mountPrompt();
+
         await wrapper.findAll('button')[1].trigger('click');
         expect(wrapper.emitted('switch')).toBeTruthy();
         expect(wrapper.emitted('continue')).toBeFalsy();

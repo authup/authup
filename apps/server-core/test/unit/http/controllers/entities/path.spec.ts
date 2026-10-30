@@ -32,7 +32,7 @@ import {
     httpRequest,
 } from '../../../../utils';
 
-const ADMIN_AUTHORIZATION = `Basic ${Buffer.from('admin:start123').toString('base64')}`;
+const ADMIN_AUTHORIZATION = `Basic ${Buffer.from('admin:start123').toBase64()}`;
 
 describe('src/http/controllers/path', () => {
     const suite = createTestApplication();
@@ -65,6 +65,7 @@ describe('src/http/controllers/path', () => {
             }),
         );
         const { data: role } = await suite.client.role.getOne(ROLE_REALM_ADMIN_NAME);
+
         await suite.client.userRole.create({
             userId: user.id,
             roleId: role.id,
@@ -122,9 +123,11 @@ describe('src/http/controllers/path', () => {
             `/paths?filter[path]=${encodeURIComponent('sales/~')}`,
             { headers: { Authorization: ADMIN_AUTHORIZATION } },
         );
+
         expect(descendants.status).toEqual(200);
 
         const descendantsBody = await descendants.json() as { data: Path[] };
+
         expect(descendantsBody.data.map((entity) => entity.path)).toEqual(['sales/berlin']);
 
         const self = await httpRequest(
@@ -133,17 +136,21 @@ describe('src/http/controllers/path', () => {
             '/paths?filter[path]=sales',
             { headers: { Authorization: ADMIN_AUTHORIZATION } },
         );
+
         expect(self.status).toEqual(200);
 
         const selfBody = await self.json() as { data: Path[] };
+
         expect(selfBody.data.map((entity) => entity.path)).toEqual(['sales']);
     });
 
     it('should rewrite every descendant on a rename', async () => {
         const { data: renamed } = await suite.client.path.update(sales.id, { name: 'marketing' });
+
         expect(renamed.path).toEqual('marketing');
 
         const { data: reread } = await suite.client.path.getOne(berlin.id);
+
         expect(reread.path).toEqual('marketing/berlin');
     });
 
@@ -157,11 +164,13 @@ describe('src/http/controllers/path', () => {
         userId = user.id;
 
         const { data: joined } = await suite.client.user.getOne(user.id, { relations: ['path'] });
+
         expect(joined.path?.path).toEqual('marketing/berlin');
     });
 
     it('should resolve a ROOT folder by its full path', async () => {
         const response = await suite.client.get(`realms/${realm.id}/paths/marketing`);
+
         expect(response.data.data.id).toEqual(sales.id);
 
         // a nested path carries a separator, so it is not one route segment
@@ -182,6 +191,7 @@ describe('src/http/controllers/path', () => {
         });
 
         const response = await suite.client.get('paths/flat-read-3632');
+
         expect(response.data.data.id).toEqual(folder.id);
     });
 
@@ -196,6 +206,7 @@ describe('src/http/controllers/path', () => {
         });
 
         const paths = data.map((entry) => entry.path);
+
         expect(paths).not.toContain('marketing');
         expect(paths).not.toContain('marketing/berlin');
         expect(paths).toContain('flat-read-3632');
@@ -227,9 +238,11 @@ describe('src/http/controllers/path', () => {
         await suite.client.path.update(underscore.id, { name: 'finance' });
 
         const { data: rewritten } = await suite.client.path.getOne(underscoreChild.id);
+
         expect(rewritten.path).toEqual('finance/team');
 
         const { data: untouched } = await suite.client.path.getOne(siblingChild.id);
+
         expect(untouched.path).toEqual('salesxeu/team');
     });
 
@@ -259,9 +272,11 @@ describe('src/http/controllers/path', () => {
             `/realms/${otherRealm.id}/paths`,
             { headers: { Authorization: ADMIN_AUTHORIZATION } },
         );
+
         expect(response.status).toEqual(200);
 
         const body = await response.json() as { data: Path[] };
+
         expect(body.data.some((entity) => entity.id === imported.id)).toBe(true);
         expect(body.data.every((entity) => entity.realmId === otherRealm.id)).toBe(true);
         expect(body.data.some((entity) => entity.id === berlin.id)).toBe(false);
@@ -277,6 +292,7 @@ describe('src/http/controllers/path', () => {
         );
 
         const { data: own } = await realmAdmin.path.create({ name: 'engineering' });
+
         expect(own.realmId).toEqual(otherRealm.id);
         expect(own.path).toEqual('engineering');
     });
@@ -323,9 +339,11 @@ describe('src/http/controllers/path', () => {
             `/paths/${sales.id}`,
             { headers: { Authorization: ADMIN_AUTHORIZATION } },
         );
+
         expect(response.status).toEqual(202);
 
         const body = await response.json() as { data: Path };
+
         expect(body.data.id).toEqual(sales.id);
 
         await expectClientError(
@@ -334,6 +352,7 @@ describe('src/http/controllers/path', () => {
         );
 
         const { data: user } = await suite.client.user.getOne(userId);
+
         expect(user.pathId).toBeNull();
     });
 });

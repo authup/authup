@@ -37,6 +37,7 @@ describe('token endpoint and a deactivated subject', () => {
         const password = 'deactivation-spec-password';
         const { data: user } = await suite.client.user.create(createFakeUser({ password }));
         const token = await suite.client.token.createWithPassword({ username: user.name, password });
+
         return { user, token };
     };
 
@@ -46,6 +47,7 @@ describe('token endpoint and a deactivated subject', () => {
 
     it('refuses to refresh the tokens of a deactivated user', async () => {
         const { user, token } = await login();
+
         await deactivate(user.id);
 
         await expectClientError(
@@ -56,12 +58,14 @@ describe('token endpoint and a deactivated subject', () => {
 
     it('reports the access token of a deactivated user inactive', async () => {
         const { user, token } = await login();
+
         await deactivate(user.id);
 
         const response = await suite.client.token.introspect(
             { token: token.access_token },
             { authorizationHeaderInherit: true },
         );
+
         expect(response.active).toBe(false);
         expect(response.permissions).toBeUndefined();
     });
@@ -73,6 +77,7 @@ describe('token endpoint and a deactivated subject', () => {
             { token: token.access_token },
             { authorizationHeaderInherit: true },
         );
+
         expect(before.active).toBe(true);
 
         await suite.client.session.delete(before.session_id!);
@@ -81,6 +86,7 @@ describe('token endpoint and a deactivated subject', () => {
             { token: token.access_token },
             { authorizationHeaderInherit: true },
         );
+
         expect(after.active).toBe(false);
     });
 });

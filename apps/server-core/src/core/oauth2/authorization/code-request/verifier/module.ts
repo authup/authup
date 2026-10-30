@@ -56,6 +56,7 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
         }
 
         const client = await this.clientRepository.findOneByIdOrName(data.client_id, data.realm_id);
+
         if (!client) {
             throw OAuth2ClientError.invalid();
         }
@@ -97,6 +98,7 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
 
         const scopes = await this.scopeRepository.findByClientId(client.id);
         const scopeNames = scopes.map((scope) => scope.name);
+
         data.scope = resolveGrantedScope(scopeNames, data.scope);
 
         // Verified only when the request's redirect_uri matched a registered
@@ -108,6 +110,7 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
         // redirect decisions on this flag, so it must not survive a refactor
         // that turns the throw below into a soft branch.
         let redirectUriVerified = false;
+
         if (data.redirect_uri) {
             // The matcher canonicalizes the value, which drops userinfo, while
             // the redirect is built from the raw string: `https://u:p@app/cb`
@@ -116,11 +119,13 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
             // navigated value. An unparsable value falls through to the
             // matcher, which rejects it.
             let url : URL | undefined;
+
             try {
                 url = new URL(data.redirect_uri);
             } catch {
                 // handled by the matcher below
             }
+
             if (url && (url.username || url.password)) {
                 throw OAuth2RequestError.malformed('The redirect_uri must not carry userinfo.');
             }

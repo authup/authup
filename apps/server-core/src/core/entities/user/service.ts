@@ -96,6 +96,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         // OR-alternative and the whole gate runs as WHERE. A non-expressible
         // policy falls back to the per-row loop below.
         const scope = await this.scopeRead(parsed, actor);
+
         if (!scope.post) {
             return this.repository.findMany(scope.query);
         }
@@ -115,6 +116,7 @@ export class UserService extends AbstractEntityService implements IUserService {
                 actor.identity.data.id === entity.id
             ) {
                 data.push(entity);
+
                 continue;
             }
 
@@ -127,8 +129,10 @@ export class UserService extends AbstractEntityService implements IUserService {
                 realm: entity.realmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -139,8 +143,8 @@ export class UserService extends AbstractEntityService implements IUserService {
             data,
             meta: {
                 ...meta,
-                total, 
-            }, 
+                total,
+            },
         };
     }
 
@@ -170,12 +174,13 @@ export class UserService extends AbstractEntityService implements IUserService {
         const entity = await this.repository.findOne(
             idOrName,
             await decodeQuery(query, {
-                schema: userSchema, 
-                parameters: ['fields', 'relations'], 
-                actor, 
+                schema: userSchema,
+                parameters: ['fields', 'relations'],
+                actor,
             }),
             realmId,
         );
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -201,6 +206,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         actor: ActorContext,
     ): Promise<User> {
         const { entity } = await this.save(undefined, data, actor);
+
         return entity;
     }
 
@@ -210,6 +216,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         actor: ActorContext,
     ): Promise<User> {
         const { entity } = await this.save(idOrName, data, actor, { updateOnly: true });
+
         return entity;
     }
 
@@ -220,13 +227,15 @@ export class UserService extends AbstractEntityService implements IUserService {
         options: { updateOnly?: boolean } = {},
     ): Promise<{
         entity: User,
-        created: boolean 
+        created: boolean
     }> {
         let group: string;
 
         let entity: User | null | undefined;
+
         if (idOrName) {
             const where: Record<string, any> = {};
+
             if (isUUID(idOrName)) {
                 where.id = idOrName;
             } else {
@@ -238,6 +247,7 @@ export class UserService extends AbstractEntityService implements IUserService {
                 // predicate would address a row of whichever realm holds the
                 // name.
                 const realm = await this.realmRepository.resolveOrFail(data.realmId);
+
                 where.realmId = realm.id;
                 entity = await this.repository.findOneBy(where);
             } else if (where.id) {
@@ -249,10 +259,12 @@ export class UserService extends AbstractEntityService implements IUserService {
                 // without one cannot create here either, so it matches
                 // nothing.
                 const actorRealmId = this.getActorRealmId(actor);
+
                 entity = actorRealmId ?
                     await this.repository.findOneBy({ ...where, realmId: actorRealmId }) :
                     null;
             }
+
             // Only a NAME key may upsert-create. A UUID addresses one specific
             // row, so a miss is a 404 (creating would write a different id).
             if (!entity && (options.updateOnly || where.id)) {
@@ -263,6 +275,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         }
 
         let isSelfEdit = false;
+
         if (entity) {
             try {
                 await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_UPDATE });
@@ -274,6 +287,7 @@ export class UserService extends AbstractEntityService implements IUserService {
                 ) {
                     throw e;
                 }
+
                 isSelfEdit = true;
                 await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_SELF_MANAGE });
             }
@@ -292,6 +306,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         // the join-column lookup off a null on a non-nullable column.
         if (validated.realmId === null) {
             const input: Partial<User> = validated;
+
             delete input.realmId;
         }
 
@@ -329,6 +344,7 @@ export class UserService extends AbstractEntityService implements IUserService {
             // an assertion made the rule unreachable from the console: every
             // address change there carried the stale `true` straight through.
             let emailChanged = false;
+
             if (
                 validated.email &&
                 (
@@ -337,6 +353,7 @@ export class UserService extends AbstractEntityService implements IUserService {
                 )
             ) {
                 const current = await this.repository.findOneByWithEmail({ id: entity.id });
+
                 emailChanged = !!current && current.email !== validated.email;
             }
 
@@ -349,6 +366,7 @@ export class UserService extends AbstractEntityService implements IUserService {
             }
 
             const before: Partial<User> = { ...entity };
+
             entity = this.repository.merge(entity, validated);
 
             if (
@@ -387,6 +405,7 @@ export class UserService extends AbstractEntityService implements IUserService {
             // patch merged onto it: TypeORM writes only the columns that
             // differ, so a concurrent writer's columns survive (#3526).
             const patch: Partial<User> = { ...validated };
+
             // A field echoed back with the value this request read is no
             // intent to change it (the console posts its whole form), and
             // writing it would overwrite a concurrent change. The name-lock
@@ -397,19 +416,24 @@ export class UserService extends AbstractEntityService implements IUserService {
                     delete patch[key];
                 }
             }
+
             if (entity.name === originalName) {
                 delete patch.name;
             }
+
             if (emailChanged) {
                 patch.emailVerified = false;
             }
+
             if (validated.password) {
                 patch.password = entity.password;
             }
 
             const { id } = entity;
+
             entity = await this.repository.transaction(async (repository) => {
                 const current = await repository.findOneBy({ id });
+
                 if (!current) {
                     throw new EntityNotFoundError();
                 }
@@ -418,6 +442,7 @@ export class UserService extends AbstractEntityService implements IUserService {
                 // racing a concurrent nameLocked flip must still lose.
                 const { name: currentName, nameLocked: currentNameLocked } = current;
                 const merged = repository.merge(current, patch);
+
                 if (currentNameLocked && patch.name && validated.nameLocked !== false) {
                     merged.name = currentName;
                 }
@@ -432,6 +457,7 @@ export class UserService extends AbstractEntityService implements IUserService {
                 const self = patch.active !== false &&
                     actor.identity?.type === 'user' &&
                     actor.identity.data.id === id;
+
                 await this.sessionManager.revokeByOwner(
                     { sub: id, subKind: 'user' },
                     self ? this.requestContext?.()?.sessionId ?? undefined : undefined,
@@ -440,12 +466,13 @@ export class UserService extends AbstractEntityService implements IUserService {
 
             return {
                 entity,
-                created: false, 
+                created: false,
             };
         }
 
         if (!validated.realmId) {
             const actorRealmId = this.getActorRealmId(actor);
+
             if (actorRealmId) {
                 validated.realmId = actorRealmId;
             }
@@ -471,7 +498,7 @@ export class UserService extends AbstractEntityService implements IUserService {
 
         return {
             entity,
-            created: true, 
+            created: true,
         };
     }
 
@@ -484,6 +511,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         }
 
         const path = await this.pathRepository.findOneById(pathId);
+
         if (!path) {
             throw new ValidationError('The path does not exist.');
         }
@@ -514,6 +542,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         }
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -525,6 +554,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         });
 
         const { id: entityId } = entity;
+
         await this.repository.remove(entity);
         entity.id = entityId;
 

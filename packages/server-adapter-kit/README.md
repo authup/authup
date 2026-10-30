@@ -41,7 +41,7 @@ For an HTTP server, a Socket.IO server or a Web `Request` handler, use one of th
 npm install @authup/server-adapter-kit
 ```
 
-The package is ESM-only and needs Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`. It has no peer dependencies. Install [`@authup/core-http-kit`](https://github.com/authup/authup/tree/master/packages/core-http-kit) as well when you use remote mode, for `createClientTokenCreator`.
+The package is ESM-only and needs Node.js `>=26.0.0`. It has no peer dependencies. Install [`@authup/core-http-kit`](https://github.com/authup/authup/tree/master/packages/core-http-kit) as well when you use remote mode, for `createClientTokenCreator`.
 
 ## Usage
 

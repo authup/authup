@@ -14,6 +14,7 @@ const JSON_SCHEMA_DRAFT_7 = 'http://json-schema.org/draft-07/schema#';
 
 function buildProperty<T, K extends keyof T>(entry: SchemaEntryInput<T, K>) : Record<string, unknown> {
     let property : Record<string, unknown>;
+
     try {
         property = z.toJSONSchema(entry.type, { target: 'draft-7', unrepresentable: 'any' });
     } catch {
@@ -25,6 +26,7 @@ function buildProperty<T, K extends keyof T>(entry: SchemaEntryInput<T, K>) : Re
     property.description = entry.description;
 
     const value : unknown = entry.default;
+
     if (typeof value !== 'undefined' && typeof value !== 'function') {
         property.default = value;
     }
@@ -50,16 +52,19 @@ function collectSchemaEntries<T>(
     entries: [string, SchemaEntryInput<any, any>][] = [],
 ) : [string, SchemaEntryInput<any, any>][] {
     const keys = Object.keys(schema) as (keyof T)[];
+
     for (const key of keys) {
         const entry = schema[key];
 
         if (isSchemaEntryInput(entry)) {
             entries.push([key as string, entry]);
+
             continue;
         }
 
         if (isSchemaInput(entry)) {
             collectSchemaEntries<any>(entry, entries);
+
             continue;
         }
 
@@ -93,6 +98,7 @@ export function buildSchemaJSONSchema<T>(
     const leaves = new Set<string>();
 
     const entries = collectSchemaEntries(schema);
+
     for (const [key, entry] of entries) {
         const path = entry.path || key;
         const segments = path.split('.');
@@ -117,6 +123,7 @@ export function buildSchemaJSONSchema<T>(
         }
 
         const leaf = walked ? `${walked}.${name}` : name;
+
         if (intermediates.has(leaf) || leaves.has(leaf)) {
             throw new Error(`The config key "${key}" can not be placed at "${path}", because the location is already taken.`);
         }

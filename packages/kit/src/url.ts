@@ -38,6 +38,7 @@ export function getURLBasePath(url?: string) : string {
     }
 
     let pathname : string;
+
     try {
         pathname = new URL(url).pathname;
     } catch {
@@ -47,6 +48,7 @@ export function getURLBasePath(url?: string) : string {
     const normalized = pathname
         .replace(/\/+$/, '')
         .replace(/^\/{2,}/, '/');
+
     if (normalized === '' || normalized === '/') {
         return '';
     }

@@ -21,8 +21,8 @@ import type {
     EntityCollectionResponse,
     EntityRecordResponse,
     EntityStatsResponse,
-    PathCreatePayload, 
-    PathUpdatePayload, 
+    PathCreatePayload,
+    PathUpdatePayload,
 } from '@authup/core-http-kit';
 import type { Path } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
@@ -30,8 +30,8 @@ import type { IEntityStatsService, IPathService  } from '../../../../../core/ind
 import {
     RECORD_QUERY_PARAMETERS,
     STATS_QUERY_PARAMETERS,
-    describeQuerySchema, 
-    pathSchema, 
+    describeQuerySchema,
+    pathSchema,
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -124,6 +124,7 @@ export class PathController {
         @DContext() event: IAppEvent,
     ): Promise<EntityRecordResponse<Path>> {
         applyRouteRealmIDToBody(event, data);
+
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 

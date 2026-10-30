@@ -60,13 +60,16 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
 
         expect(catalog).not.toHaveProperty('identity');
         expect(catalog.permissions.length).toBeGreaterThanOrEqual(Object.values(PermissionName).length);
+
         for (const permission of catalog.permissions) {
             expect(permission).not.toHaveProperty('grants');
         }
+
         // every provisioned definition projects, so none is carried unevaluable
         expect(catalog.permissions.filter((permission) => permission.policies === null)).toEqual([]);
 
         const userRead = catalog.permissions.find((permission) => permission.name === PermissionName.USER_READ);
+
         expect(userRead).toMatchObject({ realmId: null, clientId: null });
         expect(userRead).toHaveProperty('decisionStrategy');
         expect(userRead).not.toHaveProperty('realm_id');
@@ -74,6 +77,7 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
 
         const defaultPolicyId = userRead!.policies![0]!;
         const defaultPolicy = catalog.policies[defaultPolicyId];
+
         expect(defaultPolicy).toEqual({
             type: 'composite',
             decisionStrategy: 'unanimous',
@@ -84,10 +88,13 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
             ]),
         });
         expect(defaultPolicy?.children).toHaveLength(2);
+
         const defaults = Object.values(catalog.policies)
             .filter((tree) => tree.type === 'composite' &&
                 (tree.children ?? []).some((child) => child.type === 'permissionBinding'));
+
         expect(defaults).toHaveLength(1);
+
         for (const tree of Object.values(catalog.policies)) {
             expect(tree).not.toHaveProperty('id');
             expect(tree).not.toHaveProperty('name');
@@ -96,10 +103,13 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         }
 
         const referenced = catalog.permissions.flatMap((permission) => permission.policies ?? []);
+
         expect(new Set(referenced).size).toBeLessThanOrEqual(Object.keys(catalog.policies).length);
+
         for (const id of referenced) {
             expect(catalog.policies[id]).toBeDefined();
         }
+
         expect(catalog.permissions.filter((permission) => (permission.policies ?? []).includes(defaultPolicyId)).length)
             .toBeGreaterThanOrEqual(Object.values(PermissionName).length);
     });
@@ -115,10 +125,12 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
 
     it('refuses an anonymous caller, a refresh token and a bearer without the global scope', async () => {
         const anonymous = await httpRequest(suite, 'GET', '/authorization');
+
         expect(anonymous.status).toBe(401);
 
         const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
         const refresh = await httpRequest(suite, 'GET', '/authorization', { headers: { Authorization: `Bearer ${grant.refresh_token}` } });
+
         expect(refresh.status).toBe(401);
 
         const payload = await suite.client.token.introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
@@ -136,6 +148,7 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
             kind: OAuth2TokenKind.ACCESS,
         });
         const response = await httpRequest(suite, 'GET', '/authorization', { headers: { Authorization: `Bearer ${restricted}` } });
+
         expect(response.status).toBe(403);
         expect((await response.json()).code).toEqual(ErrorCode.PERMISSION_EVALUATION_FAILED);
     });
@@ -147,13 +160,17 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         const ungranted = await suite.client.token.createWithPassword({ username: user.name, password });
         const headers = { Authorization: `Bearer ${ungranted.access_token}` };
         const denied = await httpRequest(suite, 'GET', '/authorization', { headers });
+
         expect(denied.status).toBe(403);
+
         const { code } = await denied.json();
+
         expect(code).toEqual(ErrorCode.PERMISSION_EVALUATION_FAILED);
 
         // the same bearer is refused by the entity read the catalog aggregates,
         // with the same status and code: the two gates are one call
         const entities = await httpRequest(suite, 'GET', '/permissions', { headers });
+
         expect(entities.status).toBe(denied.status);
         expect((await entities.json()).code).toEqual(code);
 
@@ -168,6 +185,7 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         // is answered the refusal its console falls back to the name-only view on
         const scoped = await suite.client.token.createWithPassword({ username: user.name, password });
         const reachless = await httpRequest(suite, 'GET', '/authorization', { headers: { Authorization: `Bearer ${scoped.access_token}` } });
+
         expect(reachless.status).toBe(403);
         expect((await reachless.json()).code).toEqual(ErrorCode.PERMISSION_DENIED);
 
@@ -180,8 +198,11 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
 
         const granted = await suite.client.token.createWithPassword({ username: user.name, password });
         const response = await httpRequest(suite, 'GET', '/authorization', { headers: { Authorization: `Bearer ${granted.access_token}` } });
+
         expect(response.status).toBe(200);
+
         const catalog : AuthorizationCatalog = await response.json();
+
         expect(catalog).not.toHaveProperty('identity');
         expect(catalog.permissions.length).toBeGreaterThanOrEqual(Object.values(PermissionName).length);
     });
@@ -197,11 +218,13 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
             realmId: realm.id,
         });
         const { data: policy } = await suite.client.policy.create(createFakeTimePolicy({ realmId: realm.id }));
+
         await suite.client.permissionPolicy.create({ permissionId: foreign.id, policyId: policy.id });
 
         const password = 'start123-authorization-reach';
         const { data: user } = await suite.client.user.create(createFakeUser({ password }));
         const { data: permission } = await suite.client.permission.getOne(PermissionName.PERMISSION_READ);
+
         // `ownOrNull` is the reach a realm_admin reads with: own realm plus the
         // global building blocks, never another realm's rows
         await suite.client.userPermission.create({
@@ -212,10 +235,12 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
 
         const granted = await suite.client.token.createWithPassword({ username: user.name, password });
         const response = await httpRequest(suite, 'GET', '/authorization', { headers: { Authorization: `Bearer ${granted.access_token}` } });
+
         expect(response.status).toBe(200);
 
         const catalog : AuthorizationCatalog = await response.json();
         const entry = catalog.permissions.find((item) => item.name === foreign.name);
+
         expect(entry).toBeDefined();
         expect(entry!.realmId).toEqual(realm.id);
         expect(entry!.policies).toBeNull();
@@ -223,8 +248,10 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
 
         // its own global definitions stay whole, bodies included
         const own = catalog.permissions.find((item) => item.name === PermissionName.USER_READ);
+
         expect(own!.policies).not.toBeNull();
         expect(own!.policies!.length).toBeGreaterThan(0);
+
         for (const id of own!.policies!) {
             expect(catalog.policies[id]).toHaveProperty('type');
         }
@@ -232,6 +259,7 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         // the control: a caller reaching every realm reads the same definition whole
         const admin = await suite.client.authorization.get();
         const adminEntry = admin.permissions.find((item) => item.name === foreign.name);
+
         expect(adminEntry!.policies).toContain(policy.id);
         expect(admin.policies[policy.id]).toHaveProperty('type', BuiltInPolicyType.TIME);
     });
@@ -249,8 +277,10 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
             ['any', [true, true, true]],
         ] as const;
         const names : string[] = [];
+
         for (const [realmScope] of cases) {
             const permission = await permissionRepository.save(permissionRepository.create({ name: randomUUID() }));
+
             names.push(permission.name);
             await permissionPolicyRepository.save(permissionPolicyRepository.create({ permissionId: permission.id, policyId: policy.id }));
             await userPermissionRepository.save(userPermissionRepository.create({
@@ -261,12 +291,15 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
                 realmScope,
             }));
         }
+
         await suite.dataSource.queryResultCache?.clear();
 
         const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
         const introspection = await suite.client.token.introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
+
         expect(introspection.active).toBe(true);
         expect(introspection.sub).toEqual(user.id);
+
         const catalog : AuthorizationCatalog = JSON.parse(JSON.stringify(await suite.client.authorization.get()));
         const evaluator = await createAuthorizationEvaluator({
             catalog,
@@ -279,23 +312,29 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
             },
         });
         const rows = [user.realmId, randomUUID(), null].map((realmId) => ({ realmId }));
+
         for (const [index, [, expected]] of cases.entries()) {
             const name = names[index]!;
             const decisions = await Promise.all(rows.map(async ({ realmId }) => {
                 try {
                     await evaluator.evaluate({ name, data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: realmId }) });
+
                     return true;
                 } catch {
                     return false;
                 }
             }));
+
             expect(decisions).toEqual(expected);
 
             const compiled = await evaluator.compile({ name });
+
             expect(compiled.verdict).not.toBe('post');
+
             const predicate = compiled.verdict === 'conditional' ?
                 compileFilters(compiled.condition as IFilter | IFilters, { caseSensitive: true }) :
                 () => compiled.verdict === 'allow';
+
             expect(rows.map((row) => !!predicate(row))).toEqual(expected);
         }
     });
@@ -309,8 +348,10 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
 
         const password = 'start123-authorization-parity';
         const { data: user } = await suite.client.user.create(createFakeUser({ password, realmId: own.id }));
+
         for (const name of [PermissionName.PERMISSION_READ, PermissionName.ROLE_READ]) {
             const { data: permission } = await suite.client.permission.getOne(name);
+
             await suite.client.userPermission.create({
                 userId: user.id,
                 permissionId: permission.id,
@@ -323,6 +364,7 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         const roleRepository = suite.dataSource.getRepository(RoleEntity);
         const globalRole = await roleRepository.save(roleRepository.create({ name: randomUUID(), realmId: null }));
         const roles = [ownRole, foreignRole, globalRole];
+
         expect(roles.map((role) => role.realmId)).toEqual([own.id, foreign.id, null]);
 
         const grant = await suite.client.token.createWithPassword({
@@ -333,6 +375,7 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         const headers = { Authorization: `Bearer ${grant.access_token}` };
         const introspection = await suite.client.token.introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
         const response = await httpRequest(suite, 'GET', '/authorization', { headers });
+
         expect(response.status).toBe(200);
 
         const evaluator = await createAuthorizationEvaluator({
@@ -353,6 +396,7 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
                     name: names,
                     data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: role.realmId }),
                 });
+
                 return true;
             } catch {
                 return false;
@@ -360,6 +404,7 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         }));
         const server = await Promise.all(roles.map(async (role) => {
             const read = await httpRequest(suite, 'GET', `/roles/${role.id}`, { headers });
+
             return read.status === 200;
         }));
 
@@ -380,6 +425,7 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
             query: { visible: { $eq: true } },
         });
         const permission = await permissionRepository.save(permissionRepository.create({ name: randomUUID() }));
+
         await permissionPolicyRepository.save(permissionPolicyRepository.create({ permissionId: permission.id, policyId: binding.id }));
         await userPermissionRepository.save(userPermissionRepository.create({
             userId: user.id,
@@ -394,6 +440,7 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
         const introspection = await suite.client.token.introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
         const entries = (introspection.permissions ?? []).filter((entry: OAuth2TokenPermission) => entry.name === permission.name);
+
         expect(entries).toEqual([{
             name: permission.name,
             realm_id: null,
@@ -403,6 +450,7 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         }]);
 
         const catalog : AuthorizationCatalog = JSON.parse(JSON.stringify(await suite.client.authorization.get()));
+
         expect(catalog.policies[restriction.id]).toMatchObject({
             type: BuiltInPolicyType.ATTRIBUTES,
             query: { visible: { $eq: true } },
@@ -423,14 +471,18 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
             [BuiltInPolicyType.REALM_MATCH]: user.realmId,
             [BuiltInPolicyType.ATTRIBUTES]: { realmId: user.realmId, visible },
         });
+
         await expect(evaluator.evaluate({ name: permission.name, data: row(true) })).resolves.toBeUndefined();
         await expect(evaluator.evaluate({ name: permission.name, data: row(false) })).rejects.toThrow();
 
         const compiled = await evaluator.compile({ name: permission.name });
+
         expect(compiled.verdict).toBe('conditional');
+
         const predicate = compiled.verdict === 'conditional' ?
             compileFilters(compiled.condition as IFilter | IFilters, { caseSensitive: true }) :
             () => false;
+
         expect(!!predicate({ realmId: user.realmId, visible: true })).toBe(true);
         expect(!!predicate({ realmId: user.realmId, visible: false })).toBe(false);
     });
@@ -444,6 +496,7 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
 
         const { data: unsupported } = await suite.client.policy.create({ name: randomUUID(), type: 'plan109custom' });
         const permission = await permissionRepository.save(permissionRepository.create({ name: randomUUID() }));
+
         await permissionPolicyRepository.save(permissionPolicyRepository.create({ permissionId: permission.id, policyId: binding.id }));
         await userPermissionRepository.save(userPermissionRepository.create({
             userId: user.id,
@@ -457,9 +510,11 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
 
         const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
         const introspection = await suite.client.token.introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
+
         expect((introspection.permissions ?? []).some((entry: OAuth2TokenPermission) => entry.name === permission.name)).toBe(false);
 
         const catalog : AuthorizationCatalog = JSON.parse(JSON.stringify(await suite.client.authorization.get()));
+
         expect(catalog.policies).not.toHaveProperty(unsupported.id);
         expect(catalog.permissions.some((entry) => entry.name === permission.name)).toBe(true);
 
@@ -473,6 +528,7 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
                 realmName: introspection.realm_name,
             },
         });
+
         await expect(evaluator.evaluate({
             name: permission.name,
             data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: user.realmId }),

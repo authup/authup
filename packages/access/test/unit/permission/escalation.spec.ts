@@ -328,9 +328,9 @@ describe('escalation prevention', () => {
         const parent: PermissionPolicyBinding[] = [
             { permission: { name: 'user_read' }, realmScope: RealmScope.OWN },
             {
-                permission: { name: 'user_read' }, 
-                policies: [realmBoundPolicy], 
-                realmScope: RealmScope.ANY, 
+                permission: { name: 'user_read' },
+                policies: [realmBoundPolicy],
+                realmScope: RealmScope.ANY,
             },
         ];
         const child: PermissionPolicyBinding[] = [
@@ -344,9 +344,9 @@ describe('escalation prevention', () => {
         const parent: PermissionPolicyBinding[] = [
             { permission: { name: 'user_read' }, realmScope: RealmScope.OWN },
             {
-                permission: { name: 'user_read' }, 
-                policies: [realmBoundPolicy], 
-                realmScope: RealmScope.ANY, 
+                permission: { name: 'user_read' },
+                policies: [realmBoundPolicy],
+                realmScope: RealmScope.ANY,
             },
         ];
         const child: PermissionPolicyBinding[] = [
@@ -360,16 +360,16 @@ describe('escalation prevention', () => {
         const parent: PermissionPolicyBinding[] = [
             { permission: { name: 'user_read' }, realmScope: RealmScope.OWN },
             {
-                permission: { name: 'user_read' }, 
-                policies: [realmBoundPolicy], 
-                realmScope: RealmScope.ANY, 
+                permission: { name: 'user_read' },
+                policies: [realmBoundPolicy],
+                realmScope: RealmScope.ANY,
             },
         ];
         const child: PermissionPolicyBinding[] = [
             {
-                permission: { name: 'user_read' }, 
-                policies: [realmBoundPolicy], 
-                realmScope: RealmScope.ANY, 
+                permission: { name: 'user_read' },
+                policies: [realmBoundPolicy],
+                realmScope: RealmScope.ANY,
             },
         ];
 
@@ -415,14 +415,14 @@ describe('grantDominates', () => {
     const own = RealmScope.OWN;
     // Two differently-CONFIGURED attributes policies (disjoint queries), not just different ids.
     const policyA: PermissionGrant['policy'] = {
-        type: BuiltInPolicyType.ATTRIBUTES, 
-        id: 'a', 
-        query: { department: 'x' }, 
+        type: BuiltInPolicyType.ATTRIBUTES,
+        id: 'a',
+        query: { department: 'x' },
     } as any;
     const policyB: PermissionGrant['policy'] = {
-        type: BuiltInPolicyType.ATTRIBUTES, 
-        id: 'b', 
-        query: { department: 'y' }, 
+        type: BuiltInPolicyType.ATTRIBUTES,
+        id: 'b',
+        query: { department: 'y' },
     } as any;
 
     it('dominates when both grants are unrestricted at equal reach', () => {
@@ -449,18 +449,18 @@ describe('grantDominates', () => {
             {
                 realmScope: own,
                 policy: {
-                    type: BuiltInPolicyType.ATTRIBUTES, 
-                    id: 'r1', 
-                    query: { department: 'x' }, 
-                } as any, 
+                    type: BuiltInPolicyType.ATTRIBUTES,
+                    id: 'r1',
+                    query: { department: 'x' },
+                } as any,
             },
             {
                 realmScope: own,
                 policy: {
-                    type: BuiltInPolicyType.ATTRIBUTES, 
-                    id: 'r2', 
-                    query: { department: 'x' }, 
-                } as any, 
+                    type: BuiltInPolicyType.ATTRIBUTES,
+                    id: 'r2',
+                    query: { department: 'x' },
+                } as any,
             },
         )).toBe(true);
     });

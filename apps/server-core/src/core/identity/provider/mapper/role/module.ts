@@ -23,6 +23,7 @@ export class IdentityProviderRoleMapper extends IdentityProviderAccountBaseMappe
         const entities = await this.finder.findByProviderId(identity.provider.id);
 
         const items : IdentityProviderMapperElement[] = [];
+
         for (const entity of entities) {
             const [operation] = this.resolve(identity, entity);
 

@@ -67,9 +67,9 @@ export function buildAuthorizationCheck() : AuthorizationCheckPermissions {
     return [
         { name: 'user_read', targetRealms: [AUTHORIZATION_REALM] },
         {
-            name: 'owned_read', 
-            realmId: AUTHORIZATION_REALM, 
-            targetRealms: [AUTHORIZATION_REALM], 
+            name: 'owned_read',
+            realmId: AUTHORIZATION_REALM,
+            targetRealms: [AUTHORIZATION_REALM],
         },
     ];
 }

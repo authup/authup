@@ -39,7 +39,7 @@ Authup's management API and its OAuth2 endpoints are plain HTTP, so any client w
 npm install @authup/core-http-kit
 ```
 
-ESM only. Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`, or any browser with `fetch`. There are no peer dependencies.
+ESM only. Node.js `>=26.0.0`, or any browser with `fetch`. There are no peer dependencies.
 
 ## Usage
 

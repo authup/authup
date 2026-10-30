@@ -29,7 +29,9 @@ describe('session-include', () => {
 
     function bearer(token: string) : HTTPClient {
         const client = new HTTPClient({ baseURL: suite.baseURL });
+
         client.setAuthorizationHeader({ type: 'Bearer', token });
+
         return client;
     }
 
@@ -43,6 +45,7 @@ describe('session-include', () => {
         });
 
         expect(list.data.length).toBeGreaterThanOrEqual(1);
+
         for (const row of list.data) {
             expect(row.user).toBeDefined();
             expect(row.user!.name).toEqual('admin');
@@ -70,6 +73,7 @@ describe('session-include', () => {
         });
 
         expect(list.data.length).toBeGreaterThanOrEqual(1);
+
         for (const row of list.data) {
             expect(row.client).toBeDefined();
             expect(row.client!.name).toEqual(created.name);
@@ -79,6 +83,7 @@ describe('session-include', () => {
     it('strips the user include for a reader without USER_READ', async () => {
         const password = 'session-include-self-pw';
         const fakeUser = createFakeUser({ password });
+
         await suite.client.user.create(fakeUser);
 
         const login = await suite.client.token.createWithPassword({
@@ -89,6 +94,7 @@ describe('session-include', () => {
         const list = await bearer(login.access_token).session.getMany({ relations: ['user'] });
 
         expect(list.data.length).toBeGreaterThanOrEqual(1);
+
         for (const row of list.data) {
             expect(row.user).toBeUndefined();
         }

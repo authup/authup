@@ -22,6 +22,7 @@ const CHUNK_SIZE = 500;
 
 function chunk<T>(items: T[]) : T[][] {
     const output : T[][] = [];
+
     for (let i = 0; i < items.length; i += CHUNK_SIZE) {
         output.push(items.slice(i, i + CHUNK_SIZE));
     }
@@ -65,6 +66,7 @@ export async function unwindPaths(
 
     if (where.path) {
         const { path } = where;
+
         qb.andWhere(new Brackets((sub) => {
             sub.where('path.path = :path', { path });
             sub.orWhere('path.path LIKE :prefix', { prefix: `${path}/%` });
@@ -80,12 +82,14 @@ export async function unwindPaths(
     }
 
     const ids = rows.map((row) => row.id);
+
     for (const part of chunk(ids)) {
         await manager.getRepository(UserEntity).update({ pathId: In(part) }, { pathId: null });
         await manager.getRepository(ClientEntity).update({ pathId: In(part) }, { pathId: null });
     }
 
     const levels = new Map<number, string[]>();
+
     for (const row of rows) {
         if (where.keepRoot && row.path === where.path) {
             continue;
@@ -93,11 +97,13 @@ export async function unwindPaths(
 
         const depth = countSegments(row.path);
         const level = levels.get(depth) || [];
+
         level.push(row.id);
         levels.set(depth, level);
     }
 
     const depths = levels.keys().toArray().sort((a, b) => b - a);
+
     for (const depth of depths) {
         for (const part of chunk(levels.get(depth)!)) {
             await manager.getRepository(PathEntity).delete({ id: In(part) });

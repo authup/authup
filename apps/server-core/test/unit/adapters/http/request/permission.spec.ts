@@ -30,6 +30,7 @@ const grants : PermissionPolicyBinding[] = [{ permission: { name: 'test' }, real
 // The request helpers under test only read/write `event.store`.
 function createEvent(): IAppEvent {
     const event = { store: {} } as unknown as IAppEvent;
+
     setRequestGrantsResolver(event, async () => grants);
 
     return event;
@@ -42,6 +43,7 @@ function clientIdentity(data: Partial<Client>): Identity {
 describe('RequestPermissionEvaluator', () => {
     it('should not attach identity policy data for a global-scoped request without an identity', async () => {
         const event = createEvent();
+
         setRequestScopes(event, [ScopeName.GLOBAL]);
         // Deliberately no identity — mirrors a Bearer token whose subject was
         // deleted after issuance (issue #3184). Setting `undefined` here would
@@ -53,11 +55,13 @@ describe('RequestPermissionEvaluator', () => {
         await evaluator.evaluate({ name: 'test' });
 
         const ctx = base.evaluateCalls[0];
+
         expect(ctx.data?.has(BuiltInPolicyType.IDENTITY)).toBeFalsy();
     });
 
     it('should attach identity policy data when a global-scoped request has an identity', async () => {
         const event = createEvent();
+
         setRequestScopes(event, [ScopeName.GLOBAL]);
         setRequestIdentity(event, clientIdentity({ id: 'c1' }));
 
@@ -67,16 +71,18 @@ describe('RequestPermissionEvaluator', () => {
         await evaluator.evaluate({ name: 'test' });
 
         const ctx = base.evaluateCalls[0];
+
         expect(ctx.data?.has(BuiltInPolicyType.IDENTITY)).toBe(true);
         expect(ctx.data?.get(BuiltInPolicyType.IDENTITY)).toMatchObject({
-            type: 'client', 
-            id: 'c1', 
-            grants, 
+            type: 'client',
+            id: 'c1',
+            grants,
         });
     });
 
     it('should fail the evaluation when the grants cannot be loaded', async () => {
         const event = createEvent();
+
         setRequestScopes(event, [ScopeName.GLOBAL]);
         setRequestIdentity(event, clientIdentity({ id: 'c1' }));
         setRequestGrantsResolver(event, async () => {
@@ -94,6 +100,7 @@ describe('RequestPermissionEvaluator', () => {
     // without `global` the identity still resolves, holding no grant.
     it('should attach the identity without grants when the scopes withhold global', async () => {
         const event = createEvent();
+
         setRequestIdentity(event, clientIdentity({ id: 'c1' }));
         // No scopes → not global.
 
@@ -103,6 +110,7 @@ describe('RequestPermissionEvaluator', () => {
         await evaluator.evaluate({ name: 'test' });
 
         const ctx = base.evaluateCalls[0];
+
         expect(ctx.data?.get(BuiltInPolicyType.IDENTITY)).toMatchObject({
             type: 'client',
             id: 'c1',
@@ -112,6 +120,7 @@ describe('RequestPermissionEvaluator', () => {
 
     it('should not load the grants when the scopes withhold global', async () => {
         const event = createEvent();
+
         setRequestIdentity(event, clientIdentity({ id: 'c1' }));
         setRequestGrantsResolver(event, async () => {
             throw new Error('grants must not be loaded');
@@ -130,6 +139,7 @@ describe('RequestPermissionEvaluator', () => {
     // carrying only what its scopes allow.
     it('should strip the grants of a pre-placed identity without global scope', async () => {
         const event = createEvent();
+
         setRequestIdentity(event, clientIdentity({ id: 'c1' }));
 
         const base = new FakePermissionEvaluator();
@@ -139,15 +149,16 @@ describe('RequestPermissionEvaluator', () => {
             name: 'test',
             data: new PolicyData({
                 [BuiltInPolicyType.IDENTITY]: {
-                    type: 'client', 
-                    id: 'c1', 
-                    grants, 
+                    type: 'client',
+                    id: 'c1',
+                    grants,
                 },
                 [BuiltInPolicyType.REALM_MATCH]: null,
             }),
         });
 
         const ctx = base.preEvaluateCalls[0];
+
         expect(ctx.data?.get(BuiltInPolicyType.IDENTITY)).toMatchObject({
             type: 'client',
             id: 'c1',
@@ -159,6 +170,7 @@ describe('RequestPermissionEvaluator', () => {
 
     it('should remove a pre-placed identity when no identity resolved', async () => {
         const event = createEvent();
+
         setRequestScopes(event, [ScopeName.GLOBAL]);
 
         const base = new FakePermissionEvaluator();
@@ -168,19 +180,21 @@ describe('RequestPermissionEvaluator', () => {
             name: 'test',
             data: new PolicyData({
                 [BuiltInPolicyType.IDENTITY]: {
-                    type: 'client', 
-                    id: 'c1', 
-                    grants, 
+                    type: 'client',
+                    id: 'c1',
+                    grants,
                 },
             }),
         });
 
         const ctx = base.preEvaluateCalls[0];
+
         expect(ctx.data?.has(BuiltInPolicyType.IDENTITY)).toBe(false);
     });
 
     it('should overwrite a pre-placed identity with the request\'s own', async () => {
         const event = createEvent();
+
         setRequestScopes(event, [ScopeName.GLOBAL]);
         setRequestIdentity(event, clientIdentity({ id: 'c1' }));
 
@@ -191,18 +205,19 @@ describe('RequestPermissionEvaluator', () => {
             name: 'test',
             data: new PolicyData({
                 [BuiltInPolicyType.IDENTITY]: {
-                    type: 'user', 
-                    id: 'someone-else', 
-                    grants: [], 
-                }, 
+                    type: 'user',
+                    id: 'someone-else',
+                    grants: [],
+                },
             }),
         });
 
         const ctx = base.preEvaluateCalls[0];
+
         expect(ctx.data?.get(BuiltInPolicyType.IDENTITY)).toMatchObject({
-            type: 'client', 
-            id: 'c1', 
-            grants, 
+            type: 'client',
+            id: 'c1',
+            grants,
         });
     });
 });
@@ -210,6 +225,7 @@ describe('RequestPermissionEvaluator', () => {
 describe('useRequestPolicyGrants', () => {
     it('should resolve the grants for a global-scoped request', async () => {
         const event = createEvent();
+
         setRequestScopes(event, [ScopeName.GLOBAL]);
 
         await expect(useRequestPolicyGrants(event, { type: 'client', id: 'c1' })).resolves.toEqual(grants);
@@ -217,6 +233,7 @@ describe('useRequestPolicyGrants', () => {
 
     it('should resolve no grants when the scopes withhold global', async () => {
         const event = createEvent();
+
         setRequestScopes(event, [ScopeName.OPEN_ID]);
 
         await expect(useRequestPolicyGrants(event, { type: 'client', id: 'c1' })).resolves.toEqual([]);
@@ -226,11 +243,13 @@ describe('useRequestPolicyGrants', () => {
 describe('buildActorContext', () => {
     it('should keep the identity but delegate no grants when the scopes withhold global', async () => {
         const event = createEvent();
+
         setRequestScopes(event, [ScopeName.OPEN_ID]);
         setRequestIdentity(event, clientIdentity({ id: 'c1' }));
         setRequestPermissionEvaluator(event, new RequestPermissionEvaluator(event, new FakePermissionEvaluator()));
 
         const actor = buildActorContext(event);
+
         expect(actor.identity).toMatchObject({ type: 'client' });
         await expect(actor.grants?.()).resolves.toEqual([]);
     });

@@ -43,6 +43,7 @@ export class ClientIdentityRepository implements IClientIdentityRepository {
         // canonicalized here: the cache key must be the one the subscriber drops.
         const isId = isUUID(input);
         const key = isId ? input.toLowerCase() : input;
+
         if (isId) {
             query.where('client.id = :id', { id: key });
         } else {
@@ -56,7 +57,9 @@ export class ClientIdentityRepository implements IClientIdentityRepository {
                 }
             }
         }
+
         const { columns } = this.repository.metadata;
+
         for (const column of columns) {
             if (!column.isSelect) {
                 query.addSelect(`client.${column.propertyName}`);

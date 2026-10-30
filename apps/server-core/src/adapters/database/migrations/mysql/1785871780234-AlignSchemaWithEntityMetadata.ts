@@ -71,6 +71,7 @@ export class AlignSchemaWithEntityMetadata1785871780234 implements MigrationInte
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query('SET FOREIGN_KEY_CHECKS = 0');
+
         try {
             await queryRunner.query('ALTER TABLE `auth_clients` MODIFY COLUMN `access_policy_id` varchar(255) NULL');
             await queryRunner.query('ALTER TABLE `auth_consents` MODIFY COLUMN `client_id` varchar(255) NOT NULL, MODIFY COLUMN `realm_id` varchar(255) NOT NULL, MODIFY COLUMN `user_id` varchar(255) NULL');
@@ -128,6 +129,7 @@ export class AlignSchemaWithEntityMetadata1785871780234 implements MigrationInte
 
     public async down(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query('SET FOREIGN_KEY_CHECKS = 0');
+
         try {
             await queryRunner.query('ALTER TABLE `auth_user_authenticators` MODIFY COLUMN `realm_id` varchar(36) NOT NULL, MODIFY COLUMN `user_id` varchar(36) NOT NULL');
             await queryRunner.query('ALTER TABLE `auth_trust_anchors` MODIFY COLUMN `realm_id` varchar(36) NOT NULL');

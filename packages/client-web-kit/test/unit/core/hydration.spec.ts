@@ -51,6 +51,7 @@ describe('hydration handoff (client)', () => {
 
     it('keeps the async lookup authoritative once it settles', async () => {
         const { wrapper } = mountKitComponent(translated);
+
         await flushPromises();
 
         expect(wrapper.text()).toEqual('Name');

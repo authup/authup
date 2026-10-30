@@ -127,11 +127,13 @@ describe('token-revoke', () => {
             headers: { Authorization: `Bearer ${grant.access_token}` },
             form: { token: 'short' },
         });
+
         expect(response.status).toEqual(200);
 
         const introspection = await suite.client
             .token
             .introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
+
         expect(introspection.active).toBe(true);
     });
 
@@ -165,14 +167,14 @@ describe('token-revoke', () => {
     it('should answer its ordinary success for a token signed under an unknown key', async () => {
         const header = Buffer
             .from(JSON.stringify({
-                alg: 'RS256', 
-                typ: 'JWT', 
-                kid: '6b0f4a5c-0d2e-4f1a-9c3b-8e7d6f5a4b3c', 
+                alg: 'RS256',
+                typ: 'JWT',
+                kid: '6b0f4a5c-0d2e-4f1a-9c3b-8e7d6f5a4b3c',
             }))
-            .toString('base64url');
+            .toBase64({ alphabet: 'base64url', omitPadding: true });
         const body = Buffer
             .from(JSON.stringify({ sub: 'someone', exp: Math.floor(Date.now() / 1000) + 3600 }))
-            .toString('base64url');
+            .toBase64({ alphabet: 'base64url', omitPadding: true });
 
         await expect(
             suite.client.token.revoke({ token: `${header}.${body}.signature` }),

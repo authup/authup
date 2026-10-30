@@ -43,6 +43,7 @@ export function createHostClient(context: HostClientContext) : Client {
         timer: false,
         tokenCreator: () => withHostLock(context.directory, async () => {
             const stored = await context.storage.read(context.host);
+
             if (stored && stored.accessToken !== tokens.accessToken) {
                 tokens = stored;
 

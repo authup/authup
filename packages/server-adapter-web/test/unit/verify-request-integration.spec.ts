@@ -38,6 +38,7 @@ describe('verifyRequest with a TokenVerifier', () => {
         getJwk = vi.spyOn(Client.prototype, 'getJwk').mockImplementation(() => signer.useJwk());
 
         const now = Math.floor(Date.now() / 1000);
+
         payload = {
             kind: OAuth2TokenKind.ACCESS,
             sub,
@@ -61,10 +62,11 @@ describe('verifyRequest with a TokenVerifier', () => {
 
     it('resolves the token data for a valid token', async () => {
         const data = await verifyRequest(req(valid), { tokenVerifier });
+
         expect(data).toMatchObject({
-            sub, 
-            realm_id, 
-            permissions: [], 
+            sub,
+            realm_id,
+            permissions: [],
         });
     });
 
@@ -85,6 +87,7 @@ describe('verifyRequest with a TokenVerifier', () => {
 
     it('fetches the signing key once across requests', async () => {
         getJwk.mockClear();
+
         const verifier = new TokenVerifier({ baseURL: 'http://localhost:3001' });
 
         await verifyRequest(req(valid), { tokenVerifier: verifier });

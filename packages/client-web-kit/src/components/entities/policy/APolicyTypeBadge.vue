@@ -40,6 +40,7 @@ export default defineComponent({
 
         const label = computed(() => {
             const key = POLICY_TYPE_TRANSLATION_KEYS[props.type as keyof typeof POLICY_TYPE_TRANSLATION_KEYS];
+
             if (key) {
                 return translations[key];
             }

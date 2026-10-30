@@ -15,6 +15,7 @@ export const OAUTH2_MFA_REQUIRED_ERROR_INSTANCE = Symbol.for('@authup/specs/OAut
 export class OAuth2MfaRequiredError extends OAuth2Error {
     constructor(input?: AuthupErrorInput) {
         const options = normalizeOAuth2ErrorInput(input);
+
         super({
             code: ErrorCode.OAUTH_MFA_REQUIRED,
             message: 'A second factor is required to continue.',

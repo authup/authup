@@ -10,9 +10,11 @@
 | Nuxt             | `packages/client-web-nuxt` only (the integration downstream apps such as hub use). No authup app is a Nuxt app |
 | trapi            | OpenAPI document generation off the routup decorators (`build:swagger` in `apps/server-core`). The query surface is contributed by a preset handler during the generate, so nothing rewrites the document afterwards: see architecture.md → *Query vocabulary discovery* |
 | Vitest + SWC     | Test runner with fast compilation                  |
-| ESLint           | Linting (`@tada5hi/eslint-config-vue-typescript`) |
+| ESLint           | Linting (`@tada5hi/eslint-config`) |
 | Husky            | Pre-commit hooks via lint-staged                   |
 | commitlint       | Commit message convention enforcement              |
+
+ESLint uses the root flat config (`eslint.config.js`). Authup retains its domain-local type files, public interface names and compatibility re-exports through explicit overrides; component test harnesses may define multiple components per file.
 
 ## Validation & Error Handling
 

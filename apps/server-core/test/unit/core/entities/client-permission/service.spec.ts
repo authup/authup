@@ -9,9 +9,9 @@ import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
 import type { ClientPermission, Permission } from '@authup/core-kit';
 import {
-    beforeEach, 
-    describe, 
-    expect, 
+    beforeEach,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
@@ -34,15 +34,16 @@ describe('core/entities/client-permission/service', () => {
         });
         permissionRepository = new FakeEntityRepository<Permission>();
         service = new ClientPermissionService({
-            repository, 
-            permissionRepository, 
-            identityPermissionProvider: new FakeIdentityPermissionProvider(), 
+            repository,
+            permissionRepository,
+            identityPermissionProvider: new FakeIdentityPermissionProvider(),
         });
     });
 
     describe('getMany', () => {
         it('should call preCheckOneOf with correct permissions', async () => {
             const actor = createAllowAllActor();
+
             await service.getMany({}, actor);
             expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
@@ -61,6 +62,7 @@ describe('core/entities/client-permission/service', () => {
         it('should return entity by id', async () => {
             const entity = repository.seed({});
             const result = await service.getOne(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
         });
 
@@ -85,6 +87,7 @@ describe('core/entities/client-permission/service', () => {
             };
 
             const result = await service.create(data, createAllowAllActor());
+
             expect(result.id).toBeDefined();
             expect(result.clientRealmId).toBe(clientRealmId);
             expect(result.permissionRealmId).toBe(permissionRealmId);
@@ -97,6 +100,7 @@ describe('core/entities/client-permission/service', () => {
             });
 
             const actor = createAllowAllActor();
+
             await service.create({
                 clientId: randomUUID(),
                 permissionId: randomUUID(),
@@ -151,16 +155,19 @@ describe('core/entities/client-permission/service', () => {
     describe('update reach (#3654)', () => {
         const restrict = () => {
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.method !== 'evaluate' || call.ctx.name !== PermissionName.CLIENT_PERMISSION_UPDATE) {
                     return;
                 }
 
                 const attributes = call.ctx.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+
                 if (attributes.policyId !== '11111111-1111-4111-8111-111111111111') {
                     throw PermissionError.denied('test');
                 }
             });
+
             return actor;
         };
 
@@ -180,16 +187,19 @@ describe('core/entities/client-permission/service', () => {
 
         it('should refuse moving an unreachable row into reach', async () => {
             const entity = repository.seed({ policyId: '22222222-2222-4222-8222-222222222222' });
+
             await expect(service.update(entity.id, { policyId: '11111111-1111-4111-8111-111111111111' }, restrict())).rejects.toBeInstanceOf(PermissionError);
         });
 
         it('should allow updating a row that stays in reach', async () => {
             const entity = repository.seed({ policyId: '11111111-1111-4111-8111-111111111111' });
+
             await expect(service.update(entity.id, { policyId: '11111111-1111-4111-8111-111111111111' }, restrict())).resolves.toBeDefined();
         });
 
         it('should refuse moving a reachable row out of reach', async () => {
             const entity = repository.seed({ policyId: '11111111-1111-4111-8111-111111111111' });
+
             await expect(service.update(entity.id, { policyId: '22222222-2222-4222-8222-222222222222' }, restrict())).rejects.toBeInstanceOf(PermissionError);
         });
     });
@@ -200,6 +210,7 @@ describe('core/entities/client-permission/service', () => {
             const policyId = randomUUID();
 
             const result = await service.update(entity.id, { policyId }, createAllowAllActor());
+
             expect(result.policyId).toBe(policyId);
         });
 
@@ -207,6 +218,7 @@ describe('core/entities/client-permission/service', () => {
             const entity = repository.seed({ policyId: randomUUID() });
 
             const result = await service.update(entity.id, { policyId: null }, createAllowAllActor());
+
             expect(result.policyId).toBeNull();
         });
 
@@ -219,12 +231,14 @@ describe('core/entities/client-permission/service', () => {
         it('should call preCheck with CLIENT_PERMISSION_UPDATE', async () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
+
             await service.update(entity.id, { policyId: null }, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.CLIENT_PERMISSION_UPDATE });
         });
 
         it('should throw when actor lacks permission', async () => {
             const entity = repository.seed({});
+
             await expect(
                 service.update(entity.id, { policyId: randomUUID() }, createDenyAllActor()),
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
@@ -240,6 +254,7 @@ describe('core/entities/client-permission/service', () => {
                 { policyId, clientId: randomUUID() },
                 createAllowAllActor(),
             );
+
             expect(result.policyId).toBe(policyId);
             expect(result.clientId).toBe(originalClientId);
         });
@@ -249,6 +264,7 @@ describe('core/entities/client-permission/service', () => {
         it('should delete an existing entity', async () => {
             const entity = repository.seed({});
             const result = await service.delete(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
         });
 
@@ -259,6 +275,7 @@ describe('core/entities/client-permission/service', () => {
         it('should call preCheck with CLIENT_PERMISSION_DELETE', async () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
+
             await service.delete(entity.id, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.CLIENT_PERMISSION_DELETE });
         });

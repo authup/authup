@@ -56,6 +56,7 @@ describe('http/controllers/entities/policy/checker', () => {
         }));
 
         const response = await suite.client.policy.check(policy.id);
+
         expect(response).toBeDefined();
         expect(response.status).toMatch(/^(success|error)$/);
     });
@@ -72,21 +73,26 @@ describe('http/controllers/entities/policy/checker', () => {
         }));
 
         const control = await suite.client.policy.check(policy.id);
+
         expect(control.status).toEqual('success');
 
         // null checks without any identity
         const none = await suite.client.policy.check(policy.id, { identity: null });
+
         expect(none.status).toEqual('error');
 
         const { client, payload } = await createScopeRestrictedClient(suite);
 
         const bare = await client.policy.check(policy.id);
+
         expect(bare.status).toEqual('success');
 
         const self = await client.policy.check(policy.id, { identity: { type: payload.sub_kind, id: payload.sub } });
+
         expect(self.status).toEqual('success');
 
         const { data: other } = await suite.client.user.create(createFakeUser());
+
         await expectClientError(
             () => client.policy.check(policy.id, { identity: { type: 'user', id: other.id } }),
             { status: 403 },
@@ -108,12 +114,14 @@ describe('http/controllers/entities/policy/checker', () => {
             identity: { type: 'user', id: admin.id },
             permissionBinding,
         });
+
         expect(self.status).toEqual('success');
 
         const other = await suite.client.policy.check(SystemPolicyName.PERMISSION_BINDING, {
             identity: { type: 'user', id: subject.id },
             permissionBinding,
         });
+
         expect(other.status).toEqual('error');
     });
 
@@ -125,6 +133,7 @@ describe('http/controllers/entities/policy/checker', () => {
         const grant = await suite.client.token.createWithPassword({ username: user.name, password });
 
         const client = new Client({ baseURL: suite.baseURL });
+
         client.setAuthorizationHeader({ type: 'Bearer', token: grant.access_token });
 
         await expectClientError(

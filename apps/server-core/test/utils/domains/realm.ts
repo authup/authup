@@ -12,7 +12,7 @@ export function createFakeRealm(data: Partial<Realm> = {}) {
     return {
         name: faker.string.alpha({
             casing: 'lower',
-            length: 10, 
+            length: 10,
         }),
         displayName: faker.internet.displayName(),
         description: faker.string.alpha({ length: 256 }),

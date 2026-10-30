@@ -72,6 +72,7 @@ export function createPermissionCheckerReactiveStateFn(
     ctx: PermissionCheckerReactiveFnCreateContext = {},
 ) : PermissionCheckerReactiveStateFn {
     let store : Store;
+
     if (ctx.store) {
         store = ctx.store;
     } else {
@@ -99,6 +100,7 @@ export function createPermissionCheckerReactiveStateFn(
 
         const compute = async () => {
             let identity: IdentityPolicyData | undefined;
+
             if (storeRefs.userId.value) {
                 identity = {
                     type: 'user',
@@ -117,6 +119,7 @@ export function createPermissionCheckerReactiveStateFn(
             const evaluationContext = resolveContext();
 
             const input = evaluationContext.data || new PolicyData();
+
             input.set(BuiltInPolicyType.IDENTITY, identity);
 
             try {
@@ -134,6 +137,7 @@ export function createPermissionCheckerReactiveStateFn(
 
         const recompute = () => {
             sequence++;
+
             const current = sequence;
 
             // fail closed while the replacement evaluation is pending — a
@@ -165,6 +169,7 @@ export function createPermissionCheckerReactiveStateFn(
             userId: storeRefs.userId.value,
             realmId: storeRefs.realmId.value,
         });
+
         if (hydrationKey) {
             useHydratedValue<boolean>({
                 key: hydrationKey,
@@ -177,6 +182,7 @@ export function createPermissionCheckerReactiveStateFn(
         }
 
         let removeListener: undefined | CallableFunction;
+
         onMounted(() => {
             // `status`, not the token-derived `loggedIn`: a cookie session
             // (plan 088) never holds an access token, so that flag never flips

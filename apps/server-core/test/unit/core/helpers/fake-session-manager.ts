@@ -40,19 +40,24 @@ export class FakeSessionManager implements ISessionManager {
 
     async create(session: Partial<Session>): Promise<Session> {
         this.createCalls.push(session);
+
         const id = (session.id as string) || randomUUID();
         const created = { id, ...session } as Session;
+
         this.sessions.set(id, created);
+
         return created;
     }
 
     async ping(session: Session): Promise<Session> {
         this.pingCalls.push(session);
+
         return session;
     }
 
     async refresh(session: Session): Promise<Session> {
         this.refreshCalls.push(session);
+
         return session;
     }
 
@@ -60,6 +65,7 @@ export class FakeSessionManager implements ISessionManager {
         this.markMfaVerifiedCalls.push(session);
         session.mfaAt = new Date().toISOString();
         this.sessions.set(session.id, session);
+
         return session;
     }
 
@@ -73,6 +79,7 @@ export class FakeSessionManager implements ISessionManager {
 
     async findOneById(id: string): Promise<Session | null> {
         this.findOneByIdCalls.push(id);
+
         return this.sessions.get(id) ?? null;
     }
 
@@ -91,6 +98,7 @@ export class FakeSessionManager implements ISessionManager {
 
     async revokeByOwner(owner: { sub: string, subKind: string }, exceptId?: string): Promise<string[]> {
         this.revokeByOwnerCalls.push({ ...owner, exceptId });
+
         for (const session of [...this.sessions.values()]) {
             if (session.sub === owner.sub && session.subKind === owner.subKind && session.id !== exceptId) {
                 await this.revoke(session.id);

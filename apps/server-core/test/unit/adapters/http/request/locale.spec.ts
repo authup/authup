@@ -12,11 +12,13 @@ import { createFakeEvent } from './fake-event';
 describe('useRequestLocale', () => {
     it('should resolve the explicit locale cookie', () => {
         const event = createFakeEvent({ cookies: { 'vc-locale': 'de' } });
+
         expect(useRequestLocale(event)).toEqual('de');
     });
 
     it('should narrow a regioned cookie value to its base locale', () => {
         const event = createFakeEvent({ cookies: { 'vc-locale': 'de-DE' } });
+
         expect(useRequestLocale(event)).toEqual('de');
     });
 
@@ -25,6 +27,7 @@ describe('useRequestLocale', () => {
             cookies: { 'vc-locale': 'fr' },
             headers: { 'accept-language': 'de' },
         });
+
         expect(useRequestLocale(event)).toEqual('fr');
     });
 
@@ -33,6 +36,7 @@ describe('useRequestLocale', () => {
             cookies: { 'vc-locale': 'auto' },
             headers: { 'accept-language': 'es' },
         });
+
         expect(useRequestLocale(event)).toEqual('es');
     });
 
@@ -41,16 +45,19 @@ describe('useRequestLocale', () => {
             cookies: { 'vc-locale': 'xx' },
             headers: { 'accept-language': 'fr' },
         });
+
         expect(useRequestLocale(event)).toEqual('fr');
     });
 
     it('should honor q-ordering and skip unauthored languages', () => {
         const event = createFakeEvent({ headers: { 'accept-language': 'pt-BR, de;q=0.8' } });
+
         expect(useRequestLocale(event)).toEqual('de');
     });
 
     it('should return undefined when nothing matches', () => {
         const event = createFakeEvent({ headers: { 'accept-language': 'pt-BR' } });
+
         expect(useRequestLocale(event)).toBeUndefined();
     });
 

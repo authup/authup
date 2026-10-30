@@ -14,6 +14,7 @@ const sym = Symbol.for('AdminConsoleConfig');
 export function provideAdminConsoleConfig(config: AdminConsoleConfig, app?: App) {
     if (app) {
         app.provide(sym, config);
+
         return;
     }
 
@@ -22,6 +23,7 @@ export function provideAdminConsoleConfig(config: AdminConsoleConfig, app?: App)
 
 export function injectAdminConsoleConfig() : AdminConsoleConfig {
     const config = inject<AdminConsoleConfig>(sym);
+
     if (!config) {
         throw new Error('The admin console config has not been provided.');
     }

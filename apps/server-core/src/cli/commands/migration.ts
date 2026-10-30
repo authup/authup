@@ -57,6 +57,7 @@ async function runMigrationOperation(
     const optionsBuilder = new DataSourceOptionsBuilder();
 
     let options: DataSourceOptions;
+
     if (config.db) {
         // the configuration surface is deliberately untyped: `db` is authup's
         // own loose shape, so the driver union is applied here, at the
@@ -206,6 +207,7 @@ export function defineCLIMigrationCommand(
             // citty checks a positional's options nowhere, so an unknown operation
             // used to fall through to `runMigrations` (#3542).
             const { operation } = context.args;
+
             if (!isMigrationOperation(operation, operations)) {
                 throw new Error(`Unknown migration operation "${operation}". Expected one of: ${operations.join(', ')}.`);
             }

@@ -57,32 +57,40 @@ const test = (condition: ICondition) => compileFilters(condition as IFilter | IF
 describe('src/permission/evaluator (compile)', () => {
     it('should compile an unrestricted permission to allow', async () => {
         const result = await evaluator.compile({ name: 'user_create' });
+
         expect(result.verdict).toEqual('allow');
     });
 
     it('should compile a lowerable policy to a conditional', async () => {
         const result = await evaluator.compile({ name: 'user_edit' });
+
         expect(result.verdict).toEqual('conditional');
 
-        if (result.verdict === 'conditional') {
-            const predicate = test(result.condition);
-            expect(predicate({ name: 'admin' })).toBeTruthy();
-            expect(predicate({ name: 'guest' })).toBeFalsy();
+        if (result.verdict !== 'conditional') {
+            return;
         }
+
+        const predicate = test(result.condition);
+
+        expect(predicate({ name: 'admin' })).toBeTruthy();
+        expect(predicate({ name: 'guest' })).toBeFalsy();
     });
 
     it('should short-circuit to allow when any name is unrestricted', async () => {
         const result = await evaluator.compile({ name: ['user_edit', 'user_create'] });
+
         expect(result.verdict).toEqual('allow');
     });
 
     it('should degrade to post when any name is not expressible', async () => {
         const result = await evaluator.compile({ name: ['user_edit', 'user_update'] });
+
         expect(result.verdict).toEqual('post');
     });
 
     it('should compile an unresolvable permission to deny', async () => {
         const result = await evaluator.compile({ name: 'unknown' });
+
         expect(result.verdict).toEqual('deny');
     });
 
@@ -91,6 +99,7 @@ describe('src/permission/evaluator (compile)', () => {
             name: 'user_view',
             data: definePolicyData({ [BuiltInPolicyType.IDENTITY]: identityData }),
         });
+
         expect(result.verdict).toEqual('deny');
     });
 
@@ -99,12 +108,14 @@ describe('src/permission/evaluator (compile)', () => {
             name: ['user_edit', 'user_view'],
             data: definePolicyData({ [BuiltInPolicyType.IDENTITY]: identityData }),
         });
+
         expect(result.verdict).toEqual('conditional');
     });
 
     it('should degrade to post when a pending policy carries no condition', async () => {
         // identity policy without identity data: pending, not expressible
         const result = await evaluator.compile({ name: 'user_view' });
+
         expect(result.verdict).toEqual('post');
     });
 });

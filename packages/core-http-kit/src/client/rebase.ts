@@ -46,10 +46,12 @@ export function createBaseURLRewriter(from: string, to: string) : (url: string) 
 
     try {
         const parsed = new URL(from);
+
         parsed.search = '';
         parsed.hash = '';
 
         const normalized = trimTrailingSlashes(parsed.href);
+
         if (normalized !== prefixes[0]) {
             prefixes.push(normalized);
         }

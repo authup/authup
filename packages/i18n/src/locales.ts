@@ -54,5 +54,6 @@ export function matchLocale(input?: string | null): LocaleCode | undefined {
     }
 
     const [short] = input.toLowerCase().split('-');
+
     return isLocale(short) ? short : undefined;
 }

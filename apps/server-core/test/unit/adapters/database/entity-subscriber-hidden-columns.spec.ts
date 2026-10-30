@@ -33,6 +33,7 @@ describe('EntitySubscriber hidden columns', () => {
         const { calls, publisher } = createPublisherSpy();
 
         const subscriber = new ClientSubscriber();
+
         subscriber.setPublisher(publisher);
 
         const entity = {
@@ -60,6 +61,7 @@ describe('EntitySubscriber hidden columns', () => {
         const { calls, publisher } = createPublisherSpy();
 
         const subscriber = new UserSubscriber();
+
         subscriber.setPublisher(publisher);
 
         const build = (suffix: string) => ({
@@ -81,6 +83,7 @@ describe('EntitySubscriber hidden columns', () => {
         expect(calls).toHaveLength(1);
 
         const [ctx] = calls;
+
         for (const key of ['email', 'password', 'resetHash', 'activateHash']) {
             expect(ctx.content.data[key]).toBeUndefined();
             expect(ctx.dataPrevious?.[key]).toBeUndefined();

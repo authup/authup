@@ -113,6 +113,7 @@ export class LogoutController {
         // client name and the redirect, which is dropped anyway). Only a
         // malformed hint itself falls through to the parameter-less answer.
         let data: OAuth2EndSessionRequest;
+
         try {
             data = await this.validator.run(merged);
         } catch {
@@ -130,6 +131,7 @@ export class LogoutController {
         // hint's subject). Without a hint we mutate nothing; the page's
         // sign-out is a click-gated, bearer-authenticated action.
         let serverRevoked = false;
+
         if (result.hintVerified && result.sessionId && result.sub && result.subKind && result.realmId) {
             serverRevoked = await this.endSessionService.revoke(
                 result.sessionId,
@@ -142,8 +144,10 @@ export class LogoutController {
         // Build the validated post-logout redirect (the open-redirect guard
         // lives in the service; `state` rides only alongside a validated uri).
         let redirect: string | undefined;
+
         if (result.redirectUri) {
             const url = new URL(result.redirectUri);
+
             if (result.state) {
                 url.searchParams.set('state', result.state);
             }

@@ -15,9 +15,11 @@ export class PathProvisioningValidator extends Container<PathProvisioningEntity>
         super.initialize();
 
         const strategyValidator = new ProvisioningStrategyValidator();
+
         this.mount('strategy', { optional: true }, strategyValidator);
 
         const attributesValidator = new PathProvisioningAttributesValidator();
+
         this.mount('attributes', attributesValidator);
     }
 }

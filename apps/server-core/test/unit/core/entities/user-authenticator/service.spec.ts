@@ -51,7 +51,7 @@ const realmId = randomUUID();
 const userId = randomUUID();
 const otherUserId = randomUUID();
 
-const cipherKey = Buffer.alloc(32, 7).toString('base64');
+const cipherKey = Buffer.alloc(32, 7).toBase64();
 
 function buildRealmCipher() {
     const timestamp = new Date().toISOString();
@@ -83,16 +83,18 @@ function buildRealmCipher() {
 }
 
 function makeActor(options: {
-    allow?: boolean, 
-    identity?: boolean, 
-    id?: string 
+    allow?: boolean,
+    identity?: boolean,
+    id?: string
 } = {}): ActorContext {
     const evaluator = new FakePermissionEvaluator();
+
     if (options.allow === false) {
         evaluator.denyAll();
     }
 
     const actor: ActorContext = { permissionEvaluator: evaluator };
+
     if (options.identity !== false) {
         actor.identity = {
             type: IdentityType.USER,
@@ -167,6 +169,7 @@ describe('UserAuthenticatorService', () => {
 
             // at rest the seed is encrypted — never the raw base32
             const [stored] = await repository.findAllWithSecretsByUser(userId);
+
             expect(stored.secret).toBeDefined();
             expect(stored.secret).not.toEqual(result.meta.secret);
         });
@@ -175,6 +178,7 @@ describe('UserAuthenticatorService', () => {
             service = buildService({ enabled: false });
 
             expect.assertions(2);
+
             try {
                 await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
             } catch (e) {
@@ -185,12 +189,13 @@ describe('UserAuthenticatorService', () => {
 
         it('rejects enrolling another user without permission', async () => {
             userRepository.seed({
-                id: otherUserId, 
-                name: 'other', 
-                realmId, 
+                id: otherUserId,
+                name: 'other',
+                realmId,
             } as Partial<User>);
 
             expect.assertions(1);
+
             try {
                 await service.enroll(
                     { kind: UserAuthenticatorKind.TOTP, userId: otherUserId },
@@ -220,6 +225,7 @@ describe('UserAuthenticatorService', () => {
                 } as Partial<User>);
 
                 expect.assertions(2);
+
                 try {
                     await service.enroll({ kind, userId: otherUserId }, makeActor());
                 } catch (e) {
@@ -259,12 +265,14 @@ describe('UserAuthenticatorService', () => {
                 totpCode(first.meta.secret!),
                 makeActor(),
             );
+
             expect(confirmed.confirmed).toBeTruthy();
             expect(confirmed.secret).toBeNull();
 
             const second = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
 
             expect.assertions(3);
+
             try {
                 await service.confirm(second.data.id, '000000', makeActor());
             } catch (e) {
@@ -276,30 +284,36 @@ describe('UserAuthenticatorService', () => {
     describe('enroll (recovery)', () => {
         it('issues single-use codes, hashed at rest, with regenerate semantics', async () => {
             const first = await service.enroll({ kind: UserAuthenticatorKind.RECOVERY }, makeActor());
+
             expect(first.meta.codes).toHaveLength(10);
             expect(first.data.confirmed).toBeTruthy();
             expect(first.data.codes).toBeNull();
 
             const [stored] = await repository.findAllWithSecretsByUser(userId);
+
             expect(stored.codes).not.toContain(first.meta.codes![0]);
 
             // regenerate replaces the previous set
             const second = await service.enroll({ kind: UserAuthenticatorKind.RECOVERY }, makeActor());
             const all = await repository.findAllWithSecretsByUser(userId, { kind: UserAuthenticatorKind.RECOVERY });
+
             expect(all).toHaveLength(1);
 
             const verified = await service.verify(userId, {
                 kind: UserAuthenticatorKind.RECOVERY,
                 response: first.meta.codes![0],
             });
+
             expect(verified).toBeFalsy();
 
             cache = new MemoryCache();
             service = buildService();
+
             const verifiedSecond = await service.verify(userId, {
                 kind: UserAuthenticatorKind.RECOVERY,
                 response: second.meta.codes![0],
             });
+
             expect(verifiedSecond).toBeTruthy();
         });
 
@@ -339,7 +353,9 @@ describe('UserAuthenticatorService', () => {
             await service.enroll({ kind: UserAuthenticatorKind.RECOVERY }, makeActor());
 
             expect(eventService.recordCalls).toHaveLength(1);
+
             const [call] = eventService.recordCalls;
+
             expect(call).toMatchObject({
                 name: EventName.MFA_ENROLLED,
                 sessionId: requestSessionId,
@@ -348,6 +364,7 @@ describe('UserAuthenticatorService', () => {
 
         it('attributes a challenge event to the verifying session', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.RECOVERY }, makeActor());
+
             eventService.recordCalls = [];
 
             const verified = await service.verify(
@@ -355,10 +372,13 @@ describe('UserAuthenticatorService', () => {
                 { kind: UserAuthenticatorKind.RECOVERY, response: enrolled.meta.codes![0] },
                 { sessionId: challengeSessionId },
             );
+
             expect(verified).toBeTruthy();
 
             expect(eventService.recordCalls).toHaveLength(1);
+
             const [call] = eventService.recordCalls;
+
             expect(call).toMatchObject({
                 name: EventName.MFA_VERIFIED,
                 sessionId: challengeSessionId,
@@ -369,23 +389,28 @@ describe('UserAuthenticatorService', () => {
     describe('verify (totp)', () => {
         it('verifies a valid code and stamps lastUsedAt', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
+
             await service.confirm(enrolled.data.id, totpCode(enrolled.meta.secret!), makeActor());
 
             const verified = await service.verify(userId, {
                 kind: UserAuthenticatorKind.TOTP,
                 response: totpCode(enrolled.meta.secret!),
             });
+
             expect(verified).toBeTruthy();
 
             const [stored] = await repository.findAllWithSecretsByUser(userId);
+
             expect(stored.lastUsedAt).toBeDefined();
         });
 
         it('rejects replay of an already-used login code within its window (#3237)', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
+
             await service.confirm(enrolled.data.id, totpCode(enrolled.meta.secret!), makeActor());
 
             const code = totpCode(enrolled.meta.secret!);
+
             // the first LOGIN with this code is accepted (the confirmation does
             // not consume the step); a replay of the same code is rejected —
             // the consumed step is persisted and must strictly advance.
@@ -393,18 +418,22 @@ describe('UserAuthenticatorService', () => {
             expect(await service.verify(userId, { kind: UserAuthenticatorKind.TOTP, response: code })).toBeFalsy();
 
             const [stored] = await repository.findAllWithSecretsByUser(userId);
+
             expect(JSON.parse(stored.parameters!).counter).toBeGreaterThan(0);
         });
 
         it('bails without consuming the factor when the verify lock is held', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
+
             await service.confirm(enrolled.data.id, totpCode(enrolled.meta.secret!), makeActor());
 
             // simulate a concurrent verify holding the per-user lock
             const lockKey = buildCacheKey({ prefix: USER_AUTHENTICATOR_VERIFY_LOCK_CACHE_PREFIX, key: userId });
+
             expect(await cache.add(lockKey, 1)).toBeTruthy();
 
             const code = totpCode(enrolled.meta.secret!);
+
             expect(await service.verify(userId, { kind: UserAuthenticatorKind.TOTP, response: code })).toBeFalsy();
 
             // the step was NOT consumed — the same code succeeds once the lock frees
@@ -421,6 +450,7 @@ describe('UserAuthenticatorService', () => {
             const renew = vi.spyOn(cache, 'renewIfValue');
 
             vi.useFakeTimers();
+
             try {
                 const verification = service.verify(
                     userId,
@@ -453,9 +483,12 @@ describe('UserAuthenticatorService', () => {
 
         it('fails verification closed when the cache is unavailable', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
+
             await service.confirm(enrolled.data.id, totpCode(enrolled.meta.secret!), makeActor());
 
-            cache.get = async () => { throw new Error('cache unavailable'); };
+            cache.get = async () => {
+                throw new Error('cache unavailable');
+            };
 
             await expect(service.verify(userId, {
                 kind: UserAuthenticatorKind.TOTP,
@@ -468,9 +501,12 @@ describe('UserAuthenticatorService', () => {
 
             // the throttle read blips — confirm must degrade to a retry-able 429,
             // never surface the raw cache error as an internal 500.
-            cache.get = async () => { throw new Error('cache unavailable'); };
+            cache.get = async () => {
+                throw new Error('cache unavailable');
+            };
 
             expect.assertions(1);
+
             try {
                 await service.confirm(enrolled.data.id, totpCode(enrolled.meta.secret!), makeActor());
             } catch (e) {
@@ -485,11 +521,13 @@ describe('UserAuthenticatorService', () => {
                 kind: UserAuthenticatorKind.TOTP,
                 response: totpCode(enrolled.meta.secret!),
             });
+
             expect(verified).toBeFalsy();
         });
 
         it('fails closed (a plain verification failure) when the seed blob references an unknown key', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
+
             await service.confirm(enrolled.data.id, totpCode(enrolled.meta.secret!), makeActor());
 
             // same device rows, but a cipher whose key store no longer
@@ -506,11 +544,13 @@ describe('UserAuthenticatorService', () => {
                 kind: UserAuthenticatorKind.TOTP,
                 response: totpCode(enrolled.meta.secret!),
             });
+
             expect(verified).toBeFalsy();
         });
 
         it('lets infrastructure errors during seed decryption bubble (attempt not burned)', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
+
             await service.confirm(enrolled.data.id, totpCode(enrolled.meta.secret!), makeActor());
 
             // a cipher failing with a NON-blob-semantics error (database
@@ -540,6 +580,7 @@ describe('UserAuthenticatorService', () => {
                 prefix: USER_AUTHENTICATOR_ATTEMPT_CACHE_PREFIX,
                 key: userId,
             }));
+
             expect(attempts ?? null).toBeNull();
         });
     });
@@ -547,30 +588,37 @@ describe('UserAuthenticatorService', () => {
     describe('per-account backoff', () => {
         it('locks after a failed attempt and releases after the window', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
+
             await service.confirm(enrolled.data.id, totpCode(enrolled.meta.secret!), makeActor());
 
             const failed = await service.verify(userId, { kind: UserAuthenticatorKind.TOTP, response: '000000' });
+
             expect(failed).toBeFalsy();
 
             // immediately locked (factor 1 → 1s after the first failure)
             expect.assertions(3);
+
             try {
                 await service.verify(userId, { kind: UserAuthenticatorKind.TOTP, response: '000000' });
             } catch (e) {
                 expect(isMfaThrottledError(e)).toBeTruthy();
             }
 
-            await new Promise((resolve) => { setTimeout(resolve, 1_100); });
+            await new Promise((resolve) => {
+                setTimeout(resolve, 1_100);
+            });
 
             const verified = await service.verify(userId, {
                 kind: UserAuthenticatorKind.TOTP,
                 response: totpCode(enrolled.meta.secret!),
             });
+
             expect(verified).toBeTruthy();
         });
 
         it('counts concurrent failures atomically (#3237)', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
+
             await service.confirm(enrolled.data.id, totpCode(enrolled.meta.secret!), makeActor());
 
             expect(await service.verify(userId, { kind: UserAuthenticatorKind.TOTP, response: '000000' })).toBeFalsy();
@@ -578,15 +626,18 @@ describe('UserAuthenticatorService', () => {
             const count = await cache.get(
                 buildCacheKey({ prefix: USER_AUTHENTICATOR_ATTEMPT_CACHE_PREFIX, key: userId }),
             );
+
             expect(count).toBe(1);
         });
 
         it('recovers from a legacy (non-numeric) attempt-counter value', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
+
             await service.confirm(enrolled.data.id, totpCode(enrolled.meta.secret!), makeActor());
 
             // a pre-upgrade deployment stored the state as a JSON object
             const key = buildCacheKey({ prefix: USER_AUTHENTICATOR_ATTEMPT_CACHE_PREFIX, key: userId });
+
             await cache.set(key, { count: 3, lockedUntil: 0 }, {});
 
             expect(await service.verify(userId, { kind: UserAuthenticatorKind.TOTP, response: '000000' })).toBeFalsy();
@@ -604,7 +655,11 @@ describe('UserAuthenticatorService', () => {
             await expect(service.verify(
                 userId,
                 { kind: UserAuthenticatorKind.RECOVERY, response: code },
-                { onVerified: async () => { throw new Error('session stamp failed'); } },
+                {
+                    onVerified: async () => {
+                        throw new Error('session stamp failed');
+                    },
+                },
             )).rejects.toThrow('session stamp failed');
 
             // nothing was consumed (and no penalty applied) — the same code
@@ -614,13 +669,19 @@ describe('UserAuthenticatorService', () => {
 
         it('does not consume the TOTP step when the onVerified hook fails', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
+
             await service.confirm(enrolled.data.id, totpCode(enrolled.meta.secret!), makeActor());
 
             const code = totpCode(enrolled.meta.secret!);
+
             await expect(service.verify(
                 userId,
                 { kind: UserAuthenticatorKind.TOTP, response: code },
-                { onVerified: async () => { throw new Error('session stamp failed'); } },
+                {
+                    onVerified: async () => {
+                        throw new Error('session stamp failed');
+                    },
+                },
             )).rejects.toThrow('session stamp failed');
 
             expect(await service.verify(userId, { kind: UserAuthenticatorKind.TOTP, response: code })).toBeTruthy();
@@ -635,12 +696,17 @@ describe('UserAuthenticatorService', () => {
             } as Partial<User>);
             await service.enroll({ kind: UserAuthenticatorKind.EMAIL }, makeActor());
             await service.sendChallenge(userId, UserAuthenticatorKind.EMAIL);
+
             const code = /(\d{6})/.exec(mailClient.sent[0].text ?? '')![1];
 
             await expect(service.verify(
                 userId,
                 { kind: UserAuthenticatorKind.EMAIL, response: code },
-                { onVerified: async () => { throw new Error('session stamp failed'); } },
+                {
+                    onVerified: async () => {
+                        throw new Error('session stamp failed');
+                    },
+                },
             )).rejects.toThrow('session stamp failed');
 
             expect(await service.verify(userId, { kind: UserAuthenticatorKind.EMAIL, response: code })).toBeTruthy();
@@ -654,7 +720,9 @@ describe('UserAuthenticatorService', () => {
             const [code] = enrolled.meta.codes!;
 
             let calls = 0;
-            const onVerified = async () => { calls += 1; };
+            const onVerified = async () => {
+                calls += 1;
+            };
 
             expect(await service.verify(
                 userId,
@@ -664,7 +732,9 @@ describe('UserAuthenticatorService', () => {
             expect(calls).toBe(0);
 
             // wait out the 1s lock from the failed attempt
-            await new Promise((resolve) => { setTimeout(resolve, 1_100); });
+            await new Promise((resolve) => {
+                setTimeout(resolve, 1_100);
+            });
 
             expect(await service.verify(
                 userId,
@@ -678,17 +748,20 @@ describe('UserAuthenticatorService', () => {
     describe('challenge', () => {
         it('reports nothing when the feature is disabled', async () => {
             service = buildService({ enabled: false });
+
             const status = await service.challenge(userId);
+
             expect(status).toEqual({
-                required: false, 
-                enrollmentRequired: false, 
-                kinds: [], 
+                required: false,
+                enrollmentRequired: false,
+                kinds: [],
             });
         });
 
         it('requires a factor once a confirmed device exists', async () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
             let status = await service.challenge(userId);
+
             expect(status.required).toBeFalsy();
 
             await service.confirm(enrolled.data.id, totpCode(enrolled.meta.secret!), makeActor());
@@ -699,7 +772,9 @@ describe('UserAuthenticatorService', () => {
 
         it('requires enrollment when mfaRequired is on and no device exists', async () => {
             service = buildService({ enabled: true, required: true });
+
             const status = await service.challenge(userId);
+
             expect(status.required).toBeFalsy();
             expect(status.enrollmentRequired).toBeTruthy();
         });
@@ -719,22 +794,25 @@ describe('UserAuthenticatorService', () => {
             seedUserWithEmail();
 
             const result = await service.enroll({ kind: UserAuthenticatorKind.EMAIL }, makeActor());
+
             expect(result.data.kind).toEqual(UserAuthenticatorKind.EMAIL);
             expect(result.data.confirmed).toBeTruthy();
 
             const status = await service.challenge(userId);
+
             expect(status.required).toBeTruthy();
             expect(status.kinds).toContain(UserAuthenticatorKind.EMAIL);
         });
 
         it('rejects email enrollment when the user has no email', async () => {
             userRepository.seed({
-                id: userId, 
-                name: 'no-email', 
+                id: userId,
+                name: 'no-email',
                 realmId,
             } as Partial<User>);
 
             expect.assertions(1);
+
             try {
                 await service.enroll({ kind: UserAuthenticatorKind.EMAIL }, makeActor());
             } catch (e) {
@@ -793,6 +871,7 @@ describe('UserAuthenticatorService', () => {
             });
 
             expect.assertions(1);
+
             try {
                 await service.enroll({ kind: UserAuthenticatorKind.EMAIL }, makeActor());
             } catch (e) {
@@ -802,11 +881,13 @@ describe('UserAuthenticatorService', () => {
 
         it('re-enrolling email updates the existing factor in place (no destructive gap)', async () => {
             seedUserWithEmail();
+
             const first = await service.enroll({ kind: UserAuthenticatorKind.EMAIL }, makeActor());
             const second = await service.enroll({ kind: UserAuthenticatorKind.EMAIL }, makeActor());
 
             const rows = (await repository.findAllByUser(userId))
                 .filter((device) => device.kind === UserAuthenticatorKind.EMAIL);
+
             expect(rows).toHaveLength(1);
             // updated in place — same row id, not remove-then-create
             expect(second.data.id).toEqual(first.data.id);
@@ -822,11 +903,13 @@ describe('UserAuthenticatorService', () => {
 
             // a resend within the cooldown is throttled — no second mail
             expect.assertions(3);
+
             try {
                 await service.sendChallenge(userId, UserAuthenticatorKind.EMAIL);
             } catch (e) {
                 expect(isMfaThrottledError(e)).toBeTruthy();
             }
+
             expect(mailClient.sent).toHaveLength(1);
         });
 
@@ -834,11 +917,15 @@ describe('UserAuthenticatorService', () => {
             seedUserWithEmail();
             await service.enroll({ kind: UserAuthenticatorKind.EMAIL }, makeActor());
             await service.sendChallenge(userId, UserAuthenticatorKind.EMAIL);
+
             const code = /(\d{6})/.exec(mailClient.sent[0].text ?? '')![1];
 
             // simulate the lock primitive (set-if-absent) erroring while reads work
             const originalAdd = cache.add.bind(cache);
-            cache.add = async () => { throw new Error('cache down'); };
+
+            cache.add = async () => {
+                throw new Error('cache down');
+            };
 
             // EMAIL has no persisted anti-replay backstop, so without a real lock
             // it must fail closed rather than risk a concurrent double-consume.
@@ -872,6 +959,7 @@ describe('UserAuthenticatorService', () => {
                 prefix: USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX,
                 key: result.data.id,
             }));
+
             expect(cached).not.toBeNull();
 
             // an unconfirmed webauthn device does not satisfy a challenge
@@ -909,12 +997,15 @@ describe('UserAuthenticatorService', () => {
             );
 
             expect.assertions(2);
+
             let firstFailed = false;
+
             try {
                 await service.confirm(enrolled.data.id, '{}', makeActor());
             } catch {
                 firstFailed = true;
             }
+
             expect(firstFailed).toBeTruthy();
 
             // the next attempt is locked out (factor 1 → 1s after the first failure)
@@ -943,6 +1034,7 @@ describe('UserAuthenticatorService', () => {
             service = buildService();
 
             const status = await service.challenge(userId);
+
             expect(status.required).toBeTruthy();
             expect(status.kinds).toContain(UserAuthenticatorKind.WEBAUTHN);
             expect(status.challenge).toBeDefined();
@@ -954,6 +1046,7 @@ describe('UserAuthenticatorService', () => {
                 prefix: USER_AUTHENTICATOR_WEBAUTHN_AUTH_CACHE_PREFIX,
                 key: userId,
             }));
+
             expect(cached).not.toBeNull();
         });
 
@@ -967,6 +1060,7 @@ describe('UserAuthenticatorService', () => {
             });
 
             expect.assertions(1);
+
             try {
                 await service.enroll({ kind: UserAuthenticatorKind.WEBAUTHN }, makeActor());
             } catch (e) {
@@ -978,6 +1072,7 @@ describe('UserAuthenticatorService', () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.WEBAUTHN }, makeActor());
 
             expect.assertions(1);
+
             try {
                 await service.confirm(enrolled.data.id, 'not-json', makeActor());
             } catch (e) {
@@ -992,14 +1087,17 @@ describe('UserAuthenticatorService', () => {
 
             const actor = makeActor({ allow: false });
             const { data } = await service.getMany({}, actor, { userId });
+
             expect(data).toHaveLength(1);
             expect(data[0].secret).toBeNull();
             expect(data[0].codes).toBeNull();
 
             const one = await service.getOne(enrolled.data.id, actor, { userId });
+
             expect(one.secret).toBeNull();
 
             const deleted = await service.delete(enrolled.data.id, actor, { userId });
+
             expect(deleted.id).toEqual(enrolled.data.id);
             expect(await repository.findAllByUser(userId)).toHaveLength(0);
         });
@@ -1028,6 +1126,7 @@ describe('UserAuthenticatorService', () => {
             });
 
             const actor = makeActor();
+
             (actor.permissionEvaluator as FakePermissionEvaluator).setCompileResult({
                 verdict: 'conditional',
                 condition: eq('realmId', realmId),
@@ -1040,6 +1139,7 @@ describe('UserAuthenticatorService', () => {
             // service built over the seeded rows instead
             const query = spy.mock.calls[0]![0];
             const applied = applyQuery(query, [own, foreignSameRealm, foreignOtherRealm]);
+
             expect(applied.data.map((row) => row.id).sort())
                 .toEqual([own.id, foreignSameRealm.id].sort());
 
@@ -1063,13 +1163,16 @@ describe('UserAuthenticatorService', () => {
             });
 
             const actor = makeActor();
+
             (actor.permissionEvaluator as FakePermissionEvaluator).setCompileResult({ verdict: 'deny' });
 
             const spy = vi.spyOn(repository, 'findMany');
+
             await service.getMany({}, actor);
 
             const query = spy.mock.calls[0]![0];
             const applied = applyQuery(query, [own, foreign]);
+
             expect(applied.data.map((row) => row.id)).toEqual([own.id]);
             expect((actor.permissionEvaluator as FakePermissionEvaluator).evaluateCalls).toHaveLength(0);
         });
@@ -1085,11 +1188,13 @@ describe('UserAuthenticatorService', () => {
             const actor = makeActor({ allow: false });
 
             expect.assertions(2);
+
             try {
                 await service.getOne(entity.id, actor, { userId: otherUserId });
             } catch (e) {
                 expect(e).toBeDefined();
             }
+
             try {
                 await service.delete(entity.id, actor, { userId: otherUserId });
             } catch (e) {
@@ -1105,6 +1210,7 @@ describe('UserAuthenticatorService', () => {
             });
 
             expect.assertions(1);
+
             try {
                 await service.getOne(entity.id, makeActor(), { userId });
             } catch (e) {

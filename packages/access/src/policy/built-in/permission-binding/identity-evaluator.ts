@@ -104,6 +104,7 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
         const policy = await this.validator.run(value);
 
         const identity = await this.identityEvaluator.accessData(ctx);
+
         if (!identity) {
             return {
                 success: false,
@@ -116,7 +117,9 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
                 ],
             };
         }
+
         const binding = await this.accessData(ctx);
+
         if (!binding) {
             return {
                 success: false,
@@ -131,6 +134,7 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
         }
 
         let grants : PermissionPolicyBinding[];
+
         try {
             grants = this.accessGrants(ctx, identity);
         } catch (e) {
@@ -155,6 +159,7 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
         }
 
         const [aggr] = aggregatePermissionPolicyBindings(identityBindings);
+
         if (!aggr) {
             return { success: maybeInvertPolicyOutcome(false, policy.invert) };
         }
@@ -172,6 +177,7 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
         const conditions : ICondition[] = [];
         let pending = false;
         let lowerable = true;
+
         for (const grant of aggr.grants) {
             // Realm reach (coarse, actor-relative) — a SEPARATE factor from the grant's
             // policy, ANDed with it. The realm-match evaluator runs in SCOPE MODE: it reads the
@@ -194,8 +200,10 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
                 { scope: grant.realmScope, attributeName: ctx.realmAttributeName },
                 ctx,
             );
+
             if (realmOutcome.pending) {
                 const scope = normalizeRealmScope(grant.realmScope);
+
                 if (scope === RealmScope.NONE) {
                     continue;
                 }
@@ -204,6 +212,7 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
                     if (!realmOutcome.condition) {
                         pending = true;
                         lowerable = false;
+
                         continue;
                     }
 
@@ -222,6 +231,7 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
                 // Reach is the grant's only restriction — a pure condition term.
                 conditions.push(reachCondition);
                 pending = true;
+
                 continue;
             }
 
@@ -258,6 +268,7 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
 
                 conditions.push(reachCondition);
                 pending = true;
+
                 continue;
             }
 
@@ -317,6 +328,7 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
                 const condition = conditions.length === 1 ?
                     conditions[0]! :
                     or(...conditions);
+
                 result.condition = policy.invert ? not(condition) : condition;
             }
 
@@ -326,6 +338,7 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
         // No grant term satisfied (reach ∧ policies). Apply `invert` ONCE to the aggregated
         // disjunction outcome — never per term, which would corrupt the quantifier.
         const success = maybeInvertPolicyOutcome(false, policy.invert);
+
         return {
             success,
             issues: success ? [] : issues,

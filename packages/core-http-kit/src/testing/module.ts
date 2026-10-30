@@ -34,9 +34,9 @@ export class FakeClient extends Client {
 
     constructor(options: FakeClientOptions = {}) {
         const {
-            handlers, 
-            fallback, 
-            ...clientOptions 
+            handlers,
+            fallback,
+            ...clientOptions
         } = options;
 
         super({
@@ -59,6 +59,7 @@ export class FakeClient extends Client {
         const match = matchRoute(method, url, this.handlers);
 
         const headers : Record<string, string> = {};
+
         new Headers((config.headers ?? {}) as HeadersInit).forEach((value, key) => {
             // some DOM shims (happy-dom) preserve header-name case — the
             // fetch spec lower-cases; normalize so assertions are stable.
@@ -76,6 +77,7 @@ export class FakeClient extends Client {
             params: match ? match.params : {},
             headers,
         };
+
         this.requests.push(request);
 
         const data = match ?
@@ -86,6 +88,7 @@ export class FakeClient extends Client {
             status: 200,
             statusText: 'OK',
         }) as ResponseInterface;
+
         response.data = data;
 
         return response as R;

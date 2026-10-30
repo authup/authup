@@ -54,16 +54,19 @@ export class FakeIdentityPermissionProvider implements IIdentityPermissionProvid
 
     async getFor(identity: IdentityPermissionSubject): Promise<PermissionPolicyBinding[]> {
         this.getForCalls.push(identity);
+
         return this.bindings;
     }
 
     async getForToken(token: IdentityToken): Promise<PermissionPolicyBinding[]> {
         this.getForTokenCalls.push(token);
+
         return this.bindings;
     }
 
     async isSuperset(parent: PermissionPolicyBinding[], _child: PermissionPolicyBinding[]): Promise<boolean> {
         this.delegatedGrants.push(parent);
+
         return this.supersetResult;
     }
 
@@ -72,6 +75,7 @@ export class FakeIdentityPermissionProvider implements IIdentityPermissionProvid
         _options: ResolveJunctionPolicyOptions,
     ): Promise<ResolveJunctionGrantResult> {
         this.delegatedGrants.push(bindings);
+
         return {
             policy: this.junctionPolicy,
             realmScope: this.junctionScope,

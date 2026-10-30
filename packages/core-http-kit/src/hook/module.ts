@@ -106,6 +106,7 @@ export class ClientAuthenticationHook extends EventEmitter<{
         }
 
         const index = this.clients.indexOf(client);
+
         if (index === -1) {
             this.clients.push(client);
         }
@@ -122,6 +123,7 @@ export class ClientAuthenticationHook extends EventEmitter<{
                         const { request } = err;
 
                         const currentState = getClientRequestRetryState(request);
+
                         if (currentState.retryCount > 0) {
                             return Promise.reject(err);
                         }
@@ -204,15 +206,18 @@ export class ClientAuthenticationHook extends EventEmitter<{
         client.unsetAuthorizationHeader();
 
         const index = this.clients.indexOf(client);
+
         if (index !== -1) {
             this.clients.splice(index, 1);
         }
 
-        if (this.isAttached(client)) {
-            client.off(HookName.RESPONSE_ERROR, client[HOOK_SYMBOL] as number);
-
-            delete client[HOOK_SYMBOL];
+        if (!this.isAttached(client)) {
+            return;
         }
+
+        client.off(HookName.RESPONSE_ERROR, client[HOOK_SYMBOL] as number);
+
+        delete client[HOOK_SYMBOL];
     }
 
     // ------------------------------------------------
@@ -227,6 +232,7 @@ export class ClientAuthenticationHook extends EventEmitter<{
         this.clearTimer();
 
         const refreshInMs = (expiresIn - 60) * 1000;
+
         if (refreshInMs > 0) {
             this.timer = setTimeout(
                 async () => this.refresh(),

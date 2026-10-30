@@ -22,6 +22,7 @@ export default defineNuxtRouteMiddleware(
         await nuxtApp.callHook('authup:middleware:start', hookPayload);
 
         const redirectRoute = await interceptor.execute(to, from);
+
         if (redirectRoute) {
             await nuxtApp.callHook('authup:middleware:redirect', hookPayload);
 

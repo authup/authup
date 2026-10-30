@@ -63,6 +63,7 @@ export async function createHandler(
     // Injected by the theme module when this runs inside the console
     // application; built here for a caller holding only a config.
     const theme = themeProvider ?? await createThemeProvider(config);
+
     if (theme) {
         app.use(THEME_ASSET_MOUNT_PATH, createThemeAssetsHandler(theme));
     }
@@ -84,6 +85,7 @@ export async function createHandler(
     // means new names. Without this the default `max-age=0, must-revalidate`
     // re-requested all 140+ files on every full document load.
     const distPath = staticConsole.resolveDistPath();
+
     if (distPath) {
         app.use(ASSETS_PATH, createAssetsHandler(
             path.posix.join(distPath, 'assets'),

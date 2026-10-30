@@ -56,6 +56,7 @@ describe('grant-authorize', () => {
             }))).data;
 
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: confidentialClient.id,
@@ -97,13 +98,16 @@ describe('grant-authorize', () => {
         });
 
         const userClient = new HTTPClient({ baseURL: suite.baseURL });
+
         userClient.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
+
         return userClient;
     };
 
     it('should build oauth2 code challenge', async () => {
         const codeVerifier = 'Li5PBcECIXmMuuDsWHjexHnr6LNK6BWKKkcuJaAjeSkeux7p';
         const codeChallenge = await buildOAuth2CodeChallenge(codeVerifier);
+
         expect(codeChallenge).toEqual('lFtvTpirsB96UMQJgoRhKofsa0w7ShdPkJ3eJ6MgYVY');
     });
 
@@ -123,9 +127,11 @@ describe('grant-authorize', () => {
                 });
 
             const code = new URL(response.url).searchParams.get('code');
+
             expect(code).toMatch(/^[0-9a-f]{64}$/);
 
             const call = set.mock.calls.find(([key]) => String(key).includes(code!));
+
             expect(call).toBeDefined();
             expect(call![2]?.ttl).toBeLessThanOrEqual(600_000);
         } finally {
@@ -148,6 +154,7 @@ describe('grant-authorize', () => {
         expect(response.url).toBeDefined();
 
         const url = new URL(response.url);
+
         expect(url.searchParams.get('access_token')).toBeFalsy();
         expect(url.searchParams.get('code')).toBeDefined();
         expect(url.searchParams.get('id_token')).toEqual(null);
@@ -196,6 +203,7 @@ describe('grant-authorize', () => {
         expect(url.searchParams.get('state')).toEqual(state);
 
         const code = url.searchParams.get('code');
+
         expect(code).toBeTruthy();
 
         const tokenResponse = await suite.client
@@ -450,7 +458,9 @@ describe('grant-authorize', () => {
         });
 
         expect(tokenResponse.status).toEqual(400);
+
         const body = await tokenResponse.json() as { error?: string };
+
         expect(body.error).toEqual(OAuth2ErrorCode.INVALID_REQUEST);
     });
 
@@ -467,6 +477,7 @@ describe('grant-authorize', () => {
             }));
 
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: specialClient.id,
@@ -492,7 +503,7 @@ describe('grant-authorize', () => {
         // spec-compliant client would send it this way.
         const encodedId = encodeURIComponent(specialClient.id);
         const encodedSecret = encodeURIComponent(specialSecret);
-        const basic = Buffer.from(`${encodedId}:${encodedSecret}`).toString('base64');
+        const basic = Buffer.from(`${encodedId}:${encodedSecret}`).toBase64();
 
         const tokenResponse = await httpRequest(suite, 'POST', '/token', {
             headers: { Authorization: `Basic ${basic}` },
@@ -504,7 +515,9 @@ describe('grant-authorize', () => {
         });
 
         expect(tokenResponse.status).toEqual(200);
+
         const body = await tokenResponse.json() as { access_token?: string };
+
         expect(body.access_token).toBeDefined();
     });
 
@@ -527,7 +540,7 @@ describe('grant-authorize', () => {
         // the typed client and send raw to exercise the dual-method path.
         const basic = Buffer
             .from(`${confidentialClient.id}:${confidentialSecret}`)
-            .toString('base64');
+            .toBase64();
         const tokenResponse = await httpRequest(suite, 'POST', '/token', {
             headers: { Authorization: `Basic ${basic}` },
             form: {
@@ -540,7 +553,9 @@ describe('grant-authorize', () => {
         });
 
         expect(tokenResponse.status).toEqual(400);
+
         const body = await tokenResponse.json() as { error?: string };
+
         expect(body.error).toEqual(OAuth2ErrorCode.INVALID_REQUEST);
     });
 
@@ -590,6 +605,7 @@ describe('grant-authorize', () => {
                 tokenBindingMethod: 'none',
             }));
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: client.id,
@@ -606,6 +622,7 @@ describe('grant-authorize', () => {
                     scope: `${ScopeName.GLOBAL}`,
                     state: generateOAuth2CodeVerifier(),
                 });
+
             return new URL(response.url).searchParams.get('code')!;
         };
 
@@ -619,6 +636,7 @@ describe('grant-authorize', () => {
                 code: await issueCode(),
                 realm_id: realm.id,
             });
+
         expect(tokenResponse.access_token).toBeDefined();
 
         // realm_id also accepts the realm name
@@ -636,6 +654,7 @@ describe('grant-authorize', () => {
         // without a hint the name resolves in master, where the client does
         // not exist — deterministic fail-closed instead of an unscoped match
         const code = await issueCode();
+
         await expectClientError(
             () => suite.client.token.createWithAuthorizationCode({
                 client_id: client.name,
@@ -662,6 +681,7 @@ describe('grant-authorize', () => {
                 secret: null,
             }));
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: client.id,
@@ -698,7 +718,7 @@ describe('grant-authorize', () => {
         expect(tokenResponse.id_token).toBeDefined();
 
         const payload = JSON.parse(
-            Buffer.from(tokenResponse.id_token!.split('.')[1], 'base64url').toString('utf8'),
+            new TextDecoder().decode(Uint8Array.fromBase64(tokenResponse.id_token!.split('.')[1], { alphabet: 'base64url' })),
         ) as { sid?: unknown, auth_time?: unknown };
 
         expect(typeof payload.sid).toEqual('string');
@@ -708,6 +728,7 @@ describe('grant-authorize', () => {
         // plan 042 item 6: the id_token is minted at the exchange, so its `sid`
         // is the REAL backing session — the same one the access token carries.
         const introspection = await suite.client.token.introspect({ token: tokenResponse.access_token }, { authorizationHeaderInherit: true });
+
         expect(payload.sid).toEqual(introspection.session_id);
     });
 
@@ -726,6 +747,7 @@ describe('grant-authorize', () => {
                 secret: null,
             }));
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: client.id,
@@ -767,6 +789,7 @@ describe('grant-authorize', () => {
                 secret: null,
             }));
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: client.id,
@@ -776,6 +799,7 @@ describe('grant-authorize', () => {
         const codeChallenge = await buildOAuth2CodeChallenge(codeVerifier);
 
         expect.assertions(4);
+
         try {
             await suite.client.authorize.confirm({
                 response_type: OAuth2AuthorizationResponseType.CODE,
@@ -788,6 +812,7 @@ describe('grant-authorize', () => {
             });
         } catch (e) {
             const data = (isClientError(e) ? e.response?.data : undefined) ?? {};
+
             expect(data.code).toEqual(ErrorCode.OAUTH_LOGIN_REQUIRED);
             // no identity / realm enumeration surface in the body
             expect(data).not.toHaveProperty('realm_id');
@@ -829,6 +854,7 @@ describe('grant-authorize', () => {
                 secret: null,
             }));
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: client.id,

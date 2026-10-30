@@ -31,8 +31,10 @@ export function redirectToAuthConsole(
     const target = new URL(`${authConsoleUrl.replace(/\/+$/, '')}${page}`);
 
     const source = params ?? useRequestQuery(event);
+
     for (const [key, value] of Object.entries(source)) {
         const values = Array.isArray(value) ? value : [value];
+
         for (const item of values) {
             if (typeof item !== 'undefined' && item !== null) {
                 target.searchParams.append(key, `${item}`);

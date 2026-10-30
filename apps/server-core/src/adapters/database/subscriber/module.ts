@@ -38,6 +38,7 @@ export function buildEntityDestinations<T extends ObjectLiteral>(
         if (realmIds) {
             const items = realmIds(data);
             const seen = new Set<string>();
+
             for (const realmId of items) {
                 if (realmId && !seen.has(realmId)) {
                     seen.add(realmId);
@@ -112,6 +113,7 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
         // subscriber runs — databaseEntity is the pre-removal row and keeps
         // the id-keyed cache invalidation (and the DELETED payload) intact.
         const entity = event.databaseEntity ?? event.entity;
+
         if (!entity) {
             return;
         }
@@ -132,6 +134,7 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
         }
 
         const keys = event.queryRunner.data[PENDING_CACHE_KEYS] as Set<string> | undefined;
+
         if (!keys || !event.connection.queryResultCache) {
             return;
         }
@@ -146,13 +149,17 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
         }
 
         const keys = this.ctx.cache.keys(data);
+
         await connection.queryResultCache.remove(keys);
 
-        if (queryRunner.isTransactionActive) {
-            const pending = (queryRunner.data[PENDING_CACHE_KEYS] ??= new Set<string>()) as Set<string>;
-            for (const key of keys) {
-                pending.add(key);
-            }
+        if (!queryRunner.isTransactionActive) {
+            return;
+        }
+
+        const pending = (queryRunner.data[PENDING_CACHE_KEYS] ??= new Set<string>()) as Set<string>;
+
+        for (const key of keys) {
+            pending.add(key);
         }
     }
 
@@ -171,6 +178,7 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
         }
 
         data = this.withoutHiddenColumns(data);
+
         if (dataPrevious) {
             dataPrevious = this.withoutHiddenColumns(dataPrevious);
         }
@@ -193,6 +201,7 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
         }
 
         const output = { ...data };
+
         for (const column of this.hiddenColumns) {
             delete output[column];
         }

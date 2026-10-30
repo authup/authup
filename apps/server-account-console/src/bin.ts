@@ -16,9 +16,11 @@ import { createApplication } from './application';
  * which is also how it is started in practice.
  */
 const application = createApplication();
+
 await application.setup();
 
 const shutdown = () => application.teardown()
     .then(() => process.exit(0), () => process.exit(1));
+
 process.once('SIGINT', shutdown);
 process.once('SIGTERM', shutdown);

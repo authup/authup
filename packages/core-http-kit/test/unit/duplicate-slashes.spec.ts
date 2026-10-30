@@ -11,6 +11,7 @@ import { cleanDoubleSlashes } from '../../src/utils';
 describe('src/utils/duplicate-slashes.ts', () => {
     it('should build safe url', () => {
         let url = cleanDoubleSlashes('https://example.com//path/123');
+
         expect(url).toEqual('https://example.com/path/123');
 
         // multiple slashes with http

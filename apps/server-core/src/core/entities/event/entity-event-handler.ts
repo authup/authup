@@ -111,6 +111,7 @@ export class EntityEventHandler implements IDomainEventHandler {
             }
 
             const name = ENTITY_EVENT_NAME_MAP[ctx.content.event];
+
             if (!name) {
                 return;
             }
@@ -126,6 +127,7 @@ export class EntityEventHandler implements IDomainEventHandler {
                 undefined;
 
             let data : Record<string, any> | null = null;
+
             if (
                 name === EventName.UPDATED &&
                 !ENTITY_OPAQUE_VALUE_TYPES.has(ctx.content.type) &&
@@ -133,6 +135,7 @@ export class EntityEventHandler implements IDomainEventHandler {
                 isObject(ctx.dataPrevious)
             ) {
                 const diff = buildEntityDiff(ctx.content.data, ctx.dataPrevious);
+
                 if (Object.keys(diff).length > 0) {
                     data = { diff };
                 }
@@ -172,6 +175,7 @@ function resolveEntityRealmId(
     }
 
     const key = ENTITY_REALM_KEY_MAP[type as `${EntityType}`] ?? 'realmId';
+
     if (!hasOwnProperty(data, key)) {
         return undefined;
     }

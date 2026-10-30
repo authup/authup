@@ -42,7 +42,7 @@ You install it directly when you write tooling around an Authup deployment's con
 npm install @authup/server-config @authup/server-config-kit
 ```
 
-The package is ESM only and needs Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`.
+The package is ESM only and needs Node.js `>=26.0.0`.
 
 ## Sections
 

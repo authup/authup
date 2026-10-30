@@ -61,6 +61,7 @@ export function isSameOriginRequest(
     }
 
     let expected : string;
+
     try {
         expected = new URL(baseURL).origin;
     } catch {
@@ -68,9 +69,11 @@ export function isSameOriginRequest(
     }
 
     const origin = event.headers.get('origin');
+
     if (origin) {
         if (origin !== expected) {
             reportOriginMismatch(origin, expected, options.logger);
+
             return false;
         }
 

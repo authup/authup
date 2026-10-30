@@ -46,6 +46,7 @@ export default defineComponent({
             }
 
             const url = new URL(window.location.href);
+
             if (!url.searchParams.has('provider')) {
                 return;
             }
@@ -58,14 +59,17 @@ export default defineComponent({
 
         const buildWorkflowLink = (path: string) : LinkProps => {
             const params = new URLSearchParams();
+
             if (app.data.codeRequest && app.data.codeRequest.realm_id) {
                 params.set('realmId', app.data.codeRequest.realm_id);
             }
+
             if (app.data.requestPath) {
                 params.set('redirect', app.data.requestPath);
             }
 
             const qs = params.toString();
+
             return { href: withBasePath(`${path}${qs ? `?${qs}` : ''}`) };
         };
 

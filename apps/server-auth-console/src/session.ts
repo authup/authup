@@ -24,6 +24,7 @@ function isRejectedBearer(err: unknown) : boolean {
     }
 
     const code = getClientErrorCode(err);
+
     return code !== ErrorCode.JWT_EXPIRED && code !== ErrorCode.JWT_INACTIVE;
 }
 
@@ -57,15 +58,19 @@ export function createSessionForwardingGuard(
 
     const roll = () => {
         const time = now();
-        if (time - windowStart >= window) {
-            windowStart = time;
-            rejected = 0;
+
+        if (!(time - windowStart >= window)) {
+            return;
         }
+
+        windowStart = time;
+        rejected = 0;
     };
 
     return {
         reserve() {
             roll();
+
             if (rejected + inflight >= max) {
                 return undefined;
             }
@@ -73,6 +78,7 @@ export function createSessionForwardingGuard(
             inflight += 1;
 
             let released = false;
+
             return () => {
                 if (released) {
                     return;

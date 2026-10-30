@@ -24,6 +24,7 @@ export class CredentialsAuthenticator<T extends ObjectLiteral = ObjectLiteral> e
             const strategy = this.strategies[i];
 
             const output = await strategy.safeAuthenticate(key, value, realmId);
+
             if (output.success) {
                 return output.data;
             }

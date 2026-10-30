@@ -7,11 +7,11 @@
 
 import type { Router } from 'vue-router';
 import { createMemoryHistory, createRouter } from 'vue-router';
-import { 
-    describe, 
-    expect, 
-    it, 
-    vi, 
+import {
+    describe,
+    expect,
+    it,
+    vi,
 } from 'vitest';
 import { installChunkLoadRecovery } from '../../src/chunk-recovery';
 
@@ -54,9 +54,9 @@ function createSuite(options: { href?: string } = {}) {
     const clear = installChunkLoadRecovery(router, { storage, location });
 
     return {
-        router, 
-        location, 
-        storage, 
+        router,
+        location,
+        storage,
         clear,
     };
 }
@@ -67,6 +67,7 @@ async function navigate(router: Router, path: string) {
 
 function dispatchPreloadError() {
     const event = new Event('vite:preloadError', { cancelable: true });
+
     window.dispatchEvent(event);
 
     return event;
@@ -104,9 +105,9 @@ describe('src/chunk-recovery', () => {
 
         it('should load the same target again once a mount cleared the marker', async () => {
             const {
-                router, 
-                location, 
-                clear, 
+                router,
+                location,
+                clear,
             } = createSuite();
 
             await navigate(router, '/users');
@@ -139,6 +140,7 @@ describe('src/chunk-recovery', () => {
             const { location } = createSuite();
 
             dispatchPreloadError();
+
             const event = dispatchPreloadError();
 
             expect(event.defaultPrevented).toBe(true);

@@ -48,6 +48,7 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             if (attributes) {
                 await this.repository.remove(attributes);
             }
+
             return {
                 ...input,
                 attributes: attributes || input.attributes,
@@ -55,6 +56,7 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         }
 
         let created = false;
+
         if (attributes) {
             switch (strategy.type) {
                 case ProvisioningEntityStrategyType.MERGE:
@@ -66,10 +68,12 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
                     );
 
                     attributes = await this.repository.save(attributes);
+
                     break;
                 case ProvisioningEntityStrategyType.REPLACE:
                     input.attributes.id = attributes.id;
                     attributes = await this.repository.save(this.repository.create(input.attributes));
+
                     break;
             }
         } else {
@@ -95,6 +99,7 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
 
         if (input.relations.globalPermissionsExclude && input.relations.globalPermissionsExclude.length > 0) {
             const excludeSet = new Set(input.relations.globalPermissionsExclude);
+
             globalPermissions = globalPermissions.filter((p) => !excludeSet.has(p.name));
         }
 
@@ -112,8 +117,10 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
 
             if (defaultScope) {
                 const overrides = this.buildRealmScopeOverrides(input);
+
                 for (const permission of permissions) {
                     const realmScope = overrides.get(permission.name) ?? defaultScope;
+
                     await this.permissionJunction.synchronize(
                         attributes,
                         [permission],
@@ -140,16 +147,19 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
 
     private buildRealmScopeOverrides(input: RoleProvisioningEntity): Map<string, string> {
         const overrides = new Map<string, string>();
+
         if (input.relations?.globalPermissionsRealmScopeOverrides) {
             for (const [realmScope, permissionNames] of Object.entries(input.relations.globalPermissionsRealmScopeOverrides)) {
                 if (!permissionNames) {
                     continue;
                 }
+
                 for (const permName of permissionNames) {
                     overrides.set(permName, realmScope);
                 }
             }
         }
+
         return overrides;
     }
 }

@@ -59,11 +59,13 @@ export async function readConfig(options: ConfigRawReadOptions<Config> = {}) : P
 
     if (envDataSource) {
         const db = raw.db ?? { type: envDataSource.type };
+
         for (const [key, value] of Object.entries(envDataSource)) {
             if (typeof value !== 'undefined') {
                 db[key] = value;
             }
         }
+
         raw.db = db;
     }
 

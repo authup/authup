@@ -40,6 +40,7 @@ function createIntrospectionAuthorization(creator: TokenCreator) {
 
     const mint = () => {
         const current = creator().then((response) => `Bearer ${response.access_token}`);
+
         pending = current;
         current.catch(() => {
             if (pending === current) {
@@ -61,6 +62,7 @@ function createIntrospectionAuthorization(creator: TokenCreator) {
             }
 
             const current = mint();
+
             reminting = current;
             current
                 .then(() => {
@@ -98,6 +100,7 @@ export class TokenVerifier implements ITokenVerifier {
         // mode and deployment: a local and a remote verifier of one
         // deployment must never serve each other's results.
         let cacheNamespace : string | undefined;
+
         if (ctx.cache) {
             cacheNamespace = ctx.cacheNamespace ?? `authup:${remote ? 'remote' : 'local'}:${ctx.baseURL}`;
         }
@@ -129,8 +132,10 @@ export class TokenVerifier implements ITokenVerifier {
 
     async verify(token: string, options: TokenVerifyOptions = {}) : Promise<TokenVerificationData> {
         let payload : OAuth2TokenPayload;
+
         try {
             const result = await this.verifier.verify(token, { certificateThumbprint: options.certificateThumbprint });
+
             payload = result.claims as OAuth2TokenPayload;
         } catch (e) {
             throw toJWTError(e);
@@ -154,6 +159,7 @@ export class TokenVerifier implements ITokenVerifier {
         }
 
         const now = Math.floor(Date.now() / 1000);
+
         if (payload.exp - now <= 0) {
             throw JWTError.expired();
         }

@@ -23,12 +23,12 @@ import {
     TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { 
-    assignFormProperties, 
-    injectStore, 
-    storeToRefs, 
-    useTranslations, 
-    useTranslationsForNamespace, 
+import {
+    assignFormProperties,
+    injectStore,
+    storeToRefs,
+    useTranslations,
+    useTranslationsForNamespace,
 } from '../../../core';
 import {
     type Client,
@@ -179,8 +179,11 @@ export default defineComponent({
 
         const isSecretAuthentication = computed(() => form.authMethod === ClientAuthMethod.SECRET);
         const isTLSAuthentication = computed(() => form.authMethod === ClientAuthMethod.TLS);
+
         watch(isSecretAuthentication, (val, oldValue) => {
-            if (val === oldValue) return;
+            if (val === oldValue) {
+                return;
+            }
 
             if (val) {
                 form.secret = manager.data.value?.secret || generateSecret();
@@ -210,6 +213,7 @@ export default defineComponent({
         // one would only re-save what is already stored.
         const buildPayload = () : Partial<Client> => {
             const payload : Partial<Client> = { ...form };
+
             if (!isEditing.value) {
                 return payload;
             }
@@ -217,6 +221,7 @@ export default defineComponent({
             delete payload.secretHashed;
 
             const changed = form.secret !== (manager.data.value?.secret ?? '');
+
             if (!changed || !isSecretEditable.value) {
                 delete payload.secret;
             }
@@ -275,17 +280,17 @@ export default defineComponent({
                     key: TranslatorTranslationFieldKey.NAME,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.DISPLAY_NAME, 
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.DISPLAY_NAME,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.DESCRIPTION, 
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.DESCRIPTION,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.ENTITY, 
-                    key: TranslatorTranslationEntityKey.REALM, 
-                    count: 1, 
+                    namespace: TranslatorTranslationNamespace.ENTITY,
+                    key: TranslatorTranslationEntityKey.REALM,
+                    count: 1,
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD,
@@ -331,11 +336,13 @@ export default defineComponent({
 
         const redirectUris = computed(() => {
             const value = v.fields.redirectUri.$model.value as string | undefined;
+
             return value ? value.split(',') : [];
         });
 
         const postLogoutRedirectUris = computed(() => {
             const value = v.fields.postLogoutRedirectUri.$model.value as string | undefined;
+
             return value ? value.split(',') : [];
         });
 
@@ -344,6 +351,7 @@ export default defineComponent({
         // column rather than persist an empty string.
         const grantTypeSelection = computed<string[]>(() => {
             const value = v.fields.grantTypes.$model.value as string | null | undefined;
+
             return value ? value.split(/[\s,]+/).filter(Boolean) : [];
         });
 
@@ -358,6 +366,7 @@ export default defineComponent({
 
         const setGrantTypes = (input: unknown[]) => {
             const values = (input as string[]).filter(Boolean);
+
             v.fields.grantTypes.$model.value = values.length > 0 ? values.join(' ') : null;
         };
 

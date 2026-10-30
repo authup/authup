@@ -55,6 +55,7 @@ export abstract class OAuth2BaseTokenIssuer implements IOAuth2TokenIssuer {
         }
 
         const utc = Math.floor(new Date().getTime() / 1000);
+
         if (this.options.maxAge) {
             return utc + this.options.maxAge;
         }

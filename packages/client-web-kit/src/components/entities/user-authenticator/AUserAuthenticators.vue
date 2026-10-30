@@ -92,8 +92,10 @@ export default defineComponent({
         const load = async () => {
             busy.value = true;
             error.value = null;
+
             try {
                 const response = await apiClient.userAuthenticator.getMany(props.userId, { sorts: { createdAt: 'DESC' } });
+
                 items.value = response.data;
             } catch (e) {
                 error.value = extractErrorContext(e).message ?? null;
@@ -110,6 +112,7 @@ export default defineComponent({
                 cancelLabel: translations.abort,
                 tone: 'error',
             });
+
             if (!confirmed) {
                 return;
             }

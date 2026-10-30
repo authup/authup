@@ -7,9 +7,9 @@
 
 import { BuiltInPolicyType, evaluateRecord, reachesRecord } from '@authup/access';
 import {
-    and, 
-    eq, 
-    inArray, 
+    and,
+    eq,
+    inArray,
     or,
 } from '@rapiq/core';
 import { EntityNotFoundError } from '@authup/errors';
@@ -69,12 +69,14 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
         const parsed = await decodeQuery(query, { schema: consentSchema, actor });
 
         let canReadAll = true;
+
         try {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CONSENT_READ });
         } catch (e) {
             if (!actor.identity) {
                 throw e;
             }
+
             canReadAll = false;
         }
 
@@ -94,12 +96,14 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
         // gate runs as WHERE and pagination/totals stay exact. A non-expressible
         // policy falls back to the per-row loop below.
         const compiled = await actor.permissionEvaluator.compile({ name: PermissionName.CONSENT_READ });
+
         if (compiled.verdict !== 'post') {
             const ownership = actor.identity ?
                 and(eq('sub', actor.identity.data.id), eq('subKind', actor.identity.type)) :
                 null;
 
             let scoped = parsed;
+
             if (compiled.verdict === 'deny') {
                 scoped = appendQueryConditions(parsed, ownership ?? inArray('id', []));
             } else if (compiled.verdict === 'conditional') {
@@ -120,6 +124,7 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
         for (const entity of entities) {
             if (this.isOwnedBy(entity, actor)) {
                 data.push(entity);
+
                 continue;
             }
 
@@ -128,8 +133,10 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
                 realm: entity.realmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -147,6 +154,7 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
 
     async getOne(id: string, actor: ActorContext, options: ConsentServiceReadOptions = {}): Promise<Consent> {
         const entity = await this.repository.findOneById(id);
+
         if (!entity || (options.realmId && entity.realmId !== options.realmId)) {
             // A realm mismatch on the nested mount fails as not-found (no
             // cross-realm existence oracle).
@@ -167,6 +175,7 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
 
     async delete(id: string, actor: ActorContext, options: ConsentServiceReadOptions = {}): Promise<Consent> {
         const entity = await this.repository.findOneById(id);
+
         if (!entity || (options.realmId && entity.realmId !== options.realmId)) {
             throw new EntityNotFoundError();
         }
@@ -181,6 +190,7 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
         }
 
         const { id: entityId } = entity;
+
         await this.repository.remove(entity);
         entity.id = entityId;
 
@@ -189,6 +199,7 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
 
     async record(input: ConsentRecordInput): Promise<void> {
         const tokens = this.normalizeScopeTokens(input.scope);
+
         if (tokens.length === 0) {
             return;
         }
@@ -203,6 +214,7 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
 
     async isCovering(input: ConsentCoveringInput): Promise<boolean> {
         const tokens = this.normalizeScopeTokens(input.scope);
+
         if (tokens.length === 0) {
             return true;
         }

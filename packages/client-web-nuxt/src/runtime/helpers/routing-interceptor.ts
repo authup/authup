@@ -52,6 +52,7 @@ export class RoutingInterceptor {
         from: RouteLocationNormalized,
     ) : Promise<RouteLocationAsPathGeneric | undefined> {
         const code = typeof to.query.code === 'string' ? to.query.code : undefined;
+
         if (code) {
             // The authorization-code exchange needs the PKCE `code_verifier`
             // persisted in sessionStorage, which exists only client-side.
@@ -91,6 +92,7 @@ export class RoutingInterceptor {
                 }
 
                 const state = typeof to.query.state === 'string' ? to.query.state : undefined;
+
                 if (request.state !== state) {
                     throw new Error('The authorization request state does not match.');
                 }
@@ -115,8 +117,10 @@ export class RoutingInterceptor {
                     // what a destination can carry; vue-router's own
                     // parseQuery keeps both.
                     const query : Record<string, string | string[]> = {};
+
                     for (const key of new Set(destination.searchParams.keys())) {
                         const values = destination.searchParams.getAll(key);
+
                         query[key] = values.length > 1 ? values : values[0]!;
                     }
 
@@ -161,6 +165,7 @@ export class RoutingInterceptor {
         }
 
         let isValid = this.validateLoggedInCondition(to);
+
         if (!isValid) {
             return {
                 path: this.loginRoute,
@@ -175,6 +180,7 @@ export class RoutingInterceptor {
         }
 
         isValid = this.validateLoggedOutCondition(to);
+
         if (!isValid) {
             await this.store.logout();
 
@@ -182,6 +188,7 @@ export class RoutingInterceptor {
         }
 
         isValid = await this.validatePermissionCondition(to);
+
         if (!isValid) {
             if (from.path === to.path) {
                 // Deliberately no `redirect`: the user was denied the route
@@ -231,6 +238,7 @@ export class RoutingInterceptor {
         }
 
         let url : URL;
+
         try {
             url = new URL(value, DESTINATION_BASE);
         } catch {
@@ -306,6 +314,7 @@ export class RoutingInterceptor {
         }
 
         let identity : IdentityPolicyData | undefined;
+
         if (this.storeRefs.userId.value) {
             identity = {
                 type: 'user',
@@ -323,6 +332,7 @@ export class RoutingInterceptor {
             const value = match.meta[RouteMetaKey.REQUIRE_PERMISSIONS] as
                 RoutePermissionRequirement | RoutePermissionRequirement[] | undefined;
             let requirements : RoutePermissionRequirement[] = [];
+
             if (Array.isArray(value)) {
                 requirements = value;
             } else if (value) {
@@ -340,10 +350,12 @@ export class RoutingInterceptor {
                 clientId?: string | null,
                 names: string[]
             }>();
+
             for (const requirement of requirements) {
                 const entry = typeof requirement === 'string' ? { name: requirement } : requirement;
                 const key = `${entry.realmId || ''}:${entry.clientId || ''}`;
                 let group = groups.get(key);
+
                 if (!group) {
                     group = {
                         realmId: entry.realmId,
@@ -352,10 +364,12 @@ export class RoutingInterceptor {
                     };
                     groups.set(key, group);
                 }
+
                 group.names.push(entry.name);
             }
 
             let permitted = false;
+
             for (const group of groups.values()) {
                 try {
                     await this.store.permissionEvaluator.preEvaluateOneOf({
@@ -365,6 +379,7 @@ export class RoutingInterceptor {
                         data: definePolicyData({ [BuiltInPolicyType.IDENTITY]: identity }),
                     });
                     permitted = true;
+
                     break;
                 } catch {
                     // the next owner may still admit the route

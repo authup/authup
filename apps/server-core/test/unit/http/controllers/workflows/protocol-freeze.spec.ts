@@ -17,7 +17,7 @@ import { createFakeUser, httpRequest } from '../../../../utils';
 import { createTestApplication } from '../../../../app';
 
 function decodeJwtPayload(token: string): Record<string, any> {
-    return JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf8'));
+    return JSON.parse(new TextDecoder().decode(Uint8Array.fromBase64(token.split('.')[1], { alphabet: 'base64url' })));
 }
 
 // Plan 073 boundary pin (the Keycloak/Okta split): the OAuth2/OIDC protocol
@@ -39,6 +39,7 @@ describe('protocol-surface freeze (plan 073)', () => {
                 password: 'start123',
             },
         });
+
         expect(response.status).toEqual(200);
         grant = await response.json();
     });
@@ -78,7 +79,9 @@ describe('protocol-surface freeze (plan 073)', () => {
             'GET',
             `/realms/${REALM_MASTER_NAME}/.well-known/openid-configuration`,
         );
+
         expect(response.status).toEqual(200);
+
         const discovery = await response.json();
 
         expect(typeof discovery.authorization_endpoint).toEqual('string');
@@ -105,7 +108,9 @@ describe('protocol-surface freeze (plan 073)', () => {
             headers: { Authorization: `Bearer ${grant.access_token}` },
             form: { token: grant.access_token },
         });
+
         expect(response.status).toEqual(200);
+
         const claims = await response.json();
 
         expect(typeof claims.session_id).toEqual('string');

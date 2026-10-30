@@ -9,14 +9,14 @@ import { describe, expect, it } from 'vitest';
 
 import { ErrorCode } from '@authup/errors';
 import type { PermissionPolicyBinding } from '../../../src';
-import { 
-    BuiltInPolicyType, 
-    PermissionError, 
-    PermissionEvaluator, 
-    PermissionMemoryProvider, 
-    PolicyDefaultEvaluators, 
-    PolicyEngine, 
-    definePolicyData, 
+import {
+    BuiltInPolicyType,
+    PermissionError,
+    PermissionEvaluator,
+    PermissionMemoryProvider,
+    PolicyDefaultEvaluators,
+    PolicyEngine,
+    definePolicyData,
     definePolicyWithType,
 } from '../../../src';
 

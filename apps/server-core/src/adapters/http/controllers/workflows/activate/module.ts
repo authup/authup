@@ -59,6 +59,7 @@ export class ActivateController {
         await this.service.activate(validated);
 
         event.response.status = 202;
+
         return null;
     }
 }

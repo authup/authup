@@ -67,6 +67,7 @@ describe('core/permission-check (bearer mode)', () => {
         mount(defineComponent({
             setup() {
                 const checker = createPermissionCheckerReactiveFn({ store });
+
                 outcome = checker(ctx);
 
                 return () => h('div');
@@ -82,9 +83,11 @@ describe('core/permission-check (bearer mode)', () => {
         const store = buildStore();
 
         let outcome!: Ref<boolean>;
+
         mount(defineComponent({
             setup() {
                 const checker = createPermissionCheckerReactiveFn({ store });
+
                 outcome = checker({ name: 'user_read' });
 
                 return () => h('div');
@@ -109,6 +112,7 @@ describe('core/permission-check (bearer mode)', () => {
 
     it('settles reach per row when the check carries the row realm', async () => {
         const store = buildStore();
+
         await store.login({ name: 'admin', password: 'start123' });
 
         const own = await runCheck(store, {
@@ -130,6 +134,7 @@ describe('core/permission-check (bearer mode)', () => {
     // realm owns is checked by naming its owner (#3769).
     it('checks a realm-owned definition only when the check names its realm', async () => {
         const store = buildStore();
+
         await store.login({ name: 'admin', password: 'start123' });
 
         const owned = await runCheck(store, { name: 'owned_read', realmId: AUTHORIZATION_REALM });

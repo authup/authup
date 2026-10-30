@@ -18,6 +18,7 @@ export async function verifyRequest(
 
     if (!authorization && options.tokenByRequest) {
         const fallbackToken = options.tokenByRequest(req);
+
         if (fallbackToken) {
             authorization = fallbackToken.startsWith('Bearer ') ?
                 fallbackToken :
@@ -26,6 +27,7 @@ export async function verifyRequest(
     }
 
     const token = extractBearerToken(authorization);
+
     if (!token) {
         return undefined;
     }

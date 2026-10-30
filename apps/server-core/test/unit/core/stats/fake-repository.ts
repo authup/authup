@@ -18,6 +18,7 @@ export class FakeEntityStatsRepository<T extends Record<string, any>> implements
 
     seed(row: T): T {
         this.rows.push(row);
+
         return row;
     }
 

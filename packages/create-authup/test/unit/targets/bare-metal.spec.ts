@@ -143,23 +143,28 @@ describe('renderBareMetal', () => {
 
     it('should listen where a directly dialed url says and trust the proxy in front otherwise', () => {
         const direct = parse(renderBareMetal(buildAnswers({ publicUrl: 'http://localhost:8080' }), VERSION)['authup.yml']);
+
         expect(direct.core.port).toEqual(8080);
         expect(direct.core.trustProxy).toEqual(false);
 
         const proxied = parse(renderBareMetal(buildAnswers(), VERSION)['authup.yml']);
+
         expect(proxied.core.port).toBeUndefined();
         expect(proxied.core.trustProxy).toEqual(1);
 
         const local = parse(renderBareMetal(buildAnswers({ publicUrl: 'http://localhost:3000' }), VERSION)['authup.yml']);
+
         expect(local.core.port).toBeUndefined();
         expect(local.core.trustProxy).toEqual(false);
     });
 
     it('should emit email verification only when on and keep the placeholders as comments', () => {
         const on = renderBareMetal(buildAnswers({ emailVerificationEnabled: true }), VERSION);
+
         expect(parse(on['authup.yml']).core.emailVerificationEnabled).toEqual(true);
 
         const off = renderBareMetal(buildAnswers(), VERSION);
+
         expect(off['authup.yml']).not.toContain('emailVerificationEnabled');
         expect(off['authup.yml']).toContain('# trustedOrigins:\n#   - https://app.example.com\n');
         expect(parse(off['authup.yml']).trustedOrigins).toBeUndefined();

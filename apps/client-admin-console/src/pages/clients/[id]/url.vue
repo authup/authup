@@ -28,9 +28,9 @@ export default defineComponent({
         const translationsDefault = useTranslations(
             [
                 {
-                    namespace: TranslatorTranslationNamespace.ENTITY, 
-                    key: TranslatorTranslationEntityKey.SCOPE, 
-                    count: 2, 
+                    namespace: TranslatorTranslationNamespace.ENTITY,
+                    key: TranslatorTranslationEntityKey.SCOPE,
+                    count: 2,
                 },
             ],
         );
@@ -49,6 +49,7 @@ export default defineComponent({
 
         const generatedUrl = computed(() => {
             const link = buildURL(config.apiUrl, 'authorize');
+
             link.searchParams.set('client_id', props.entity.id);
             link.searchParams.set('response_type', 'code');
 
@@ -65,6 +66,7 @@ export default defineComponent({
 
         const toggleScope = (scope: string) => {
             const index = scopes.value.indexOf(scope);
+
             if (index === -1) {
                 scopes.value.push(scope);
             } else {

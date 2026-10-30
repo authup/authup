@@ -55,6 +55,7 @@ export default defineComponent({
 
             try {
                 const url = new URL(props.backLink);
+
                 if (url.protocol !== 'http:' && url.protocol !== 'https:') {
                     return undefined;
                 }

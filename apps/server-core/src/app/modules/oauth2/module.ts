@@ -62,6 +62,7 @@ export class OAuth2Module implements IModule {
         container.register(OAuth2InjectionToken.ClientRepository, {
             useFactory: (c) => {
                 const repository = c.resolve<Repository<ClientEntity>>(ClientEntity);
+
                 return new OAuth2ClientRepository(repository);
             },
         });
@@ -69,6 +70,7 @@ export class OAuth2Module implements IModule {
         container.register(OAuth2InjectionToken.ScopeRepository, {
             useFactory: (c) => {
                 const repository = c.resolve<Repository<ClientScopeEntity>>(ClientScopeEntity);
+
                 return new OAuth2ScopeRepository(repository);
             },
         });
@@ -76,6 +78,7 @@ export class OAuth2Module implements IModule {
         container.register(OAuth2InjectionToken.AuthorizationCodeRepository, {
             useFactory: (c) => {
                 const cache = c.resolve(CacheInjectionKey);
+
                 return new OAuth2AuthorizationCodeRepository(cache);
             },
         });
@@ -83,6 +86,7 @@ export class OAuth2Module implements IModule {
         container.register(OAuth2InjectionToken.AuthorizationStateRepository, {
             useFactory: (c) => {
                 const cache = c.resolve(CacheInjectionKey);
+
                 return new OAuth2AuthorizationStateRepository(cache);
             },
         });
@@ -90,6 +94,7 @@ export class OAuth2Module implements IModule {
         container.register(OAuth2InjectionToken.TokenRepository, {
             useFactory: (c) => {
                 const cache = c.resolve(CacheInjectionKey);
+
                 return new OAuth2TokenRepository(cache, {
                     keyInactiveMaxAge: Math.max(
                         config.tokenRefreshMaxAge,
@@ -118,12 +123,14 @@ export class OAuth2Module implements IModule {
                 const config = c.resolve(ConfigInjectionKey);
 
                 let secretsCipher : SymmetricCipher | null = null;
+
                 if (config.secretsEncryptionKey) {
                     secretsCipher = new SymmetricCipher(config.secretsEncryptionKey);
                 } else if (config.env === 'production') {
                     // parity posture without a KEK (Keycloak/authentik store key
                     // material plaintext too) — but say so once, loudly.
                     const logger = c.resolve(LoggerInjectionKey);
+
                     logger.warn(
                         'The realm key store persists key material unwrapped; ' +
                         'set SECRETS_ENCRYPTION_KEY to wrap it at rest.',
@@ -137,6 +144,7 @@ export class OAuth2Module implements IModule {
         container.register(OAuth2InjectionToken.RealmCipher, {
             useFactory: (c) => {
                 const keyStore = c.resolve(OAuth2InjectionToken.KeyStore);
+
                 return new RealmCipher({ keyStore });
             },
         });
@@ -144,6 +152,7 @@ export class OAuth2Module implements IModule {
         container.register(OAuth2InjectionToken.TokenSigner, {
             useFactory: (c) => {
                 const keyStore = c.resolve(OAuth2InjectionToken.KeyStore);
+
                 return new OAuth2TokenSigner(keyStore);
             },
         });
@@ -214,6 +223,7 @@ export class OAuth2Module implements IModule {
             useFactory: (c) => {
                 const tokenRepository = c.resolve(OAuth2InjectionToken.TokenRepository);
                 const sessionTokenRepository = c.resolve(OAuth2InjectionToken.SessionTokenRepository);
+
                 return new OAuth2TokenRevoker(tokenRepository, sessionTokenRepository);
             },
         });
@@ -235,6 +245,7 @@ export class OAuth2Module implements IModule {
                 const tokenSigner = c.resolve(OAuth2InjectionToken.TokenSigner);
                 const identityRoleProvider = c.resolve(IdentityInjectionKey.RoleProvider);
                 const sessionTokenRepository = c.resolve(OAuth2InjectionToken.SessionTokenRepository);
+
                 return new OAuth2AccessTokenIssuer(
                     tokenRepository,
                     tokenSigner,

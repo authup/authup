@@ -41,6 +41,7 @@ describe('http/controllers (include authorization)', () => {
 
         for (const permissionName of permissionNames) {
             const { data: permission } = await suite.client.permission.getOne(permissionName);
+
             await suite.client.clientPermission.create({
                 clientId: created.id,
                 permissionId: permission.id,
@@ -53,6 +54,7 @@ describe('http/controllers (include authorization)', () => {
         });
 
         const httpClient = new HTTPClient({ baseURL: suite.baseURL });
+
         httpClient.setAuthorizationHeader({
             type: 'Bearer',
             token: tokenResponse.access_token,
@@ -90,6 +92,7 @@ describe('http/controllers (include authorization)', () => {
 
         // fail-soft: the list itself succeeds, only the joins are dropped
         expect(response.data.length).toBeGreaterThanOrEqual(1);
+
         for (const row of response.data) {
             expect(row.user).toBeUndefined();
             expect(row.role).toBeUndefined();
@@ -102,6 +105,7 @@ describe('http/controllers (include authorization)', () => {
         const response = await roleReaderClient.userRole.getMany({ relations: ['user', 'role'] });
 
         expect(response.data.length).toBeGreaterThanOrEqual(1);
+
         for (const row of response.data) {
             expect(row.user).toBeUndefined();
             expect(row.role).toBeDefined();
@@ -114,6 +118,7 @@ describe('http/controllers (include authorization)', () => {
     it('should join include=permission on client-permission for a permitted actor', async () => {
         const { data: permission } = await suite.client.permission.create(createFakePermission());
         const { data: client } = await suite.client.client.create(createFakeClient());
+
         await suite.client.clientPermission.create({
             clientId: client.id,
             permissionId: permission.id,
@@ -125,6 +130,7 @@ describe('http/controllers (include authorization)', () => {
         });
 
         const row = response.data.find((r) => r.clientId === client.id);
+
         expect(row).toBeDefined();
         expect(row!.permission).toBeDefined();
         expect(row!.permission!.name).toEqual(permission.name);
@@ -133,6 +139,7 @@ describe('http/controllers (include authorization)', () => {
     it('should join include=permission on user-permission for a permitted actor', async () => {
         const { data: permission } = await suite.client.permission.create(createFakePermission());
         const { data: user } = await suite.client.user.create(createFakeUser());
+
         await suite.client.userPermission.create({
             userId: user.id,
             permissionId: permission.id,
@@ -144,6 +151,7 @@ describe('http/controllers (include authorization)', () => {
         });
 
         const row = response.data.find((r) => r.userId === user.id);
+
         expect(row).toBeDefined();
         expect(row!.permission).toBeDefined();
         expect(row!.permission!.name).toEqual(permission.name);
@@ -152,6 +160,7 @@ describe('http/controllers (include authorization)', () => {
     it('should join include=permission on role-permission for a permitted actor', async () => {
         const { data: permission } = await suite.client.permission.create(createFakePermission());
         const { data: role } = await suite.client.role.create(createFakeRole());
+
         await suite.client.rolePermission.create({
             roleId: role.id,
             permissionId: permission.id,
@@ -163,6 +172,7 @@ describe('http/controllers (include authorization)', () => {
         });
 
         const row = response.data.find((r) => r.roleId === role.id);
+
         expect(row).toBeDefined();
         expect(row!.permission).toBeDefined();
         expect(row!.permission!.name).toEqual(permission.name);

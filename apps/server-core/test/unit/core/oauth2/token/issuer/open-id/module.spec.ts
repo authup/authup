@@ -87,7 +87,9 @@ describe('OAuth2OpenIDTokenIssuer', () => {
     describe('issue', () => {
         it('should throw when sub_kind or sub is missing', async () => {
             const resolver = new FakeIdentityResolver();
+
             resolver.setIdentity(identity);
+
             const issuer = createIssuer({ identityResolver: resolver });
 
             await expect(issuer.issue({ sub: userId })).rejects.toThrow(JWTError);
@@ -105,7 +107,9 @@ describe('OAuth2OpenIDTokenIssuer', () => {
 
         it('should resolve identity and issue token', async () => {
             const resolver = new FakeIdentityResolver();
+
             resolver.setIdentity(identity);
+
             const issuer = createIssuer({ identityResolver: resolver });
 
             const [token] = await issuer.issue({
@@ -113,6 +117,7 @@ describe('OAuth2OpenIDTokenIssuer', () => {
                 sub_kind: OAuth2SubKind.USER,
                 realm_id: realmId,
             });
+
             expect(token).toBe('signed-id-token');
         });
     });
@@ -131,6 +136,7 @@ describe('OAuth2OpenIDTokenIssuer', () => {
             );
 
             const insertCall = repository.insertCalls[0];
+
             expect(insertCall.kind).toBe(OAuth2TokenKind.ID_TOKEN);
             expect(insertCall.name).toBe('jdoe');
             expect(insertCall.given_name).toBe('John');

@@ -23,8 +23,8 @@ import type {
     EntityRecordResponse,
     EntityStatsResponse,
     UserCreatePayload,
-    UserSavePayload, 
-    UserUpdatePayload, 
+    UserSavePayload,
+    UserUpdatePayload,
 } from '@authup/core-http-kit';
 import type { User } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
@@ -32,8 +32,8 @@ import type { IEntityStatsService, IUserService  } from '../../../../../core/ind
 import {
     RECORD_QUERY_PARAMETERS,
     STATS_QUERY_PARAMETERS,
-    describeQuerySchema, 
-    userSchema, 
+    describeQuerySchema,
+    userSchema,
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -131,6 +131,7 @@ export class UserController {
         @DContext() event: IAppEvent,
     ): Promise<EntityRecordResponse<User>> {
         applyRouteRealmIDToBody(event, data);
+
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
@@ -146,6 +147,7 @@ export class UserController {
         @DContext() event: IAppEvent,
     ): Promise<EntityRecordResponse<User>> {
         applyRouteRealmIDToBody(event, data);
+
         const actor = buildActorContext(event);
         const entity = await this.service.update(
             id,
@@ -165,6 +167,7 @@ export class UserController {
         @DContext() event: IAppEvent,
     ): Promise<EntityRecordResponse<User>> {
         applyRouteRealmIDToBody(event, data);
+
         const actor = buildActorContext(event);
         const {
             entity,
@@ -176,6 +179,7 @@ export class UserController {
         );
 
         event.response.status = created ? 201 : 202;
+
         return { data: entity, meta: {} };
     }
 

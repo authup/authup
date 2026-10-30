@@ -47,6 +47,7 @@ export class PolicyRepositoryAdapter extends EntityRepositoryAdapter<Policy, Pol
 
     async deleteFromTree(entity: Policy): Promise<void> {
         const treeRepository = this.repository.manager.connection.getTreeRepository(PolicyEntity);
+
         await treeRepository.remove(entity);
     }
 }

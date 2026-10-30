@@ -22,6 +22,7 @@ export function resolveHostURL(
     env: NodeJS.ProcessEnv = process.env,
 ) : string {
     const input = server || env.AUTHUP_SERVER_URL || current;
+
     if (!input) {
         throw new Error('No server given. Pass --server <url>, set AUTHUP_SERVER_URL, or sign in once with `authup login --server <url> --client <id|name>`.');
     }

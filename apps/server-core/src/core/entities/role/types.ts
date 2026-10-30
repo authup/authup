@@ -30,7 +30,7 @@ export interface IRoleService extends IReadScoper {
         options?: { updateOnly?: boolean },
     ): Promise<{
         entity: Role,
-        created: boolean 
+        created: boolean
     }>;
     delete(id: string, actor: ActorContext): Promise<Role>;
 }

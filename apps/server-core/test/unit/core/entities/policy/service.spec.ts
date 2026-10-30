@@ -55,12 +55,14 @@ describe('core/entities/policy/service', () => {
     describe('update with a restricted grant (#3654)', () => {
         function createRestrictedActor() {
             const permissionEvaluator = new FakePermissionEvaluator();
+
             permissionEvaluator.setBehavior((call) => {
                 if (call.method !== 'evaluate' || call.ctx.name !== PermissionName.PERMISSION_UPDATE) {
                     return;
                 }
 
                 const attributes = call.ctx.data?.get(BuiltInPolicyType.ATTRIBUTES) as Partial<Policy>;
+
                 if (!attributes?.name?.startsWith('reach-')) {
                     throw PermissionError.denied('test');
                 }
@@ -99,6 +101,7 @@ describe('core/entities/policy/service', () => {
             const entity = seed('reach-a');
 
             const result = await service.update(entity.id, { name: 'reach-b' }, createRestrictedActor());
+
             expect(result.name).toBe('reach-b');
         });
 
@@ -156,6 +159,7 @@ describe('core/entities/policy/service', () => {
             }, createAllowAllActor());
 
             const stored = await repository.findOneById(entity.id) as Record<string, any>;
+
             expect(stored.types).toEqual(['user']);
             expect(stored.foo).toBeUndefined();
             expect(stored.builtIn).toBeFalsy();
@@ -170,6 +174,7 @@ describe('core/entities/policy/service', () => {
             }, createAllowAllActor());
 
             const stored = await repository.findOneById(entity.id) as Record<string, any>;
+
             expect(stored.decisionStrategy).toEqual('affirmative');
             expect(stored.foo).toBeUndefined();
         });
@@ -200,10 +205,10 @@ describe('core/entities/policy/service', () => {
 
             await expect(service.update(entity.id, {
                 children: [{
-                    name: 'custom-update-child', 
-                    type: 'custom', 
-                    foo: 'bar', 
-                }], 
+                    name: 'custom-update-child',
+                    type: 'custom',
+                    foo: 'bar',
+                }],
             }, createAllowAllActor())).rejects.toThrow(ValidationError);
         });
 
@@ -212,9 +217,9 @@ describe('core/entities/policy/service', () => {
                 name: 'composite-custom-child',
                 type: BuiltInPolicyType.COMPOSITE,
                 children: [{
-                    name: 'custom-child', 
-                    type: 'custom', 
-                    foo: 'bar', 
+                    name: 'custom-child',
+                    type: 'custom',
+                    foo: 'bar',
                 }],
             }, createAllowAllActor())).rejects.toThrow(ValidationError);
         });
@@ -228,6 +233,7 @@ describe('core/entities/policy/service', () => {
             }, createAllowAllActor());
 
             const stored = await repository.findOneById(entity.id) as Record<string, any>;
+
             expect(stored.type).toEqual('custom');
             expect(stored.displayName).toEqual('Custom');
         });
@@ -268,6 +274,7 @@ describe('core/entities/policy/service', () => {
             }, createAllowAllActor());
 
             const stored = await repository.findOneById(entity.id) as Record<string, any>;
+
             expect(stored.range).toEqual('10.0.0.0/8');
             expect(stored.foo).toBeUndefined();
         });
@@ -280,6 +287,7 @@ describe('core/entities/policy/service', () => {
             }, createAllowAllActor());
 
             const stored = await repository.findOneById(entity.id) as Record<string, any>;
+
             expect(stored.start).toEqual('2020-01-01');
             expect(Object.keys(stored)).not.toContain('end');
         });
@@ -297,6 +305,7 @@ describe('core/entities/policy/service', () => {
             }, createAllowAllActor());
 
             const stored = await repository.findOneById(entity.id) as Record<string, any>;
+
             expect(stored.attributeName).toEqual('realmId');
             expect(stored.foo).toBeUndefined();
         });
@@ -318,9 +327,9 @@ describe('core/entities/policy/service', () => {
             const global = seedEntity('name-scoped', null);
 
             return {
-                master, 
-                global, 
-                scoped, 
+                master,
+                global,
+                scoped,
             };
         }
 

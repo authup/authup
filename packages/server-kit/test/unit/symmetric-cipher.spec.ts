@@ -8,16 +8,18 @@
 import { describe, expect, it } from 'vitest';
 import { SymmetricCipher } from '../../src';
 
-const key = Buffer.alloc(32, 1).toString('base64');
+const key = Buffer.alloc(32, 1).toBase64();
 
 describe('src/crypto/symmetric-cipher', () => {
     it('should encrypt and decrypt round-trip', async () => {
         const cipher = new SymmetricCipher(key);
 
         const blob = await cipher.encrypt('JBSWY3DPEHPK3PXP');
+
         expect(blob).not.toEqual('JBSWY3DPEHPK3PXP');
 
         const plain = await cipher.decrypt(blob);
+
         expect(plain).toEqual('JBSWY3DPEHPK3PXP');
     });
 
@@ -26,6 +28,7 @@ describe('src/crypto/symmetric-cipher', () => {
 
         const first = await cipher.encrypt('value');
         const second = await cipher.encrypt('value');
+
         expect(first).not.toEqual(second);
 
         expect(await cipher.decrypt(first)).toEqual('value');
@@ -35,14 +38,15 @@ describe('src/crypto/symmetric-cipher', () => {
     it('should throw synchronously at construction for a key of the wrong length', () => {
         // a bad key must fail at construction (boot), never as a deferred
         // rejection at first encrypt/decrypt
-        expect(() => new SymmetricCipher(Buffer.alloc(16, 1).toString('base64'))).toThrow(/32 bytes/);
+        expect(() => new SymmetricCipher(Buffer.alloc(16, 1).toBase64())).toThrow(/32 bytes/);
     });
 
     it('should reject a blob sealed under a different key', async () => {
         const cipher = new SymmetricCipher(key);
-        const other = new SymmetricCipher(Buffer.alloc(32, 2).toString('base64'));
+        const other = new SymmetricCipher(Buffer.alloc(32, 2).toBase64());
 
         const blob = await cipher.encrypt('value');
+
         await expect(other.decrypt(blob)).rejects.toThrow();
     });
 

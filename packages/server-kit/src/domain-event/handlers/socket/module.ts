@@ -17,6 +17,7 @@ export class DomainEventSocketHandler implements IDomainEventHandler {
 
     constructor(input: RedisClientCreateInput) {
         const client = createRedisClient(input);
+
         this.driver = new Emitter(client);
     }
 

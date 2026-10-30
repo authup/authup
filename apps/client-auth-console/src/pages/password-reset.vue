@@ -6,9 +6,9 @@
   -->
 <script lang="ts">
 import {
-    AAuthShell, 
-    APasswordResetForm, 
-    AWorkflowDisabledNotice, 
+    AAuthShell,
+    APasswordResetForm,
+    AWorkflowDisabledNotice,
     useTranslations,
 } from '@authup/client-web-kit';
 import type { StatusResponseFeatures } from '@authup/core-http-kit';

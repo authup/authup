@@ -94,6 +94,7 @@ export class HTTPOAuth2Authorizer extends OAuth2Authorization {
         event: IAppEvent,
     ) : Promise<OAuth2AuthorizationCodeRequest> {
         const data = await readFromLocations(event, ['body', 'query']);
+
         return this.requestValidator.run(data);
     }
 }

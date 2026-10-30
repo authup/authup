@@ -30,6 +30,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
         data?: EntityQueryInput<UserAuthenticator>,
     ): Promise<EntityCollectionResponse<UserAuthenticator>> {
         const response = await this.client.get(`users/${userId}/authenticators${buildQueryString(data)}`);
+
         return response.data;
     }
 
@@ -38,6 +39,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
         id: UserAuthenticator['id'],
     ): Promise<EntityRecordResponse<UserAuthenticator>> {
         const response = await this.client.get(`users/${userId}/authenticators/${id}`);
+
         return response.data;
     }
 
@@ -46,6 +48,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
         data: UserAuthenticatorCreatePayload,
     ): Promise<UserAuthenticatorEnrollResponse> {
         const response = await this.client.post(`users/${userId}/authenticators`, nullifyEmptyObjectProperties(data));
+
         return response.data;
     }
 
@@ -55,6 +58,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
         data: UserAuthenticatorConfirmPayload,
     ): Promise<EntityRecordResponse<UserAuthenticator>> {
         const response = await this.client.post(`users/${userId}/authenticators/${id}/confirm`, data);
+
         return response.data;
     }
 
@@ -63,6 +67,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
         id: UserAuthenticator['id'],
     ): Promise<EntityRecordResponse<UserAuthenticator>> {
         const response = await this.client.delete(`users/${userId}/authenticators/${id}`);
+
         return response.data;
     }
 
@@ -77,6 +82,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
             url,
             buildAuthorizationHeaderRequestConfig(options),
         );
+
         return response.data;
     }
 
@@ -89,6 +95,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
             data,
             buildAuthorizationHeaderRequestConfig(options),
         );
+
         return response.data;
     }
 
@@ -101,6 +108,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
             data,
             buildAuthorizationHeaderRequestConfig(options),
         );
+
         return response.data;
     }
 }

@@ -12,7 +12,7 @@ import {
     Index,
     JoinColumn,
     ManyToOne,
-    PrimaryGeneratedColumn, 
+    PrimaryGeneratedColumn,
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
@@ -33,7 +33,7 @@ export class PolicyAttributeEntity implements PolicyAttribute {
 
     @Column({
         type: 'varchar',
-        length: 255, 
+        length: 255,
     })
     name: string;
 
@@ -59,7 +59,7 @@ export class PolicyAttributeEntity implements PolicyAttribute {
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'realm_id' })
     realm: RealmEntity | null;

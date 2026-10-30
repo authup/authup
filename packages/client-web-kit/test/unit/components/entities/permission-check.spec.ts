@@ -55,6 +55,7 @@ describe('components/entities/permission-check', () => {
             .mockRejectedValue(new Error('denied'));
 
         const wrapper = mountCheck('user_read');
+
         await flushPromises();
 
         // the gate must actually evaluate — a truthy inner Ref object must
@@ -67,6 +68,7 @@ describe('components/entities/permission-check', () => {
             .mockResolvedValue(undefined);
 
         const wrapper = mountCheck('user_read');
+
         await flushPromises();
 
         expect(wrapper.find('.permission-gated').exists()).toBe(true);
@@ -85,6 +87,7 @@ describe('components/entities/permission-check', () => {
             });
 
         const wrapper = mountCheck('user_read');
+
         await flushPromises();
         expect(wrapper.find('.permission-gated').exists()).toBe(true);
 
@@ -108,6 +111,7 @@ describe('components/entities/permission-check', () => {
             });
 
         const wrapper = mountCheck('user_read');
+
         await flushPromises();
         expect(wrapper.find('.permission-gated').exists()).toBe(true);
 
@@ -123,6 +127,7 @@ describe('components/entities/permission-check', () => {
             .mockResolvedValue(undefined);
 
         const wrapper = mountCheck('mtb_query_submit', { realmId: 'realm-id', clientId: 'client-id' });
+
         await flushPromises();
 
         expect(spy).toHaveBeenCalledWith(expect.objectContaining({

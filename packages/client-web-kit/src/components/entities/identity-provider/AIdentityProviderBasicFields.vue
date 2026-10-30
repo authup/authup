@@ -80,6 +80,7 @@ export default defineComponent({
         setup.expose({ assign });
 
         const updatedAt = useUpdatedAt(() => props.entity as IdentityProvider);
+
         onChange(updatedAt, () => assign(props.entity));
 
         assign(props.entity);

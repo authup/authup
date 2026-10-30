@@ -199,6 +199,7 @@ describe('src/http/controllers/user', () => {
         });
 
         const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_SELF_MANAGE);
+
         await suite.client.userPermission.create({
             userId: user.id,
             permissionId: permission.id,
@@ -211,6 +212,7 @@ describe('src/http/controllers/user', () => {
         });
 
         const selfClient = new HTTPClient({ baseURL: suite.baseURL });
+
         selfClient.setAuthorizationHeader({
             type: 'Bearer',
             token: tokenResponse.access_token,
@@ -235,6 +237,7 @@ describe('src/http/controllers/user', () => {
         );
 
         const { data: current } = await suite.client.user.getOne(user.id);
+
         expect(current.pathId).toBeNull();
     });
 });

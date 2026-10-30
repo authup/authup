@@ -20,7 +20,7 @@ import { KeyEntity, RealmEntity } from '../../../../../src/adapters/database/dom
 import { WRAPPED_KEY_MATERIAL_PREFIX } from '../../../../../src/core/index.ts';
 import { KeyRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/key/repository.ts';
 
-const KEK = new SymmetricCipher(Buffer.alloc(32, 3).toString('base64'));
+const KEK = new SymmetricCipher(Buffer.alloc(32, 3).toBase64());
 
 describe('app/modules/database/repositories/key', () => {
     let dataSource : DataSource;
@@ -41,6 +41,7 @@ describe('app/modules/database/repositories/key', () => {
         const realm = await dataSource.getRepository(RealmEntity).save(
             dataSource.getRepository(RealmEntity).create({ name: 'master', builtIn: true }),
         );
+
         realmId = realm.id;
     });
 
@@ -62,6 +63,7 @@ describe('app/modules/database/repositories/key', () => {
         const repository = new KeyRepositoryAdapter(dataSource);
 
         const sig = await repository.resolveOrCreate(realmId, JWKUse.SIGNATURE);
+
         expect(sig).toBeDefined();
         expect(sig!.type).toEqual(JWKType.RSA);
         expect(sig!.use).toEqual(JWKUse.SIGNATURE);
@@ -70,6 +72,7 @@ describe('app/modules/database/repositories/key', () => {
         expect(sig!.encryptionKey).toBeDefined();
 
         const enc = await repository.resolveOrCreate(realmId, JWKUse.ENCRYPTION);
+
         expect(enc).toBeDefined();
         expect(enc!.type).toEqual(JWKType.OCT);
         expect(enc!.use).toEqual(JWKUse.ENCRYPTION);
@@ -83,6 +86,7 @@ describe('app/modules/database/repositories/key', () => {
         // a second resolve returns the same keys — no duplicate mints
         const sigAgain = await repository.resolveOrCreate(realmId, JWKUse.SIGNATURE);
         const encAgain = await repository.resolveOrCreate(realmId, JWKUse.ENCRYPTION);
+
         expect(sigAgain!.id).toEqual(sig!.id);
         expect(encAgain!.id).toEqual(enc!.id);
         expect(encAgain!.decryptionKey).toEqual(enc!.decryptionKey);
@@ -132,6 +136,7 @@ describe('app/modules/database/repositories/key', () => {
 
         // a higher-priority PASSIVE key must not be picked
         const keyRepository = dataSource.getRepository(KeyEntity);
+
         await keyRepository.save(keyRepository.create({
             name: 'passive-newer',
             type: JWKType.RSA,
@@ -145,6 +150,7 @@ describe('app/modules/database/repositories/key', () => {
         }));
 
         const resolved = await repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE);
+
         expect(resolved!.id).toEqual(active!.id);
     });
 
@@ -155,6 +161,7 @@ describe('app/modules/database/repositories/key', () => {
         );
 
         const key = await repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE);
+
         await dataSource.getRepository(KeyEntity).update(key!.id, { status: KeyStatus.DISABLED });
 
         await expect(repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE))
@@ -162,7 +169,9 @@ describe('app/modules/database/repositories/key', () => {
 
         // re-enabling restores resolution without a new mint
         await dataSource.getRepository(KeyEntity).update(key!.id, { status: KeyStatus.ACTIVE });
+
         const resolved = await repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE);
+
         expect(resolved!.id).toEqual(key!.id);
     });
 
@@ -178,16 +187,20 @@ describe('app/modules/database/repositories/key', () => {
         );
 
         const key = await repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE);
+
         await dataSource.getRepository(KeyEntity).update(key!.id, { status: KeyStatus.DISABLED });
 
         const outcomes = await Promise.allSettled([
             repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE),
             repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE),
         ]);
+
         expect(outcomes.every((outcome) => outcome.status === 'rejected')).toBe(true);
 
         await dataSource.getRepository(KeyEntity).update(key!.id, { status: KeyStatus.ACTIVE });
+
         const resolved = await repository.resolveOrCreate(realm.id, JWKUse.SIGNATURE);
+
         expect(resolved!.id).toEqual(key!.id);
     });
 
@@ -199,14 +212,17 @@ describe('app/modules/database/repositories/key', () => {
         );
 
         const enc = await repository.resolveOrCreate(realm.id, JWKUse.ENCRYPTION);
+
         // the caller always receives usable material ...
         expect(() => new SymmetricCipher(enc!.decryptionKey!)).not.toThrow();
 
         // ... while the row stores it wrapped
         const raw = await readRawMaterial(enc!.id);
+
         expect(raw!.startsWith(WRAPPED_KEY_MATERIAL_PREFIX)).toBeTruthy();
 
         const reRead = await repository.resolveById(enc!.id);
+
         expect(reRead!.decryptionKey).toEqual(enc!.decryptionKey);
     });
 
@@ -217,10 +233,12 @@ describe('app/modules/database/repositories/key', () => {
 
         const plainRepository = new KeyRepositoryAdapter(dataSource);
         const enc = await plainRepository.resolveOrCreate(realm.id, JWKUse.ENCRYPTION);
+
         expect((await readRawMaterial(enc!.id))!.startsWith(WRAPPED_KEY_MATERIAL_PREFIX)).toBeFalsy();
 
         const wrappedRepository = new KeyRepositoryAdapter(dataSource, { secretsCipher: KEK });
         const reRead = await wrappedRepository.resolveById(enc!.id);
+
         expect(reRead!.decryptionKey).toEqual(enc!.decryptionKey);
 
         // the read wrote the wrapped form back
@@ -228,6 +246,7 @@ describe('app/modules/database/repositories/key', () => {
 
         // and it still round-trips through the wrapped repository
         const again = await wrappedRepository.resolveById(enc!.id);
+
         expect(again!.decryptionKey).toEqual(enc!.decryptionKey);
     });
 
@@ -240,6 +259,7 @@ describe('app/modules/database/repositories/key', () => {
         const enc = await wrappedRepository.resolveOrCreate(realm.id, JWKUse.ENCRYPTION);
 
         const plainRepository = new KeyRepositoryAdapter(dataSource);
+
         await expect(plainRepository.resolveById(enc!.id)).rejects.toThrow(/SECRETS_ENCRYPTION_KEY/);
     });
 });

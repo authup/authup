@@ -87,6 +87,7 @@ function log(message) {
 function fail(message) {
     process.stderr.write(`[smoke] ERROR: ${message}\n`);
     process.exitCode = 1;
+
     return new Error(message);
 }
 
@@ -110,6 +111,7 @@ function buildChildEnv(scratchDirectory) {
     delete env.PUBLIC_URL;
     delete env.API_URL;
     delete env.NODE_ENV;
+
     for (const key of Object.keys(env)) {
         if (key.startsWith('DB_') || key.startsWith('NUXT_') || key.startsWith('NITRO_')) {
             delete env[key];
@@ -156,6 +158,7 @@ function sleep(ms) {
 async function probe(url) {
     try {
         const response = await fetch(url, { redirect: 'follow' });
+
         return response.status;
     } catch {
         return undefined;
@@ -178,6 +181,7 @@ async function assertConsoleServed(name, route, marker) {
     const url = new URL(route, SERVER_URL).href;
 
     let response;
+
     try {
         // Not `follow`: a redirect to some other page that happens to contain
         // the marker would hide a broken console route.
@@ -191,6 +195,7 @@ async function assertConsoleServed(name, route, marker) {
     }
 
     const body = await response.text();
+
     if (!body.includes(marker)) {
         throw fail(`${name}: ${url} answered 200 but the body does not contain ${marker}, so the console shell was not rendered.`);
     }
@@ -212,6 +217,7 @@ async function assertRedirectsToConsole(name, route, expectedPath) {
     const url = new URL(route, SERVER_URL).href;
 
     const response = await fetch(url, { redirect: 'manual' });
+
     if (response.status < 300 || response.status >= 400) {
         throw fail(`${name}: ${url} answered ${response.status}, expected a redirect to the console service.`);
     }
@@ -250,6 +256,7 @@ async function assertRedirectsToConsole(name, route, expectedPath) {
  */
 async function assertConsoleAssetServed(name, route, shell) {
     const match = /<script[^>]+src="([^"]*\/assets\/[^"]+\.js)"/.exec(shell);
+
     if (!match) {
         throw fail(`${name}: the console shell references no script under assets/, so its entry cannot be located.`);
     }
@@ -257,6 +264,7 @@ async function assertConsoleAssetServed(name, route, shell) {
     const url = new URL(match[1], new URL(route, SERVER_URL)).href;
 
     let response;
+
     try {
         response = await fetch(url, { redirect: 'manual' });
     } catch (e) {
@@ -268,6 +276,7 @@ async function assertConsoleAssetServed(name, route, shell) {
     }
 
     const contentType = response.headers.get('content-type') || '';
+
     if (!contentType.includes('javascript')) {
         throw fail(`${name}: ${url} answered 200 with content type "${contentType}", expected JavaScript.`);
     }
@@ -276,6 +285,7 @@ async function assertConsoleAssetServed(name, route, shell) {
     // leaves the socket mid-write, `server.close()` then waits for it, and
     // the SIGTERM assertion below only passes through the 10s force-exit.
     const body = await response.arrayBuffer();
+
     if (body.byteLength === 0) {
         throw fail(`${name}: ${url} answered 200 with an empty body.`);
     }
@@ -310,8 +320,10 @@ async function waitUntilReady(name, url, child) {
         }
 
         const status = await probe(url);
+
         if (status === 200) {
             log(`${name}: ready after ${Math.round((Date.now() - startedAt) / 1000)}s (${url}).`);
+
             return;
         }
 
@@ -350,6 +362,7 @@ function run(command, args, options = {}) {
         });
 
         let stdout = '';
+
         child.stdout.on('data', (chunk) => {
             stdout += chunk;
         });
@@ -381,6 +394,7 @@ function run(command, args, options = {}) {
 async function executeScenario(name, cliExec, cliArgs, cwd) {
     const tempDirectory = createTempDirectory(`authup-smoke-${name}`);
     const scratchDirectory = path.join(tempDirectory, 'scratch');
+
     fs.mkdirSync(scratchDirectory, { recursive: true });
     writeServerConfig(tempDirectory);
 
@@ -413,6 +427,7 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
             authConsoleURL.href,
             'window.__AUTHUP__',
         );
+
         await assertConsoleAssetServed(
             `${name}/client-auth-console`,
             authConsoleURL.href,
@@ -438,14 +453,17 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
             'console/auth/password-forgot',
             'window.__AUTHUP__',
         );
+
         const deviceShell = await assertConsoleServed(
             `${name}/client-auth-console`,
             'console/auth/device?user_code=BCDF-GHJK',
             'window.__AUTHUP__',
         );
+
         if (!deviceShell.includes('BCDFGHJK')) {
             throw fail(`${name}/client-auth-console: the device page did not carry the normalized user code in its payload.`);
         }
+
         // window.__AUTHUP__ rather than the shell markup: it only appears if
         // the `<!--account-config-->` marker was found and replaced, which is
         // that console's entire runtime contract. Without it the SPA silently
@@ -455,17 +473,20 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
             'console/account',
             'window.__AUTHUP__',
         );
+
         await assertConsoleAssetServed(
             `${name}/client-account-console`,
             'console/account',
             accountShell,
         );
+
         // The admin console (plan 081), same contract: `<!--admin-config-->`.
         const adminShell = await assertConsoleServed(
             `${name}/client-admin-console`,
             'console/admin',
             'window.__AUTHUP__',
         );
+
         await assertConsoleAssetServed(
             `${name}/client-admin-console`,
             'console/admin',
@@ -480,6 +501,7 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
         child.kill('SIGTERM');
 
         const { code, signal } = await waitForExit(child, EXIT_TIMEOUT_MS);
+
         if (code !== 0) {
             throw fail(`${name}: the CLI exited with code ${code} (signal ${signal}), expected 0.`);
         }
@@ -487,6 +509,7 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
         await sleep(500);
 
         const serverStatus = await probe(SERVER_URL);
+
         if (typeof serverStatus !== 'undefined') {
             throw fail(`${name}: something is still listening after shutdown (server: ${serverStatus}).`);
         }
@@ -496,6 +519,7 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
         if (child.exitCode === null) {
             child.kill('SIGTERM');
             await sleep(2_000);
+
             if (child.exitCode === null) {
                 child.kill('SIGKILL');
             }
@@ -507,6 +531,7 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
 
 async function executeWorkspaceScenario() {
     const cliEntry = path.join(packageDirectory, 'dist', 'index.mjs');
+
     assertFileExists(cliEntry, 'run: npm run build -w apps/authup');
     assertFileExists(
         path.join(repositoryDirectory, 'apps', 'server-core', 'dist', 'index.mjs'),
@@ -546,6 +571,7 @@ async function executeWorkspaceScenario() {
 async function executeSplitScenario() {
     const tempDirectory = createTempDirectory('authup-smoke-split');
     const scratchDirectory = path.join(tempDirectory, 'scratch');
+
     fs.mkdirSync(scratchDirectory, { recursive: true });
     writeServerConfig(tempDirectory);
 
@@ -582,24 +608,31 @@ async function executeSplitScenario() {
         // mounted first winning silently.
         for (const route of ['console/auth/logout', 'console/admin', 'console/account']) {
             const response = await fetch(new URL(route, SERVER_URL).href, { redirect: 'manual' });
+
             if (response.status !== 404) {
                 throw fail(`split/core: /${route} answered ${response.status}, expected 404: server-core serves no console.`);
             }
+
             await response.arrayBuffer();
         }
+
         log('split/core: the API serves no console page.');
 
         // The hop, which is the only thing tying the two processes together.
         const logout = await fetch(new URL('logout', SERVER_URL).href, { redirect: 'manual' });
+
         // Drained like every other body here: an undrained response leaves
         // the socket mid-write and `server.close()` waits for it, so the
         // SIGTERM assertion below would only pass through the force-exit.
         await logout.arrayBuffer();
+
         const location = logout.headers.get('location') || '';
         const expected = new URL(`${CONSOLE_SEGMENTS.auth}/logout`, SERVER_URL).href;
+
         if (location !== expected) {
             throw fail(`split/core: /logout redirected to "${location}", expected ${expected}.`);
         }
+
         log(`split/core: /logout handed over to ${location}.`);
 
         for (const name of Object.keys(CONSOLE_PORTS)) {
@@ -609,11 +642,13 @@ async function executeSplitScenario() {
             const target = throughProxy(name, publicPath);
 
             const response = await fetch(target, { redirect: 'manual' });
+
             if (response.status !== 200) {
                 throw fail(`split/console: ${target} answered ${response.status}, expected 200.`);
             }
 
             const body = await response.text();
+
             if (!body.includes('window.__AUTHUP__')) {
                 throw fail(`split/console: ${target} answered 200 without the injected runtime config.`);
             }
@@ -623,14 +658,17 @@ async function executeSplitScenario() {
             // outside its own base would be dialled at a path its service
             // does not serve.
             const match = /<script[^>]+src="([^"]*\/assets\/[^"]+\.js)"/.exec(body);
+
             if (!match) {
                 throw fail(`split/console/${name}: the shell references no script under assets/.`);
             }
 
             const asset = await fetch(throughProxy(name, match[1]), { redirect: 'manual' });
+
             if (asset.status !== 200 || !(asset.headers.get('content-type') || '').includes('javascript')) {
                 throw fail(`split/console/${name}: ${match[1]} answered ${asset.status} (${asset.headers.get('content-type')}), expected JavaScript.`);
             }
+
             const bytes = await asset.arrayBuffer();
 
             log(`split/console/${name}: ${match[1]} served the console entry script (${bytes.byteLength} bytes).`);
@@ -641,11 +679,13 @@ async function executeSplitScenario() {
         consoles.kill('SIGTERM');
 
         const apiExit = await waitForExit(api, EXIT_TIMEOUT_MS);
+
         if (apiExit.code !== 0) {
             throw fail(`split/core: exited with code ${apiExit.code}, expected 0.`);
         }
 
         const consoleExit = await waitForExit(consoles, EXIT_TIMEOUT_MS);
+
         if (consoleExit.code !== 0) {
             throw fail(`split/console: exited with code ${consoleExit.code}, expected 0.`);
         }
@@ -657,7 +697,9 @@ async function executeSplitScenario() {
                 child.kill('SIGTERM');
             }
         }
+
         await sleep(2_000);
+
         for (const child of [api, consoles]) {
             if (child.exitCode === null) {
                 child.kill('SIGKILL');
@@ -685,6 +727,7 @@ function collectPackWorkspaces() {
     ];
 
     const packagesDirectory = path.join(repositoryDirectory, 'packages');
+
     for (const entry of fs.readdirSync(packagesDirectory)) {
         if (fs.existsSync(path.join(packagesDirectory, entry, 'package.json'))) {
             workspaces.push(`packages/${entry}`);
@@ -702,6 +745,7 @@ async function executePackedScenario() {
         const workspaces = collectPackWorkspaces();
 
         log(`packed: packing ${workspaces.length} workspaces ...`);
+
         const packStartedAt = Date.now();
         const packArgs = [
             'pack',
@@ -709,13 +753,17 @@ async function executePackedScenario() {
             packDirectory,
             ...workspaces.flatMap((workspace) => ['-w', workspace]),
         ];
+
         await run('npm', packArgs, { cwd: repositoryDirectory });
+
         const tarballs = fs.readdirSync(packDirectory)
             .filter((entry) => entry.endsWith('.tgz'))
             .map((entry) => path.join(packDirectory, entry));
+
         if (tarballs.length !== workspaces.length) {
             throw fail(`packed: expected ${workspaces.length} tarballs, found ${tarballs.length}.`);
         }
+
         log(`packed: pack took ${Math.round((Date.now() - packStartedAt) / 1000)}s (${tarballs.length} tarballs).`);
 
         fs.writeFileSync(path.join(installDirectory, 'package.json'), JSON.stringify({
@@ -725,7 +773,9 @@ async function executePackedScenario() {
         }));
 
         log('packed: installing tarballs ...');
+
         const installStartedAt = Date.now();
+
         // --force mirrors the documented workspace install (transient peer
         // range lag between lockstep releases, e.g. pinia); never
         // --legacy-peer-deps.
@@ -739,6 +789,7 @@ async function executePackedScenario() {
         log(`packed: install took ${Math.round((Date.now() - installStartedAt) / 1000)}s.`);
 
         const installedBin = path.join(installDirectory, 'node_modules', '.bin', 'authup');
+
         assertFileExists(installedBin, 'the installed authup package exposes no bin');
 
         await executeScenario(
@@ -765,6 +816,6 @@ try {
 
     log(`done in ${Math.round((Date.now() - startedAt) / 1000)}s.`);
 } catch (e) {
-    process.stderr.write(`[smoke] failed after ${Math.round((Date.now() - startedAt) / 1000)}s: ${e instanceof Error ? e.message : e}\n`);
+    process.stderr.write(`[smoke] failed after ${Math.round((Date.now() - startedAt) / 1000)}s: ${Error.isError(e) ? e.message : e}\n`);
     process.exit(1);
 }

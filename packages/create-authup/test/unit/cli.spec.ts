@@ -42,8 +42,13 @@ function runWizard(cwd: string, lines: string[], flags: string[] = []): Promise<
         const child = spawn(process.execPath, [BIN, ...flags], { cwd, stdio: 'pipe' });
         let stdout = '';
         let stderr = '';
-        child.stdout.setEncoding('utf8').on('data', (chunk: string) => { stdout += chunk; });
-        child.stderr.setEncoding('utf8').on('data', (chunk: string) => { stderr += chunk; });
+
+        child.stdout.setEncoding('utf8').on('data', (chunk: string) => {
+            stdout += chunk;
+        });
+        child.stderr.setEncoding('utf8').on('data', (chunk: string) => {
+            stderr += chunk;
+        });
         child.on('error', reject);
         child.on('close', (code) => resolve({
             code,
@@ -62,6 +67,7 @@ describe('create-authup bin', () => {
 
     function createTempDir(): string {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'create-authup-'));
+
         dirs.push(dir);
 
         return dir;
@@ -71,6 +77,7 @@ describe('create-authup bin', () => {
         for (const dir of dirs) {
             fs.rmSync(dir, { recursive: true, force: true });
         }
+
         dirs.length = 0;
     });
 
@@ -88,9 +95,13 @@ describe('create-authup bin', () => {
 
     it('should refuse to overwrite existing files and leave them untouched', async () => {
         const cwd = createTempDir();
+
         await runWizard(cwd, COMPOSE_LINES);
+
         const composePath = path.join(cwd, 'docker-compose.yml');
+
         fs.appendFileSync(composePath, '# marker\n');
+
         const marked = fs.readFileSync(composePath);
         const dotenv = fs.readFileSync(path.join(cwd, '.env'));
 
@@ -105,8 +116,11 @@ describe('create-authup bin', () => {
 
     it('should overwrite existing files with --force', async () => {
         const cwd = createTempDir();
+
         await runWizard(cwd, COMPOSE_LINES);
+
         const composePath = path.join(cwd, 'docker-compose.yml');
+
         fs.appendFileSync(composePath, '# marker\n');
 
         const result = await runWizard(cwd, COMPOSE_LINES, ['--force']);
@@ -120,6 +134,7 @@ describe('create-authup bin', () => {
         const result = await runWizard(createTempDir(), [], ['--help']);
 
         expect(result.code).toEqual(0);
+
         for (const target of ['docker', 'compose', 'helm', 'bare-metal']) {
             expect(result.stdout).toContain(target);
         }
@@ -134,7 +149,9 @@ describe('create-authup bin', () => {
         expect(result.code).toEqual(0);
         expect(fs.existsSync(path.join(cwd, 'authup.yml'))).toBeTruthy();
         expect(fs.existsSync(path.join(cwd, '.env'))).toBeTruthy();
+
         const manifest = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
+
         expect(manifest.dependencies.authup).toEqual(VERSION);
     }, TIMEOUT);
 
@@ -150,7 +167,9 @@ describe('create-authup bin', () => {
 
         // an overwrite has to reset the mode: writeFileSync's mode applies to a file it creates
         fs.chmodSync(path.join(cwd, '.env'), 0o644);
+
         const forced = await runWizard(cwd, COMPOSE_LINES, ['--force']);
+
         expect(forced.code).toEqual(0);
         expect(fs.statSync(path.join(cwd, '.env')).mode & 0o777).toEqual(0o600);
     }, TIMEOUT);

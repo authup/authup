@@ -24,6 +24,7 @@ type CLICommand = ReturnType<typeof defineCLIConfigCommand>;
 
 async function runSubCommand(command: CLICommand, name: 'validate' | 'schema') {
     const subCommand = (command.subCommands as Record<string, any>)[name];
+
     await subCommand.run({
         args: { _: [] },
         rawArgs: [],
@@ -146,6 +147,7 @@ describe('defineCLIConfigCommand', () => {
             expect(error).toHaveBeenCalledTimes(1);
 
             const message = error.mock.calls[0][0] as string;
+
             expect(message).toContain('port');
             expect(message).toContain('passwordMinLength');
         } finally {

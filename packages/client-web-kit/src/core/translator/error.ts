@@ -37,6 +37,7 @@ export function useErrorTranslator(): (error: unknown) => Promise<string> {
                 .map((entry) => entry.message)
                 .filter(Boolean)
                 .join('\n');
+
             if (joined) {
                 return joined;
             }
@@ -49,6 +50,7 @@ export function useErrorTranslator(): (error: unknown) => Promise<string> {
                 data: ctx.data,
                 locale: locale.value,
             });
+
             if (message) {
                 return message;
             }

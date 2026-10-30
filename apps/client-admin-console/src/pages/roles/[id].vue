@@ -38,28 +38,28 @@ export default defineComponent({
 
         const translationsDefault = useTranslations([
             {
-                namespace: TranslatorTranslationNamespace.COMMON, 
-                key: TranslatorTranslationCommonKey.GENERAL, 
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.GENERAL,
             },
             {
-                namespace: TranslatorTranslationNamespace.ENTITY, 
-                key: TranslatorTranslationEntityKey.CLIENT, 
-                count: 2, 
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.CLIENT,
+                count: 2,
             },
             {
-                namespace: TranslatorTranslationNamespace.ENTITY, 
-                key: TranslatorTranslationEntityKey.PERMISSION, 
-                count: 2, 
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.PERMISSION,
+                count: 2,
             },
             {
-                namespace: TranslatorTranslationNamespace.ENTITY, 
-                key: TranslatorTranslationEntityKey.USER, 
-                count: 2, 
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.USER,
+                count: 2,
             },
             {
-                namespace: TranslatorTranslationNamespace.ENTITY, 
-                key: TranslatorTranslationEntityKey.ROLE, 
-                count: 1, 
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.ROLE,
+                count: 1,
             },
         ]);
 
@@ -71,6 +71,7 @@ export default defineComponent({
         // A record that cannot be loaded sends the visitor back to the
         // collection; the template renders nothing until then (`v-if`).
         let entity : Ref<Role | null> = ref(null);
+
         try {
             entity = ref(await httpClient
                 .role

@@ -83,41 +83,56 @@ describe('global-capable entities (realm isolation)', () => {
         const { data: master } = await suite.client.realm.getOne(REALM_MASTER_NAME);
 
         const { data: ownRole } = await suite.client.role.create(createFakeRole({ realmId: master.id }));
+
         ownRoleId = ownRole.id;
+
         const { data: foreignRole } = await suite.client.role.create(
             createFakeRole({ realmId: realmB.id }),
         );
+
         foreignRoleId = foreignRole.id;
 
         const { data: ownScope } = await suite.client.scope.create(createFakeScope({ realmId: master.id }));
+
         ownScopeId = ownScope.id;
+
         const { data: foreignScope } = await suite.client.scope.create(
             createFakeScope({ realmId: realmB.id }),
         );
+
         foreignScopeId = foreignScope.id;
 
         const { data: ownPermission } = await suite.client.permission.create(createFakePermission({ realmId: master.id }));
+
         ownPermissionId = ownPermission.id;
+
         const { data: foreignPermission } = await suite.client.permission.create(
             createFakePermission({ realmId: realmB.id }),
         );
+
         foreignPermissionId = foreignPermission.id;
 
         const { data: ownPolicy } = await suite.client.policy.create(createFakeTimePolicy({ realmId: master.id }));
+
         ownPolicyId = ownPolicy.id;
+
         const { data: foreignPolicy } = await suite.client.policy.create(
             createFakeTimePolicy({ realmId: realmB.id }),
         );
+
         foreignPolicyId = foreignPolicy.id;
 
         // the global (realmId: null) building blocks an `ownOrNull` reader must keep
         const { data: globalRole } = await suite.client.role.create(
             createFakeRole({ realmId: null }),
         );
+
         globalRoleId = globalRole.id;
+
         const { data: globalPermission } = await suite.client.permission.create(
             createFakePermission({ realmId: null }),
         );
+
         globalPermissionId = globalPermission.id;
 
         // a reader in master at `ownOrNull` reach — the realm_admin read shape.
@@ -136,8 +151,10 @@ describe('global-capable entities (realm isolation)', () => {
             PermissionName.SCOPE_READ,
             PermissionName.PERMISSION_READ,
         ];
+
         for (const name of names) {
             const { data: permission } = await suite.client.permission.getOne(name);
+
             await suite.client.clientPermission.create({
                 clientId: readerClient.id,
                 permissionId: permission.id,
@@ -149,6 +166,7 @@ describe('global-capable entities (realm isolation)', () => {
             client_id: readerClient.id,
             client_secret: readerSecret,
         });
+
         reader = new HTTPClient({ baseURL: suite.baseURL });
         reader.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
 
@@ -175,8 +193,10 @@ describe('global-capable entities (realm isolation)', () => {
             secretHashed: false,
             secretEncrypted: false,
         });
+
         for (const name of names) {
             const { data: permission } = await suite.client.permission.getOne(name);
+
             await suite.client.clientPermission.create({
                 clientId: postReaderClient.id,
                 permissionId: permission.id,
@@ -189,6 +209,7 @@ describe('global-capable entities (realm isolation)', () => {
             client_id: postReaderClient.id,
             client_secret: postReaderSecret,
         });
+
         postReader = new HTTPClient({ baseURL: suite.baseURL });
         postReader.setAuthorizationHeader({ type: 'Bearer', token: postToken.access_token });
 
@@ -201,6 +222,7 @@ describe('global-capable entities (realm isolation)', () => {
             createFakeUser({ realmId: realmB.id, password: realmAdminPassword }),
         );
         const { data: realmAdminRole } = await suite.client.role.getOne(ROLE_REALM_ADMIN_NAME);
+
         await suite.client.userRole.create({
             userId: realmAdminUser.id,
             roleId: realmAdminRole.id,
@@ -211,6 +233,7 @@ describe('global-capable entities (realm isolation)', () => {
             password: realmAdminPassword,
             realm_id: realmB.id,
         });
+
         realmAdmin = new HTTPClient({ baseURL: suite.baseURL });
         realmAdmin.setAuthorizationHeader({ type: 'Bearer', token: realmAdminToken.access_token });
 
@@ -219,14 +242,19 @@ describe('global-capable entities (realm isolation)', () => {
         const { data: assignable } = await suite.client.role.create(
             createFakeRole({ realmId: null }),
         );
+
         assignableGlobalRoleId = assignable.id;
+
         const { data: realmBUser } = await suite.client.user.create(
             createFakeUser({ realmId: realmB.id }),
         );
+
         realmBUserId = realmBUser.id;
+
         const { data: realmBRole } = await suite.client.role.create(
             createFakeRole({ realmId: realmB.id }),
         );
+
         realmBRoleId = realmBRole.id;
     });
 
@@ -236,42 +264,52 @@ describe('global-capable entities (realm isolation)', () => {
 
     it('lists own-realm and global roles, never a foreign realm', async () => {
         const own = await reader.role.getMany({ filters: { id: ownRoleId } });
+
         expect(own.data.some((entity) => entity.id === ownRoleId)).toBe(true);
 
         const global = await reader.role.getMany({ filters: { id: globalRoleId } });
+
         expect(global.data.some((entity) => entity.id === globalRoleId)).toBe(true);
 
         const foreign = await reader.role.getMany({ filters: { id: foreignRoleId } });
+
         expect(foreign.data.some((entity) => entity.id === foreignRoleId)).toBe(false);
         expect(foreign.meta.total).toEqual(0);
     });
 
     it('lists own-realm scopes, never a foreign realm', async () => {
         const own = await reader.scope.getMany({ filters: { id: ownScopeId } });
+
         expect(own.data.some((entity) => entity.id === ownScopeId)).toBe(true);
 
         const foreign = await reader.scope.getMany({ filters: { id: foreignScopeId } });
+
         expect(foreign.data.some((entity) => entity.id === foreignScopeId)).toBe(false);
         expect(foreign.meta.total).toEqual(0);
     });
 
     it('lists own-realm and global permissions, never a foreign realm', async () => {
         const own = await reader.permission.getMany({ filters: { id: ownPermissionId } });
+
         expect(own.data.some((entity) => entity.id === ownPermissionId)).toBe(true);
 
         const global = await reader.permission.getMany({ filters: { id: globalPermissionId } });
+
         expect(global.data.some((entity) => entity.id === globalPermissionId)).toBe(true);
 
         const foreign = await reader.permission.getMany({ filters: { id: foreignPermissionId } });
+
         expect(foreign.data.some((entity) => entity.id === foreignPermissionId)).toBe(false);
         expect(foreign.meta.total).toEqual(0);
     });
 
     it('lists own-realm policies, never a foreign realm', async () => {
         const own = await reader.policy.getMany({ filters: { id: ownPolicyId } });
+
         expect(own.data.some((entity) => entity.id === ownPolicyId)).toBe(true);
 
         const foreign = await reader.policy.getMany({ filters: { id: foreignPolicyId } });
+
         expect(foreign.data.some((entity) => entity.id === foreignPolicyId)).toBe(false);
         expect(foreign.meta.total).toEqual(0);
     });
@@ -284,10 +322,12 @@ describe('global-capable entities (realm isolation)', () => {
         // or this pins nothing.
         const own = await reader.policy.getMany({ filters: { id: ownPolicyId } });
         const ownEntity: any = own.data.find((entity) => entity.id === ownPolicyId);
+
         expect(ownEntity).toBeDefined();
         expect(ownEntity.start).toEqual('08:00:00');
 
         const foreign = await reader.policy.getMany({ filters: { id: foreignPolicyId } });
+
         expect(foreign.data).toHaveLength(0);
     });
 
@@ -299,24 +339,28 @@ describe('global-capable entities (realm isolation)', () => {
             filters: { id: foreignRoleId },
             fields: ['id', 'name'],
         });
+
         expect(role.data.some((entity) => entity.id === foreignRoleId)).toBe(false);
 
         const scope = await reader.scope.getMany({
             filters: { id: foreignScopeId },
             fields: ['id', 'name'],
         });
+
         expect(scope.data.some((entity) => entity.id === foreignScopeId)).toBe(false);
 
         const permission = await reader.permission.getMany({
             filters: { id: foreignPermissionId },
             fields: ['id', 'name'],
         });
+
         expect(permission.data.some((entity) => entity.id === foreignPermissionId)).toBe(false);
 
         const policy = await reader.policy.getMany({
             filters: { id: foreignPolicyId },
             fields: ['id', 'name'],
         });
+
         expect(policy.data.some((entity) => entity.id === foreignPolicyId)).toBe(false);
     });
 
@@ -325,13 +369,16 @@ describe('global-capable entities (realm isolation)', () => {
         // needs in order to bind anything: realm_admin holds every read at
         // ownOrNull, and ownOrNull covers `realmId IS NULL`
         const roles = await realmAdmin.role.getMany({ filters: { id: assignableGlobalRoleId } });
+
         expect(roles.data.some((entity) => entity.id === assignableGlobalRoleId)).toBe(true);
 
         const permissions = await realmAdmin.permission.getMany({ filters: { id: globalPermissionId } });
+
         expect(permissions.data.some((entity) => entity.id === globalPermissionId)).toBe(true);
 
         // and one at a time, since getOne is gated too
         const { data: role } = await realmAdmin.role.getOne(assignableGlobalRoleId);
+
         expect(role.id).toEqual(assignableGlobalRoleId);
         expect(role.realmId).toBeNull();
     });
@@ -341,6 +388,7 @@ describe('global-capable entities (realm isolation)', () => {
             userId: realmBUserId,
             roleId: assignableGlobalRoleId,
         });
+
         expect(binding.roleId).toEqual(assignableGlobalRoleId);
         expect(binding.userId).toEqual(realmBUserId);
     });
@@ -352,6 +400,7 @@ describe('global-capable entities (realm isolation)', () => {
             roleId: realmBRoleId,
             permissionId: permission.id,
         });
+
         expect(binding.permissionId).toEqual(permission.id);
         expect(binding.roleId).toEqual(realmBRoleId);
     });
@@ -385,12 +434,14 @@ describe('global-capable entities (realm isolation)', () => {
         );
 
         const { data: stored } = await suite.client.rolePermission.getOne(binding.id);
+
         expect(stored.realmScope).toEqual(RealmScope.ANY);
     });
 
     it('still keeps another realm out of reach for a realm_admin', async () => {
         // the master-realm rows created above are foreign to realm B
         const foreign = await realmAdmin.role.getMany({ filters: { id: ownRoleId } });
+
         expect(foreign.data.some((entity) => entity.id === ownRoleId)).toBe(false);
 
         await expectClientError(() => realmAdmin.role.getOne(ownRoleId), { status: 403 });
@@ -399,6 +450,7 @@ describe('global-capable entities (realm isolation)', () => {
     it('holds the gate on the post branch when realmId is projected away', async () => {
         // control: this reader can see its own-realm rows at all
         const own = await postReader.role.getMany({ filters: { id: ownRoleId } });
+
         expect(own.data.some((entity) => entity.id === ownRoleId)).toBe(true);
 
         // the force-select is what keeps `realmId` on the row the per-row gate
@@ -413,6 +465,7 @@ describe('global-capable entities (realm isolation)', () => {
 
         for (const [name, run] of cases) {
             const response = await run();
+
             expect(response.data, name).toHaveLength(0);
             // the drop loop decrements the total it reports
             expect(response.meta.total, name).toEqual(0);
@@ -430,6 +483,7 @@ describe('global-capable entities (realm isolation)', () => {
             relations: ['realm'],
         });
         const joined = role.data.find((entity) => entity.id === ownRoleId);
+
         expect(joined).toBeDefined();
         // the join must actually have happened, or this pins nothing
         expect(joined!.realm).toBeDefined();
@@ -438,12 +492,14 @@ describe('global-capable entities (realm isolation)', () => {
             filters: { id: ownScopeId },
             relations: ['realm'],
         });
+
         expect(scope.data.some((entity) => entity.id === ownScopeId)).toBe(true);
 
         const policy = await reader.policy.getMany({
             filters: { id: ownPolicyId },
             relations: ['realm'],
         });
+
         expect(policy.data.some((entity) => entity.id === ownPolicyId)).toBe(true);
 
         // and the same join under a field projection, which is where the
@@ -453,6 +509,7 @@ describe('global-capable entities (realm isolation)', () => {
             fields: ['id', 'name'],
             relations: ['realm'],
         });
+
         expect(projected.data.some((entity) => entity.id === ownRoleId)).toBe(true);
     });
 
@@ -467,18 +524,23 @@ describe('global-capable entities (realm isolation)', () => {
 
     it('still reads own-realm and global rows one at a time', async () => {
         const { data: role } = await reader.role.getOne(ownRoleId);
+
         expect(role.id).toEqual(ownRoleId);
 
         const { data: globalRole } = await reader.role.getOne(globalRoleId);
+
         expect(globalRole.id).toEqual(globalRoleId);
 
         const { data: scope } = await reader.scope.getOne(ownScopeId);
+
         expect(scope.id).toEqual(ownScopeId);
 
         const { data: permission } = await reader.permission.getOne(ownPermissionId);
+
         expect(permission.id).toEqual(ownPermissionId);
 
         const { data: policy } = await reader.policy.getOne(ownPolicyId);
+
         expect(policy.id).toEqual(ownPolicyId);
     });
 });

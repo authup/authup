@@ -56,6 +56,7 @@ export class ClientManager<
 
     async connect(namespace = '/') : Promise<Socket<ListenEvents, EmitEvents>> {
         const socket = this.inject(namespace);
+
         if (socket.connected) {
             return socket;
         }
@@ -75,6 +76,7 @@ export class ClientManager<
 
     async disconnect(namespace = '/') : Promise<void> {
         const socket = this.inject(namespace);
+
         if (!socket.connected) {
             return;
         }
@@ -86,11 +88,13 @@ export class ClientManager<
             ) => {
                 if (reason === 'io client disconnect') {
                     resolve();
+
                     return;
                 }
 
                 if (isDisconnectDescription(description)) {
                     reject(new Error(description.description));
+
                     return;
                 }
 
@@ -103,6 +107,7 @@ export class ClientManager<
 
     async reconnect(namespace = '/') : Promise<Socket<ListenEvents, EmitEvents>> {
         await this.disconnect(namespace);
+
         return new Promise((resolve, reject) => {
             setTimeout(() => {
                 this.connect(namespace)
@@ -115,9 +120,10 @@ export class ClientManager<
     async reconnectAll() : Promise<Socket<ListenEvents, EmitEvents>[]> {
         const keys = this.sockets.keys();
         const promises : Promise<Socket<ListenEvents, EmitEvents>>[] = [];
-         
+
         while (true) {
             const key = keys.next();
+
             if (key.done) {
                 break;
             }
@@ -130,6 +136,7 @@ export class ClientManager<
 
     inject(namespace = '/') : Socket<ListenEvents, EmitEvents> {
         let socket = this.sockets.get(namespace);
+
         if (socket) {
             return socket;
         }
@@ -153,9 +160,11 @@ export class ClientManager<
     eject(namespace = '/') {
         const socket = this.sockets.get(namespace);
 
-        if (socket) {
-            socket.disconnect();
-            this.sockets.delete(namespace);
+        if (!socket) {
+            return;
         }
+
+        socket.disconnect();
+        this.sockets.delete(namespace);
     }
 }

@@ -7,11 +7,11 @@
 
 import { randomUUID } from 'node:crypto';
 import type { Client, Realm, Session } from '@authup/core-kit';
-import { 
-    EventName, 
-    EventRefType, 
-    EventScope, 
-    IdentityType, 
+import {
+    EventName,
+    EventRefType,
+    EventScope,
+    IdentityType,
 } from '@authup/core-kit';
 import { createNoopLogger } from '@authup/server-kit';
 import { OAuth2TokenKind } from '@authup/specs';
@@ -106,6 +106,7 @@ class StubClientRepository implements IOAuth2ClientRepository {
 
     async findOneByIdOrName(idOrName: string): Promise<Client | null> {
         this.calls.push(idOrName);
+
         return this.clients.find((client) => client.id === idOrName) ?? null;
     }
 }
@@ -165,7 +166,8 @@ describe('OAuth2BackchannelLogoutNotifier', () => {
         it('collects each client the session issued a token for exactly once', async () => {
             const a = createClient();
             const b = createClient();
-            await seedToken(session.id, a.id, 'access');
+
+            await seedToken(session.id, a.id);
             await seedToken(session.id, a.id, 'refresh');
             await seedToken(session.id, b.id);
             // an MFA-login completion attributes its rows to no client
@@ -183,6 +185,7 @@ describe('OAuth2BackchannelLogoutNotifier', () => {
         it('skips a client that registered no back-channel logout URI', async () => {
             const silent = createClient({ backchannelLogoutUri: null });
             const listening = createClient();
+
             await seedToken(session.id, silent.id);
             await seedToken(session.id, listening.id);
 
@@ -218,6 +221,7 @@ describe('OAuth2BackchannelLogoutNotifier', () => {
             expect(fetchMock).toHaveBeenCalledTimes(2);
 
             const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+
             expect(url).toEqual(a.backchannelLogoutUri);
             expect(init.method).toEqual('POST');
             expect(init.headers).toEqual({ 'content-type': 'application/x-www-form-urlencoded' });
@@ -240,6 +244,7 @@ describe('OAuth2BackchannelLogoutNotifier', () => {
             expect(eventService.recordCalls.map((call) => call.refId)).toEqual([a.id, b.id]);
 
             const [row] = eventService.recordCalls;
+
             expect(row).toMatchObject({
                 scope: EventScope.OAUTH2,
                 name: EventName.BACKCHANNEL_LOGOUT,
@@ -259,10 +264,13 @@ describe('OAuth2BackchannelLogoutNotifier', () => {
             const { notifier } = buildNotifier([client], { issuer: 'https://auth.example.com/', maxAge: 120 });
 
             const before = Math.floor(Date.now() / 1000);
+
             await notifier.notify(session, [client]);
+
             const after = Math.floor(Date.now() / 1000);
 
             expect(signer.signCalls).toHaveLength(1);
+
             const payload = signer.signCalls[0]!;
 
             expect(payload.kind).toEqual(OAuth2TokenKind.LOGOUT);
@@ -294,6 +302,7 @@ describe('OAuth2BackchannelLogoutNotifier', () => {
             await notifier.notify(session, [client]);
 
             const payload = signer.signCalls[0]!;
+
             expect(session.realmId).not.toEqual(clientRealm.id);
             expect(payload.realm_id).toEqual(clientRealm.id);
             expect(payload.iss).toEqual('https://auth.example.com/realms/client-realm');
@@ -302,6 +311,7 @@ describe('OAuth2BackchannelLogoutNotifier', () => {
         it('logs and resolves when the client refuses the token', async () => {
             const client = createClient();
             const { notifier } = buildNotifier([client]);
+
             fetchMock.mockResolvedValue(new Response(null, { status: 500 }));
 
             await expect(notifier.notify(session, [client])).resolves.toBeUndefined();
@@ -322,6 +332,7 @@ describe('OAuth2BackchannelLogoutNotifier', () => {
         it('logs and resolves when the delivery throws', async () => {
             const client = createClient();
             const { notifier } = buildNotifier([client]);
+
             fetchMock.mockRejectedValue(new Error('connect ECONNREFUSED'));
 
             await expect(notifier.notify(session, [client])).resolves.toBeUndefined();
@@ -342,11 +353,14 @@ describe('OAuth2BackchannelLogoutNotifier', () => {
         it('records the code of a delivery that never got an answer, never its message', async () => {
             const client = createClient();
             const { notifier } = buildNotifier([client]);
+
             // what undici raises for a refused connection: the address rides
             // the cause's message, and the row must carry the code alone
             fetchMock.mockRejectedValueOnce(new TypeError('fetch failed', { cause: Object.assign(new Error('connect ECONNREFUSED 10.0.0.1:443'), { code: 'ECONNREFUSED' }) }));
             fetchMock.mockRejectedValueOnce(new DOMException('The operation was aborted due to timeout', 'TimeoutError'));
+
             const cyclic = new Error('loop');
+
             cyclic.cause = cyclic;
             fetchMock.mockRejectedValueOnce(cyclic);
 
@@ -364,6 +378,7 @@ describe('OAuth2BackchannelLogoutNotifier', () => {
             const failing = createClient();
             const healthy = createClient();
             const { notifier } = buildNotifier([failing, healthy]);
+
             fetchMock.mockImplementation(async (url: string) => {
                 if (url === failing.backchannelLogoutUri) {
                     throw new Error('connect ETIMEDOUT');
@@ -382,6 +397,7 @@ describe('OAuth2BackchannelLogoutNotifier', () => {
         it('logs and resolves when the token cannot be signed', async () => {
             const client = createClient();
             const { notifier } = buildNotifier([client]);
+
             vi.spyOn(signer, 'sign').mockRejectedValue(new Error('no active signing key'));
 
             await expect(notifier.notify(session, [client])).resolves.toBeUndefined();

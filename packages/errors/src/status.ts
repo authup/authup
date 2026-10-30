@@ -88,12 +88,33 @@ export function httpStatusFromCode(code: string, fallback = 400): number {
  * collapses to `INTERNAL_ERROR`; unknown 4xx collapses to `BAD_REQUEST`.
  */
 export function codeFromHttpStatus(status: number): ErrorCode {
-    if (status === 404) return ErrorCode.ENTITY_NOT_FOUND;
-    if (status === 409) return ErrorCode.ENTITY_CONFLICT;
-    if (status === 401) return ErrorCode.IDENTITY_UNAUTHORIZED;
-    if (status === 403) return ErrorCode.PERMISSION_DENIED;
-    if (status === 429) return ErrorCode.LOGIN_ATTEMPT_THROTTLED;
-    if (status === 507) return ErrorCode.STORAGE_INSUFFICIENT;
-    if (status >= 500) return ErrorCode.INTERNAL_ERROR;
+    if (status === 404) {
+        return ErrorCode.ENTITY_NOT_FOUND;
+    }
+
+    if (status === 409) {
+        return ErrorCode.ENTITY_CONFLICT;
+    }
+
+    if (status === 401) {
+        return ErrorCode.IDENTITY_UNAUTHORIZED;
+    }
+
+    if (status === 403) {
+        return ErrorCode.PERMISSION_DENIED;
+    }
+
+    if (status === 429) {
+        return ErrorCode.LOGIN_ATTEMPT_THROTTLED;
+    }
+
+    if (status === 507) {
+        return ErrorCode.STORAGE_INSUFFICIENT;
+    }
+
+    if (status >= 500) {
+        return ErrorCode.INTERNAL_ERROR;
+    }
+
     return ErrorCode.BAD_REQUEST;
 }

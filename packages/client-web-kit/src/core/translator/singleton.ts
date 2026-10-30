@@ -30,6 +30,7 @@ export function injectTranslatorLocale(): Ref<string> {
 function unwrapTranslationData(input: DataMaybeRef) : Record<string, string | number> {
     const output : Record<string, string | number> = {};
     const entries = Object.entries(input);
+
     for (const [key, value] of entries) {
         output[key] = unref(value);
     }
@@ -83,6 +84,7 @@ export function useTranslation(input: GetContextReactive): Ref<string> {
     const source = _useTranslation(input);
 
     const store = injectHydrationStore();
+
     if (!store) {
         return source;
     }
@@ -90,6 +92,7 @@ export function useTranslation(input: GetContextReactive): Ref<string> {
     // `@ilingo/vue` falls back to this for a refused read AND for a missing
     // key, so it only rules the seed out, it does not say which happened
     const placeholder = `${input.namespace}.${input.key}`;
+
     if (source.value !== placeholder) {
         return source;
     }

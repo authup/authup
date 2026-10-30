@@ -20,7 +20,7 @@ import {
 import { createTestApplication } from '../../../../../app';
 
 function decodePayload(token: string) : Record<string, any> {
-    return JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf-8'));
+    return JSON.parse(new TextDecoder().decode(Uint8Array.fromBase64(token.split('.')[1], { alphabet: 'base64url' })));
 }
 
 describe('src/http/controllers/token (realm route)', () => {
@@ -44,7 +44,9 @@ describe('src/http/controllers/token (realm route)', () => {
         });
 
         expect(response.status).toEqual(200);
+
         const body = await response.json();
+
         expect(decodePayload(body.access_token).realm_name).toEqual('master');
     });
 
@@ -65,7 +67,9 @@ describe('src/http/controllers/token (realm route)', () => {
         });
 
         expect(response.status).toEqual(200);
+
         let body = await response.json();
+
         expect(decodePayload(body.access_token).realm_id).toEqual(realm.id);
 
         response = await httpRequest(suite, 'POST', '/realms/master/token', {
@@ -113,7 +117,9 @@ describe('src/http/controllers/token (realm route)', () => {
         });
 
         expect(response.status).toEqual(400);
+
         const body = await response.json();
+
         expect(body.message).toEqual('The request body must be an object.');
     });
 
@@ -121,12 +127,14 @@ describe('src/http/controllers/token (realm route)', () => {
         const { data: realm } = await suite.client.realm.create(createFakeRealm());
 
         const input = createFakeClient();
+
         input.active = true;
         input.authMethod = 'secret';
         input.tokenBindingMethod = 'none';
         input.secretHashed = false;
         input.secretEncrypted = false;
         input.realmId = realm.id;
+
         const { data: client } = await suite.client.client.create(input);
 
         let response = await httpRequest(suite, 'POST', `/realms/${realm.name}/token`, {
@@ -139,7 +147,9 @@ describe('src/http/controllers/token (realm route)', () => {
         });
 
         expect(response.status).toEqual(200);
+
         const { access_token: token } = await response.json();
+
         expect(decodePayload(token).realm_id).toEqual(realm.id);
 
         response = await httpRequest(suite, 'POST', `/realms/${realm.name}/token/introspect`, {
@@ -152,19 +162,22 @@ describe('src/http/controllers/token (realm route)', () => {
         });
 
         expect(response.status).toEqual(200);
+
         const introspection = await response.json();
+
         expect(introspection.active).toEqual(true);
     });
 
     // RFC 7662 §2.1 / RFC 7009 §2.1: the realm mount reads the token from
     // the form body only, like the flat one.
     it('should refuse a token passed in the query string on the realm route', async () => {
-        const basic = Buffer.from('admin:start123').toString('base64');
+        const basic = Buffer.from('admin:start123').toBase64();
 
         let response = await httpRequest(suite, 'POST', '/realms/master/token/introspect?token=value', {
             headers: { Authorization: `Basic ${basic}` },
             form: { realm_name: 'master' },
         });
+
         expect(response.status).toEqual(400);
 
         response = await httpRequest(suite, 'POST', '/realms/master/token/revoke?token=value', { form: { realm_name: 'master' } });

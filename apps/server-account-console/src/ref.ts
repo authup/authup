@@ -45,11 +45,13 @@ export function resolveRef(
     }
 
     const trimmed = value.trim();
+
     if (trimmed.length === 0 || trimmed.length > REF_MAX_LENGTH) {
         return undefined;
     }
 
     let url : URL;
+
     try {
         url = new URL(trimmed);
     } catch {
@@ -61,8 +63,9 @@ export function resolveRef(
     }
 
     const candidate = `${url.origin}${url.pathname}${url.search}${url.hash}`;
+    const trustedPatterns = trustedOrigins.map((origin) => `${origin}/**`);
 
-    if (!isSimpleURLMatch(candidate, trustedOrigins.map((origin) => `${origin}/**`))) {
+    if (!isSimpleURLMatch(candidate, trustedPatterns)) {
         return undefined;
     }
 

@@ -13,6 +13,7 @@ export function expectPropertiesEqualToSrc<T extends Record<string, any>>(
     ignore?: (keyof T)[],
 ) {
     const keys = Object.keys(src);
+
     for (const key of keys) {
         if (ignore && ignore.includes(key)) {
             continue;

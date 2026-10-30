@@ -59,6 +59,7 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
             name: READ_PERMISSION_NAMES,
             realmAttributeName: this.ownerRealmKey,
         });
+
         if (compiled.verdict === 'deny') {
             parsed = appendQueryConditions(parsed, inArray('id', []));
         } else if (compiled.verdict === 'conditional') {
@@ -80,8 +81,10 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
                 realm: this.junctionResourceRealm(entity),
                 data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -98,6 +101,7 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
         await actor.permissionEvaluator.preEvaluateOneOf({ name: READ_PERMISSION_NAMES });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -125,6 +129,7 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
             permissionId: validated.permissionId,
             policyId: validated.policyId,
         });
+
         if (existing) {
             throw new EntityConflictError({ entity: 'permission-policy' });
         }
@@ -149,6 +154,7 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
         });
 
         let entity = this.repository.create(validated);
+
         entity = await this.repository.save(entity);
 
         return entity;
@@ -161,6 +167,7 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_UPDATE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -173,6 +180,7 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
         });
 
         const { id: entityId } = entity;
+
         await this.repository.remove(entity);
         entity.id = entityId;
 

@@ -132,13 +132,14 @@ export async function createAuthorizationEvaluator(
     options: AuthorizationEvaluatorOptions = {},
 ) : Promise<IPermissionEvaluator> {
     const {
-        catalog, 
-        grants, 
-        identity, 
+        catalog,
+        grants,
+        identity,
     } = await parseAuthorizationEvaluatorInput(input);
 
     const trees = new Map<string, AuthorizationPolicy>();
     const unevaluable = new Set<string>();
+
     for (const [id, raw] of Object.entries(catalog.policies)) {
         try {
             trees.set(id, await projectAuthorizationPolicy(raw, options.validators));
@@ -149,6 +150,7 @@ export async function createAuthorizationEvaluator(
 
     const definitions : PermissionPolicyBinding[] = [];
     const permissions = new Map<string, BasePermission | null>();
+
     for (const [index, entry] of catalog.permissions.entries()) {
         const permission : BasePermission = {
             name: entry.name,
@@ -157,27 +159,36 @@ export async function createAuthorizationEvaluator(
             decisionStrategy: entry.decisionStrategy ?? undefined,
         };
         const key = buildPermissionKey(permission);
+
         if (permissions.has(key)) {
             refuseDocument(
                 `The catalog defines the permission ${key} more than once.`,
                 ['catalog', 'permissions', index],
             );
         }
-        if (entry.policies === null || entry.policies.some((id) => unevaluable.has(id))) {
+
+        const hasUnevaluablePolicies = entry.policies?.some((id) => unevaluable.has(id));
+
+        if (hasUnevaluablePolicies || entry.policies === null) {
             permissions.set(key, null);
+
             continue;
         }
+
         permissions.set(key, permission);
 
         const policies : BasePolicy[] = [];
+
         for (const [i, id] of entry.policies.entries()) {
             const tree = trees.get(id);
+
             if (!tree) {
                 refuseDocument(
                     `The catalog does not declare the policy ${id}.`,
                     ['catalog', 'permissions', index, 'policies', i],
                 );
             }
+
             policies.push(toPolicy(tree));
         }
 
@@ -185,6 +196,7 @@ export async function createAuthorizationEvaluator(
     }
 
     const bindings : PermissionPolicyBinding[] = [];
+
     for (const grant of grants) {
         const key = buildPermissionKey({
             name: grant.name,
@@ -192,30 +204,40 @@ export async function createAuthorizationEvaluator(
             clientId: grant.client_id ?? null,
         });
         const permission = permissions.get(key);
+
         if (typeof permission === 'undefined') {
             throw new AuthorizationCatalogStaleError(`The catalog does not define the permission ${key}.`);
         }
+
         if (permission === null) {
             continue;
         }
 
         const policies : BasePolicy[] = [];
         let evaluable = true;
+
         for (const id of grant.policies ?? []) {
             if (unevaluable.has(id)) {
                 evaluable = false;
+
                 break;
             }
+
             const tree = trees.get(id);
+
             if (!tree) {
                 throw new AuthorizationCatalogStaleError(`The catalog does not declare the policy ${id}.`);
             }
+
             if (containsBindingCheck(tree)) {
                 evaluable = false;
+
                 break;
             }
+
             policies.push(toPolicy(tree));
         }
+
         if (!evaluable) {
             continue;
         }
@@ -228,10 +250,12 @@ export async function createAuthorizationEvaluator(
     }
 
     const engine = new PolicyEngine(options.evaluators ?? PolicyDefaultEvaluators);
+
     engine.registerEvaluator(
         BuiltInPolicyType.PERMISSION_BINDING,
         new IdentityPermissionBindingPolicyEvaluator(),
     );
+
     const evaluator = new PermissionEvaluator({
         provider: new PermissionMemoryProvider(definitions),
         policyEngine: engine,
@@ -239,6 +263,7 @@ export async function createAuthorizationEvaluator(
 
     const withIdentity = (input?: PolicyData) : PolicyData => {
         const data = input?.clone() ?? new PolicyData();
+
         if (!identity) {
             // symmetrical with the branch below, which overwrites the key:
             // the document proved no identity, so the caller may not supply
@@ -282,9 +307,11 @@ export async function createAuthorizationEvaluator(
 
     const forResource = (ctx: PermissionEvaluationContext) : PermissionEvaluationContext => {
         const next = forGate(ctx);
+
         if (next.data!.has(BuiltInPolicyType.REALM_MATCH)) {
             const value = next.data!.get(BuiltInPolicyType.REALM_MATCH);
             const outcome = realmMatchSchema.safeParse(value);
+
             if (!outcome.success) {
                 refuseDocumentWithIssues(
                     buildIssuesForZodError(outcome.error, value)
@@ -358,6 +385,7 @@ export async function createAuthorizationCheckEvaluator(
     const { permissions, identity } = await parseAuthorizationCheckEvaluatorInput(input);
 
     const verdicts = new Map<string, Set<string | null>>();
+
     for (const permission of permissions) {
         verdicts.set(
             buildPermissionKey({
@@ -375,9 +403,11 @@ export async function createAuthorizationCheckEvaluator(
     // or a check carrying the realm NAME would deny against an answer keyed by
     // the id.
     const ownKeys = new Set<string>();
+
     if (identity?.realmId) {
         ownKeys.add(identity.realmId);
     }
+
     if (identity?.realmName) {
         ownKeys.add(identity.realmName);
     }
@@ -411,11 +441,13 @@ export async function createAuthorizationCheckEvaluator(
             realmId: ctx.realmId ?? null,
             clientId: ctx.clientId ?? null,
         }));
+
         if (!realms) {
             return false;
         }
 
         const { data } = ctx;
+
         if (!data || !data.has(BuiltInPolicyType.REALM_MATCH)) {
             // No resource realm named, so the question is whether the
             // permission is held at all, which it is: an entry only exists
@@ -424,6 +456,7 @@ export async function createAuthorizationCheckEvaluator(
         }
 
         const value = data.get<string | string[] | null>(BuiltInPolicyType.REALM_MATCH);
+
         if (Array.isArray(value)) {
             // A resource spanning several realms needs every one of them,
             // fail-closed on the empty set, the rule `realmScopeMatches` applies.
@@ -451,6 +484,7 @@ export async function createAuthorizationCheckEvaluator(
 
     const assertSome = async (ctx: PermissionEvaluationContext) : Promise<void> => {
         const list = names(ctx);
+
         for (const name of list) {
             if (holds(ctx, name)) {
                 return;
@@ -470,7 +504,9 @@ export async function createAuthorizationCheckEvaluator(
             // lowered into a query. `deny` is still sound and worth answering:
             // a name held in no requested realm cannot match a row either.
             const list = Array.isArray(ctx.name) ? ctx.name : [ctx.name];
-            if (list.some((name) => holds(ctx, name))) {
+            const hasPermission = list.some((name) => holds(ctx, name));
+
+            if (hasPermission) {
                 return { verdict: 'post' };
             }
 

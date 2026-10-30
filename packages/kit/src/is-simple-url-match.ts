@@ -53,6 +53,7 @@ function canonicalizeHttpURL(url: URL) : string[] {
  */
 function canonicalizePattern(pattern: string) : string {
     let url : URL;
+
     try {
         url = new URL(pattern);
     } catch {
@@ -97,6 +98,7 @@ export function isSimpleURLMatch(
     const patterns = Array.isArray(pattern) ? pattern : [pattern];
 
     let url : URL;
+
     try {
         url = new URL(value);
     } catch {
@@ -112,6 +114,7 @@ export function isSimpleURLMatch(
     }
 
     const candidates = canonicalizeHttpURL(url);
+
     for (const item of patterns) {
         const canonicalPattern = canonicalizePattern(item);
 

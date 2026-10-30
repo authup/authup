@@ -9,10 +9,10 @@ import { BuiltInPolicyType, evaluateRecord, reachesRecord } from '@authup/access
 import { EntityNotFoundError } from '@authup/errors';
 import type { IdentityProviderAccount } from '@authup/core-kit';
 import {
-    EventName, 
-    EventRefType, 
-    EventScope, 
-    IdentityType, 
+    EventName,
+    EventRefType,
+    EventScope,
+    IdentityType,
     PermissionName,
 } from '@authup/core-kit';
 import { AbstractEntityService } from '@authup/server-kit';
@@ -67,6 +67,7 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
         const parsed = await decodeQuery(query, { schema: identityProviderAccountSchema, actor });
 
         let canReadAll = true;
+
         try {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_ACCOUNT_READ });
         } catch (e) {
@@ -75,6 +76,7 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
             if (!actor.identity || actor.identity.type !== IdentityType.USER) {
                 throw e;
             }
+
             canReadAll = false;
         }
 
@@ -103,6 +105,7 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
                 null;
 
             let scoped = parsed;
+
             if (compiled.verdict === 'deny') {
                 scoped = appendQueryConditions(parsed, self ?? inArray('id', []));
             } else if (compiled.verdict === 'conditional') {
@@ -123,6 +126,7 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
         for (const entity of entities) {
             if (this.isOwnedBy(entity, actor)) {
                 data.push(entity);
+
                 continue;
             }
 
@@ -131,8 +135,10 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
                 realm: entity.userRealmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -148,6 +154,7 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
         options: IdentityProviderAccountServiceReadOptions = {},
     ): Promise<IdentityProviderAccount> {
         const entity = await this.repository.findOneById(id);
+
         if (!entity || (options.realmId && entity.userRealmId !== options.realmId)) {
             // A realm mismatch on the nested mount fails as not-found (no
             // cross-realm existence oracle).
@@ -172,6 +179,7 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
         options: IdentityProviderAccountServiceReadOptions = {},
     ): Promise<IdentityProviderAccount> {
         const entity = await this.repository.findOneById(id);
+
         if (!entity || (options.realmId && entity.userRealmId !== options.realmId)) {
             throw new EntityNotFoundError();
         }
@@ -199,9 +207,11 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
 
         const { id: entityId } = entity;
         const removed = await this.repository.removeGuarded(entity, userHasOtherLogin);
+
         if (!removed) {
             throw new IdentityProviderAccountUnlinkBlockedError();
         }
+
         entity.id = entityId;
 
         const requestContext = this.requestContext ?

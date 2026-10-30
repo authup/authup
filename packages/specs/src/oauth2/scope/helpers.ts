@@ -65,11 +65,13 @@ export function hasOAuth2Scopes(
     required: string | string[] = [],
 ) : boolean {
     const grantedNormalized = unwrapOAuth2Scope(granted);
+
     if (grantedNormalized.length === 0) {
         return false;
     }
 
     const requiredNormalized = unwrapOAuth2Scope(required);
+
     if (requiredNormalized.length === 0) {
         return true;
     }

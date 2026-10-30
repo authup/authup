@@ -45,6 +45,7 @@ describe('core/store (check expiry, server render)', () => {
                 }),
             },
         });
+
         httpClient.authorization.checkWithMaxAge = async () => ({ data: buildAuthorizationCheck(), maxAge: 60 });
 
         const store = createStore({

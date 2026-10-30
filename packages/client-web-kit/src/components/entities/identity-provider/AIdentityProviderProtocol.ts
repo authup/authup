@@ -19,6 +19,7 @@ export const AIdentityProviderProtocol = defineComponent({
     },
     setup(props, setup) {
         const preset = getIdentityProviderProtocolElement(props.id as IdentityProviderProtocol);
+
         if (preset) {
             if (hasNormalizedSlot('default', setup.slots)) {
                 return () => normalizeSlot('default', preset, setup.slots);

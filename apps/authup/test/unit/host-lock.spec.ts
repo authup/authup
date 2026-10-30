@@ -41,12 +41,18 @@ describe('withHostLock', () => {
         await Promise.all([
             withHostLock(directory, async () => {
                 order.push('first:start');
-                await new Promise((resolve) => { setTimeout(resolve, 150); });
+                await new Promise((resolve) => {
+                    setTimeout(resolve, 150);
+                });
                 order.push('first:end');
             }),
             (async () => {
-                await new Promise((resolve) => { setTimeout(resolve, 20); });
-                await withHostLock(directory, async () => { order.push('second'); });
+                await new Promise((resolve) => {
+                    setTimeout(resolve, 20);
+                });
+                await withHostLock(directory, async () => {
+                    order.push('second');
+                });
             })(),
         ]);
 
@@ -55,8 +61,11 @@ describe('withHostLock', () => {
 
     it('takes over a stale lock instead of asking for it to be removed by hand', async () => {
         const lock = path.join(directory, 'hosts.lock');
+
         await fs.writeFile(lock, '');
+
         const stale = new Date(Date.now() - 60_000);
+
         await fs.utimes(lock, stale, stale);
 
         await expect(withHostLock(directory, async () => 'ok')).resolves.toBe('ok');
@@ -64,7 +73,9 @@ describe('withHostLock', () => {
     });
 
     it('releases the lock when the callback throws', async () => {
-        await expect(withHostLock(directory, async () => { throw new Error('boom'); })).rejects.toThrow('boom');
+        await expect(withHostLock(directory, async () => {
+            throw new Error('boom');
+        })).rejects.toThrow('boom');
         expect(await fs.readdir(directory)).toEqual([]);
     });
 

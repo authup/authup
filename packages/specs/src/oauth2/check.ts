@@ -58,6 +58,7 @@ export function isOAuth2Error(input: unknown): input is OAuth2Error {
     }
 
     const { data } = input;
+
     return isObject(data) && typeof data.error === 'string';
 }
 

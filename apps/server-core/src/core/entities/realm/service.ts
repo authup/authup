@@ -59,6 +59,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
         idOrName: string,
     ): Promise<Realm> {
         const entity = await this.repository.findOneByIdOrName(idOrName);
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -71,6 +72,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
         actor: ActorContext,
     ): Promise<Realm> {
         const { entity } = await this.save(undefined, data, actor);
+
         return entity;
     }
 
@@ -80,6 +82,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
         actor: ActorContext,
     ): Promise<Realm> {
         const { entity } = await this.save(idOrName, data, actor, { updateOnly: true });
+
         return entity;
     }
 
@@ -90,13 +93,15 @@ export class RealmService extends AbstractEntityService implements IRealmService
         options: { updateOnly?: boolean } = {},
     ): Promise<{
         entity: Realm,
-        created: boolean 
+        created: boolean
     }> {
         let group: string;
 
         let entity: Realm | null | undefined;
+
         if (idOrName) {
             const where: Record<string, any> = {};
+
             if (isUUID(idOrName)) {
                 where.id = idOrName;
             } else {
@@ -104,6 +109,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
             }
 
             entity = await this.repository.findOneBy(where);
+
             // Only a NAME key may upsert-create. A UUID addresses one specific
             // row, so a miss is a 404 (creating would write a different id).
             if (!entity && (options.updateOnly || where.id)) {
@@ -127,6 +133,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
 
         if (entity) {
             const realmId = entity.id;
+
             await this.evaluateUpdate(
                 actor,
                 PermissionName.REALM_UPDATE,
@@ -144,7 +151,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
 
             return {
                 entity,
-                created: false, 
+                created: false,
             };
         }
 
@@ -171,7 +178,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
                 } catch (e) {
                     if (this.logger) {
                         this.logger.warn(
-                            `${provisioner.constructor.name} failed for realm ${entity.id}: ${e instanceof Error ? e.message : String(e)}`,
+                            `${provisioner.constructor.name} failed for realm ${entity.id}: ${Error.isError(e) ? e.message : String(e)}`,
                         );
                     }
                 }
@@ -191,6 +198,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.REALM_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -206,6 +214,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
         });
 
         const { id: entityId } = entity;
+
         await this.repository.remove(entity);
         entity.id = entityId;
 

@@ -119,7 +119,9 @@ describe('OAuth2EndSessionService', () => {
     });
 
     it('should NOT verify a forged hint (signature failure)', async () => {
-        const service = buildService(async () => { throw new Error('bad signature'); });
+        const service = buildService(async () => {
+            throw new Error('bad signature');
+        });
         const result = await service.verify({ id_token_hint: 'forged' });
 
         expect(result.hintVerified).toBe(false);
@@ -172,12 +174,13 @@ describe('OAuth2EndSessionService', () => {
         // resolved before the cross-check — scoped by the hint's own realm
         // claim when the request carries no realm hint.
         const hintRealm: Realm = {
-            ...realm, 
-            id: randomUUID(), 
-            name: 'tenant-a', 
+            ...realm,
+            id: randomUUID(),
+            name: 'tenant-a',
             builtIn: false,
         };
         const scopedRealmRepository = new FakeRealmRepository();
+
         scopedRealmRepository.seed([hintRealm]);
 
         const resolveCalls: [string, string | undefined][] = [];
@@ -187,6 +190,7 @@ describe('OAuth2EndSessionService', () => {
             clientRepository: {
                 findOneByIdOrName: async (idOrName, realmId) => {
                     resolveCalls.push([idOrName, realmId]);
+
                     return idOrName === client.name && realmId === hintRealm.id ? client : null;
                 },
             },
@@ -210,9 +214,9 @@ describe('OAuth2EndSessionService', () => {
         });
 
         const result = await service.verify({
-            id_token_hint: 'valid', 
-            client_id: 'web', 
-            realm_name: 'master', 
+            id_token_hint: 'valid',
+            client_id: 'web',
+            realm_name: 'master',
         });
 
         expect(result.hintVerified).toBe(false);
@@ -248,6 +252,7 @@ describe('OAuth2EndSessionService', () => {
             clientRepository: {
                 findOneByIdOrName: async (idOrName) => {
                     lookupCalls.push(idOrName);
+
                     return client;
                 },
             },
@@ -277,6 +282,7 @@ describe('OAuth2EndSessionService', () => {
             clientRepository: {
                 findOneByIdOrName: async (idOrName) => {
                     lookupCalls.push(idOrName);
+
                     return client;
                 },
             },
@@ -303,11 +309,14 @@ describe('OAuth2EndSessionService', () => {
         // name lookup is ambiguous (same rule as the /authorize verifier)
         const lookupCalls: string[] = [];
         const service = new OAuth2EndSessionService({
-            tokenVerifier: buildVerifier(async () => { throw new Error('bad signature'); }),
+            tokenVerifier: buildVerifier(async () => {
+                throw new Error('bad signature');
+            }),
             sessionManager,
             clientRepository: {
                 findOneByIdOrName: async (idOrName) => {
                     lookupCalls.push(idOrName);
+
                     return client;
                 },
             },

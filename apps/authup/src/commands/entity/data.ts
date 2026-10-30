@@ -15,6 +15,7 @@ export async function readEntityData(
     stdin: NodeJS.ReadableStream = process.stdin,
 ) : Promise<Record<string, unknown>> {
     let raw = value;
+
     if (value === '@-') {
         raw = await text(stdin);
     } else if (value.startsWith('@')) {
@@ -22,6 +23,7 @@ export async function readEntityData(
     }
 
     let parsed : unknown;
+
     try {
         parsed = JSON.parse(raw);
     } catch {

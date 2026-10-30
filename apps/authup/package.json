@@ -19,7 +19,7 @@
         "test:smoke:packed": "node test/smoke/run.mjs --packed"
     },
     "engines": {
-        "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
+        "node": ">=26.0.0"
     },
     "bin": {
         "authup": "dist/index.mjs"

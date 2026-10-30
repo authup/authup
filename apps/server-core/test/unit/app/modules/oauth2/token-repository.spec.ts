@@ -14,8 +14,10 @@ import { OAuth2TokenRepository } from '../../../../../src/app/modules/oauth2/rep
 function record(cache: MemoryCache) {
     const calls : CacheSetOptions[] = [];
     const set = cache.set.bind(cache);
+
     cache.set = async (key, value, options) => {
         calls.push(options ?? {});
+
         return set(key, value, options);
     };
 

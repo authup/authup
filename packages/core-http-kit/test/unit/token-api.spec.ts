@@ -43,6 +43,7 @@ describe('src/domains/workflows/oauth2/token', () => {
         expect(transport.requests).toHaveLength(1);
 
         const [request] = transport.requests;
+
         expect(request.url).toEqual('http://fake.test/token');
         expect(readForm(request)).toEqual({
             grant_type: OAuth2TokenGrant.PASSWORD,

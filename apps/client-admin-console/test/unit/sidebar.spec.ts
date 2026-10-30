@@ -23,8 +23,8 @@ const useStore = defineStore('sidebar-spec', () => ({
     permissionRevision: ref(0),
 }));
 
-vi.mock('@authup/client-web-kit', async (importOriginal) => ({
-    ...(await importOriginal<Record<string, unknown>>()),
+vi.mock('@authup/client-web-kit', () => ({
+    StoreAuthStatus: { AUTHENTICATED: 'authenticated' },
     injectStore: () => useStore(),
     injectHTTPClient: () => ({ getBaseURL: () => 'http://localhost:3000/' }),
     injectTranslatorLocale: () => ref('en'),
@@ -53,9 +53,9 @@ describe('components/sidebar', () => {
                 plugins: [pinia],
                 stubs: {
                     VCNavItems: {
-                        name: 'VCNavItems', 
-                        props: ['data', 'watch'], 
-                        template: '<div />', 
+                        name: 'VCNavItems',
+                        props: ['data', 'watch'],
+                        template: '<div />',
                     },
                     VCCountdown: true,
                     VCIcon: true,
@@ -68,6 +68,7 @@ describe('components/sidebar', () => {
         const sample = () => watchers.map((fn) => fn());
 
         const before = sample();
+
         useStore(pinia).permissionRevision += 1;
 
         expect(sample()).not.toEqual(before);

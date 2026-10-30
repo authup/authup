@@ -20,6 +20,7 @@ export function assertSecretsEncryptionKey(value: string | undefined) : void {
     }
 
     let byteLength = -1;
+
     try {
         byteLength = base64ToArrayBuffer(value.trim()).byteLength;
     } catch {

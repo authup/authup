@@ -35,6 +35,7 @@ describe('core/entities/permission-policy/service', () => {
     describe('getMany', () => {
         it('should call preEvaluateOneOf with correct permissions', async () => {
             const actor = createAllowAllActor();
+
             await service.getMany({}, actor);
             expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
@@ -53,6 +54,7 @@ describe('core/entities/permission-policy/service', () => {
         it('should return entity by id', async () => {
             const entity = repository.seed({});
             const result = await service.getOne(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
         });
 
@@ -63,6 +65,7 @@ describe('core/entities/permission-policy/service', () => {
         it('should call preEvaluateOneOf with correct permissions', async () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
+
             await service.getOne(entity.id, actor);
             expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
@@ -88,6 +91,7 @@ describe('core/entities/permission-policy/service', () => {
             };
 
             const result = await service.create(data, createAllowAllActor());
+
             expect(result.id).toBeDefined();
             expect(result.permissionRealmId).toBe(realmId);
             expect(result.policyRealmId).toBe(realmId);
@@ -103,6 +107,7 @@ describe('core/entities/permission-policy/service', () => {
                 permissionId: randomUUID(),
                 policyId: randomUUID(),
             }, createAllowAllActor());
+
             expect(result.policyRealmId).toBeNull();
         });
 
@@ -130,6 +135,7 @@ describe('core/entities/permission-policy/service', () => {
             });
 
             const actor = createAllowAllActor();
+
             await service.create({
                 permissionId: randomUUID(),
                 policyId: randomUUID(),
@@ -194,6 +200,7 @@ describe('core/entities/permission-policy/service', () => {
         it('should delete an existing entity', async () => {
             const entity = repository.seed({});
             const result = await service.delete(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
         });
 
@@ -204,6 +211,7 @@ describe('core/entities/permission-policy/service', () => {
         it('should call preEvaluate with PERMISSION_UPDATE', async () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
+
             await service.delete(entity.id, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.PERMISSION_UPDATE });
         });

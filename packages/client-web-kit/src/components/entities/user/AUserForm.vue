@@ -177,6 +177,7 @@ export default defineComponent({
             }
 
             busy.value = true;
+
             try {
                 // The admin-only keys have to be gated on the PAYLOAD, not only
                 // in the template: a self-edit is evaluated against the
@@ -202,6 +203,7 @@ export default defineComponent({
             v.fields.name.$model.value = input;
 
             const currentEmail = v.fields.email.$model.value as string;
+
             if (!currentEmail || isUserFakeEmail(currentEmail)) {
                 v.fields.email.$model.value = buildUserFakeEmail(input);
             }
@@ -210,28 +212,28 @@ export default defineComponent({
         const translationsDefault = useTranslations(
             [
                 {
-                    namespace: TranslatorTranslationNamespace.COMMON, 
-                    key: TranslatorTranslationCommonKey.ACTIVE, 
+                    namespace: TranslatorTranslationNamespace.COMMON,
+                    key: TranslatorTranslationCommonKey.ACTIVE,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.COMMON, 
-                    key: TranslatorTranslationCommonKey.INACTIVE, 
+                    namespace: TranslatorTranslationNamespace.COMMON,
+                    key: TranslatorTranslationCommonKey.INACTIVE,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.DISPLAY_NAME, 
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.DISPLAY_NAME,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.EMAIL, 
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.EMAIL,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.COMMON, 
-                    key: TranslatorTranslationCommonKey.LOCKED, 
+                    namespace: TranslatorTranslationNamespace.COMMON,
+                    key: TranslatorTranslationCommonKey.LOCKED,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.COMMON, 
-                    key: TranslatorTranslationCommonKey.NOT_LOCKED, 
+                    namespace: TranslatorTranslationNamespace.COMMON,
+                    key: TranslatorTranslationCommonKey.NOT_LOCKED,
                 },
                 {
                     namespace: TranslatorTranslationNamespace.COMMON,
@@ -242,8 +244,8 @@ export default defineComponent({
                     key: TranslatorTranslationCommonKey.EMAIL_NOT_VERIFIED,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.NAME, 
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.NAME,
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD,

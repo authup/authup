@@ -62,6 +62,7 @@ async function expectParity(policy: Record<string, any>, outcome: PolicyEvaluati
     expect(outcome.condition).toBeDefined();
 
     const predicate = test(outcome.condition!);
+
     for (const row of rows) {
         expect(predicate(row), JSON.stringify(row)).toEqual(await evaluateOnRow(policy, row));
     }
@@ -72,6 +73,7 @@ describe('src/policy (toCondition / WHERE pushdown)', () => {
         const policy = attributesPolicy();
 
         const outcome = await engine.evaluate(policy, context());
+
         await expectParity(policy, outcome, [{ name: 'admin' }, { name: 'guest' }]);
     });
 
@@ -79,11 +81,13 @@ describe('src/policy (toCondition / WHERE pushdown)', () => {
         const policy = attributesPolicy(true);
 
         const outcome = await engine.evaluate(policy, context());
+
         await expectParity(policy, outcome, [{ name: 'admin' }, { name: 'guest' }]);
     });
 
     it('should not attach a condition without withConditions', async () => {
         const outcome = await engine.evaluate(attributesPolicy(), definePolicyEvaluationContext());
+
         expect(outcome.pending).toBeTruthy();
         expect(outcome.condition).toBeUndefined();
     });
@@ -95,6 +99,7 @@ describe('src/policy (toCondition / WHERE pushdown)', () => {
         });
 
         const outcome = await engine.evaluate(policy, context({ data: withIdentity() }));
+
         await expectParity(policy, outcome, [{ name: 'admin' }, { name: 'guest' }]);
     });
 
@@ -106,6 +111,7 @@ describe('src/policy (toCondition / WHERE pushdown)', () => {
         });
 
         const outcome = await engine.evaluate(policy, context({ data: withIdentity() }));
+
         await expectParity(policy, outcome, [
             { name: 'admin' },
             { name: 'guest' },
@@ -121,6 +127,7 @@ describe('src/policy (toCondition / WHERE pushdown)', () => {
 
         // no identity data: the identity child pends and has no condition form
         const outcome = await engine.evaluate(policy, context());
+
         expect(outcome.pending).toBeTruthy();
         expect(outcome.condition).toBeUndefined();
     });
@@ -132,6 +139,7 @@ describe('src/policy (toCondition / WHERE pushdown)', () => {
         });
 
         const outcome = await engine.evaluate(policy, context());
+
         expect(outcome.pending).toBeTruthy();
         expect(outcome.condition).toBeUndefined();
     });
@@ -145,6 +153,7 @@ describe('src/policy (toCondition / WHERE pushdown)', () => {
         });
 
         const outcome = await engine.evaluate(policy, context({ data: withIdentity() }));
+
         await expectParity(policy, outcome, [{ name: 'admin' }, { name: 'guest' }]);
     });
 
@@ -155,6 +164,7 @@ describe('src/policy (toCondition / WHERE pushdown)', () => {
         });
 
         const outcome = await engine.evaluate(policy, context({ data: withIdentity() }));
+
         expect(outcome.pending).toBeTruthy();
         expect(outcome.condition).toBeUndefined();
     });
@@ -171,6 +181,7 @@ describe('src/policy (toCondition / WHERE pushdown)', () => {
         });
 
         const outcome = await localEngine.evaluate({ type: 'broken' }, context());
+
         expect(outcome.pending).toBeTruthy();
         expect(outcome.condition).toBeUndefined();
     });
@@ -195,10 +206,12 @@ describe('src/policy (toCondition / WHERE pushdown)', () => {
 
         async function expectScopeParity(scope: `${RealmScope}`, expected: boolean[]) {
             const outcome = await engine.evaluate(scopePolicy(scope), context({ data: withIdentity() }));
+
             expect(outcome.pending).toBeTruthy();
             expect(outcome.condition).toBeDefined();
 
             const predicate = test(outcome.condition!);
+
             for (const [i, row] of rows.entries()) {
                 expect(predicate(row!), `${scope} ${JSON.stringify(row)}`).toEqual(expected[i]);
 
@@ -209,6 +222,7 @@ describe('src/policy (toCondition / WHERE pushdown)', () => {
                         [BuiltInPolicyType.REALM_MATCH]: row!.realmId,
                     }),
                 }));
+
                 expect(settled.success, `${scope} settled ${JSON.stringify(row)}`).toEqual(expected[i]);
             }
         }
@@ -243,6 +257,7 @@ describe('src/policy (toCondition / WHERE pushdown)', () => {
 
         it('should keep the neutral-pass without withConditions', async () => {
             const outcome = await engine.evaluate(scopePolicy('own'), definePolicyEvaluationContext({ data: withIdentity() }));
+
             expect(outcome.success).toBeTruthy();
             expect(outcome.pending).toBeFalsy();
         });
@@ -256,6 +271,7 @@ describe('src/policy (toCondition / WHERE pushdown)', () => {
             });
 
             const outcome = await engine.evaluate(policy, context({ data: withIdentity() }));
+
             await expectParity(policy, outcome, [
                 { realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023' },
                 { realmId: '11111111-2222-4333-8444-555555555555' },
@@ -271,6 +287,7 @@ describe('src/policy (toCondition / WHERE pushdown)', () => {
             });
 
             const outcome = await engine.evaluate(policy, context({ data: withIdentity() }));
+
             await expectParity(policy, outcome, [
                 { realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023' },
                 { realmId: '11111111-2222-4333-8444-555555555555' },
@@ -282,6 +299,7 @@ describe('src/policy (toCondition / WHERE pushdown)', () => {
             const policy = definePolicyWithType(BuiltInPolicyType.REALM_MATCH, {});
 
             const outcome = await engine.evaluate(policy, context({ data: withIdentity() }));
+
             expect(outcome.pending).toBeTruthy();
             expect(outcome.condition).toBeUndefined();
         });

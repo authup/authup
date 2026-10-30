@@ -70,9 +70,9 @@ class RecordingNotifier implements ISessionRevokeNotifier {
     public resolveCalls: { sessionId: string, removed: number }[] = [];
 
     public notifyCalls: {
-        sessionId: string, 
-        clients: Client[], 
-        removed: number 
+        sessionId: string,
+        clients: Client[],
+        removed: number
     }[] = [];
 
     constructor(
@@ -82,14 +82,15 @@ class RecordingNotifier implements ISessionRevokeNotifier {
 
     async resolve(session: Session): Promise<Client[]> {
         this.resolveCalls.push({ sessionId: session.id, removed: this.repository.removeCalls.length });
+
         return this.clients;
     }
 
     async notify(session: Session, clients: Client[]): Promise<void> {
         this.notifyCalls.push({
-            sessionId: session.id, 
-            clients, 
-            removed: this.repository.removeCalls.length, 
+            sessionId: session.id,
+            clients,
+            removed: this.repository.removeCalls.length,
         });
     }
 }
@@ -150,6 +151,7 @@ describe('SessionManager', () => {
 
         it('does nothing for an unknown id', async () => {
             seedSession();
+
             const notifier = new RecordingNotifier(repository, [createClient()]);
 
             await buildManager(notifier).revoke(randomUUID());
@@ -182,7 +184,9 @@ describe('SessionManager', () => {
                 notify: async () => {
                     inFlight++;
                     peak = Math.max(peak, inFlight);
-                    await new Promise((resolve) => { setTimeout(resolve, 5); });
+                    await new Promise((resolve) => {
+                        setTimeout(resolve, 5);
+                    });
                     inFlight--;
                 },
             };
@@ -223,6 +227,7 @@ describe('SessionManager', () => {
             const sessions = Array.from({ length: 3 }, () => seedSession({ sub }));
 
             const remove = repository.remove.bind(repository);
+
             repository.remove = async (session: Session) => {
                 if (session.id === sessions[0].id) {
                     throw new Error('unavailable');

@@ -7,11 +7,11 @@
 
 import { ValidationError } from '@authup/errors';
 import type { ActorContext, ICache } from '@authup/server-kit';
-import { 
-    eq, 
-    isFilter, 
-    isFilters, 
-    lt, 
+import {
+    eq,
+    isFilter,
+    isFilters,
+    lt,
     not,
 } from '@rapiq/core';
 import type { ICondition, IQuery } from '@rapiq/core';
@@ -40,6 +40,7 @@ function collectFields(condition: ICondition, output: Set<string>): void {
  */
 function readReferencedColumns(query: IQuery): string[] {
     const output = new Set<string>();
+
     collectFields(query.filters, output);
 
     for (const group of query.groups?.value ?? []) {
@@ -99,13 +100,16 @@ export class EntityStatsService<
         const realmColumn = this.definition.realmColumn === undefined ?
             'realmId' :
             this.definition.realmColumn;
+
         if (realmColumn && options.realmId) {
             base = appendQueryConditions(base, eq(realmColumn, options.realmId));
         }
 
         let scoped = base;
+
         if (gate) {
             scoped = narrowReadScope(gate);
+
             if (realmColumn && options.realmId) {
                 scoped = appendQueryConditions(scoped, eq(realmColumn, options.realmId));
             }
@@ -137,10 +141,13 @@ export class EntityStatsService<
         // retention by nature
         let own: IQuery | undefined;
         let routable = this.isRoutable(scoped);
+
         if (!routable && gate?.reach && gate.ownership) {
             const reached = appendQueryConditions(base, gate.reach);
+
             routable = this.isRoutable(reached);
             translated = this.translate(reached, window, now);
+
             if (translated) {
                 own = appendQueryConditions(base, gate.ownership, not(gate.reach));
             }
@@ -167,6 +174,7 @@ export class EntityStatsService<
         ].join(':');
 
         const cached = await this.cache.get<EntityStatsResult<G, M>>(key);
+
         if (cached) {
             return cached;
         }
@@ -182,6 +190,7 @@ export class EntityStatsService<
         ]);
 
         const merged = new Map<string, Record<string, unknown>>();
+
         for (const row of [...rows, ...ownRows]) {
             const normalized = {
                 ...row,
@@ -191,6 +200,7 @@ export class EntityStatsService<
             const id = JSON.stringify(Object.entries(group).sort(([a], [b]) => a.localeCompare(b)));
 
             const existing = merged.get(id);
+
             if (existing) {
                 existing.count = Number(existing.count) + Number(count);
             } else {
@@ -228,6 +238,7 @@ export class EntityStatsService<
      */
     protected translate(query: IQuery, window: StatsWindow, now: Date): IQuery | undefined {
         const { rollup } = this.definition;
+
         if (!rollup || window.unit === 'hour' || !this.isRoutable(query)) {
             return undefined;
         }
@@ -235,6 +246,7 @@ export class EntityStatsService<
         // a rollup answers whole days, so an open window ends at the next
         // day boundary rather than the read instant
         const end = new Date(now);
+
         end.setUTCHours(24, 0, 0, 0);
 
         const translated = rollup.translate(window.upperBound ?
@@ -256,11 +268,13 @@ export class EntityStatsService<
     protected async countTotal(prefix: string[], query: IQuery): Promise<number> {
         const key = [...prefix, queryCodec.encode(query) ?? '', 'total'].join(':');
         const cached = await this.cache.get<number>(key);
+
         if (typeof cached === 'number') {
             return cached;
         }
 
         const total = await this.definition.repository.count(query);
+
         await this.cache.set(key, total, { ttl: STATS_CACHE_TTL });
 
         return total;

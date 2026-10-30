@@ -13,11 +13,11 @@ import {
     IdentityType,
 } from '@authup/core-kit';
 import type { DomainEventPublishContext } from '@authup/server-kit';
-import { 
-    beforeEach, 
-    describe, 
-    expect, 
-    it, 
+import {
+    beforeEach,
+    describe,
+    expect,
+    it,
 } from 'vitest';
 import { EntityEventHandler } from '../../../../../src/core/entities/event/entity-event-handler.ts';
 import type { EventRequestContext } from '../../../../../src/core/entities/event/types.ts';
@@ -94,6 +94,7 @@ describe('EntityEventHandler', () => {
         await buildHandler().handle(buildPublishContext());
 
         const [call] = eventService.recordCalls;
+
         expect(call.refType).toEqual('role');
         expect(call.refId).toEqual(entityId);
         expect(call.realmId).toEqual(realmId);
@@ -171,6 +172,7 @@ describe('EntityEventHandler', () => {
         await buildHandler({ requestContext: () => requestContext }).handle(buildPublishContext());
 
         const [call] = eventService.recordCalls;
+
         expect(call.actorType).toEqual(IdentityType.USER);
         expect(call.actorId).toEqual(actorId);
         expect(call.actorName).toEqual('admin');
@@ -185,6 +187,7 @@ describe('EntityEventHandler', () => {
         await buildHandler().handle(buildPublishContext());
 
         const [call] = eventService.recordCalls;
+
         expect(call.actorType).toBeNull();
         expect(call.actorId).toBeNull();
         expect(call.actorName).toBeNull();
@@ -199,6 +202,7 @@ describe('EntityEventHandler', () => {
         await buildHandler({ requestContext: () => undefined }).handle(buildPublishContext());
 
         const [call] = eventService.recordCalls;
+
         expect(call.actorId).toBeNull();
         expect(call.requestPath).toBeNull();
     });
@@ -208,19 +212,20 @@ describe('EntityEventHandler', () => {
             content: {
                 event: 'updated',
                 data: {
-                    id: entityId, 
-                    realmId, 
-                    description: 'after', 
+                    id: entityId,
+                    realmId,
+                    description: 'after',
                 },
             },
             dataPrevious: {
-                id: entityId, 
-                realmId, 
-                description: 'before', 
+                id: entityId,
+                realmId,
+                description: 'before',
             },
         }));
 
         const [call] = eventService.recordCalls;
+
         expect(call.data).toEqual({ diff: { description: { next: 'after', previous: 'before' } } });
     });
 
@@ -250,6 +255,7 @@ describe('EntityEventHandler', () => {
         }));
 
         const [call] = eventService.recordCalls;
+
         expect(call.name).toEqual(EventName.UPDATED);
         expect(call.data).toBeNull();
     });
@@ -265,15 +271,15 @@ describe('EntityEventHandler', () => {
             content: {
                 event: 'updated',
                 data: {
-                    id: entityId, 
-                    realmId, 
-                    description: 'same', 
+                    id: entityId,
+                    realmId,
+                    description: 'same',
                 },
             },
             dataPrevious: {
-                id: entityId, 
-                realmId, 
-                description: 'same', 
+                id: entityId,
+                realmId,
+                description: 'same',
             },
         }));
 
@@ -282,6 +288,7 @@ describe('EntityEventHandler', () => {
 
     it('records null data for created and deleted events (no column dumps)', async () => {
         const handler = buildHandler();
+
         await handler.handle(buildPublishContext({ content: { event: 'created', data: { id: entityId, name: 'some-role' } } }));
         await handler.handle(buildPublishContext({ content: { event: 'deleted', data: { id: entityId, name: 'some-role' } } }));
 
@@ -292,6 +299,7 @@ describe('EntityEventHandler', () => {
 
     it('records an updated event whose content carries no data (diff skipped, no throw)', async () => {
         const handler = buildHandler();
+
         await handler.handle(buildPublishContext({
             content: { event: 'updated', data: undefined },
             dataPrevious: { id: entityId, name: 'previous' },

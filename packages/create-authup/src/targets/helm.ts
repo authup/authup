@@ -20,6 +20,7 @@ export const HELM_COMMANDS: string[] = [
 
 export function renderHelm(answers: Answers, _version: string): Rendered {
     const { db } = answers;
+
     if (db.type === 'better-sqlite3') {
         throw new Error('The helm chart needs a server database (postgres or mysql); the image refuses sqlite.');
     }
@@ -46,12 +47,15 @@ export function renderHelm(answers: Answers, _version: string): Rendered {
 
     if (answers.registrationEnabled || answers.passwordRecoveryEnabled || answers.emailVerificationEnabled) {
         lines.push('  features:');
+
         if (answers.registrationEnabled) {
             lines.push('    registration: true');
         }
+
         if (answers.passwordRecoveryEnabled) {
             lines.push('    passwordRecovery: true');
         }
+
         if (answers.emailVerificationEnabled) {
             lines.push('    emailVerification: true');
         }
@@ -89,7 +93,9 @@ export function renderHelm(answers: Answers, _version: string): Rendered {
     // The bundled engine takes the answered password; left empty, the chart would generate one and drop the answer.
     for (const engine of ['postgresql', 'mysql'] as const) {
         const enabled = db.bundled && db.type === (engine === 'postgresql' ? 'postgres' : 'mysql');
+
         lines.push(`${engine}:`, `  enabled: ${enabled}`);
+
         if (enabled) {
             lines.push('  auth:', `    password: ${quoteYaml(db.password)}`);
         }

@@ -19,6 +19,7 @@ export class UserCredentialsService implements ICredentialService<User> {
     async verify(input: string, entity: User): Promise<boolean> {
         if (!entity.password) {
             await compare(input, DUMMY_PASSWORD_HASH);
+
             return false;
         }
 

@@ -33,6 +33,7 @@ export function assignFormProperties<T extends Record<string, any>>(
     options: AssignFormPropertiesOptions = {},
 ) : T {
     const keys : (keyof T)[] = Object.keys(form);
+
     for (const key of keys) {
         if (!Object.prototype.hasOwnProperty.call(data, key)) {
             continue;
@@ -43,6 +44,7 @@ export function assignFormProperties<T extends Record<string, any>>(
 
         if (options.fields) {
             const field = options.fields.at(key as string);
+
             if (field.$dirty.value) {
                 if (!isEqual(form[key], next)) {
                     continue;

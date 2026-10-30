@@ -34,7 +34,7 @@ export function toJWTError(input: unknown) : JWTError {
         return new JWTError({ message: input.message, cause: input });
     }
 
-    if (input instanceof Error) {
+    if (Error.isError(input)) {
         return new JWTError({
             ...(input.message ? { message: input.message } : {}),
             cause: input,

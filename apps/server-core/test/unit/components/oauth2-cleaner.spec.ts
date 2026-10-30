@@ -85,11 +85,13 @@ describe('components/oauth2-cleaner', () => {
         await component.stop();
 
         expect(findMock).toHaveBeenCalledTimes(2);
+
         for (const [options] of findMock.mock.calls) {
             expect(options?.take).toBeGreaterThan(0);
         }
 
         expect(deleteMock).toHaveBeenCalledTimes(2);
+
         for (const [where] of deleteMock.mock.calls) {
             expect(Object.keys(where)).toEqual(['id']);
         }
@@ -116,11 +118,13 @@ describe('components/oauth2-cleaner', () => {
         const gate = new Promise<[]>((resolve) => {
             release = () => resolve([]);
         });
+
         findMock.mockImplementation(() => gate);
 
         const component = createOAuth2CleanerComponent(dataSource, cache);
 
         const started = component.start();
+
         await component.stop();
 
         release();

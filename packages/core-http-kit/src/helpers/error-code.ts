@@ -7,12 +7,8 @@
 import { isObject } from '@authup/kit';
 
 export function getClientErrorCode(err: unknown): string | null {
-    if (!isObject(err) || !isObject(err.response)) {
-        return null;
-    }
-
     /* istanbul ignore next */
-    if (!isObject(err.response.data) || typeof err.response.data.code !== 'string') {
+    if (!isObject(err) || !isObject(err.response) || !isObject(err.response.data) || typeof err.response.data.code !== 'string') {
         return null;
     }
 
@@ -23,11 +19,7 @@ export function getClientErrorCode(err: unknown): string | null {
  * The OAuth2 `error` field of a response body (RFC 6749 §5.2).
  */
 export function getClientOAuth2ErrorCode(err: unknown): string | null {
-    if (!isObject(err) || !isObject(err.response)) {
-        return null;
-    }
-
-    if (!isObject(err.response.data) || typeof err.response.data.error !== 'string') {
+    if (!isObject(err) || !isObject(err.response) || !isObject(err.response.data) || typeof err.response.data.error !== 'string') {
         return null;
     }
 

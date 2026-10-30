@@ -45,19 +45,21 @@ class RecordingCache implements ICache {
 
     async set(key: string, value: any, options?: CacheSetOptions): Promise<void> {
         this.records.push({
-            method: 'set', 
-            key, 
-            ttl: options?.ttl, 
+            method: 'set',
+            key,
+            ttl: options?.ttl,
         });
+
         return this.inner.set(key, value, options);
     }
 
     async add(key: string, value: any, options?: CacheSetOptions): Promise<boolean> {
         this.records.push({
-            method: 'add', 
-            key, 
-            ttl: options?.ttl, 
+            method: 'add',
+            key,
+            ttl: options?.ttl,
         });
+
         return this.inner.add(key, value, options);
     }
 
@@ -71,10 +73,11 @@ class RecordingCache implements ICache {
 
     async increment(key: string, value?: number, options?: CacheSetOptions): Promise<number> {
         this.records.push({
-            method: 'increment', 
-            key, 
-            ttl: options?.ttl, 
+            method: 'increment',
+            key,
+            ttl: options?.ttl,
         });
+
         return this.inner.increment(key, value, options);
     }
 
@@ -92,11 +95,13 @@ class RecordingCache implements ICache {
 
     async drop(key: string): Promise<void> {
         this.dropped.push(key);
+
         return this.inner.drop(key);
     }
 
     async dropMany(keys: string[]): Promise<void> {
         this.dropped.push(...keys);
+
         return this.inner.dropMany(keys);
     }
 
@@ -108,7 +113,7 @@ class RecordingCache implements ICache {
 const now = () => Math.floor(Date.now() / 1000);
 
 const buildRequest = (input: Partial<OAuth2DeviceCodeRequest> = {}) : OAuth2DeviceCodeRequest => ({
-    id: randomBytes(32).toString('hex'),
+    id: randomBytes(32).toHex(),
     user_code: 'BCDFGHJK',
     client_id: randomUUID(),
     realm_id: randomUUID(),
@@ -150,6 +155,7 @@ describe('app/modules/oauth2/repositories/device-code', () => {
         expect(cache.records[1].ttl).toEqual(900_000);
 
         const entity = await repository.findOneById(request.id);
+
         expect(entity).toEqual({
             ...request,
             status: OAuth2DeviceCodeStatus.PENDING,
@@ -184,6 +190,7 @@ describe('app/modules/oauth2/repositories/device-code', () => {
 
     it('should merge the decision into the user-code read', async () => {
         const request = buildRequest();
+
         await repository.save(request);
 
         const decision = {
@@ -201,11 +208,14 @@ describe('app/modules/oauth2/repositories/device-code', () => {
         expect(cache.records).toHaveLength(1);
         expect(cache.records[0].method).toEqual('add');
         expect(cache.records[0].key).toEqual(keyOf(CacheOAuth2Prefix.DEVICE_DECISION, request.id));
+
         const remaining = request.expires_at - now();
+
         expect(cache.records[0].ttl).toBeGreaterThanOrEqual((remaining - 1 + OAUTH2_DEVICE_CODE_GRACE) * 1000);
         expect(cache.records[0].ttl).toBeLessThanOrEqual((remaining + OAUTH2_DEVICE_CODE_GRACE) * 1000);
 
         const entity = await repository.findOneByUserCode(request.user_code);
+
         expect(entity).toEqual({
             ...request,
             status: OAuth2DeviceCodeStatus.APPROVED,
@@ -215,6 +225,7 @@ describe('app/modules/oauth2/repositories/device-code', () => {
 
     it('should write a decision once', async () => {
         const request = buildRequest();
+
         await repository.save(request);
 
         expect(await repository.decide(request.id, { status: OAuth2DeviceCodeStatus.DENIED }, request.expires_at)).toBe(true);
@@ -228,12 +239,14 @@ describe('app/modules/oauth2/repositories/device-code', () => {
         }, request.expires_at)).toBe(false);
 
         const entity = await repository.findOneById(request.id);
+
         expect(entity?.status).toEqual(OAuth2DeviceCodeStatus.DENIED);
         expect(entity?.decision).toEqual({ status: OAuth2DeviceCodeStatus.DENIED });
     });
 
     it('should refuse a decision whose remaining ttl is not positive', async () => {
         const request = buildRequest();
+
         await repository.save(request);
         cache.records = [];
 
@@ -246,11 +259,13 @@ describe('app/modules/oauth2/repositories/device-code', () => {
 
     it('should pop the blob together with the decision and poll keys', async () => {
         const request = buildRequest();
+
         await repository.save(request);
         await repository.decide(request.id, { status: OAuth2DeviceCodeStatus.DENIED }, request.expires_at);
         expect(await repository.touchPoll(request.id)).toBe(true);
 
         const popped = await repository.popOneById(request.id);
+
         expect(popped).toEqual({
             ...request,
             status: OAuth2DeviceCodeStatus.DENIED,
@@ -267,6 +282,7 @@ describe('app/modules/oauth2/repositories/device-code', () => {
 
     it('should remove the blob together with the decision and poll keys without a read', async () => {
         const request = buildRequest();
+
         await repository.save(request);
         await repository.decide(request.id, { status: OAuth2DeviceCodeStatus.DENIED }, request.expires_at);
         await repository.touchPoll(request.id);
@@ -281,6 +297,7 @@ describe('app/modules/oauth2/repositories/device-code', () => {
 
     it('should drop the user-code index alone', async () => {
         const request = buildRequest();
+
         await repository.save(request);
 
         await repository.removeUserCode(request.user_code);
@@ -291,6 +308,7 @@ describe('app/modules/oauth2/repositories/device-code', () => {
 
     it('should refuse a poll inside the fixed window and accept one once the key lapsed', async () => {
         const request = buildRequest();
+
         await repository.save(request);
         cache.records = [];
 
@@ -299,6 +317,7 @@ describe('app/modules/oauth2/repositories/device-code', () => {
         expect(await repository.touchPoll(request.id)).toBe(false);
 
         expect(cache.records).toHaveLength(3);
+
         for (const record of cache.records) {
             expect(record).toEqual({
                 method: 'add',
@@ -326,6 +345,7 @@ describe('app/modules/oauth2/repositories/device-code', () => {
         }
 
         expect(cache.records).toHaveLength(9);
+
         for (const record of cache.records) {
             expect(record).toEqual({
                 method: 'increment',
@@ -345,6 +365,7 @@ describe('app/modules/oauth2/repositories/device-code', () => {
         });
 
         const retryAfter = await repository.lookupThrottle(key);
+
         expect(retryAfter).toBeGreaterThan(0);
         expect(retryAfter).toBeLessThanOrEqual(OAUTH2_DEVICE_LOOKUP_ATTEMPT_WINDOW);
 
@@ -377,6 +398,7 @@ describe('app/modules/oauth2/repositories/device-code', () => {
         // the second reset in the window adds nothing, so the counter keeps
         // running and the tenth miss behind it arms the lock
         await repository.resetLookupMisses(key);
+
         for (let i = 0; i < 9; i++) {
             await repository.countLookupMiss(key, 10);
         }
@@ -408,6 +430,7 @@ describe('app/modules/oauth2/repositories/device-code', () => {
         for (let i = 0; i < 9; i++) {
             await repository.countLookupMiss(key, 10);
         }
+
         await repository.resetLookupMisses(key);
         await repository.countLookupMiss(key, 10);
 

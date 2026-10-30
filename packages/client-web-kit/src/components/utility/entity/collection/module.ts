@@ -142,6 +142,7 @@ function create<
 
     const resolveBaseQuery = () : IQuery => {
         let contextQuery : IQuery | undefined;
+
         if (context.query) {
             contextQuery = normalizeQueryInput(
                 typeof context.query === 'function' ? context.query() : context.query,
@@ -149,6 +150,7 @@ function create<
         }
 
         let propsQuery : IQuery | undefined;
+
         if (context.props.query) {
             propsQuery = normalizeQueryInput(context.props.query);
         }
@@ -192,6 +194,7 @@ function create<
             inputQuery = normalizeQueryInput(input);
 
             let filtersOverride : IFilters | undefined;
+
             if (
                 input.filters &&
                 !isCondition(input.filters) &&
@@ -212,6 +215,7 @@ function create<
                         input.filters.name,
                         searchEntityNames(context.type, input.filters.name),
                     );
+
                 filtersOverride = defineFilters(
                     transformed as FiltersBuildInput | ICondition,
                 );
@@ -258,9 +262,11 @@ function create<
             serializeFilters(interactiveNext) !== serializeFilters(interactive);
 
         const statePagination : PaginationBuildInput = {};
+
         if (typeof meta.value.pagination?.limit === 'number') {
             statePagination.limit = meta.value.pagination.limit;
         }
+
         if (typeof meta.value.pagination?.offset === 'number') {
             statePagination.offset = filtersChanged ? 0 : meta.value.pagination.offset;
         }
@@ -287,7 +293,9 @@ function create<
     // an unhandled rejection is fatal to the server process, so a failed load
     // emits `failed` and leaves the list empty instead of throwing.
     async function load(input: EntityListQueryInput<Entity<RECORD>> = {}) {
-        if (!getMany || busy.value) return;
+        if (!getMany || busy.value) {
+            return;
+        }
 
         busy.value = true;
         meta.value.busy = true;
@@ -319,6 +327,7 @@ function create<
             loadCompleted = true;
         } catch (e) {
             failed(isError(e) ? e : new Error('The entities could not be loaded.'));
+
             return;
         } finally {
             busy.value = false;
@@ -397,6 +406,7 @@ function create<
 
         if (store && handoff) {
             const snapshot = store.get<EntityCollectionHydrationSnapshot<RECORD>>(handoff.key);
+
             if (snapshot) {
                 // One-shot: navigating back to this list later must fetch
                 // again instead of replaying the first render's rows.
@@ -406,6 +416,7 @@ function create<
                 total.value = snapshot.total;
 
                 meta.value.total = snapshot.total;
+
                 if (snapshot.pagination) {
                     meta.value.pagination = snapshot.pagination;
                 }
@@ -450,11 +461,13 @@ function create<
 
     function render(defaults?: EntityCollectionRenderOptions<RECORD>) : VNodeChild {
         let renderOptions : EntityCollectionRenderOptions<RECORD>;
+
         if (defaults) {
             renderOptions = mergeEntityCollectionRenderOptions(context.props, defaults);
         } else {
             renderOptions = context.props;
         }
+
         const headerOpt: ListHeaderOptions<RECORD> | undefined = boolableToObject(renderOptions.header || {});
         const footerOpt: ListFooterOptions<RECORD> | undefined = boolableToObject(renderOptions.footer || {});
         const noMoreOpt: ListNoMoreOptions<RECORD> | undefined = boolableToObject(renderOptions.noMore || {});
@@ -489,6 +502,7 @@ function create<
             withSlotProps = true,
         ): VNodeChild | null => {
             const slot = slots[slotName];
+
             if (slot) {
                 return h(
                     opt?.tag ?? 'div',
@@ -496,9 +510,11 @@ function create<
                     withSlotProps ? slot(slotProps()) : slot(undefined),
                 );
             }
+
             if (opt?.content) {
                 return h(opt.tag ?? 'div', { class: cssClass }, opt.content);
             }
+
             return null;
         };
 
@@ -522,6 +538,7 @@ function create<
         // (legacy buildList contract). Used as the escape hatch for
         // consumers that want full control over the list body.
         const defaultSlot = slots[EntityCollectionSlotName.DEFAULT];
+
         if (defaultSlot) {
             return h(VCList, listProps, () => defaultSlot(slotProps()));
         }
@@ -532,24 +549,36 @@ function create<
             const headerVNode = renderOptions.header !== false ?
                 renderChrome(EntityCollectionSlotName.HEADER, headerOpt, 'vc-list-header') :
                 null;
-            if (headerVNode) children.push(headerVNode);
+
+            if (headerVNode) {
+                children.push(headerVNode);
+            }
 
             // BODY slot — if provided, the consumer renders the full body
             // (e.g. a `<VCTable>` with `:columns` driving auto-render) and
             // per-item rendering is skipped. Otherwise fall back to
             // <VCListBody> + per-item <VCListItem>.
             const bodySlot = slots[EntityCollectionSlotName.BODY];
+
             if (bodySlot) {
                 children.push(bodySlot(slotProps()));
             } else {
                 children.push(h(VCListBody, {}, () => {
                     const renderLoadingBand = (overlay: boolean) => {
-                        if (renderOptions.loading === false) return null;
+                        if (renderOptions.loading === false) {
+                            return null;
+                        }
+
                         const slot = slots[EntityCollectionSlotName.LOADING];
-                        if (slot) return slot(undefined);
+
+                        if (slot) {
+                            return slot(undefined);
+                        }
+
                         if (loadingOpt?.content) {
                             return h(loadingOpt.tag ?? 'div', { class: 'vc-list-loading' }, loadingOpt.content);
                         }
+
                         return h(VCListLoading, { overlay });
                     };
 
@@ -576,12 +605,14 @@ function create<
                             updated: (next: RECORD) => handlers.updated(next),
                             deleted: (next: RECORD) => handlers.deleted(next),
                         };
+
                         return h(VCListItem, { key: item.id ?? index }, () => {
                             const itemSlot = slots[EntityCollectionSlotName.ITEM];
                             const itemActionsSlot = slots[EntityCollectionSlotName.ITEM_ACTIONS];
                             const itemActionsExtraSlot = slots[EntityCollectionSlotName.ITEM_ACTIONS_EXTRA];
 
                             let body: VNodeChild;
+
                             if (itemSlot) {
                                 body = itemSlot(itemSlotProps);
                             } else if (itemOpt?.content) {
@@ -592,8 +623,10 @@ function create<
                                 const name = hasOwnProperty(item, 'name') && typeof item.name === 'string' ?
                                     item.name :
                                     undefined;
+
                                 if (name) {
                                     const label = translateEntityName(context.type, item as EntityNamed);
+
                                     body = label === name ?
                                         h('span', name) :
                                         h('span', [label, h('small', { class: 'block text-fg-muted' }, name)]);
@@ -619,12 +652,15 @@ function create<
                             // the right — matches every junction picker
                             // (client/user/policy roles) consumer.
                             const actionsNodes: VNodeChild[] = [];
+
                             if (itemActionsSlot) {
                                 actionsNodes.push(itemActionsSlot(itemSlotProps));
                             }
+
                             if (itemActionsExtraSlot) {
                                 actionsNodes.push(itemActionsExtraSlot(itemSlotProps));
                             }
+
                             return [
                                 body,
                                 h(
@@ -639,6 +675,7 @@ function create<
                     if (busy.value) {
                         return [rows, renderLoadingBand(true)];
                     }
+
                     return rows;
                 }));
             }
@@ -661,13 +698,19 @@ function create<
                 total.value === 0
             ) {
                 const noMoreVNode = renderChrome(EntityCollectionSlotName.NO_MORE, noMoreOpt, 'vc-list-no-more', false);
-                if (noMoreVNode) children.push(noMoreVNode);
+
+                if (noMoreVNode) {
+                    children.push(noMoreVNode);
+                }
             }
 
             const footerVNode = renderOptions.footer !== false ?
                 renderChrome(EntityCollectionSlotName.FOOTER, footerOpt, 'vc-list-footer') :
                 null;
-            if (footerVNode) children.push(footerVNode);
+
+            if (footerVNode) {
+                children.push(footerVNode);
+            }
 
             return h(Fragment, children);
         });
@@ -688,6 +731,7 @@ function create<
 
     let loadOnSetup = true;
     const propLoadOnSetup = unref(context.props.loadOnSetup);
+
     if (typeof propLoadOnSetup === 'boolean') {
         loadOnSetup = propLoadOnSetup;
     }

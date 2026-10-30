@@ -124,6 +124,7 @@ export default defineComponent({
                     callbacks: {
                         title: (items) => {
                             const [item] = items;
+
                             if (!item) {
                                 return '';
                             }

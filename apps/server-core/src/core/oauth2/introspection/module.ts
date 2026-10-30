@@ -49,6 +49,7 @@ export async function resolveIntrospectionSubject(
     input: OAuth2IntrospectionSubjectInput,
 ) : Promise<OAuth2IntrospectionSubject | null> {
     const identity = await ctx.identityResolver.resolve(input.token.sub_kind, input.token.sub);
+
     if (!identity) {
         // todo: differentiate between client & user
         throw OAuth2RequestError.identityInvalid();
@@ -84,8 +85,10 @@ export async function resolveIntrospectionSubject(
     const bindings = await ctx.identityPermissionProvider.getForToken(input.token);
 
     const permissions : OAuth2TokenPermission[] = [];
+
     for (const binding of bindings) {
         const policies : string[] = [];
+
         try {
             for (const policy of binding.policies ?? []) {
                 policies.push(readPolicyId(policy));
@@ -94,8 +97,9 @@ export async function resolveIntrospectionSubject(
         } catch (e) {
             ctx.logger?.warn(
                 `Dropped a grant of permission ${buildPermissionKey(binding.permission)} from the introspection: ` +
-                `${e instanceof Error ? e.message : String(e)}`,
+                `${Error.isError(e) ? e.message : String(e)}`,
             );
+
             continue;
         }
 

@@ -73,17 +73,20 @@ export class LoginThrottleService implements ILoginThrottleService {
         // not reserved, and the audit-row count alone still throttles.
         let inflight = 0;
         let reservation : LoginThrottleReservation | undefined;
+
         if (this.cache) {
             try {
                 const bucket = this.currentBucket();
+
                 inflight = await this.reserve(ctx, bucket);
                 reservation = { bucket };
             } catch (e) {
-                this.logger?.warn(`Could not reserve a login attempt: ${e instanceof Error ? e.message : String(e)}`);
+                this.logger?.warn(`Could not reserve a login attempt: ${Error.isError(e) ? e.message : String(e)}`);
             }
         }
 
         let count : number;
+
         try {
             count = await this.repository.countRecent({
                 name: EventName.LOGIN_FAILED,
@@ -96,19 +99,28 @@ export class LoginThrottleService implements ILoginThrottleService {
                 since: new Date(Date.now() - (windowSeconds * 1_000)).toISOString(),
             });
         } catch (e) {
-            if (reservation) await this.release(ctx, reservation);
+            if (reservation) {
+                await this.release(ctx, reservation);
+            }
+
             throw e;
         }
 
         if (count >= threshold) {
-            if (reservation) await this.release(ctx, reservation);
+            if (reservation) {
+                await this.release(ctx, reservation);
+            }
+
             throw new LoginThrottledError({ retryAfter: windowSeconds });
         }
 
         // the threshold is only full of attempts still running: those end
         // within moments, so the caller may retry almost at once.
         if (count + inflight >= threshold) {
-            if (reservation) await this.release(ctx, reservation);
+            if (reservation) {
+                await this.release(ctx, reservation);
+            }
+
             throw new LoginThrottledError({
                 message: 'Too many concurrent login attempts. Please try again.',
                 retryAfter: 1,
@@ -130,7 +142,7 @@ export class LoginThrottleService implements ILoginThrottleService {
         try {
             await this.cache.increment(this.buildKey(ctx, reservation.bucket), -1, { ttl: INFLIGHT_BUCKET_MS * 2 });
         } catch (e) {
-            this.logger?.warn(`Could not release a login attempt: ${e instanceof Error ? e.message : String(e)}`);
+            this.logger?.warn(`Could not release a login attempt: ${Error.isError(e) ? e.message : String(e)}`);
         }
     }
 

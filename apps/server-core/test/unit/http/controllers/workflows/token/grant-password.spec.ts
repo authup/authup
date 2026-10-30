@@ -161,6 +161,7 @@ describe('src/http/controllers/token', () => {
         const { data: realm } = await suite.client.realm.create(createFakeRealm());
 
         const { name } = createFakeUser();
+
         await suite.client.user.create(createFakeUser({
             name,
             password: 'master-secret-123',

@@ -47,10 +47,10 @@ const NONCE = 'rp-nonce-value';
 // client is authMethod `none`, so the code flow is unusable without one.
 const CODE_VERIFIER = 'aVeryLongCodeVerifierValueUsedByThePublicClient1234567890';
 
-const encode = (input: Record<string, any>) => Buffer.from(JSON.stringify(input)).toString('base64url');
+const encode = (input: Record<string, any>) => Buffer.from(JSON.stringify(input)).toBase64({ alphabet: 'base64url', omitPadding: true });
 
 const decodeJWTPayload = (token: string) => JSON.parse(
-    Buffer.from(token.split('.')[1], 'base64url').toString('utf-8'),
+    new TextDecoder().decode(Uint8Array.fromBase64(token.split('.')[1], { alphabet: 'base64url' })),
 );
 
 describe('identity-provider login completion', () => {
@@ -77,7 +77,8 @@ describe('identity-provider login completion', () => {
 
     beforeAll(async () => {
         const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(CODE_VERIFIER));
-        codeChallenge = Buffer.from(new Uint8Array(digest)).toString('base64url');
+
+        codeChallenge = Buffer.from(new Uint8Array(digest)).toBase64({ alphabet: 'base64url', omitPadding: true });
 
         // A minimal external provider: its token endpoint answers with an
         // unsigned JWT whose `sub` identifies the external user. It counts its
@@ -99,6 +100,7 @@ describe('identity-provider login completion', () => {
                         token_type: 'Bearer',
                     }));
                 });
+
                 return;
             }
 
@@ -130,6 +132,7 @@ describe('identity-provider login completion', () => {
 
         for (const scopeName of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {
             const { data: scope } = await suite.client.scope.getOne(scopeName);
+
             await suite.client.clientScope.create({ scopeId: scope.id, clientId: client.id });
         }
     });
@@ -153,7 +156,7 @@ describe('identity-provider login completion', () => {
             code_challenge: codeChallenge,
             code_challenge_method: 'S256',
             ...overrides,
-        })).toString('base64url');
+        })).toBase64({ alphabet: 'base64url', omitPadding: true });
     }
 
     /**
@@ -166,6 +169,7 @@ describe('identity-provider login completion', () => {
 
     function readPendingLoginCookie(response: Response) : string | null {
         const header = response.headers.get('set-cookie');
+
         if (!header) {
             return null;
         }
@@ -185,14 +189,17 @@ describe('identity-provider login completion', () => {
             headers: { 'user-agent': USER_AGENT },
             redirect: 'manual',
         });
+
         expect(out.status).toEqual(302);
 
         const state = new URL(out.headers.get('location') as string).searchParams.get('state');
+
         expect(state).toBeTruthy();
 
         // the browser carries the nonce the start set, which is what stops a
         // crafted callback URL establishing a session somewhere else
         const nonce = readPendingLoginCookie(out);
+
         expect(nonce).toBeTruthy();
 
         const back = await httpRequest(
@@ -207,6 +214,7 @@ describe('identity-provider login completion', () => {
                 redirect: 'manual',
             },
         );
+
         expect(back.status).toEqual(302);
 
         lastCallbackResponse = back;
@@ -238,9 +246,11 @@ describe('identity-provider login completion', () => {
      */
     async function completePendingLogin(hosted: URL): Promise<string> {
         const response = await completeRequest(hosted);
+
         expect(response.status).toEqual(200);
 
         const grant = await response.json();
+
         expect(grant.access_token).toBeTruthy();
 
         return grant.access_token;
@@ -256,8 +266,9 @@ describe('identity-provider login completion', () => {
                 'content-type': 'application/json',
                 'user-agent': USER_AGENT,
             },
-            body: Buffer.from(codeRequest, 'base64url').toString('utf-8'),
+            body: new TextDecoder().decode(Uint8Array.fromBase64(codeRequest, { alphabet: 'base64url' })),
         });
+
         expect(approve.status).toEqual(200);
 
         const { url } = await approve.json();
@@ -276,6 +287,7 @@ describe('identity-provider login completion', () => {
 
         // built from publicUrl, like every hosted-page link
         const url = new URL(response.headers.get('location') as string);
+
         expect(url.pathname.endsWith('/authorize')).toBe(true);
         expect(url.searchParams.get('client_id')).toEqual(clientId);
         expect(url.searchParams.get('redirect_uri')).toEqual(REDIRECT_URI);
@@ -312,6 +324,7 @@ describe('identity-provider login completion', () => {
         // the attributes are the binding: another origin cannot set it, a
         // cross-site request does not send it, and script cannot read it
         const setCookie = lastCallbackResponse?.headers.get('set-cookie') ?? '';
+
         expect(setCookie).toContain('HttpOnly');
         expect(setCookie.toLowerCase()).toContain('samesite=lax');
         expect(setCookie).toContain('Path=/identity-providers');
@@ -339,6 +352,7 @@ describe('identity-provider login completion', () => {
         await completePendingLogin(hosted);
 
         const response = await completeRequest(hosted, cookie);
+
         expect(response.status).toEqual(400);
     });
 
@@ -461,6 +475,7 @@ describe('identity-provider login completion', () => {
         const hosted = await runFederatedLogin();
 
         const response = await completeRequest(hosted, null);
+
         expect(response.status).toEqual(400);
     });
 
@@ -538,6 +553,7 @@ describe('identity-provider login completion', () => {
         });
 
         const body = await response.json();
+
         expect(body.id_token).toBeTruthy();
         expect(decodeJWTPayload(body.id_token)).toMatchObject({
             nonce: NONCE,
@@ -547,6 +563,7 @@ describe('identity-provider login completion', () => {
         // The id_token is minted at this exchange, so its `sid` must name the
         // session this exchange created rather than anything the callback held.
         const introspection = await suite.client.token.introspect({ token: body.access_token }, { authorizationHeaderInherit: true });
+
         expect(decodeJWTPayload(body.id_token).sid).toEqual(introspection.session_id);
     });
 
@@ -564,6 +581,7 @@ describe('identity-provider login completion', () => {
             redirect_uri: REDIRECT_URI,
             code_verifier: CODE_VERIFIER,
         });
+
         expect(anonymous.status).toEqual(401);
         await expect(anonymous.json()).resolves.toMatchObject({ error: OAuth2ErrorCode.INVALID_CLIENT });
 
@@ -576,6 +594,7 @@ describe('identity-provider login completion', () => {
             redirect_uri: REDIRECT_URI,
             code_verifier: CODE_VERIFIER,
         });
+
         expect(afterAnonymous.status).toEqual(200);
 
         // A different client, correctly authenticated as itself, against a
@@ -597,6 +616,7 @@ describe('identity-provider login completion', () => {
             redirect_uri: REDIRECT_URI,
             code_verifier: CODE_VERIFIER,
         });
+
         expect(foreign.status).toEqual(400);
         await expect(foreign.json()).resolves.toMatchObject({ error: OAuth2ErrorCode.INVALID_GRANT });
     });
@@ -616,12 +636,14 @@ describe('identity-provider login completion', () => {
         // reaches proxies, referrers and browser history. Single use is what
         // bounds that exposure.
         const replay = await exchange(form);
+
         expect(replay.status).toEqual(400);
         await expect(replay.json()).resolves.toMatchObject({ error: OAuth2ErrorCode.INVALID_GRANT });
     });
 
     it('records the login in the audit log', async () => {
         const hosted = await runFederatedLogin();
+
         await completePendingLogin(hosted);
 
         // The authorization itself is recorded by the hosted ladder now, like
@@ -635,6 +657,7 @@ describe('identity-provider login completion', () => {
         });
 
         const event = events.find((row) => (row.data as Record<string, any>)?.reason === 'federated');
+
         expect(event).toBeDefined();
         expect(event).toMatchObject({
             scope: EventScope.OAUTH2,
@@ -694,6 +717,7 @@ describe('identity-provider login completion', () => {
         const nonce = readPendingLoginCookie(out);
 
         const usersBefore = (await suite.client.user.getMany({ filters: { realmId: realm.id } })).meta.total;
+
         providerTokenCalls = 0;
 
         try {
@@ -732,6 +756,7 @@ describe('identity-provider login completion', () => {
             requiredAmr: 'mfa',
         });
         const strictProvider = (await suite.client.identityProvider.create(strictPayload)).data;
+
         providerIdTokenClaims = {
             sub: 'external-user-completion',
             email: 'external-completion@example.com',
@@ -774,6 +799,7 @@ describe('identity-provider login completion', () => {
             await suite.client.identityProvider.delete(strictProvider.id);
 
             const { data: users } = await suite.client.user.getMany({ filters: { realmId: realm.id } });
+
             for (const row of users) {
                 if (!usersBefore.includes(row.id)) {
                     await suite.client.user.delete(row.id);
@@ -829,6 +855,7 @@ describe('identity-provider login completion', () => {
 
         const { data: users } = await suite.client.user.getMany({ filters: { realmId: realm.id } });
         const user = users.find((row) => row.name !== 'admin');
+
         expect(user).toBeDefined();
 
         await suite.client.user.update((user as { id: string }).id, { active: false });
@@ -871,6 +898,7 @@ describe('identity-provider login completion', () => {
         }))).data;
 
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
         await suite.client.clientScope.create({ scopeId: scope.id, clientId: moved.id });
 
         const codeRequest = buildCodeRequest({ client_id: moved.id, scope: ScopeName.GLOBAL });
@@ -927,6 +955,7 @@ describe('identity-provider login completion', () => {
             redirectUri: 'myapp://cb',
         }))).data;
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
         await suite.client.clientScope.create({ scopeId: scope.id, clientId: native.id });
 
         const codeRequest = buildCodeRequest({
@@ -936,10 +965,12 @@ describe('identity-provider login completion', () => {
         });
 
         const hosted = await runFederatedLogin(codeRequest);
+
         expect(hosted.pathname.endsWith('/authorize')).toBe(true);
         expect(pendingLoginCookie).toBeTruthy();
 
         const target = await completeFederatedLogin(codeRequest);
+
         expect(target.protocol).toEqual('myapp:');
         expect(target.host).toEqual('cb');
         expect(target.searchParams.get('code')).toBeTruthy();
@@ -958,6 +989,7 @@ describe('identity-provider login completion', () => {
             redirectUri: 'myapp://cb',
         }))).data;
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
         await suite.client.clientScope.create({ scopeId: scope.id, clientId: native.id });
 
         const out = await httpRequest(suite, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${buildCodeRequest({
@@ -976,8 +1008,10 @@ describe('identity-provider login completion', () => {
         const verify = verifier.verify.bind(verifier);
         const spy = vi.spyOn(verifier, 'verify').mockImplementation(async (data) => {
             const result = await verify(data);
+
             // eslint-disable-next-line no-script-url -- the scheme under test
             result.data.redirect_uri = 'javascript:alert(document.cookie)//';
+
             return result;
         });
 
@@ -1013,6 +1047,7 @@ describe('identity-provider login completion', () => {
 
         for (const scopeName of [ScopeName.GLOBAL]) {
             const { data: scope } = await suite.client.scope.getOne(scopeName);
+
             await suite.client.clientScope.create({ scopeId: scope.id, clientId: disabled.id });
         }
 
@@ -1066,6 +1101,7 @@ describe('identity-provider login completion', () => {
 
         const { data: users } = await suite.client.user.getMany({ filters: { realmId: realm.id } });
         const user = users.find((row) => row.name !== 'admin');
+
         expect(user).toBeDefined();
 
         const { data: authenticator } = await suite.client.userAuthenticator.enroll(
@@ -1101,6 +1137,7 @@ describe('identity-provider login completion', () => {
             // the page renders from this answer, so it has to say what the
             // SESSION owes rather than what the user holds
             const plain = await httpRequest(suite, 'GET', 'authenticators/challenge', { headers: { authorization: `Bearer ${accessToken}` } });
+
             await expect(plain.json()).resolves.toMatchObject({
                 required: false,
                 enrollmentRequired: false,
@@ -1114,6 +1151,7 @@ describe('identity-provider login completion', () => {
                 'authenticators/challenge?acrValues=urn%3Aauthup%3Amfa',
                 { headers: { authorization: `Bearer ${accessToken}` } },
             );
+
             await expect(stepUp.json()).resolves.toMatchObject({ required: true });
         } finally {
             await suite.client.userAuthenticator.delete((user as { id: string }).id, authenticator.id);
@@ -1142,7 +1180,7 @@ describe('identity-provider login completion', () => {
                     'content-type': 'application/json',
                     'user-agent': USER_AGENT,
                 },
-                body: Buffer.from(codeRequest, 'base64url').toString('utf-8'),
+                body: new TextDecoder().decode(Uint8Array.fromBase64(codeRequest, { alphabet: 'base64url' })),
             });
 
             // the application asked, and a local factor is the only way authup

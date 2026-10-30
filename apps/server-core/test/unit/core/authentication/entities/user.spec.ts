@@ -19,11 +19,13 @@ import { FakeIdentityResolver } from '../../helpers/fake-identity-resolver.ts';
 describe('core/authentication/entities/user', () => {
     it('runs the credential check for an unknown user before refusing', async () => {
         const resolver = new FakeIdentityResolver();
+
         resolver.setIdentity(null);
 
         const verify = vi.spyOn(UserCredentialsService.prototype, 'verify');
 
         const authenticator = new UserAuthenticator(resolver);
+
         await expect(authenticator.authenticate('unknown', 'secret'))
             .rejects.toSatisfy((e) => isEntityCredentialsInvalidError(e));
 
@@ -35,6 +37,7 @@ describe('core/authentication/entities/user', () => {
         const service = new UserCredentialsService();
 
         const start = performance.now();
+
         await expect(service.verify('secret', {} as never)).resolves.toBe(false);
 
         // a cost-10 comparison takes tens of milliseconds; skipping it takes none

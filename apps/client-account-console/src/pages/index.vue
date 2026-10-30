@@ -222,6 +222,7 @@ export default defineComponent({
         // realm chooser. Suppressed while an error param is present so a
         // denial cannot loop back into the flow without a user action.
         const kicked = ref(false);
+
         watchEffect(() => {
             if (kicked.value ||
                 errorCode.value ||
@@ -232,10 +233,13 @@ export default defineComponent({
             const hint = typeof route.query.realmId === 'string' ?
                 route.query.realmId :
                 undefined;
-            if (hint) {
-                kicked.value = true;
-                Promise.resolve().then(() => kick(hint));
+
+            if (!hint) {
+                return;
             }
+
+            kicked.value = true;
+            Promise.resolve().then(() => kick(hint));
         });
 
         // Sign-out lives in App.vue's gadget-slot content (the single
@@ -258,6 +262,7 @@ export default defineComponent({
             await router.replace({ path: route.path });
 
             const { realmId } = store;
+
             if (realmId) {
                 await kick(realmId);
             }

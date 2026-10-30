@@ -13,7 +13,7 @@ import {
     isIdentityProviderAssuranceError,
 } from '../../../../../src/core/identity/provider/authentication/protocols/oauth2/assurance.ts';
 
-const encode = (input: Record<string, any>) => Buffer.from(JSON.stringify(input)).toString('base64url');
+const encode = (input: Record<string, any>) => Buffer.from(JSON.stringify(input)).toBase64({ alphabet: 'base64url', omitPadding: true });
 
 // unsigned three-segment JWT — the gate decodes, it never verifies
 const idToken = (claims: Record<string, any>) => `${encode({ alg: 'none', typ: 'JWT' })}.${encode(claims)}.x`;
@@ -115,16 +115,16 @@ describe('core/identity/provider — assertIdentityProviderAssurance', () => {
         // parties is refused however the extra party is spelled
         ['aud carries an untrusted extra audience', { amr: ['mfa'], aud: ['other', 'client-1'] }, false],
         ['azp cannot rescue an untrusted extra audience', {
-            amr: ['mfa'], 
-            aud: ['client-1', 'other'], 
-            azp: 'client-1', 
+            amr: ['mfa'],
+            aud: ['client-1', 'other'],
+            azp: 'client-1',
         }, false],
         ['aud names another client', { amr: ['mfa'], aud: 'client-2' }, false],
         ['aud is absent', { amr: ['mfa'] }, false],
         ['azp names another party', {
-            amr: ['mfa'], 
-            aud: ['client-1'], 
-            azp: 'client-2', 
+            amr: ['mfa'],
+            aud: ['client-1'],
+            azp: 'client-2',
         }, false],
     ] as const)('should decide the audience when %s', (_label, claims, accepted) => {
         const refusal = refusalOf(() => assertIdentityProviderAssurance(

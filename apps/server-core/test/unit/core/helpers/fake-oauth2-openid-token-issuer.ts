@@ -22,7 +22,9 @@ export class FakeOAuth2OpenIDTokenIssuer implements IOAuth2OpenIDTokenIssuer {
 
     async issue(input: OAuth2TokenPayload = {}): Promise<OAuth2TokenIssuerResponse> {
         this.issueCalls.push(input);
+
         const jti = randomUUID();
+
         return [`id-token-${jti}`, {
             ...input,
             jti,
@@ -35,6 +37,7 @@ export class FakeOAuth2OpenIDTokenIssuer implements IOAuth2OpenIDTokenIssuer {
         _identity: Identity,
     ): Promise<OAuth2TokenIssuerResponse> {
         this.issueWithIdentityCalls.push(input);
+
         return this.issue(input);
     }
 

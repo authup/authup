@@ -111,15 +111,16 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
 
     async complete(input: OAuth2FederatedLoginCompleteInput): Promise<OAuth2FederatedLoginCompleteResult> {
         const {
-            code, 
-            codeRequest, 
-            provider, 
+            code,
+            codeRequest,
+            provider,
         } = input;
 
         // Null for a login the device verification page started: there is no
         // client there, and the device flow's own lookup and approval run the
         // client-dependent gates (#3589).
         let verified : OAuth2AuthorizationCodeRequestVerificationResult | null = null;
+
         if (codeRequest) {
             // Re-verify the request BEFORE the provider's single-use code is
             // spent. It re-resolves the client (active, grant allowlist,
@@ -163,6 +164,7 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
             // itself, which is the only thing here that knows the uri was
             // ever matched.
             const redirectUri = verified.data.redirect_uri;
+
             if (!redirectUri || !verified.redirectUriVerified) {
                 throw OAuth2RequestError.malformed('The redirect_uri was not verified.');
             }
@@ -198,6 +200,7 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
         });
 
         let user : User;
+
         try {
             user = await authenticator.authenticate({ code });
         } catch (e) {
@@ -281,6 +284,7 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
                     realm,
                 },
             });
+
             if (subject && this.accessPolicyEvaluator) {
                 allowed = await this.accessPolicyEvaluator.evaluate(
                     verified.client.accessPolicyId,
@@ -359,6 +363,7 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
         const refuse = () => new BadRequestError('The login request is unknown or expired.');
 
         const pending = await this.pendingLoginStore.consume(input.pendingLoginId);
+
         if (!pending) {
             throw refuse();
         }
@@ -379,6 +384,7 @@ export class OAuth2FederatedLoginService implements IOAuth2FederatedLoginService
         }
 
         const existing = await this.sessionManager.findOneById(pending.sessionId);
+
         if (!existing) {
             throw refuse();
         }

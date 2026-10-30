@@ -6,9 +6,9 @@
  */
 
 import {
-    describe, 
-    expect, 
-    it, 
+    describe,
+    expect,
+    it,
     vi,
 } from 'vitest';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
@@ -43,6 +43,7 @@ describe('src/creator', () => {
         expect(creator).toBeDefined();
 
         const output = await creator();
+
         expect(output).toEqual(tokenGrantResponse);
     });
 
@@ -55,6 +56,7 @@ describe('src/creator', () => {
         expect(creator).toBeDefined();
 
         const output = await creator();
+
         expect(output).toEqual(tokenGrantResponse);
     });
 });

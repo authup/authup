@@ -99,6 +99,7 @@ describe('entity commands', () => {
             requests = [];
             vi.spyOn(process.stdout, 'write').mockImplementation((chunk) => {
                 output.push(String(chunk));
+
                 return true;
             });
             await createHostStore(resolveHostsDirectory()).write({
@@ -128,11 +129,13 @@ describe('entity commands', () => {
                     url: request.url,
                     body: typeof request.body === 'string' ? JSON.parse(request.body) : form,
                 });
+
                 return { body: { data: { id: 'u1' }, meta: {} } };
             };
             const transport = createHostTransport(Object.fromEntries(
                 Object.entries(routes).map(([key, route]) => [key, (request, form) => {
                     record(request, form);
+
                     return route(request, form);
                 }]),
             ));
@@ -145,6 +148,7 @@ describe('entity commands', () => {
             await run('user', ['list', '--filter', 'name=~ali&realm.name=master', '--sort', '-createdAt', '--include', 'realm', '--limit', '10', '--offset', '20'], { 'GET /users': () => ({ body: { data: [{ id: 'u1' }], meta: { total: 1 } } }) });
 
             const query = createURLCodec().decode(new URL(requests[0]!.url).search.slice(1));
+
             expect(query).toMatchObject({
                 filters: {
                     operator: 'and',
@@ -177,6 +181,7 @@ describe('entity commands', () => {
 
         it('counts with the stats flags carried onto the @stats read and prints the body', async () => {
             const body = { data: [{ createdAt: '2026-09-22T00:00:00.000Z', count: 1 }], meta: { total: 1 } };
+
             await run('user', [
                 'stats',
                 '--filter',
@@ -188,6 +193,7 @@ describe('entity commands', () => {
             ], { 'GET /users/@stats': () => ({ body }) });
 
             const url = new URL(requests[0]!.url);
+
             expect(requests[0]!.method).toEqual('GET');
             expect(url.pathname).toEqual('/users/@stats');
             expect(url.searchParams.get('group')).toEqual('bucket(createdAt,day),name');
@@ -217,12 +223,14 @@ describe('entity commands', () => {
             await run('user', ['stats'], { 'GET /users/@stats': () => ({ body: { data: [], meta: { total: 0 } } }) });
 
             const url = new URL(requests[0]!.url);
+
             expect(url.pathname).toEqual('/users/@stats');
             expect(url.search).toEqual('');
         });
 
         it('reads the query vocabulary', async () => {
             const body = { data: { name: 'user' }, meta: { recordParameters: ['fields', 'relations'] } };
+
             await run('user', ['schema'], { 'GET /users/@schema': () => ({ body }) });
 
             expect(requests[0]!.method).toEqual('GET');
@@ -249,6 +257,7 @@ describe('entity commands', () => {
 
         it('reads --data from a file', async () => {
             const file = path.join(root, 'user.json');
+
             await fs.writeFile(file, '{"name":"bob"}');
 
             await run('user', ['create', '--data', `@${file}`], { 'POST /users': () => ({ body: { data: {}, meta: {} } }) });
@@ -266,6 +275,7 @@ describe('entity commands', () => {
             const transport = new MemoryTransport({
                 fetch: (request) => {
                     urls.push(request.url);
+
                     return { body: { data: [], meta: { total: 0 } } };
                 },
             });
@@ -276,6 +286,7 @@ describe('entity commands', () => {
             }
 
             expect(urls).toHaveLength(NOUNS.length);
+
             for (const url of urls) {
                 expect(new URL(url).pathname).not.toMatch(/undefined|object/);
             }
@@ -310,9 +321,9 @@ describe('readEntityStatsQuery', () => {
         expect(query.filters).toMatchObject({
             operator: 'and',
             value: [{
-                field: 'realmId', 
-                operator: 'eq', 
-                value: 'r1', 
+                field: 'realmId',
+                operator: 'eq',
+                value: 'r1',
             }],
         });
     });

@@ -49,6 +49,7 @@ export class IdentityPolicyEvaluator implements IPolicyEvaluator {
         const policy = await this.validator.run(value);
 
         const data = await this.accessData(ctx);
+
         if (!data) {
             return {
                 success: false,
@@ -71,6 +72,7 @@ export class IdentityPolicyEvaluator implements IPolicyEvaluator {
         }
 
         const typeAllowed = policy.types.includes(data.type);
+
         if (typeAllowed) {
             return { success: maybeInvertPolicyOutcome(typeAllowed, policy.invert) };
         }

@@ -48,11 +48,13 @@ describe('renderDocker', () => {
 
     it('should pin the image to the version and comment the run command', () => {
         const command = dockerRunCommand(VERSION, 3000);
+
         expect(command).toContain(`authup/authup:${VERSION}`);
         expect(command).toContain('--env-file authup.env');
         expect(command).not.toContain('latest');
 
         const content = renderDocker(buildAnswers(), VERSION)['authup.env'];
+
         expect(content).toContain(`# ${command}`);
         expect(content).not.toContain('latest');
     });
@@ -142,6 +144,7 @@ describe('renderDocker', () => {
         expect(renderLines().some((line) => line.startsWith('EMAIL_VERIFICATION_ENABLED'))).toBe(false);
 
         const lines = renderLines();
+
         expect(lines).toContain('# TRUSTED_ORIGINS=https://app.example.com');
         expect(lines).toContain('# SECRETS_ENCRYPTION_KEY=<base64 32 bytes>');
         expect(lines.some((line) => line.startsWith('TRUSTED_ORIGINS=') || line.startsWith('SECRETS_ENCRYPTION_KEY='))).toBe(false);

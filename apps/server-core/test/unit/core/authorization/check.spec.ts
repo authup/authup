@@ -44,16 +44,16 @@ const systemDefault = {
     decisionStrategy: 'unanimous',
     children: [
         {
-            id: 'policy-identity', 
-            realmId: null, 
-            type: 'identity', 
-            builtIn: true, 
+            id: 'policy-identity',
+            realmId: null,
+            type: 'identity',
+            builtIn: true,
         },
         {
-            id: 'policy-binding', 
-            realmId: null, 
-            type: 'permissionBinding', 
-            builtIn: true, 
+            id: 'policy-binding',
+            realmId: null,
+            type: 'permissionBinding',
+            builtIn: true,
         },
     ],
 };
@@ -61,9 +61,9 @@ const systemDefault = {
 function definition(name: string, overrides: Record<string, any> = {}) : PermissionPolicies {
     return [
         {
-            name, 
-            realmId: null, 
-            clientId: null, 
+            name,
+            realmId: null,
+            clientId: null,
             ...overrides,
         },
         [systemDefault],
@@ -96,6 +96,7 @@ function decorateWith(value?: IdentityPolicyData) {
             }
 
             const data = ctx.data || new PolicyData();
+
             data.set(BuiltInPolicyType.IDENTITY, value);
 
             return { ...ctx, data };
@@ -145,9 +146,11 @@ function grant(
 
 function setup(definitions: PermissionPolicies[], grants: PermissionPolicyBinding[]) {
     const catalogRepository = new FakeAuthorizationCatalogRepository();
+
     catalogRepository.setDefinitions(definitions);
 
     const identityPermissionProvider = new FakeIdentityPermissionProvider();
+
     identityPermissionProvider.setBindings(grants);
 
     return { catalogRepository, identityPermissionProvider };
@@ -258,6 +261,7 @@ describe('core/authorization/check', () => {
         const ctx = setup([identityOnly], []);
 
         const { permissions: held } = await buildAuthorizationCheck(ctx, await visible(ctx));
+
         expect(held).toEqual([{ name: 'user_read', targetRealms: [REALM_ID, null] }]);
 
         // the same tree denies an identity the policy does not admit, which is
@@ -271,6 +275,7 @@ describe('core/authorization/check', () => {
         };
 
         const { permissions: denied } = await buildAuthorizationCheck(ctx, { ...await visible(ctx, clientIdentity) });
+
         expect(denied).toEqual([]);
     });
 
@@ -387,9 +392,9 @@ describe('core/authorization/check', () => {
 
             expect(result).toEqual([
                 {
-                    name: 'mtb_query_submit', 
-                    realmId: REALM_ID, 
-                    targetRealms: [REALM_ID, null], 
+                    name: 'mtb_query_submit',
+                    realmId: REALM_ID,
+                    targetRealms: [REALM_ID, null],
                 },
             ]);
         });
@@ -435,9 +440,9 @@ describe('core/authorization/check', () => {
 
             expect(result).toEqual([
                 {
-                    name: 'report_export', 
-                    clientId: CLIENT_ID, 
-                    targetRealms: [REALM_ID], 
+                    name: 'report_export',
+                    clientId: CLIENT_ID,
+                    targetRealms: [REALM_ID],
                 },
                 {
                     name: 'report_export',
@@ -468,9 +473,9 @@ describe('core/authorization/check', () => {
 
             expect(result).toEqual([
                 {
-                    name: 'report_export', 
-                    clientId: CLIENT_ID, 
-                    targetRealms: [REALM_ID], 
+                    name: 'report_export',
+                    clientId: CLIENT_ID,
+                    targetRealms: [REALM_ID],
                 },
             ]);
         });
@@ -577,9 +582,9 @@ describe('core/authorization/check', () => {
             const ctx = setup(
                 [
                     [{
-                        name: 'report_view', 
-                        realmId: null, 
-                        clientId: CLIENT_ID, 
+                        name: 'report_view',
+                        realmId: null,
+                        clientId: CLIENT_ID,
                     }, []],
                     definition('report_export', { clientId: FOREIGN_CLIENT_ID }),
                 ],
@@ -618,6 +623,7 @@ describe('core/authorization/check', () => {
                 ...await visible(ctx),
                 realms: RealmScope.OWN_OR_NULL,
             });
+
             expect(own).toEqual([]);
 
             const { permissions: result } = await buildAuthorizationCheck(ctx, {
@@ -640,19 +646,19 @@ describe('core/authorization/check', () => {
             const ctx = setup(
                 [
                     [{
-                        name: 'report_view', 
-                        realmId: null, 
-                        clientId: null, 
+                        name: 'report_view',
+                        realmId: null,
+                        clientId: null,
                     }, []],
                     [{
-                        name: 'report_view', 
-                        realmId: REALM_ID, 
-                        clientId: null, 
+                        name: 'report_view',
+                        realmId: REALM_ID,
+                        clientId: null,
                     }, []],
                     [{
-                        name: 'report_view', 
-                        realmId: FOREIGN_REALM_ID, 
-                        clientId: null, 
+                        name: 'report_view',
+                        realmId: FOREIGN_REALM_ID,
+                        clientId: null,
                     }, []],
                 ],
                 [],
@@ -697,9 +703,9 @@ describe('core/authorization/check', () => {
 
             expect(result).toEqual([
                 {
-                    name: 'report_export', 
-                    realmId: REALM_ID, 
-                    targetRealms: [REALM_ID], 
+                    name: 'report_export',
+                    realmId: REALM_ID,
+                    targetRealms: [REALM_ID],
                 },
                 {
                     name: 'report_export',

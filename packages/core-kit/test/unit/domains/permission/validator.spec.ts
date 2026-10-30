@@ -22,6 +22,7 @@ describe('domains/permission/validator', () => {
 
     it.each([ValidatorGroup.CREATE, ValidatorGroup.UPDATE, ValidatorGroup.PROVISIONING])('accepts and canonicalizes colon-separated names in group %s', async (group) => {
         const output = await new PermissionValidator().run({ name: ' Agent:Worker-1:Run ' }, { group });
+
         expect(output.name).toBe('agent:worker-1:run');
     });
 

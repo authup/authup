@@ -14,7 +14,13 @@ export function isJWKErrorCode(code: unknown) {
 }
 
 export function isJWKError(input: unknown): input is JWKError {
-    if (matchesInstanceof(input, JWK_ERROR_INSTANCE)) return true;
-    if (!isAuthupError(input)) return false;
+    if (matchesInstanceof(input, JWK_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
     return isJWKErrorCode(input.code);
 }

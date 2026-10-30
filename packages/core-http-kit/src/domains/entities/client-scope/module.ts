@@ -25,6 +25,7 @@ export class ClientScopeAPI extends BaseAPI implements IClientScopeAPI {
 
     async getMany(data?: EntityQueryInput<ClientScope>) : Promise<EntityCollectionResponse<ClientScope>> {
         const response = await this.client.get(`client-scopes${buildQueryString(data)}`);
+
         return response.data;
     }
 

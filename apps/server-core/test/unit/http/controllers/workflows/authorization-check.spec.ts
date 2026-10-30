@@ -67,6 +67,7 @@ async function createDateBoundPermission(
     const { data: permission } = await suite.client.permission.create({ name, realmId: null });
 
     const { data: bound } = await suite.client.permissionPolicy.getMany({ filters: { permissionId: permission.id } });
+
     for (const binding of bound) {
         await suite.client.permissionPolicy.delete(binding.id);
     }
@@ -77,6 +78,7 @@ async function createDateBoundPermission(
         realmId: null,
         ...window,
     });
+
     await suite.client.permissionPolicy.create({
         permissionId: permission.id,
         policyId: policy.id,
@@ -102,6 +104,7 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         expect(result.length).toBeGreaterThanOrEqual(Object.values(PermissionName).length);
 
         const entry = entryOf(result, PermissionName.USER_UPDATE);
+
         expect(entry).toBeDefined();
         // `admin` holds `any`, so both requested realms pass
         expect(entry!.targetRealms).toHaveLength(2);
@@ -130,6 +133,7 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         // every built-in definition is bound to the global `system.default`,
         // whose identity child settles DATA_MISSING without one
         const result : AuthorizationCheckPermissions = await anonymous.json();
+
         expect(entryOf(result, PermissionName.USER_UPDATE)).toBeUndefined();
         expect(entryOf(result, PermissionName.PERMISSION_READ)).toBeUndefined();
     });
@@ -165,11 +169,13 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         const response = await postCheck(suite, {}, { Authorization: `Bearer ${restricted}` });
 
         expect(response.status).toBe(200);
+
         // named rather than asserted empty: spec files sharing a worker share
         // one database copy, and a permission another spec created through the
         // API carries no Layer-1 policy, so it passes for any authenticated
         // caller and would make an empty-array assertion flake
         const result : AuthorizationCheckPermissions = await response.json();
+
         expect(entryOf(result, PermissionName.USER_UPDATE)).toBeUndefined();
         expect(entryOf(result, PermissionName.PERMISSION_READ)).toBeUndefined();
     });
@@ -182,7 +188,9 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         const response = await postCheck(suite, {}, { Authorization: `Bearer ${grant.access_token}` });
 
         expect(response.status).toBe(200);
+
         const result : AuthorizationCheckPermissions = await response.json();
+
         expect(entryOf(result, PermissionName.USER_UPDATE)).toBeUndefined();
         expect(entryOf(result, PermissionName.PERMISSION_READ)).toBeUndefined();
     });
@@ -191,6 +199,7 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         const password = 'start123-check-reach';
         const { data: user } = await suite.client.user.create(createFakeUser({ password }));
         const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_UPDATE);
+
         await suite.client.userPermission.create({
             userId: user.id,
             permissionId: permission.id,
@@ -202,18 +211,23 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         const headers = { Authorization: `Bearer ${grant.access_token}` };
 
         const own = await postCheck(suite, { targetRealms: RealmScope.OWN }, headers);
+
         expect(own.status).toBe(200);
+
         const ownResult : AuthorizationCheckPermissions = await own.json();
+
         expect(entryOf(ownResult, PermissionName.USER_UPDATE)?.targetRealms).toEqual([user.realmId]);
 
         // `own` reaches neither a global row nor another realm's
         const wider = await postCheck(suite, { targetRealms: [null, foreignRealm.id] }, headers);
+
         expect(wider.status).toBe(200);
         expect(entryOf(await wider.json(), PermissionName.USER_UPDATE)).toBeUndefined();
 
         // and the answer is per realm rather than per name: a realm it reaches
         // still comes back in the same call that refuses the two it does not
         const mixed = await postCheck(suite, { targetRealms: [user.realmId, foreignRealm.id] }, headers);
+
         expect(entryOf(await mixed.json(), PermissionName.USER_UPDATE)?.targetRealms).toEqual([user.realmId]);
     });
 
@@ -221,6 +235,7 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         const password = 'start123-check-own-or-null';
         const { data: user } = await suite.client.user.create(createFakeUser({ password }));
         const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_READ);
+
         await suite.client.userPermission.create({
             userId: user.id,
             permissionId: permission.id,
@@ -240,16 +255,20 @@ describe('src/http/controllers/workflows/authorization/check', () => {
 
         const names = Array.from({ length: 257 }, (_, index) => `permission_${index}`);
         const tooManyNames = await postCheck(suite, { names }, headers);
+
         expect(tooManyNames.status).toBe(400);
 
         const ids = Array.from({ length: 5 }, () => randomUUID());
+
         for (const key of ['realms', 'clients', 'targetRealms']) {
             const tooMany = await postCheck(suite, { [key]: ids }, headers);
+
             expect(tooMany.status).toBe(400);
 
             // `any` is not offered: a caller that wants another realm or
             // client names it
             const badSelector = await postCheck(suite, { [key]: 'any' }, headers);
+
             expect(badSelector.status).toBe(400);
         }
     });
@@ -280,6 +299,7 @@ describe('src/http/controllers/workflows/authorization/check', () => {
             ...createFakePermission(),
             realmId: user.realmId,
         });
+
         await suite.client.permission.create({
             ...createFakePermission({ name: owned.name }),
             realmId: null,
@@ -294,16 +314,18 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         const headers = { Authorization: `Bearer ${grant.access_token}` };
 
         const globalOnly = await postCheck(suite, { names: [owned.name] }, headers);
+
         expect(globalOnly.status).toBe(200);
         expect(await globalOnly.json()).toEqual([]);
 
         const selected = await postCheck(suite, { names: [owned.name], realms: RealmScope.OWN_OR_NULL }, headers);
+
         expect(selected.status).toBe(200);
         expect(await selected.json()).toEqual([
             {
-                name: owned.name, 
-                realmId: user.realmId, 
-                targetRealms: [user.realmId, null], 
+                name: owned.name,
+                realmId: user.realmId,
+                targetRealms: [user.realmId, null],
             },
         ]);
     });
@@ -320,6 +342,7 @@ describe('src/http/controllers/workflows/authorization/check', () => {
             ...createFakePermission(),
             realmId: master.id,
         });
+
         await suite.client.userPermission.create({
             userId: user.id,
             permissionId: owned.id,
@@ -334,10 +357,12 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         const headers = { Authorization: `Bearer ${grant.access_token}` };
 
         const own = await postCheck(suite, { names: [owned.name], realms: RealmScope.OWN_OR_NULL }, headers);
+
         expect(own.status).toBe(200);
         expect(await own.json()).toEqual([]);
 
         const granted = await postCheck(suite, { names: [owned.name], realms: 'granted' }, headers);
+
         expect(granted.status).toBe(200);
         expect(await granted.json()).toEqual([
             {
@@ -365,7 +390,9 @@ describe('src/http/controllers/workflows/authorization/check', () => {
         const response = await postCheck(suite, {});
 
         expect(response.status).toBe(200);
+
         const result : AuthorizationCheckPermissions = await response.json();
+
         expect(entryOf(result, open)?.targetRealms).toEqual([null]);
         // the window is evaluated rather than ignored
         expect(entryOf(result, closed)).toBeUndefined();
@@ -400,11 +427,13 @@ describe('src/http/controllers/workflows/authorization/check', () => {
 
         const header = response.headers.get('cache-control')!;
         const match = header.match(/^private, no-cache, max-age=(\d+)$/);
+
         expect(match).not.toBeNull();
 
         // the window ends today, and the daily rollover at midnight is the
         // latest instant the verdict could change
         const maxAge = Number(match![1]);
+
         expect(maxAge).toBeGreaterThanOrEqual(0);
         expect(maxAge).toBeLessThanOrEqual(24 * 60 * 60);
     });

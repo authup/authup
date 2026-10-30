@@ -30,6 +30,7 @@ export function resolveLoginRedirect(value: unknown) : string | undefined {
     }
 
     let url : URL;
+
     try {
         url = new URL(value, DESTINATION_BASE);
     } catch {
@@ -82,6 +83,7 @@ export function loadLoginRedirect() : string | undefined {
 
     try {
         const value = sessionStorage.getItem(LOGIN_REDIRECT_STORAGE_KEY);
+
         if (!value) {
             return undefined;
         }

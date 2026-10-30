@@ -21,6 +21,7 @@ async function expectBodyRefused(response: Response) {
     expect(response.status).toEqual(400);
 
     const body = await response.json();
+
     expect(body.code).toEqual(ErrorCode.BAD_REQUEST);
     expect(body.message).toEqual('request entity too large');
 }

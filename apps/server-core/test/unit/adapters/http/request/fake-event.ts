@@ -31,9 +31,11 @@ export function createFakeEvent(init: FakeEventInit = {}): IAppEvent {
     if (init.cookies) {
         store[COOKIE_SYMBOL] = { ...init.cookies };
     }
+
     if (init.query) {
         store[QUERY_SYMBOL] = { ...init.query };
     }
+
     if (init.body) {
         store[BODY_SYMBOL] = { ...init.body };
     }

@@ -64,11 +64,13 @@ describe('core/security/policy — IdentityPermissionBindingPolicyEvaluator disj
             [BuiltInPolicyType.IDENTITY]: { ...identityA, grants: bindings },
             [BuiltInPolicyType.PERMISSION_BINDING]: { permission: { name: PERMISSION_NAME } },
         };
+
         if (withResourceRealm) {
             data[BuiltInPolicyType.REALM_MATCH] = resourceRealm ?? null;
         }
 
         const evaluator = new IdentityPermissionBindingPolicyEvaluator();
+
         return evaluator.evaluate(
             { type: BuiltInPolicyType.PERMISSION_BINDING },
             definePolicyEvaluationContext({
@@ -96,11 +98,13 @@ describe('core/security/policy — IdentityPermissionBindingPolicyEvaluator disj
 
         it('grants cross-realm access via the any+policy grant (the fix)', async () => {
             const outcome = await run({ bindings, resourceRealm: REALM_B });
+
             expect(outcome.success).toBe(true);
         });
 
         it('still grants own-realm access via the policy-free own grant', async () => {
             const outcome = await run({ bindings, resourceRealm: REALM_A });
+
             expect(outcome.success).toBe(true);
         });
     });
@@ -113,11 +117,13 @@ describe('core/security/policy — IdentityPermissionBindingPolicyEvaluator disj
 
         it('denies cross-realm access — the own grant policy must not ride the any reach', async () => {
             const outcome = await run({ bindings, resourceRealm: REALM_B });
+
             expect(outcome.success).toBe(false);
         });
 
         it('grants own-realm access via the own grant (its policy passes)', async () => {
             const outcome = await run({ bindings, resourceRealm: REALM_A });
+
             expect(outcome.success).toBe(true);
         });
     });
@@ -137,11 +143,13 @@ describe('core/security/policy — IdentityPermissionBindingPolicyEvaluator disj
     describe('null (global) resource realm', () => {
         it('own does not reach a null resource', async () => {
             const outcome = await run({ bindings: [grant(RealmScope.OWN)], resourceRealm: null });
+
             expect(outcome.success).toBe(false);
         });
 
         it('ownOrNull reaches a null resource', async () => {
             const outcome = await run({ bindings: [grant(RealmScope.OWN_OR_NULL)], resourceRealm: null });
+
             expect(outcome.success).toBe(true);
         });
     });
@@ -152,6 +160,7 @@ describe('core/security/policy — IdentityPermissionBindingPolicyEvaluator disj
                 bindings: [grant(RealmScope.OWN, [failingPolicy])],
                 resourceRealm: REALM_A,
             });
+
             expect(outcome.success).toBe(false);
         });
     });
@@ -162,6 +171,7 @@ describe('core/security/policy — IdentityPermissionBindingPolicyEvaluator disj
                 bindings: [grant(RealmScope.OWN, [passingPolicy])],
                 withResourceRealm: false,
             });
+
             expect(outcome.success).toBe(true);
         });
     });
@@ -169,6 +179,7 @@ describe('core/security/policy — IdentityPermissionBindingPolicyEvaluator disj
     describe('no grants at all', () => {
         it('denies when the actor holds no matching grant', async () => {
             const outcome = await run({ bindings: [], resourceRealm: REALM_A });
+
             expect(outcome.success).toBe(false);
         });
     });
@@ -187,6 +198,7 @@ describe('core/security/policy — IdentityPermissionBindingPolicyEvaluator disj
         const predicateOf = (outcome: Awaited<ReturnType<typeof run>>) => {
             expect(outcome.pending).toBe(true);
             expect(outcome.condition).toBeDefined();
+
             return compileFilters(outcome.condition as IFilter | IFilters, { caseSensitive: true });
         };
 
@@ -198,6 +210,7 @@ describe('core/security/policy — IdentityPermissionBindingPolicyEvaluator disj
             });
 
             const predicate = predicateOf(outcome);
+
             expect(rows.map(predicate)).toEqual([true, false, false]);
         });
 
@@ -209,6 +222,7 @@ describe('core/security/policy — IdentityPermissionBindingPolicyEvaluator disj
             });
 
             const predicate = predicateOf(outcome);
+
             expect(rows.map(predicate)).toEqual([true, false, true]);
         });
 
@@ -246,6 +260,7 @@ describe('core/security/policy — IdentityPermissionBindingPolicyEvaluator disj
             });
 
             const predicate = predicateOf(outcome);
+
             expect(predicate({ realmId: REALM_A, name: 'admin' })).toBe(true);
             expect(predicate({ realmId: REALM_A, name: 'guest' })).toBe(false);
             expect(predicate({ realmId: REALM_B, name: 'admin' })).toBe(false);
@@ -266,6 +281,7 @@ describe('core/security/policy — IdentityPermissionBindingPolicyEvaluator disj
             });
 
             const predicate = predicateOf(outcome);
+
             // own realm: reachable policy-free
             expect(predicate({ realmId: REALM_A, name: 'guest' })).toBe(true);
             // foreign realm: only via the any grant, whose policy must match
@@ -307,6 +323,7 @@ describe('core/security/policy — IdentityPermissionBindingPolicyEvaluator disj
             });
 
             const predicate = predicateOf(outcome);
+
             expect(rows.map(predicate)).toEqual([true, false, false]);
         });
     });

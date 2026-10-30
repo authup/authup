@@ -36,7 +36,9 @@ describe('OAuth2TokenSigner', () => {
 
     beforeEach(async () => {
         vi.clearAllMocks();
+
         const serverKit = await import('@authup/server-kit');
+
         signToken = serverKit.signToken as ReturnType<typeof vi.fn>;
     });
 
@@ -80,6 +82,7 @@ describe('OAuth2TokenSigner', () => {
         const payload = createPayload();
 
         const result = await signer.sign(payload);
+
         expect(result).toBe('signed-jwt-token');
         expect(signToken).toHaveBeenCalledWith(payload, expect.objectContaining({
             type: JWKType.OCT,
@@ -100,6 +103,7 @@ describe('OAuth2TokenSigner', () => {
         const signer = new OAuth2TokenSigner(keyRepo);
 
         const result = await signer.sign(createPayload());
+
         expect(result).toBe('signed-jwt-token');
         expect(signToken).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
             type: JWKType.EC,
@@ -121,6 +125,7 @@ describe('OAuth2TokenSigner', () => {
         const signer = new OAuth2TokenSigner(keyRepo);
 
         const result = await signer.sign(createPayload());
+
         expect(result).toBe('signed-jwt-token');
         expect(signToken).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
             type: JWKType.RSA,

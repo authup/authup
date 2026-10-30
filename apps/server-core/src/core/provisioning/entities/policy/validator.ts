@@ -47,9 +47,11 @@ export class PolicyProvisioningValidator extends Container<PolicyProvisioningEnt
         super.initialize();
 
         const strategyValidator = new ProvisioningStrategyValidator();
+
         this.mount('strategy', { optional: true }, strategyValidator);
 
         const attributesValidator = new PolicyValidator();
+
         this.mount('attributes', attributesValidator);
 
         this.mount('extraAttributes', { optional: true }, createValidator(

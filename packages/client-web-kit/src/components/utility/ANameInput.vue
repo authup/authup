@@ -45,8 +45,8 @@ export default defineComponent({
     setup(props, { emit }) {
         const translationsDefault = useTranslations([
             {
-                namespace: TranslatorTranslationNamespace.ACTION, 
-                key: TranslatorTranslationActionKey.GENERATE, 
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.GENERATE,
             },
         ]);
 

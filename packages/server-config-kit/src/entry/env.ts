@@ -31,6 +31,7 @@ export function readSchemaEntryFromEnv<T, K extends keyof T>(entry: SchemaEntryI
     }
 
     const raw = read(entry.env);
+
     if (typeof raw !== 'string') {
         return undefined;
     }

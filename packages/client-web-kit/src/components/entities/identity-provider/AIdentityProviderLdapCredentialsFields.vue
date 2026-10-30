@@ -47,11 +47,15 @@ export default defineComponent({
         const v = useValidup(new Container<typeof form>(), form, { name: 'credentials' });
 
         function init() {
-            if (!props.entity) return;
+            if (!props.entity) {
+                return;
+            }
+
             assignFormProperties(form, props.entity as Partial<LdapIdentityProvider>, { fields: v.fields });
         }
 
         const updated = useUpdatedAt(() => props.entity as IdentityProvider);
+
         onChange(updated, () => init());
         init();
 

@@ -41,6 +41,7 @@ export class FileProvisioningSource implements IProvisioningSource {
         const compositeSource = new CompositeProvisioningSource([]);
 
         const output : RootProvisioningEntity = {};
+
         for (const location of locations) {
             const raw = await read(location);
             // Unwrap the default export only for module files; a data file
@@ -66,6 +67,7 @@ export class FileProvisioningSource implements IProvisioningSource {
             // client names may contain underscores), so it would silently
             // corrupt those keys. Unmounted keys are stripped by the validator.
             let data : RootProvisioningEntity;
+
             try {
                 data = await this.rootValidator.run(
                     entity as Record<string, any>,

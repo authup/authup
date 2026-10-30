@@ -23,9 +23,9 @@ const schema = JSON.parse(readFileSync(new URL('../fixtures/helm-values.schema.j
 // default key as required, so a partial values.yaml is merged onto the vendored defaults first, exactly as helm does.
 const defaults = parse(readFileSync(new URL('../fixtures/helm-values.yaml', import.meta.url), 'utf8'));
 const ajv = new Ajv({
-    strict: false, 
-    allErrors: true, 
-    validateFormats: false, 
+    strict: false,
+    allErrors: true,
+    validateFormats: false,
 });
 const validate = ajv.compile(schema);
 
@@ -39,6 +39,7 @@ function merge(base: unknown, overlay: unknown): unknown {
     }
 
     const result: Record<string, unknown> = { ...base };
+
     for (const [key, value] of Object.entries(overlay)) {
         result[key] = merge(base[key], value);
     }
@@ -76,12 +77,12 @@ const MATRIX: Record<string, Partial<Answers>> = {
     'bundled postgres': {},
     'bundled mysql with a worker split': {
         db: {
-            type: 'mysql', 
-            bundled: true, 
-            host: 'mysql', 
-            port: 3306, 
-            username: 'authup', 
-            password: 'db-secret', 
+            type: 'mysql',
+            bundled: true,
+            host: 'mysql',
+            port: 3306,
+            username: 'authup',
+            password: 'db-secret',
             database: 'authup',
         },
         workerSplit: true,
@@ -89,12 +90,12 @@ const MATRIX: Record<string, Partial<Answers>> = {
     },
     'external postgres with every feature and a console split': {
         db: {
-            type: 'postgres', 
-            bundled: false, 
-            host: 'pg.internal', 
-            port: 5432, 
-            username: 'authup', 
-            password: 'db-secret', 
+            type: 'postgres',
+            bundled: false,
+            host: 'pg.internal',
+            port: 5432,
+            username: 'authup',
+            password: 'db-secret',
             database: 'authup',
         },
         consoleSplit: true,

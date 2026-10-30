@@ -104,6 +104,7 @@ export class ConsoleLogin {
      */
     async login(event: IAppEvent) : Promise<Response> {
         const realmId = useRequestQuery(event, 'realmId');
+
         if (typeof realmId !== 'string' || realmId.length === 0) {
             // The console client is identified by NAME, and a name needs a
             // realm hint at `/authorize` and at `/token` alike. The console
@@ -126,6 +127,7 @@ export class ConsoleLogin {
         this.setLoginCookie(event, id);
 
         const url = new URL(`${this.trimmedBaseURL()}/authorize`);
+
         url.searchParams.set('response_type', 'code');
         url.searchParams.set('client_id', this.definition.clientName);
         url.searchParams.set('realm_id', realmId);
@@ -178,6 +180,7 @@ export class ConsoleLogin {
         // callback that consumed first would burn the live login of the tab
         // that is still waiting.
         const pending = await this.loginStore.find(pendingId);
+
         if (!pending) {
             return this.refuse(event, OAuth2ErrorCode.INVALID_REQUEST);
         }
@@ -187,6 +190,7 @@ export class ConsoleLogin {
         }
 
         const consumed = await this.loginStore.consume(pendingId);
+
         if (!consumed) {
             // Lost a race with another callback carrying the same state.
             return this.refuse(event, OAuth2ErrorCode.INVALID_REQUEST);
@@ -253,11 +257,13 @@ export class ConsoleLogin {
         }
 
         const ttl = new Date(session.expiresAt).getTime() - Date.now();
+
         if (ttl <= 0) {
             return this.refuse(event, OAuth2ErrorCode.INVALID_GRANT);
         }
 
         const secret = createSessionSecret();
+
         await this.sessionRepository.updateSecret(session.id, secret);
 
         setSessionCookie(event, this.baseURL, secret, ttl);
@@ -271,6 +277,7 @@ export class ConsoleLogin {
 
     protected resolveHttpClient(event: IAppEvent) : IClient {
         const factory = event.store[INTERNAL_HTTP_CLIENT_FACTORY_STORE_KEY] as (() => IClient) | undefined;
+
         if (!factory) {
             throw new InternalError('No http client is available to redeem the authorization code.');
         }

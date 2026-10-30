@@ -49,15 +49,18 @@ describe('http/controllers/entities/realm-default', () => {
             secretHashed: false,
             secretEncrypted: false,
         });
+
         masterRealmId = actorClient.realmId;
 
         const { data: permission } = await suite.client.permission.getOne(PermissionName.ROLE_CREATE);
+
         await suite.client.clientPermission.create({ clientId: actorClient.id, permissionId: permission.id });
 
         const token = await suite.client.token.createWithClientCredentials({
             client_id: actorClient.id,
             client_secret: knownSecret,
         });
+
         restricted = new HTTPClient({ baseURL: suite.baseURL });
         restricted.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
     });
@@ -69,7 +72,7 @@ describe('http/controllers/entities/realm-default', () => {
     async function createAsAdmin(path: string, data: Record<string, any>) {
         const response = await httpRequest(suite, 'POST', path, {
             headers: {
-                Authorization: `Basic ${Buffer.from('admin:start123').toString('base64')}`,
+                Authorization: `Basic ${Buffer.from('admin:start123').toBase64()}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(data),
@@ -78,6 +81,7 @@ describe('http/controllers/entities/realm-default', () => {
         expect(response.status).toEqual(201);
 
         const { data: entity } = await response.json();
+
         return entity;
     }
 
@@ -151,12 +155,14 @@ describe('http/controllers/entities/realm-default', () => {
 
         beforeAll(async () => {
             const { data: realm } = await suite.client.realm.create({ name: 'realm-default-other' });
+
             otherRealmId = realm.id;
         });
 
         it('should update the global role when realmId is absent', async () => {
             const { data: scoped } = await suite.client.role.create({ name: 'dup-x', realmId: otherRealmId });
             const { data: global } = await suite.client.role.create({ name: 'dup-x', realmId: null });
+
             scopedRoleId = scoped.id;
 
             const { data } = await suite.client.role.createOrUpdate('dup-x', { name: 'dup-x', description: 'changed' });
@@ -165,6 +171,7 @@ describe('http/controllers/entities/realm-default', () => {
             expect(data.realmId).toBeNull();
 
             const { data: unchanged } = await suite.client.role.getOne(scoped.id);
+
             expect(unchanged.realmId).toEqual(otherRealmId);
             expect(unchanged.description).not.toEqual('changed');
         });
@@ -178,6 +185,7 @@ describe('http/controllers/entities/realm-default', () => {
             expect(data.realmId).toBeNull();
 
             const { data: unchanged } = await suite.client.role.getOne(scoped.id);
+
             expect(unchanged.description).not.toEqual('changed');
         });
 
@@ -194,12 +202,14 @@ describe('http/controllers/entities/realm-default', () => {
 
         it('should keep the unchanged name of a realm role when a global role shares it', async () => {
             await suite.client.role.create({ name: 'dup-u', realmId: null });
+
             const { data: scoped } = await suite.client.role.create({ name: 'dup-u', realmId: otherRealmId });
 
             const { data: byId } = await suite.client.role.update(scoped.id, {
                 name: 'dup-u',
                 description: 'by-id',
             });
+
             expect(byId.id).toEqual(scoped.id);
             expect(byId.realmId).toEqual(otherRealmId);
             expect(byId.description).toEqual('by-id');
@@ -209,12 +219,14 @@ describe('http/controllers/entities/realm-default', () => {
                 description: 'by-name',
                 realmId: otherRealmId,
             });
+
             expect(byName.id).toEqual(scoped.id);
             expect(byName.description).toEqual('by-name');
         });
 
         it('should refuse renaming a realm role onto a name its realm holds', async () => {
             await suite.client.role.create({ name: 'dup-v', realmId: otherRealmId });
+
             const { data: scoped } = await suite.client.role.create({ name: 'dup-w', realmId: otherRealmId });
 
             await expectClientError(
@@ -225,24 +237,28 @@ describe('http/controllers/entities/realm-default', () => {
 
         it('should keep the unchanged name of a realm permission when a global permission shares it', async () => {
             await suite.client.permission.create({ name: 'dup-u', realmId: null });
+
             const { data: scoped } = await suite.client.permission.create({ name: 'dup-u', realmId: otherRealmId });
 
             const { data } = await suite.client.permission.update(scoped.id, {
                 name: 'dup-u',
                 description: 'by-id',
             });
+
             expect(data.id).toEqual(scoped.id);
             expect(data.description).toEqual('by-id');
         });
 
         it('should keep the unchanged name of a realm scope when a global scope shares it', async () => {
             await suite.client.scope.create({ name: 'dup-u', realmId: null });
+
             const { data: scoped } = await suite.client.scope.create({ name: 'dup-u', realmId: otherRealmId });
 
             const { data } = await suite.client.scope.update(scoped.id, {
                 name: 'dup-u',
                 description: 'by-id',
             });
+
             expect(data.id).toEqual(scoped.id);
             expect(data.description).toEqual('by-id');
         });
@@ -257,6 +273,7 @@ describe('http/controllers/entities/realm-default', () => {
             expect(data.realmId).toBeNull();
 
             const { data: unchanged } = await suite.client.permission.getOne(scoped.id);
+
             expect(unchanged.realmId).toEqual(otherRealmId);
             expect(unchanged.description).not.toEqual('changed');
         });
@@ -277,6 +294,7 @@ describe('http/controllers/entities/realm-default', () => {
                 description: 'unowned',
                 realmId: otherRealmId,
             });
+
             expect(unowned.id).not.toEqual(owned.id);
             expect(unowned.clientId).toBeNull();
             expect(unowned.realmId).toEqual(otherRealmId);
@@ -287,10 +305,12 @@ describe('http/controllers/entities/realm-default', () => {
                 realmId: otherRealmId,
                 clientId: client.id,
             });
+
             expect(ownedUpdate.id).toEqual(owned.id);
             expect(ownedUpdate.description).toEqual('owned');
 
             const { data: unownedAgain } = await suite.client.role.getOne(unowned.id);
+
             expect(unownedAgain.description).toEqual('unowned');
         });
 
@@ -360,6 +380,7 @@ describe('http/controllers/entities/realm-default', () => {
             );
 
             const { data: unchanged } = await suite.client.user.getOne(user.id);
+
             expect(unchanged.displayName).not.toEqual('hijacked');
         });
 
@@ -368,6 +389,7 @@ describe('http/controllers/entities/realm-default', () => {
 
             beforeAll(async () => {
                 const { data: realm } = await suite.client.realm.create({ name: 'realm-default-bound' });
+
                 otherRealmId = realm.id;
             });
 
@@ -388,6 +410,7 @@ describe('http/controllers/entities/realm-default', () => {
                 expect(data.realmId).toEqual(masterRealmId);
 
                 const { data: unchanged } = await suite.client.user.getOne(foreign.id);
+
                 expect(unchanged.realmId).toEqual(otherRealmId);
                 expect(unchanged.displayName).not.toEqual('master-alice');
             });
@@ -421,6 +444,7 @@ describe('http/controllers/entities/realm-default', () => {
                 expect(data.realmId).toEqual(masterRealmId);
 
                 const { data: unchanged } = await suite.client.client.getOne(foreign.id);
+
                 expect(unchanged.realmId).toEqual(otherRealmId);
                 expect(unchanged.displayName).not.toEqual('master-app');
             });
@@ -443,6 +467,7 @@ describe('http/controllers/entities/realm-default', () => {
                 expect(data.realmId).toEqual(masterRealmId);
 
                 const { data: unchanged } = await suite.client.identityProvider.getOne(foreign.id);
+
                 expect(unchanged.realmId).toEqual(otherRealmId);
                 expect(unchanged.displayName).not.toEqual('master-idp');
             });
@@ -452,10 +477,12 @@ describe('http/controllers/entities/realm-default', () => {
                 const { data: client } = await suite.client.client.create({ ...createFakeClient(), realmId: otherRealmId });
 
                 const { data: updatedUser } = await suite.client.user.update(user.id, { displayName: 'by-id' });
+
                 expect(updatedUser.displayName).toEqual('by-id');
                 expect(updatedUser.realmId).toEqual(otherRealmId);
 
                 const { data: updatedClient } = await suite.client.client.update(client.id, { displayName: 'by-id' });
+
                 expect(updatedClient.displayName).toEqual('by-id');
                 expect(updatedClient.realmId).toEqual(otherRealmId);
             });
@@ -468,9 +495,11 @@ describe('http/controllers/entities/realm-default', () => {
 
         beforeAll(async () => {
             const { data: realm } = await suite.client.realm.create({ name: 'realm-default-owner' });
+
             clientRealmId = realm.id;
 
             const { data: client } = await suite.client.client.create({ ...createFakeClient(), realmId: clientRealmId });
+
             clientId = client.id;
         });
 
@@ -507,6 +536,7 @@ describe('http/controllers/entities/realm-default', () => {
 
             beforeAll(async () => {
                 const { data: realm } = await suite.client.realm.create({ name: 'realm-default-admin' });
+
                 realmAdminRealmId = realm.id;
 
                 const password = 'realm-default-realm-admin-pw';
@@ -514,6 +544,7 @@ describe('http/controllers/entities/realm-default', () => {
                     createFakeUser({ realmId: realm.id, password }),
                 );
                 const { data: role } = await suite.client.role.getOne(ROLE_REALM_ADMIN_NAME);
+
                 await suite.client.userRole.create({ userId: user.id, roleId: role.id });
 
                 const token = await suite.client.token.createWithPassword({
@@ -521,6 +552,7 @@ describe('http/controllers/entities/realm-default', () => {
                     password,
                     realm_id: realm.id,
                 });
+
                 realmAdmin = new HTTPClient({ baseURL: suite.baseURL });
                 realmAdmin.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
             });

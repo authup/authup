@@ -7,9 +7,9 @@
 
 import type { OAuth2JsonWebKey } from '@authup/specs';
 import {
-    AsymmetricKey, 
-    CryptoAsymmetricAlgorithm, 
-    createAsymmetricKeyPair, 
+    AsymmetricKey,
+    CryptoAsymmetricAlgorithm,
+    createAsymmetricKeyPair,
     signToken,
 } from '@authup/server-kit';
 
@@ -45,6 +45,7 @@ export class Faker {
 
     async sign(payload: Record<string, any>, keyId: string = FAKER_KEY_ID) {
         const keyPair = await this.useKeyPair();
+
         return signToken(payload, {
             type: 'rsa',
             key: keyPair.privateKey,

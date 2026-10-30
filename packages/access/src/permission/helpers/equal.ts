@@ -11,17 +11,7 @@ export function isPermissionPolicyBindingEqual(
     a: { permission: BasePermission },
     b: { permission: BasePermission },
 ): boolean {
-    if (a.permission.name !== b.permission.name) {
-        return false;
-    }
-
-    if ((a.permission.realmId ?? null) !== (b.permission.realmId ?? null)) {
-        return false;
-    }
-
-    if ((a.permission.clientId ?? null) !== (b.permission.clientId ?? null)) {
-        return false;
-    }
-
-    return true;
+    return a.permission.name === b.permission.name &&
+        (a.permission.realmId ?? null) === (b.permission.realmId ?? null) &&
+        (a.permission.clientId ?? null) === (b.permission.clientId ?? null);
 }

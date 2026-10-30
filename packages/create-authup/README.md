@@ -41,7 +41,7 @@ Nothing to install; run it with npm:
 npm create authup@latest
 ```
 
-This runs the `create-authup` binary in the current directory. Use `@latest` to scaffold the current release, since the version you run is the version the files pin. The wizard needs Node.js `^22.13.0 || ^23.5.0 || >=24.0.0` and has no runtime dependencies.
+This runs the `create-authup` binary in the current directory. Use `@latest` to scaffold the current release, since the version you run is the version the files pin. The wizard needs Node.js `>=26.0.0` and has no runtime dependencies.
 
 ## Usage
 

@@ -34,6 +34,7 @@ export function applyOwningClientRealm(input: ClientOwnedInput): void {
 
     if (!input.realmId) {
         input.realmId = input.client.realmId;
+
         return;
     }
 
@@ -84,6 +85,7 @@ export async function findClientOwnedRowForSave<T extends ClientOwnedRow>(
 
     if (typeof data.realmId === 'string') {
         const realm = await ctx.realmRepository.resolveOrFail(data.realmId);
+
         return ctx.repository.findOneBy({
             ...where,
             realmId: realm.id,
@@ -107,7 +109,9 @@ export async function findClientOwnedRowForSave<T extends ClientOwnedRow>(
         }
 
         const probe = { clientId: data.clientId } as Partial<T>;
+
         await ctx.repository.validateJoinColumns(probe);
+
         if (!probe.client) {
             return null;
         }

@@ -47,7 +47,10 @@ export async function httpRequest(
 
     if (options.form) {
         body = new URLSearchParams(options.form).toString();
-        if (Object.keys(headers).every((k) => k.toLowerCase() !== 'content-type')) {
+
+        const needsContentType = Object.keys(headers).every((k) => k.toLowerCase() !== 'content-type');
+
+        if (needsContentType) {
             headers['Content-Type'] = 'application/x-www-form-urlencoded';
         }
     } else if (typeof options.body !== 'undefined') {

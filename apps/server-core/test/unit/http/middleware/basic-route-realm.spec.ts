@@ -22,7 +22,7 @@ import {
 } from '../../../utils/index.ts';
 
 function basic(username: string, password: string) {
-    return `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
+    return `Basic ${Buffer.from(`${username}:${password}`).toBase64()}`;
 }
 
 /**
@@ -101,6 +101,7 @@ describe('http/middleware/authorization (Basic under a route realm)', () => {
     describe('client', () => {
         it('should resolve a client name within the route realm', async () => {
             let response = await httpRequest(suite, 'GET', `/realms/${realmA.name}/clients/@me`, { headers: { Authorization: basic(sharedName, secretA) } });
+
             expect(response.status).toEqual(200);
             expect((await response.json()).data.id).toEqual(clientA.id);
 
@@ -130,6 +131,7 @@ describe('http/middleware/authorization (Basic under a route realm)', () => {
 
         it('should resolve a client name in the master realm on a flat route', async () => {
             let response = await httpRequest(suite, 'GET', '/users', { headers: { Authorization: basic(clientOnlyB.name, secretB) } });
+
             expect(response.status).toEqual(401);
 
             response = await httpRequest(suite, 'GET', '/clients/@me', { headers: { Authorization: basic(clientOnlyB.id, secretB) } });
@@ -141,6 +143,7 @@ describe('http/middleware/authorization (Basic under a route realm)', () => {
     describe('user', () => {
         it('should resolve a user name within the route realm', async () => {
             let response = await httpRequest(suite, 'GET', `/realms/${realmA.name}/users/@me`, { headers: { Authorization: basic(sharedUserName, secretA) } });
+
             expect(response.status).toEqual(200);
             expect((await response.json()).data.id).toEqual(userA.id);
 
@@ -157,6 +160,7 @@ describe('http/middleware/authorization (Basic under a route realm)', () => {
 
         it('should resolve a user name in the master realm on a flat route', async () => {
             let response = await httpRequest(suite, 'GET', '/users/@me', { headers: { Authorization: basic(sharedUserName, secretB) } });
+
             expect(response.status).toEqual(401);
 
             response = await httpRequest(suite, 'GET', '/users/@me', { headers: { Authorization: basic(userB.id, secretB) } });
@@ -188,6 +192,7 @@ describe('http/middleware/authorization (Basic under a route realm)', () => {
             });
 
             let response = await httpRequest(suite, 'GET', `/realms/${realmA.name}/users/@me`, { headers: { Authorization: basic('admin', secretA) } });
+
             expect(response.status).toEqual(200);
             expect((await response.json()).data.id).toEqual(shadow.id);
 

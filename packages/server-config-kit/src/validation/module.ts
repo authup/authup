@@ -24,18 +24,23 @@ export function mountSchema<T extends Record<string, any>>(
     schema: SchemaInput<T>,
 ) : void {
     const keys = Object.keys(schema) as (keyof SchemaInput<T>)[];
+
     for (const key of keys) {
         const entry = schema[key];
+
         if (isSchemaEntryInput(entry)) {
             container.mount(key as string, { optional: true }, createValidator(entry.type));
+
             continue;
         }
 
         if (isSchemaInput(entry)) {
             const child = new Container();
+
             mountSchema<any>(child, entry);
 
             container.mount(key as string, { optional: true }, child);
+
             continue;
         }
 

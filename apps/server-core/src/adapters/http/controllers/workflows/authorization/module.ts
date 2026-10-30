@@ -103,6 +103,7 @@ export class AuthorizationController {
         ];
 
         const actor = buildActorContext(event);
+
         await actor.permissionEvaluator.preEvaluateOneOf({ name: names });
 
         event.response.headers.set('cache-control', 'private, no-cache');
@@ -122,7 +123,7 @@ export class AuthorizationController {
                 if (!isPermissionError(e)) {
                     this.ctx.logger?.warn(
                         `Treated realm ${realmId ?? 'global'} as out of reach while building the authorization ` +
-                        `catalog: ${e instanceof Error ? e.message : String(e)}.`,
+                        `catalog: ${Error.isError(e) ? e.message : String(e)}.`,
                     );
                 }
 
@@ -142,10 +143,10 @@ export class AuthorizationController {
         // `system.default`, so a credential granted the family and nothing else
         // reaches no definition at all. `ownOrNull` is the floor for this
         // route, for a single-realm resource server as much as for a console.
-        if (
-            catalog.permissions.length > 0 &&
-            catalog.permissions.every((permission) => permission.policies === null)
-        ) {
+        const hasNoAuthorizationDefinition = catalog.permissions.length > 0 &&
+            catalog.permissions.every((permission) => permission.policies === null);
+
+        if (hasNoAuthorizationDefinition) {
             throw new PermissionError({
                 message: 'This credential reaches no authorization definition. ' +
                     'Grant its permission with a realm scope of ownOrNull or wider.',
@@ -222,6 +223,7 @@ export class AuthorizationController {
         // denial, an authoritative empty set the kit memoizes. Thrown from
         // here, it fails the request.
         let identity = toIdentityPolicyData(actor.identity);
+
         if (identity) {
             identity = {
                 ...identity,
@@ -251,6 +253,7 @@ export class AuthorizationController {
         // same verdict again, with a deadline a fraction of a second away.
         if (expiresAt) {
             const maxAge = Math.max(0, Math.ceil((expiresAt.getTime() - Date.now()) / 1000));
+
             event.response.headers.set('cache-control', `private, no-cache, max-age=${maxAge}`);
         } else {
             event.response.headers.set('cache-control', 'private, no-cache');

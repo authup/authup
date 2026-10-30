@@ -44,9 +44,9 @@ import type { EventRequestContext, IEventService } from '../event/index.ts';
 import { assertCertificateMatchesKey, isWrappedKeyMaterial, parseCertificateChain } from '../../key/index.ts';
 import type { IOAuth2TokenRepository } from '../../oauth2/token/repository/types.ts';
 import type {
-    IKeyRepository, 
-    IKeyService, 
-    KeyDeleteOptions, 
+    IKeyRepository,
+    IKeyService,
+    KeyDeleteOptions,
     KeyServiceReadOptions,
 } from './types.ts';
 import { appendQueryConditions, decodeQuery, scopeReadQuery } from '../../query/index.ts';
@@ -96,6 +96,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         options: KeyServiceReadOptions = {},
     ): Promise<EntityRepositoryFindManyResult<Key>> {
         let parsed = await decodeQuery(query, { schema: keySchema, actor });
+
         if (options.realmId) {
             parsed = appendQueryConditions(parsed, eq('realmId', options.realmId));
         }
@@ -126,8 +127,10 @@ export class KeyService extends AbstractEntityService implements IKeyService {
                 realm: entity.realmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -152,6 +155,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         await actor.permissionEvaluator.preEvaluateOneOf({ name: PERMISSION_NAMES });
 
         const entity = await this.repository.findOneByIdOrName(idOrName, realmId);
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -176,6 +180,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
 
         const validated = await this.validator.run(data, { group: ValidatorGroup.CREATE });
         const { use } = validated;
+
         if (!use) {
             throw new ValidationError('A key use must be specified.');
         }
@@ -184,6 +189,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
 
         if (!validated.realmId && actor.identity) {
             const actorRealmId = this.getActorRealmId(actor);
+
             if (actorRealmId) {
                 validated.realmId = actorRealmId;
             }
@@ -222,6 +228,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
 
         if (typeof validated.priority !== 'number') {
             const highest = await this.repository.findHighestPriority(validated.realmId, use);
+
             // generate doubles as rotate: a new key outranks the current one.
             validated.priority = typeof highest === 'number' ? highest + 1 : 0;
         }
@@ -231,6 +238,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         }
 
         const certificate = typeof validated.certificate === 'string' ? validated.certificate : null;
+
         if (certificate && (!validated.decryptionKey || use !== JWKUse.SIGNATURE)) {
             throw new ValidationError('A certificate requires imported signature key material.');
         }
@@ -246,6 +254,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
 
             try {
                 const chain = parseCertificateChain(certificate);
+
                 assertCertificateMatchesKey(chain, material.encryptionKey);
             } catch (e) {
                 throw new ValidationError(
@@ -284,6 +293,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.KEY_UPDATE });
 
         let entity = await this.repository.findOneByIdOrName(idOrName, realmId);
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -323,6 +333,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         entity.decryptionKey = null;
 
         const diff = buildEntityDiff(this.pickAuditFields(entity), previous);
+
         await this.recordEvent(EventName.UPDATED, entity, actor, { ...(Object.keys(diff).length > 0 ? { diff } : {}) });
 
         return entity;
@@ -336,6 +347,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.KEY_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -348,6 +360,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
 
         if (entity.use === JWKUse.ENCRYPTION && !options.force) {
             const references = await this.repository.countBlobReferences(entity.id);
+
             if (references > 0) {
                 throw new EntityConflictError({
                     message: `The encryption key is still referenced by ${references} encrypted secret(s) — ` +
@@ -358,6 +371,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         }
 
         const { id: entityId } = entity;
+
         await this.repository.remove(entity);
         entity.id = entityId;
         entity.decryptionKey = null;
@@ -369,6 +383,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         // force only carries crypto-shred semantics for encryption keys — a
         // sig-key delete with a stray force flag must not read as a shred.
         const forcedCryptoShred = entity.use === JWKUse.ENCRYPTION && !!options.force;
+
         await this.recordEvent(EventName.DELETED, entity, actor, { ...(forcedCryptoShred ? { force: true } : {}) });
 
         return entity;
@@ -379,6 +394,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
     protected buildForeignRealmId(actor: ActorContext): string {
         const actorRealmId = this.getActorRealmId(actor);
         let realmId = randomUUID();
+
         while (realmId === actorRealmId) {
             realmId = randomUUID();
         }
@@ -448,6 +464,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             }
 
             const raw = new Uint8Array(32);
+
             getRandomValues(raw);
 
             return {
@@ -503,6 +520,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             }
 
             let byteLength : number;
+
             try {
                 byteLength = base64ToArrayBuffer(decryptionKey).byteLength;
             } catch {
@@ -558,6 +576,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             (component) => publicJwk[component] !== undefined &&
                 publicJwk[component] !== privateJwk[component],
         );
+
         if (mismatch) {
             throw new ValidationError('The private and public key material do not form a pair.');
         }
@@ -565,7 +584,8 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         // the adapters verify with jose, which refuses RSA keys under 2048
         // bits, so a shorter key would sign tokens no resource server accepts.
         if (publicJwk.kty === 'RSA' && typeof publicJwk.n === 'string') {
-            const bits = Buffer.from(publicJwk.n, 'base64url').byteLength * 8;
+            const bits = Uint8Array.fromBase64(publicJwk.n, { alphabet: 'base64url' }).byteLength * 8;
+
             if (bits < 2048) {
                 throw new ValidationError(`The RSA key is ${bits} bits; signature keys must be 2048 bits or larger.`);
             }

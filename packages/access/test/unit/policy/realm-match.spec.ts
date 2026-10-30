@@ -30,6 +30,7 @@ describe('src/policy/attribute-realm', () => {
                 [BuiltInPolicyType.ATTRIBUTES]: { realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023' },
             }),
         }));
+
         expect(outcome.success).toBeTruthy();
     });
 
@@ -52,6 +53,7 @@ describe('src/policy/attribute-realm', () => {
                 },
             }),
         }));
+
         expect(outcome.success).toBeTruthy();
     });
 
@@ -70,6 +72,7 @@ describe('src/policy/attribute-realm', () => {
                 [BuiltInPolicyType.ATTRIBUTES]: { realmId: '1b17ab3d-3e87-4d63-9997-374ed9a58c23' },
             }),
         }));
+
         expect(outcome.success).toBeFalsy();
     });
 
@@ -88,6 +91,7 @@ describe('src/policy/attribute-realm', () => {
                 [BuiltInPolicyType.ATTRIBUTES]: { realmId: '1b17ab3d-3e87-4d63-9997-374ed9a58c23' },
             }),
         }));
+
         expect(outcome.success).toBeFalsy();
     });
 });
@@ -112,6 +116,7 @@ describe('src/policy/realm-match scope mode', () => {
             [BuiltInPolicyType.IDENTITY]: identityA,
             [BuiltInPolicyType.REALM_MATCH]: REALM_A,
         });
+
         expect(o.success).toBe(true);
     });
 
@@ -120,6 +125,7 @@ describe('src/policy/realm-match scope mode', () => {
             [BuiltInPolicyType.IDENTITY]: identityA,
             [BuiltInPolicyType.REALM_MATCH]: REALM_B,
         });
+
         expect(o.success).toBe(false);
     });
 
@@ -128,6 +134,7 @@ describe('src/policy/realm-match scope mode', () => {
             [BuiltInPolicyType.IDENTITY]: identityA,
             [BuiltInPolicyType.REALM_MATCH]: null,
         });
+
         expect(o.success).toBe(false);
     });
 
@@ -136,6 +143,7 @@ describe('src/policy/realm-match scope mode', () => {
             [BuiltInPolicyType.IDENTITY]: identityA,
             [BuiltInPolicyType.REALM_MATCH]: null,
         });
+
         expect(o.success).toBe(true);
     });
 
@@ -148,12 +156,14 @@ describe('src/policy/realm-match scope mode', () => {
             [BuiltInPolicyType.IDENTITY]: identityA,
             [BuiltInPolicyType.REALM_MATCH]: null,
         });
+
         expect(foreign.success).toBe(true);
         expect(global.success).toBe(true);
     });
 
     it('absent resource realm (no REALM_MATCH, no ATTRIBUTES) neutral-passes the gate', async () => {
         const o = await run({ scope: 'own' }, { [BuiltInPolicyType.IDENTITY]: identityA });
+
         expect(o.success).toBe(true);
     });
 
@@ -164,6 +174,7 @@ describe('src/policy/realm-match scope mode', () => {
             [BuiltInPolicyType.IDENTITY]: identityA,
             [BuiltInPolicyType.ATTRIBUTES]: { realmId: REALM_B },
         });
+
         expect(o.success).toBe(true);
     });
 });

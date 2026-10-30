@@ -36,8 +36,9 @@ describe('token verification: key realm binding', () => {
         await suite.setup();
 
         const pair = generateKeyPairSync('rsa', { modulusLength: 2048 });
-        privateKey = pair.privateKey.export({ type: 'pkcs8', format: 'der' }).toString('base64');
-        publicKey = pair.publicKey.export({ type: 'spki', format: 'der' }).toString('base64');
+
+        privateKey = pair.privateKey.export({ type: 'pkcs8', format: 'der' }).toBase64();
+        publicKey = pair.publicKey.export({ type: 'spki', format: 'der' }).toBase64();
 
         const grant = await suite.client.token.createWithPassword({
             username: 'admin',

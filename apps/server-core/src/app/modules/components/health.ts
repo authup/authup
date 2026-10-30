@@ -45,9 +45,11 @@ export class WorkerHealthModule implements IModule {
 
         const server = createServer((req, res) => {
             const path = (req.url || '').split('?')[0];
+
             if (path !== '/' || (req.method !== 'GET' && req.method !== 'HEAD')) {
                 res.statusCode = 404;
                 res.end();
+
                 return;
             }
 
@@ -80,12 +82,15 @@ export class WorkerHealthModule implements IModule {
 
         const address = server.address();
         const port = address && typeof address === 'object' ? address.port : config.worker.port;
+
         logger.info(`Worker health listener on port ${port}.`);
     }
 
     async teardown(): Promise<void> {
         const { server } = this;
+
         this.server = undefined;
+
         if (!server) {
             return;
         }

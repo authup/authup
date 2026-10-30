@@ -74,6 +74,7 @@ export function describeQuerySchema(
     parameters?: `${Parameter}`[],
 ) : SchemaDescription {
     let bySignature = cache.get(schema);
+
     if (!bySignature) {
         bySignature = new Map();
         cache.set(schema, bySignature);
@@ -82,6 +83,7 @@ export function describeQuerySchema(
     const signature = parameters ? [...parameters].sort().join(',') : '*';
 
     let output = bySignature.get(signature);
+
     if (!output) {
         output = deepFreeze(schema.describe(parameters ? { parameters } : {}));
         bySignature.set(signature, output);
@@ -119,6 +121,7 @@ export function describeSchemaRegistry() : Record<string, SchemaDescription> {
     // would otherwise hit the legacy setter, leaving the key absent from
     // discovery and from the hash with nothing raised.
     const output : Record<string, SchemaDescription> = Object.create(null);
+
     for (const schema of named) {
         output[schema.name] = describeQuerySchema(schema);
     }

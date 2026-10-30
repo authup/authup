@@ -74,9 +74,9 @@ const CONSOLES = [
 ];
 
 describe.each(CONSOLES)('$name console session', ({
-    segment, 
-    clientName, 
-    refusal, 
+    segment,
+    clientName,
+    refusal,
 }) => {
     const suite = createTestApplication();
 
@@ -123,6 +123,7 @@ describe.each(CONSOLES)('$name console session', ({
         // 1) the kick: PKCE + state are minted server-side and parked behind
         //    a short-lived login cookie.
         const kick = await request('GET', `/${segment}/login/start?realmId=${realm.id}`, { redirect: 'manual' });
+
         expect(kick.status).toEqual(302);
         expect(jar.get(CONSOLE_LOGIN_COOKIE)).toBeDefined();
 
@@ -134,6 +135,7 @@ describe.each(CONSOLES)('$name console session', ({
         expect(jar.header('/console/auth/assets/x.js')).toBeUndefined();
 
         const authorizeURL = new URL(kick.headers.get('location') as string);
+
         expect(authorizeURL.pathname).toEqual('/authorize');
         expect(authorizeURL.searchParams.get('client_id')).toEqual(clientName);
         expect(authorizeURL.searchParams.get('realm_id')).toEqual(realm.id);
@@ -149,6 +151,7 @@ describe.each(CONSOLES)('$name console session', ({
             .createWithPassword({ username: user.name, password });
 
         const userClient = new HTTPClient({ baseURL: suite.baseURL });
+
         userClient.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
 
         const authorized = await userClient.authorize.confirm({
@@ -163,6 +166,7 @@ describe.each(CONSOLES)('$name console session', ({
         });
 
         const code = new URL(authorized.url).searchParams.get('code') as string;
+
         expect(code).toBeDefined();
 
         // 3) the redemption. Nothing token-shaped reaches the browser: the
@@ -182,6 +186,7 @@ describe.each(CONSOLES)('$name console session', ({
         const setCookie = callback.headers
             .getSetCookie()
             .find((value) => value.startsWith(`${SESSION_COOKIE}=`)) as string;
+
         expect(setCookie).toBeDefined();
         expect(setCookie).toContain('HttpOnly');
         expect(setCookie).toContain('SameSite=Strict');
@@ -193,10 +198,12 @@ describe.each(CONSOLES)('$name console session', ({
         // ~8-year cookie for a ~3-day session), which a `Max-Age=\d+` match
         // would happily accept.
         const maxAge = Number((/Max-Age=(\d+)/.exec(setCookie) as RegExpExecArray)[1]);
+
         expect(maxAge).toBeGreaterThan(0);
         expect(maxAge).toBeLessThanOrEqual(30 * 24 * 60 * 60);
 
         const secret = setCookie.split(';')[0].slice(`${SESSION_COOKIE}=`.length);
+
         expect(secret.length).toBeGreaterThan(0);
         expect(jar.get(SESSION_COOKIE)).toEqual(secret);
 
@@ -225,29 +232,35 @@ describe.each(CONSOLES)('$name console session', ({
 
         // 4) the console hydrates from the session endpoint
         const sessionResponse = await request('GET', '/sessions/@me/introspect', { headers: { 'sec-fetch-site': 'same-origin' } });
+
         expect(sessionResponse.status).toEqual(200);
         expect(sessionResponse.headers.get('cache-control')).toEqual('no-store');
         expect(sessionResponse.headers.get('vary')).toEqual('cookie');
 
         const sessionBody = await sessionResponse.json();
+
         expect(sessionBody.active).toEqual(true);
         expect(sessionBody.sub).toEqual(user.id);
         expect(sessionBody.session_id).toBeDefined();
         expect(sessionBody.realm_id).toEqual(realm.id);
         // the identity's grant list, paired with the catalog below
         expect(Array.isArray(sessionBody.permissions)).toBe(true);
+
         for (const entry of sessionBody.permissions) {
             expect(['none', 'own', 'ownOrNull', 'any']).toContain(entry.realm_scope);
             expect(Array.isArray(entry.policies)).toBe(true);
         }
+
         // the catalog is gated like the permission reads: a user holding no
         // grant of the family is refused through the cookie exactly as
         // through a bearer, and the console falls back to the name-only view
         const refused = await request('GET', '/authorization', { headers: { 'sec-fetch-site': 'same-origin' } });
+
         expect(refused.status).toEqual(403);
         expect((await refused.json()).code).toEqual(ErrorCode.PERMISSION_EVALUATION_FAILED);
 
         const { data: permissionRead } = await suite.client.permission.getOne(PermissionName.PERMISSION_READ);
+
         // `ownOrNull`, the reach a realm_admin reads with: the built-in
         // definitions are global rows, which the default `own` does not reach
         await suite.client.userPermission.create({
@@ -257,9 +270,12 @@ describe.each(CONSOLES)('$name console session', ({
         });
 
         const authorizationResponse = await request('GET', '/authorization', { headers: { 'sec-fetch-site': 'same-origin' } });
+
         expect(authorizationResponse.status).toEqual(200);
         expect(authorizationResponse.headers.get('cache-control')).toEqual('private, no-cache');
+
         const authorization = await authorizationResponse.json();
+
         expect(authorization).not.toHaveProperty('identity');
         expect(Array.isArray(authorization.permissions)).toBe(true);
         expect(authorization.permissions.length).toBeGreaterThan(0);
@@ -277,15 +293,18 @@ describe.each(CONSOLES)('$name console session', ({
         // 5) and the credential drives ordinary, identity-gated API routes —
         //    the same ones every other client reaches with a bearer.
         const me = await request('GET', '/users/@me', { headers: { 'sec-fetch-site': 'same-origin' } });
+
         expect(me.status).toEqual(200);
         expect((await me.json()).data.id).toEqual(user.id);
 
         const sessions = await request('GET', '/sessions', { headers: { 'sec-fetch-site': 'same-origin' } });
+
         expect(sessions.status).toEqual(200);
 
         // the control: it is the cookie doing that work, not an ambient
         // anonymous allowance on the route.
         const anonymous = await httpRequest(suite, 'GET', '/users/@me', { headers: { 'sec-fetch-site': 'same-origin' } });
+
         expect(anonymous.status).toEqual(401);
 
         // 6) but never the OAuth2 issuance surface (plan 088, finding 2)
@@ -302,6 +321,7 @@ describe.each(CONSOLES)('$name console session', ({
                 redirect_uri: `${publicOrigin}/${segment}/callback`,
             }),
         });
+
         expect(issuance.status).toEqual(401);
 
         // ... the device approval included (plan 065): an approval would
@@ -314,6 +334,7 @@ describe.each(CONSOLES)('$name console session', ({
             },
             body: JSON.stringify({ user_code: 'BCDF-GHJK' }),
         });
+
         expect(deviceApproval.status).toEqual(401);
 
         // 7) revoking ANOTHER device is not a sign-out: the cookie is cleared
@@ -327,6 +348,7 @@ describe.each(CONSOLES)('$name console session', ({
             { token: otherLogin.access_token },
             { authorizationHeaderInherit: true },
         );
+
         expect(otherIntrospect.session_id).not.toEqual(sessionBody.session_id);
 
         const dropOther = await request('DELETE', `/sessions/${otherIntrospect.session_id}`, {
@@ -335,6 +357,7 @@ describe.each(CONSOLES)('$name console session', ({
                 origin: publicOrigin,
             },
         });
+
         expect(dropOther.status).toEqual(202);
         expect(dropOther.headers.getSetCookie()).toHaveLength(0);
         expect(jar.get(SESSION_COOKIE)).toEqual(secret);
@@ -349,6 +372,7 @@ describe.each(CONSOLES)('$name console session', ({
                 origin: publicOrigin,
             },
         });
+
         expect(signOut.status).toEqual(202);
         expect(jar.get(SESSION_COOKIE)).toBeUndefined();
 
@@ -361,6 +385,7 @@ describe.each(CONSOLES)('$name console session', ({
                 cookie: `${SESSION_COOKIE}=${secret}`,
             },
         });
+
         // 401, not `{active: false}`: the route carries ForceLoggedIn like its
         // siblings on this controller, and an unauthenticated caller never
         // reaches the handler. The kit store already reads a 401 here as the
@@ -373,6 +398,7 @@ describe.each(CONSOLES)('$name console session', ({
                 cookie: `${SESSION_COOKIE}=${secret}`,
             },
         });
+
         expect(replayedOnAPI.status).toEqual(401);
     });
 
@@ -382,6 +408,7 @@ describe.each(CONSOLES)('$name console session', ({
         const { data: realm } = await suite.client.realm.getOne('master');
 
         const kick = await httpRequest(suite, 'GET', `/${segment}/login/start?realmId=${realm.id}`, { redirect: 'manual' });
+
         foreign.store(kick);
 
         const state = new URL(kick.headers.get('location') as string).searchParams.get('state') as string;
@@ -403,6 +430,7 @@ describe.each(CONSOLES)('$name console session', ({
 
         const local = new TestCookieJar();
         const kick = await httpRequest(suite, 'GET', `/${segment}/login/start?realmId=${realm.id}`, { redirect: 'manual' });
+
         local.store(kick);
 
         const mismatched = await httpRequest(suite, 'GET', `/${segment}/callback?code=whatever&state=not-the-state`, {
@@ -457,6 +485,7 @@ describe.each(CONSOLES)('$name console session (disabled)', ({ segment, disable 
         const { data: realm } = await suite.client.realm.getOne('master');
 
         const kick = await httpRequest(suite, 'GET', `/${segment}/login/start?realmId=${realm.id}`, { redirect: 'manual' });
+
         expect(kick.status).toEqual(404);
         expect(kick.headers.get('set-cookie')).toBeNull();
     });
@@ -466,6 +495,7 @@ describe.each(CONSOLES)('$name console session (disabled)', ({ segment, disable 
             redirect: 'manual',
             headers: { 'sec-fetch-site': 'same-origin' },
         });
+
         expect(callback.status).toEqual(404);
         expect(callback.headers.get('set-cookie')).toBeNull();
     });

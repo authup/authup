@@ -48,15 +48,22 @@ export default defineComponent({
         // pattern relies on prop-write side effects which Vue 3 warns about.
         // The explicit `ref + watch` is cleaner but needs the watcher to
         // catch parent-driven updates (e.g. entity loaded after mount).
-        watch(() => props.entity, (val) => { localEntity.value = val; });
+        watch(() => props.entity, (val) => {
+            localEntity.value = val;
+        });
 
         const set = () => {
             if (!entity.value) {
                 return;
             }
 
-            if (entity.value.preset) preset.value = entity.value.preset;
-            if (entity.value.protocol) protocol.value = entity.value.protocol;
+            if (entity.value.preset) {
+                preset.value = entity.value.preset;
+            }
+
+            if (entity.value.protocol) {
+                protocol.value = entity.value.protocol;
+            }
         };
 
         set();
@@ -66,8 +73,10 @@ export default defineComponent({
             if (type === 'preset') {
                 preset.value = value;
                 protocol.value = getIdentityProviderProtocolForPreset(value as IdentityProviderPreset);
+
                 return;
             }
+
             protocol.value = value;
             preset.value = null;
         };

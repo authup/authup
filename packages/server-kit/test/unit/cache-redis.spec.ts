@@ -48,6 +48,7 @@ async function quit(cache: RedisCache): Promise<void> {
 
 const probe = createCache();
 let available: boolean;
+
 try {
     await probe.set('__cache_probe__', 1, { ttl: 1_000 });
     await probe.drop('__cache_probe__');
@@ -55,6 +56,7 @@ try {
 } catch {
     available = false;
 }
+
 await quit(probe);
 
 const describeRedis = available ? describe : describe.skip;

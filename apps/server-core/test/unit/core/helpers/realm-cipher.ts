@@ -26,7 +26,7 @@ export function createFakeRealmCipher(realmId: string): RealmCipher {
         status: 'active',
         signatureAlgorithm: null,
         priority: 0,
-        decryptionKey: Buffer.alloc(32, 7).toString('base64'),
+        decryptionKey: Buffer.alloc(32, 7).toBase64(),
         encryptionKey: null,
         createdAt: timestamp,
         updatedAt: timestamp,

@@ -112,6 +112,7 @@ describe.skipIf(!rowLockable)('http/controllers/path (concurrency)', () => {
             ]);
 
             const created = results[1];
+
             if (created.status === 'rejected') {
                 continue;
             }

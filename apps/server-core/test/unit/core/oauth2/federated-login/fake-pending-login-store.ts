@@ -20,6 +20,7 @@ export class FakePendingLoginStore implements IOAuth2FederatedLoginStore {
         this.saved.push(data);
 
         const id = randomUUID();
+
         this.entries.set(id, data);
 
         return id;
@@ -27,6 +28,7 @@ export class FakePendingLoginStore implements IOAuth2FederatedLoginStore {
 
     async consume(id: string): Promise<OAuth2FederatedLoginPending | null> {
         const entry = this.entries.get(id);
+
         this.entries.delete(id);
 
         return entry ?? null;

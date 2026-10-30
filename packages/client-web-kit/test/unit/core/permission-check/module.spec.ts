@@ -39,6 +39,7 @@ async function runCheck(store: Store, ctx: PermissionEvaluationContext) : Promis
     mount(defineComponent({
         setup() {
             const checker = createPermissionCheckerReactiveFn({ store });
+
             outcome = checker(ctx);
 
             return () => h('div');
@@ -53,6 +54,7 @@ async function runCheck(store: Store, ctx: PermissionEvaluationContext) : Promis
 describe('core/permission-check', () => {
     it('should keep realm id and realm name on distinct identity fields', async () => {
         const store = buildStore();
+
         store.setUser({ id: 'user-id' } as User);
         store.realm = { id: 'realm-id', name: 'master' };
 
@@ -64,10 +66,12 @@ describe('core/permission-check', () => {
         expect(spy).toHaveBeenCalledTimes(1);
 
         const [evaluationContext] = spy.mock.calls[0];
+
         expect(evaluationContext.data).toBeDefined();
 
         const identity = evaluationContext.data!
             .get<IdentityPolicyData>(BuiltInPolicyType.IDENTITY);
+
         expect(identity).toEqual({
             type: 'user',
             id: 'user-id',
@@ -80,6 +84,7 @@ describe('core/permission-check', () => {
 
     it('should pass the owner ids of the definition through', async () => {
         const store = buildStore();
+
         store.setUser({ id: 'user-id' } as User);
 
         const spy = vi.spyOn(store.permissionEvaluator, 'preEvaluateOneOf')
@@ -94,6 +99,7 @@ describe('core/permission-check', () => {
         expect(spy).toHaveBeenCalledTimes(1);
 
         const [evaluationContext] = spy.mock.calls[0];
+
         expect(evaluationContext.name).toEqual('mtb_query_submit');
         expect(evaluationContext.realmId).toEqual('realm-id');
         expect(evaluationContext.clientId).toEqual('client-id');
@@ -101,6 +107,7 @@ describe('core/permission-check', () => {
 
     it('should omit realm fields when the store has no realm', async () => {
         const store = buildStore();
+
         store.setUser({ id: 'user-id' } as User);
 
         const spy = vi.spyOn(store.permissionEvaluator, 'preEvaluateOneOf')
@@ -113,6 +120,7 @@ describe('core/permission-check', () => {
         const [evaluationContext] = spy.mock.calls[0];
         const identity = evaluationContext.data!
             .get<IdentityPolicyData>(BuiltInPolicyType.IDENTITY);
+
         expect(identity).toEqual({
             type: 'user',
             id: 'user-id',
@@ -122,13 +130,16 @@ describe('core/permission-check', () => {
     // flag is what tells a caller the verdict is final (#3632).
     it('should report a denial as settled only once it is evaluated', async () => {
         const store = buildStore();
+
         store.setUser({ id: 'user-id' } as User);
 
         const deferred = Promise.withResolvers<undefined>();
+
         vi.spyOn(store.permissionEvaluator, 'preEvaluateOneOf')
             .mockImplementation(() => deferred.promise);
 
         let state!: ReturnType<ReturnType<typeof createPermissionCheckerReactiveStateFn>>;
+
         mount(defineComponent({
             setup() {
                 state = createPermissionCheckerReactiveStateFn({ store })({ name: 'path_read' });

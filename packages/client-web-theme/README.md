@@ -31,7 +31,7 @@ This is the app-level layer on top of [`@authup/client-web-kit-theme`](https://g
 npm install @authup/client-web-theme @vuecs/core @vuecs/design @vuecs/theme-tailwind tailwindcss
 ```
 
-`@vuecs/core`, `@vuecs/design`, `@vuecs/theme-tailwind` and `tailwindcss` (`^4.3.2`) are peer dependencies; `@authup/client-web-kit-theme` comes along as a dependency, together with its own peer `@vuecs/tree`. You need a Tailwind v4 build step, for example `@tailwindcss/vite`. The package is ESM-only; build tooling needs Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`.
+`@vuecs/core`, `@vuecs/design`, `@vuecs/theme-tailwind` and `tailwindcss` (`^4.3.2`) are peer dependencies; `@authup/client-web-kit-theme` comes along as a dependency, together with its own peer `@vuecs/tree`. You need a Tailwind v4 build step, for example `@tailwindcss/vite`. The package is ESM-only; build tooling needs Node.js `>=26.0.0`.
 
 ## Usage
 

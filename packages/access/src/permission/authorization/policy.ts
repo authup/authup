@@ -62,15 +62,18 @@ export async function projectAuthorizationPolicy(
         const validator = head.type !== AUTHORIZATION_POLICY_WITHHELD_TYPE && Object.hasOwn(validators, head.type) ?
             validators[head.type] :
             undefined;
+
         if (!validator) {
             throw new ValidupError([defineIssueItem({
                 message: `The policy type ${head.type} is not supported.`,
                 path: ['type'],
             })]);
         }
+
         const validated = await validator.run(value as Record<string, any>) as Record<string, unknown>;
 
         const output : AuthorizationPolicy = { ...validated, type: head.type };
+
         for (const key of Object.keys(output)) {
             if (typeof output[key] === 'undefined') {
                 delete output[key];

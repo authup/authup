@@ -43,6 +43,7 @@ describe('OAuth2ScopeAttributesResolver', () => {
 
         it('should resolve global scope to all attributes', () => {
             const result = resolver.resolveForUser(ScopeName.GLOBAL);
+
             expect(result).toEqual(expect.arrayContaining(
                 ['name', 'displayName', 'lastName', 'firstName', 'email', 'updatedAt', 'active'],
             ));
@@ -56,6 +57,7 @@ describe('OAuth2ScopeAttributesResolver', () => {
     describe('input handling', () => {
         it('should deduplicate attributes across multiple scopes', () => {
             const result = resolver.resolveForUser([ScopeName.IDENTITY, ScopeName.EMAIL, ScopeName.OPEN_ID]);
+
             expect(result).toEqual([...new Set(result)]);
         });
 

@@ -119,6 +119,7 @@ describe('core/entities/client/system-clients', () => {
 
         it('should create every system client when none exists', async () => {
             const realmId = randomUUID();
+
             await provisioner.ensureForRealm({ id: realmId });
 
             for (const definition of SYSTEM_CLIENT_DEFINITIONS) {
@@ -141,6 +142,7 @@ describe('core/entities/client/system-clients', () => {
         // scopes from.
         it('should bind the built-in scopes through the junction for every client', async () => {
             const realmId = randomUUID();
+
             await provisioner.ensureForRealm({ id: realmId });
 
             for (const definition of SYSTEM_CLIENT_DEFINITIONS) {
@@ -154,6 +156,7 @@ describe('core/entities/client/system-clients', () => {
                 );
 
                 const rows = await clientScopeRepository.findManyBy({ clientId: client!.id });
+
                 expect(rows.every((row) => row.clientRealmId === realmId)).toBe(true);
                 expect(rows.every((row) => row.scopeRealmId === null)).toBe(true);
             }
@@ -161,6 +164,7 @@ describe('core/entities/client/system-clients', () => {
 
         it('should backfill missing scope rows for an already-provisioned client', async () => {
             const realmId = randomUUID();
+
             await provisioner.ensureForRealm({ id: realmId });
 
             const client = await repository.findOneBy({
@@ -187,6 +191,7 @@ describe('core/entities/client/system-clients', () => {
             await provisioner.ensureForRealm({ id: realmId });
 
             const result = await repository.findMany(new Query({}));
+
             for (const definition of SYSTEM_CLIENT_DEFINITIONS) {
                 const clients = result.data.filter(
                     (c) => c.name === definition.name && c.realmId === realmId,
@@ -202,6 +207,7 @@ describe('core/entities/client/system-clients', () => {
 
         it('should keep a scope bound by hand', async () => {
             const realmId = randomUUID();
+
             await provisioner.ensureForRealm({ id: realmId });
 
             const client = await repository.findOneBy({
@@ -212,6 +218,7 @@ describe('core/entities/client/system-clients', () => {
                 name: 'custom',
                 realmId,
             });
+
             clientScopeRepository.seed({
                 clientId: client!.id,
                 clientRealmId: realmId,
@@ -228,6 +235,7 @@ describe('core/entities/client/system-clients', () => {
 
         it('should skip an unprovisioned scope', async () => {
             const realmId = randomUUID();
+
             scopeRepository.clear();
 
             await provisioner.ensureForRealm({ id: realmId });
@@ -243,6 +251,7 @@ describe('core/entities/client/system-clients', () => {
 
         it('should refresh redirectUri on an existing built-in client', async () => {
             const realmId = randomUUID();
+
             repository.seed([
                 {
                     id: randomUUID(),
@@ -275,6 +284,7 @@ describe('core/entities/client/system-clients', () => {
         it('should keep attributes it does not own', async () => {
             const realmId = randomUUID();
             const accessPolicyId = randomUUID();
+
             repository.seed([
                 {
                     id: randomUUID(),
@@ -312,6 +322,7 @@ describe('core/entities/client/system-clients', () => {
         // shadow the realm's system client.
         it('should take over a non-built-in client squatting a reserved name', async () => {
             const realmId = randomUUID();
+
             repository.seed([
                 {
                     id: randomUUID(),

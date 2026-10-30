@@ -27,12 +27,14 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
     async synchronizeMany(input: PolicyProvisioningEntity[]): Promise<PolicyProvisioningEntity[]> {
         const output = await super.synchronizeMany(input);
+
         // Prune stale TOP-LEVEL built-in system policies (e.g. a system policy removed
         // from the source). cleanupStaleChildren handles removed CHILDREN of a synced
         // parent; this is its top-level counterpart so the provisioner — not a migration
         // — owns the policy-graph shape. Realm-scoped (realmId != null) policies are out
         // of scope. Safe: the only caller passes the complete global top-level set.
         await this.cleanupStaleTopLevel(input.map((entity) => entity.attributes.name));
+
         return output;
     }
 
@@ -55,9 +57,11 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
                 parentId: input.attributes.parentId,
                 parent: input.attributes.parent,
             };
+
             if (typeof input.attributes.invert !== 'undefined') {
                 mergeData.invert = input.attributes.invert;
             }
+
             entity = this.repository.merge(entity, mergeData);
             await this.repository.saveWithEA(entity, input.extraAttributes);
         } else {
@@ -141,6 +145,7 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
                 parent: null,
                 builtIn: false,
             });
+
             await this.repository.saveWithEA(detached);
         }
     }

@@ -8,9 +8,9 @@
 import type { PermissionPolicy } from '@authup/core-kit';
 import { BuiltInPolicyType } from '@authup/access';
 import {
-    beforeEach, 
-    describe, 
-    expect, 
+    beforeEach,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { PolicyProvisioningSynchronizer } from '../../../../../src/core/provisioning/synchronizer/policy/module.ts';
@@ -93,6 +93,7 @@ describe('core/provisioning/synchronizer/policy', () => {
             await synchronizer.synchronize(input);
 
             const all = policyRepository.getAll();
+
             expect(all.filter((p) => p.name === 'system.realm-bound')).toHaveLength(1);
         });
     });
@@ -119,6 +120,7 @@ describe('core/provisioning/synchronizer/policy', () => {
             });
 
             const child = policyRepository.getAll().find((p) => p.name === 'mixed-child');
+
             expect(child).toBeDefined();
             expect(child?.parentId).toBeTruthy();
         });
@@ -277,6 +279,7 @@ describe('core/provisioning/synchronizer/policy', () => {
             await synchronizer.synchronize(withoutChildren);
 
             const all = policyRepository.getAll();
+
             expect(all).toHaveLength(1);
             expect(all[0].name).toBe('system.default');
         });
@@ -370,6 +373,7 @@ describe('core/provisioning/synchronizer/policy', () => {
             await synchronizer.synchronize(updated);
 
             const all = policyRepository.getAll();
+
             expect(all).toHaveLength(1);
             expect(all[0].builtIn).toBe(false);
         });

@@ -43,9 +43,11 @@ vi.mock('#imports', () => ({
 
 async function runPlugin(requestURL: string) {
     state.requestURL = requestURL;
+
     const plugin = (await import('../../src/runtime/plugins/kit')).default as unknown as {
         setup: (ctx: unknown) => void
     };
+
     plugin.setup({
         vueApp: {},
         $pinia: {},
@@ -62,6 +64,7 @@ describe('runtime/plugins/kit', () => {
 
     it('marks the store cookies secure for an https request', async () => {
         const options = await runPlugin('https://app.example.com/users');
+
         expect(options?.cookieSecure).toBe(true);
     });
 
@@ -74,6 +77,7 @@ describe('runtime/plugins/kit', () => {
 
     it('leaves the store cookies non-secure for a plain http request', async () => {
         const options = await runPlugin('http://localhost:3000/users');
+
         expect(options?.cookieSecure).toBe(false);
     });
 });

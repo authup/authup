@@ -11,8 +11,8 @@ import { isUUID } from '@authup/kit';
 import type { IQuery } from '@rapiq/core';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type {
-    DataSource, 
-    DeepPartial, 
+    DataSource,
+    DeepPartial,
     Repository,
 } from 'typeorm';
 import { applyQuery, fetchMany } from '../query.ts';
@@ -89,11 +89,13 @@ export class IdentityProviderAccountRepositoryAdapter implements IIdentityProvid
             // driver) without buying any atomicity here. Plain
             // count-then-remove, exactly as the un-guarded path did.
             const count = await this.repository.countBy({ userId: entity.userId });
+
             if (!userHasOtherLogin && count <= 1) {
                 return false;
             }
 
             await this.repository.remove(entity as IdentityProviderAccountEntity);
+
             return true;
         }
 
@@ -114,6 +116,7 @@ export class IdentityProviderAccountRepositoryAdapter implements IIdentityProvid
             }
 
             await repository.remove(entity as IdentityProviderAccountEntity);
+
             return true;
         });
     }

@@ -106,8 +106,9 @@ export default defineComponent({
         // back to plain.
         const defaultMode = () : `${ClientSecretMode}` => {
             const mode = getClientSecretMode(props.entity);
+            const isModeAvailable = modeOptions.value.some((option) => option.value === mode);
 
-            return modeOptions.value.some((option) => option.value === mode) ?
+            return isModeAvailable ?
                 mode :
                 ClientSecretMode.PLAIN;
         };
@@ -147,8 +148,10 @@ export default defineComponent({
 
             busy.value = true;
             error.value = null;
+
             try {
                 const payload : ClientSecretRotatePayload = { mode: form.mode };
+
                 if (form.secret) {
                     payload.secret = form.secret;
                 }
@@ -166,11 +169,7 @@ export default defineComponent({
         };
 
         const copy = async () => {
-            if (!secret.value) {
-                return;
-            }
-
-            if (typeof navigator === 'undefined' || !navigator.clipboard) {
+            if (typeof navigator === 'undefined' || !secret.value || !navigator.clipboard) {
                 return;
             }
 

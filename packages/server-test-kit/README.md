@@ -31,7 +31,7 @@
 npm install --save-dev @authup/server-test-kit
 ```
 
-The package is ESM only and needs Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`.
+The package is ESM only and needs Node.js `>=26.0.0`.
 
 ## Usage
 

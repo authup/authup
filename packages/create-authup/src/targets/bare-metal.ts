@@ -78,6 +78,7 @@ function renderConfig(answers: Answers): string {
 
     // The process listens where the url says when nothing is in front; behind a proxy the default stays.
     const exposure = describeExposure(answers.publicUrl);
+
     lines.push(
         '',
         'core:',
@@ -96,6 +97,7 @@ function renderEnv(answers: Answers): string {
     const lines = ['# Secrets. authup start reads this file from the directory it is started in. Keep it out of version control.'];
 
     const { db } = answers;
+
     if (db.type !== 'better-sqlite3') {
         lines.push(
             `DB_TYPE=${db.type}`,

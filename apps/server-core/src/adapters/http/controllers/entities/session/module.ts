@@ -17,27 +17,27 @@ import type { Session } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import type { 
-    EntityCollectionResponse, 
-    EntityRecordResponse, 
-    EntityStatsResponse, 
-    SessionDeleteManyResponse,  
+import type {
+    EntityCollectionResponse,
+    EntityRecordResponse,
+    EntityStatsResponse,
+    SessionDeleteManyResponse,
 } from '@authup/core-http-kit';
 import { isSelfToken } from '../../../../../utils/index.ts';
-import type { 
-    IEntityStatsService, 
-    IIdentityPermissionProvider, 
-    IIdentityResolver, 
-    ISessionRepository, 
-    ISessionService,   
+import type {
+    IEntityStatsService,
+    IIdentityPermissionProvider,
+    IIdentityResolver,
+    ISessionRepository,
+    ISessionService,
 } from '../../../../../core/index.ts';
 import {
     RECORD_QUERY_PARAMETERS,
-    STATS_QUERY_PARAMETERS, 
-    deriveAmrAcr, 
-    describeQuerySchema, 
-    resolveIntrospectionSubject, 
-    sessionSchema,  
+    STATS_QUERY_PARAMETERS,
+    deriveAmrAcr,
+    describeQuerySchema,
+    resolveIntrospectionSubject,
+    sessionSchema,
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -138,6 +138,7 @@ export class SessionController {
 
         const actor = buildActorContext(event);
         const session = await this.service.getOne(sessionId, actor);
+
         if (!session) {
             return { active: false };
         }
@@ -156,6 +157,7 @@ export class SessionController {
             active: true,
             scopes: useRequestScopes(event),
         });
+
         if (!subject) {
             return { active: false };
         }
@@ -260,6 +262,7 @@ export class SessionController {
         });
 
         event.response.status = 202;
+
         return result;
     }
 
@@ -290,6 +293,7 @@ export class SessionController {
         }
 
         event.response.status = 202;
+
         return { data: entity, meta: {} };
     }
 }

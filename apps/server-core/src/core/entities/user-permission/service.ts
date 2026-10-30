@@ -70,6 +70,7 @@ export class UserPermissionService extends JunctionEntityService implements IUse
             name: READ_PERMISSION_NAMES,
             realmAttributeName: this.ownerRealmKey,
         });
+
         if (compiled.verdict === 'deny') {
             parsed = appendQueryConditions(parsed, inArray('id', []));
         } else if (compiled.verdict === 'conditional') {
@@ -91,8 +92,10 @@ export class UserPermissionService extends JunctionEntityService implements IUse
                 realm: this.junctionResourceRealm(entity),
                 data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -109,6 +112,7 @@ export class UserPermissionService extends JunctionEntityService implements IUse
         await actor.permissionEvaluator.preEvaluateOneOf({ name: READ_PERMISSION_NAMES });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -136,6 +140,7 @@ export class UserPermissionService extends JunctionEntityService implements IUse
             permissionId: validated.permissionId,
             userId: validated.userId,
         });
+
         if (existing) {
             throw new EntityConflictError({ entity: 'user-permission' });
         }
@@ -175,6 +180,7 @@ export class UserPermissionService extends JunctionEntityService implements IUse
         });
 
         let entity = this.repository.create(validated);
+
         entity = await this.repository.save(entity);
 
         return entity;
@@ -188,6 +194,7 @@ export class UserPermissionService extends JunctionEntityService implements IUse
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_PERMISSION_UPDATE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -195,6 +202,7 @@ export class UserPermissionService extends JunctionEntityService implements IUse
         const validated = await this.validator.run(data, { group: ValidatorGroup.UPDATE });
 
         const permission = await this.permissionRepository.findOneById(entity.permissionId);
+
         if (permission) {
             // Member-permission gate: an actor may only modify a binding for a permission it
             // holds (mirrors create()).
@@ -208,6 +216,7 @@ export class UserPermissionService extends JunctionEntityService implements IUse
         let actorScope: `${RealmScope}` = RealmScope.ANY;
         let actorPolicyFree = true;
         let actorPolicyId: string | null = null;
+
         if (permission && actor.identity) {
             const grant = await this.identityPermissionProvider.resolveJunctionGrant(
                 await this.getActorGrants(actor),
@@ -218,6 +227,7 @@ export class UserPermissionService extends JunctionEntityService implements IUse
                     realmScope: validated.realmScope ?? entity.realmScope,
                 },
             );
+
             actorScope = grant.realmScope;
             actorPolicyFree = !grant.policy;
             actorPolicyId = grant.policy ? grant.policy.id : null;
@@ -256,6 +266,7 @@ export class UserPermissionService extends JunctionEntityService implements IUse
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_PERMISSION_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -267,6 +278,7 @@ export class UserPermissionService extends JunctionEntityService implements IUse
         });
 
         const { id: entityId } = entity;
+
         await this.repository.remove(entity);
         entity.id = entityId;
 

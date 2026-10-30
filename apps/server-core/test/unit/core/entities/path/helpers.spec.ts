@@ -39,12 +39,14 @@ describe('core/entities/path/helpers', () => {
             realmId,
             path: 'sales/berlin',
         });
+
         expect(leaf.parentId).toBe(middle!.id);
 
         const root = await repository.findOneBy({
             realmId,
             path: 'sales',
         });
+
         expect(root!.parentId).toBeNull();
         expect(middle!.parentId).toBe(root!.id);
 
@@ -73,6 +75,7 @@ describe('core/entities/path/helpers', () => {
 
     it('should refuse a chain deeper than the maximum depth', async () => {
         const segments : string[] = [];
+
         for (let i = 0; i < PATH_MAX_DEPTH + 1; i++) {
             segments.push(`s${i}`);
         }
@@ -98,6 +101,7 @@ describe('core/entities/path/helpers', () => {
 
     it('should survive losing the unique race', async () => {
         const spy = vi.spyOn(repository, 'save');
+
         spy.mockImplementationOnce(async () => {
             // the concurrent caller's row lands between the read and the write,
             // and the adapter reports the rejected insert as a conflict

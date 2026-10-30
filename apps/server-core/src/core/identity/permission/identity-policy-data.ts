@@ -17,6 +17,7 @@ export function toIdentityPolicyData(identity: Identity | undefined): IdentityPo
     const { type, data } = identity;
 
     let clientId: string | null;
+
     if (type === IdentityType.CLIENT) {
         clientId = data.id;
     } else if ('clientId' in data) {
@@ -26,6 +27,7 @@ export function toIdentityPolicyData(identity: Identity | undefined): IdentityPo
     }
 
     let realmId: string | null = data.realmId ?? null;
+
     if (!realmId && data.realm && data.realm.id) {
         realmId = data.realm.id ?? null;
     }

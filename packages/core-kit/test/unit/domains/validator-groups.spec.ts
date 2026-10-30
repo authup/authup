@@ -34,9 +34,11 @@ describe('domains/validator-groups', () => {
         await expect(validator.run({}, { group: ValidatorGroup.PROVISIONING })).rejects.toThrow();
 
         const created = await validator.run({ name: ' FOO ' }, { group: ValidatorGroup.CREATE });
+
         expect(created.name).toEqual('foo');
 
         const provisioned = await validator.run({ name: ' FOO ' }, { group: ValidatorGroup.PROVISIONING });
+
         expect(provisioned.name).toEqual('foo');
     });
 
@@ -55,18 +57,21 @@ describe('domains/validator-groups', () => {
             { name: 'foo', builtIn: true },
             { group: ValidatorGroup.CREATE },
         );
+
         expect(created).not.toHaveProperty('builtIn');
 
         const updated = await validator.run(
             { builtIn: true },
             { group: ValidatorGroup.UPDATE },
         );
+
         expect(updated).not.toHaveProperty('builtIn');
 
         const provisioned = await validator.run(
             { name: 'foo', builtIn: true },
             { group: ValidatorGroup.PROVISIONING },
         );
+
         expect(provisioned.builtIn).toBe(true);
     });
 
@@ -74,6 +79,7 @@ describe('domains/validator-groups', () => {
         const realmId = '9f0b7e2c-4d3a-4a1e-9f6c-5b0d2a7e1c34';
 
         const validators = [new UserValidator(), new ClientValidator()];
+
         for (const validator of validators) {
             const created = await validator.run(
                 {
@@ -83,6 +89,7 @@ describe('domains/validator-groups', () => {
                 },
                 { group: ValidatorGroup.CREATE },
             );
+
             expect(created.realmId).toEqual(realmId);
 
             const updated = await validator.run(
@@ -92,6 +99,7 @@ describe('domains/validator-groups', () => {
                 },
                 { group: ValidatorGroup.UPDATE },
             );
+
             expect(updated).not.toHaveProperty('realmId');
         }
     });
@@ -100,23 +108,27 @@ describe('domains/validator-groups', () => {
         const clientId = '3c6e1a2b-7d4f-4e8a-9b1c-2d5f8e0a6b47';
 
         const validators = [new PermissionValidator(), new RoleValidator()];
+
         for (const validator of validators) {
             const created = await validator.run(
                 { name: 'foo', clientId },
                 { group: ValidatorGroup.CREATE },
             );
+
             expect(created.clientId).toEqual(clientId);
 
             const provisioned = await validator.run(
                 { name: 'foo', clientId },
                 { group: ValidatorGroup.PROVISIONING },
             );
+
             expect(provisioned.clientId).toEqual(clientId);
 
             const updated = await validator.run(
                 { displayName: 'Foo', clientId },
                 { group: ValidatorGroup.UPDATE },
             );
+
             expect(updated).not.toHaveProperty('clientId');
         }
     });
@@ -130,8 +142,10 @@ describe('domains/validator-groups', () => {
         };
 
         const validators = [new UserValidator(), new ClientValidator(), new PathValidator()];
+
         for (const validator of validators) {
             const created = await validator.run(input, { group: ValidatorGroup.CREATE });
+
             expect(created.realmId).toBeNull();
         }
 
@@ -143,6 +157,7 @@ describe('domains/validator-groups', () => {
             },
             { group: ValidatorGroup.CREATE },
         );
+
         expect(provider.realmId).toBeNull();
     });
 
@@ -153,16 +168,18 @@ describe('domains/validator-groups', () => {
             { name: 'foo', secretHashed: true },
             { group: ValidatorGroup.CREATE },
         );
+
         expect(created.secretHashed).toBe(true);
 
         const updated = await validator.run(
             {
-                secret: 'start1234', 
-                secretHashed: true, 
-                secretEncrypted: true, 
+                secret: 'start1234',
+                secretHashed: true,
+                secretEncrypted: true,
             },
             { group: ValidatorGroup.UPDATE },
         );
+
         expect(updated.secret).toEqual('start1234');
         expect(updated).not.toHaveProperty('secretHashed');
         expect(updated).not.toHaveProperty('secretEncrypted');
@@ -171,6 +188,7 @@ describe('domains/validator-groups', () => {
             { name: 'foo', secretHashed: true },
             { group: ValidatorGroup.PROVISIONING },
         );
+
         expect(provisioned.secretHashed).toBe(true);
     });
 
@@ -180,6 +198,7 @@ describe('domains/validator-groups', () => {
         await expect(validator.run({ name: 'foo' }, { group: ValidatorGroup.CREATE })).rejects.toThrow();
 
         const provisioned = await validator.run({ name: 'foo' }, { group: ValidatorGroup.PROVISIONING });
+
         expect(provisioned.name).toEqual('foo');
         expect(provisioned).not.toHaveProperty('email');
 
@@ -192,6 +211,7 @@ describe('domains/validator-groups', () => {
             { name: 'foo', email: 'Foo@Example.com' },
             { group: ValidatorGroup.PROVISIONING },
         );
+
         expect(withEmail.email).toEqual('foo@example.com');
     });
 
@@ -203,12 +223,13 @@ describe('domains/validator-groups', () => {
 
         const provisioned = await validator.run(
             {
-                name: 'foo', 
-                type: 'composite', 
-                builtIn: true, 
+                name: 'foo',
+                type: 'composite',
+                builtIn: true,
             },
             { group: ValidatorGroup.PROVISIONING },
         );
+
         expect(provisioned.type).toEqual('composite');
         expect(provisioned.builtIn).toBe(true);
     });

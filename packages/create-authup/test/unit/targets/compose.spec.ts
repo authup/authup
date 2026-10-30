@@ -47,6 +47,7 @@ function render(overrides: Partial<Answers> = {}) {
 function serviceBlock(compose: string, name: string): string {
     const lines = compose.split('\n');
     const start = lines.indexOf(`  ${name}:`);
+
     expect(start, `service ${name}`).toBeGreaterThan(-1);
 
     const end = lines.findIndex((line, index) => index > start && /^ {0,2}\S/.test(line));
@@ -57,18 +58,21 @@ function serviceBlock(compose: string, name: string): string {
 describe('renderCompose', () => {
     it('should write the two files with the image tag pinned to the version', () => {
         const { compose, env } = render({
-            redis: { url: 'redis://redis:6379' }, 
-            workerSplit: true, 
-            consoleSplit: true, 
+            redis: { url: 'redis://redis:6379' },
+            workerSplit: true,
+            consoleSplit: true,
         });
 
         expect(Object.keys(renderCompose(buildAnswers(), VERSION))).toEqual(['docker-compose.yml', '.env']);
 
         const images = compose.match(/^ +image: authup\/authup:.*$/gm);
+
         expect(images).toHaveLength(3);
+
         for (const line of images!) {
             expect(line.trim()).toEqual(`image: authup/authup:${VERSION}`);
         }
+
         expect(compose).not.toContain('latest');
         expect(compose).not.toMatch(/^version:/m);
         expect(compose).toMatch(/^# .*https:\/\/authup\.org\/guide\/deployment\/docker-compose$/m);
@@ -97,6 +101,7 @@ describe('renderCompose', () => {
         ].join('\n'));
 
         const authup = serviceBlock(compose, 'authup');
+
         expect(authup).toContain('    depends_on:\n      postgres:\n        condition: service_healthy\n');
         expect(authup).toContain('- "DB_TYPE=postgres"');
         expect(authup).toContain('- "DB_HOST=postgres"');
@@ -125,6 +130,7 @@ describe('renderCompose', () => {
         expect(compose).not.toMatch(/^ {2}postgres:$/m);
 
         const mysql = serviceBlock(compose, 'mysql');
+
         expect(mysql).toContain('    image: mysql:8.4');
         expect(mysql).toContain('      - mysql_data:/var/lib/mysql');
         expect(mysql).toContain('- "MYSQL_USER=authup"');
@@ -134,6 +140,7 @@ describe('renderCompose', () => {
         expect(mysql).toContain('      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]\n');
 
         const authup = serviceBlock(compose, 'authup');
+
         expect(authup).toContain('- "DB_TYPE=mysql"');
         expect(authup).toContain('- "DB_HOST=mysql"');
         expect(authup).toContain('- "DB_PORT=3306"');
@@ -158,6 +165,7 @@ describe('renderCompose', () => {
         expect(compose).not.toContain('depends_on');
 
         const authup = serviceBlock(compose, 'authup');
+
         expect(authup).toContain('- "DB_HOST=db.internal"');
         expect(authup).toContain('- "DB_PORT=5433"');
         expect(authup).toContain('- "DB_USERNAME=svc"');
@@ -174,6 +182,7 @@ describe('renderCompose', () => {
         ].join('\n'));
 
         const authup = serviceBlock(compose, 'authup');
+
         expect(authup).toContain('- "REDIS=redis://redis:6379"');
         expect(authup).not.toContain('elsewhere');
         expect(authup).toContain('    depends_on:\n      postgres:\n        condition: service_healthy\n      redis:\n        condition: service_started\n');
@@ -193,11 +202,13 @@ describe('renderCompose', () => {
         const { compose } = render({ redis: { url: 'redis://redis:6379' }, workerSplit: true });
 
         const authup = serviceBlock(compose, 'authup');
+
         expect(authup).toContain('      # the sweeps run in the worker below\n      - "WORKER_ENABLED=false"\n');
         expect(authup).toContain('      # run "docker compose run --rm authup migration run" once before starting\n      - "MIGRATION_ENABLED=false"\n');
         expect(authup).toMatch(/^ {4}command: start$/m);
 
         const worker = serviceBlock(compose, 'authup-worker');
+
         expect(worker).toContain('    command: start worker');
         // the image healthcheck applies: the worker answers its health on PORT
         expect(worker).not.toContain('healthcheck');
@@ -214,11 +225,13 @@ describe('renderCompose', () => {
         const { compose } = render({ redis: { url: 'redis://redis:6379' }, consoleSplit: true });
 
         const authup = serviceBlock(compose, 'authup');
+
         expect(authup).toMatch(/^ {4}command: start core$/m);
         expect(authup).not.toContain('WORKER_ENABLED');
         expect(authup).not.toContain('MIGRATION_ENABLED');
 
         const console = serviceBlock(compose, 'authup-console');
+
         expect(console).toContain('    command: start console');
         expect(console).toContain('- "PUBLIC_URL=https://auth.example.com"');
         expect(console).toContain('- "INTERNAL_URL=http://authup:3000"');
@@ -229,6 +242,7 @@ describe('renderCompose', () => {
         expect(console).not.toContain('depends_on');
 
         const [preamble] = compose.split('  authup-console:');
+
         expect(preamble).toContain('# Two proxy rules, in this order: /console/<name>/login/start and');
         expect(preamble).toContain('https://authup.org/guide/deployment/console-replicas');
     });
@@ -279,6 +293,7 @@ describe('renderCompose', () => {
 
     it('should omit SMTP and the feature flags when mail is off and emit them when on', () => {
         const off = render();
+
         expect(off.compose).not.toContain('SMTP');
         expect(off.compose).not.toContain('REGISTRATION_ENABLED');
         expect(off.compose).not.toContain('PASSWORD_RECOVERY_ENABLED');
@@ -289,6 +304,7 @@ describe('renderCompose', () => {
             registrationEnabled: true,
             passwordRecoveryEnabled: true,
         });
+
         expect(on.compose).toContain('- "REGISTRATION_ENABLED=true"');
         expect(on.compose).toContain('- "PASSWORD_RECOVERY_ENABLED=true"');
     });
@@ -316,6 +332,7 @@ describe('renderCompose', () => {
         const trust = (overrides: Partial<Answers>) => {
             const authup = serviceBlock(renderCompose(buildAnswers(overrides), VERSION)['docker-compose.yml'], 'authup');
             const match = authup.match(/- "TRUST_PROXY=([^"]+)"/);
+
             expect(match).not.toBeNull();
 
             return match?.[1];
@@ -325,29 +342,32 @@ describe('renderCompose', () => {
         expect(trust({ publicUrl: 'http://localhost:8080' })).toEqual('false');
         expect(trust({ consoleSplit: true, redis: { url: 'redis://redis:6379' } })).toEqual('2');
         expect(trust({
-            publicUrl: 'http://localhost:8080', 
-            consoleSplit: true, 
-            redis: { url: 'redis://redis:6379' }, 
+            publicUrl: 'http://localhost:8080',
+            consoleSplit: true,
+            redis: { url: 'redis://redis:6379' },
         })).toEqual('1');
     });
 
     it('should hand the published port to an nginx service under a console split and emit its config', () => {
         const rendered = renderCompose(buildAnswers({
-            publicUrl: 'http://localhost:8080', 
-            consoleSplit: true, 
-            redis: { url: 'redis://redis:6379' }, 
+            publicUrl: 'http://localhost:8080',
+            consoleSplit: true,
+            redis: { url: 'redis://redis:6379' },
         }), VERSION);
         const compose = rendered['docker-compose.yml'];
 
         expect(Object.keys(rendered)).toEqual(['docker-compose.yml', '.env', 'nginx.conf']);
         expect(serviceBlock(compose, 'authup')).not.toContain('ports:');
+
         const nginx = serviceBlock(compose, 'nginx');
+
         expect(nginx).toContain('    image: nginx:1.31-alpine\n');
         expect(nginx).toContain('    ports:\n      - "8080:80"\n');
         expect(nginx).toContain('      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro\n');
         expect(nginx).toContain('    depends_on:\n      authup:\n        condition: service_started\n      authup-console:\n        condition: service_started');
 
         const conf = rendered['nginx.conf'];
+
         expect(conf).toContain('upstream authup_api             { server authup:3000; }');
         expect(conf).toContain('upstream authup_admin_console   { server authup-console:3021; }');
         expect(conf).toContain('location = /console/admin/login/start   { proxy_pass http://authup_api; }');
@@ -361,10 +381,12 @@ describe('renderCompose', () => {
 
     it('should emit email verification only when on and keep the placeholders as comments', () => {
         const on = serviceBlock(renderCompose(buildAnswers({ emailVerificationEnabled: true }), VERSION)['docker-compose.yml'], 'authup');
+
         expect(on).toContain('- "EMAIL_VERIFICATION_ENABLED=true"');
 
         const rendered = renderCompose(buildAnswers(), VERSION);
         const authup = serviceBlock(rendered['docker-compose.yml'], 'authup');
+
         expect(authup).not.toContain('EMAIL_VERIFICATION_ENABLED');
         expect(authup).toContain('      # - "TRUSTED_ORIGINS=https://app.example.com"\n');
         expect(authup).toContain('      # - "SECRETS_ENCRYPTION_KEY=<base64 32 bytes>"\n');

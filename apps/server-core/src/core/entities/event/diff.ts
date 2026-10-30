@@ -52,22 +52,14 @@ export function buildEntityDiff(
     ]);
 
     for (const key of keys) {
-        if (key.endsWith('_at') || key.endsWith('At')) {
-            continue;
-        }
-
-        if (EVENT_DIFF_SECRET_KEY_REGEX.test(key)) {
+        if (key.endsWith('_at') || key.endsWith('At') || EVENT_DIFF_SECRET_KEY_REGEX.test(key)) {
             continue;
         }
 
         const nextValue = next[key];
         const previousValue = previous[key];
 
-        if (!isScalar(nextValue) || !isScalar(previousValue)) {
-            continue;
-        }
-
-        if (isEqual(nextValue, previousValue)) {
+        if (!isScalar(nextValue) || !isScalar(previousValue) || isEqual(nextValue, previousValue)) {
             continue;
         }
 

@@ -8,11 +8,11 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { 
-    afterEach, 
-    describe, 
-    expect, 
-    it, 
+import {
+    afterEach,
+    describe,
+    expect,
+    it,
 } from 'vitest';
 import { ThemeProvider } from '../../src/theme/index';
 import { THEME_MANIFEST_REVALIDATE_INTERVAL } from '../../src/theme/constants';
@@ -21,10 +21,12 @@ const roots : string[] = [];
 
 function createDirectory(files: Record<string, string>) : string {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'authup-theme-provider-'));
+
     roots.push(root);
 
     for (const [name, content] of Object.entries(files)) {
         const filePath = path.join(root, name);
+
         fs.mkdirSync(path.dirname(filePath), { recursive: true });
         fs.writeFileSync(filePath, content, 'utf-8');
     }
@@ -60,6 +62,7 @@ describe('theme (ThemeProvider)', () => {
         const root = createDirectory({ 'assets/theme.css': 'body{}' });
 
         const provider = new ThemeProvider({ directoryPath: root });
+
         await provider.load();
 
         expect(await provider.getManifest()).toBeUndefined();
@@ -70,6 +73,7 @@ describe('theme (ThemeProvider)', () => {
         const root = createDirectory({ assets: 'not a directory' });
 
         const provider = new ThemeProvider({ directoryPath: root });
+
         await provider.load();
 
         expect(await provider.getAssetsPath()).toBeUndefined();
@@ -88,6 +92,7 @@ describe('theme (ThemeProvider)', () => {
         const root = createDirectory({ 'theme.json': JSON.stringify({ version: 1 }) });
 
         const provider = new ThemeProvider({ directoryPath: root });
+
         await provider.load();
 
         expect(await provider.getAssetsPath()).toBeUndefined();
@@ -101,6 +106,7 @@ describe('theme (ThemeProvider)', () => {
         const root = createDirectory({ 'theme.json': JSON.stringify({ version: 1 }) });
 
         const provider = new ThemeProvider({ directoryPath: root });
+
         await provider.load();
 
         expect(await provider.getAssetsPath()).toBeUndefined();
@@ -125,6 +131,7 @@ describe('theme (ThemeProvider)', () => {
             });
 
             const provider = new ThemeProvider({ directoryPath: root });
+
             await provider.load();
 
             // Dropping the file into the directory must do nothing on its
@@ -142,6 +149,7 @@ describe('theme (ThemeProvider)', () => {
                 directoryPath: root,
                 fragmentsEnabled: true,
             });
+
             await provider.load();
 
             expect(await provider.getHead('')).toEqual(FRAGMENT);
@@ -154,6 +162,7 @@ describe('theme (ThemeProvider)', () => {
                 directoryPath: root,
                 fragmentsEnabled: true,
             });
+
             await provider.load();
 
             expect(await provider.getHead('')).toEqual('');
@@ -169,6 +178,7 @@ describe('theme (ThemeProvider)', () => {
                 directoryPath: root,
                 fragmentsEnabled: true,
             });
+
             await provider.load();
 
             expect(await provider.getHead('')).toEqual('');
@@ -181,6 +191,7 @@ describe('theme (ThemeProvider)', () => {
                 directoryPath: root,
                 fragmentsEnabled: true,
             });
+
             await provider.load();
 
             expect(await provider.getManifest()).toBeUndefined();
@@ -198,6 +209,7 @@ describe('theme (ThemeProvider)', () => {
             });
 
             const provider = new ThemeProvider({ directoryPath: root });
+
             await provider.load();
             expect(await provider.getHead('')).toContain('red');
 
@@ -209,7 +221,9 @@ describe('theme (ThemeProvider)', () => {
 
             // A broken theme must never take down a login page, so the
             // request path keeps serving the previous value.
-            await new Promise((resolve) => { setTimeout(resolve, 1_100); });
+            await new Promise((resolve) => {
+                setTimeout(resolve, 1_100);
+            });
             expect(await provider.getHead('')).toContain('red');
         });
 
@@ -222,6 +236,7 @@ describe('theme (ThemeProvider)', () => {
             });
 
             const provider = new ThemeProvider({ directoryPath: root });
+
             await provider.load();
             expect(await provider.getHead('')).toContain('red');
 
@@ -234,7 +249,9 @@ describe('theme (ThemeProvider)', () => {
                 'utf-8',
             );
 
-            await new Promise((resolve) => { setTimeout(resolve, 1_100); });
+            await new Promise((resolve) => {
+                setTimeout(resolve, 1_100);
+            });
             expect(await provider.getHead('')).toContain('blue');
             expect(await provider.getHead('')).not.toContain('red');
         });

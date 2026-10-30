@@ -169,6 +169,7 @@ describe('readSchemaFromFileTree', () => {
         };
 
         const prototype = Object.prototype as Record<string, unknown>;
+
         prototype.port = 9999;
         prototype.core = { port: 9999 };
 
@@ -308,6 +309,7 @@ describe('mergeSchemaData', () => {
 describe('mountSchema', () => {
     it('should validate a section rather than drop it', async () => {
         const container = new Container<Fixture>();
+
         mountSchema(container, SCHEMA);
 
         // what a parsed document actually carries: untrusted, and a section
@@ -317,6 +319,7 @@ describe('mountSchema', () => {
             publicUrl: 'https://idp.example.com',
             core: { port: 'not-a-port' },
         };
+
         await expect(container.run(invalid)).rejects.toThrow();
 
         // a mounted section is also what carries the value over: validup
@@ -325,6 +328,7 @@ describe('mountSchema', () => {
             publicUrl: 'https://idp.example.com',
             core: { port: 4001 },
         };
+
         expect(await container.run(valid)).toEqual({
             publicUrl: 'https://idp.example.com',
             core: { port: 4001 },

@@ -26,6 +26,7 @@ export const INTERNAL_HTTP_CLIENT_FACTORY_STORE_KEY = Symbol('InternalHttpClient
 export function registerInternalHttpClientMiddleware(router: IApp, httpClientFactory: () => IClient) {
     router.use(defineCoreHandler((event) => {
         event.store[INTERNAL_HTTP_CLIENT_FACTORY_STORE_KEY] = httpClientFactory;
+
         return event.next();
     }));
 }

@@ -49,10 +49,13 @@ function readBound(conjuncts: ICondition[], field: string, operators: string[]):
 
 function snap(input: Date, unit: StatsWindow['unit']): Date {
     const date = new Date(input);
+
     date.setUTCMinutes(0, 0, 0);
+
     if (unit !== 'hour') {
         date.setUTCHours(0);
     }
+
     if (unit === 'month') {
         date.setUTCDate(1);
     }
@@ -62,6 +65,7 @@ function snap(input: Date, unit: StatsWindow['unit']): Date {
 
 function advance(input: Date, unit: StatsWindow['unit']): Date {
     const date = new Date(input);
+
     if (unit === 'hour') {
         date.setUTCHours(date.getUTCHours() + 1);
     } else if (unit === 'day') {
@@ -85,6 +89,7 @@ export function resolveStatsWindow(query: IQuery, options: StatsWindowOptions): 
 
     const [group] = query.groups?.value ?? [];
     const unit = group?.lowering?.args[0];
+
     if (
         !group ||
         group.lowering?.fn !== 'bucket' ||
@@ -96,6 +101,7 @@ export function resolveStatsWindow(query: IQuery, options: StatsWindowOptions): 
 
     const conjuncts = readConjuncts(query.filters);
     const lowerBounds = readBound(conjuncts, dateColumn, LOWER_BOUND_OPERATORS);
+
     if (lowerBounds.length === 0) {
         throw new ValidationError(`The filter must carry a lower bound on ${dateColumn}.`);
     }
@@ -108,14 +114,17 @@ export function resolveStatsWindow(query: IQuery, options: StatsWindowOptions): 
         now;
 
     let buckets = 0;
+
     for (let start = from; start < to; start = advance(start, unit)) {
         buckets++;
+
         if (buckets > STATS_MAX_BUCKETS) {
             throw new ValidationError(`The window spans more than ${STATS_MAX_BUCKETS} buckets.`);
         }
     }
 
     const { rawHorizonDays } = options;
+
     if (
         unit === 'hour' &&
         rawHorizonDays &&

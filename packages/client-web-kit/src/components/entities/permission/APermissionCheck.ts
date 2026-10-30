@@ -7,11 +7,11 @@
 
 import type { PermissionEvaluationOptions } from '@authup/access';
 import { definePolicyData } from '@authup/access';
-import { 
-    SlotName, 
-    createPermissionCheckerReactiveFn, 
-    hasNormalizedSlot, 
-    normalizeSlot,  
+import {
+    SlotName,
+    createPermissionCheckerReactiveFn,
+    hasNormalizedSlot,
+    normalizeSlot,
 } from '../../../core';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';

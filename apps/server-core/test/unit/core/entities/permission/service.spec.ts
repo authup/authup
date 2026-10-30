@@ -13,9 +13,9 @@ import type {
     RolePermission,
 } from '@authup/core-kit';
 import {
-    beforeEach, 
-    describe, 
-    expect, 
+    beforeEach,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import {
@@ -88,11 +88,13 @@ describe('core/entities/permission/service', () => {
             ]);
 
             const result = await service.getMany({}, createAllowAllActor());
+
             expect(result.data).toHaveLength(1);
         });
 
         it('should call preCheckOneOf with permission permissions', async () => {
             const actor = createAllowAllActor();
+
             await service.getMany({}, actor);
 
             expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
@@ -116,6 +118,7 @@ describe('core/entities/permission/service', () => {
             const entity = repository.seed(createFakePermission({ name: 'test-perm' }));
 
             const result = await service.getOne(entity.id, createAllowAllActor());
+
             expect(result.name).toBe('test-perm');
         });
 
@@ -139,6 +142,7 @@ describe('core/entities/permission/service', () => {
 
         it('should call preCheck with PERMISSION_CREATE', async () => {
             const actor = createAllowAllActor();
+
             await service.create({ name: 'test-perm' }, actor);
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.PERMISSION_CREATE });
@@ -157,6 +161,7 @@ describe('core/entities/permission/service', () => {
             );
 
             const junctions = permissionPolicyRepository.getAll();
+
             expect(junctions).toHaveLength(1);
             expect(junctions[0].policyId).toBe(defaultPolicyId);
         });
@@ -169,6 +174,7 @@ describe('core/entities/permission/service', () => {
 
             const grants = rolePermissionRepository.getAll();
             const adminGrant = grants.find((g) => g.permissionId === permission.id);
+
             expect(adminGrant).toBeDefined();
             expect(adminGrant!.realmScope).toBe(RealmScope.ANY);
         });
@@ -189,6 +195,7 @@ describe('core/entities/permission/service', () => {
 
             const grant = rolePermissionRepository.getAll()
                 .find((g) => g.permissionId === permission.id && g.roleId === realmAdmin.id);
+
             expect(grant!.realmScope).toBe(RealmScope.OWN);
         });
 
@@ -213,6 +220,7 @@ describe('core/entities/permission/service', () => {
 
         it('should roll back the created permission when post-save wiring fails', async () => {
             const failure = new Error('binding write failed');
+
             permissionPolicyRepository.save = async () => {
                 throw failure;
             };
@@ -230,7 +238,7 @@ describe('core/entities/permission/service', () => {
         it('should update an existing permission', async () => {
             const entity = repository.seed(createFakePermission({
                 name: 'old-perm',
-                builtIn: false, 
+                builtIn: false,
             }));
 
             const result = await service.update(
@@ -251,7 +259,7 @@ describe('core/entities/permission/service', () => {
         it('should prevent renaming a built-in permission', async () => {
             const entity = repository.seed(createFakePermission({
                 name: 'built-in-perm',
-                builtIn: true, 
+                builtIn: true,
             }));
 
             await expect(
@@ -262,7 +270,7 @@ describe('core/entities/permission/service', () => {
         it('should allow updating built-in permission fields other than name', async () => {
             const entity = repository.seed(createFakePermission({
                 name: 'built-in-perm',
-                builtIn: true, 
+                builtIn: true,
             }));
 
             const result = await service.update(
@@ -278,16 +286,19 @@ describe('core/entities/permission/service', () => {
     describe('update with a restricted grant (#3654)', () => {
         const restrictedActor = () => {
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
                 if (method !== 'evaluate') {
                     return;
                 }
 
                 const attributes = ctx.data?.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+
                 if (!attributes?.name?.startsWith('reach-')) {
                     throw PermissionError.denied('out of reach');
                 }
             });
+
             return actor;
         };
 
@@ -318,6 +329,7 @@ describe('core/entities/permission/service', () => {
             const entity = repository.seed(createFakePermission({ name: 'reach-name', builtIn: false }));
 
             const result = await service.update(entity.id, { name: 'reach-renamed' }, restrictedActor());
+
             expect(result.name).toBe('reach-renamed');
         });
 
@@ -333,8 +345,8 @@ describe('core/entities/permission/service', () => {
     describe('save (upsert)', () => {
         it('should create when entity not found', async () => {
             const {
-                entity, 
-                created, 
+                entity,
+                created,
             } = await service.save(
                 undefined,
                 { name: 'upserted-perm' },
@@ -348,7 +360,7 @@ describe('core/entities/permission/service', () => {
         it('should update when entity found', async () => {
             const entity = repository.seed(createFakePermission({
                 name: 'old-perm',
-                builtIn: false, 
+                builtIn: false,
             }));
 
             const { created } = await service.save(
@@ -398,7 +410,7 @@ describe('core/entities/permission/service', () => {
             const result = await service.create(
                 {
                     name: 'global-perm',
-                    realmId: null, 
+                    realmId: null,
                 },
                 actor,
             );
@@ -470,6 +482,7 @@ describe('core/entities/permission/service', () => {
             const entity = repository.seed(createFakePermission({ builtIn: false }));
 
             const result = await service.delete(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
         });
 
@@ -491,6 +504,7 @@ describe('core/entities/permission/service', () => {
             const entity = repository.seed(createFakePermission({ builtIn: false }));
 
             const actor = createAllowAllActor();
+
             await service.delete(entity.id, actor);
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.PERMISSION_DELETE });
@@ -514,9 +528,9 @@ describe('core/entities/permission/service', () => {
             const global = seedEntity('name-scoped', null);
 
             return {
-                master, 
-                global, 
-                scoped, 
+                master,
+                global,
+                scoped,
             };
         }
 
@@ -581,11 +595,13 @@ describe('core/entities/permission/service', () => {
         it('should address the client owned row when its client is given', async () => {
             const clientId = randomUUID();
             const clientRealmId = randomUUID();
+
             repository.onValidateJoinColumns((input) => {
                 if (input.clientId === clientId) {
                     input.client = { id: clientId, realmId: clientRealmId } as Permission['client'];
                 }
             });
+
             const global = repository.seed(createFakePermission({ name: 'name-owned', realmId: null }));
             const owned = repository.seed(createFakePermission({
                 name: 'name-owned',
@@ -606,6 +622,7 @@ describe('core/entities/permission/service', () => {
 
         it('should not look the client up for a caller who may not write', async () => {
             let lookups = 0;
+
             repository.onValidateJoinColumns(() => {
                 lookups++;
             });

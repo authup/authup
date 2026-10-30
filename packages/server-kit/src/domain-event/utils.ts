@@ -11,10 +11,12 @@ import type { DomainEventChannelName } from './types';
 
 export function transformDomainEventData<T extends ObjectLiteral>(input: T) : T {
     const keys = Object.keys(input);
+
     for (const key_ of keys) {
         const key = key_ as keyof T;
 
         const value = input[key] as T[keyof T];
+
         if (!isObject(value)) {
             continue;
         }

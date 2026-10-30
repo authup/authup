@@ -20,7 +20,7 @@ What remains is `npm install`, `npx authup config validate` and `npm start`.
 ## Requirements
 The following guide is based on some shared assumptions:
 
-- Node.js `v22.13` (minimum)
+- Node.js `v26.0.0` (minimum)
 - Min. `2` cores
 - Min. `5G` hard disk
 - One available port (default: `3000`)

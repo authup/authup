@@ -116,6 +116,7 @@ export async function parseThemeManifest(input: unknown, filePath: string) : Pro
     }
 
     const unknown = Object.keys(input).filter((key) => !KNOWN_KEYS.includes(key));
+
     if (unknown.length > 0) {
         throw new AuthupError(
             `The theme manifest "${filePath}" is invalid.\n${unknown

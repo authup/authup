@@ -43,9 +43,9 @@ export class ConsentEntity implements Consent {
 
     @Index()
     @Column({
-        name: 'sub_kind', 
-        type: 'varchar', 
-        length: 64, 
+        name: 'sub_kind',
+        type: 'varchar',
+        length: 64,
     })
     subKind: string;
 
@@ -59,11 +59,11 @@ export class ConsentEntity implements Consent {
     // ------------------------------------------------------------------
 
     @Column({
-        name: 'expires_at', 
-        type: 'varchar', 
-        length: 28, 
-        nullable: true, 
-        default: null, 
+        name: 'expires_at',
+        type: 'varchar',
+        length: 28,
+        nullable: true,
+        default: null,
     })
     expiresAt: string | null;
 
@@ -95,10 +95,10 @@ export class ConsentEntity implements Consent {
 
     @Index()
     @Column({
-        name: 'user_id', 
-        type: 'uuid', 
-        nullable: true, 
-        default: null, 
+        name: 'user_id',
+        type: 'uuid',
+        nullable: true,
+        default: null,
     })
     userId: User['id'] | null;
 

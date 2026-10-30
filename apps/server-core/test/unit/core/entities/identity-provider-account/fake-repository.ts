@@ -31,7 +31,9 @@ export class FakeIdentityProviderAccountRepository implements IIdentityProviderA
             updatedAt: new Date().toISOString(),
             ...account,
         } as IdentityProviderAccount;
+
         this.accounts.set(entity.id, entity);
+
         return entity;
     }
 
@@ -46,9 +48,11 @@ export class FakeIdentityProviderAccountRepository implements IIdentityProviderA
         this.findManyCalls.push({ query, options });
 
         let data = this.rows();
+
         if (options.userId) {
             data = data.filter((account) => account.userId === options.userId);
         }
+
         if (options.realmId) {
             data = data.filter((account) => account.userRealmId === options.realmId);
         }
@@ -69,12 +73,14 @@ export class FakeIdentityProviderAccountRepository implements IIdentityProviderA
 
     async removeGuarded(entity: IdentityProviderAccount, userHasOtherLogin: boolean): Promise<boolean> {
         const count = this.rows().filter((account) => account.userId === entity.userId).length;
+
         if (!userHasOtherLogin && count <= 1) {
             return false;
         }
 
         this.removeCalls.push(entity);
         this.accounts.delete(entity.id);
+
         return true;
     }
 
@@ -91,7 +97,9 @@ export class FakeIdentityProviderAccountRepository implements IIdentityProviderA
                 ...this.accounts.get(entity.id)!,
                 ...entity,
             } as IdentityProviderAccount;
+
             this.accounts.set(existing.id, existing);
+
             return existing;
         }
 
@@ -103,6 +111,7 @@ export class FakeIdentityProviderAccountRepository implements IIdentityProviderA
                 account.userId === entity.userId
             ),
         );
+
         if (taken) {
             throw new EntityConflictError();
         }

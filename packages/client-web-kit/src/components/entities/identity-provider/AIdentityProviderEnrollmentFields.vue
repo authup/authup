@@ -89,6 +89,7 @@ export default defineComponent({
         const entityAttributes = () => props.entity as Partial<IdentityProvider & IdentityProviderEnrollmentAttributes>;
 
         const updatedAt = useUpdatedAt(() => props.entity as IdentityProvider);
+
         onChange(updatedAt, () => assign(entityAttributes()));
 
         assign(entityAttributes());

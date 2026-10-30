@@ -15,6 +15,7 @@ import { EVENT_AGGREGATE_BACKFILL_DAYS } from '../../core/index.ts';
 
 function shiftDay(day: string, days: number) : string {
     const date = new Date(`${day}T00:00:00.000Z`);
+
     date.setUTCDate(date.getUTCDate() + days);
 
     return date.toISOString().slice(0, 10);
@@ -48,16 +49,19 @@ export function createEventAggregatorTick(
             undefined;
 
         let oldest = await repository.findOldestEventDay();
+
         if (oldest && horizon && oldest < horizon) {
             oldest = horizon;
         }
 
         const start = cursor && cursor < yesterday ? cursor : shiftDay(yesterday, -1);
+
         if (oldest && start >= oldest) {
             const present = new Set(await repository.findDays(oldest, start));
 
             let day = start;
             let filled = 0;
+
             while (day >= oldest && filled < EVENT_AGGREGATE_BACKFILL_DAYS) {
                 if (!present.has(day)) {
                     await repository.recompute(day);

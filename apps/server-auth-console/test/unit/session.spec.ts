@@ -20,12 +20,14 @@ function createStubClient() {
         on(name: string, fn: ErrorHook) {
             expect(name).toEqual('responseError');
             hooks.push(fn);
+
             return hooks.length - 1;
         },
     } as unknown as Client;
 
     const fail = (status: number, code?: string) => {
         const err = { response: { status, data: code ? { code } : {} } };
+
         expect(() => hooks.forEach((hook) => hook(err))).toThrow();
     };
 
@@ -36,6 +38,7 @@ describe('createSessionForwardingGuard', () => {
     it('should stop forwarding once the API refused enough bearers', () => {
         const guard = createSessionForwardingGuard({ max: 3, now: () => 1000 });
         const { client, fail } = createStubClient();
+
         guard.observe(client);
 
         for (let i = 0; i < 2; i++) {
@@ -44,6 +47,7 @@ describe('createSessionForwardingGuard', () => {
         }
 
         const third = guard.reserve();
+
         expect(third).toBeDefined();
         third!();
         fail(401, ErrorCode.JWT_INVALID);
@@ -56,6 +60,7 @@ describe('createSessionForwardingGuard', () => {
 
         // a burst of parallel renders, none answered yet
         const reservations = [guard.reserve(), guard.reserve(), guard.reserve()];
+
         expect(reservations.every((release) => typeof release === 'function')).toBeTruthy();
         expect(guard.reserve()).toBeUndefined();
 
@@ -69,11 +74,12 @@ describe('createSessionForwardingGuard', () => {
     it('should forward again in the next window', () => {
         let time = 1000;
         const guard = createSessionForwardingGuard({
-            max: 1, 
-            window: 60_000, 
-            now: () => time, 
+            max: 1,
+            window: 60_000,
+            now: () => time,
         });
         const { client, fail } = createStubClient();
+
         guard.observe(client);
 
         guard.reserve()!();
@@ -91,6 +97,7 @@ describe('createSessionForwardingGuard', () => {
     ])('should not count %s', (_label, status, code) => {
         const guard = createSessionForwardingGuard({ max: 1, now: () => 1000 });
         const { client, fail } = createStubClient();
+
         guard.observe(client);
 
         guard.reserve()!();
@@ -102,11 +109,18 @@ describe('createSessionForwardingGuard', () => {
         const guard = createSessionForwardingGuard();
         const { client } = createStubClient();
         let hook : ErrorHook | undefined;
-        (client as any).on = (_name: string, fn: ErrorHook) => { hook = fn; return 0; };
+
+        (client as any).on = (_name: string, fn: ErrorHook) => {
+            hook = fn;
+
+            return 0;
+        };
         guard.observe(client);
 
         const err = { response: { status: 401, data: {} } };
+
         expect(() => hook!(err)).toThrow();
+
         try {
             hook!(err);
         } catch (e) {

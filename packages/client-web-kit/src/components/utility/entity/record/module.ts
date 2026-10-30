@@ -26,10 +26,10 @@ import { normalizeQueryInput } from '../../../../core/query';
 import { isObject } from 'smob';
 import type { Ref, VNodeChild } from 'vue';
 import {
-    computed, 
-    isRef, 
-    ref, 
-    toRef, 
+    computed,
+    isRef,
+    ref,
+    toRef,
     watch,
 } from 'vue';
 import { hasNormalizedSlot, injectHTTPClient, normalizeSlot } from '../../../../core';
@@ -292,6 +292,7 @@ function create<
     if (ctx.props) {
         const propEntityRef = toRef(ctx.props, 'entity');
         const propsEntityId = computed(() => (propEntityRef.value ? propEntityRef.value.id : undefined));
+
         watch(propsEntityId, (val) => {
             entity.value = propEntityRef.value;
 
@@ -313,6 +314,7 @@ function create<
         }
 
         let query : IQuery | undefined;
+
         if (rctx.query) {
             query = normalizeQueryInput(rctx.query);
         }
@@ -338,6 +340,7 @@ function create<
 
             if (ctx.props.queryFilters) {
                 const current = query || new Query();
+
                 query = new Query({
                     fields: current.fields,
                     relations: current.relations,
@@ -351,6 +354,7 @@ function create<
 
             if (ctx.props.queryFields) {
                 const current = query || new Query();
+
                 query = new Query({
                     filters: current.filters,
                     relations: current.relations,
@@ -374,6 +378,7 @@ function create<
         if (id && domainAPI.getOne) {
             try {
                 const response = await domainAPI.getOne(id, query);
+
                 entity.value = response.data;
 
                 if (socket) {
@@ -420,14 +425,16 @@ function create<
     const resolveOrFail = async (resolveContext: ResourceManagerResolveContext<RECORD> = {}) => {
         await resolve(resolveContext);
 
-        if (typeof entity.value === 'undefined') {
-            if (!error.value) {
-                throw EntityRecordError.unresolvable();
-            }
-
-            // eslint-disable-next-line no-throw-literal
-            throw error.value as Error;
+        if (!(typeof entity.value === 'undefined')) {
+            return;
         }
+
+        if (!error.value) {
+            throw EntityRecordError.unresolvable();
+        }
+
+        // eslint-disable-next-line no-throw-literal
+        throw error.value as Error;
     };
 
     if (ctx.query) {
@@ -439,6 +446,7 @@ function create<
             () => {
                 if (!initialized) {
                     initialized = true;
+
                     return;
                 }
 

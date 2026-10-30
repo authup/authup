@@ -25,6 +25,7 @@ function buildApp(handlers: Record<string, FakeHandler> = {}) {
 
     const pinia = createPinia();
     const app = createApp({ render: () => h('div') });
+
     app.use(pinia);
 
     installStore(app, {
@@ -45,9 +46,9 @@ function buildApp(handlers: Record<string, FakeHandler> = {}) {
     const hook = injectHTTPClientAuthenticationHook(app);
 
     return {
-        store, 
-        hook, 
-        httpClient, 
+        store,
+        hook,
+        httpClient,
     };
 }
 
@@ -75,9 +76,9 @@ describe('core/http-client/authentication-hook', () => {
         const { promise: gate, resolve: release } = Promise.withResolvers<void>();
 
         const {
-            store, 
-            hook, 
-            httpClient, 
+            store,
+            hook,
+            httpClient,
         } = buildApp({
             'POST /token': async () => {
                 await gate;
@@ -116,10 +117,14 @@ describe('core/http-client/authentication-hook', () => {
 
         // the dropped pair was never written to the store, so nothing else
         // could revoke it — the drop guard revokes it best-effort.
-        await new Promise((resolve) => { setTimeout(resolve, 0); });
+        await new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
+
         const revoked = httpClient.requests
             .filter((request) => request.url === '/token/revoke')
             .map((request) => (request.body as Record<string, string>).token);
+
         expect(revoked).toContain('at-stale');
         expect(revoked).toContain('rt-stale');
     });
@@ -128,9 +133,9 @@ describe('core/http-client/authentication-hook', () => {
         const { promise: gate, resolve: release } = Promise.withResolvers<void>();
 
         const {
-            store, 
-            hook, 
-            httpClient, 
+            store,
+            hook,
+            httpClient,
         } = buildApp({
             'POST /token': async () => {
                 await gate;
@@ -165,10 +170,14 @@ describe('core/http-client/authentication-hook', () => {
 
         // the dropped pair is revoked best-effort (alongside logout()'s own
         // revoke of the presented pair)
-        await new Promise((resolve) => { setTimeout(resolve, 0); });
+        await new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
+
         const revoked = httpClient.requests
             .filter((request) => request.url === '/token/revoke')
             .map((request) => (request.body as Record<string, string>).token);
+
         expect(revoked).toContain('at-stale');
         expect(revoked).toContain('rt-stale');
     });

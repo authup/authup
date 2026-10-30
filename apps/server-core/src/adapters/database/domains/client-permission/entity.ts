@@ -8,7 +8,7 @@
 import {
     Column,
     CreateDateColumn,
-    Entity, 
+    Entity,
     Index,
     JoinColumn,
     ManyToOne,
@@ -43,16 +43,16 @@ export class ClientPermissionEntity implements ClientPermission {
 
     @ManyToOne(() => PolicyEntity, {
         onDelete: 'SET NULL',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'policy_id' })
     policy: Policy | null;
 
     @Column({
-        name: 'realm_scope', 
-        type: 'varchar', 
-        length: 50, 
-        default: 'own', 
+        name: 'realm_scope',
+        type: 'varchar',
+        length: 50,
+        default: 'own',
     })
     realmScope: RealmScopeValue;
 
@@ -69,7 +69,7 @@ export class ClientPermissionEntity implements ClientPermission {
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'client_realm_id' })
     clientRealm: Realm | null;
@@ -88,7 +88,7 @@ export class ClientPermissionEntity implements ClientPermission {
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'permission_realm_id' })
     permissionRealm: Realm | null;

@@ -94,7 +94,8 @@ function catalog(
     definitions: string[] | Definition[] = ['binding'],
     policies: Record<string, Policy> = { binding: { type: 'permissionBinding' } },
 ) {
-    const permissions : Definition[] = definitions.every((entry) => typeof entry === 'string') ?
+    const hasOnlyNames = definitions.every((entry) => typeof entry === 'string');
+    const permissions : Definition[] = hasOnlyNames ?
         [definition(definitions as string[])] :
         definitions as Definition[];
 
@@ -132,6 +133,7 @@ function resource(realmId: string | null, visible = false) {
 async function allowed(evaluator: Awaited<ReturnType<typeof createAuthorizationEvaluator>>, data: PolicyData) {
     try {
         await evaluator.evaluate({ name: 'event_read', data });
+
         return true;
     } catch (e) {
         // Only a permission error is a deny; a refused document fails the caller.
@@ -152,12 +154,17 @@ describe('authorization catalog consumer', () => {
     ] as const)('enforces %s for own, foreign and null realms, even in master', async (realmScope, expected) => {
         const evaluator = await build({ grants: grants({ realm_scope: realmScope, policies: [] }) });
         const rows = [realmA, realmB, null].map((realmId) => ({ realmId }));
+
         expect(await Promise.all(rows.map((row) => allowed(evaluator, resource(row.realmId))))).toEqual(expected);
+
         const compiled = await evaluator.compile({ name: 'event_read' });
+
         expect(compiled.verdict).not.toBe('post');
+
         const predicate = compiled.verdict === 'conditional' ?
             compileFilters(compiled.condition as IFilter | IFilters, { caseSensitive: true }) :
             () => compiled.verdict === 'allow';
+
         expect(rows.map((row) => !!predicate(row))).toEqual(expected);
     });
 
@@ -194,13 +201,21 @@ describe('authorization catalog consumer', () => {
                 visible: false,
             },
         ];
+
         expect(await Promise.all(rows.map((row) => allowed(evaluator, resource(row.realmId, row.visible)))))
             .toEqual([false, true, true, false]);
+
         const compiled = await evaluator.compile({ name: 'event_read' });
+
         expect(compiled.verdict).toBe('conditional');
-        if (compiled.verdict !== 'conditional') throw new Error('Expected a row condition');
+
+        if (compiled.verdict !== 'conditional') {
+            throw new Error('Expected a row condition');
+        }
+
         const predicate = compileFilters(compiled.condition as IFilter | IFilters, { caseSensitive: true });
         const authorized = rows.filter(predicate);
+
         expect({ items: authorized.slice(0, 1).map((row) => row.id), total: authorized.length })
             .toEqual({ items: [2], total: 2 });
     });
@@ -217,8 +232,9 @@ describe('authorization catalog consumer', () => {
                 { realm_scope: 'any', policies: ['hidden'] },
             ),
         });
+
         expect(await allowed(evaluator, resource(realmB, true))).toBe(false);
-        expect(await allowed(evaluator, resource(realmB, false))).toBe(true);
+        expect(await allowed(evaluator, resource(realmB))).toBe(true);
     });
 
     it('preserves nested definition policies and their decision strategy', async () => {
@@ -241,7 +257,8 @@ describe('authorization catalog consumer', () => {
                 },
             }),
         });
-        expect(await allowed(evaluator, resource(realmB, false))).toBe(false);
+
+        expect(await allowed(evaluator, resource(realmB))).toBe(false);
         expect(await allowed(evaluator, resource(realmB, true))).toBe(true);
         expect((await evaluator.compile({ name: 'event_read' })).verdict).toBe('conditional');
     });
@@ -269,6 +286,7 @@ describe('authorization catalog consumer', () => {
                 },
             ),
         });
+
         expect(await allowed(evaluator, resource(realmB))).toBe(false);
         await expect(evaluator.evaluate({
             name: 'event_read',
@@ -306,12 +324,14 @@ describe('authorization catalog consumer', () => {
                 { realm_scope: 'any', policies: ['names'] },
             ),
         });
+
         expect(await evaluator.compile({ name: 'event_read' })).toEqual({ verdict: 'post' });
         expect(await allowed(evaluator, resource(realmB))).toBe(false);
     });
 
     it('neutral-passes reach for a realm-less resource and prevents caller identity or policy-filter overrides', async () => {
         const evaluator = await build({ grants: grants({ realm_scope: 'own', policies: [] }) });
+
         // no REALM_MATCH key: the resource has no realm dimension, so reach
         // neutral-passes; a record check never gets here, since its required
         // `realm` argument always sets the key
@@ -321,7 +341,9 @@ describe('authorization catalog consumer', () => {
             name: 'event_read',
             data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: 5 }),
         })).rejects.toThrow();
+
         const data = resource(realmB);
+
         data.set(BuiltInPolicyType.IDENTITY, {
             id: clientA,
             type: 'client',
@@ -340,6 +362,7 @@ describe('authorization catalog consumer', () => {
 
     it('exposes the pre-gate: reach settles when the resource realm is known, passes when it is not', async () => {
         const evaluator = await build({ grants: grants({ realm_scope: 'own', policies: [] }) });
+
         await expect(evaluator.preEvaluateOneOf({ name: 'event_read' })).resolves.toBeUndefined();
         await expect(evaluator.preEvaluateOneOf({
             name: 'event_read',
@@ -376,6 +399,7 @@ describe('authorization catalog consumer', () => {
             .rejects.toThrow(AuthorizationCatalogStaleError);
 
         const empty = await build({ catalog: { ...catalog(), permissions: [] }, grants: [] });
+
         await expect(empty.preEvaluate({ name: 'event_read' })).rejects.toThrow();
         expect(await allowed(empty, resource(realmA))).toBe(false);
         expect(await empty.compile({ name: 'event_read' })).toEqual({ verdict: 'deny' });
@@ -404,6 +428,7 @@ describe('authorization catalog consumer', () => {
                 { realm_scope: 'any', policies: [] },
             ),
         });
+
         await expect(evaluator.preEvaluate({ name: 'event_delete' })).rejects.toThrow();
         await expect(evaluator.evaluate({ name: 'event_delete', data: resource(realmA) })).rejects.toThrow();
         expect(await evaluator.compile({ name: 'event_delete' })).toEqual({ verdict: 'deny' });
@@ -420,6 +445,7 @@ describe('authorization catalog consumer', () => {
         // an unevaluable definition denies without a grant as well, and a
         // duplicate is refused whichever form it takes
         const ungranted = await build({ catalog: catalog([definition(null)]), grants: [] });
+
         await expect(ungranted.preEvaluate({ name: 'event_read' })).rejects.toThrow();
         expect(await allowed(ungranted, resource(realmA))).toBe(false);
         await expect(build({ catalog: catalog([definition(), definition(null)]) })).rejects.toThrow();
@@ -448,6 +474,7 @@ describe('authorization catalog consumer', () => {
                 },
             ),
         });
+
         expect(await allowed(evaluator, resource(realmA))).toBe(true);
         await expect(evaluator.preEvaluate({ name: 'event_delete' })).rejects.toThrow();
         await expect(evaluator.evaluate({ name: 'event_delete', data: resource(realmA) })).rejects.toThrow();
@@ -465,6 +492,7 @@ describe('authorization catalog consumer', () => {
                 { realm_scope: 'own', policies: [] },
             ),
         });
+
         expect(await allowed(junction, resource(realmA))).toBe(true);
         expect(await allowed(junction, resource(realmB))).toBe(false);
 
@@ -483,6 +511,7 @@ describe('authorization catalog consumer', () => {
         { unprojectable: { type: 'composite', children: [{ type: 'plan109future' }] } },
     ])('denies rather than throws for a catalog tree it cannot project %#', async (policies) => {
         const evaluator = await build({ catalog: catalog(['unprojectable'], policies) });
+
         await expect(evaluator.preEvaluate({ name: 'event_read' })).rejects.toThrow();
         expect(await allowed(evaluator, resource(realmA))).toBe(false);
         expect(await evaluator.compile({ name: 'event_read' })).toEqual({ verdict: 'deny' });
@@ -503,6 +532,7 @@ describe('authorization catalog consumer', () => {
         const row = new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: null });
 
         const anonymous = await createAuthorizationEvaluator({ catalog: document });
+
         await expect(anonymous.preEvaluate({ name: 'open' })).resolves.toBeUndefined();
         await expect(anonymous.evaluate({ name: 'open', data: row })).resolves.toBeUndefined();
         expect(await anonymous.compile({ name: 'open' })).toEqual({ verdict: 'allow' });
@@ -515,6 +545,7 @@ describe('authorization catalog consumer', () => {
         // a caller cannot supply the identity the document did not prove:
         // the key is stripped here exactly as it is overwritten when one was
         const injected = new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: null });
+
         injected.set(BuiltInPolicyType.IDENTITY, {
             id: identity.id,
             type: 'user',
@@ -532,6 +563,7 @@ describe('authorization catalog consumer', () => {
             }),
             identity,
         });
+
         await expect(identified.preEvaluate({ name: 'guarded' })).resolves.toBeUndefined();
         await expect(identified.evaluate({ name: 'guarded', data: row })).resolves.toBeUndefined();
         expect(await identified.compile({ name: 'guarded' })).toEqual({ verdict: 'allow' });
@@ -561,11 +593,12 @@ describe('authorization catalog consumer', () => {
             .toEqual([expect.objectContaining({ path: ['grants'] })]);
 
         const evaluator = await createAuthorizationEvaluator({
-            catalog: document, 
-            identity, 
-            grants: [], 
+            catalog: document,
+            identity,
+            grants: [],
         });
         const row = new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: null });
+
         await expect(evaluator.evaluate({ name: 'guarded', data: row })).rejects.toThrow();
         await expect(evaluator.evaluate({ name: 'identified', data: row })).resolves.toBeUndefined();
     });
@@ -594,6 +627,7 @@ describe('authorization catalog consumer', () => {
                 { realm_scope: 'own', policies: [] },
             ),
         });
+
         expect(await allowed(evaluator, resource(realmA))).toBe(true);
         expect(await allowed(evaluator, resource(realmB))).toBe(false);
         expect(await allowed(evaluator, resource(null))).toBe(false);
@@ -602,6 +636,7 @@ describe('authorization catalog consumer', () => {
             catalog: catalog(['binding'], policies),
             grants: grants({ realm_scope: 'any', policies: ['nested'] }),
         });
+
         expect(await allowed(alone, resource(realmA))).toBe(false);
         expect(await alone.compile({ name: 'event_read' })).toEqual({ verdict: 'deny' });
     });
@@ -609,6 +644,7 @@ describe('authorization catalog consumer', () => {
     it('treats an absent or null reach as own and an absent policy list as none', async () => {
         for (const grant of [{}, { realm_scope: null }, { policies: null }, { realm_scope: null, policies: null }]) {
             const evaluator = await build({ grants: grants(grant) });
+
             expect(await Promise.all([realmA, realmB, null].map((realmId) => allowed(evaluator, resource(realmId)))))
                 .toEqual([true, false, false]);
         }
@@ -677,7 +713,7 @@ describe('authorization catalog consumer', () => {
 
             return [
                 await allowed(evaluator, resource(realmB, true)),
-                await allowed(evaluator, resource(realmB, false)),
+                await allowed(evaluator, resource(realmB)),
             ];
         };
 
@@ -715,23 +751,33 @@ describe('authorization catalog consumer', () => {
             catalog: catalog(['match'], { match: { type: 'realmMatch', attributeName: 'realmId' } }),
             identity: { ...identity, realmName: null },
         });
+
         expect(await allowed(evaluator, resource(null))).toBe(false);
+
         const compiled = await evaluator.compile({ name: 'event_read' });
+
         expect(compiled.verdict).toBe('conditional');
-        if (compiled.verdict !== 'conditional') throw new Error('Expected a row condition');
+
+        if (compiled.verdict !== 'conditional') {
+            throw new Error('Expected a row condition');
+        }
+
         const predicate = compileFilters(compiled.condition as IFilter | IFilters, { caseSensitive: true });
+
         expect(predicate({ realmId: null })).toBeFalsy();
         expect(predicate({ realmId: realmA })).toBeTruthy();
     });
 
     it.each<[string[]]>([[[]], [['binding']]])('denies a definition the identity holds no grant for (%j)', async (policies) => {
         const evaluator = await build({ catalog: catalog(policies), grants: [] });
+
         expect(await allowed(evaluator, resource(realmA))).toBe(policies.length === 0);
         expect(await evaluator.compile({ name: 'event_read' })).toEqual({ verdict: policies.length === 0 ? 'allow' : 'deny' });
     });
 
     it('allows an empty permission catalog that denies every lookup', async () => {
         const evaluator = await build({ catalog: { ...catalog(), permissions: [] }, grants: [] });
+
         expect(await allowed(evaluator, resource(realmA))).toBe(false);
         expect(await evaluator.compile({ name: 'event_read' })).toEqual({ verdict: 'deny' });
     });
@@ -761,6 +807,7 @@ describe('authorization catalog consumer', () => {
                 },
             }),
         });
+
         expect(await allowed(evaluator, resource(realmA))).toBe(false);
         await expect(evaluator.preEvaluate({ name: 'event_read' })).rejects.toThrow();
     });
@@ -772,6 +819,7 @@ describe('authorization catalog consumer', () => {
                 unsupported: { type: 'attributes', query: { visible: { $unsupported: true } } },
             }),
         });
+
         expect(await evaluator.compile({ name: 'event_read' })).toEqual({ verdict: 'post' });
         expect(await allowed(evaluator, resource(realmA, true))).toBe(false);
     });
@@ -784,14 +832,14 @@ describe('authorization catalog consumer', () => {
             ]),
             grants: grants(
                 {
-                    name: 'ok', 
-                    realm_scope: 'any', 
-                    policies: [], 
+                    name: 'ok',
+                    realm_scope: 'any',
+                    policies: [],
                 },
                 {
-                    name: 'no', 
-                    realm_scope: 'none', 
-                    policies: [], 
+                    name: 'no',
+                    realm_scope: 'none',
+                    policies: [],
                 },
             ),
         });
@@ -819,9 +867,11 @@ describe('authorization catalog consumer', () => {
             catalog: catalog([], {}),
             grants: grants({ realm_scope: 'none', policies: [] }),
         });
+
         for (const realmId of [realmA, realmB, null]) {
             await expect(evaluator.evaluate({ name: 'event_read', data: resource(realmId) })).resolves.toBeUndefined();
         }
+
         expect(await evaluator.compile({ name: 'event_read' })).toEqual({ verdict: 'allow' });
     });
 
@@ -843,8 +893,10 @@ describe('authorization catalog consumer', () => {
             [realmA, null],
             [realmA, realmB],
         ];
+
         for (const value of values) {
             const data = new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: value });
+
             expect(await allowed(evaluator, data)).toBe(realmScopeMatches(realmScope, value, realmA, 'master'));
         }
     });
@@ -878,6 +930,7 @@ describe('authorization catalog consumer', () => {
             grants: grants({ realm_scope: 'any', policies: [] }),
             identity,
         }, options);
+
         expect(await allowed(registered, resource(realmA))).toBe(true);
 
         const failing = await createAuthorizationEvaluator({
@@ -888,10 +941,12 @@ describe('authorization catalog consumer', () => {
             grants: grants({ realm_scope: 'any', policies: [] }),
             identity,
         }, options);
+
         expect(await allowed(failing, resource(realmA))).toBe(false);
 
         // the defaults do not know the type: the definition denies, the build does not throw
         const defaults = await build(input);
+
         expect(await allowed(defaults, resource(realmA))).toBe(false);
 
         // a validator without its evaluator projects the tree and then denies it
@@ -900,6 +955,7 @@ describe('authorization catalog consumer', () => {
             grants: grants({ realm_scope: 'any', policies: [] }),
             identity,
         }, { validators: options.validators });
+
         expect(await allowed(projectedOnly, resource(realmA))).toBe(false);
     });
 
@@ -910,6 +966,7 @@ describe('authorization catalog consumer', () => {
             grants: grants({ realm_scope: 'own', policies: [] }),
             identity,
         }, { evaluators: { ...PolicyDefaultEvaluators, permissionBinding: { evaluate: async () => ({ success: true }) } } });
+
         expect(await allowed(evaluator, resource(realmB))).toBe(false);
         expect(await allowed(handed, resource(realmB))).toBe(false);
     });

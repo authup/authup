@@ -27,7 +27,9 @@ export class FakeEventRepository implements IEventRepository {
 
     seed(data: Partial<Event>): Event {
         const entity = this.create(data);
+
         this.rows.push(entity);
+
         return entity;
     }
 
@@ -61,6 +63,7 @@ export class FakeEventRepository implements IEventRepository {
         this.saveCalls.push(entity);
 
         const index = this.rows.findIndex((row) => row.id === entity.id);
+
         if (index === -1) {
             this.rows.push(entity);
         } else {
@@ -82,14 +85,18 @@ export class FakeEventRepository implements IEventRepository {
 
         if (options.owner) {
             const { owner } = options;
+
             data = data.filter((row) => row.actorId === owner.actorId &&
                 row.actorType === owner.actorType);
         }
+
         if (options.realmId) {
             data = data.filter((row) => row.realmId === options.realmId);
         }
+
         if (options.visibility) {
             const { owner, realmIds } = options.visibility;
+
             data = data.filter((row) => realmIds.includes(row.realmId) ||
                 (!!owner && row.actorId === owner.actorId && row.actorType === owner.actorType));
         }
@@ -108,18 +115,18 @@ export class FakeEventRepository implements IEventRepository {
         const since = new Date(filter.since).getTime();
 
         return this.rows.filter((row) => {
-            if (row.name !== filter.name) {
+            if ((row.name !== filter.name) || (new Date(row.createdAt).getTime() <= since)) {
                 return false;
             }
-            if (new Date(row.createdAt).getTime() <= since) {
-                return false;
-            }
+
             if (filter.actorName && row.actorName !== filter.actorName) {
                 return false;
             }
+
             if (filter.requestIpAddress && row.requestIpAddress !== filter.requestIpAddress) {
                 return false;
             }
+
             if (typeof filter.realmId !== 'undefined') {
                 if (filter.realmId === null) {
                     if (row.realmId !== null) {

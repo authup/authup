@@ -58,6 +58,7 @@ export function defineSchema<
 
     if (options.pathPrefix) {
         const keys = Object.keys(schema) as (keyof Schema<T, D, E>)[];
+
         for (const key of keys) {
             const entry = schema[key];
 

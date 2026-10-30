@@ -45,9 +45,9 @@ type MountOptions = {
 
 function mountAuthorizePage(options: MountOptions = {}) {
     const {
-        data = {}, 
-        baseURL = 'http://localhost:3001/', 
-        url, 
+        data = {},
+        baseURL = 'http://localhost:3001/',
+        url,
     } = options;
 
     if (url) {
@@ -95,6 +95,7 @@ describe('authorize page', () => {
         });
 
         const url = new URL(window.location.href);
+
         expect(url.searchParams.get('provider')).toBeNull();
 
         // and only that one: the request the page renders survives

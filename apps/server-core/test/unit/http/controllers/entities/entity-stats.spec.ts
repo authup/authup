@@ -66,7 +66,7 @@ const STATS_COLLECTIONS = [
 describe('src/http/controllers/entities/* (@stats)', () => {
     const suite = createTestApplication();
 
-    const adminAuthorization = `Basic ${Buffer.from('admin:start123').toString('base64')}`;
+    const adminAuthorization = `Basic ${Buffer.from('admin:start123').toBase64()}`;
 
     let realmId: string;
     let userToken: string;
@@ -81,9 +81,11 @@ describe('src/http/controllers/entities/* (@stats)', () => {
         await suite.setup();
 
         const { data: realm } = await suite.client.realm.create(createFakeRealm());
+
         realmId = realm.id;
 
         const first = createFakeUser({ realmId });
+
         await suite.client.user.create(first);
         await suite.client.user.create(createFakeUser({ realmId }));
 
@@ -92,6 +94,7 @@ describe('src/http/controllers/entities/* (@stats)', () => {
             password: first.password!,
             realm_id: realmId,
         });
+
         userToken = grant.access_token;
     });
 
@@ -180,6 +183,7 @@ describe('src/http/controllers/entities/* (@stats)', () => {
 
     it('counts a row once however many to-many join rows its filter matches', async () => {
         const name = `composite-${Date.now()}`;
+
         await suite.client.policy.createBuiltIn({
             name,
             type: BuiltInPolicyType.COMPOSITE,

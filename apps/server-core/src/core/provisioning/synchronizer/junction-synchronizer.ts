@@ -24,11 +24,11 @@ export class ProvisioningJunctionSynchronizer<T extends ObjectLiteral = ObjectLi
     async synchronize(
         owner: {
             id: string,
-            realmId?: string | null 
+            realmId?: string | null
         },
         targets: Array<{
             id: string,
-            realmId?: string | null 
+            realmId?: string | null
         }>,
         targetKey: string,
         targetRealmKey: string,

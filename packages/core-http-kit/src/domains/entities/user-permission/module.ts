@@ -27,6 +27,7 @@ export class UserPermissionAPI extends BaseAPI implements IUserPermissionAPI {
 
     async getMany(data?: EntityQueryInput<UserPermission>) : Promise<EntityCollectionResponse<UserPermission>> {
         const response = await this.client.get(`user-permissions${buildQueryString(data)}`);
+
         return response.data;
     }
 

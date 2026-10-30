@@ -60,12 +60,14 @@ export async function runDeviceLogin(client: Client, options: DeviceLoginOptions
             });
         } catch (e) {
             const code = getClientErrorCode(e);
+
             if (code === ErrorCode.OAUTH_AUTHORIZATION_PENDING) {
                 continue;
             }
 
             if (code === ErrorCode.OAUTH_SLOW_DOWN) {
                 interval += DEVICE_SLOW_DOWN_MS;
+
                 continue;
             }
 

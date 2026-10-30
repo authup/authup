@@ -17,10 +17,10 @@ import {
 } from 'typeorm';
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type {
-    IdentityProviderMappingSyncMode, 
-    IdentityProviderRoleMapping, 
+    IdentityProviderMappingSyncMode,
+    IdentityProviderRoleMapping,
     Realm,
-    Role, 
+    Role,
 } from '@authup/core-kit';
 import { IdentityProviderEntity } from '../identity-provider/index.ts';
 import { RoleEntity } from '../role/index.ts';
@@ -33,31 +33,31 @@ export class IdentityProviderRoleMappingEntity implements IdentityProviderRoleMa
     id: string;
 
     @Column({
-        name: 'synchronization_mode', 
-        type: 'varchar', 
-        length: 64, 
-        nullable: true, 
+        name: 'synchronization_mode',
+        type: 'varchar',
+        length: 64,
+        nullable: true,
     })
     synchronizationMode: `${IdentityProviderMappingSyncMode}` | null;
 
     @Column({
         type: 'varchar',
         length: 64,
-        nullable: true, 
+        nullable: true,
     })
     name: string | null;
 
     @Column({
         type: 'varchar',
         length: 128,
-        nullable: true, 
+        nullable: true,
     })
     value: string | null;
 
     @Column({
-        name: 'value_is_regex', 
-        type: 'boolean', 
-        default: false, 
+        name: 'value_is_regex',
+        type: 'boolean',
+        default: false,
     })
     valueIsRegex: boolean;
 
@@ -85,7 +85,7 @@ export class IdentityProviderRoleMappingEntity implements IdentityProviderRoleMa
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'role_realm_id' })
     roleRealm: RealmEntity | null;

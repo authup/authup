@@ -33,11 +33,13 @@ export abstract class BaseKey {
 
     async toUint8Array(): Promise<Uint8Array> {
         const arrayBuffer = await this.toArrayBuffer();
+
         return new Uint8Array(arrayBuffer);
     }
 
     async toBase64() : Promise<string> {
         const arrayBuffer = await this.toArrayBuffer();
+
         return arrayBufferToBase64(arrayBuffer);
     }
 

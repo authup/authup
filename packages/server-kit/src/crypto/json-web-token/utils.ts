@@ -20,6 +20,7 @@ export function createErrorForJWTError(e: unknown) : JWTError {
                     if (typeof e.date === 'string' || e.date instanceof Date) {
                         return JWTError.notActiveBefore(e.date);
                     }
+
                     break;
                 }
                 case 'JsonWebTokenError': {

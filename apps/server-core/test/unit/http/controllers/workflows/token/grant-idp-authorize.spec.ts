@@ -29,18 +29,19 @@ import { createFakeClient, createFakeOAuth2IdentityProvider, httpRequest } from 
 import { createTestApplication } from '../../../../../app';
 
 function buildFakeAccessToken(claims: Record<string, unknown>): string {
-    const header = btoa(JSON.stringify({
+    const header = Buffer.from(JSON.stringify({
         alg: 'none',
-        typ: 'JWT', 
-    }));
-    const payload = btoa(JSON.stringify(claims));
+        typ: 'JWT',
+    }), 'latin1').toBase64();
+    const payload = Buffer.from(JSON.stringify(claims), 'latin1').toBase64();
+
     return `${header}.${payload}.fakesignature`;
 }
 
 function createFakeIdpServer(): {
     server: Server,
     start: () => Promise<string>,
-    stop: () => Promise<void> 
+    stop: () => Promise<void>
 } {
     const server = createServer((req, res) => {
         if (req.url === '/token' && req.method === 'POST') {
@@ -56,12 +57,14 @@ function createFakeIdpServer(): {
                 token_type: 'Bearer',
                 expires_in: 3600,
             }));
+
             return;
         }
 
         if (req.url === '/authorize') {
             res.writeHead(200, { 'Content-Type': 'text/plain' });
             res.end('authorize');
+
             return;
         }
 
@@ -74,6 +77,7 @@ function createFakeIdpServer(): {
         start: () => new Promise<string>((resolve) => {
             server.listen(0, '127.0.0.1', () => {
                 const address = server.address() as AddressInfo;
+
                 resolve(`http://127.0.0.1:${address.port}`);
             });
         }),
@@ -118,6 +122,7 @@ describe('identity-provider authorization code grant', () => {
 
         for (const scopeName of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {
             const { data: scope } = await suite.client.scope.getOne(scopeName);
+
             await suite.client.clientScope.create({
                 scopeId: scope.id,
                 clientId: client.id,
@@ -143,6 +148,7 @@ describe('identity-provider authorization code grant', () => {
 
     function readPendingLoginCookie(response: Response) : string | null {
         const header = response.headers.get('set-cookie');
+
         if (!header) {
             return null;
         }
@@ -171,6 +177,7 @@ describe('identity-provider authorization code grant', () => {
                 },
             },
         );
+
         expect(redeem.status).toEqual(200);
 
         const grant = await redeem.json();
@@ -180,8 +187,9 @@ describe('identity-provider authorization code grant', () => {
                 authorization: `Bearer ${grant.access_token}`,
                 'content-type': 'application/json',
             },
-            body: Buffer.from(codeRequest, 'base64url').toString('utf-8'),
+            body: new TextDecoder().decode(Uint8Array.fromBase64(codeRequest, { alphabet: 'base64url' })),
         });
+
         expect(approve.status).toEqual(200);
 
         const { url } = await approve.json();
@@ -199,9 +207,11 @@ describe('identity-provider authorization code grant', () => {
         expect(response.status).toEqual(302);
 
         const location = response.headers.get('location') as string;
+
         expect(location).toBeDefined();
 
         const redirectURL = new URL(location);
+
         expect(redirectURL.origin).toEqual(fakeIdpBaseURL);
         expect(redirectURL.searchParams.get('state')).toBeDefined();
     });
@@ -214,6 +224,7 @@ describe('identity-provider authorization code grant', () => {
             );
 
         federatedCookie = readPendingLoginCookie(authorizeOutResponse);
+
         const outLocation = authorizeOutResponse.headers.get('location') as string;
         const outURL = new URL(outLocation);
         const state = outURL.searchParams.get('state');
@@ -230,16 +241,19 @@ describe('identity-provider authorization code grant', () => {
         pendingLoginCookie = readPendingLoginCookie(authorizeInResponse);
 
         const inLocation = authorizeInResponse.headers.get('location') as string;
+
         expect(inLocation).toBeDefined();
         pendingLoginCookie = readPendingLoginCookie(authorizeInResponse);
 
         // The callback returns to the hosted page, never to the RP.
         const hostedURL = new URL(inLocation);
+
         expect(hostedURL.pathname.endsWith('/authorize')).toBe(true);
         expect(hostedURL.searchParams.get('code')).toBeNull();
 
         const inURL = await completeThroughLadder(hostedURL);
         const authupCode = inURL.searchParams.get('code');
+
         expect(authupCode).toBeDefined();
         expect(authupCode!.length).toBeGreaterThan(0);
 
@@ -272,6 +286,7 @@ describe('identity-provider authorization code grant', () => {
             );
 
         federatedCookie = readPendingLoginCookie(authorizeOutResponse);
+
         const outLocation = authorizeOutResponse.headers.get('location') as string;
         const state = new URL(outLocation).searchParams.get('state');
 
@@ -282,7 +297,9 @@ describe('identity-provider authorization code grant', () => {
             );
 
         const inLocation = authorizeInResponse.headers.get('location') as string;
+
         pendingLoginCookie = readPendingLoginCookie(authorizeInResponse);
+
         const authupCode = (await completeThroughLadder(new URL(inLocation))).searchParams.get('code');
 
         await suite.client
@@ -330,6 +347,7 @@ describe('identity-provider authorization code grant', () => {
             );
 
         federatedCookie = readPendingLoginCookie(authorizeOutResponse);
+
         const state = new URL(authorizeOutResponse.headers.get('location') as string)
             .searchParams.get('state');
 
@@ -340,6 +358,7 @@ describe('identity-provider authorization code grant', () => {
             );
 
         pendingLoginCookie = readPendingLoginCookie(authorizeInResponse);
+
         const authupCode = (await completeThroughLadder(
             new URL(authorizeInResponse.headers.get('location') as string),
             openidCodeRequest,
@@ -357,13 +376,14 @@ describe('identity-provider authorization code grant', () => {
         expect(tokenResponse.id_token).toBeDefined();
 
         const payload = JSON.parse(
-            Buffer.from(tokenResponse.id_token!.split('.')[1], 'base64url').toString('utf8'),
+            new TextDecoder().decode(Uint8Array.fromBase64(tokenResponse.id_token!.split('.')[1], { alphabet: 'base64url' })),
         ) as { sid?: unknown };
 
         expect(typeof payload.sid).toEqual('string');
         expect((payload.sid as string).length).toBeGreaterThan(0);
 
         const introspection = await suite.client.token.introspect({ token: tokenResponse.access_token }, { authorizationHeaderInherit: true });
+
         expect(payload.sid).toEqual(introspection.session_id);
     });
 
@@ -379,6 +399,7 @@ describe('identity-provider authorization code grant', () => {
             types: [IdentityType.CLIENT],
             realmId: null,
         });
+
         await suite.client.client.update(client.id, { accessPolicyId: denyPolicy.id });
 
         const authorizeOutResponse = await suite.client
@@ -388,6 +409,7 @@ describe('identity-provider authorization code grant', () => {
             );
 
         federatedCookie = readPendingLoginCookie(authorizeOutResponse);
+
         const state = new URL(authorizeOutResponse.headers.get('location') as string)
             .searchParams.get('state');
 
@@ -401,6 +423,7 @@ describe('identity-provider authorization code grant', () => {
         pendingLoginCookie = readPendingLoginCookie(authorizeInResponse);
 
         const inURL = new URL(authorizeInResponse.headers.get('location') as string);
+
         expect(inURL.pathname.endsWith('/authorize')).toBe(true);
         expect(inURL.searchParams.get('error')).toEqual(OAuth2ErrorCode.ACCESS_DENIED);
         expect(inURL.searchParams.get('code')).toBeNull();
@@ -418,6 +441,7 @@ describe('identity-provider authorization code grant', () => {
             );
 
         federatedCookie = readPendingLoginCookie(authorizeOutResponse);
+
         const state = new URL(authorizeOutResponse.headers.get('location') as string)
             .searchParams.get('state');
 
@@ -431,10 +455,12 @@ describe('identity-provider authorization code grant', () => {
         pendingLoginCookie = readPendingLoginCookie(authorizeInResponse);
 
         const hostedURL = new URL(authorizeInResponse.headers.get('location') as string);
+
         expect(hostedURL.searchParams.get('error')).toBeNull();
         expect(pendingLoginCookie).toBeTruthy();
 
         const inURL = await completeThroughLadder(hostedURL);
+
         expect(inURL.searchParams.get('code')).toBeTruthy();
     });
 });

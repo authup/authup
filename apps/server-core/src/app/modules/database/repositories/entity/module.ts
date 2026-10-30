@@ -51,12 +51,15 @@ export abstract class EntityRepositoryAdapter<
         const { alias } = this.options;
 
         const qb = this.repository.createQueryBuilder(alias);
+
         qb.groupBy(`${alias}.id`);
 
         const { pagination } = applyQuery(qb, query);
+
         this.applyRealmScopeSelect(qb);
 
         const { data, total } = await fetchMany(qb, query);
+
         await this.extendMany(data);
 
         return {
@@ -70,6 +73,7 @@ export abstract class EntityRepositoryAdapter<
 
     async findOneById(id: string): Promise<T | null> {
         const entity = await this.findOneBy({ id });
+
         if (entity) {
             await this.extendOne(entity);
         }
@@ -83,11 +87,13 @@ export abstract class EntityRepositoryAdapter<
         }
 
         const qb = await this.createNameQueryBuilder(name, realmKey);
+
         if (!qb) {
             return null;
         }
 
         const entity = await qb.getOne();
+
         if (entity) {
             await this.extendOne(entity);
         }
@@ -162,11 +168,13 @@ export abstract class EntityRepositoryAdapter<
         const { alias } = this.options;
 
         let qb : SelectQueryBuilder<T> | undefined;
+
         if (isUUID(idOrName)) {
             qb = this.repository.createQueryBuilder(alias);
             qb.where(`${alias}.id = :id`, { id: idOrName });
         } else {
             qb = await this.createNameQueryBuilder(idOrName, realmKey);
+
             if (!qb) {
                 return null;
             }
@@ -178,6 +186,7 @@ export abstract class EntityRepositoryAdapter<
         this.applyRealmScopeSelect(qb, ['id']);
 
         const entity = await qb.getOne();
+
         if (entity) {
             await this.extendOne(entity);
         }
@@ -191,6 +200,7 @@ export abstract class EntityRepositoryAdapter<
      */
     protected applyRealmScopeSelect(qb: SelectQueryBuilder<T>, extraColumns: string[] = []): void {
         const { alias, realmScope } = this.options;
+
         if (!realmScope) {
             return;
         }
@@ -209,16 +219,18 @@ export abstract class EntityRepositoryAdapter<
      */
     protected async createNameQueryBuilder(name: string, realmKey?: string): Promise<SelectQueryBuilder<T> | undefined> {
         const {
-            alias, 
-            nameColumn = 'name', 
-            realmRepository, 
+            alias,
+            nameColumn = 'name',
+            realmRepository,
         } = this.options;
 
         const qb = this.repository.createQueryBuilder(alias);
+
         qb.where(`${alias}.${nameColumn} = :name`, { name });
 
         if (realmKey && realmRepository) {
             const realmId = await realmRepository.resolveId(realmKey);
+
             if (!realmId) {
                 return undefined;
             }

@@ -57,6 +57,7 @@ describe('src/http/controllers/key', () => {
         const response = await suite.client.key.getMany({ filters: { realmId: realm.id } });
 
         const uses = response.data.map((entity) => entity.use).sort();
+
         expect(uses).toEqual([JWKUse.ENCRYPTION, JWKUse.SIGNATURE]);
 
         for (const entity of response.data) {
@@ -90,9 +91,11 @@ describe('src/http/controllers/key', () => {
         });
 
         const { data: byId } = await suite.client.key.getOne(created.id);
+
         expect(byId.id).toEqual(created.id);
 
         const response = await suite.client.get(`realms/${realm.id}/keys/read-target`);
+
         expect(response.data.data.id).toEqual(created.id);
     });
 
@@ -155,6 +158,7 @@ describe('src/http/controllers/key', () => {
 
         let jwks = await suite.client.get(`realms/${realm.id}/jwks`);
         let kids = jwks.data.keys.map((key: { kid: string }) => key.kid);
+
         expect(kids).toContain(created.id);
 
         await suite.client.key.update(created.id, { status: KeyStatus.DISABLED });
@@ -173,20 +177,23 @@ describe('src/http/controllers/key', () => {
             certificate: CERTIFICATE,
             realmId: realm.id,
         });
+
         expect(imported.decryptionKey).toBeNull();
         expect(imported.certificate).toEqual(CERTIFICATE);
 
         const certificate = new X509Certificate(CERTIFICATE);
-        const expectedX5c = [certificate.raw.toString('base64')];
+        const expectedX5c = [certificate.raw.toBase64()];
         const expectedThumbprint = createHash('sha256')
             .update(certificate.raw)
             .digest('base64url');
 
         const collectionPaths = ['jwks', `realms/${realm.id}/jwks`];
+
         for (const path of collectionPaths) {
             const response = await suite.client.get(path);
             const entry = (response.data.keys as OAuth2JsonWebKey[])
                 .find((key) => key.kid === imported.id);
+
             expect(entry).toMatchObject({
                 x5c: expectedX5c,
                 'x5t#S256': expectedThumbprint,
@@ -194,8 +201,10 @@ describe('src/http/controllers/key', () => {
         }
 
         const recordPaths = [`jwks/${imported.id}`, `realms/${realm.id}/jwks/${imported.id}`];
+
         for (const path of recordPaths) {
             const response = await suite.client.get(path);
+
             expect(response.data).toMatchObject({
                 kid: imported.id,
                 x5c: expectedX5c,
@@ -214,6 +223,7 @@ describe('src/http/controllers/key', () => {
         let response = await suite.client.get(`realms/${realm.id}/jwks`);
         let entry = (response.data.keys as OAuth2JsonWebKey[])
             .find((key) => key.kid === withoutCertificate.id);
+
         expect(entry).not.toHaveProperty('x5c');
         expect(entry).not.toHaveProperty('x5t#S256');
 
@@ -252,6 +262,7 @@ describe('src/http/controllers/key', () => {
         });
 
         const { data: deleted } = await suite.client.key.delete(created.id);
+
         expect(deleted.id).toEqual(created.id);
 
         await expectClientError(
@@ -275,6 +286,7 @@ describe('src/http/controllers/key', () => {
             name: 'audited-key',
             realmId: realm.id,
         });
+
         await suite.client.key.update(created.id, { status: KeyStatus.PASSIVE });
         await suite.client.key.delete(created.id);
 
@@ -283,6 +295,7 @@ describe('src/http/controllers/key', () => {
         expect(data).toHaveLength(3);
         expect(new Set(data.map((row) => row.name)))
             .toEqual(new Set(['created', 'updated', 'deleted']));
+
         for (const row of data) {
             expect(row.realmId).toEqual(realm.id);
             expect(row.actorType).toEqual('user');
@@ -294,6 +307,7 @@ describe('src/http/controllers/key', () => {
         }
 
         const updatedRow = data.find((row) => row.name === 'updated');
+
         expect(updatedRow!.data!.diff).toEqual({ status: { next: KeyStatus.PASSIVE, previous: KeyStatus.ACTIVE } });
     });
     describe.each([
@@ -311,9 +325,11 @@ describe('src/http/controllers/key', () => {
                 username: 'admin',
                 password: 'start123',
             });
+
             expect(extractTokenHeader(token).kid).toEqual(key.id);
 
             const request = () => httpRequest(suite, 'GET', '/users/@me', { headers: { Authorization: `Bearer ${token}` } });
+
             expect((await request()).status).toEqual(200);
 
             await retire(key.id);
@@ -333,9 +349,11 @@ describe('src/http/controllers/key', () => {
             username: 'admin',
             password: 'start123',
         });
+
         expect(extractTokenHeader(token).kid).toEqual(key.id);
 
         const request = () => httpRequest(suite, 'GET', '/users/@me', { headers: { Authorization: `Bearer ${token}` } });
+
         expect((await request()).status).toEqual(200);
 
         await suite.client.key.update(key.id, { status: KeyStatus.DISABLED });

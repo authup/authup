@@ -89,6 +89,7 @@ export async function readPathDeleteImpact(
 
     try {
         const subtree = await collectPathSubtree(client, realmId, path);
+
         if (subtree.truncated) {
             return unresolved;
         }

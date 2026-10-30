@@ -27,18 +27,22 @@ export function getJWTClaimByPattern(
     const output : unknown[] = [];
 
     const keys = expandPath(claims, pattern);
+
     for (const key of keys) {
         const info = getPathInfo(claims, key);
+
         if (!info.exists) {
             continue;
         }
 
         if (typeof equalTo === 'undefined' || equalTo === null) {
             output.push(info.value);
+
             continue;
         }
 
         let regex : RegExp | undefined;
+
         if (equalToIsRegex && typeof equalTo === 'string') {
             regex = new RegExp(equalTo, 'gi');
         } else if (equalTo instanceof RegExp) {

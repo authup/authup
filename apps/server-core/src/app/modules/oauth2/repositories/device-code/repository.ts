@@ -39,6 +39,7 @@ export class OAuth2DeviceCodeRepository implements IOAuth2DeviceCodeRepository {
             entity.id,
             { ttl: OAUTH2_DEVICE_CODE_MAX_AGE * 1000 },
         );
+
         if (!added) {
             return false;
         }
@@ -54,6 +55,7 @@ export class OAuth2DeviceCodeRepository implements IOAuth2DeviceCodeRepository {
 
     async findOneById(id: string): Promise<OAuth2DeviceCode | null> {
         const request = await this.cache.get<OAuth2DeviceCodeRequest>(this.buildCodeKey(id));
+
         if (!request) {
             return null;
         }
@@ -65,6 +67,7 @@ export class OAuth2DeviceCodeRepository implements IOAuth2DeviceCodeRepository {
 
     async findOneByUserCode(userCode: string): Promise<OAuth2DeviceCode | null> {
         const id = await this.cache.get<string>(this.buildUserCodeKey(userCode));
+
         if (!id) {
             return null;
         }
@@ -74,11 +77,13 @@ export class OAuth2DeviceCodeRepository implements IOAuth2DeviceCodeRepository {
 
     async popOneById(id: string): Promise<OAuth2DeviceCode | null> {
         const request = await this.cache.pop<OAuth2DeviceCodeRequest>(this.buildCodeKey(id));
+
         if (!request) {
             return null;
         }
 
         const decision = await this.cache.pop<OAuth2DeviceCodeDecision>(this.buildDecisionKey(id));
+
         await this.cache.drop(this.buildPollKey(id));
 
         return this.merge(request, decision);
@@ -94,6 +99,7 @@ export class OAuth2DeviceCodeRepository implements IOAuth2DeviceCodeRepository {
 
     async decide(id: string, decision: OAuth2DeviceCodeDecision, expiresAt: number): Promise<boolean> {
         const remaining = expiresAt - this.now();
+
         if (remaining <= 0) {
             return false;
         }
@@ -127,6 +133,7 @@ export class OAuth2DeviceCodeRepository implements IOAuth2DeviceCodeRepository {
 
     async lookupThrottle(key: string): Promise<number | null> {
         const deadline = await this.cache.get<number>(this.buildLookupLockKey(key));
+
         if (typeof deadline !== 'number') {
             return null;
         }
@@ -175,6 +182,7 @@ export class OAuth2DeviceCodeRepository implements IOAuth2DeviceCodeRepository {
             1,
             { ttl: OAUTH2_DEVICE_LOOKUP_ATTEMPT_WINDOW * 1000 },
         );
+
         if (!first) {
             return;
         }

@@ -43,7 +43,7 @@ describe('redactSensitiveURLParams', () => {
     });
 
     it('should redact the parameters that carry an encoded authorize request', () => {
-        const codeRequest = Buffer.from(JSON.stringify({ login_hint: 'a@b.c' })).toString('base64');
+        const codeRequest = Buffer.from(JSON.stringify({ login_hint: 'a@b.c' })).toBase64();
         const redacted = redactSensitiveURLParams(`/identity-providers/x/authorize-out?codeRequest=${codeRequest}` +
             '&redirect=%2Fauthorize%3Flogin_hint%3Da%2540b.c');
 
@@ -66,6 +66,7 @@ describe('redactSensitiveURLParams', () => {
 
     it('should leave non-sensitive params untouched', () => {
         const url = '/users?filter%5Bname%5D=foo&page%5Blimit%5D=10';
+
         expect(redactSensitiveURLParams(url)).toEqual(url);
     });
 });

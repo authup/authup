@@ -31,6 +31,7 @@ export function buildTitle(
 
     if (ctx.icon) {
         let iconContent : VNodeChild;
+
         if (hasNormalizedSlot(TitleSlotName.ICON)) {
             iconContent = normalizeSlot(TitleSlotName.ICON, {}, ctx.slots);
         }
@@ -46,6 +47,7 @@ export function buildTitle(
     }
 
     let content: VNodeChild;
+
     if (typeof ctx.text === 'function') {
         content = ctx.text();
     } else {

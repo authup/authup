@@ -59,12 +59,15 @@ function settlesWithin<T>(promise: Promise<T>, ms: number) : Promise<'settled' |
 function buildApp(transport: Transport, options: { shared?: boolean } = {}) {
     const pinia = createPinia();
     const app = createApp({ render: () => h('div') });
+
     app.use(pinia);
 
     const clients : IClient[] = [];
     const createClient = () => {
         const client = new Client({ baseURL: 'https://auth.example.com/', transport });
+
         clients.push(client);
+
         return client;
     };
 
@@ -82,6 +85,7 @@ function buildApp(transport: Transport, options: { shared?: boolean } = {}) {
     // A server render restores the session from the cookies before the hook
     // installs, which is what turns the hook on.
     const store = injectStore(pinia, app);
+
     store.accessToken = 'at-1';
     store.refreshToken = 'rt-1';
 
@@ -171,9 +175,9 @@ describe('core/http-client/build', () => {
                 // token endpoint answers a refused client with
                 const body = request.url.endsWith('/token') ?
                     {
-                        code: 'invalid_client', 
-                        error: 'invalid_client', 
-                        message: 'Client authentication failed', 
+                        code: 'invalid_client',
+                        error: 'invalid_client',
+                        message: 'Client authentication failed',
                     } :
                     { code: 'expired_token', message: 'The token is expired.' };
 

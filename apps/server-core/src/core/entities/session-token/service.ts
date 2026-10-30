@@ -84,6 +84,7 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
         entity: SessionToken,
     ): Promise<void> {
         const session = entity.session as Session | undefined;
+
         if (!session) {
             throw new PermissionError();
         }
@@ -103,6 +104,7 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
     ): Promise<boolean> {
         try {
             await this.evaluateToken(actor, name, entity);
+
             return true;
         } catch (e) {
             if (isPermissionError(e)) {
@@ -120,12 +122,14 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
         const parsed = await decodeQuery(query, { schema: sessionTokenSchema, actor });
 
         let canReadAll = true;
+
         try {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.SESSION_READ });
         } catch (e) {
             if (!actor.identity) {
                 throw e;
             }
+
             canReadAll = false;
         }
 
@@ -151,11 +155,13 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
         for (const entity of entities) {
             if (this.isOwnedBy(entity, actor)) {
                 data.push(entity);
+
                 continue;
             }
 
             if (!await this.reachesToken(actor, PermissionName.SESSION_READ, entity)) {
                 total -= 1;
+
                 continue;
             }
 
@@ -211,6 +217,7 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
         });
 
         let canDeleteAll = true;
+
         try {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.SESSION_DELETE });
         } catch {
@@ -228,6 +235,7 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
         const entities = await this.repository.findAllByQuery(scoped);
 
         let count = 0;
+
         for (const entity of entities) {
             if (
                 !this.isOwnedBy(entity, actor) &&
@@ -293,6 +301,7 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
         }
 
         let parsed;
+
         try {
             parsed = SessionTokenService.queryCodec.decode(query);
         } catch {

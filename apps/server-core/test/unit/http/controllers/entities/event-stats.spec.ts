@@ -70,6 +70,7 @@ function toDay(date: Date): string {
  */
 async function recompute(dataSource: DataSource, ...dates: Date[]) {
     const repository = new EventAggregateRepositoryAdapter(dataSource);
+
     for (const date of dates) {
         await repository.recompute(toDay(date));
     }
@@ -100,7 +101,7 @@ function buildQuery(
 describe('src/http/controllers/entities/event (stats)', () => {
     const suite = createTestApplication();
 
-    const adminAuthorization = `Basic ${Buffer.from('admin:start123').toString('base64')}`;
+    const adminAuthorization = `Basic ${Buffer.from('admin:start123').toBase64()}`;
 
     let masterRealmId: string;
     let realmBId: string;
@@ -113,23 +114,29 @@ describe('src/http/controllers/entities/event (stats)', () => {
         dataSource = suite.container.resolve(DatabaseInjectionKey.DataSource);
 
         const { data: master } = await suite.client.realm.getOne('master');
+
         masterRealmId = master.id;
 
         const { data: realmB } = await suite.client.realm.create(createFakeRealm());
+
         realmBId = realmB.id;
 
         // two logins in master, one in realm B; every stats read below happens
         // after the seeding, since a read is cached per actor for a minute
         const userM1 = createFakeUser();
+
         await suite.client.user.create(userM1);
+
         const grant = await suite.client.token.createWithPassword({
             username: userM1.name,
             password: userM1.password!,
         });
+
         selfClient = new HTTPClient({ baseURL: suite.baseURL });
         selfClient.setAuthorizationHeader({ type: 'Bearer', token: grant.access_token });
 
         const userM2 = createFakeUser();
+
         await suite.client.user.create(userM2);
         await suite.client.token.createWithPassword({
             username: userM2.name,
@@ -137,6 +144,7 @@ describe('src/http/controllers/entities/event (stats)', () => {
         });
 
         const userB = createFakeUser({ realmId: realmB.id });
+
         await suite.client.user.create(userB);
         await suite.client.token.createWithPassword({
             username: userB.name,
@@ -170,6 +178,7 @@ describe('src/http/controllers/entities/event (stats)', () => {
         expect(new Date(meta.from).getTime()).toBeLessThan(new Date(meta.to).getTime());
 
         expect(data.length).toBeGreaterThan(0);
+
         for (const row of data) {
             expect(row.createdAt).toMatch(DAY_BUCKET);
             expect(row.count).toBeTypeOf('number');
@@ -185,6 +194,7 @@ describe('src/http/controllers/entities/event (stats)', () => {
 
         expect(meta.bucket).toEqual('hour');
         expect(meta.from).toMatch(HOUR_BUCKET);
+
         for (const row of data) {
             expect(row.createdAt).toMatch(HOUR_BUCKET);
         }
@@ -195,10 +205,13 @@ describe('src/http/controllers/entities/event (stats)', () => {
     it('buckets a UTC day edge into the two days it separates', async () => {
         const refId = randomUUID();
         const today = new Date();
+
         today.setUTCHours(0, 0, 0, 0);
+
         const before = new Date(today.getTime() - 1000);
 
         const repository = dataSource.getRepository<Event>(EventEntity);
+
         for (const createdAt of [before, today]) {
             const entity = await repository.save(repository.create({
                 id: randomUUID(),
@@ -207,6 +220,7 @@ describe('src/http/controllers/entities/event (stats)', () => {
                 refType: 'edge',
                 refId,
             }));
+
             await repository.update({ id: entity.id }, { createdAt: createdAt.toISOString() });
         }
 
@@ -252,13 +266,19 @@ describe('src/http/controllers/entities/event (stats)', () => {
         const query = buildQueryString<Event>(buildQuery('day', since(7 * DAY_IN_MS)));
 
         const byId = await httpRequest(suite, 'GET', `/realms/${realmBId}/events/@stats${query}`, { headers: { Authorization: adminAuthorization } });
+
         expect(byId.status).toEqual(200);
+
         const { data: dataB } = await byId.json();
+
         expect(countOf(dataB, EventName.LOGIN)).toEqual(1);
 
         const byName = await httpRequest(suite, 'GET', `/realms/master/events/@stats${query}`, { headers: { Authorization: adminAuthorization } });
+
         expect(byName.status).toEqual(200);
+
         const { data: dataMaster } = await byName.json();
+
         expect(countOf(dataMaster, EventName.LOGIN)).toBeGreaterThanOrEqual(2);
         expect(countOf(dataMaster, EventName.LOGIN)).toEqual(
             countOf((await suite.client.event.getStats(
@@ -305,12 +325,15 @@ describe('src/http/controllers/entities/event (stats)', () => {
 
     it('bounds the window above by the filter', async () => {
         const to = new Date();
+
         to.setUTCHours(0, 0, 0, 0);
+
         const { data, meta } = await suite.client.event.getStats(
             buildQuery('day', new Date(to.getTime() - (7 * DAY_IN_MS)).toISOString(), lt('createdAt', to.toISOString())),
         );
 
         expect(meta.to).toEqual(to.toISOString());
+
         for (const row of data) {
             expect(new Date(row.createdAt).getTime()).toBeLessThan(to.getTime());
         }
@@ -319,6 +342,7 @@ describe('src/http/controllers/entities/event (stats)', () => {
     it('answers a rollup-routed read exactly like raw events, across a UTC day edge', async () => {
         const refType = `parity-${randomUUID().slice(0, 8)}`;
         const today = new Date();
+
         today.setUTCHours(0, 0, 0, 0);
 
         const repository = dataSource.getRepository<Event>(EventEntity);
@@ -328,6 +352,7 @@ describe('src/http/controllers/entities/event (stats)', () => {
             new Date(today.getTime() - 1000),
             today,
         ];
+
         for (const [index, createdAt] of instants.entries()) {
             const entity = await repository.save(repository.create({
                 id: randomUUID(),
@@ -336,6 +361,7 @@ describe('src/http/controllers/entities/event (stats)', () => {
                 refType,
                 realmId: masterRealmId,
             }));
+
             await repository.update({ id: entity.id }, { createdAt: createdAt.toISOString() });
         }
 
@@ -367,6 +393,7 @@ describe('src/http/controllers/entities/event (stats)', () => {
             .sort();
 
         const { data, meta } = await suite.client.event.getStats(query);
+
         expect(sort(data)).toEqual(sort(expected.data));
         expect(sort(data)).toEqual([
             [new Date(today.getTime() - (2 * DAY_IN_MS)).toISOString(), EventScope.OAUTH2, EventName.LOGIN, 1],
@@ -386,9 +413,11 @@ describe('src/http/controllers/entities/event (stats)', () => {
             refType,
             realmId: masterRealmId,
         }));
+
         const { data: stale } = await suite.client.event.getStats(
             buildQuery('day', new Date(today.getTime() - (4 * DAY_IN_MS)).toISOString(), eq('refType', refType)),
         );
+
         expect(countOf(stale, EventName.LOGIN)).toEqual(2);
     });
 
@@ -396,6 +425,7 @@ describe('src/http/controllers/entities/event (stats)', () => {
         // a day-aligned bound, as the console sends it: a rollup answers
         // whole days only
         const from = new Date(Date.now() - (30 * DAY_IN_MS));
+
         from.setUTCHours(0, 0, 0, 0);
 
         const { data } = await suite.client.event.getStats({
@@ -414,6 +444,7 @@ describe('src/http/controllers/entities/event (stats)', () => {
     it('keeps a deleted realm in the rollups of the realms page', async () => {
         const read = async (days: number) => {
             const from = new Date(Date.now() - (days * DAY_IN_MS));
+
             from.setUTCHours(0, 0, 0, 0);
 
             const { data } = await suite.client.event.getStats({
@@ -432,9 +463,11 @@ describe('src/http/controllers/entities/event (stats)', () => {
         };
 
         await recompute(dataSource, new Date());
+
         const before = await read(30);
 
         const { data: realm } = await suite.client.realm.create(createFakeRealm());
+
         await suite.client.realm.delete(realm.id);
         await recompute(dataSource, new Date());
 
@@ -442,6 +475,7 @@ describe('src/http/controllers/entities/event (stats)', () => {
 
         // a delete the rollups have not seen yet proves the read was routed
         const { data: other } = await suite.client.realm.create(createFakeRealm());
+
         await suite.client.realm.delete(other.id);
         expect(await read(32)).toEqual(before + 1);
     });
@@ -451,14 +485,17 @@ describe('src/http/controllers/entities/event (stats)', () => {
         const password = 'start123-event-reach';
         const { data: user } = await suite.client.user.create(createFakeUser({ password }));
         const { data: permission } = await suite.client.permission.getOne(PermissionName.EVENT_READ);
+
         // the reach a realm_admin reads with: its own realm plus the global rows
         await suite.client.userPermission.create({
             userId: user.id,
             permissionId: permission.id,
             realmScope: RealmScope.OWN_OR_NULL,
         });
+
         const grant = await suite.client.token.createWithPassword({ username: user.name, password });
         const client = new HTTPClient({ baseURL: suite.baseURL });
+
         client.setAuthorizationHeader({ type: 'Bearer', token: grant.access_token });
 
         const repository = dataSource.getRepository<Event>(EventEntity);
@@ -470,6 +507,7 @@ describe('src/http/controllers/entities/event (stats)', () => {
             realmId,
             ...(actorId ? { actorId, actorType: 'user' } : {}),
         }));
+
         // inside the reach, answered by the rollups
         await seedEvent(masterRealmId);
         await seedEvent(null);
@@ -482,6 +520,7 @@ describe('src/http/controllers/entities/event (stats)', () => {
         await recompute(dataSource, new Date());
 
         const from = new Date(Date.now() - (30 * DAY_IN_MS));
+
         from.setUTCHours(0, 0, 0, 0);
 
         const { data, meta } = await client.event.getStats(buildQuery('day', from.toISOString(), eq('refType', refType)));
@@ -494,15 +533,18 @@ describe('src/http/controllers/entities/event (stats)', () => {
 
         // an event the rollups have not seen yet proves the reach was routed
         await seedEvent(masterRealmId);
+
         const { data: stale } = await client.event.getStats(
             buildQuery('day', new Date(from.getTime() - DAY_IN_MS).toISOString(), eq('refType', refType)),
         );
+
         expect(countOf(stale, EventName.LOGIN)).toEqual(4);
     });
 
     it('requires an identity', async () => {
         const query = buildQueryString<Event>(buildQuery('day', since(DAY_IN_MS)));
         const response = await httpRequest(suite, 'GET', `/events/@stats${query}`);
+
         expect(response.status).toEqual(401);
     });
 });
@@ -543,6 +585,7 @@ describe('src/http/controllers/entities/event (stats, log disabled)', () => {
     it('reports the raw retentions and the rollup coverage on a rollup-routed read', async () => {
         const dataSource = suite.container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
         const day = toDay(new Date(Date.now() - (100 * DAY_IN_MS)));
+
         await dataSource.getRepository(EventAggregateEntity).insert({
             date: day,
             realmId: null,

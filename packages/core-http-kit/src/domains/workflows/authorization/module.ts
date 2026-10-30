@@ -56,6 +56,7 @@ function readCacheControlMaxAge(value: string | null) : number | undefined {
     }
 
     const match = value.match(/(?:^|,)\s*max-age\s*=\s*"?(\d+)"?\s*(?:,|$)/i);
+
     if (!match) {
         return undefined;
     }

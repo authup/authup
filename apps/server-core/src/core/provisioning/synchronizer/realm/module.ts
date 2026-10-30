@@ -55,9 +55,10 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             if (attributes) {
                 await this.repository.remove(attributes);
             }
+
             return {
                 ...input,
-                attributes: attributes || input.attributes, 
+                attributes: attributes || input.attributes,
             };
         }
 
@@ -72,10 +73,12 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
                     );
 
                     attributes = await this.repository.save(attributes);
+
                     break;
                 case ProvisioningEntityStrategyType.REPLACE:
                     input.attributes.id = attributes.id;
                     attributes = await this.repository.save(this.repository.create(input.attributes));
+
                     break;
             }
         } else {
@@ -88,6 +91,7 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             const scopes = input.relations.scopes.map((child) => {
                 child.attributes.realmId = attributes.id;
                 child.attributes.realm = attributes;
+
                 return child;
             });
 
@@ -100,6 +104,7 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
         if (input.relations && input.relations.paths) {
             const paths = input.relations.paths.map((child) => {
                 child.attributes.realmId = attributes.id;
+
                 return child;
             });
 
@@ -111,6 +116,7 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
                 (child) => {
                     child.attributes.realmId = attributes.id;
                     child.attributes.realm = attributes;
+
                     return child;
                 },
             );
@@ -122,6 +128,7 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             const permissions = input.relations.permissions.map((child) => {
                 child.attributes.realmId = attributes.id;
                 child.attributes.realm = attributes;
+
                 return child;
             });
 
@@ -132,6 +139,7 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             const roles = input.relations.roles.map((child) => {
                 child.attributes.realmId = attributes.id;
                 child.attributes.realm = attributes;
+
                 return child;
             });
 
@@ -142,6 +150,7 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             const users = input.relations.users.map((child) => {
                 child.attributes.realmId = attributes.id;
                 child.attributes.realm = attributes;
+
                 return child;
             });
 

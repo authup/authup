@@ -52,6 +52,7 @@ export class IdentityProviderLdapCollectionAuthenticator extends BaseCredentials
             });
 
             const response = await authenticator.safeAuthenticate(name, password);
+
             if (response.success === true) {
                 return response.data;
             }

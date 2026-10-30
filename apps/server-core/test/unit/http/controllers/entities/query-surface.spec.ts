@@ -40,7 +40,7 @@ import { createTestApplication } from '../../../../app';
  */
 describe('src/http/controllers/entities (widened query surface)', () => {
     const suite = createTestApplication();
-    const basic = `Basic ${Buffer.from('admin:start123').toString('base64')}`;
+    const basic = `Basic ${Buffer.from('admin:start123').toBase64()}`;
 
     beforeAll(async () => {
         await suite.setup();
@@ -58,12 +58,14 @@ describe('src/http/controllers/entities (widened query surface)', () => {
         // rows other spec files left in this worker's database copy.
         const active = await httpRequest(suite, 'GET', `/users?filter[id]=${user.id}&filter[active]=true`, { headers: { Authorization: basic } });
         const activeBody = await active.json();
+
         expect(active.status).toEqual(200);
         expect(activeBody.data).toHaveLength(1);
         expect(activeBody.data[0].id).toEqual(user.id);
 
         const inactive = await httpRequest(suite, 'GET', `/users?filter[id]=${user.id}&filter[active]=false`, { headers: { Authorization: basic } });
         const inactiveBody = await inactive.json();
+
         expect(inactive.status).toEqual(200);
         expect(inactiveBody.data).toHaveLength(0);
     });
@@ -92,6 +94,7 @@ describe('src/http/controllers/entities (widened query surface)', () => {
 
         const byId = await httpRequest(suite, 'GET', `/role-permissions?filter[id]=${junction.id}`, { headers: { Authorization: basic } });
         const byIdBody = await byId.json();
+
         expect(byId.status).toEqual(200);
         expect(byIdBody.data).toHaveLength(1);
         expect(byIdBody.data[0].id).toEqual(junction.id);
@@ -99,6 +102,7 @@ describe('src/http/controllers/entities (widened query surface)', () => {
         const realmId = junction.roleRealmId;
         const byRealm = await httpRequest(suite, 'GET', `/role-permissions?filter[roleRealmId]=${realmId}`, { headers: { Authorization: basic } });
         const byRealmBody = await byRealm.json();
+
         expect(byRealm.status).toEqual(200);
         expect(byRealmBody.meta.total).toBeGreaterThan(0);
         // predicate over the page rather than membership in it, for the
@@ -117,8 +121,11 @@ describe('src/http/controllers/entities (widened query surface)', () => {
         // row: a bare temporal filter would be satisfied vacuously by an
         // empty page, which is precisely what a mis-bound comparison returns
         const meResponse = await httpRequest(suite, 'GET', '/sessions/@me', { headers: { Authorization: `Bearer ${grant.access_token}` } });
+
         expect(meResponse.status).toEqual(200);
+
         const session = (await meResponse.json()).data;
+
         expect(session.expiresAt).toBeDefined();
 
         const past = new Date(Date.now() - 3600_000).toISOString();
@@ -128,6 +135,7 @@ describe('src/http/controllers/entities (widened query surface)', () => {
         // lower bound: the session expires in the future, so it is above `past`
         const above = await httpRequest(suite, 'GET', `${scope}&filter[expiresAt]=>${encodeURIComponent(past)}`, { headers: { Authorization: basic } });
         const aboveBody = await above.json();
+
         expect(above.status).toEqual(200);
         expect(aboveBody.data).toHaveLength(1);
 
@@ -137,12 +145,14 @@ describe('src/http/controllers/entities (widened query surface)', () => {
         // comparison silently failing to bind.
         const below = await httpRequest(suite, 'GET', `${scope}&filter[expiresAt]=<${encodeURIComponent(beyondExpiry)}`, { headers: { Authorization: basic } });
         const belowBody = await below.json();
+
         expect(below.status).toEqual(200);
         expect(belowBody.data).toHaveLength(1);
 
         // upper bound, NEGATIVE: a ceiling in the past must exclude it
         const excluded = await httpRequest(suite, 'GET', `${scope}&filter[expiresAt]=<${encodeURIComponent(past)}`, { headers: { Authorization: basic } });
         const excludedBody = await excluded.json();
+
         expect(excluded.status).toEqual(200);
         expect(excludedBody.data).toHaveLength(0);
     });
@@ -153,8 +163,11 @@ describe('src/http/controllers/entities (widened query surface)', () => {
 
         async function count(path: string) {
             const response = await httpRequest(suite, 'GET', path, { headers: { Authorization: basic } });
+
             expect(response.status).toEqual(200);
+
             const body = await response.json();
+
             return body.data.length;
         }
 
@@ -178,6 +191,7 @@ describe('src/http/controllers/entities (widened query surface)', () => {
 
             const response = await httpRequest(suite, 'GET', `/events?filter[createdAt]=${encodeURIComponent('>')}${past()}`, { headers: { Authorization: basic } });
             const body = await response.json();
+
             expect(response.status).toEqual(200);
             expect(body.meta.total).toBeGreaterThan(0);
         });
@@ -188,6 +202,7 @@ describe('src/http/controllers/entities (widened query surface)', () => {
             const { data: junction } = await suite.client.userRole.create({ userId: user.id, roleId: role.id });
 
             const scope = `/user-roles?filter[id]=${junction.id}&filter[user.createdAt]=`;
+
             expect(await count(`${scope}${encodeURIComponent('>')}${past()}`)).toEqual(1);
             expect(await count(`${scope}${encodeURIComponent('<')}${past()}`)).toEqual(0);
         });
@@ -211,9 +226,11 @@ describe('src/http/controllers/entities (widened query surface)', () => {
                 `/user-roles?filter[user.createdAt]=${encodeURIComponent(build(role.createdAt))}`,
             ]) {
                 const response = await httpRequest(suite, 'GET', path, { headers: { Authorization: basic } });
+
                 expect(response.status).toEqual(400);
 
                 const body = await response.json();
+
                 expect(body.code).toEqual(ErrorCode.BAD_REQUEST);
                 expect(body.issues.map((issue: { message: string }) => issue.message).join()).toContain('range operators');
             }
@@ -221,9 +238,11 @@ describe('src/http/controllers/entities (widened query surface)', () => {
 
         it('should answer 400 for a date that denotes no instant', async () => {
             const response = await httpRequest(suite, 'GET', `/roles?filter[createdAt]=${encodeURIComponent('>not-a-date')}`, { headers: { Authorization: basic } });
+
             expect(response.status).toEqual(400);
 
             const body = await response.json();
+
             expect(body.code).toEqual(ErrorCode.BAD_REQUEST);
         });
     });

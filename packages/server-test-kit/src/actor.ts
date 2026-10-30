@@ -21,12 +21,15 @@ export function createAllowAllActor(): FakeActorContext {
 
 export function createDenyAllActor(): FakeActorContext {
     const evaluator = new FakePermissionEvaluator();
+
     evaluator.denyAll();
+
     return { permissionEvaluator: evaluator };
 }
 
 export function createMasterRealmActor(realmId?: string): FakeActorContext {
     const id = realmId || randomUUID();
+
     return {
         permissionEvaluator: new FakePermissionEvaluator(),
         identity: {
@@ -44,6 +47,7 @@ export function createMasterRealmActor(realmId?: string): FakeActorContext {
 
 export function createNonMasterRealmActor(realmId?: string): FakeActorContext {
     const id = realmId || randomUUID();
+
     return {
         permissionEvaluator: new FakePermissionEvaluator(),
         identity: {

@@ -41,6 +41,7 @@ describe('core/identity/policy/checker', () => {
         await suite.setup();
 
         const userRepository = new UserRepository(suite.dataSource);
+
         adminUser = await userRepository.findOneByOrFail({ name: 'admin' }) as unknown as UserEntity;
 
         const realmEntityRepository = suite.dataSource.getRepository(RealmEntity);
@@ -108,7 +109,9 @@ describe('core/identity/policy/checker', () => {
 
     it('safeCheck wraps failures into Result<null>', async () => {
         const result = await service.safeCheck(createNanoID(), {}, createAllowAllActor());
+
         expect(result.success).toBe(false);
+
         if (!result.success) {
             expect(result.error).toBeInstanceOf(EntityNotFoundError);
         }
@@ -133,6 +136,7 @@ describe('core/identity/policy/checker', () => {
 
         const reference = { type: IdentityType.USER, id: adminUser.id };
         const data = { [BuiltInPolicyType.IDENTITY]: reference };
+
         await expect(service.check(policy.id, data, actor)).resolves.toBeUndefined();
         expect(data[BuiltInPolicyType.IDENTITY]).toBe(reference);
         expect(reference).toEqual({ type: IdentityType.USER, id: adminUser.id });

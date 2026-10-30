@@ -41,7 +41,7 @@ Most deployments never install this package directly: the [`authup`](https://git
 npm install @authup/server-core
 ```
 
-Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`. The package is ESM-only and ships no binary. The PostgreSQL, MySQL and SQLite drivers (`pg`, `mysql2`, `better-sqlite3`) come with it.
+Node.js `>=26.0.0`. The package is ESM-only and ships no binary. The PostgreSQL, MySQL and SQLite drivers (`pg`, `mysql2`, `better-sqlite3`) come with it.
 
 ## Usage
 

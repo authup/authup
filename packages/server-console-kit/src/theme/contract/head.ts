@@ -42,11 +42,13 @@ function buildAssetURL(assetPath: string, basePath: string) : string {
  */
 function buildLogoTokens(logo: string | undefined, basePath: string) : Record<string, string> {
     const tokens : Record<string, string> = {};
+
     if (!logo) {
         return tokens;
     }
 
     const url = buildAssetURL(logo, basePath);
+
     for (const pair of THEME_LOGO_TOKENS) {
         tokens[pair.image] = `url("${url}")`;
         tokens[pair.markVisibility] = 'hidden';
@@ -93,14 +95,17 @@ export function buildThemeHead(
     //   both           -> a per-mode image
     //   logoDark only  -> the built-in mark in light, the operator's in dark
     const tokens = buildLogoTokens(manifest.logo, basePath);
+
     Object.assign(tokens, manifest.tokens);
 
     const tokensDark = buildLogoTokens(manifest.logoDark, basePath);
+
     Object.assign(tokensDark, manifest.tokensDark);
 
     if (Object.keys(tokens).length > 0) {
         rules.push(buildTokenRule(':root', tokens));
     }
+
     // After :root, so it wins inside the layer by source order and the
     // color-mode switcher keeps working.
     if (Object.keys(tokensDark).length > 0) {

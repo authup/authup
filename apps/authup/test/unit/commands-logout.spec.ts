@@ -39,7 +39,10 @@ const keyring = vi.hoisted(() => {
         }
 
         async deleteCredential() : Promise<boolean> {
-            if (failing) throw new Error('keychain locked');
+            if (failing) {
+                throw new Error('keychain locked');
+            }
+
             return entries.delete(this.account);
         }
     }
@@ -47,7 +50,9 @@ const keyring = vi.hoisted(() => {
     return {
         entries,
         AsyncEntry,
-        fail: (value: boolean) => { failing = value; },
+        fail: (value: boolean) => {
+            failing = value;
+        },
     };
 });
 
@@ -65,6 +70,7 @@ describe('authup logout', () => {
         notices = [];
         vi.spyOn(process.stderr, 'write').mockImplementation((chunk) => {
             notices.push(String(chunk));
+
             return true;
         });
         await createHostStore(resolveHostsDirectory()).write({
@@ -94,6 +100,7 @@ describe('authup logout', () => {
         const transport = createHostTransport({
             'POST /token/revoke': (_request, form) => {
                 revoked.push(form);
+
                 return { status: 200, body: {} };
             },
         });
@@ -143,6 +150,7 @@ describe('authup logout', () => {
             expiresAt: 5,
         }));
         keyring.fail(true);
+
         const transport = createHostTransport({ 'POST /token/revoke': () => ({ status: 200, body: {} }) });
 
         await runCommand(defineCLILogoutCommand({ transport }), { rawArgs: [] });

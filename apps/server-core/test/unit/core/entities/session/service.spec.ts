@@ -30,11 +30,13 @@ const otherUserId = randomUUID();
 
 function makeActor(options: { allow: boolean, identity?: boolean } = { allow: true }): ActorContext {
     const evaluator = new FakePermissionEvaluator();
+
     if (!options.allow) {
         evaluator.denyAll();
     }
 
     const actor: ActorContext = { permissionEvaluator: evaluator };
+
     if (options.identity !== false) {
         actor.identity = {
             type: IdentityType.USER,
@@ -93,6 +95,7 @@ describe('SessionService', () => {
 
         it('rejects an anonymous (identity-less) actor without the read permission', async () => {
             const actor = makeActor({ allow: false, identity: false });
+
             await expect(service.getMany({}, actor)).rejects.toBeDefined();
         });
 
@@ -107,18 +110,21 @@ describe('SessionService', () => {
             });
 
             const actor = makeActor({ allow: true });
+
             (actor.permissionEvaluator as FakePermissionEvaluator).setCompileResult({
                 verdict: 'conditional',
                 condition: eq('realmId', realmId),
             });
 
             const spy = vi.spyOn(repository, 'findMany');
+
             await service.getMany({}, actor);
 
             // the fake repository does not apply filters — replay the query the
             // service built over the seeded rows instead
             const query = spy.mock.calls[0]![0];
             const applied = applyQuery(query, [own, foreignSameRealm, foreignOtherRealm]);
+
             expect(applied.data.map((row) => row.id).sort())
                 .toEqual([own.id, foreignSameRealm.id].sort());
 
@@ -130,13 +136,16 @@ describe('SessionService', () => {
             const foreign = seedOther();
 
             const actor = makeActor({ allow: true });
+
             (actor.permissionEvaluator as FakePermissionEvaluator).setCompileResult({ verdict: 'deny' });
 
             const spy = vi.spyOn(repository, 'findMany');
+
             await service.getMany({}, actor);
 
             const query = spy.mock.calls[0]![0];
             const applied = applyQuery(query, [own, foreign]);
+
             expect(applied.data.map((row) => row.id)).toEqual([own.id]);
             expect((actor.permissionEvaluator as FakePermissionEvaluator).evaluateCalls).toHaveLength(0);
         });
@@ -147,8 +156,10 @@ describe('SessionService', () => {
             seedOther();
 
             const evaluator = new FakePermissionEvaluator();
+
             // preEvaluate passes (has the permission) but per-row evaluate denies
             evaluator.deny('evaluate');
+
             const actor: ActorContext = {
                 permissionEvaluator: evaluator,
                 identity: { type: IdentityType.USER, data: { id: userId, realmId } as User },
@@ -169,6 +180,7 @@ describe('SessionService', () => {
             const actor = makeActor({ allow: false });
 
             const result = await service.getOne(session.id, actor);
+
             expect(result.id).toEqual(session.id);
             expect((actor.permissionEvaluator as FakePermissionEvaluator).preEvaluateCalls).toHaveLength(0);
         });
@@ -185,11 +197,13 @@ describe('SessionService', () => {
             const actor = makeActor({ allow: true });
 
             const result = await service.getOne(session.id, actor);
+
             expect(result.id).toEqual(session.id);
         });
 
         it('throws when the session does not exist', async () => {
             const actor = makeActor({ allow: true });
+
             await expect(service.getOne(randomUUID(), actor)).rejects.toBeDefined();
         });
     });
@@ -237,13 +251,16 @@ describe('SessionService', () => {
             const s1 = seedOwn();
             const current = seedOwn();
             const s3 = seedOwn();
+
             seedOther();
 
             const actor = makeActor({ allow: false });
             const { count } = await service.deleteMany(actor, { currentSessionId: current.id });
 
             expect(count).toEqual(2);
+
             const removed = repository.removeCalls.map((s) => s.id);
+
             expect(removed).toContain(s1.id);
             expect(removed).toContain(s3.id);
             expect(removed).not.toContain(current.id);
@@ -251,9 +268,11 @@ describe('SessionService', () => {
 
         it('counts only the sessions actually revoked', async () => {
             const s1 = seedOwn();
+
             seedOwn();
 
             const remove = repository.remove.bind(repository);
+
             repository.remove = async (session: Session) => {
                 if (session.id === s1.id) {
                     throw new Error('unavailable');
@@ -283,6 +302,7 @@ describe('SessionService', () => {
             const revoke = vi.spyOn(sessionManager, 'revoke');
 
             const actor = makeActor({ allow: false });
+
             await service.deleteMany(actor);
 
             expect(revoke.mock.calls.map(([id]) => id).sort()).toEqual([s1.id, s2.id].sort());
@@ -290,31 +310,31 @@ describe('SessionService', () => {
 
         it('narrows the self-service revoke by a non-target filter (#3642)', async () => {
             const stale = repository.seed({
-                sub: userId, 
-                subKind: IdentityType.USER, 
-                userId, 
-                realmId, 
+                sub: userId,
+                subKind: IdentityType.USER,
+                userId,
+                realmId,
                 seenAt: '2026-01-01T00:00:00.000Z',
             });
             const fresh = repository.seed({
-                sub: userId, 
-                subKind: IdentityType.USER, 
-                userId, 
-                realmId, 
+                sub: userId,
+                subKind: IdentityType.USER,
+                userId,
+                realmId,
                 seenAt: '2026-09-01T00:00:00.000Z',
             });
             const current = repository.seed({
-                sub: userId, 
-                subKind: IdentityType.USER, 
-                userId, 
-                realmId, 
+                sub: userId,
+                subKind: IdentityType.USER,
+                userId,
+                realmId,
                 seenAt: '2026-01-01T00:00:00.000Z',
             });
             const foreign = repository.seed({
-                sub: otherUserId, 
-                subKind: IdentityType.USER, 
-                userId: otherUserId, 
-                realmId, 
+                sub: otherUserId,
+                subKind: IdentityType.USER,
+                userId: otherUserId,
+                realmId,
                 seenAt: '2026-01-01T00:00:00.000Z',
             });
 
@@ -353,6 +373,7 @@ describe('SessionService', () => {
 
         it('throws for an identity-less actor', async () => {
             const actor = makeActor({ allow: true, identity: false });
+
             await expect(service.deleteMany(actor)).rejects.toBeDefined();
         });
     });
@@ -375,13 +396,16 @@ describe('SessionService', () => {
         it('revokes every session matching filter[userId]', async () => {
             const s1 = seedOther();
             const s2 = seedOther();
+
             seedOwn();
 
             const actor = makeActor({ allow: true });
             const { count } = await service.deleteMany(actor, { query: adminQuery(otherUserId) });
 
             expect(count).toEqual(2);
+
             const removed = repository.removeCalls.map((s) => s.id);
+
             expect(removed).toContain(s1.id);
             expect(removed).toContain(s2.id);
         });
@@ -395,13 +419,16 @@ describe('SessionService', () => {
                 userId: thirdUserId,
                 realmId,
             });
+
             seedOwn();
 
             const actor = makeActor({ allow: true });
             const { count } = await service.deleteMany(actor, { query: adminQuery([otherUserId, thirdUserId]) });
 
             expect(count).toEqual(2);
+
             const removed = repository.removeCalls.map((s) => s.id);
+
             expect(removed).toContain(a.id);
             expect(removed).toContain(b.id);
         });
@@ -420,17 +447,21 @@ describe('SessionService', () => {
             // preEvaluate (gate) passes; per-session evaluate denies when the
             // resource realm is outside the actor's own realm.
             const evaluator = new FakePermissionEvaluator();
+
             evaluator.setBehavior((call) => {
                 if (call.method !== 'evaluate') {
                     return;
                 }
+
                 const resourceRealm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
                     call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
                     undefined;
+
                 if (resourceRealm !== realmId) {
                     throw new PermissionError({ message: 'out of realm reach' });
                 }
             });
+
             const actor: ActorContext = {
                 permissionEvaluator: evaluator,
                 identity: { type: IdentityType.USER, data: { id: userId, realmId } as User },
@@ -439,7 +470,9 @@ describe('SessionService', () => {
             const { count } = await service.deleteMany(actor, { query: adminQuery(otherUserId) });
 
             expect(count).toEqual(2);
+
             const removed = repository.removeCalls.map((s) => s.id);
+
             expect(removed).toContain(inReach1.id);
             expect(removed).toContain(inReach2.id);
             expect(removed).not.toContain(outOfReach.id);
@@ -449,6 +482,7 @@ describe('SessionService', () => {
             seedOther();
 
             const actor = makeActor({ allow: false });
+
             await expect(
                 service.deleteMany(actor, { query: adminQuery(otherUserId) }),
             ).rejects.toBeDefined();

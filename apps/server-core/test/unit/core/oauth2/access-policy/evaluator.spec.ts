@@ -52,6 +52,7 @@ describe('core/oauth2/access-policy — OAuth2AccessPolicyEvaluator', () => {
         const evaluator = buildEvaluator(provider);
 
         const policyId = randomUUID();
+
         await expect(evaluator.evaluate(policyId, subject)).resolves.toBe(true);
         expect(provider.calls).toEqual([policyId]);
     });
@@ -133,6 +134,7 @@ describe('core/oauth2/access-policy: OAuth2AccessPolicyEvaluator.evaluateData', 
         const evaluator = buildEvaluator(provider);
 
         const policyId = randomUUID();
+
         await expect(evaluator.evaluateData(policyId, attributes({ name: 'jane', emailVerified: true })))
             .resolves.toBe(true);
         expect(provider.calls).toEqual([policyId]);
@@ -171,10 +173,12 @@ describe('core/oauth2/access-policy: OAuth2AccessPolicyEvaluator.evaluateData', 
         const realmId = randomUUID();
 
         const own = buildEvaluator(new FakePolicyProvider({ ...verifiedEmail, realmId }));
+
         await expect(own.evaluateData(randomUUID(), attributes({ emailVerified: true }), { realmId }))
             .resolves.toBe(true);
 
         const global = buildEvaluator(new FakePolicyProvider({ ...verifiedEmail, realmId: null }));
+
         await expect(global.evaluateData(randomUUID(), attributes({ emailVerified: true }), { realmId }))
             .resolves.toBe(true);
     });

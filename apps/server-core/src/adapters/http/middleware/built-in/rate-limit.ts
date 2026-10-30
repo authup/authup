@@ -63,6 +63,7 @@ function isFailedAuthentication(event: IAppEvent, response: Response) : boolean 
     }
 
     const code = useRequestErrorCode(event);
+
     if (code === ErrorCode.OAUTH_CLIENT_INVALID) {
         // a client secret, which the token endpoint also reads from the body
         return true;
@@ -144,6 +145,7 @@ export function registerIdentityRateLimitMiddleware(
     let options : OptionsInput = {
         keyGenerator: (event) => {
             const identity = useRequestIdentity(event);
+
             if (identity) {
                 return `${identity.type}:${identity.id}`;
             }
@@ -153,6 +155,7 @@ export function registerIdentityRateLimitMiddleware(
         skip: isLoopbackRequest,
         max(event) {
             const identity = useRequestIdentity(event);
+
             if (!identity) {
                 return budgets.anonymous;
             }

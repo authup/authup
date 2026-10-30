@@ -79,6 +79,7 @@ const buildRealm = (data: Partial<Realm> = {}) : Realm => ({
 
 const buildClient = (data: Partial<Client> = {}) : Client => {
     const timestamp = new Date().toISOString();
+
     return {
         id: randomUUID(),
         active: true,
@@ -152,7 +153,7 @@ const buildIdentity = (data: Partial<UserIdentity['data']> = {}) : UserIdentity 
 });
 
 const buildRequest = (client: Client, input: Partial<OAuth2DeviceCodeRequest> = {}) : OAuth2DeviceCodeRequest => ({
-    id: randomBytes(32).toString('hex'),
+    id: randomBytes(32).toHex(),
     user_code: 'BCDFGHJK',
     client_id: client.id,
     realm_id: client.realmId,
@@ -172,10 +173,12 @@ const createClientRepository = () : FakeClientRepository => {
     return {
         seed: (client) => {
             clients.set(client.id, client);
+
             return client;
         },
         findOneByIdOrName: async (idOrName, realmId) => {
             const client = clients.get(idOrName);
+
             if (!client || (realmId && client.realmId !== realmId)) {
                 return null;
             }
@@ -209,6 +212,7 @@ const createAccessPolicyEvaluator = () : FakeAccessPolicyEvaluator => {
         allowed: false,
         evaluate: async (policyId, subject) => {
             evaluator.calls.push({ policyId, subject });
+
             return evaluator.allowed;
         },
         evaluateData: async () => {
@@ -326,6 +330,7 @@ describe('OAuth2DeviceAuthorizationService', () => {
     describe('issue', () => {
         it('should grant every bound scope when none is requested', async () => {
             scopeRepository.scopes = [buildScope(ScopeName.GLOBAL), buildScope(ScopeName.OPEN_ID)];
+
             const client = buildClient();
 
             const response = await buildService().issue(client, buildRealm(), {});
@@ -372,6 +377,7 @@ describe('OAuth2DeviceAuthorizationService', () => {
 
         it('should regenerate on a user code collision', async () => {
             scopeRepository.scopes = [buildScope(ScopeName.GLOBAL)];
+
             const save = vi.spyOn(repository, 'save').mockResolvedValueOnce(false);
 
             const response = await buildService().issue(buildClient(), buildRealm(), {});
@@ -384,6 +390,7 @@ describe('OAuth2DeviceAuthorizationService', () => {
 
         it('should give up after five collisions', async () => {
             scopeRepository.scopes = [buildScope(ScopeName.GLOBAL)];
+
             const save = vi.spyOn(repository, 'save').mockResolvedValue(false);
 
             await expect(buildService().issue(buildClient(), buildRealm(), {}))
@@ -399,11 +406,15 @@ describe('OAuth2DeviceAuthorizationService', () => {
     describe('lookup', () => {
         it('should answer one neutral invalid_grant for every miss and record it', async () => {
             const inactive = clientRepository.seed(buildClient({ active: false }));
+
             repository.seed(buildRequest(inactive, { user_code: 'BCDFGHJM' }));
 
             const { client } = seedCode();
+
             repository.seed(buildRequest(client, { user_code: 'BCDFGHJN', expires_at: now() - 1 }));
+
             const approved = repository.seed(buildRequest(client, { user_code: 'BCDFGHJP' }));
+
             await repository.decide(approved.id, {
                 status: OAuth2DeviceCodeStatus.APPROVED,
                 sub: USER_ID,
@@ -412,7 +423,9 @@ describe('OAuth2DeviceAuthorizationService', () => {
                 auth_time: now(),
                 auth_method: null,
             }, approved.expires_at);
+
             const denied = repository.seed(buildRequest(client, { user_code: 'BCDFGHJQ' }));
+
             await repository.decide(denied.id, { status: OAuth2DeviceCodeStatus.DENIED }, denied.expires_at);
 
             const service = buildService();
@@ -430,8 +443,10 @@ describe('OAuth2DeviceAuthorizationService', () => {
             ];
 
             const messages = new Set<string>();
+
             for (const input of inputs) {
                 let caught : unknown;
+
                 try {
                     await service.lookup(input, identity);
                 } catch (e) {
@@ -453,6 +468,7 @@ describe('OAuth2DeviceAuthorizationService', () => {
             });
 
             expect(eventService.recordCalls).toHaveLength(inputs.length);
+
             for (const call of eventService.recordCalls) {
                 expect(call).toMatchObject({
                     scope: EventScope.OAUTH2,
@@ -512,6 +528,7 @@ describe('OAuth2DeviceAuthorizationService', () => {
             }
 
             let caught : unknown;
+
             try {
                 await service.lookup(request.user_code, identity);
             } catch (e) {
@@ -520,21 +537,26 @@ describe('OAuth2DeviceAuthorizationService', () => {
 
             expect(isDeviceVerificationThrottledError(caught)).toBe(true);
             expect(caught).toMatchObject({ code: ErrorCode.OAUTH_DEVICE_VERIFICATION_THROTTLED });
+
             const { retryAfter } = (caught as { data: { retryAfter: number } }).data;
+
             expect(retryAfter).toBeGreaterThanOrEqual(OAUTH2_DEVICE_LOOKUP_ATTEMPT_WINDOW - 1);
             expect(retryAfter).toBeLessThanOrEqual(OAUTH2_DEVICE_LOOKUP_ATTEMPT_WINDOW);
             expect(repository.countLookupMissCalls).toHaveLength(OAUTH2_DEVICE_LOOKUP_ATTEMPTS_PER_ACTOR);
 
             const other = buildIdentity({ id: randomUUID(), name: 'other' });
             const info = await service.lookup(request.user_code, other);
+
             expect(info.scope).toEqual(request.scope);
         });
 
         it('should fail closed when the throttle cannot be read', async () => {
             const { request } = seedCode();
+
             vi.spyOn(repository, 'lookupThrottle').mockRejectedValue(new Error('cache unavailable'));
 
             let caught : unknown;
+
             try {
                 await buildService().lookup(request.user_code, buildIdentity());
             } catch (e) {
@@ -551,6 +573,7 @@ describe('OAuth2DeviceAuthorizationService', () => {
             const foreignRealmId = randomUUID();
 
             let caught : unknown;
+
             try {
                 await buildService().lookup(request.user_code, buildIdentity({ realmId: foreignRealmId }));
             } catch (e) {
@@ -563,6 +586,7 @@ describe('OAuth2DeviceAuthorizationService', () => {
             });
 
             const serialized = JSON.stringify(caught);
+
             expect(serialized).not.toContain(foreignRealmId);
             expect(serialized).not.toContain(REALM_ID);
 
@@ -629,6 +653,7 @@ describe('OAuth2DeviceAuthorizationService', () => {
 
         it('should record no consent for a built-in client', async () => {
             await seedSession();
+
             const { request } = seedCode(clientRepository.seed(buildClient({ builtIn: true })));
 
             await buildService().approve(request.user_code, buildIdentity(), { sessionId: SESSION_ID });
@@ -639,19 +664,24 @@ describe('OAuth2DeviceAuthorizationService', () => {
 
         it('should not fail the approval over a consent write failure', async () => {
             await seedSession();
+
             const { request } = seedCode();
+
             consentService.recordError = new Error('consent down');
 
             await buildService().approve(request.user_code, buildIdentity(), { sessionId: SESSION_ID });
 
             expect(consentService.recordCalls).toHaveLength(1);
+
             const entity = await repository.findOneById(request.id);
+
             expect(entity?.decision?.status).toEqual(OAuth2DeviceCodeStatus.APPROVED);
             expect(metrics.authorizeCalls).toEqual(['issued']);
         });
 
         it('should refuse a foreign-realm user with login_required and record the refusal', async () => {
             await seedSession();
+
             const { request } = seedCode();
 
             await expect(buildService().approve(request.user_code, buildIdentity({ realmId: randomUUID() }), { sessionId: SESSION_ID }))
@@ -664,6 +694,7 @@ describe('OAuth2DeviceAuthorizationService', () => {
 
         it('should require the second factor while the session carries no mfa_at', async () => {
             await seedSession();
+
             const { request } = seedCode();
 
             await expect(buildService(challengeProvider({ required: true })).approve(request.user_code, buildIdentity(), { sessionId: SESSION_ID }))
@@ -676,6 +707,7 @@ describe('OAuth2DeviceAuthorizationService', () => {
 
         it('should approve once the session carries mfa_at', async () => {
             await seedSession({ mfaAt: new Date().toISOString() });
+
             const { request } = seedCode();
 
             await buildService(challengeProvider({ required: true })).approve(request.user_code, buildIdentity(), { sessionId: SESSION_ID });
@@ -686,6 +718,7 @@ describe('OAuth2DeviceAuthorizationService', () => {
 
         it('should exempt an externally authenticated session from the local factor', async () => {
             await seedSession({ authMethod: SessionAuthMethod.EXTERNAL });
+
             const { request } = seedCode();
 
             await buildService(challengeProvider({ required: true })).approve(request.user_code, buildIdentity(), { sessionId: SESSION_ID });
@@ -696,6 +729,7 @@ describe('OAuth2DeviceAuthorizationService', () => {
 
         it('should refuse a denying access policy and record the denial', async () => {
             await seedSession();
+
             const { client, request } = seedCode(clientRepository.seed(buildClient({ accessPolicyId: randomUUID() })));
 
             await expect(buildService().approve(request.user_code, buildIdentity(), { sessionId: SESSION_ID }))
@@ -719,16 +753,19 @@ describe('OAuth2DeviceAuthorizationService', () => {
 
         it('should refuse a second decision and keep the first', async () => {
             await seedSession();
+
             const service = buildService();
             const identity = buildIdentity();
 
             const denied = seedCode(undefined, { user_code: 'BCDFGHJM' });
+
             await service.deny(denied.request.user_code, identity);
             await expect(service.approve(denied.request.user_code, identity, { sessionId: SESSION_ID }))
                 .rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_GRANT_INVALID }));
             expect((await repository.findOneById(denied.request.id))?.decision?.status).toEqual(OAuth2DeviceCodeStatus.DENIED);
 
             const approved = seedCode(undefined, { user_code: 'BCDFGHJN' });
+
             await service.approve(approved.request.user_code, identity, { sessionId: SESSION_ID });
             await expect(service.deny(approved.request.user_code, identity))
                 .rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_GRANT_INVALID }));
@@ -741,6 +778,7 @@ describe('OAuth2DeviceAuthorizationService', () => {
 
         it('should forgive earlier misses once the actor decided on a code', async () => {
             await seedSession();
+
             const service = buildService();
             const identity = buildIdentity();
             const { request } = seedCode();
@@ -756,6 +794,7 @@ describe('OAuth2DeviceAuthorizationService', () => {
             expect(repository.resetLookupMissesCalls).toEqual([`actor:${USER_ID}`]);
 
             let caught : unknown;
+
             try {
                 await service.lookup('WXZB-WXZB', identity);
             } catch (e) {
@@ -766,11 +805,13 @@ describe('OAuth2DeviceAuthorizationService', () => {
             expect(caught).toMatchObject({ code: ErrorCode.OAUTH_GRANT_INVALID });
 
             const info = await service.lookup(pending.request.user_code, identity);
+
             expect(info.scope).toEqual(pending.request.scope);
         });
 
         it('should forgive once per window, so a self-served decision cannot reset the throttle again', async () => {
             await seedSession();
+
             const service = buildService();
             const identity = buildIdentity();
             const denied = seedCode(undefined, { user_code: 'BCDFGHJM' });
@@ -798,6 +839,7 @@ describe('OAuth2DeviceAuthorizationService', () => {
                 .rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_GRANT_INVALID }));
 
             let caught : unknown;
+
             try {
                 await service.lookup(pending.request.user_code, identity);
             } catch (e) {
@@ -810,6 +852,7 @@ describe('OAuth2DeviceAuthorizationService', () => {
 
         it('should not spend the forgiveness on a decision that had nothing to forgive', async () => {
             await seedSession();
+
             const service = buildService();
             const identity = buildIdentity();
             const clean = seedCode(undefined, { user_code: 'BCDFGHJM' });
@@ -827,6 +870,7 @@ describe('OAuth2DeviceAuthorizationService', () => {
             await service.approve(typed.request.user_code, identity, { sessionId: SESSION_ID });
 
             let caught : unknown;
+
             try {
                 await service.lookup('WXZB-WXZB', identity);
             } catch (e) {
@@ -839,7 +883,9 @@ describe('OAuth2DeviceAuthorizationService', () => {
 
         it('should not fail the approval, nor lose its audit row, over a failed reset', async () => {
             await seedSession();
+
             const { request } = seedCode();
+
             repository.resetLookupMisses = async () => {
                 throw new Error('the cache is unreachable');
             };
