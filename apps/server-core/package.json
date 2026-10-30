@@ -87,7 +87,7 @@
         "@authup/specs": "^1.0.0-beta.72",
         "@ebec/http": "^4.3.2",
         "@hapic/oauth2": "^4.0.2",
-        "@peculiar/x509": "^2.2.0",
+        "@peculiar/x509": "^3.1.0",
         "@rapiq/adapter-memory": "^2.4.0",
         "@rapiq/adapter-sql": "^2.4.0",
         "@rapiq/adapter-typeorm": "^2.4.0",
