@@ -47,7 +47,7 @@
         "cross-env": "^10.1.0",
         "fix-dts-default-cjs-exports": "^1.0.1",
         "mkdist": "^2.3.0",
-        "nuxt": "^4.6.2",
+        "nuxt": "^4.6.3",
         "pinia": "^4.1.0",
         "rollup-plugin-dts": "^6.5.1",
         "strip-literal": "^4.0.0",
