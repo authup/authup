@@ -279,6 +279,18 @@ export class TokenController {
                     null;
 
                 active = !!session && isTokenSession(session, payload);
+
+                if (active && session) {
+                    try {
+                        await this.sessionManager.verify(session);
+                    } catch (e) {
+                        if (!isJWTError(e)) {
+                            throw e;
+                        }
+
+                        active = false;
+                    }
+                }
             }
 
             // An inactive token reports WHO it belonged to and nothing about
