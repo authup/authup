@@ -3,6 +3,38 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.72](https://github.com/authup/authup/compare/v1.0.0-beta.72...v1.0.0-beta.72) (2026-10-31)
+
+
+### ⚠ BREAKING CHANGES
+
+* All Authup packages now require Node.js >=26.0.0.
+
+### Features
+
+* allow colons in permission names ([#3780](https://github.com/authup/authup/issues/3780)) ([fc9b729](https://github.com/authup/authup/commit/fc9b72974e2d6db03e328281e31448b4dee8a61f))
+
+
+### Bug Fixes
+
+* **deps-dev:** bump happy-dom from 20.14.6 to 21.0.4 ([#3766](https://github.com/authup/authup/issues/3766)) ([e379de7](https://github.com/authup/authup/commit/e379de751d653557652b907d0a7a0a20b2a3584e))
+* **deps-dev:** bump node-forge from 1.4.0 to 1.4.2 ([#3784](https://github.com/authup/authup/issues/3784)) ([313dc18](https://github.com/authup/authup/commit/313dc18fe622287762b02235123ae570df4b8d34))
+* **deps-dev:** bump postcss-selector-parser from 7.1.5 to 7.1.6 ([#3710](https://github.com/authup/authup/issues/3710)) ([3f1645f](https://github.com/authup/authup/commit/3f1645ff3d462ce99a3fca7c1a40ae133d5f43d0))
+* **deps-dev:** bump serialize-javascript from 7.1.2 to 7.1.4 ([#3767](https://github.com/authup/authup/issues/3767)) ([40e159c](https://github.com/authup/authup/commit/40e159c89298391e5da772d25d7945e62c689108))
+* **deps-dev:** bump seroval from 1.6.9 to 1.7.5 ([#3781](https://github.com/authup/authup/issues/3781)) ([d2ab325](https://github.com/authup/authup/commit/d2ab325840f377aa3efdaa7364de8b36e92727cc))
+* **deps-dev:** bump svgo from 4.0.2 to 4.1.0 ([#3578](https://github.com/authup/authup/issues/3578)) ([ad418f7](https://github.com/authup/authup/commit/ad418f7af9957b77648f074fcd597bebc8b6f67d))
+* **deps:** bump @grpc/grpc-js from 1.14.4 to 1.14.5 ([#3700](https://github.com/authup/authup/issues/3700)) ([d66de93](https://github.com/authup/authup/commit/d66de9386cd553d7b4ad89dd0243d0b69406274b))
+* **deps:** bump @nuxt/nitro-server and nuxt ([#3786](https://github.com/authup/authup/issues/3786)) ([2015c31](https://github.com/authup/authup/commit/2015c31daaacf1217311be8a817aeff8072ef696))
+* **deps:** bump proxy-addr from 2.0.7 to 2.0.8 ([#3707](https://github.com/authup/authup/issues/3707)) ([9540e2f](https://github.com/authup/authup/commit/9540e2f0e7e4e62e0aa6261f59f4e30ba4999c00))
+* **deps:** bump qs from 6.16.0 to 6.17.0 ([#3778](https://github.com/authup/authup/issues/3778)) ([d2a95ad](https://github.com/authup/authup/commit/d2a95ad628def5081aa43c26c8971a266c562784))
+* **deps:** bump the minorandpatch group across 1 directory with 8 updates ([#3776](https://github.com/authup/authup/issues/3776)) ([f527380](https://github.com/authup/authup/commit/f527380156bcc4934b415a77a5f860799de7694e))
+* **deps:** bump the minorandpatch group with 4 updates ([#3783](https://github.com/authup/authup/issues/3783)) ([3194b6d](https://github.com/authup/authup/commit/3194b6da88b8552c9d4b66eec8c782197021f832))
+
+
+### Build System
+
+* require Node.js 26 and upgrade eslint config ([af74365](https://github.com/authup/authup/commit/af74365e779dfac0bdda276bfb77b822f47730fa))
+
 ## [1.0.0-beta.72](https://github.com/authup/authup/compare/v1.0.0-beta.71...v1.0.0-beta.72) (2026-10-27)
 
 

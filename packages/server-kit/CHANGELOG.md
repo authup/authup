@@ -1,5 +1,16 @@
 # Change Log
 
+## [1.0.0-beta.72](https://github.com/authup/authup/compare/v1.0.0-beta.72...v1.0.0-beta.72) (2026-10-31)
+
+
+### ⚠ BREAKING CHANGES
+
+* All Authup packages now require Node.js >=26.0.0.
+
+### Build System
+
+* require Node.js 26 and upgrade eslint config ([af74365](https://github.com/authup/authup/commit/af74365e779dfac0bdda276bfb77b822f47730fa))
+
 ## [1.0.0-beta.72](https://github.com/authup/authup/compare/v1.0.0-beta.71...v1.0.0-beta.72) (2026-10-27)
 
 
