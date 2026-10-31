@@ -1,5 +1,27 @@
 # Change Log
 
+## [1.0.0-beta.72](https://github.com/authup/authup/compare/v1.0.0-beta.72...v1.0.0-beta.72) (2026-10-31)
+
+
+### ⚠ BREAKING CHANGES
+
+* All Authup packages now require Node.js >=26.0.0.
+
+### Features
+
+* allow colons in permission names ([#3780](https://github.com/authup/authup/issues/3780)) ([fc9b729](https://github.com/authup/authup/commit/fc9b72974e2d6db03e328281e31448b4dee8a61f))
+
+
+### Bug Fixes
+
+* **deps-dev:** bump happy-dom from 20.14.6 to 21.0.4 ([#3766](https://github.com/authup/authup/issues/3766)) ([e379de7](https://github.com/authup/authup/commit/e379de751d653557652b907d0a7a0a20b2a3584e))
+* **deps:** bump the minorandpatch group with 4 updates ([#3783](https://github.com/authup/authup/issues/3783)) ([3194b6d](https://github.com/authup/authup/commit/3194b6da88b8552c9d4b66eec8c782197021f832))
+
+
+### Build System
+
+* require Node.js 26 and upgrade eslint config ([af74365](https://github.com/authup/authup/commit/af74365e779dfac0bdda276bfb77b822f47730fa))
+
 ## [1.0.0-beta.72](https://github.com/authup/authup/compare/v1.0.0-beta.71...v1.0.0-beta.72) (2026-10-27)
 
 
