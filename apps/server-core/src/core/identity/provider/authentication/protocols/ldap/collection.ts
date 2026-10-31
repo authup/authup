@@ -41,7 +41,7 @@ export class IdentityProviderLdapCollectionAuthenticator extends BaseCredentials
         const entities = await this.repository.findByProtocol(IdentityProviderProtocol.LDAP, realmId);
 
         for (const provider of entities) {
-            if (!isLdapIdentityProvider(provider)) {
+            if (!provider.enabled || !isLdapIdentityProvider(provider)) {
                 continue;
             }
 
