@@ -166,7 +166,7 @@ export class TimePolicyEvaluator implements IPolicyEvaluator {
         if (policy.interval) {
             if (
                 isIntervalForDayOfWeek(policy.interval) &&
-                policy.dayOfWeek
+                typeof policy.dayOfWeek === 'number'
             ) {
                 if (now.getDay() !== policy.dayOfWeek) {
                     return { success: maybeInvertPolicyOutcome(false, policy.invert) };
