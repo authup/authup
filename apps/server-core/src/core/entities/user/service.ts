@@ -31,6 +31,7 @@ import type { IUserRepository, IUserService } from './types.ts';
 import { decodeQuery, scopeReadQuery } from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { userSchema } from './schema.ts';
+import { assertRowUnchanged, retryOnStaleRow } from '../stale-row/index.ts';
 
 export type UserServiceContext = {
     repository: IUserRepository;
@@ -322,9 +323,6 @@ export class UserService extends AbstractEntityService implements IUserService {
         const credentialsService = new UserCredentialsService();
 
         if (entity) {
-            const originalName = entity.name;
-            const originalNameLocked = entity.nameLocked;
-
             // A changed address carries none of the old one's verification, and
             // `email` is NOT on the self-manage denylist, so without this a user
             // verifies their own address and then edits it to someone else's
@@ -364,37 +362,11 @@ export class UserService extends AbstractEntityService implements IUserService {
                 });
             }
 
-            const before: Partial<User> = { ...entity };
+            let password: string | undefined;
 
-            entity = this.repository.merge(entity, validated);
+            const { id } = entity;
 
-            if (
-                validated.name &&
-                validated.name !== originalName
-            ) {
-                if (validated.nameLocked) {
-                    entity.nameLocked = validated.nameLocked;
-                }
-
-                if (originalNameLocked && validated.nameLocked !== false) {
-                    entity.name = originalName;
-                }
-            }
-
-            if (!isSelfEdit) {
-                await this.evaluateUpdate(actor, PermissionName.USER_UPDATE, before, {
-                    ...entity,
-                    ...validated,
-                }, { realm: (row) => row.realmId });
-            }
-
-            if (emailChanged) {
-                entity.emailVerified = false;
-            }
-
-            if (validated.password) {
-                entity.password = await credentialsService.protect(validated.password);
-            }
+            let deactivated = false;
 
             // Only the write runs inside the transaction. It pins one pooled
             // connection, and the permission evaluator, the join-column check
@@ -402,65 +374,109 @@ export class UserService extends AbstractEntityService implements IUserService {
             // pool, so wrapping them too deadlocks the DataSource under ten
             // concurrent saves. The fresh row is lock-read and this request's
             // patch merged onto it: TypeORM writes only the columns that
-            // differ, so a concurrent writer's columns survive (#3526).
-            const patch: Partial<User> = { ...validated };
-
+            // differ, so a concurrent writer's columns survive (#3526). A
+            // fresh row that differs from the one authorized aborts the write,
+            // and the attempt is authorized again against it.
             // A field echoed back with the value this request read is no
             // intent to change it (the console posts its whole form), and
-            // writing it would overwrite a concurrent change. The name-lock
-            // revert falls under the same rule: a stale originalName must not
-            // overwrite a concurrent rename.
-            for (const key of Object.keys(patch) as (keyof User)[]) {
-                if (patch[key] === before[key]) {
-                    delete patch[key];
+            // writing it would overwrite a concurrent change. A retry still
+            // compares against that first read, the one the caller saw.
+            const read: Partial<User> = { ...entity };
+            const requested: Partial<User> = { ...validated };
+
+            for (const key of Object.keys(requested) as (keyof User)[]) {
+                if (requested[key] === read[key]) {
+                    delete requested[key];
                 }
             }
 
-            if (entity.name === originalName) {
-                delete patch.name;
-            }
+            entity = await retryOnStaleRow({
+                row: entity,
+                reread: () => this.repository.findOneBy({ id }),
+            }, async (stored) => {
+                const originalName = stored.name;
+                const originalNameLocked = stored.nameLocked;
+                const before: Partial<User> = { ...stored };
+                const next = this.repository.merge(stored, requested);
 
-            if (emailChanged) {
-                patch.emailVerified = false;
-            }
+                if (
+                    requested.name &&
+                    requested.name !== originalName
+                ) {
+                    if (requested.nameLocked) {
+                        next.nameLocked = requested.nameLocked;
+                    }
 
-            if (validated.password) {
-                patch.password = entity.password;
-            }
-
-            // A reset code mailed before the change would undo it: the new
-            // password, or the address the code was not sent to.
-            if (addressChanged || validated.password) {
-                patch.resetHash = null;
-                patch.resetExpires = null;
-            }
-
-            const { id } = entity;
-
-            entity = await this.repository.transaction(async (repository) => {
-                const current = await repository.findOneBy({ id });
-
-                if (!current) {
-                    throw new EntityNotFoundError();
+                    if (originalNameLocked && validated.nameLocked !== false) {
+                        next.name = originalName;
+                    }
                 }
 
-                // The lock is re-checked against the FRESH row: a rename
-                // racing a concurrent nameLocked flip must still lose.
-                const { name: currentName, nameLocked: currentNameLocked } = current;
-                const merged = repository.merge(current, patch);
-
-                if (currentNameLocked && patch.name && validated.nameLocked !== false) {
-                    merged.name = currentName;
+                if (!isSelfEdit) {
+                    await this.evaluateUpdate(actor, PermissionName.USER_UPDATE, before, {
+                        ...next,
+                        ...requested,
+                    }, { realm: (row) => row.realmId });
                 }
 
-                return repository.save(merged);
+                if (!password && validated.password) {
+                    password = await credentialsService.protect(validated.password);
+                }
+
+                const patch: Partial<User> = { ...requested };
+
+                // The name-lock revert follows the echo rule: a stale
+                // originalName must not overwrite a concurrent rename.
+                if (next.name === originalName) {
+                    delete patch.name;
+                }
+
+                if (emailChanged) {
+                    patch.emailVerified = false;
+                }
+
+                if (password) {
+                    patch.password = password;
+                }
+
+                // A reset code mailed before the change would undo it: the new
+                // password, or the address the code was not sent to.
+                if (addressChanged || password) {
+                    patch.resetHash = null;
+                    patch.resetExpires = null;
+                }
+
+                deactivated = patch.active === false;
+
+                return this.repository.transaction(async (repository) => {
+                    const current = await repository.findOneBy({ id });
+
+                    if (!current) {
+                        throw new EntityNotFoundError();
+                    }
+
+                    if (!isSelfEdit) {
+                        assertRowUnchanged(before, current);
+                    }
+
+                    // The lock is re-checked against the FRESH row: a rename
+                    // racing a concurrent nameLocked flip must still lose.
+                    const { name: currentName, nameLocked: currentNameLocked } = current;
+                    const merged = repository.merge(current, patch);
+
+                    if (currentNameLocked && patch.name && validated.nameLocked !== false) {
+                        merged.name = currentName;
+                    }
+
+                    return repository.save(merged);
+                });
             });
 
             // A deactivation ends every session of the user, and a new
             // password every other one: a user changing its own keeps the
             // session it did so with.
-            if (this.sessionManager && (patch.active === false || validated.password)) {
-                const self = patch.active !== false &&
+            if (this.sessionManager && (deactivated || password)) {
+                const self = !deactivated &&
                     actor.identity?.type === 'user' &&
                     actor.identity.data.id === id;
 

@@ -40,6 +40,13 @@ otherwise. Review the detached policies after the upgrade.
 - An email factor an administrator enrolls for a user ends all of that user's sessions.
 - Adding a further factor ends nothing.
 
+### A user, client or folder update can answer 409 under concurrent writes
+
+An update of a user, a client or a folder is authorized against the row it read. When
+another write changes that row before the update is stored, the update is authorized
+again against the changed row and retried. It answers `409` (`entity_conflict`) when the
+row keeps changing over three attempts; retry the request.
+
 ### A password or email change invalidates a pending reset link
 
 A password-reset link mailed before the user's password or email address changed no longer

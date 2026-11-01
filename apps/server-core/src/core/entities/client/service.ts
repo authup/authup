@@ -39,6 +39,7 @@ import { CLIENT_READ_PERMISSIONS } from './constants.ts';
 import { decodeQuery, scopeReadQuery } from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { clientSchema } from './schema.ts';
+import { assertRowUnchanged, retryOnStaleRow } from '../stale-row/index.ts';
 import { isRealmReachable } from '../realm/helpers.ts';
 import type { IQuery } from '@rapiq/core';
 import type { ISessionManager } from '../../authentication/session/types.ts';
@@ -348,16 +349,8 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         assertSecretModeExclusive(validated);
 
-        // A protected secret is replaced only through rotateSecret, together
-        // with the mode it is stored under; the metadata path must never be
-        // able to downgrade it (plan 105). `null` counts: the save path would
-        // otherwise generate a replacement nobody is told about.
-        if (
-            entity &&
-            validated.secret !== undefined &&
-            getClientSecretMode(entity) !== ClientSecretMode.PLAIN
-        ) {
-            throw new ValidationError('The secret of a hashed or encrypted client is rotated through POST /clients/:id/secret.');
+        if (entity) {
+            assertSecretWritable(entity, validated);
         }
 
         await this.repository.validateJoinColumns(validated);
@@ -399,71 +392,108 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 });
             }
 
-            const before: Partial<Client> = { ...entity };
+            const { id } = entity;
 
-            entity = this.repository.merge(entity, validated);
-
-            if (!isSelfEdit) {
-                await this.evaluateUpdate(actor, PermissionName.CLIENT_UPDATE, before, entity, { realm: (row) => row.realmId });
-            }
-
-            if (entity.authMethod === ClientAuthMethod.SECRET) {
-                if (!validated.secret && !entity.secret) {
-                    validated.secret = credentialsService.generateSecret();
-                }
-
-                if (validated.secret) {
-                    entity.secret = await credentialsService.protect(validated.secret, entity);
-                }
-            } else {
-                entity.secret = null;
-                entity.secretHashed = false;
-                entity.secretEncrypted = false;
-            }
+            let deactivated = false;
 
             // Only the write runs inside the transaction: it pins one pooled
             // connection, and the evaluator, join-column and uniqueness reads
             // above each take their own from the same pool, so wrapping them
             // too deadlocks the DataSource under ten concurrent saves. The
             // fresh row is lock-read and this request's patch merged onto it,
-            // so a concurrent writer's columns survive (#3526).
-            const patch: Partial<Client> = { ...validated };
-
+            // so a concurrent writer's columns survive (#3526). A fresh row
+            // that differs from the one authorized aborts the write, and the
+            // attempt is authorized again against it.
             // A field echoed back with the value this request read is no
             // intent to change it (the console posts its whole form), and
-            // writing it would overwrite a concurrent change.
-            for (const key of Object.keys(patch) as (keyof Client)[]) {
-                if (patch[key] === before[key]) {
-                    delete patch[key];
-                }
-            }
+            // writing it would overwrite a concurrent change. A retry still
+            // compares against that first read, the one the caller saw.
+            const read: Partial<Client> = { ...entity };
+            const dropEchoes = (input: Partial<Client>): Partial<Client> => {
+                const output = { ...input };
 
-            const { id } = entity;
-
-            entity = await this.repository.transaction(async (repository) => {
-                const current = await repository.findOneWithSecret({ id });
-
-                if (!current) {
-                    throw new EntityNotFoundError();
+                for (const key of Object.keys(output) as (keyof Client)[]) {
+                    if (output[key] === read[key]) {
+                        delete output[key];
+                    }
                 }
 
-                // The secret follows the FRESH row's authMethod, not the one
-                // this request read: a concurrent switch to `secret` must not
-                // have its credential cleared by an unrelated edit racing it.
-                const merged = repository.merge(current, patch);
+                return output;
+            };
 
-                if (merged.authMethod !== ClientAuthMethod.SECRET) {
-                    merged.secret = null;
-                    merged.secretHashed = false;
-                    merged.secretEncrypted = false;
-                } else if (patch.secret) {
-                    merged.secret = await credentialsService.protect(patch.secret, merged);
+            entity = await retryOnStaleRow({
+                row: entity,
+                reread: () => this.repository.findOneWithSecret({ id }),
+            }, async (stored) => {
+                // A retry reads a row a concurrent rotation may have moved
+                // out of plain mode, and only the fresh row says whether a
+                // secret is still missing.
+                assertSecretWritable(stored, validated);
+
+                const input: Partial<Client> = { ...validated };
+                const before: Partial<Client> = { ...stored };
+                const next = this.repository.merge(stored, dropEchoes(input));
+
+                if (!isSelfEdit) {
+                    await this.evaluateUpdate(actor, PermissionName.CLIENT_UPDATE, before, next, { realm: (row) => row.realmId });
                 }
 
-                return repository.save(merged);
+                if (next.authMethod === ClientAuthMethod.SECRET) {
+                    if (!input.secret && !next.secret) {
+                        input.secret = credentialsService.generateSecret();
+                    }
+
+                    if (input.secret) {
+                        next.secret = await credentialsService.protect(input.secret, next);
+                    }
+                } else {
+                    next.secret = null;
+                    next.secretHashed = false;
+                    next.secretEncrypted = false;
+                }
+
+                const patch = dropEchoes(input);
+
+                deactivated = patch.active === false;
+
+                return this.repository.transaction(async (repository) => {
+                    const current = await repository.findOneWithSecret({ id });
+
+                    if (!current) {
+                        throw new EntityNotFoundError();
+                    }
+
+                    if (!isSelfEdit) {
+                        assertRowUnchanged(before, current);
+                    } else if (patch.secret !== undefined) {
+                        // A self-edit is not retried, so its secret is
+                        // checked against the locked row itself.
+                        assertSecretWritable(current, validated);
+
+                        if (validated.secret === undefined && current.secret) {
+                            delete patch.secret;
+                        }
+                    }
+
+                    // The secret follows the FRESH row's authMethod, not the
+                    // one this request read: a concurrent switch to `secret`
+                    // must not have its credential cleared by an unrelated
+                    // edit racing it.
+                    const merged = repository.merge(current, patch);
+
+                    if (merged.authMethod !== ClientAuthMethod.SECRET) {
+                        merged.secret = null;
+                        merged.secretHashed = false;
+                        merged.secretEncrypted = false;
+                    } else if (patch.secret) {
+                        merged.secret = await credentialsService.protect(patch.secret, merged);
+                    }
+
+                    return repository.save(merged);
+                });
             });
 
-            if (patch.active === false) {
+            if (deactivated) {
                 await this.sessionManager?.revokeByOwner({ sub: id, subKind: 'client' });
             }
 
@@ -729,6 +759,21 @@ export class ClientService extends AbstractEntityService implements IClientServi
         entity.id = entityId;
 
         return entity;
+    }
+}
+
+/**
+ * A protected secret is replaced only through rotateSecret, together with
+ * the mode it is stored under; the metadata path must never be able to
+ * downgrade it. `null` counts: the save path would otherwise generate a
+ * replacement nobody is told about.
+ */
+function assertSecretWritable(row: Client, validated: Partial<Client>): void {
+    if (
+        validated.secret !== undefined &&
+        getClientSecretMode(row) !== ClientSecretMode.PLAIN
+    ) {
+        throw new ValidationError('The secret of a hashed or encrypted client is rotated through POST /clients/:id/secret.');
     }
 }
 

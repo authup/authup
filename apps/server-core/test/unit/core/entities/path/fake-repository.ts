@@ -74,8 +74,16 @@ export class FakePathRepository extends FakeEntityRepository<Path> implements IP
             item.path.startsWith(prefix));
     }
 
+    /**
+     * Runs as the transaction opens, before the callback's locked read: a
+     * spec commits a concurrent write here.
+     */
+    beforeTransaction: (() => Promise<void> | void) | undefined;
+
     async transaction<R>(fn: (repository: IPathRepository) => Promise<R>): Promise<R> {
         this.transactionCalls += 1;
+
+        await this.beforeTransaction?.();
 
         // the adapter hands the callback a SECOND instance, bound to the
         // transaction and locking what it reads; the store is shared by

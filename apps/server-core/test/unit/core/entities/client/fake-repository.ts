@@ -22,6 +22,14 @@ export class FakeClientRepository extends FakeEntityRepository<Client> implement
         // no-op
     }
 
+    // A database read hands out a fresh object, never the stored one, so a
+    // merge onto a read row changes nothing until it is saved.
+    async findOneBy(where: Record<string, any>): Promise<Client | null> {
+        const entity = await super.findOneBy(where);
+
+        return entity ? { ...entity } : null;
+    }
+
     async findOne(id: string, _query?: IQuery, realm?: string): Promise<Client | null> {
         return this.findOneByIdOrName(id, realm);
     }
@@ -40,8 +48,16 @@ export class FakeClientRepository extends FakeEntityRepository<Client> implement
 
     transactionCalls = 0;
 
+    /**
+     * Runs as the transaction opens, before the callback's locked read: a
+     * spec commits a concurrent write here.
+     */
+    beforeTransaction: (() => Promise<void> | void) | undefined;
+
     async transaction<R>(fn: (repository: IClientRepository) => Promise<R>): Promise<R> {
         this.transactionCalls += 1;
+
+        await this.beforeTransaction?.();
 
         return fn(this);
     }

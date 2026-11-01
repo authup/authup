@@ -716,6 +716,99 @@ describe('core/entities/client/service', () => {
             expect(current!.secret).toEqual(stored);
         });
 
+        describe('a secret rotated between the read and the write', () => {
+            const rotateConcurrently = (id: string, secret: string) => {
+                let done = false;
+
+                repository.beforeTransaction = async () => {
+                    if (done) {
+                        return;
+                    }
+
+                    done = true;
+
+                    const row = await repository.findOneBy({ id });
+
+                    await repository.save({
+                        ...row!,
+                        secret,
+                        secretHashed: true,
+                        secretEncrypted: false,
+                    });
+                };
+            };
+
+            it('should refuse a supplied secret once the fresh row is hashed', async () => {
+                const entity = repository.seed(createFakeClient({
+                    secret: 'old-plain',
+                    secretHashed: false,
+                    secretEncrypted: false,
+                }));
+
+                const rotated = await hash('rotated');
+
+                rotateConcurrently(entity.id, rotated);
+
+                await expect(
+                    service.update(entity.id, { secret: 'new-plain' }, createAllowAllActor()),
+                ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+
+                const stored = await repository.findOneWithSecret({ id: entity.id });
+
+                expect(stored!.secret).toEqual(rotated);
+                expect(stored!.secretHashed).toBe(true);
+            });
+
+            it('should not write a secret generated for the first read over the rotated one', async () => {
+                const entity = repository.seed(createFakeClient({
+                    secret: null,
+                    secretHashed: false,
+                    secretEncrypted: false,
+                }));
+
+                const rotated = await hash('rotated');
+
+                rotateConcurrently(entity.id, rotated);
+
+                const result = await service.update(entity.id, { displayName: 'Renamed' }, createAllowAllActor());
+
+                expect(result.displayName).toEqual('Renamed');
+                expect(repository.transactionCalls).toBe(2);
+
+                const stored = await repository.findOneWithSecret({ id: entity.id });
+
+                expect(stored!.secret).toEqual(rotated);
+                expect(stored!.secretHashed).toBe(true);
+            });
+
+            it('should keep the rotated secret on a self-edit', async () => {
+                const entity = repository.seed(createFakeClient({
+                    secret: null,
+                    secretHashed: false,
+                    secretEncrypted: false,
+                }));
+
+                const actor = buildSelfActor(entity.id);
+
+                actor.permissionEvaluator.setBehavior((call) => {
+                    if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
+                        throw PermissionError.denied('test');
+                    }
+                });
+
+                const rotated = await hash('rotated');
+
+                rotateConcurrently(entity.id, rotated);
+
+                await service.update(entity.id, { displayName: 'Renamed' }, actor);
+
+                const stored = await repository.findOneWithSecret({ id: entity.id });
+
+                expect(stored!.secret).toEqual(rotated);
+                expect(stored!.displayName).toEqual('Renamed');
+            });
+        });
+
         it('should ignore a storage mode flag sent on update', async () => {
             const entity = repository.seed(createFakeClient({
                 secret: 'keep',
@@ -863,6 +956,97 @@ describe('core/entities/client/service', () => {
                 }));
 
                 await expect(service.update(entity.id, { pathId: unreachable }, actor)).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+            });
+
+            // The verdict above is taken on a row read before the write
+            // transaction. A change committed in between must be authorized
+            // again against the row the write lands on.
+            describe('a change committed between the read and the write', () => {
+                const seedReachable = () => repository.seed(createFakeClient({
+                    realmId: realmRepository.getMasterRealm().id,
+                    pathId: reachable,
+                }));
+
+                const commitConcurrently = (id: string, data: Partial<Client>) => {
+                    repository.beforeTransaction = async () => {
+                        const row = await repository.findOneBy({ id });
+
+                        await repository.save({ ...row!, ...data });
+                    };
+                };
+
+                const countUpdateEvaluations = () => actor.permissionEvaluator.evaluateCalls
+                    .filter((call) => call.name === PermissionName.CLIENT_UPDATE).length;
+
+                it('should evaluate once and open one transaction when nothing changed', async () => {
+                    const entity = seedReachable();
+
+                    await service.update(entity.id, { displayName: 'Renamed' }, actor);
+
+                    expect(repository.transactionCalls).toBe(1);
+                    expect(countUpdateEvaluations()).toBe(2);
+                });
+
+                it('should refuse the write when the fresh row is out of reach', async () => {
+                    const entity = seedReachable();
+
+                    commitConcurrently(entity.id, { pathId: unreachable });
+
+                    await expect(service.update(entity.id, { displayName: 'Renamed' }, actor))
+                        .rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+
+                    const stored = await repository.findOneById(entity.id);
+
+                    expect(stored!.pathId).toBe(unreachable);
+                    expect(stored!.displayName).not.toBe('Renamed');
+                });
+
+                it('should re-authorize and keep a concurrent change that stays in reach', async () => {
+                    const entity = seedReachable();
+
+                    commitConcurrently(entity.id, { description: 'concurrent' });
+
+                    const result = await service.update(entity.id, { displayName: 'Renamed' }, actor);
+
+                    expect(result.description).toBe('concurrent');
+                    expect(result.displayName).toBe('Renamed');
+                    expect(repository.transactionCalls).toBe(2);
+                    expect(countUpdateEvaluations()).toBe(4);
+                });
+
+                it('should still drop a field echoed from the first read on the retry', async () => {
+                    const entity = repository.seed(createFakeClient({
+                        realmId: realmRepository.getMasterRealm().id,
+                        pathId: reachable,
+                        active: true,
+                    }));
+
+                    commitConcurrently(entity.id, { active: false });
+
+                    const result = await service.update(entity.id, { displayName: 'Renamed', active: true }, actor);
+
+                    expect(repository.transactionCalls).toBe(2);
+                    expect(result.active).toBe(false);
+                    expect(result.displayName).toBe('Renamed');
+                });
+
+                it('should answer a conflict when the row never stabilizes', async () => {
+                    const entity = seedReachable();
+
+                    let counter = 0;
+
+                    repository.beforeTransaction = async () => {
+                        const row = await repository.findOneBy({ id: entity.id });
+
+                        counter += 1;
+                        await repository.save({ ...row!, description: `concurrent-${counter}` });
+                    };
+
+                    await expect(service.update(entity.id, { displayName: 'Renamed' }, actor))
+                        .rejects.toMatchObject({ code: ErrorCode.ENTITY_CONFLICT });
+                    expect(repository.transactionCalls).toBe(3);
+                    expect((await repository.findOneById(entity.id))!.displayName).not.toBe('Renamed');
+                });
             });
         });
     });
