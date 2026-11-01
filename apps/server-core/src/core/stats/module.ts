@@ -25,7 +25,12 @@ import type {
     IEntityStatsService,
     StatsWindow,
 } from './types.ts';
-import { isPastRawHorizon, resolveStatsWindow, stripWindowConditions } from './window.ts';
+import {
+    isPastRawHorizon,
+    readRecordQuery,
+    resolveStatsWindow,
+    splitWindowConditions,
+} from './window.ts';
 
 function collectFields(condition: ICondition, output: Set<string>): void {
     if (isFilters(condition)) {
@@ -87,35 +92,34 @@ export class EntityStatsService<
             actor,
         });
 
-        // the whole gate runs before the cache lookup, and the key carries
-        // what it produced: reach is a property of the REQUEST (a token
-        // narrowed to its client, a bearer without `global`), not of the
-        // identity, so two requests by one identity can lower to different
-        // queries and one must never read the other's answer
+        const dateColumn = this.definition.dateColumn ?? 'createdAt';
+
+        // the gate runs over the query without the caller's window, which
+        // is appended afterwards: the total drops that window alone, never a
+        // range the gate itself narrowed to. The whole gate runs before the
+        // cache lookup, and the key carries what it produced: reach is a
+        // property of the REQUEST (a token narrowed to its client, a bearer
+        // without `global`), not of the identity, so two requests by one
+        // identity can lower to different queries and one must never read
+        // the other's answer
+        const split = splitWindowConditions(parsed, dateColumn);
         const gate = this.definition.scope ?
-            await this.definition.scope(parsed, actor) :
+            await this.definition.scope(split.query, actor) :
             undefined;
 
         let base = parsed;
+        let unwindowed = gate ? narrowReadScope(gate) : split.query;
         const realmColumn = this.definition.realmColumn === undefined ?
             'realmId' :
             this.definition.realmColumn;
 
         if (realmColumn && options.realmId) {
             base = appendQueryConditions(base, eq(realmColumn, options.realmId));
+            unwindowed = appendQueryConditions(unwindowed, eq(realmColumn, options.realmId));
         }
 
-        let scoped = base;
+        const scoped = appendQueryConditions(unwindowed, ...split.window);
 
-        if (gate) {
-            scoped = narrowReadScope(gate);
-
-            if (realmColumn && options.realmId) {
-                scoped = appendQueryConditions(scoped, eq(realmColumn, options.realmId));
-            }
-        }
-
-        const dateColumn = this.definition.dateColumn ?? 'createdAt';
         const now = new Date();
         const rawHorizonDays = this.definition.rawHorizonDays?.(scoped);
         const window = resolveStatsWindow(scoped, {
@@ -185,7 +189,7 @@ export class EntityStatsService<
                 rollup.repository.aggregate(translated).then((output) => output.map((row) => rollup.translateRow(row))) :
                 this.definition.repository.aggregate(bound(scoped)),
             own ? this.definition.repository.aggregate(bound(own)) : [],
-            this.countTotal(prefix, stripWindowConditions(scoped, dateColumn)),
+            this.countTotal(prefix, readRecordQuery(unwindowed)),
             this.definition.meta ? this.definition.meta({ routable }) : {},
         ]);
 

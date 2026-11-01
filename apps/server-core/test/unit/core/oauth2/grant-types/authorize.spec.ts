@@ -29,6 +29,7 @@ import { FakeOAuth2OpenIDTokenIssuer } from '../../helpers/fake-oauth2-openid-to
 import { FakeOAuth2TokenIssuer } from '../../helpers/fake-oauth2-token-issuer.ts';
 import { FakeSessionManager } from '../../helpers/fake-session-manager.ts';
 import { FakeIdentityResolver } from '../../helpers/fake-identity-resolver.ts';
+import { createConcurrentFirstFactor } from './concurrent-first-factor.ts';
 
 describe('OAuth2AuthorizeGrant', () => {
     let accessTokenIssuer: FakeOAuth2TokenIssuer;
@@ -103,6 +104,13 @@ describe('OAuth2AuthorizeGrant', () => {
             keyStore,
             identityResolver,
             sessionManager,
+            mfaChallengeProvider: {
+                challenge: async () => ({
+                    required: false, 
+                    enrollmentRequired: false, 
+                    kinds: [], 
+                }), 
+            },
         });
     });
 
@@ -483,5 +491,93 @@ describe('OAuth2AuthorizeGrant', () => {
 
         expect(payload).not.toHaveProperty('amr');
         expect(payload).not.toHaveProperty('acr');
+    });
+
+    describe('a first factor stored concurrently with a session-less redemption', () => {
+        function build(enabled = true) {
+            const factor = createConcurrentFirstFactor(sessionManager, {
+                userId, 
+                realmId, 
+                enabled, 
+            });
+            const guarded = new OAuth2AuthorizeGrant({
+                accessTokenIssuer,
+                refreshTokenIssuer,
+                openIdTokenIssuer,
+                keyStore,
+                identityResolver,
+                sessionManager,
+                mfaChallengeProvider: factor.service,
+            });
+
+            return { grant: guarded, ...factor };
+        }
+
+        it('should revoke the created session and refuse the code', async () => {
+            const { grant: guarded, enrollAfterInsert } = build();
+
+            enrollAfterInsert();
+
+            await expectInvalidGrant(guarded.runWith(buildCode({ auth_method: 'pwd' })));
+
+            expect(sessionManager.createCalls).toHaveLength(1);
+            expect(sessionManager.revokeCalls).toHaveLength(1);
+            expect(accessTokenIssuer.issueCalls).toHaveLength(0);
+        });
+
+        it('should leave the session alone when mfa is disabled', async () => {
+            const { grant: guarded, enrollAfterInsert } = build(false);
+
+            enrollAfterInsert();
+
+            const result = await guarded.runWith(buildCode({ auth_method: 'pwd' }));
+
+            expect(result).toHaveProperty('access_token');
+            expect(sessionManager.revokeCalls).toHaveLength(0);
+        });
+
+        it('should not look up factors for an externally authenticated code', async () => {
+            const {
+                grant: guarded, 
+                enrollAfterInsert, 
+                lookups, 
+            } = build();
+
+            enrollAfterInsert();
+
+            const result = await guarded.runWith(buildCode({ auth_method: 'ext' }));
+
+            expect(result).toHaveProperty('access_token');
+            expect(lookups).not.toHaveBeenCalled();
+            expect(sessionManager.revokeCalls).toHaveLength(0);
+        });
+
+        it('should not look up factors when the code reuses a session', async () => {
+            const { grant: guarded, lookups } = build();
+            const sessionId = randomUUID();
+
+            await sessionManager.create({
+                id: sessionId,
+                sub: userId,
+                subKind: OAuth2SubKind.USER,
+                realmId,
+                authMethod: 'pwd',
+                mfaAt: null,
+            });
+
+            await guarded.runWith(buildCode({ session_id: sessionId }));
+
+            expect(lookups).not.toHaveBeenCalled();
+        });
+
+        it('should issue tokens when the user still holds no factor', async () => {
+            const { grant: guarded, lookups } = build();
+
+            const result = await guarded.runWith(buildCode({ auth_method: 'pwd' }));
+
+            expect(result).toHaveProperty('access_token');
+            expect(lookups).toHaveBeenCalledTimes(1);
+            expect(sessionManager.revokeCalls).toHaveLength(0);
+        });
     });
 });

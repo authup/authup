@@ -123,8 +123,9 @@ Realm-bound entities scope a NAME key without a realm to the actor's realm, the
 realm create would write, so `PUT /users/alice` from a master admin never
 reaches another realm's `alice`. A UUID key stays a by-id lookup.
 
-A policy with a `parentId` and no `realmId` is global; there is deliberately no
-parent/child realm check.
+A policy with a `parentId` and no `realmId` is global; there is no parent/child
+realm check, but attaching, detaching or deleting a child needs `PERMISSION_UPDATE`
+on the parent (before its type), and attaching to a built-in parent is refused.
 
 ### Realm immutability (an entity never moves between realms)
 

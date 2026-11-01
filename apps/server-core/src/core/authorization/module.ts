@@ -53,9 +53,9 @@ function readRealmId(row: BasePolicy) : string | null | undefined {
 /**
  * Every realm a tree touches, its children included. A child row carries its
  * own `realmId` and nothing pins it to its parent's (`PolicyService.save`
- * checks only that the parent is a composite), so a reachable composite can
- * hold a child of a realm the caller may not read, and the child's
- * configuration travels inside the parent's projection.
+ * requires authority over the parent, not realm equality), so a reachable
+ * composite can hold a child of a realm the caller may not read, and the
+ * child's configuration travels inside the parent's projection.
  */
 function collectRealmIds(tree: BasePolicy, into: Set<string | null | undefined>) : Set<string | null | undefined> {
     into.add(readRealmId(tree));

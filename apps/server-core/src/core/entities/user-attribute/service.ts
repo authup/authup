@@ -15,7 +15,7 @@ import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import { eq, inArray, or } from '@rapiq/core';
 import { PermissionName } from '@authup/core-kit';
 import type { UserAttribute } from '@authup/core-kit';
-import { isObject } from '@authup/kit';
+import { ValidatorGroup, isObject } from '@authup/kit';
 import { buildErrorMessageForAttribute } from 'validup';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import { AbstractEntityService } from '@authup/server-kit';
@@ -23,6 +23,7 @@ import type { IUserAttributeRepository, IUserAttributeService } from './types.ts
 import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
 import { assertPreferenceValue } from './preferences.ts';
 import { userAttributeSchema } from './schema.ts';
+import { EntityAttributeValidator } from '../attribute/index.ts';
 
 export type UserAttributeServiceContext = {
     repository: IUserAttributeRepository;
@@ -34,9 +35,12 @@ export class UserAttributeService extends AbstractEntityService implements IUser
 
     protected reservedNames: ReadonlySet<string>;
 
+    protected validator: EntityAttributeValidator;
+
     constructor(ctx: UserAttributeServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.validator = new EntityAttributeValidator();
         this.reservedNames = ctx.reservedNames ?? new Set();
     }
 
@@ -181,6 +185,8 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_SELF_MANAGE });
         }
 
+        Object.assign(data, await this.validator.run(data, { group: ValidatorGroup.CREATE }));
+
         await this.repository.validateJoinColumns(data);
 
         if (typeof data.name === 'string' && this.reservedNames.has(data.name)) {
@@ -201,7 +207,12 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             throw new ValidationError(buildErrorMessageForAttribute('userId'));
         }
 
-        const entity = this.repository.create(data);
+        const entity = this.repository.create({
+            name: data.name,
+            value: data.value,
+            userId: data.userId,
+            realmId: data.realmId,
+        });
 
         if (isSelfFallback) {
             await evaluateRecord(actor.permissionEvaluator, {
@@ -227,6 +238,8 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<UserAttribute> {
+        Object.assign(data, await this.validator.run(data, { group: ValidatorGroup.UPDATE }));
+
         await this.repository.validateJoinColumns(data);
 
         if (typeof data.name === 'string' && this.reservedNames.has(data.name)) {
@@ -264,18 +277,24 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_SELF_MANAGE });
         }
 
-        // An attribute belongs to a fixed user; its owner (and the user-derived realmId) is
-        // IMMUTABLE on update — strip both from the body. This blocks a self-manage or admin
-        // caller from reassigning the attribute to another user (isSelfTarget was decided from
-        // the ORIGINAL owner), and blocks a caller-supplied realmId that would gate USER_UPDATE
-        // against a realm of their choosing. To move an attribute, delete + recreate.
-        delete data.userId;
-        delete data.user;
-        delete data.realmId;
-
+        // Only the name and value are writable: the id, the owner and the
+        // user-derived realmId are IMMUTABLE on update. isSelfTarget was
+        // decided from the ORIGINAL owner, a body realmId would pick the realm
+        // USER_UPDATE is gated against, and a body id would retarget the save
+        // onto another row. To move an attribute, delete + recreate.
         const before: UserAttribute = { ...entity };
 
-        entity = this.repository.merge(entity, data);
+        const patch: Partial<UserAttribute> = {};
+
+        if (typeof data.name !== 'undefined') {
+            patch.name = data.name;
+        }
+
+        if (typeof data.value !== 'undefined') {
+            patch.value = data.value;
+        }
+
+        entity = this.repository.merge(entity, patch);
 
         if (isSelfFallback) {
             await evaluateRecord(actor.permissionEvaluator, {

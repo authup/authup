@@ -11,7 +11,9 @@ import type {
     ActorContext,
     EntityRepositoryFindManyResult,
     ICache,
+    Logger,
 } from '@authup/server-kit';
+import type { ISessionManager } from '../../authentication/session/types.ts';
 import type { IRealmCipher } from '../../key/index.ts';
 import type { EventRequestContext, IEventService } from '../event/index.ts';
 import type { IMailClient, IMailTemplateRenderer } from '../../mail/index.ts';
@@ -279,6 +281,11 @@ export type UserAuthenticatorServiceContext = {
     cipher: IRealmCipher,
     eventService?: IEventService,
     requestContext?: () => EventRequestContext | undefined,
+    /**
+     * Ends the sessions a user held before its first confirmed factor.
+     */
+    sessionManager?: ISessionManager,
+    logger?: Logger,
     /**
      * Mail dependencies for the email-OTP kind (absent = email OTP
      * enrollment/send is refused).

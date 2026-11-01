@@ -7,6 +7,7 @@
 
 import { RealmScope } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
+import type { RoleAttribute } from '@authup/core-kit';
 import {
     afterAll,
     beforeAll,
@@ -33,15 +34,20 @@ describe('role attribute owner realm', () => {
     let token: string;
     let ownRealmId: string;
     let foreignRoleId: string;
+    let ownRoleId: string;
 
-    async function create(body: Record<string, any>) {
-        return httpRequest(suite, 'POST', '/role-attributes', {
+    async function send(path: string, body: Record<string, any>) {
+        return httpRequest(suite, 'POST', path, {
             headers: {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(body),
         });
+    }
+
+    async function create(body: Record<string, any>) {
+        return send('/role-attributes', body);
     }
 
     beforeAll(async () => {
@@ -59,6 +65,13 @@ describe('role attribute owner realm', () => {
         });
 
         foreignRoleId = role.id;
+
+        const { data: ownRole } = await suite.client.role.create({
+            ...createFakeRole(),
+            realmId: ownRealmId,
+        });
+
+        ownRoleId = ownRole.id;
 
         const secret = 'role-attribute-realm-secret';
         const { data: client } = await suite.client.client.create({
@@ -122,5 +135,77 @@ describe('role attribute owner realm', () => {
         const response = await create({ name: 'no-role', value: 'v' });
 
         expect(response.status).toEqual(400);
+    });
+
+    describe('a body id', () => {
+        let globalAttribute: RoleAttribute;
+
+        beforeAll(async () => {
+            const { data: globalRole } = await suite.client.role.create(createFakeRole());
+            const { data } = await suite.client.roleAttribute.create({
+                roleId: globalRole.id,
+                name: 'global-attribute',
+                value: 'global-value',
+            });
+
+            globalAttribute = data;
+        });
+
+        async function expectGlobalAttributeUntouched() {
+            const { data } = await suite.client.roleAttribute.getOne(globalAttribute.id);
+
+            expect(data).toMatchObject({
+                roleId: globalAttribute.roleId,
+                realmId: null,
+                name: 'global-attribute',
+                value: 'global-value',
+            });
+        }
+
+        it('never retargets a create onto another row', async () => {
+            const response = await create({
+                id: globalAttribute.id,
+                roleId: ownRoleId,
+                name: 'created-with-id',
+                value: 'v',
+            });
+
+            expect(response.status).toEqual(201);
+
+            const body = await response.json();
+
+            expect(body.data.id).not.toEqual(globalAttribute.id);
+            expect(body.data.roleId).toEqual(ownRoleId);
+
+            await expectGlobalAttributeUntouched();
+        });
+
+        it('never retargets an update onto another row', async () => {
+            const { data: own } = await suite.client.roleAttribute.create({
+                roleId: ownRoleId,
+                name: 'own-attribute',
+                value: 'v',
+            });
+
+            const response = await send(`/role-attributes/${own.id}`, {
+                id: globalAttribute.id,
+                name: 'renamed',
+                value: 'overwritten',
+            });
+
+            expect(response.status).toEqual(202);
+
+            const body = await response.json();
+
+            expect(body.data).toMatchObject({
+                id: own.id,
+                roleId: ownRoleId,
+                realmId: ownRealmId,
+                name: 'renamed',
+                value: 'overwritten',
+            });
+
+            await expectGlobalAttributeUntouched();
+        });
     });
 });
