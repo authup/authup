@@ -50,8 +50,8 @@ server keeps answering with the claims, because the store SOURCES the whole
 session from them (RFC 7662 §2.2 recommends - SHOULD NOT, not MUST NOT -
 trimming an inactive response, and trimming would cost the store its realm,
 subject, permissions, session_id and acr on every restore). This is coupled to
-the introspection endpoint's own change (conventions.md -> *`POST
-/token/introspect` READS an expired token*): an EXPIRED token answers 200
+the introspection endpoint (conventions.md -> *`POST /token/introspect`
+REPORTS, it does not raise*): an EXPIRED token answers 200
 `{active: false}` rather than throwing, so a store relying on a throw to reach
 its refresh fallback would never reach it. The two must not be separated.
 

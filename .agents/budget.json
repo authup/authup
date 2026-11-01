@@ -6,15 +6,15 @@
             "history": 5
         },
         ".agents/conventions.md": {
-            "bytes": 66594,
-            "history": 1
+            "bytes": 33686,
+            "history": 0
         },
         ".agents/structure.md": {
-            "bytes": 99702,
-            "history": 4
+            "bytes": 46413,
+            "history": 2
         },
         ".agents/testing.md": {
-            "bytes": 45085,
+            "bytes": 30800,
             "history": 0
         },
         ".agents/topics/authorization.md": {
@@ -86,7 +86,7 @@
             "history": 0
         },
         ".agents/topics/ui.md": {
-            "bytes": 36430,
+            "bytes": 36421,
             "history": 5
         },
         "AGENTS.md": {

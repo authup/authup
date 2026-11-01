@@ -2,60 +2,14 @@
 
 ## Setup
 
-- **Runner**: Vitest with SWC compiler for fast transpilation
+- **Runner**: Vitest with SWC compiler for fast transpilation. SWC strips types without checking them (see `check:types` below).
 - **Test location**: `test/unit/**/*.spec.ts` within each package/app
-- **Config**: `test/vitest.config.ts` per package/app
+- **Config**: `test/vitest.config.ts` per package/app. Vitest does NOT auto-discover a config under `test/`, so every `test` script passes `--config test/vitest.config.ts`. A plain `npx vitest run` from the workspace directory finds no config and skips the global setup (`test/setup.ts`, which provisions the master realm and starts Docker containers).
 - **Prerequisite**: `npm run build` before running tests
-- **Reflect polyfill (server-core)**: `test/vitest.config.ts` sets
-  `setupFiles: ['reflect-metadata']`. `@peculiar/x509` v2 pulls in
-  `tsyringe`, which throws at import time unless a Reflect polyfill is
-  already loaded, and the `globalSetup` file runs in an isolated context
-  so its own `import 'reflect-metadata'` does not reach test-file
-  contexts. Any spec importing `src/core` transitively loads x509 (via the
-  client-certificate module), so this must stay: do not remove it.
-- **Per-worker sqlite isolation (server-core, issue #3405)**: spec files run
-  in parallel vitest workers, so a shared database file made the suite flake
-  on a different spec each run. The global setup provisions a template
-  database at `writable/test.sql`; `createTestDatabaseModuleForSuite` gives
-  every worker its own copy (`writable/test-<poolId>.sql`, keyed by
-  `VITEST_POOL_ID`), created on first use in that worker and swept by the
-  next global setup. Files that reuse a pool slot share its copy
-  sequentially, so a spec must never rely on state written by another spec
-  file. The MySQL/Postgres runs have no per-worker copy (one shared server
-  database), so `test/vitest.config.ts` turns `fileParallelism` off for
-  them instead; expect those runs to take several times the sqlite
-  wall-clock. Those runs also raise `testTimeout` to 30s: a heavy spec (the
-  full provisioning sync) sits just under vitest's 5s default there and tips
-  over on a loaded CI runner, so an unchanged test starts failing on a
-  dependency bump alone. The sqlite run keeps the 5s default, which is what
-  keeps it an honest signal about a test that got genuinely slow. It raises
-  `testTimeout` only: `hookTimeout` stays at vitest's default, and the one
-  spec whose hooks outgrew it says so itself (`federation-e2e.spec.ts`'s
-  `TWO_INSTANCE_HOOK_TIMEOUT`). A hook that starts flaking on the
-  shared-server runs belongs in that same per-spec form until there are
-  enough of them to justify a second config-level knob.
-- **A second application in one spec (server-core)**: a spec that boots two
-  instances (`federation-e2e.spec.ts`, one authup brokering a login to
-  another) gives the second one
-  `createTestDatabaseModuleForSecondaryInstance('<name>')` plus its own
-  `withProvisioning(...)`. The factory follows the dialect the run itself
-  uses: a `writable/test-<name>-<poolId>.sql` file on sqlite, a
-  `<database>_<name>_<poolId>` database on the server otherwise. Do **not**
-  pin the second instance to sqlite by hand and seed it from
-  `writable/test.sql`: that template only exists on sqlite runs, so the spec
-  dies with `ENOENT` under `test:mysql` / `test:psql`. Its database starts
-  empty rather than as a template copy, which is why the caller provisions
-  it. Booting two applications in one process is otherwise supported, and
-  regressions in that isolation surface here first (see architecture.md →
-  *Policy engine evaluators are per engine*). **Both of its hooks take an
-  explicit timeout.** Each `setup()` is a schema synchronize plus a full
-  provisioning pass before the instance listens, and the hook adds ten API
-  round-trips on top; vitest's default budget is 10s, which the sqlite runs
-  clear and the mysql one does not, since it shares one server with every other
-  spec file and runs with file parallelism off. A second two-instance spec
-  needs the same treatment: the symptom is a `Hook timed out in 10000ms` with
-  every test in the file reported as PASSING, because it is the hook and not an
-  assertion that ran out of clock.
+- **Reflect polyfill (server-core)**: `test/vitest.config.ts` sets `setupFiles: ['reflect-metadata']`. `@peculiar/x509` pulls in `tsyringe`, which throws at import time without a Reflect polyfill, and the `globalSetup` file runs in an isolated context, so its own import does not reach test files. Any spec importing `src/core` loads x509 transitively. Do not remove it.
+- **Per-worker sqlite isolation (server-core, #3405)**: the global setup provisions a template database at `writable/test.sql`. `createTestDatabaseModuleForSuite` (`test/app/database.ts`) gives every vitest worker its own copy (`writable/test-<poolId>.sql`, keyed by `VITEST_POOL_ID`), created on first use and swept by the next global setup. Files that reuse a pool slot share its copy sequentially, so **a spec must never rely on state written by another spec file**.
+- **MySQL/Postgres runs** share one server database, so `test/vitest.config.ts` turns `fileParallelism` off and raises `testTimeout` to 30s for them (expect several times the sqlite wall-clock). The sqlite run keeps vitest's 5s default, so it stays an honest signal about a slow test. `hookTimeout` is not raised: a hook that outgrows the default takes an explicit per-spec timeout (see below).
+- **A second application in one spec (server-core)**: a spec booting two instances (`test/unit/http/controllers/entities/identity-provider/federation-e2e.spec.ts`) gives the second one `createTestDatabaseModuleForSecondaryInstance('<name>')` plus its own `withProvisioning(...)`. The factory follows the run's dialect: `writable/test-<name>-<poolId>.sql` on sqlite, a `<database>_<name>_<poolId>` database otherwise. Its database starts empty, which is why the caller provisions it. Do not pin the second instance to sqlite and seed it from `writable/test.sql`: that template exists only on sqlite runs, so the spec dies with `ENOENT` under `test:mysql` / `test:psql`. **Both hooks take an explicit timeout** (`TWO_INSTANCE_HOOK_TIMEOUT`, 60s): each `setup()` synchronizes a schema and runs a full provisioning pass, which exceeds vitest's 10s hook default on mysql. The symptom of a missing one is `Hook timed out in 10000ms` with every test in the file reported as passing.
 
 ## Running Tests
 
@@ -63,9 +17,11 @@
 npm run build                                  # required before testing
 npm run test                                   # test all apps/packages
 npm run test --workspace=apps/server-core      # test a single app/package
-npm run test --workspace=apps/server-core -- test/unit/core/entities/role/service.spec.ts  # run a specific test file
+npm run test --workspace=apps/server-core -- test/unit/core/entities/role/service.spec.ts  # one file
 npm run check:types --workspace=apps/server-core  # type-check src + test (vitest's SWC does not)
 ```
+
+Every workspace declares `check:types` (CI runs `npm run check:types --workspaces --if-present`). It is the only gate that type-checks `test/**`; a type error otherwise surfaces as a runtime assertion failure. See conventions.md -> *Workflow* for the per-workspace exceptions.
 
 ### Database-Specific Tests (server-core)
 
@@ -74,65 +30,11 @@ npm run test:mysql --workspace=apps/server-core
 npm run test:psql --workspace=apps/server-core
 ```
 
-Some behaviour only exists against a server database. The row lock
-`UserService.save` / `ClientService.save` take through the repository
-`transaction(fn)` seam (#3526) is a `FOR UPDATE` on mysql and postgres and an
-unlocked passthrough on sqlite, so the concurrency regression spec
-(`test/unit/http/controllers/entities/user-concurrency.spec.ts`, two
-`Promise.all`ed updates of one row, asserting the second cannot restore what
-the first changed) is `describe.skipIf`-gated to those two dialects: on sqlite
-the two awaited reads interleave and the lost update reproduces by design. The
-lock path therefore runs under `test:mysql` / `test:psql` only, and a green
-sqlite run says nothing about it. The service specs pin the seam itself on the
-fakes (`transactionCalls === 1` after an update, `0` after a create), which
-every dialect runs.
+Some behaviour exists only on a server database, and a green sqlite run says nothing about it. These specs are `describe.skipIf`-gated to mysql/postgres:
 
-The transaction wraps ONLY the write: lock-read the fresh row, merge this
-request's patch, save. The pre-work (gates, validation, join-column and
-uniqueness checks, derivations) stays unlocked and outside it, because a
-transaction pins a pooled connection and the evaluator, join-column and
-uniqueness reads acquire a second one; with the whole body inside, ten
-concurrent saves exhausted the pool and hung every later query. The same spec
-therefore carries a pool-exhaustion pin: twelve concurrent updates on twelve
-different users and twelve concurrent creates must all resolve within the
-default test timeout, which a regression turns into a hang and vitest into a
-failure. The spec boots with the entity audit mirror on, its default: the
-mirror is the same hazard if its row goes to a second pooled connection from
-inside the persist transaction (#3539), so the same pins are the regression
-test for that write too.
-
-**Provisioning concurrency is gated the same way.**
-`test/unit/modules/provisioning-concurrency.spec.ts` boots two
-`ProvisionerModule` instances concurrently against one empty database
-(`createTestDatabaseModuleForSecondaryInstance`, since the per-worker sqlite
-copy is a provisioned template and this race exists only on a first boot) and
-asserts one master realm, one `system` client, one `admin` user, and one row
-each for a global permission, role, scope and policy. It is
-`describe.skipIf`-gated to mysql/postgres because the provisioning lock is a
-deliberate passthrough on better-sqlite3 (one database file per container, so
-a second replica cannot exist). Confirm it is honest by making
-`withDatabaseLock` an unconditional passthrough: without the lock it fails
-with `duplicate key value violates unique constraint
-"UQ_9b95dc8c08d8b11a80a6798a640"`, the `auth_realms(name)` collision
-issue #3356 reports. One DataSource is enough to model two replicas, because each
-`setup()` takes its own query runner and the lock is arbitrated per session.
-The lock mechanics themselves (the mysql2 answer shape, the bound name, the
-release on a throwing callback) are typeorm-extension's and tested there.
-
-**The global uniqueness index is gated the same way.**
-`test/unit/adapters/database/global-uniqueness.spec.ts` boots an EMPTY
-synchronized secondary database (the schema a deployment carries before the
-migration), runs `1788782400000-WidenClientSecretAndGlobalUniqueness`'s own `up()` through a
-query runner, and asserts that the entity-declared index name matches the
-migration's, that `createSchemaBuilder().log()` reports the same drift before
-and after (the property the drift gate relies on), that typeorm's own loader
-sees the index, that a second global row with one name is refused on all four
-tables while one name per realm plus once globally stays allowed, that `down()`
-is real, and that the pre-check names the tables holding duplicates. It is
-`describe.skipIf`-gated to mysql/postgres because sqlite never runs the
-migration, and it has this shape because the suite synchronizes its schema from
-the entities: an index declared `synchronize: false` is never created by that
-path, so no other spec can observe the constraint.
+- `test/unit/http/controllers/entities/user-concurrency.spec.ts`: the row lock `UserService.save` / `ClientService.save` take through the repository `transaction(fn)` seam (#3526) is `FOR UPDATE` on mysql/postgres and an unlocked passthrough on sqlite, where the lost update reproduces by design. It also carries a pool-exhaustion pin (twelve concurrent updates on different users and twelve concurrent creates must resolve within the default timeout; a regression is a hang). It boots with the entity audit mirror on, so it also guards the #3539 audit-write pool deadlock. Every dialect runs the seam itself on the fakes (`transactionCalls === 1` after an update, `0` after a create).
+- `test/unit/modules/provisioning-concurrency.spec.ts`: two `ProvisionerModule` instances boot concurrently against one empty secondary database and must leave one master realm, one `system` client, one `admin` user and one row per global permission/role/scope/policy. The provisioning lock is a passthrough on better-sqlite3. One DataSource models two replicas because each `setup()` takes its own query runner. Confirm the spec is honest by making `withDatabaseLock` an unconditional passthrough: it must fail with a duplicate key on `auth_realms(name)`.
+- `test/unit/adapters/database/global-uniqueness.spec.ts`: runs `1788782400000-WidenClientSecretAndGlobalUniqueness`'s own `up()` / `down()` on an empty synchronized secondary database and asserts the unsynced index (name matches the entity, zero drift, a second global row refused, the pre-check naming duplicate tables). It has this shape because the suite synchronizes from entities, so an index declared `synchronize: false` never exists in any other spec.
 
 ## Test Layers (server-core)
 
@@ -140,46 +42,41 @@ path, so no other spec can observe the constraint.
 
 Location: `test/unit/core/entities/{entity}/service.spec.ts`
 
-Test business logic in isolation using fake repositories (in-memory) and mock permission checkers. No HTTP, database, or Docker required. Tests run in ~1ms each.
+Test business logic in isolation with in-memory fakes and a mock permission evaluator. No HTTP, database or Docker; no global setup needed.
 
 Generic fakes from `@authup/server-test-kit`:
 - `FakeEntityRepository<T>`: in-memory `IEntityRepository` backed by an array
-- `FakePermissionEvaluator`: `IPermissionEvaluator` implementation with call recording (`evaluateCalls`, `preEvaluateCalls`, etc.) and configurable behavior (`setBehavior(fn)`, `denyAll()`, `deny(method)`)
+- `FakePermissionEvaluator`: records calls (`evaluateCalls`, `preEvaluateCalls`, ...) and is configurable (`setBehavior(fn)`, `denyAll()`, `deny(method)`). `compile` defaults to `post` so per-row expectations hold; override with `setCompileResult`.
 - `createAllowAllActor()` / `createDenyAllActor()`: `FakeActorContext` for permission testing
 - `createMasterRealmActor(realmId?)` / `createNonMasterRealmActor(realmId?)`: presets with identity for realm defaulting tests
 
-Domain fakes colocated under each entity's test dir as `test/unit/core/entities/<entity>/fake-repository.ts`:
-- `FakeRoleRepository`, `FakeRealmRepository` (pre-seeds master realm + `resolve()` helper), `FakePolicyRepository`, `FakePermissionRepository`
-- `FakeUserRepository`, `FakeClientRepository`
+Domain fakes sit next to their entity at `test/unit/core/entities/<entity>/fake-repository.ts` (`FakeRoleRepository`, `FakeRealmRepository` which pre-seeds the master realm and offers `resolve()`, `FakePolicyRepository`, `FakePermissionRepository`, `FakeUserRepository`, `FakeClientRepository`).
 
-Workflow / orchestration helpers still in `test/unit/core/helpers/`:
-- `FakeMailClient`, `FakeIdentityPermissionProvider`, `FakeIdentityResolver`, `FakeIdentityRoleProvider`, `FakeOAuth2KeyRepository`, `FakeOAuth2TokenIssuer`, `FakeOAuth2TokenRepository`, `FakeOAuth2TokenSigner`, `FakeOAuth2TokenVerifier`, `FakeSessionManager`, `FakeSessionTokenRepository` (in-memory `ISessionTokenRepository` for refresh-rotation grant tests: `create`/`markRefreshConsumed`/`hasConsumedChild`/`revokeBySessionId`/... with call recording). `helpers/index.ts` also re-exports everything from `@authup/server-test-kit` for terse spec imports.
+Workflow / orchestration fakes are in `test/unit/core/helpers/` (barrel `index.ts`): `FakeMailClient`, `FakeIdentityPermissionProvider`, `FakeIdentityResolver`, `FakeIdentityRoleProvider`, `FakeKeyStore`, `FakeOAuth2TokenIssuer`, `FakeOAuth2OpenIDTokenIssuer`, `FakeOAuth2TokenRepository`, `FakeOAuth2TokenSigner`, `FakeOAuth2TokenVerifier`, `FakeOAuth2DeviceCodeRepository`, `FakeSessionManager`, `FakeSessionTokenRepository` (call recording for refresh-rotation tests), `FakeEventService`, `FakeAuthFlowMetrics`, `FakeAuthorizationCatalogRepository`, `createFakeRealmCipher`, `readEvaluatedRecordRealms`. The barrel does not re-export `@authup/server-test-kit`; import that package directly.
 
 What to test: permission gates, validation, realm defaulting, uniqueness, built-in entity protection, upsert behavior, error paths.
 
-**Writing philosophy:** Tests should assert *expected* behavior based on the service contract and architecture docs, not merely confirm what the implementation currently does. If a test fails, it may surface a real bug in the implementation rather than a test error. When a test failure seems like it could be a legitimate implementation issue, flag it to the user before "fixing" the test. The tests are a verification tool, not a rubber stamp.
+**Writing philosophy:** assert the *expected* behavior from the service contract and the architecture docs, not what the implementation happens to do. A failing test may expose a real bug. When a failure looks like a legitimate implementation issue, flag it to the user before "fixing" the test. Tests are a verification tool, not a rubber stamp.
 
-**Important:** The vitest config lives at `test/vitest.config.ts`, not the project root. Running `npx vitest run` directly from the workspace directory will **not** find the config and **skips the global setup** (`test/setup.ts`), which provisions the master realm and starts Docker containers.
-
-- **Always use** `npm run test --workspace=apps/server-core` (from repo root) or `npx vitest run --config test/vitest.config.ts` (from workspace directory)
-- Service-level tests (`test/unit/core/entities/`) don't need the global setup and work without it
-- Integration tests (e.g., `test/unit/core/identity/provider/account.spec.ts`) **require** the provisioned database from the global setup and will fail without it
+Integration specs outside `test/unit/core/entities/` (e.g. `test/unit/core/identity/provider/account.spec.ts`) need the provisioned database from the global setup, so run them through the npm script.
 
 ### HTTP-Level Tests
 
 Location: `test/unit/http/controllers/entities/{entity}.spec.ts`
 
-Integration tests that spin up the full application (database, HTTP server). Test HTTP client compatibility (`core-http-kit`), request/response shaping, middleware pipeline, and end-to-end wiring. Require Docker services.
+Integration tests that boot the full application (database, HTTP server) on a random port via `createTestApplication()` (`test/app/factory.ts`). They cover HTTP client compatibility (`core-http-kit`), request/response shaping, the middleware pipeline and end-to-end wiring. They need the Docker services.
 
 `test/app/http.ts` exposes:
-- `suite.client`: a typed `@authup/core-http-kit` `Client` pointed at the running test server with admin Basic auth.
-- `suite.baseURL`: the `http://localhost:<random-port>` URL of the test server, useful for raw `fetch()` calls when the typed client doesn't fit (e.g., asserting on HTML response bodies).
+- `suite.client`: a typed `@authup/core-http-kit` `Client` against the test server with admin Basic auth. hapic strips the client-level header on token-API calls, so pass `{ authorizationHeaderInherit: true }` (or an explicit `authorizationHeader`) on e.g. `client.token.introspect`, or it goes out anonymous.
+- `suite.baseURL`: the `http://localhost:<port>` URL, for raw `fetch()` calls.
+
+`createTestApplication({ config: (c) => { c.publicUrl = '...'; } })` overrides config. The port is bound AFTER config normalization, so `publicUrl` is not `suite.baseURL`: a spec exercising a same-origin check reads `suite.container.resolve(ConfigInjectionKey).publicUrl`.
 
 ### HTTP test helpers
 
-`test/utils/` exports two helpers tuned for HTTP integration tests:
+`test/utils/` (barrel `index.ts`) exports helpers for HTTP integration tests.
 
-**`expectClientError(fn, { status?, code?, data? })`**: asserts the supplied async call rejects with a hapic `ClientError` matching the given shape. Replaces the `expect.assertions(N) + try/catch + isClientError` boilerplate. `code` is shorthand for `data.code`; pass `data` for arbitrary `response.data` field assertions (e.g. OAuth2 errors carrying both `code` and `error`).
+**`expectClientError(fn, { status?, code?, data? })`**: asserts an async call rejects with a hapic `ClientError` of that shape. `code` is shorthand for `data.code`; `data` matches arbitrary `response.data` fields.
 
 ```typescript
 import { expectClientError } from '../../../utils';
@@ -200,7 +97,7 @@ await expectClientError(
 );
 ```
 
-**`httpRequest(suite, method, path, { form?, body?, headers? })`**: raw `fetch()` against the test server, for tests that need to bypass the typed `Client` (raw HTML bodies, OAuth2 redirect payloads, RFC 6749 edge cases the typed client deletes). Returns the native `Response`; caller controls status / body parsing. `form: Record<string, string>` is shorthand for urlencoded body + auto Content-Type.
+**`httpRequest(suite, method, path, { form?, body?, headers? })`**: raw `fetch()` against the test server, for raw HTML bodies, redirect payloads, or RFC edge cases the typed client cannot express. Returns the native `Response`. `form` is shorthand for an urlencoded body plus Content-Type.
 
 ```typescript
 import { httpRequest } from '../../../utils';
@@ -219,7 +116,7 @@ const body = await response.json();
 
 ### Non-admin identity tests
 
-To test policies/permissions under a non-admin identity (e.g. `*_SELF_MANAGE` flows), grant the relevant permission to a freshly-created identity and authenticate against the server with its own bearer token:
+To test policies/permissions under a non-admin identity (e.g. `*_SELF_MANAGE`), grant the permission to a fresh identity and authenticate with its own bearer:
 
 ```typescript
 const created = await suite.client.client.create({
@@ -242,26 +139,23 @@ const selfClient = new HTTPClient({ baseURL: suite.baseURL });
 selfClient.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
 ```
 
-`suite.client.permission.getOne(name)` resolves the provisioned permission by name. See `test/unit/http/controllers/entities/client-self-manage.spec.ts` for a working example asserting both allowed-field updates and ATTRIBUTE_NAMES policy rejections.
+Working example: `test/unit/http/controllers/entities/client-self-manage.spec.ts`.
 
-A bearer WITHOUT the `global` scope cannot be obtained from the token endpoint: the password grant always stamps `global`, and Basic auth and the console cookie session carry it too. `createScopeRestrictedClient(suite, scope?)` (`test/utils/token.ts`) re-signs the admin's own claims with `scope` (default `openid`) through `OAuth2InjectionToken.TokenSigner` and returns a client bearing it plus the introspected `payload`.
+A bearer WITHOUT the `global` scope cannot come from the token endpoint (the password grant, Basic and the console cookie all carry `global`). `createScopeRestrictedClient(suite, scope?)` (`test/utils/token.ts`) re-signs the admin's claims with `scope` (default `openid`) through `OAuth2InjectionToken.TokenSigner` and returns a client bearing it plus the introspected `payload`.
 
 ### Testing the hosted pages (they render in another workspace now)
 
-The auth pages are NOT rendered by server-core, so its suite has no page assertions left: a hosted page GET is a redirect, and that is all server-core's specs check. The render itself belongs to `apps/server-auth-console`, whose `test/unit/handler.spec.ts` boots the real handler on an ephemeral port and asserts against the BUILT `@authup/client-auth-console` bundle. `/logout` is the honest smoke test there, because it is the one page the service can answer with no backend at all (it drives the end-session call from the browser, so the render is a pure shell); the other pages hydrate over HTTP from server-core and a spec that wants them needs a stub API, not a DI seam.
+server-core renders no page: a hosted page GET is a redirect, and that is all its specs assert. The render belongs to `apps/server-auth-console`, whose `test/unit/handler.spec.ts` boots the real handler on an ephemeral port against the BUILT `@authup/client-auth-console` bundle. `/logout` is the smoke test that needs no backend (the page drives its end-session call from the browser).
 
-That is the shape change worth internalizing: the service holds **no credential, no loopback and no database**, so there is nothing to inject a fake client into. It reads `GET /authorize/info` and `GET /` from whatever `apiUrl` names, and a spec stubs those by pointing `apiUrl` at a server it controls.
+The service holds no credential, no loopback and no database, so there is no DI seam to fake. It reads `GET /authorize/info` and `GET /` from whatever `apiUrl` names; a spec stubs those by pointing `apiUrl` at a server it controls. A substituted package is stubbed through config: `handler.spec.ts`'s `writeBundle` writes a fake package under a tmp dir (`package.json` with `"type": "module"` plus the needed `dist/` files, since the service `import()`s `dist/server/server.js`) and passes it as `resolveConfig({ path })`. That is how the suite pins the `CONTRACT_VERSION` refusal, the half-built bundle error, and handler isolation.
 
-A substituted PACKAGE is stubbed the same way, through config rather than DI: `handler.spec.ts`'s `writeBundle` writes a fake package under a tmp dir (`package.json` with `"type": "module"`, since locter's `read` is a native `import()` of the exact `dist/server/server.js` name the service reads, plus whatever `dist/` files the case needs) and passes it as `resolveConfig({ path })`. That is how the suite pins the boot-time `CONTRACT_VERSION` refusal, the half-built bundle answering the actionable per-request error, and two handlers in one process not sharing a resolved bundle.
-
-Caveats that survive the move:
-- The service renders from the **built** bundle (`apps/client-auth-console/dist/server/server.js`, resolved through node_modules), so rebuild `apps/client-auth-console` after changing that app or `client-web-kit`, or the specs exercise a stale bundle. The two static console services have the same requirement for their own dists.
-- There is no just-in-time branch any more: it was a vite dev server inside server-core and left with the rendering, so the dist path is the only path and the JIT gate now decides nothing but the migrations glob (architecture.md → *The `cli-dev` JIT gate*).
-- Icon bundling is asserted in `apps/client-auth-console/test/unit/icons.spec.ts` against that app's own built client entry, not through a rendered page (`@iconify/vue` resolves icons client-side, so an SSR'd page carries empty `<svg>` shells either way).
+Caveats:
+- The service renders the built bundle, so rebuild `apps/client-auth-console` after changing it or `client-web-kit`, or the specs exercise a stale bundle. The two static console services need their dists built the same way.
+- Icon bundling is asserted in `apps/client-auth-console/test/unit/icons.spec.ts` against that app's built client entry, not through a rendered page (`@iconify/vue` resolves icons client-side, so SSR markup carries empty `<svg>` shells).
 
 ### The internal HTTP client seam (server-core)
 
-server-core keeps ONE client for calls to its own API, and it was renamed with the UI it lost: `HTTPInjectionKey.InternalHttpClient` (was `UIHttpClient`), backed by `createInternalHttpClient` (was `createInternalUIHttpClient`) and handed to routes per request under `INTERNAL_HTTP_CLIENT_FACTORY_STORE_KEY`. Its one consumer is the console login's token exchange. `HTTPModule.setup` registers the production default unless the token is ALREADY bound, so a fake registered before `suite.setup()` wins:
+server-core keeps one client for calls to its own API under `HTTPInjectionKey.InternalHttpClient` (built by `createInternalHttpClient`, handed to routes per request under `INTERNAL_HTTP_CLIENT_FACTORY_STORE_KEY`). Its one consumer is the console login's token exchange. `HTTPModule.setup` registers the production default unless the token is already bound, so a fake registered before `suite.setup()` wins:
 
 ```typescript
 import { createFakeClient as createFakeHTTPClient } from '@authup/core-http-kit/testing';
@@ -274,11 +168,11 @@ suite.container.register(HTTPInjectionKey.InternalHttpClient, {
 await suite.setup();
 ```
 
-Register with `useFactory` + `lifetime: 'transient'` (eldin), never a singleton-lifetime instance: a client carries per-user Authorization state. Register **before** `suite.setup()`, since the middleware mount is decided at boot. Alias the import (`createFakeHTTPClient`), because `test/utils` already exports a `createFakeClient` entity factory. `test/unit/adapters/http/internal-client.spec.ts` covers the rewriter as a pure unit (dispatch onto the own listen address, prefixed and prefix-less `publicUrl`, wildcard hosts normalized to loopback). For a spec that needs the whole application on a different public URL, the test factory takes a config override: `createTestApplication({ config: (c) => { c.publicUrl = '...'; } })`.
+Register with `useFactory` + `lifetime: 'transient'`, never a singleton instance: a client carries per-user Authorization state. Register before `suite.setup()`, since the middleware mount is decided at boot. Alias the import, because `test/utils` already exports a `createFakeClient` entity factory. `test/unit/adapters/http/internal-client.spec.ts` covers the rewriter as a pure unit. The same test-fake-wins rule holds for `MailInjectionKey` and `LoggerInjectionKey`.
 
 ### Capturing what the server logs
 
-`LoggerModule.setup` honors a pre-registered `LoggerInjectionKey` (test-fake-wins, the same rule as `MailInjectionKey` and `InternalHttpClient`), so a spec asserting on log output registers its own recorder before `suite.setup()`:
+`LoggerModule.setup` honors a pre-registered `LoggerInjectionKey`, so a spec asserting on log output registers a recorder before `suite.setup()`:
 
 ```typescript
 const logLines: string[] = [];
@@ -292,17 +186,11 @@ suite.container.register(LoggerInjectionKey, { useValue: logger });
 await suite.setup();
 ```
 
-Reach for this where the log is the ONLY observable surface, a `catch` that swallows a failure into a redirect for instance. See `test/unit/http/controllers/entities/identity-provider/link.spec.ts`, which asserts the upstream status and body reach the log while the browser only sees `?linkError=link_failed`.
+Use it where the log is the only observable surface (a `catch` that swallows a failure into a redirect). Example: `test/unit/http/controllers/entities/identity-provider/link.spec.ts`.
 
 ### Cookies a browser would actually send
 
-A spec that echoes `set-cookie` straight back proves the server SENT a cookie,
-not that a browser would send it BACK: a cookie scoped to the wrong `Path`
-passes it and breaks every real request. `TestCookieJar` (`test/utils/`) is the
-smallest thing that closes that gap. It stores `set-cookie` from a response
-(honouring `Path`, `Max-Age=0` and a past `Expires`) and yields a `cookie`
-header per request path, RFC 6265 §5.1.4 path matching included. Use it for any
-flow whose contract is a cookie:
+Echoing `set-cookie` back proves the server sent a cookie, not that a browser would send it back. `TestCookieJar` (`test/utils/cookie-jar.ts`) stores `set-cookie` from a response (honouring `Path`, `Max-Age=0` and a past `Expires`) and yields a `cookie` header per request path with RFC 6265 §5.1.4 path matching. Use it for any flow whose contract is a cookie:
 
 ```typescript
 function request(method: string, path: string, options: Record<string, any> = {}) {
@@ -318,245 +206,57 @@ function request(method: string, path: string, options: Record<string, any> = {}
 }
 ```
 
-Note the harness binds its port AFTER the config is normalized, so `publicUrl`
-is NOT `suite.baseURL`. A spec exercising a same-origin check (the federated
-login's completion endpoint rides `isSameOriginRequest`, so a POST needs both
-`sec-fetch-site: same-origin` and an `Origin` equal to publicUrl's) must read
-the config (`suite.container.resolve(ConfigInjectionKey).publicUrl`), not the
-base URL. See
-`test/unit/http/controllers/entities/identity-provider/login-cookie-flow.spec.ts`.
+A same-origin POST (e.g. the federated login completion, which rides `isSameOriginRequest`) needs `sec-fetch-site: same-origin` and an `Origin` equal to publicUrl's. Example: `test/unit/http/controllers/entities/identity-provider/login-cookie-flow.spec.ts`.
 
 ### The OpenAPI parity gate
 
-`test/unit/http/openapi-parity.spec.ts` is what makes the plan-077 claim
-falsifiable: the generated OpenAPI document, the rapiq decode allow-lists and
-the `meta.schema` wire key are three projections of ONE schema registry. It
-reads the built `dist/swagger.json`, asks a running server the same questions
-and requires the answers to be byte-identical, `indexes` included, in both read
-shapes. A record read is checked against the full `x-authup-schemas` entry
-PROJECTED onto the parameters its own `x-query-schema` marker declares, since
-the document states the narrower vocabulary by naming those parameters rather
-than by carrying a second, narrowed copy of the description. Completeness is
-checked against `schemaRegistry.getAll()` rather than against
-`describeSchemaRegistry()`, which is the projection the generate itself emits:
-routing the claim through the projection under test would let a schema the
-projection drops stay missing from the document unreported.
+`test/unit/http/openapi-parity.spec.ts` checks that the generated OpenAPI document, the rapiq decode allow-lists and the `meta.schema` wire key are projections of one schema registry. It reads the built `dist/swagger.json`, asks a running server the same questions and requires byte-identical answers, `indexes` included, in both read shapes (a record read is compared against the `x-authup-schemas` entry projected onto its `x-query-schema` parameters). Completeness is checked against `schemaRegistry.getAll()`, not against the projection under test. It also requires every operation to declare every variable of its own path template.
 
-It also walks every operation and requires each to declare every variable of
-its own path template. That is the regression guard for the enrichment's
-APPEND: the generic query parameters are appended to what trapi emitted, and an
-assignment there would delete the path variables of every templated route in
-one go, which no other spec would notice.
-
-Only the half that reads the document depends on a build, and it is skipped
-when `dist/swagger.json` is absent, because a checkout that has not run the
-swagger step is an ordinary state (`build:server:js` carries `clean: true` and
-wipes `dist/`). The registry-against-wire half still runs, so the file is never
-vacuous. The skip message goes to `process.stderr` and not through `console`:
-this runner swallows console output entirely, module scope and in-test alike,
-so a `console.warn` there is dead code.
+The document half is skipped when `dist/swagger.json` is absent (`build:server:js` wipes `dist/`, so that is an ordinary state); the registry-against-wire half always runs. A skip notice must go to `process.stderr`: this runner swallows `console` output. The sibling coverage guards live in `test/unit/http/openapi-coverage.spec.ts`; see `.agents/topics/query.md` for the mechanism.
 
 ## Page Tests (apps/client-auth-console)
 
-The auth console carries the same vitest + `@vue/test-utils` + `happy-dom`
-setup as the kit (`test/vitest.config.ts`, run with `npm run test -w
-apps/client-auth-console`; `nx run-many -t test` picks the target up on its
-own). Its pages are thin: they read the hydration payload and hand it to a kit
-component, so a page test provides the payload and stubs that component rather
-than installing the kit.
+Vitest + `@vue/test-utils` + `happy-dom` (`test/vitest.config.ts`, `npm run test -w apps/client-auth-console`). Pages are thin: they read the hydration payload and hand it to a kit component, so a page test provides the payload and stubs that component instead of installing the kit.
 
-- The payload symbol is `Symbol.for('HYDRATION_PAYLOAD')` (`src/di.ts`), so it
-  is provided by description, no import needed.
-- A page calling `useToast()` needs a manager under
-  `Symbol.for('VCToastManager')`: `{ entries: ref([]), generateId: () => '…' }`
-  is enough; the full `@vuecs/overlays` install is not.
+- The payload symbol is `Symbol.for('HYDRATION_PAYLOAD')` (`src/di.ts`), provided by description.
+- A page calling `useToast()` needs a manager under `Symbol.for('VCToastManager')`: `{ entries: ref([]), generateId: () => '…' }` is enough.
 
 ## Component Tests (packages/client-web-kit)
 
-The kit has a vitest + `@vue/test-utils` + `happy-dom` setup
-(`test/vitest.config.ts`, `@vitejs/plugin-vue` for SFC compilation). Run with
-`npm run test --workspace=packages/client-web-kit`: the package script passes
-`--config test/vitest.config.ts` explicitly, which is **mandatory**: vitest
-does NOT auto-discover a config under `test/` (packages/access carries a dead
-config as a cautionary example: its plain `vitest run` script never loads it).
+Vitest + `@vue/test-utils` + `happy-dom` (`test/vitest.config.ts`, `@vitejs/plugin-vue` for SFCs). Run with `npm run test --workspace=packages/client-web-kit`.
 
-Mounting a kit component needs the same wiring a consumer app does:
-`test/utils/index.ts` exports a `mountLoginForm(props?, handlers?)` harness
-that assembles it: fresh `createPinia()` + `createFakeClient` (from
-`@authup/core-http-kit/testing`, records every request in `.requests` with
-URLSearchParams bodies normalized to plain objects) per mount, `app.use(vuecs,
-{})` (ThemeManager + DefaultsManager: `useSubmitButton`/`VC*` throw without
-them), and the kit `install(app, { baseURL, httpClient, pinia, isServer:
-true, cookieGet/cookieSet/cookieUnset })` (`isServer: true` disables the
-auth-hook refresh timer; cookie stubs avoid `useCookies`). The only global
-component lookup in the login subtree is `resolveComponent('VCIcon')` in
-`ATitle`: stub via `global.components`.
+Mounting a kit component needs the same wiring a consumer app does. `test/utils/index.ts` exports `mountLoginForm(props?, handlers?)`, which assembles it: a fresh `createPinia()` and `createFakeClient` (from `@authup/core-http-kit/testing`; records every request in `.requests`, URLSearchParams bodies normalized to plain objects) per mount, `app.use(vuecs, {})` (`useSubmitButton` and `VC*` throw without the theme/defaults managers), and the kit `install(app, { baseURL, httpClient, pinia, isServer: true, cookieGet/cookieSet/cookieUnset })` (`isServer: true` disables the refresh timer; cookie stubs avoid `useCookies`). Stub `VCIcon` via `global.components` (`ATitle` resolves it globally).
 
-The realm-plumbing regression suite pins the interactive-login contract at two
-layers: `test/unit/components/workflows/login-form.spec.ts` (picker-selected
-realm transmitted; `codeRequest.realm_id` transmitted incl. late-arriving prop
-via `setProps`; empty realm omitted from the grant body) and
-`test/unit/core/store/login.spec.ts` (the `store.login()` gate forwards
-`ctx.realmId` even though the store's own realm ref is null pre-login: the
-original one-line bug).
+The interactive-login realm contract is pinned at two layers: `test/unit/components/workflows/login-form.spec.ts` and `test/unit/core/store/login.spec.ts`.
 
-**Server-render specs.** The SSR data handoff (architecture.md → *SSR data
-handoff*) branches on `typeof window`, so its server half cannot be exercised
-in the default `happy-dom` environment. Those specs opt into node with a
-`// @vitest-environment node` docblock and render through
-`renderKitComponent()` (`test/utils/ssr.ts`: `createSSRApp` + the same install
-options + `renderToString`), asserting on the returned HTML plus the entries a
-`createFakeHydrationStore()` (`test/utils/hydration.ts`) collected. The client
-half stays in `happy-dom` and seeds the same store before mounting. The
-recorded key is asserted verbatim on both sides
-(`test/unit/core/hydration{,-ssr}.spec.ts`,
-`test/unit/components/utility/entity-collection-hydration.spec.ts`), so a
-change to the key format fails both rather than silently degrading to a
-cache miss. Assertions about the seeded first render must NOT
-`await flushPromises()`: the point is the render the markup is hydrated
-against, before the async lookup settles.
+**Server-render specs.** The SSR data handoff (`.agents/topics/ui.md`) branches on `typeof window`, so its server half cannot run under `happy-dom`. Those specs opt into node with a `// @vitest-environment node` docblock and render through `renderKitComponent()` (`test/utils/ssr.ts`: `createSSRApp` + the install options + `renderToString`), asserting on the HTML and on the entries a `createFakeHydrationStore()` (`test/utils/hydration.ts`) collected. The client half stays in `happy-dom` and seeds the same store before mounting. The recorded key is asserted verbatim on both sides (`test/unit/core/hydration{,-ssr}.spec.ts`, `test/unit/components/utility/entity-collection-hydration.spec.ts`). Assertions about the seeded first render must NOT `await flushPromises()`: the point is the render the markup is hydrated against.
 
 ## CLI Tests (apps/authup)
 
-The `authup` CLI runs every service in process, so almost
-nothing is left to unit-test: the wiring is the assertion, and the behaviour
-lives in the packages. The suite is split in two accordingly.
+The CLI runs every service in process, so the wiring is the assertion and the behaviour lives in the packages. Two suites:
 
-- **Unit** (`npm run test -w apps/authup`, config at `test/vitest.config.ts` like
-  every other workspace): `createCLIEntryPointCommand` carries the `authup`
-  meta read from the package and exactly the subcommands it should
-  (`config`, `dev`, `healthcheck`, `migration`, `start`, and no `core`,
-  `console` or `worker`: those are roles of `start`). The root `setup`
-  refuses a stray positional on `dev` alone and leaves the commands whose
-  positional is real alone (`migration run`, `start console admin`);
-  `start`'s own `setup` refuses a bad role before anything boots: an unknown
-  role, a name after
-  `core` or `worker`, an unknown console name and the tombstone `--worker`
-  flag, whose message names `start worker`. `healthcheck` dials the host the
-  listener inherits (root `host` / `HOST`, with `core.host` winning), never the
-  unresolved `core.host` coerced to localhost, and loops a wildcard bind back
-  to 127.0.0.1 (`test/unit/healthcheck.spec.ts`); it asserts on what the
-  command hands `http.request`, since a socket-level probe cannot tell the two
-  apart on a dev box, where every dialable host resolves to loopback. The
-  There is no composed-schema spec: every configuration key is declared once
-  in `@authup/server-config`, so there is no pair of declarations to prove
-  consistent. There is no supervisor either, so nothing resolves an
-  entrypoint, maps a child environment or holds a routing table.
-- **Host and commands** (`test/unit/host-*.spec.ts`, `test/unit/commands-*.spec.ts`): the
-  CLI-as-a-client layer runs against hapic's `MemoryTransport` handed to the `Client`, never
-  the kit's `FakeClient` (it overrides `request()` and so never runs the hook path the refresh
-  test exercises), with `@napi-rs/keyring` mocked through `vi.hoisted` and
-  `XDG_CONFIG_HOME` pointed at a tmp dir. Pinned: the device poll cadence and its terminal
-  answers, the hosts document and both token storages, the stale-lock takeover, a 401 that
-  refreshes once and replays, the adoption of another process's rotation, the refresh-on-401
-  deadlock guard, the derived noun set (every `EntityType` value `pickEntityAPI` resolves on
-  the client except the owner-scoped `userAuthenticator`, so a new sub-API fails this list
-  until it is acknowledged) and verbs, and the flags reaching the URL as rapiq parameters.
-- **Smoke** (`npm run test:smoke`) runs TWO scenarios, because each fails in a
-  way the other cannot show.
-  - The **composed** scenario boots the built CLI's `start` against sqlite on
-    a non-default port and asserts all three consoles are served on that one
-    listener: `/logout` hands over to `/console/auth/logout` and the hop is
-    then followed (a forward that lands nowhere answers the API-side probe
-    exactly like a working one, so the hop and its target are checked
-    separately), `/console/account` and `/console/admin` each answer 200 with
-    the injected `window.__AUTHUP__`, and the first script asset each shell
-    references answers 200 as JavaScript, so a dist built for another base
-    fails here instead of serving a blank console. Then SIGTERM, a clean exit
-    and nothing still listening. It additionally pins **env-wins precedence**:
-    the run writes an `authup.yml` under `--configDirectory` naming a
-    DIFFERENT port and passes the real one in the environment, so a regression
-    that lets the file win moves the listener and the readiness probe never
-    answers. That the file was read at all is proven separately, by reading
-    `publicUrl` back out of the injected console config: it is the one key
-    only the file supplies.
-  - The **split** scenario runs `authup start core` and `authup start console` side by
-    side and asserts what only two processes can show: the API answers **404**
-    for every console page (the shed; a shell answered there would mean both
-    sides serve it, with whichever mounted first winning silently), `/logout`
-    still hands over to the console process, and each console serves its shell
-    and its own entry script. Its console urls carry **no path**, which is
-    what a prefix-stripping proxy delivers and what catches an asset rebase
-    that PREPENDS rather than replaces: a console published at its own vite
-    base looks identical either way.
-- `npm run test:smoke:packed` runs the composed scenario against `npm pack`ed
-  tarballs installed into a temp project. **The packed variant is the one that
-  matters:** every CLI breakage found so far (the ESM `__dirname` crash,
-  the stale spawn path, and nitro's symlinked module store being dropped by
-  `npm pack`) reproduced ONLY from a packed artifact, where a workspace-dist
-  run passes straight through all three. Its workspace list carries the three
-  console SERVICES as well as the three bundles: the CLI depends on the
-  services and each service resolves its bundle at runtime, so without both
-  halves a packed install reaches for the registry. Both variants run in CI
-  (`tests-launcher` job); the packed one needs `npm install --force` like
-  every install in this repo.
+- **Unit** (`npm run test -w apps/authup`): the root command's meta and its exact subcommand set (`config`, `dev`, `healthcheck`, `migration`, `start`, plus the client commands; `core`, `console` and `worker` are roles of `start`), the root `setup` refusing a stray positional on `dev` alone, `start`'s `setup` refusing a bad role before anything boots (unknown role, a name after `core`/`worker`, an unknown console name, the tombstone `--worker` flag), and `healthcheck` dialing the inherited host with a wildcard bind looped to 127.0.0.1 (`test/unit/healthcheck.spec.ts`, asserting on what reaches `http.request`, since a socket probe cannot tell hosts apart on a dev box).
+- **Host and commands** (`test/unit/host-*.spec.ts`, `test/unit/commands-*.spec.ts`): the CLI-as-client layer runs against hapic's `MemoryTransport` handed to the `Client`, never the kit's `FakeClient` (it overrides `request()` and so skips the hook path the refresh tests exercise). `@napi-rs/keyring` is mocked through `vi.hoisted` and `XDG_CONFIG_HOME` points at a tmp dir. The derived entity noun list is pinned, so a new kit sub-API fails it until acknowledged.
+- **Smoke** (`npm run test:smoke`, `test/smoke/run.mjs`) runs two scenarios against the built CLI on sqlite:
+  - **composed**: `start` on a non-default port. `/logout` hands over to `/console/auth/logout` and the hop is followed; `/console/account` and `/console/admin` answer 200 with the injected `window.__AUTHUP__`; the first script asset of each shell answers 200 as JavaScript (catches a dist built for another base). Then SIGTERM, clean exit, nothing listening. It also pins env-wins precedence: an `authup.yml` under `--configDirectory` names a different port than the environment, and `publicUrl` (supplied by the file alone) is read back from the injected config to prove the file was read.
+  - **split**: `start core` and `start console` side by side. The API answers 404 for every console page, `/logout` still hands over, each console serves its shell and entry script. Console urls carry no path, which catches an asset rebase that prepends instead of replacing.
+- **`npm run test:smoke:packed`** runs the composed scenario against `npm pack`ed tarballs installed into a temp project. This is the variant that matters: packaging breakage reproduces only from a packed artifact. Its workspace list includes the three console services and the three bundles. Both variants run in CI (`tests-launcher` job) and need `npm install --force`.
 
-**One trap the split scenario surfaced, worth knowing for any runner that
-awaits a SECOND process:** `child.on('exit')` fires once, so a listener
-attached after the child already exited waits out the whole timeout. Check
-`exitCode`/`signalCode` first. That was harmless while one process was
-awaited and fatal for the second.
+Runner trap: `child.on('exit')` fires once, so a listener attached after the child exited waits out the timeout. Check `exitCode` / `signalCode` first.
 
 ## Console Service Tests (apps/server-{admin,account,auth}-console)
 
-Each console service carries its own vitest suite (`npm run test -w
-apps/server-<name>-console`, config at `test/vitest.config.ts`, node
-environment). They boot the real handler on an ephemeral port and assert
-against the BUILT console dist: the health route, the shell with its runtime
-config injected, the same shell for a nested/sub route, the asset the shell
-references (which is what makes a marker or vite-base mismatch fail here
-rather than in a browser), and a missing asset answering 404 rather than the
-shell. The account console adds the `ref` verdicts (a trusted origin is
-injected, a foreign one is dropped). `test/unit/config.spec.ts` pins the
-registry-to-service mapping: the derived console url, an explicit one winning,
-the listen address, the boolean and list readers, and the refusal to start
-without `publicUrl`.
+Each service has its own suite (`npm run test -w apps/server-<name>-console`, node environment). It boots the real handler on an ephemeral port against the BUILT console dist and asserts the health route, the shell with its runtime config injected, the same shell for a nested route, the asset the shell references (a marker or vite-base mismatch fails here), and a missing asset answering 404 instead of the shell. The account console adds the `ref` verdicts. `test/unit/config.spec.ts` pins the registry-to-service mapping (derived and explicit console url, listen address, readers, refusal without `publicUrl`).
 
-The MECHANISM those services share is tested once, in
-`packages/server-console-kit` (`npm run test -w packages/server-console-kit`):
-`html.spec.ts` for the shell helpers (including the `$'`-expansion guard the
-`replaceTemplateMarker` rule exists for, asserted over all four expansion
-patterns, and the asset rebase over more than one vite base), plus
-`theme.spec.ts` and `theme-provider.spec.ts`,
-which moved out of server-core's suite with the code. A spec asserting theme
-BEHAVIOUR belongs there now; a spec asserting that a particular console
-applies it belongs to that console's service.
+The shared mechanism is tested once in `packages/server-console-kit`: `html.spec.ts` (shell helpers, including the `$'`-expansion guard over all four patterns and the asset rebase), `theme.spec.ts` and `theme-provider.spec.ts`. Theme BEHAVIOUR belongs there; that a particular console applies it belongs to that console's service.
 
 ## Console Bundle Tests (apps/client-admin-console, apps/client-account-console)
 
-Both static console bundles carry a vitest suite of their own. The admin
-console's `test/vitest.config.ts` registers `@vitejs/plugin-vue`, because its
-guard spec imports the kit (aliased to package source, which carries `.vue`
-files); `test/unit/config.spec.ts` pins the runtime-config contract (injected
-config, same-origin API derivation, the capability-AND-applicability rule
-behind `cookieSession`), `test/unit/guard.spec.ts` the routing guard (the
-login bounce with `redirect`, the three route-meta gates, the cookie-mode
-rules: `logout({ revoke: false })` on a failed or `RESTORING` resolve, never a
-code exchange), `test/unit/event-stats.spec.ts` the dashboard's fetch
-composable against the fake client (the realm-plus-global filter, the hourly
-24h window, a reload on a realm change, a failed reload of a NEW scope
-leaving no stale answer while a failed reload of the same scope keeps it, a
-stale answer dropped behind a newer request) and
-`test/unit/dashboard-stats.spec.ts` its pure helpers. A composable is tested
-through a bare component that takes the client as an argument. A whole PAGE is
-mounted with `mountPage(path, handlers?, routes?)` (`test/utils/index.ts`):
-pinia, the kit `install` over a `createFakeClient`, vuecs, `installOverlays`,
-`installNavigation` and a memory-history router over the real `routes`, with
-`<Suspense>` around the `RouterView` (the async `setup()` detail pages need it)
-and `VCIcon` stubbed, since iconify would fetch every icon it holds no data for.
-It installs no guard and no layout, and only what `/users/:id` needs, so a page
-reaching another global component adds its plugin there. A spec swaps route
-records by mapping `routes` (a probe child route to see what `RouterView`
-forwards, a stub collection page as a redirect target), as
-`test/unit/user-page.spec.ts` does for the record heading, the `entity` handed
-to the tab, and the failed fetch landing on `/users`. The server-side half is
-split by ownership now: the SERVING lives in each console service's suite
-(above), and the cookie login round-trip stays in server-core, as the
-`describe.each` over both consoles in
-`test/unit/http/controllers/workflows/account/console-session.spec.ts`. That
-file gained a **"console shell"** block asserting server-core answers 404 for
-`''`, `/login` and an arbitrary sub-path under each segment, which is the
-regression guard for the shed itself.
+Both bundles have their own suite. The admin console's `test/vitest.config.ts` registers `@vitejs/plugin-vue` because the guard spec imports the kit from source. Notable specs: `config.spec.ts` (runtime-config contract, `cookieSession` capability AND applicability), `guard.spec.ts` (login bounce with `redirect`, route-meta gates, cookie-mode rules), `event-stats.spec.ts` / `entity-stats.spec.ts` (stats composables against the fake client) and `dashboard-stats.spec.ts` (pure helpers).
+
+A composable is tested through a bare component that takes the client as an argument. A whole page is mounted with `mountPage(path, handlers?, routes?)` (`test/utils/index.ts`): pinia, the kit `install` over a `createFakeClient`, vuecs, `installOverlays`, `installNavigation` and a memory-history router over the real `routes`, with `<Suspense>` around `RouterView` (async `setup()` detail pages need it) and `VCIcon` stubbed (iconify would fetch every icon). It installs no guard and no layout; a page reaching another global component adds its plugin there. Swap route records by mapping `routes`, as `test/unit/user-page.spec.ts` does.
+
+The cookie login round-trip stays in server-core: `test/unit/http/controllers/workflows/account/console-session.spec.ts` (a `describe.each` over both consoles). Its "console shell" block asserts server-core answers 404 for every console page.
 
 ## Code Coverage
 
@@ -566,38 +266,30 @@ regression guard for the shed itself.
 npm run test:coverage --workspace=apps/server-core
 ```
 
-This runs all tests with coverage collection and outputs:
-- Console summary table (truncated folder names, hard to read for specific files)
-- `apps/server-core/coverage/coverage-final.json`: detailed JSON report
+Outputs a console summary (folder names truncated) and `apps/server-core/coverage/coverage-final.json`.
 
 ### Query coverage for specific modules
 
-After running `test:coverage`, use this from `apps/server-core/`:
+After `test:coverage`, from `apps/server-core/`:
 
 ```bash
 node -e 'var cov=JSON.parse(require("fs").readFileSync("./coverage/coverage-final.json","utf8"));var files=Object.keys(cov).filter(function(f){return f.indexOf("PATTERN")>-1&&f.endsWith(".ts")});files.sort();files.forEach(function(f){var d=cov[f];var stmts=Object.values(d.s);var total=stmts.length;var covered=stmts.filter(function(v){return v>0}).length;var pct=total?Math.round(covered/total*100):0;var idx=f.lastIndexOf("core");var short=f.substring(idx);console.log(pct+"% ("+covered+"/"+total+") | "+short)})'
 ```
 
-Replace `PATTERN` with a path fragment to filter files. Examples:
-- `core\\\\entities`: all entity service/type files
-- `core\\\\oauth2`: OAuth2 module
-- `core\\\\identity`: registration and password recovery
-- `core\\\\entities.*service`: only service implementation files
-
-**Note:** Windows paths use `\\\\` (double-escaped backslash) in the filter string.
+Replace `PATTERN` with a path fragment, e.g. `core/entities`, `core/oauth2`, `core/identity` (on Windows use `\\\\` as the separator).
 
 ### Coverage targets
 
-| Layer | Current | Target |
-|---|---|---|
-| Core entity services (`core/entities/*/service.ts`) | 95-100% | Maintain |
-| Workflow services (`core/identity/*/service.ts`) | 94-100% | Maintain |
-| OAuth2 module (`core/oauth2/`) | Mixed (0-100%) | Improve with service-level tests |
-| HTTP controllers, adapters | Covered by HTTP integration tests | - |
+| Layer | Target |
+|---|---|
+| Core entity services (`core/entities/*/service.ts`) | Maintain 95-100% |
+| Workflow services (`core/identity/*/service.ts`) | Maintain 94-100% |
+| OAuth2 module (`core/oauth2/`) | Improve with service-level tests |
+| HTTP controllers, adapters | Covered by HTTP integration tests |
 
 ## Docker Services
 
-Integration tests use Docker services defined in `docker-compose.yml`:
+Integration tests use the services in `docker-compose.yml`:
 
 | Service    | Port      |
 |------------|-----------|
@@ -609,50 +301,45 @@ Integration tests use Docker services defined in `docker-compose.yml`:
 
 ## Migration Tests
 
-The `tests-server-core` CI job runs the integration suite against MySQL and PostgreSQL, but the schema is built via `dataSource.synchronize()` (see `apps/server-core/test/app/database.ts`): migrations in `apps/server-core/src/adapters/database/migrations/{mysql,postgres}/` are NOT exercised by that suite.
+The integration suite builds its schema with `dataSource.synchronize()` (`apps/server-core/test/app/database.ts`), so migrations in `apps/server-core/src/adapters/database/migrations/{mysql,postgres}/` are NOT exercised there. The `tests-migrations` CI job runs the migration CLI against fresh MySQL and PostgreSQL containers:
 
-A separate `tests-migrations` CI job runs the migration CLI end-to-end against a fresh MySQL and PostgreSQL container:
+1. `migration run`: applies all migrations
+2. `migration revert` x N: undoes every migration (verifies every `down()`)
+3. `migration run`: re-applies the chain (idempotency)
+4. `npm run test:schema-drift`: the migrated schema must match the entity metadata
+5. `npm run test:migration-latest`: the populated round-trip (below)
 
-1. `migration run`: applies all migrations forward
-2. `migration revert` × N: undoes every migration in reverse order (verifies every `down()` works)
-3. `migration run`: re-applies the full chain (verifies idempotency)
-4. `npm run test:schema-drift`: asserts the migrated schema matches the entity metadata (see below)
+Steps 1 to 4 run on an empty schema, so they cannot catch anything that fails only with rows present (an FK re-validating data, a lossy column rewrite, a narrowing type change).
 
-This catches SQL syntax errors, cross-DB type mismatches, and `down()` regressions across every migration. It does **not** catch data-correctness bugs in `UPDATE`/`INSERT` migrations against pre-existing rows: the schema is empty throughout, so anything that only fails with rows present (a foreign key re-validating existing data, a column rewrite losing values, a narrowing type change truncating) passes here. Use the populated round-trip below for those.
+The job pre-flights that compiled migrations exist under `apps/server-core/dist/adapters/database/migrations/{mysql,postgres}/`: without a build, typeorm reports "No migrations are pending" and exits 0. The cwd does not matter, since the glob is anchored on the package path (`SRC_PATH` / `DIST_PATH` in `apps/server-core/src/path.ts`).
 
-### Schema-drift gate (`npm run test:schema-drift`)
-
-`apps/server-core/scripts/assert-schema-drift.mjs` runs `createSchemaBuilder().log()` against a migrated database and fails when it returns any statement: i.e. when the migration chain and the entity classes, two independent descriptions of the same schema, disagree. Every divergence so far was found by hand: two foreign keys pointing at the wrong table (`auth_permissions.client_id` in `1766830857009`, `auth_roles.client_id` in `1784970000000`) and an entire naming + column-type split introduced by the hand-authored `1783325495597` / `1783769340000` and closed by `1785871780234-AlignSchemaWithEntityMetadata`.
-
-The rule that keeps the gate green is in [conventions.md](conventions.md#database-migrations): **DDL is generated with `migration generate`, never hand-written.** A green gate is the normal state: with the chain applied, `migration generate` writes no file at all.
-
-The two traps below are why. Both are invisible while hand-writing DDL and cannot occur when generating it:
-
-- **Constraint names are derived, not chosen.** typeorm names indexes and foreign keys from a table+column hash (`IDX_<hash>` / `FK_<hash>`). A readable `IDX_auth_events_actor_name` reads better and diverges permanently from the model.
-- **uuid columns are `varchar(255)` on MySQL.** MySQL has no uuid type, and `MysqlDriver.getColumnLength` only shortens to 36 for columns typeorm generates itself (`@PrimaryGeneratedColumn('uuid')`); a plain `@Column({ type: 'uuid' })` falls through to the generic varchar default. Writing `varchar(36)` holds a uuid perfectly well but drifts, and the next generated migration then emits `DROP COLUMN`, data loss that reads as routine in review. Pinning `length: 36` on the entity is **not** an escape: `uuid` is not in Postgres's `withLengthColumnTypes`, so `EntityMetadataValidator` throws `Column X of Entity Y does not support length property.` at `DataSource.initialize()`: the app would not boot on Postgres at all.
-
-When the gate does fail, its output is the list of statements needed to reconcile the two: read it as "the entities changed without a migration" or "a migration wrote something the entities do not describe", and fix whichever is wrong before regenerating.
-
-### Populated round-trip (`npm run test:migration-latest`)
-
-`apps/server-core/scripts/verify-latest-migration.mjs` closes the empty-schema gap for the newest migration. It drops and recreates `DB_DATABASE`, boots the real application (so provisioning and a password grant write realms / clients / users / sessions / session tokens / events), seeds the remaining tables, then reverts and re-applies the newest migration and asserts: row counts unchanged in both directions, zero schema drift afterwards, foreign keys still rejecting orphans and still cascading, and the application still booting and issuing a token against the migrated schema.
-
-```bash
-DB_TYPE=postgres DB_HOST=127.0.0.1 DB_PORT=5432 DB_USERNAME=postgres DB_PASSWORD=start123 \
-    DB_DATABASE=scratch npm run test:migration-latest --workspace=apps/server-core
-```
-
-It needs a built `dist` and a scratch database (it drops the target). It runs in the `tests-migrations` job as the final step, for both dialects, because it is the only gate that can certify a migration touching columns, constraints or rows: the empty round-trip above cannot. Run it locally too when authoring such a migration, rather than waiting for CI.
-
-The value comparison exempts the columns the newest migration itself changed, in both directions. Columns it ADDED are keys present before and absent after the revert; columns it DROPPED are keys present after the revert and absent before, which the revert brings back as keys the before-snapshot never had. Only the first kind was exempt until #3355 dropped `auth_clients.scope` and `root_url`, at which point *column values unchanged after revert* failed by construction. The script now compares the after-revert values without the dropped columns against the before values without the added ones, and additionally checks that the re-run drops them again.
-
-The job pre-flights with a sanity check that the compiled migrations exist under `apps/server-core/dist/adapters/database/migrations/{mysql,postgres}/`. Without that guard a missing or partial build leaves typeorm silently reporting "No migrations are pending" with exit code 0, masking the failure. The working directory is not part of that failure mode: the glob is anchored on the package path (`SRC_PATH` / `DIST_PATH` from `apps/server-core/src/path.ts`), so `migration run` applies the chain from any cwd.
-
-Locally, run the same flow with a running compose stack:
+Locally, with the compose stack running:
 
 ```bash
 DB_TYPE=mysql DB_HOST=127.0.0.1 DB_PORT=3306 DB_USERNAME=root DB_PASSWORD=start123 DB_DATABASE=app \
     node apps/server-core/dist/cli/index.mjs migration run
 ```
 
-The CLI auto-creates the target database if it does not exist.
+The CLI creates the target database if it does not exist.
+
+### Schema-drift gate (`npm run test:schema-drift`)
+
+`apps/server-core/scripts/assert-schema-drift.mjs` runs `createSchemaBuilder().log()` against a migrated database and fails on any statement, i.e. when the migration chain and the entity classes disagree. The rule that keeps it green is in conventions.md -> *Database Migrations*: DDL is generated with `migration generate`, never hand-written. With the chain applied, `migration generate` writes no file.
+
+Two traps that appear only with hand-written DDL:
+
+- **Constraint names are derived**: typeorm names indexes and FKs from a table+column hash (`IDX_<hash>` / `FK_<hash>`). A readable name diverges permanently.
+- **uuid columns are `varchar(255)` on MySQL.** `MysqlDriver.getColumnLength` shortens to 36 only for typeorm-generated columns. Writing `varchar(36)` drifts, and the next generated migration emits a `DROP COLUMN`. Pinning `length: 36` on the entity is not an escape: Postgres rejects a length on `uuid` at `DataSource.initialize()`.
+
+When the gate fails, its output is the reconciling statement list: decide whether the entities changed without a migration or a migration wrote something the entities do not describe, fix that side, then regenerate.
+
+### Populated round-trip (`npm run test:migration-latest`)
+
+`apps/server-core/scripts/verify-latest-migration.mjs` drops and recreates `DB_DATABASE`, boots the real application (provisioning and a password grant write realms, clients, users, sessions, session tokens, events), seeds the remaining tables, then reverts and re-applies the newest migration. It asserts row counts unchanged both ways, zero drift afterwards, FKs still rejecting orphans and cascading, and the application still booting and issuing a token.
+
+```bash
+DB_TYPE=postgres DB_HOST=127.0.0.1 DB_PORT=5432 DB_USERNAME=postgres DB_PASSWORD=start123 \
+    DB_DATABASE=scratch npm run test:migration-latest --workspace=apps/server-core
+```
+
+It needs a built `dist` and a scratch database (it drops the target). It is the only gate that can certify a migration touching columns, constraints or rows; run it locally when authoring one. The value comparison exempts columns the newest migration added (present before, absent after revert) and dropped (absent before, back after revert), and checks that the re-run drops them again.
