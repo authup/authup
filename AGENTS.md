@@ -50,27 +50,38 @@ The console BUNDLES (`apps/client-admin-console`, `apps/client-account-console`,
 - **[Architecture](.agents/architecture.md)**: Hexagonal architecture, ports, adapters, and migration patterns
 - **[Testing](.agents/testing.md)**: Test runner, conventions, and Docker services
 - **[Conventions](.agents/conventions.md)**: Best practices, tooling, validation, and error handling
+- **[Topic files](.agents/topics/)**: per-subsystem detail (OAuth2, MFA, key store, consoles, query IR, ...), indexed at the end of architecture.md. NOT loaded into every session: read the topic file before changing that area.
 
-These four files are loaded into every agent session, so their whole size is
-paid on every task. **They exist to tell a future task what it needs to know:
-they are not a changelog.** Before writing a paragraph, ask what task it would
-save, and if the answer is "none", leave it out. Three rules follow:
+### Writing agent docs
 
-- **Never cite a plan** (`plan 078`, `plan 101 D2-3`, or a bare sub-designator
-  like `D2-3` / `Stage B`). `.agents/plans/` is gitignored, so the pointer
-  resolves for one person on one machine; plans are frozen at design time while
-  these files are maintained, so the pointer leads from the current description
-  to a superseded one; and the plans themselves defer back here. Cite the issue
-  or PR number instead: it resolves on GitHub for everyone and links the diff
-  that actually shipped.
-- **Describe what the code does now, not what it did before.** No before/after
-  narration, no reproduction of a fixed defect. State the rule, and name the
-  issue where provenance helps. The one exception is a **rejected
-  alternative**: keep the verdict and its one-line reason, because that is
-  what stops the next agent re-proposing it.
-- **Rewrite, don't append.** When a change supersedes a paragraph, edit that
-  paragraph. Appending the new state next to the old is what turned these files
-  from 86 KB into 716 KB in four months.
+The four files above are loaded into every session; the topic files are read on
+demand. Both exist to tell a future task what it must know to avoid a silent
+breakage. **They are not a changelog, a design record or a test index.**
+
+| Content | Where it goes |
+|---|---|
+| A cross-cutting rule or an easy-to-break invariant, its reason, and the rejected alternative | One line in a core file, with the issue number |
+| A subsystem's invariants and rejected alternatives | Its topic file |
+| Mechanism the code already shows | Nowhere, or a code comment |
+| How a defect happened, before/after, "pinned by spec X" | The PR description or commit message |
+| What changed for operators | CHANGELOG or `docs/src/guide/deployment/upgrading.md` |
+
+The test for a paragraph: would removing it let a reasonable change break
+something silently? If not, leave it out.
+
+- **Update docs only when an invariant or a cross-cutting rule changes.** A bug
+  fix or a feature that follows the existing rules needs no doc change. Edit
+  the existing line; never add a section for a single fix.
+- **Never cite a plan** (`plan 078`, `D2-3`, `Stage B`): `.agents/plans/` is
+  gitignored. Cite the issue or PR number.
+- **Describe what the code does now.** No "used to", "no longer", "before #N".
+  The one exception is a rejected alternative: keep the verdict and its
+  one-line reason.
+- **`npm run lint:agent-docs` enforces it.** Every file has a byte budget and a
+  history-phrase budget in `.agents/budget.json` (CI fails above either).
+  Budgets only go down: run `node scripts/lint-agent-docs.mjs --update` after
+  shortening a file, and never raise one to make room. A new topic file needs a
+  budget entry.
 
 ## Commits, Issues & Pull Requests
 
