@@ -21,7 +21,9 @@ const ROOT = path.resolve(import.meta.dirname, '..');
 const BUDGET_PATH = '.agents/budget.json';
 
 // Phrases that narrate history or cite a local artifact instead of stating a rule.
-const HISTORY_PATTERN = /plan [0-9]{3}|\bused to\b|\bbefore #[0-9]|\bno longer\b|\bpinned by\b/gi;
+// "used to" after a form of "be" or "get" is the passive voice ("is used to
+// validate"), which states a current fact, so it does not match.
+const HISTORY_PATTERN = /plan [0-9]{3}|(?<!\b(?:is|are|am|be|been|being|was|were|get|gets|got|getting)\s+)\bused to\b|\bbefore #[0-9]|\bno longer\b|\bpinned by\b/gi;
 
 // --update leaves this much room above the current size, so a correction
 // that adds a few words still fits. It never raises a budget.
