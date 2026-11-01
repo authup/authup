@@ -10,9 +10,17 @@ import eslintConfig from '@tada5hi/eslint-config';
 export default eslintConfig(
     {
         typescript: true,
-        vue: true, 
+        vue: true,
+        // Above the shared defaults (40000 per file, 60000 for what CLAUDE.md
+        // loads) because the core docs are still larger. Lower these as the
+        // docs shrink; never raise them to make room.
+        agentDocs: {
+            maxBytes: 60000,
+            importMaxBytes: 180000,
+        },
     },
     {
+        files: ['**/*.{js,mjs,cjs,ts,mts,cts,tsx,vue}'],
         rules: {
             '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
             '@typescript-eslint/no-use-before-define': 'off',

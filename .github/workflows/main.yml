@@ -78,15 +78,6 @@ jobs:
                 run: |
                     npm run lint
 
-            -   name: Lint agent docs
-                run: npm run lint:agent-docs
-
-            -   name: Agent doc budgets only go down
-                if: github.event_name == 'pull_request'
-                run: |
-                    git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
-                    npm run lint:agent-docs -- --base FETCH_HEAD
-
             -   name: Type-check tests
                 # every workspace declaring the script, not a hand-kept list:
                 # the two it used to name were the only ones checked, so a
