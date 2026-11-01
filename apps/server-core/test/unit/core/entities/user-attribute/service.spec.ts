@@ -22,6 +22,7 @@ import {
 } from 'vitest';
 import { ErrorCode, ValidationError } from '@authup/errors';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
+import { ValidupError } from 'validup';
 import { UserAttributeService } from '../../../../../src/core/entities/user-attribute/service.ts';
 import {
     FakeEntityRepository,
@@ -258,6 +259,30 @@ describe('core/entities/user-attribute/service', () => {
                 value,
                 userId: randomUUID(),
             }, createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+
+        it('should never take the id or timestamps from the body on create', async () => {
+            const foreign = repository.seed(createFakeUserAttribute({
+                name: 'foreign',
+                value: 'kept',
+                userId: randomUUID(),
+            }));
+            const snapshot = { ...foreign };
+            const createdAt = '2000-01-01T00:00:00.000Z';
+
+            const result = await service.create({
+                id: foreign.id,
+                name: 'own',
+                value: 'v',
+                userId: randomUUID(),
+                createdAt,
+                updatedAt: createdAt,
+            }, createAllowAllActor());
+
+            expect(result.id).not.toBe(foreign.id);
+            expect(result.createdAt).not.toBe(createdAt);
+            expect(result.updatedAt).not.toBe(createdAt);
+            expect(await repository.findOneBy({ id: foreign.id })).toEqual(snapshot);
         });
 
         it('should create entity with user from join data', async () => {
@@ -559,6 +584,35 @@ describe('core/entities/user-attribute/service', () => {
             expect(result.value).toBe('new-val');
         });
 
+        it('should keep the route row id when the body names another', async () => {
+            const ownerId = randomUUID();
+            const entity = repository.seed(createFakeUserAttribute({
+                name: 'own', 
+                value: 'v', 
+                userId: ownerId, 
+            }));
+            const foreign = repository.seed(createFakeUserAttribute({
+                name: 'foreign',
+                value: 'kept',
+                userId: randomUUID(),
+            }));
+            const snapshot = { ...foreign };
+            const createdAt = '2000-01-01T00:00:00.000Z';
+
+            const { id } = entity;
+            const result = await service.update(id, {
+                id: foreign.id,
+                value: 'new',
+                createdAt,
+            }, createAllowAllActor());
+
+            expect(result.id).toBe(id);
+            expect(result.userId).toBe(ownerId);
+            expect(result.value).toBe('new');
+            expect(result.createdAt).not.toBe(createdAt);
+            expect(await repository.findOneBy({ id: foreign.id })).toEqual(snapshot);
+        });
+
         it('should preEvaluate USER_UPDATE to gate access', async () => {
             const entity = repository.seed(createFakeUserAttribute({
                 value: 'val',
@@ -690,6 +744,101 @@ describe('core/entities/user-attribute/service', () => {
                 await expect(service.update(entity.id, { name: 'other' }, actor))
                     .rejects.toBeInstanceOf(PermissionError);
             });
+        });
+    });
+
+    describe('name and value shape', () => {
+        const reserved = () => new UserAttributeService({
+            repository,
+            reservedNames: new Set(['email', 'password']),
+        });
+
+        it.each([
+            ['an array', ['email']],
+            ['a number', 1],
+            ['an object', { name: 'email' }],
+            ['null', null],
+            ['an empty string', ' '.repeat(3)],
+            ['an overlong string', 'a'.repeat(256)],
+        ])('should refuse %s as the name on create', async (_label, name) => {
+            await expect(reserved().create({
+                name,
+                value: 'foo@bar.com',
+                userId: randomUUID(),
+            }, createAllowAllActor())).rejects.toBeInstanceOf(ValidupError);
+
+            expect(repository.getAll()).toHaveLength(0);
+        });
+
+        // A one-element array was never matched by the string-only preference
+        // check, so a reserved name smuggled in that way kept any value.
+        it('should refuse an array naming a preference', async () => {
+            await expect(service.create({
+                name: ['colorMode'],
+                value: 'purple',
+                userId: randomUUID(),
+            }, createAllowAllActor())).rejects.toBeInstanceOf(ValidupError);
+
+            expect(repository.getAll()).toHaveLength(0);
+        });
+
+        it('should refuse a missing name on create', async () => {
+            await expect(service.create({ value: 'v', userId: randomUUID() }, createAllowAllActor()))
+                .rejects.toBeInstanceOf(ValidupError);
+        });
+
+        it('should check a padded name against the reserved names after trimming it', async () => {
+            await expect(reserved().create({
+                name: ' email ',
+                value: 'foo@bar.com',
+                userId: randomUUID(),
+            }, createAllowAllActor())).rejects.toThrow(/collides with a User entity column/);
+        });
+
+        it('should check a padded preference name after trimming it', async () => {
+            await expect(service.create({
+                name: ' colorMode',
+                value: 'purple',
+                userId: randomUUID(),
+            }, createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+
+        it.each([
+            ['an array', ['email']],
+            ['null', null],
+            ['a number', 1],
+        ])('should refuse %s as the name on update', async (_label, name) => {
+            const entity = repository.seed(createFakeUserAttribute({
+                name: 'own',
+                value: 'v',
+                userId: randomUUID(),
+            }));
+            const snapshot = { ...entity };
+
+            await expect(reserved().update(entity.id, { name }, createAllowAllActor()))
+                .rejects.toBeInstanceOf(ValidupError);
+
+            expect(await repository.findOneBy({ id: entity.id })).toEqual(snapshot);
+        });
+
+        it.each([
+            ['a string', 'v'],
+            ['a number', 1],
+            ['a boolean', false],
+            ['null', null],
+            ['an array', ['a', 'b']],
+            ['an object', { a: 1 }],
+        ])('should keep accepting %s as the value', async (_label, value) => {
+            const result = await service.create({
+                name: 'attr',
+                value,
+                userId: randomUUID(),
+            }, createAllowAllActor());
+
+            expect(result.value).toEqual(value);
+
+            await expect(service.update(result.id, { value }, createAllowAllActor()))
+                .resolves.toMatchObject({ value });
         });
     });
 

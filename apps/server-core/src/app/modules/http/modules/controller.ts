@@ -863,7 +863,10 @@ export class HTTPControllerModule {
             container.resolve<Repository<RoleAttribute>>(RoleAttributeEntity),
         );
         const reservedNames = new Set(
-            dataSource.getMetadata(RoleEntity).columns.map((c) => c.propertyName),
+            [
+                ...dataSource.getMetadata(RoleEntity).columns.map((c) => c.propertyName),
+                ...dataSource.getMetadata(RoleEntity).relations.map((r) => r.propertyName),
+            ],
         );
         const service = new RoleAttributeService({ repository, reservedNames });
 
@@ -1276,7 +1279,10 @@ export class HTTPControllerModule {
             container.resolve<Repository<UserAttribute>>(UserAttributeEntity),
         );
         const reservedNames = new Set(
-            dataSource.getMetadata(UserEntity).columns.map((c) => c.propertyName),
+            [
+                ...dataSource.getMetadata(UserEntity).columns.map((c) => c.propertyName),
+                ...dataSource.getMetadata(UserEntity).relations.map((r) => r.propertyName),
+            ],
         );
         const service = new UserAttributeService({ repository, reservedNames });
 

@@ -93,11 +93,7 @@ export class ExtraAttributesTreeRepositoryAdapter<
                 return entity;
             }
 
-            const keys = Object.keys(value);
-
-            for (const key of keys) {
-                entity[key as keyof T] = value[key] as T[keyof T];
-            }
+            this.assignAttributes(entity, value);
 
             return entity;
         });

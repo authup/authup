@@ -41,6 +41,8 @@ export class ExtraAttributesRepositoryAdapter<
 
     protected extra : EARepositoryPropertiesModifyFn<T, A>;
 
+    protected entityProperties : ReadonlySet<string> | undefined;
+
     // ------------------------------------------------------------------------------
 
     constructor(ctx: EARepositoryAdapterOptions<T, A>) {
@@ -178,12 +180,9 @@ export class ExtraAttributesRepositoryAdapter<
         entity: T,
         extraOptions: EARepositoryFindOptions = {},
     ) : Promise<T & E> {
-        const attributes = await this.findOneWithEAByPrimaryColumn(entity[this.primaryColumn], extraOptions);
-        const attributeKeys = Object.keys(attributes);
+        const attributes = await this.findOneWithEAByPrimaryColumn<E>(entity[this.primaryColumn], extraOptions);
 
-        for (const attributeKey of attributeKeys) {
-            entity[attributeKey as keyof T] = attributes[attributeKey] as T[keyof T];
-        }
+        this.assignAttributes(entity, attributes);
 
         return entity as T & E;
     }
@@ -235,14 +234,43 @@ export class ExtraAttributesRepositoryAdapter<
                 continue;
             }
 
-            const attributeKeys = Object.keys(attributes);
-
-            for (const attributeKey of attributeKeys) {
-                entity[attributeKey as keyof T] = attributes[attributeKey] as T[keyof T];
-            }
+            this.assignAttributes(entity, attributes);
         }
 
         return entities as (T & E)[];
+    }
+
+    /**
+     * An attribute never replaces a column or relation of its parent. The
+     * services refuse such a name on write, but a row written before they
+     * did (or past them) would otherwise shadow the column on every read
+     * that flattens the attributes, and the identity read serves the result
+     * as claims (`email`).
+     */
+    protected assignAttributes(entity: T, attributes: Record<string, any>): void {
+        const properties = this.getEntityProperties();
+        const attributeKeys = Object.keys(attributes);
+
+        for (const attributeKey of attributeKeys) {
+            if (properties.has(attributeKey)) {
+                continue;
+            }
+
+            entity[attributeKey as keyof T] = attributes[attributeKey] as T[keyof T];
+        }
+    }
+
+    protected getEntityProperties(): ReadonlySet<string> {
+        if (!this.entityProperties) {
+            const { metadata } = this.repository;
+
+            this.entityProperties = new Set([
+                ...metadata.columns.map((column) => column.propertyName),
+                ...metadata.relations.map((relation) => relation.propertyName),
+            ]);
+        }
+
+        return this.entityProperties;
     }
 
     // ------------------------------------------------------------------------------
