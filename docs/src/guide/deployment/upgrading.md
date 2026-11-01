@@ -15,6 +15,20 @@ All Authup packages require Node.js `>=26.0.0`. The Docker image and CI use Node
 CLI, or application that consumes Authup packages. Docker deployments receive the runtime
 with the updated image; no separate host Node.js upgrade is needed.
 
+### Changing a composite policy's children needs authority over it
+
+Creating a policy with a `parentId`, moving a policy to another parent, detaching it
+(`parentId: null`) and deleting a policy that has a parent now need `permission_update`
+on the parent, evaluated in the parent's realm. A realm administrator can therefore no
+longer change the composite policies of another realm or the global ones. Attaching a
+child to a built-in policy is refused for every caller. The nested `children` of a
+composite are checked for `permission_create` in their own realm, and a nested child
+without a `realmId` is global, so a realm administrator names its realm on each child.
+
+Provisioning already removes, on every start, a child of a built-in policy that its
+source does not declare: it is deleted when no permission binds it, and detached
+otherwise. Review the detached policies after the upgrade.
+
 ## Next release (after v1.0.0-beta.71)
 
 ### `POST /authorization/check` answers realm- and client-owned permissions
