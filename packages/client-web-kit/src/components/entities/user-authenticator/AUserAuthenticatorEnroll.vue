@@ -26,7 +26,9 @@ import { VCAlert } from '@vuecs/elements';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { VCIcon } from '@vuecs/icon';
 import { extractErrorContext, injectHTTPClient, useTranslations } from '../../../core';
+import AUserAuthenticatorStepUp from './AUserAuthenticatorStepUp.vue';
 import { USER_AUTHENTICATOR_KIND_ICONS } from './constants';
+import { useAuthenticatorStepUp } from './step-up';
 
 export default defineComponent({
     components: {
@@ -35,6 +37,7 @@ export default defineComponent({
         VCFormGroup,
         VCFormInput,
         VCIcon,
+        AUserAuthenticatorStepUp,
     },
     props: {
         // resolves `@me` for the calling user; an admin passes a user id.
@@ -52,6 +55,7 @@ export default defineComponent({
     emits: ['done', 'failed', 'closed'],
     setup(props, { emit }) {
         const apiClient = injectHTTPClient();
+        const stepUp = useAuthenticatorStepUp();
 
         const translations = useTranslations([
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_ENROLL_TITLE },
@@ -201,9 +205,17 @@ export default defineComponent({
                 // deliberately NOT enroll(): the nudge defers every `done`
                 // until the codes were acknowledged (close), so the parent
                 // cannot re-render the shown-once codes away.
-                const response = await apiClient.userAuthenticator.enroll(props.userId, { kind: UserAuthenticatorKind.RECOVERY });
+                const result = await stepUp.run(
+                    () => apiClient.userAuthenticator.enroll(props.userId, { kind: UserAuthenticatorKind.RECOVERY }),
+                );
 
-                enrollment.value = response;
+                if (result.outcome === 'cancelled') {
+                    skipRecoveryNudge();
+
+                    return;
+                }
+
+                enrollment.value = result.data;
                 enrollmentKind.value = UserAuthenticatorKind.RECOVERY;
             } catch (e) {
                 error.value = extractErrorContext(e).message ?? null;
@@ -237,26 +249,59 @@ export default defineComponent({
             error.value = null;
 
             try {
-                const response = await apiClient.userAuthenticator.enroll(props.userId, { kind });
+                const enrolled = await stepUp.run(() => apiClient.userAuthenticator.enroll(props.userId, { kind }));
+
+                if (enrolled.outcome === 'cancelled') {
+                    return;
+                }
+
+                const response = enrolled.data;
 
                 // webauthn: run the registration ceremony immediately and
                 // confirm with the attestation (no display).
                 if (kind === UserAuthenticatorKind.WEBAUTHN) {
-                    if (!response.meta.webauthn) {
-                        throw new Error('The server did not return WebAuthn registration options.');
+                    let registration = response;
+
+                    // a challenge the confirm owed outlives the registration
+                    // challenge the attestation signed: restart the ceremony
+                    for (let round = 0; round < 2; round++) {
+                        if (!registration.meta.webauthn) {
+                            throw new Error('The server did not return WebAuthn registration options.');
+                        }
+
+                        // the http-kit response type is intentionally framework-agnostic
+                        // (Record<string, unknown>); assert the browser lib's shape here.
+                        const optionsJSON = registration.meta.webauthn as unknown as PublicKeyCredentialCreationOptionsJSON;
+                        const attestation = await startRegistration({ optionsJSON });
+                        const { id } = registration.data;
+                        const confirmed = await stepUp.attempt(() => apiClient.userAuthenticator.confirm(
+                            props.userId,
+                            id,
+                            { code: JSON.stringify(attestation) },
+                        ));
+
+                        if (confirmed.outcome === 'cancelled') {
+                            return;
+                        }
+
+                        if (confirmed.outcome === 'done') {
+                            await finishEnrollment(confirmed.data.data, kind);
+
+                            return;
+                        }
+
+                        if (round > 0) {
+                            return;
+                        }
+
+                        const restarted = await stepUp.run(() => apiClient.userAuthenticator.enroll(props.userId, { kind }));
+
+                        if (restarted.outcome === 'cancelled') {
+                            return;
+                        }
+
+                        registration = restarted.data;
                     }
-
-                    // the http-kit response type is intentionally framework-agnostic
-                    // (Record<string, unknown>); assert the browser lib's shape here.
-                    const optionsJSON = response.meta.webauthn as unknown as PublicKeyCredentialCreationOptionsJSON;
-                    const attestation = await startRegistration({ optionsJSON });
-                    const confirmed = await apiClient.userAuthenticator.confirm(
-                        props.userId,
-                        response.data.id,
-                        { code: JSON.stringify(attestation) },
-                    );
-
-                    await finishEnrollment(confirmed.data, kind);
 
                     return;
                 }
@@ -293,13 +338,27 @@ export default defineComponent({
             error.value = null;
 
             try {
-                const entity = await apiClient.userAuthenticator.confirm(
+                const { id } = enrollment.value.data;
+                const code = confirmCode.value.trim();
+                const result = await stepUp.attempt(() => apiClient.userAuthenticator.confirm(
                     props.userId,
-                    enrollment.value.data.id,
-                    { code: confirmCode.value.trim() },
-                );
+                    id,
+                    { code },
+                ));
 
-                emit('done', entity.data);
+                if (result.outcome === 'cancelled') {
+                    return;
+                }
+
+                // the code may have expired while the challenge ran: ask for
+                // a fresh one instead of resubmitting it
+                if (result.outcome === 'proven') {
+                    confirmCode.value = '';
+
+                    return;
+                }
+
+                emit('done', result.data.data);
                 reset();
             } catch (e) {
                 error.value = extractErrorContext(e).message ?? null;
@@ -342,6 +401,7 @@ export default defineComponent({
             skipRecoveryNudge,
             generateRecoveryCodes,
             closeRecoveryCodes,
+            stepUp,
         };
     },
 });
@@ -357,8 +417,14 @@ export default defineComponent({
             {{ error }}
         </VCAlert>
 
+        <!-- an own-factor call owed a challenge of the session -->
+        <AUserAuthenticatorStepUp
+            v-if="stepUp.status.value"
+            :step-up="stepUp"
+        />
+
         <!-- recovery-code nudge after an email/webauthn enrollment -->
-        <template v-if="recoveryNudge && !enrollment">
+        <template v-else-if="recoveryNudge && !enrollment">
             <VCAlert
                 color="warning"
                 variant="soft"
