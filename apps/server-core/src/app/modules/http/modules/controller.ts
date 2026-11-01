@@ -1116,6 +1116,8 @@ export class HTTPControllerModule {
             cipher: container.resolve(OAuth2InjectionToken.RealmCipher),
             eventService: container.resolve(DatabaseInjectionKey.EventService),
             requestContext: useRequestEventContext,
+            sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
+            logger: container.resolve(LoggerInjectionKey),
             mailClient: container.resolve(MailInjectionKey),
             mailTemplateRenderer: container.resolve(MailTemplateRendererInjectionKey),
             options: {

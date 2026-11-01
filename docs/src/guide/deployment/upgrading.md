@@ -29,6 +29,15 @@ Provisioning already removes, on every start, a child of a built-in policy that 
 source does not declare: it is deleted when no permission binds it, and detached
 otherwise. Review the detached policies after the upgrade.
 
+### A user's first second factor ends its other sessions
+
+- A user's first confirmed second factor (a confirmed TOTP or WebAuthn device, a first
+  recovery-code set, an email factor) ends every other session of that user, federated
+  sign-ins included, with their refresh tokens and back-channel logout. The session the
+  user enrolled from is kept.
+- An email factor an administrator enrolls for a user ends all of that user's sessions.
+- Adding a further factor ends nothing.
+
 ## Next release (after v1.0.0-beta.71)
 
 ### `POST /authorization/check` answers realm- and client-owned permissions

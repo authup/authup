@@ -38,10 +38,13 @@ import type {
     ActorContext,
     EntityRepositoryFindManyResult,
     ICache,
+    Logger,
 } from '@authup/server-kit';
 import { Secret, TOTP } from 'otpauth';
 import QRCode from 'qrcode';
 import type { AuthenticationResponseJSON, RegistrationResponseJSON } from '@simplewebauthn/server';
+import type { ISessionManager } from '../../authentication/session/types.ts';
+import { describeError } from '../../../utils/index.ts';
 import { isRealmCipherBlobError } from '../../key/index.ts';
 import type { IRealmCipher } from '../../key/index.ts';
 import type { EventRequestContext, IEventService } from '../event/index.ts';
@@ -130,6 +133,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
     protected requestContext?: () => EventRequestContext | undefined;
 
+    protected sessionManager?: ISessionManager;
+
+    protected logger?: Logger;
+
     protected mailClient?: IMailClient;
 
     protected mailTemplateRenderer?: IMailTemplateRenderer;
@@ -147,6 +154,8 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         this.cipher = ctx.cipher;
         this.eventService = ctx.eventService;
         this.requestContext = ctx.requestContext;
+        this.sessionManager = ctx.sessionManager;
+        this.logger = ctx.logger;
         this.mailClient = ctx.mailClient;
         this.mailTemplateRenderer = ctx.mailTemplateRenderer;
         this.options = ctx.options ?? {};
@@ -326,10 +335,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
                 return this.enrollTotp(user, validated.name ?? null);
             }
             case UserAuthenticatorKind.RECOVERY: {
-                return this.enrollRecovery(user, validated.name ?? null);
+                return this.enrollRecovery(user, validated.name ?? null, actor);
             }
             case UserAuthenticatorKind.EMAIL: {
-                return this.enrollEmail(user, validated.name ?? null);
+                return this.enrollEmail(user, validated.name ?? null, actor);
             }
             case UserAuthenticatorKind.WEBAUTHN: {
                 return this.enrollWebauthn(user, validated.name ?? null);
@@ -388,7 +397,11 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         };
     }
 
-    protected async enrollEmail(user: User, name: string | null): Promise<UserAuthenticatorEnrollResult> {
+    protected async enrollEmail(
+        user: User,
+        name: string | null,
+        actor: ActorContext,
+    ): Promise<UserAuthenticatorEnrollResult> {
         this.assertMail();
 
         // The actor identity may not carry `email` (the User entity's email
@@ -404,6 +417,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         // one email factor per user — update the existing marker row in place
         // rather than remove-then-create, so a failed save never leaves the user
         // with no email factor (the row is a pure marker: no secret/codes).
+        const firstFactor = !await this.repository.hasConfirmedByUser(user.id);
         const existing = (await this.repository.findAllByUser(user.id))
             .filter((device) => device.kind === UserAuthenticatorKind.EMAIL);
 
@@ -433,6 +447,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
 
         await this.recordEvent(EventName.MFA_ENROLLED, entity);
+
+        if (firstFactor) {
+            await this.revokePreFactorSessions(user.id, actor);
+        }
 
         return { data: this.sanitize(entity), meta: {} };
     }
@@ -510,7 +528,11 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         };
     }
 
-    protected async enrollRecovery(user: User, name: string | null): Promise<UserAuthenticatorEnrollResult> {
+    protected async enrollRecovery(
+        user: User,
+        name: string | null,
+        actor: ActorContext,
+    ): Promise<UserAuthenticatorEnrollResult> {
         const codes : string[] = [];
         const stored : UserAuthenticatorRecoveryCode[] = [];
 
@@ -524,6 +546,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         // regenerate semantics: a user holds ONE recovery-code set. Reuse the
         // existing row via a single atomic save instead of delete-then-insert,
         // so a mid-operation failure can never leave the user with no codes.
+        const firstFactor = !await this.repository.hasConfirmedByUser(user.id);
         const [existing] = await this.repository.findAllWithSecretsByUser(user.id, { kind: UserAuthenticatorKind.RECOVERY });
 
         let entity : UserAuthenticator;
@@ -546,6 +569,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
 
         await this.recordEvent(EventName.MFA_ENROLLED, entity);
+
+        if (firstFactor) {
+            await this.revokePreFactorSessions(user.id, actor);
+        }
 
         return {
             data: this.sanitize(entity),
@@ -577,7 +604,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
 
         if (entity.kind === UserAuthenticatorKind.WEBAUTHN) {
-            return this.confirmWebauthn(entity, code);
+            return this.confirmWebauthn(entity, code, actor);
         }
 
         if (entity.kind !== UserAuthenticatorKind.TOTP) {
@@ -600,6 +627,8 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         await this.resetAttempts(entity.userId);
 
+        const firstFactor = !await this.repository.hasConfirmedByUser(entity.userId);
+
         entity.confirmed = true;
 
         // The consumed step is tracked only on the login-verify path (below),
@@ -610,10 +639,18 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         await this.recordEvent(EventName.MFA_ENROLLED, output);
 
+        if (firstFactor) {
+            await this.revokePreFactorSessions(output.userId, actor);
+        }
+
         return this.sanitize(output);
     }
 
-    protected async confirmWebauthn(entity: UserAuthenticator, response: string): Promise<UserAuthenticator> {
+    protected async confirmWebauthn(
+        entity: UserAuthenticator,
+        response: string,
+        actor: ActorContext,
+    ): Promise<UserAuthenticator> {
         const ctx = this.assertWebauthn();
 
         // brute-force throttle, same lifecycle as the TOTP confirm branch — the
@@ -652,6 +689,8 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         await this.resetAttempts(entity.userId);
         await this.cache.drop(cacheKey);
 
+        const firstFactor = !await this.repository.hasConfirmedByUser(entity.userId);
+
         entity.parameters = JSON.stringify(credential);
         entity.confirmed = true;
 
@@ -659,7 +698,40 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         await this.recordEvent(EventName.MFA_ENROLLED, output);
 
+        if (firstFactor) {
+            await this.revokePreFactorSessions(output.userId, actor);
+        }
+
         return this.sanitize(output);
+    }
+
+    /**
+     * A session issued before the user's first confirmed factor never proved
+     * one and would outlive it. The user keeps the session it enrolled from;
+     * an enrollment by another actor keeps none. A failure is logged, never
+     * raised: the factor is already stored, so failing the request would
+     * withhold shown-once recovery codes and a retry would revoke nothing.
+     */
+    protected async revokePreFactorSessions(userId: string, actor: ActorContext): Promise<void> {
+        if (!this.sessionManager) {
+            return;
+        }
+
+        const self = !!actor.identity &&
+            actor.identity.type === IdentityType.USER &&
+            actor.identity.data.id === userId;
+
+        try {
+            await this.sessionManager.revokeByOwner(
+                { sub: userId, subKind: IdentityType.USER },
+                self ? this.requestContext?.()?.sessionId ?? undefined : undefined,
+            );
+        } catch (e) {
+            this.logger?.warn(describeError(
+                e,
+                `The sessions of user ${userId} predating its first factor could not be revoked.`,
+            ));
+        }
     }
 
     async delete(
