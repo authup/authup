@@ -29,15 +29,16 @@ import {
     isQuery,
     mergeQueries,
 } from '@rapiq/core';
+import { defineDataCollection } from '@vuecs/data';
+import type { DataCollectionLoadResult, DataCollectionSnapshot, DataLoadOutcome } from '@vuecs/data';
 import type { EntityListQueryInput } from '../../../../core';
-import type { Ref, VNodeChild } from 'vue';
+import type { VNodeChild } from 'vue';
 import {
     Fragment,
     computed,
     h,
     isRef,
     onServerPrefetch,
-    ref,
     unref,
 } from 'vue';
 import { EntityCollectionSlotName } from './constants';
@@ -68,7 +69,6 @@ import type {
     ListSlotProps,
 } from './types';
 import {
-    ListHandlers,
     buildEntitySearchCondition,
     mergeEntityCollectionRenderOptions,
 } from './utils';
@@ -80,6 +80,17 @@ type ComposedQuery = {
     query: Query,
     interactive: Query
 };
+
+/**
+ * What the data source keeps between loads. `interactive` is the retained
+ * interactive query state (search filters, sort changes, ...), so pagination
+ * and loadAll continuations keep the current search without round-tripping
+ * query state through ListMeta; `query` is the composed query of the last
+ * applied load, read by the socket handler's sort check. Both ride the
+ * source's meta, which hands every load a draft based on the load still in
+ * flight and commits it only when that load applies.
+ */
+type SourceMeta = ListMeta & Partial<ComposedQuery>;
 
 function stripPagination(input: IQuery) : Query {
     return new Query({
@@ -96,11 +107,6 @@ function create<
 >(
     context: EntityCollectionManagerCreateContext<TYPE, RECORD>,
 ) : EntityCollectionManager<RECORD> {
-    const data : Ref<RECORD[]> = ref([]);
-    const busy = ref(false);
-    const total = ref(0);
-    const meta = ref<ListMeta>({ pagination: { limit: 10 } });
-
     const realmId = computed<string | undefined>(
         () => {
             if (context.realmId) {
@@ -126,19 +132,6 @@ function create<
     const getMany = domainAPI?.getMany ?
         domainAPI.getMany.bind(domainAPI) :
         undefined;
-
-    // Last composed query (IR) — read by the socket handler's sort check.
-    let query : IQuery | undefined;
-
-    // Whether the last `load` ran to completion. A load that failed leaves the
-    // list empty, which must NOT be handed to the client as a result.
-    let loadCompleted = false;
-
-    // Interactive query state (search filters, sort changes, ...) retained
-    // across loads, so pagination / loadAll continuations keep the current
-    // search without round-tripping query state through ListMeta.
-    // Pagination is deliberately excluded — it lives in `meta`.
-    let interactive : IQuery | undefined;
 
     const resolveBaseQuery = () : IQuery => {
         let contextQuery : IQuery | undefined;
@@ -181,7 +174,11 @@ function create<
         return buildQueryString(new Query({ filters: source.filters }));
     }
 
-    function composeQuery(input: EntityListQueryInput<Entity<RECORD>>) : ComposedQuery {
+    function composeQuery(
+        input: EntityListQueryInput<Entity<RECORD>>,
+        retained: IQuery | undefined,
+        pagination: PaginationBuildInput | undefined,
+    ) : ComposedQuery {
         let inputQuery : IQuery;
         let interactiveNext : Query;
 
@@ -239,11 +236,11 @@ function create<
                 typeof input.sort !== 'undefined';
 
             interactiveNext = new Query({
-                fields: 'fields' in input ? inputQuery.fields : interactive?.fields,
+                fields: 'fields' in input ? inputQuery.fields : retained?.fields,
                 filters: filtersOverride ??
-                    ('filters' in input ? inputQuery.filters : interactive?.filters),
-                relations: 'relations' in input ? inputQuery.relations : interactive?.relations,
-                sorts: sortsSupplied ? inputQuery.sorts : interactive?.sorts,
+                    ('filters' in input ? inputQuery.filters : retained?.filters),
+                relations: 'relations' in input ? inputQuery.relations : retained?.relations,
+                sorts: sortsSupplied ? inputQuery.sorts : retained?.sorts,
             });
         }
 
@@ -258,17 +255,17 @@ function create<
         // owns this. The very first load is exempt (nothing changed yet),
         // and an input carrying its own pagination still wins by merge
         // precedence below.
-        const filtersChanged = typeof interactive !== 'undefined' &&
-            serializeFilters(interactiveNext) !== serializeFilters(interactive);
+        const filtersChanged = typeof retained !== 'undefined' &&
+            serializeFilters(interactiveNext) !== serializeFilters(retained);
 
         const statePagination : PaginationBuildInput = {};
 
-        if (typeof meta.value.pagination?.limit === 'number') {
-            statePagination.limit = meta.value.pagination.limit;
+        if (typeof pagination?.limit === 'number') {
+            statePagination.limit = pagination.limit;
         }
 
-        if (typeof meta.value.pagination?.offset === 'number') {
-            statePagination.offset = filtersChanged ? 0 : meta.value.pagination.offset;
+        if (typeof pagination?.offset === 'number') {
+            statePagination.offset = filtersChanged ? 0 : pagination.offset;
         }
 
         return {
@@ -287,59 +284,103 @@ function create<
         };
     }
 
-    // Never rejects: callers don't reliably handle rejections — most call
-    // sites are fire-and-forget (the setup-time initial load below, template
-    // refs, pagination footers) and the awaiting ones don't catch. During SSR
-    // an unhandled rejection is fatal to the server process, so a failed load
-    // emits `failed` and leaves the list empty instead of throwing.
-    async function load(input: EntityListQueryInput<Entity<RECORD>> = {}) {
-        if (!getMany || busy.value) {
-            return;
-        }
+    // Pagination state before anything was loaded. Also what the hydration
+    // key is derived from, so it must match the source's initial meta.
+    const initialPagination : PaginationBuildInput = { limit: 10 };
 
-        busy.value = true;
-        meta.value.busy = true;
+    // Offset pagination shifts when rows are inserted or reordered between
+    // two page requests, so a walk can see one row twice. The first
+    // occurrence is kept; a row without an identity is never dropped.
+    function dedupeRows(rows: RECORD[]) : RECORD[] {
+        const seen = new Set<string | number>();
 
-        try {
-            loadCompleted = false;
+        return rows.filter((row) => {
+            const key = source.getItemKey(row);
 
-            const composed = composeQuery(input);
-
-            const response = await getMany(composed.query);
-
-            interactive = composed.interactive;
-            query = composed.query;
-
-            if (context.loadAll) {
-                data.value.push(...response.data as RECORD[]);
-            } else {
-                data.value = response.data as RECORD[];
+            if (typeof key === 'undefined') {
+                return true;
             }
 
-            total.value = response.meta.total;
+            if (seen.has(key)) {
+                return false;
+            }
 
-            meta.value.total = response.meta.total;
-            meta.value.pagination = {
-                limit: response.meta.limit,
-                offset: response.meta.offset,
-            };
+            seen.add(key);
 
-            loadCompleted = true;
-        } catch (e) {
-            failed(isError(e) ? e : new Error('The entities could not be loaded.'));
+            return true;
+        });
+    }
 
-            return;
-        } finally {
-            busy.value = false;
-            meta.value.busy = false;
+    // Walks every page when `loadAll` is set: the source replaces its data
+    // wholesale, so the concatenation is assembled here rather than appended.
+    async function fetchAll(composed: Query) : Promise<DataCollectionLoadResult<RECORD, SourceMeta>> {
+        if (!getMany) {
+            return { data: [] };
         }
 
-        if (
+        // A walk always starts at the first row: the retained offset is the
+        // LAST page of the previous walk, so starting there would leave every
+        // row before it unfetched.
+        let response = await getMany(context.loadAll ?
+            mergeQueries(
+                new Query({ pagination: definePagination({ offset: 0 }) }),
+                composed,
+            ) :
+            composed);
+        const first = response.meta;
+        const rows = [...response.data] as RECORD[];
+
+        while (
             context.loadAll &&
-            total.value > data.value.length
+            response.data.length > 0 &&
+            response.meta.total > rows.length
         ) {
-            await load({ pagination: { offset: (meta.value.pagination?.offset ?? 0) + (meta.value.pagination?.limit ?? 0) } });
+            response = await getMany(mergeQueries(
+                new Query({
+                    pagination: definePagination({
+                        limit: response.meta.limit,
+                        // Advanced by the rows actually returned, so a short
+                        // page can neither skip rows nor repeat the request.
+                        offset: (response.meta.offset ?? 0) + response.data.length,
+                    }),
+                }),
+                composed,
+            ));
+
+            rows.push(...response.data as RECORD[]);
         }
+
+        return {
+            data: context.loadAll ? dedupeRows(rows) : rows,
+            total: response.meta.total,
+            meta: {
+                pagination: {
+                    limit: first.limit,
+                    offset: context.loadAll ? 0 : first.offset,
+                },
+            },
+        };
+    }
+
+    // The draft meta of this call carries the query it composed.
+    async function loadQuery(draft: SourceMeta) : Promise<DataCollectionLoadResult<RECORD, SourceMeta>> {
+        if (!draft.query) {
+            return { data: [] };
+        }
+
+        return fetchAll(draft.query);
+    }
+
+    // Snapshot handed over by the server render, adopted at most once.
+    let adopted : DataCollectionSnapshot<RECORD, SourceMeta> | undefined;
+
+    const isServer = typeof window === 'undefined';
+
+    let loadOnSetup = true;
+    const propLoadOnSetup = unref(context.props.loadOnSetup);
+
+    if (typeof propLoadOnSetup === 'boolean') {
+        loadOnSetup = propLoadOnSetup;
     }
 
     // Identity of the request the initial load will make (entity type plus
@@ -352,7 +393,7 @@ function create<
         }
 
         try {
-            const initial = composeQuery({});
+            const initial = composeQuery({}, undefined, initialPagination);
 
             return {
                 key: `authup:collection:${context.type}${buildQueryString(initial.query)}`,
@@ -363,101 +404,211 @@ function create<
         }
     }
 
-    // Three paths for the initial load: adopt a server-rendered snapshot,
-    // load inside `onServerPrefetch` so the renderer awaits the data and can
-    // hand it over, or fetch on the next microtask in the browser. Without a
+    const handoff = loadOnSetup ? resolveHandoff() : undefined;
+
+    // The client consumes the server's snapshot on read: one-shot, so
+    // navigating back to this list later fetches again instead of replaying
+    // the first render's rows. A server render only ever WRITES. It is the
+    // producer, so there is nothing of its own to adopt, and reading here
+    // would mean rendering whatever the store happens to hold — which is
+    // another request's rows if a host ever backs the store with something
+    // outliving one request. Keeping the server path write-only makes that
+    // leak impossible from here, independently of how a host wires the store.
+    function popSnapshot() : DataCollectionSnapshot<RECORD, SourceMeta> | undefined {
+        if (isServer || !hydration || !handoff) {
+            return undefined;
+        }
+
+        const snapshot = hydration.get<EntityCollectionHydrationSnapshot<RECORD>>(handoff.key);
+
+        if (!snapshot) {
+            return undefined;
+        }
+
+        hydration.delete(handoff.key);
+
+        adopted = {
+            data: snapshot.data,
+            total: snapshot.total,
+            meta: {
+                pagination: snapshot.pagination ?? initialPagination,
+                interactive: handoff.initial.interactive,
+                query: handoff.initial.query,
+            },
+        };
+
+        return adopted;
+    }
+
+    const source = defineDataCollection<RECORD, SourceMeta>({
+        load: loadQuery,
+        initialMeta: { pagination: initialPagination },
+        autoLoad: false,
+        hydrate: popSnapshot,
+        deep: true,
+        dedupCreated: true,
+        mergeOnUpdated: true,
+        filterDeleted: true,
+    });
+
+    const {
+        data, 
+        busy, 
+        total, 
+    } = source;
+
+    // The pagination UI reads total and busy off the meta object, so the
+    // exposed meta folds the source's own state into the bag it keeps.
+    const meta = computed<ListMeta>(() => ({
+        pagination: source.meta.pagination,
+        total: total.value,
+        busy: busy.value,
+    }));
+
+    // Composes the query against the source's draft (the state of the load
+    // still in flight, else the committed one), so a sort or page change
+    // issued while a search is loading still carries the search. The draft
+    // is committed only when this load applies. A composition that throws
+    // issues no request, so it supersedes nothing.
+    async function run(input: EntityListQueryInput<Entity<RECORD>>) : Promise<DataLoadOutcome | undefined> {
+        if (!getMany) {
+            return undefined;
+        }
+
+        let outcome : Promise<DataLoadOutcome>;
+
+        try {
+            outcome = source.load((current) => ({
+                ...current,
+                ...composeQuery(input, current.interactive, current.pagination),
+            }));
+        } catch (e) {
+            failed(isError(e) ? e : new Error('The entities could not be loaded.'));
+
+            return undefined;
+        }
+
+        const result = await outcome;
+
+        if (result.status === 'failed') {
+            failed(isError(result.error) ? result.error : new Error('The entities could not be loaded.'));
+        }
+
+        return result;
+    }
+
+    // Never rejects: callers don't reliably handle rejections — most call
+    // sites are fire-and-forget (the setup-time initial load below, template
+    // refs, pagination footers) and the awaiting ones don't catch. During SSR
+    // an unhandled rejection is fatal to the server process, so a failed load
+    // emits `failed` and leaves the list as it was instead of throwing.
+    // A load issued while another is in flight supersedes it.
+    async function load(input: EntityListQueryInput<Entity<RECORD>> = {}) {
+        await run(input);
+    }
+
+    // Three paths for the initial load: adopt a server-rendered snapshot
+    // (above, through the source's `hydrate`), load inside
+    // `onServerPrefetch` so the renderer awaits the data and can hand it
+    // over, or fetch on the next microtask in the browser. Without a
     // hydration store the server render loads nothing at all, because the
     // response would be discarded when the render flushes.
     function setupInitialLoad() {
-        const store = hydration;
-        const handoff = resolveHandoff();
+        if (isServer) {
+            const store = hydration;
 
-        // A server render only ever WRITES. It is the producer, so there is
-        // nothing of its own to adopt, and reading here would mean rendering
-        // whatever the store happens to hold — which is another request's rows
-        // if a host ever backs the store with something outliving one request.
-        // Keeping the server path write-only makes that leak impossible from
-        // here, independently of how a host wires the store.
-        if (typeof window === 'undefined') {
             if (!store || !handoff) {
                 return;
             }
 
             onServerPrefetch(async () => {
-                await load();
+                const outcome = await run({});
 
                 // A failed render load leaves an empty list behind. Handing
                 // that over would strand the client on it (an adopted
                 // snapshot suppresses the load), so say nothing and let the
                 // browser fetch for itself.
-                if (!loadCompleted) {
+                if (outcome && outcome.status === 'failed') {
                     return;
                 }
 
-                store.set(handoff.key, {
-                    data: data.value,
+                const snapshot = source.dehydrate();
+                const value : EntityCollectionHydrationSnapshot<RECORD> = {
+                    data: snapshot.data,
                     total: total.value,
-                    pagination: meta.value.pagination,
-                });
+                    pagination: snapshot.meta.pagination,
+                };
+
+                store.set(handoff.key, value);
             });
 
             return;
         }
 
-        if (store && handoff) {
-            const snapshot = store.get<EntityCollectionHydrationSnapshot<RECORD>>(handoff.key);
-
-            if (snapshot) {
-                // One-shot: navigating back to this list later must fetch
-                // again instead of replaying the first render's rows.
-                store.delete(handoff.key);
-
-                data.value = snapshot.data;
-                total.value = snapshot.total;
-
-                meta.value.total = snapshot.total;
-
-                if (snapshot.pagination) {
-                    meta.value.pagination = snapshot.pagination;
-                }
-
-                interactive = handoff.initial.interactive;
-                query = handoff.initial.query;
-
-                return;
-            }
+        if (adopted) {
+            return;
         }
 
         Promise.resolve()
             .then(() => load());
     }
 
-    const handlers = new ListHandlers<RECORD>(data, {
-        created: (cbEntity) => {
-            total.value++;
+    // The mutators apply only what changes the list: a create of a row
+    // already present, an update or delete of a row that is not, are
+    // no-ops. A mutation arriving while a load is in flight is buffered by
+    // the source and replayed once the load settles, so each emit fires from
+    // `onSettled`, and only when its mutation applied.
+    function created(entity: RECORD) {
+        source.create(entity, {
+            onSettled: (status) => {
+                if (status !== 'applied') {
+                    return;
+                }
 
-            if (context.onCreated) {
-                context.onCreated(cbEntity, meta.value);
-            }
+                if (context.onCreated) {
+                    context.onCreated(entity, meta.value);
+                }
 
-            if (context.setup && typeof context.setup.emit === 'function') {
-                context.setup.emit('created', cbEntity);
-            }
-        },
-        deleted: (cbEntity) => {
-            total.value--;
+                if (context.setup && typeof context.setup.emit === 'function') {
+                    context.setup.emit('created', entity);
+                }
+            },
+        });
+    }
 
-            if (context.setup && typeof context.setup.emit === 'function') {
-                context.setup.emit('deleted', cbEntity);
-            }
-        },
-        updated: (cbEntity) => {
-            if (context.setup && typeof context.setup.emit === 'function') {
-                context.setup.emit('updated', cbEntity);
-            }
-        },
-    });
+    function updated(entity: RECORD) {
+        source.update(entity, {
+            onSettled: (status) => {
+                if (status !== 'applied') {
+                    return;
+                }
 
+                const next = data.value[source.findIndex(entity)];
+
+                if (next && context.setup && typeof context.setup.emit === 'function') {
+                    context.setup.emit('updated', next);
+                }
+            },
+        });
+    }
+
+    function deleted(entity: RECORD) {
+        // The held row is read up front: once the delete applied it is gone.
+        const index = source.findIndex(entity);
+        const previous = (index === -1 ? undefined : data.value[index]) ?? entity;
+
+        source.delete(entity, {
+            onSettled: (status) => {
+                if (status !== 'applied') {
+                    return;
+                }
+
+                if (context.setup && typeof context.setup.emit === 'function') {
+                    context.setup.emit('deleted', previous);
+                }
+            },
+        });
+    }
 
     function render(defaults?: EntityCollectionRenderOptions<RECORD>) : VNodeChild {
         let renderOptions : EntityCollectionRenderOptions<RECORD>;
@@ -480,8 +631,8 @@ function create<
 
         const slots = context.setup.slots || {};
 
-        // Each callback delegates to the `handlers` instance which already
-        // updates total/data and emits the corresponding parent event —
+        // Each callback delegates to the source mutators, which already
+        // update total/data and emit the corresponding parent event —
         // adding a parallel `context.setup.emit(...)` here would fire each
         // event twice (silent data-corruption risk on entity mutations).
         const slotProps = (): ListSlotProps<RECORD> => ({
@@ -490,9 +641,9 @@ function create<
             total: total.value,
             load,
             meta: meta.value,
-            created: (value: RECORD) => handlers.created(value),
-            updated: (value: RECORD) => handlers.updated(value),
-            deleted: (value: RECORD) => handlers.deleted(value),
+            created: (value: RECORD) => created(value),
+            updated: (value: RECORD) => updated(value),
+            deleted: (value: RECORD) => deleted(value),
         });
 
         const renderChrome = (
@@ -596,14 +747,14 @@ function create<
                     // (the old buildList rendered an overlay here; without it
                     // there's no signal that an in-flight reload is happening).
                     const rows = data.value.map((item, index) => {
-                    // Same single-emit contract as `slotProps()`: handlers
+                    // Same single-emit contract as `slotProps()`: the mutators
                     // already emits, so we delegate and don't double-fire.
                         const itemSlotProps: ListItemSlotProps<RECORD> = {
                             data: item,
                             index,
                             busy: busy.value,
-                            updated: (next: RECORD) => handlers.updated(next),
-                            deleted: (next: RECORD) => handlers.deleted(next),
+                            updated: (next: RECORD) => updated(next),
+                            deleted: (next: RECORD) => deleted(next),
                         };
 
                         return h(VCListItem, { key: item.id ?? index }, () => {
@@ -717,24 +868,16 @@ function create<
     }
 
     context.setup.expose({
-        handleCreated: (data: RECORD) => handlers.created(data),
-        handleDeleted: (data: RECORD) => handlers.deleted(data),
-        handleUpdated: (data: RECORD) => handlers.updated(data),
+        handleCreated: (entity: RECORD) => created(entity),
+        handleDeleted: (entity: RECORD) => deleted(entity),
+        handleUpdated: (entity: RECORD) => updated(entity),
         load,
         data,
-        // `load` is a silent no-op while another load is in flight, so a
-        // caller that narrows the base query has to know whether its ask
-        // was taken. Without this it can only compare `data` afterwards,
-        // which cannot tell its own load from the one already running.
+        // A load issued while another is in flight supersedes it, but a
+        // caller that narrows the base query still waits for idle before
+        // asking, so it can tell its own load from the one already running.
         busy,
     });
-
-    let loadOnSetup = true;
-    const propLoadOnSetup = unref(context.props.loadOnSetup);
-
-    if (typeof propLoadOnSetup === 'boolean') {
-        loadOnSetup = propLoadOnSetup;
-    }
 
     if (loadOnSetup) {
         setupInitialLoad();
@@ -751,19 +894,20 @@ function create<
         };
 
         socketContext.onCreated = (entity) => {
+            const { query } = source.meta;
             const isSorted = query &&
                 isQuerySortedDescByDate(query.sorts) &&
                 meta.value?.pagination?.offset === 0;
 
             if (isSorted || total.value < (meta.value?.pagination?.limit ?? 0)) {
-                handlers.created(entity);
+                created(entity);
             }
         };
         socketContext.onDeleted = (entity: RECORD) => {
-            handlers.deleted(entity);
+            deleted(entity);
         };
         socketContext.onUpdated = (entity: RECORD) => {
-            handlers.updated(entity);
+            updated(entity);
         };
         socketContext.realmId = realmId;
 
@@ -777,13 +921,13 @@ function create<
         total,
 
         handleCreated: (entity: RECORD) => {
-            handlers.updated(entity);
+            created(entity);
         },
         handleDeleted: (entity: RECORD) => {
-            handlers.deleted(entity);
+            deleted(entity);
         },
         handleUpdated: (entity: RECORD) => {
-            handlers.updated(entity);
+            updated(entity);
         },
 
         render,

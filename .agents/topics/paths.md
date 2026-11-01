@@ -116,8 +116,11 @@ needed for `?path=` to reach the server:
 
 - Reload post flush: the manager reads its base query off its `query` PROP,
   which updates only on parent re-render.
-- `load` is a silent no-op while another load runs, so the manager exposes
-  `busy`; wait for idle, then ask once. The wait has no deadline (any ceiling
+- A load issued while another runs supersedes it (latest wins). The page
+  still waits for `busy` to clear and asks once, so it sends one request per
+  scope instead of cancelling the mount load on every settle, and it never
+  compares `data` afterwards (that cannot tell its own load from the running
+  one). The wait has no deadline (any ceiling
   answers a folder with the whole realm); it ends on `busy` clearing or the
   page unmounting, and a newer scope supersedes an older wait.
 - A scope still RESOLVING contributes no filter; one resolved to nothing
