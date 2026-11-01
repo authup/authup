@@ -28,6 +28,7 @@ import { assertPathBounds, buildPathForParent } from './helpers.ts';
 import { appendQueryConditions, decodeQuery, scopeReadQuery } from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { pathSchema } from './schema.ts';
+import { StaleRowSignal, assertRowUnchanged, retryOnStaleRow } from '../stale-row/index.ts';
 
 export type PathServiceContext = {
     repository: IPathRepository;
@@ -192,8 +193,9 @@ export class PathService extends AbstractEntityService implements IPathService {
         // the subtree prefix then finds the row under neither name.
         //
         // The gates and checkUniqueness stay outside for the pool reason the
-        // update path documents (#3526); as there, the policy sees the path
-        // resolved above rather than the one finally written.
+        // update path documents (#3526). Unlike there, a parent renamed in
+        // between is not re-authorized: the policy sees the path resolved
+        // above rather than the one finally written.
         return this.repository.transaction(async (repository) => {
             const parentLocked = await this.resolveParent(
                 repository,
@@ -234,89 +236,103 @@ export class PathService extends AbstractEntityService implements IPathService {
         // OUTSIDE the transaction: the evaluator's grant loads and
         // checkUniqueness each take a pooled connection of their own, and
         // holding one while a transaction pins another deadlocks the pool
-        // under concurrency (issue #3526).
-        const resolved = await this.resolveNextPath(this.repository, entity, validated);
+        // under concurrency (issue #3526). A transaction that finds the row or
+        // its next path changed aborts, and the attempt is authorized again.
+        return retryOnStaleRow({
+            row: entity,
+            reread: () => this.repository.findOneBy({ id: entity.id }),
+        }, async (stored) => {
+            const resolved = await this.resolveNextPath(this.repository, stored, validated);
 
-        await this.evaluateUpdate(
-            actor,
-            PermissionName.PATH_UPDATE,
-            entity,
-            {
-                ...entity,
-                ...validated,
-                path: resolved.path,
-            },
-            { realm: (row) => row.realmId },
-        );
-
-        if (resolved.path !== entity.path) {
-            await this.repository.checkUniqueness({
-                path: resolved.path,
-                realmId: entity.realmId,
-            }, entity);
-        }
-
-        return this.repository.transaction(async (repository) => {
-            // The row is re-read inside the transaction and everything the
-            // write depends on is recomputed from it. Merging onto the copy
-            // loaded above would write that copy's path back: a concurrent
-            // rename of the same folder commits between the two reads, this
-            // request derives its `nextPath` from the old name, sees no
-            // change and rewrites no descendant, and the folder lands back at
-            // its old path while its children stay under the new one.
-            //
-            // The repository handed over here locks what it reads, so the row,
-            // its resolved parent and the descendant set are all held for the
-            // transaction: a rename of an ANCESTOR is the race the re-read
-            // alone cannot see, since the two requests read different rows.
-            const current = await repository.findOneBy({ id: entity.id });
-
-            if (!current) {
-                throw new EntityNotFoundError();
-            }
-
-            const {
-                name,
-                parentId,
-                path: nextPath,
-            } = await this.resolveNextPath(
-                repository,
-                current,
-                validated,
+            await this.evaluateUpdate(
+                actor,
+                PermissionName.PATH_UPDATE,
+                stored,
+                {
+                    ...stored,
+                    ...validated,
+                    path: resolved.path,
+                },
+                { realm: (row) => row.realmId },
             );
 
-            const previousPath = current.path;
-            const descendants = nextPath === previousPath ?
-                [] :
-                await repository.findDescendants(current);
-
-            // every bound is asserted before the first write, so a descendant
-            // whose new path is too long can not leave the subtree half
-            // rewritten
-            assertPathBounds(nextPath);
-
-            const rewritten = descendants.map((descendant) => {
-                const path = `${nextPath}${descendant.path.slice(previousPath.length)}`;
-
-                assertPathBounds(path);
-
-                return { descendant, path };
-            });
-
-            // Users and clients follow their folder by id and are not touched.
-            for (const item of rewritten) {
-                item.descendant.path = item.path;
-                await repository.save(item.descendant);
+            if (resolved.path !== stored.path) {
+                await this.repository.checkUniqueness({
+                    path: resolved.path,
+                    realmId: stored.realmId,
+                }, stored);
             }
 
-            const merged = repository.merge(current, {
-                ...validated,
-                name,
-                parentId,
-                path: nextPath,
-            });
+            return this.repository.transaction(async (repository) => {
+                // The row is re-read inside the transaction and everything the
+                // write depends on is recomputed from it. Merging onto the copy
+                // loaded above would write that copy's path back: a concurrent
+                // rename of the same folder commits between the two reads, this
+                // request derives its `nextPath` from the old name, sees no
+                // change and rewrites no descendant, and the folder lands back
+                // at its old path while its children stay under the new one.
+                //
+                // The repository handed over here locks what it reads, so the
+                // row, its resolved parent and the descendant set are all held
+                // for the transaction: a rename of an ANCESTOR is the race the
+                // re-read alone cannot see, since the two requests read
+                // different rows.
+                const current = await repository.findOneBy({ id: stored.id });
 
-            return repository.save(merged);
+                if (!current) {
+                    throw new EntityNotFoundError();
+                }
+
+                assertRowUnchanged(stored, current);
+
+                const {
+                    name,
+                    parentId,
+                    path: nextPath,
+                } = await this.resolveNextPath(
+                    repository,
+                    current,
+                    validated,
+                );
+
+                if (nextPath !== resolved.path) {
+                    throw new StaleRowSignal();
+                }
+
+                const previousPath = current.path;
+                const descendants = nextPath === previousPath ?
+                    [] :
+                    await repository.findDescendants(current);
+
+                // every bound is asserted before the first write, so a
+                // descendant whose new path is too long can not leave the
+                // subtree half rewritten
+                assertPathBounds(nextPath);
+
+                const rewritten = descendants.map((descendant) => {
+                    const path = `${nextPath}${descendant.path.slice(previousPath.length)}`;
+
+                    assertPathBounds(path);
+
+                    return { descendant, path };
+                });
+
+                // Users and clients follow their folder by id and are not
+                // touched.
+                for (const item of rewritten) {
+                    item.descendant.path = item.path;
+                    await repository.save(item.descendant);
+                }
+
+                const merged = repository.merge(current, {
+                    ...validated,
+                    name,
+                    parentId,
+                    path: nextPath,
+                });
+
+                return repository.save(merged);
+            });
         });
     }
 

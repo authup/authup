@@ -86,7 +86,9 @@ load-bearing:
   clients (delete nulls `auth_permissions.client_id`).
 - A stored value counts only in the epoch it was read in; every invalidation drops the
   epoch key. Dropping only the value key lets a read that started before a commit
-  overwrite a fresher value.
+  overwrite a fresher value. The by-id principal keys (`client`, `user`, trusted for
+  `active`) get the same fence per key inside `DatabaseQueryResultCache`
+  (`isPrincipalCacheKey`); a new cached read that authentication trusts needs it too.
 - `EntitySubscriber` drops its keys again after the outermost commit (hooks run before the
   commit). Applies to every subscriber cache.
 - The 60 s TTL is only a backstop for writes bypassing subscribers (query-builder
@@ -442,6 +444,10 @@ Defaults (declared in `app/modules/provisioning/sources/default/module.ts`):
     the fresh row (`FOR UPDATE`), merge the patch, re-check rules depending on current
     state (`nameLocked`; the client secret follows the fresh `authMethod`), save. TypeORM
     then writes only changed columns, so concurrent writers' columns survive.
+  - The gates judged the pre-read row, so a fresh row differing from it (`updatedAt`
+    aside; a path also when its recomputed `path` differs) aborts the transaction
+    (`StaleRowSignal`); `retryOnStaleRow` re-reads, re-authorizes and retries, then 409.
+    Without it a concurrent commit lands a pair no gate saw. `PathService.update` too.
   - Nothing inside the callback may use a pool-bound repository (same rule for the entity
     audit row, which rides `event.manager`, #3539).
   - On sqlite the seam is an unlocked passthrough (no `FOR UPDATE`, one shared query

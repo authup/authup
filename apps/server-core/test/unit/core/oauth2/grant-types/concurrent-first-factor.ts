@@ -29,8 +29,9 @@ export function createConcurrentFirstFactor(
     sessionManager: FakeSessionManager,
     input: {
         userId: string, 
-        realmId: string, 
-        enabled?: boolean 
+        realmId: string,
+        enabled?: boolean,
+        kind?: `${UserAuthenticatorKind}`,
     },
 ) {
     const repository = new FakeUserAuthenticatorRepository();
@@ -51,6 +52,7 @@ export function createConcurrentFirstFactor(
     });
 
     const lookups = vi.spyOn(repository, 'findAllByUser');
+    const existenceChecks = vi.spyOn(repository, 'hasConfirmedByUser');
 
     const enrollAfterInsert = () => {
         const create = sessionManager.create.bind(sessionManager);
@@ -61,7 +63,7 @@ export function createConcurrentFirstFactor(
             repository.seed({
                 userId: input.userId,
                 realmId: input.realmId,
-                kind: UserAuthenticatorKind.TOTP,
+                kind: input.kind ?? UserAuthenticatorKind.TOTP,
                 confirmed: true,
             });
 
@@ -73,6 +75,7 @@ export function createConcurrentFirstFactor(
         service,
         repository,
         lookups,
+        existenceChecks,
         enrollAfterInsert,
     };
 }

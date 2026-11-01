@@ -10,7 +10,7 @@ import { IdentityType, SessionAuthMethod } from '@authup/core-kit';
 import type { ObjectLiteral } from '@authup/kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { ISessionManager } from '../../authentication/index.ts';
-import type { IUserAuthenticatorChallengeProvider, UserAuthenticatorChallengeStatus } from '../../entities/index.ts';
+import type { IUserAuthenticatorRequirementProvider, UserAuthenticatorChallengeStatus } from '../../entities/index.ts';
 import type { IOAuth2TokenIssuer } from '../token/index.ts';
 import type { BaseGrantContext, IOAuth2Grant, OAuth2GrantRunWIthOptions } from './types.ts';
 
@@ -21,7 +21,7 @@ export abstract class OAuth2BaseGrant<
 
     protected sessionManager : ISessionManager;
 
-    protected mfaChallengeProvider? : IUserAuthenticatorChallengeProvider;
+    protected mfaChallengeProvider? : IUserAuthenticatorRequirementProvider;
 
     // -----------------------------------------------------
 
@@ -42,13 +42,11 @@ export abstract class OAuth2BaseGrant<
      * Answers the challenge status of a revoked session, otherwise null.
      */
     protected async revokeIfSecondFactorOwed(session: Session): Promise<UserAuthenticatorChallengeStatus | null> {
-        if (
-            !this.mfaChallengeProvider ||
+        if (!this.mfaChallengeProvider ||
             session.subKind !== IdentityType.USER ||
             !session.sub ||
             session.mfaAt ||
-            session.authMethod === SessionAuthMethod.EXTERNAL
-        ) {
+            session.authMethod === SessionAuthMethod.EXTERNAL || !await this.mfaChallengeProvider.isChallengeRequired(session.sub)) {
             return null;
         }
 

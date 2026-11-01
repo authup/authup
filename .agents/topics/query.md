@@ -41,7 +41,20 @@ and decoding, adapters only execute.
   POLICY sits under the PERMISSION family. Nested paths gate hop by hop.
 - Deny is a silent strip: the include and every dotted filter/sort/field key
   traversing the denied relation are pruned, and the request still succeeds.
-  So `filter[user.name]` is gated exactly like `include=user`.
+- A dotted filter/sort key joins without a row gate, so it is also pruned when
+  the target's compiled verdict is anything but `allow`
+  (`pruneUnreachedRelationKeys`, `core/query/reach.ts`); a strict decode
+  refuses it (400). `filter[user.name]` is therefore stricter than
+  `include=user`.
+- That gate never sees a row, so every service read with a gated relation
+  passes its rows through `redactUnreachedRelations` (`core/query/include.ts`):
+  each joined row (include or `fields[relation]` join) must pass the target's
+  read reach, else the relation is dropped and the parent kept. Under any
+  verdict but `allow`, `decodeQuery` widens a sparse `fields[relation]` to
+  the target's default columns (`ReachCheckField`, `core/query/projection.ts`,
+  trimmed after the check): an unprojected column reads as null to a policy.
+  A joined row still without `realmId` is dropped. A new
+  read exposing a gated relation must call it.
 - A decode without `actor` is a SYSTEM decode and runs unrestricted. Every
   request decode passes one; `buildActorContext` builds one for anonymous
   requests, which holds no grants.

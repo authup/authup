@@ -26,7 +26,7 @@ import type { QueryDecodeContext } from './types.ts';
  * organizational metadata only and no authorization semantics, so a
  * reader of a user or client may see where it is filed).
  */
-const RELATION_TARGET_READ_GATES : Partial<Record<`${EntityType}`, PermissionName[]>> = {
+export const RELATION_TARGET_READ_GATES : Partial<Record<`${EntityType}`, PermissionName[]>> = {
     [EntityType.CLIENT]: [
         PermissionName.CLIENT_READ,
         PermissionName.CLIENT_UPDATE,

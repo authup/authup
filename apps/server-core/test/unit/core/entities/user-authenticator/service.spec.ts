@@ -43,7 +43,12 @@ import type {
     UserAuthenticatorServiceContext,
     UserAuthenticatorServiceOptions,
 } from '../../../../../src/core/entities/user-authenticator/types.ts';
-import { FakeEventService, FakeKeyStore, FakeMailClient } from '../../helpers/index.ts';
+import {
+    FakeEventService,
+    FakeKeyStore,
+    FakeMailClient,
+    FakeSessionManager,
+} from '../../helpers/index.ts';
 import { FakeUserRepository } from '../user/fake-repository.ts';
 import { FakeUserAuthenticatorRepository } from './fake-repository.ts';
 
@@ -123,6 +128,8 @@ describe('UserAuthenticatorService', () => {
     let userRepository: FakeUserRepository;
     let cache: MemoryCache;
     let mailClient: FakeMailClient;
+    let sessionManager: FakeSessionManager;
+    let sessionId: string;
     let service: UserAuthenticatorService;
 
     const webauthnOptions = {
@@ -142,16 +149,33 @@ describe('UserAuthenticatorService', () => {
             cipher: buildRealmCipher(),
             mailClient,
             mailTemplateRenderer: new MailTemplateRenderer(),
+            sessionManager,
+            requestContext: () => ({
+                actorType: IdentityType.USER,
+                actorId: userId,
+                actorName: null,
+                sessionId,
+                requestPath: null,
+                requestMethod: null,
+                requestIpAddress: null,
+                requestUserAgent: null,
+            }),
             ...ctx,
             options: { webauthn: webauthnOptions, ...options },
         });
     }
 
-    beforeEach(() => {
+    beforeEach(async () => {
         repository = new FakeUserAuthenticatorRepository();
         userRepository = new FakeUserRepository();
         cache = new MemoryCache();
         mailClient = new FakeMailClient();
+        sessionManager = new FakeSessionManager();
+        ({ id: sessionId } = await sessionManager.create({
+            sub: userId,
+            subKind: IdentityType.USER,
+            mfaAt: new Date().toISOString(),
+        }));
         service = buildService();
     });
 

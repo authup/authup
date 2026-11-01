@@ -508,6 +508,103 @@ describe('core/entities/path/service', () => {
                 createRestrictedActor(PermissionName.PATH_UPDATE, reachable),
             )).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
+
+        // The verdict above is taken on rows read before the write
+        // transaction. A rename committed in between must be authorized again
+        // against the path the write lands on.
+        describe('a rename committed between the read and the write', () => {
+            const renameConcurrently = (folder: Path, child: Path | undefined, name: string) => {
+                repository.beforeTransaction = async () => {
+                    await repository.save({
+                        ...folder, 
+                        name, 
+                        path: name, 
+                    });
+
+                    if (child) {
+                        await repository.save({ ...child, path: `${name}/${child.name}` });
+                    }
+                };
+            };
+
+            it('should open one transaction when nothing changed', async () => {
+                const analyses = seedPath({ name: 'analyses', path: 'analyses' });
+                const a = seedPath({
+                    name: 'a',
+                    path: 'analyses/a',
+                    parentId: analyses.id,
+                });
+
+                await service.update(a.id, { name: 'b' }, createRestrictedActor(PermissionName.PATH_UPDATE, reachable));
+
+                expect(repository.transactionCalls).toBe(1);
+            });
+
+            it('should refuse the write when an ancestor rename moved the folder out of reach', async () => {
+                const analyses = seedPath({ name: 'analyses', path: 'analyses' });
+                const a = seedPath({
+                    name: 'a',
+                    path: 'analyses/a',
+                    parentId: analyses.id,
+                });
+
+                renameConcurrently(analyses, a, 'other');
+
+                await expect(service.update(
+                    a.id,
+                    { name: 'b' },
+                    createRestrictedActor(PermissionName.PATH_UPDATE, reachable),
+                )).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+                expect((await repository.findOneById(a.id))!.path).toBe('other/a');
+            });
+
+            it('should refuse the write when the new parent was renamed out of reach', async () => {
+                const analyses = seedPath({ name: 'analyses', path: 'analyses' });
+                const target = seedPath({
+                    name: 'target',
+                    path: 'analyses/target',
+                    parentId: analyses.id,
+                });
+                const a = seedPath({
+                    name: 'a',
+                    path: 'analyses/a',
+                    parentId: analyses.id,
+                });
+
+                repository.beforeTransaction = async () => {
+                    await repository.save({
+                        ...target, 
+                        parentId: null, 
+                        path: 'target', 
+                    });
+                };
+
+                await expect(service.update(
+                    a.id,
+                    { parentId: target.id },
+                    createRestrictedActor(PermissionName.PATH_UPDATE, reachable),
+                )).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+                expect((await repository.findOneById(a.id))!.path).toBe('analyses/a');
+            });
+
+            it('should answer a conflict when the folder never stabilizes', async () => {
+                const a = seedPath({ name: 'a', path: 'a' });
+
+                let counter = 0;
+
+                repository.beforeTransaction = async () => {
+                    const row = await repository.findOneById(a.id);
+
+                    counter += 1;
+                    await repository.save({ ...row!, displayName: `concurrent-${counter}` });
+                };
+
+                await expect(service.update(a.id, { name: 'b' }, createAllowAllActor()))
+                    .rejects.toMatchObject({ code: ErrorCode.ENTITY_CONFLICT });
+                expect(repository.transactionCalls).toBe(3);
+                expect((await repository.findOneById(a.id))!.path).toBe('a');
+            });
+        });
     });
 
     describe('delete', () => {

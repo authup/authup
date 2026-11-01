@@ -7,3 +7,6 @@
 
 export { default as AUserAuthenticatorEnroll } from './AUserAuthenticatorEnroll.vue';
 export { default as AUserAuthenticators } from './AUserAuthenticators.vue';
+export { default as AUserAuthenticatorStepUp } from './AUserAuthenticatorStepUp.vue';
+export * from './step-up';
+export * from './types';

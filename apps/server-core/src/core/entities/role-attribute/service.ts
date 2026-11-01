@@ -20,7 +20,7 @@ import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/serv
 import { AbstractEntityService } from '@authup/server-kit';
 import { buildErrorMessageForAttribute } from 'validup';
 import type { IRoleAttributeRepository, IRoleAttributeService } from './types.ts';
-import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery, redactUnreachedRelations } from '../../query/index.ts';
 import { roleAttributeSchema } from './schema.ts';
 import { EntityAttributeValidator } from '../attribute/index.ts';
 
@@ -69,14 +69,14 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             parsed = appendQueryConditions(parsed, compiled.condition);
         }
 
-        if (compiled.verdict !== 'post') {
-            return this.repository.findMany(parsed);
-        }
-
         const {
             data: entities,
             meta,
         } = await this.repository.findMany(parsed);
+
+        if (compiled.verdict !== 'post') {
+            return { data: await redactUnreachedRelations(entities, parsed, roleAttributeSchema, actor), meta };
+        }
 
         const data: RoleAttribute[] = [];
         let { total } = meta;
@@ -102,7 +102,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         }
 
         return {
-            data,
+            data: await redactUnreachedRelations(data, parsed, roleAttributeSchema, actor),
             meta: {
                 ...meta,
                 total,

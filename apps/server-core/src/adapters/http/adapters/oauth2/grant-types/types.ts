@@ -6,7 +6,6 @@
  */
 
 import type { User } from '@authup/core-kit';
-import type { Logger } from '@authup/server-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { IAppEvent } from 'routup';
 import type {
@@ -18,7 +17,6 @@ import type {
     IOAuth2AccessPolicyEvaluator,
     IOAuth2AuthorizationCodeVerifier,
     IOAuth2DeviceCodeVerifier,
-    IOAuth2MfaLoginService,
     IRealmRepository,
     IUserAuthenticatorService,
     OAuth2AuthorizeGrantContext,
@@ -63,8 +61,6 @@ export type HTTPOAuth2PasswordGrantContext = OAuth2PasswordGrantContext & {
     realmRepository: IRealmRepository,
     loginThrottleService?: ILoginThrottleService,
     userAuthenticatorService?: IUserAuthenticatorService,
-    mfaLoginService?: IOAuth2MfaLoginService,
-    logger?: Logger,
     certificateSource: CertificateSource,
 };
 

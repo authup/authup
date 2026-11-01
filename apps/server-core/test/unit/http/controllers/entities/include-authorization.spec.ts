@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { RealmScope } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import {
@@ -42,9 +43,11 @@ describe('http/controllers (include authorization)', () => {
         for (const permissionName of permissionNames) {
             const { data: permission } = await suite.client.permission.getOne(permissionName);
 
+            // the joined rows are global built-ins, which `own` reach excludes
             await suite.client.clientPermission.create({
                 clientId: created.id,
                 permissionId: permission.id,
+                realmScope: RealmScope.OWN_OR_NULL,
             });
         }
 
@@ -102,9 +105,18 @@ describe('http/controllers (include authorization)', () => {
     });
 
     it('should strip only the includes whose target read gate settles false', async () => {
-        const response = await roleReaderClient.userRole.getMany({ relations: ['user', 'role'] });
+        // a global role, so the binding stays in the reader's role reach
+        // whatever other spec files left in a shared database
+        const { data: role } = await suite.client.role.create(createFakeRole({ realmId: null }));
+        const { data: user } = await suite.client.user.create(createFakeUser());
+        const { data: binding } = await suite.client.userRole.create({ userId: user.id, roleId: role.id });
 
-        expect(response.data.length).toBeGreaterThanOrEqual(1);
+        const response = await roleReaderClient.userRole.getMany({
+            filters: { id: binding.id },
+            relations: ['user', 'role'],
+        });
+
+        expect(response.data).toHaveLength(1);
 
         for (const row of response.data) {
             expect(row.user).toBeUndefined();

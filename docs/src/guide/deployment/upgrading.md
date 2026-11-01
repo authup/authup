@@ -25,6 +25,11 @@ child to a built-in policy is refused for every caller. The nested `children` of
 composite are checked for `permission_create` in their own realm, and a nested child
 without a `realmId` is global, so a realm administrator names its realm on each child.
 
+Deleting a composite deletes every policy below it, so the delete now needs
+`permission_delete` on each of them in its own realm, and it is refused when one of them
+is built-in. A realm administrator can no longer delete its composite while a global or
+foreign policy sits below it; an administrator with authority over that policy detaches it first.
+
 Provisioning already removes, on every start, a child of a built-in policy that its
 source does not declare: it is deleted when no permission binds it, and detached
 otherwise. Review the detached policies after the upgrade.
@@ -39,6 +44,43 @@ otherwise. Review the detached policies after the upgrade.
   so end them through the session API.
 - An email factor an administrator enrolls for a user ends all of that user's sessions.
 - Adding a further factor ends nothing.
+
+### Managing your own factors needs a session that passed one
+
+Once a user holds a confirmed second factor, its own requests to enroll another factor,
+confirm a pending device, regenerate the recovery codes or delete a device are refused
+with `400 mfa_required` unless the session they come from passed a second-factor
+challenge. This includes the session the first factor was enrolled from: it completes a
+challenge (`POST /authenticators/challenge`) or signs in again with the factor.
+Sessions of a federated sign-in, administrators managing another user's factors and
+deployments with `MFA_ENABLED=false` are not affected.
+
+### A user, client or folder update can answer 409 under concurrent writes
+
+An update of a user, a client or a folder is authorized against the row it read. When
+another write changes that row before the update is stored, the update is authorized
+again against the changed row and retried. It answers `409` (`entity_conflict`) when the
+row keeps changing over three attempts; retry the request.
+
+### A password or email change invalidates a pending reset link
+
+A password-reset link mailed before the user's password or email address changed no longer
+works. Changing the password through the API or a console, or changing the address (an
+identity provider's attribute sync included), clears the pending reset code. Request a new link if one is still needed.
+
+### An included relation follows the reader's reach of that entity
+
+A related row joined onto a response (`include=role`, `include=accessPolicy`, or a
+`fields[relation]` projection) is now checked against the reader's own read access to that
+entity, as if it were read on its own route. When the reader may list the parent row but
+not that related row, for example a role of another realm or a global row under an `own`
+grant, the relation is left out and the parent row is returned with its reference column (`roleId`) only.
+Readers with unrestricted access see no change. A sparse `fields[relation]` list is checked
+against the whole related row and still answers with the requested columns only.
+
+A filter or sort key through such a relation (`filter[role.name]`, `sort=user.name`) is
+ignored for a restricted reader, and refused with 400 on a bulk delete
+(`DELETE /sessions`). Filter on the reference column (`roleId`, `userId`) instead.
 
 ## Next release (after v1.0.0-beta.71)
 

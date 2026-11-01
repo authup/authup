@@ -112,6 +112,7 @@ It follows hexagonal architecture principles, separating core business logic, ad
 ### server-console-kit rules
 
 - Three groups: html helpers (`readUIClientPreferences`, `stampHtmlAttributes`, `replaceTemplateMarker`, `injectHeadContent`, `stampDocumentTitle`, `applyUIPageHeaders`, `rebaseAssetURLs`, `serializeInlineScriptJSON`); **`defineStaticConsole`**, one closure per console AND per handler; the theme subsystem (`ThemeProvider`, `applyTheme`, `createThemeAssetsHandler`, and `theme/contract/`, which imports nothing from node or routup).
+- Every `@routup/assets` mount is preceded by `createAssetPathGuard(dir)` on the same path, because the handler performs no containment check.
 - `replaceTemplateMarker` is why this is a package: a string replacement re-interprets `$&`, `` $` ``, `$'`, `$$` in the VALUE, spliced values carry raw request input, and the helper that defends it must exist once.
 - Every piece of `defineStaticConsole` state is instance-scoped; a `setPackagePath`-style mutator would make two handlers in one process share a resolution.
 - `createApplication` composes a console's module graph straight from orkos (`ConfigModule` + `ThemeModule` + `HTTPModule`), so a console is a runnable SERVICE; the bin and `authup start console` start the same thing. A pre-registered token wins (the test seam). Not a builder like server-core's `ApplicationBuilder`: a builder for two modules would be a factory for one product.

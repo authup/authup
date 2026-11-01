@@ -28,7 +28,7 @@ import type { Session, SessionToken } from '@authup/core-kit';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IOAuth2TokenRepository, ISessionTokenRepository  } from '../../oauth2/index.ts';
-import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery, redactUnreachedRelations } from '../../query/index.ts';
 import { sessionTokenSchema } from './schema.ts';
 import type { ISessionTokenService, SessionTokenDeleteManyResult } from './types.ts';
 
@@ -144,7 +144,9 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
                 ),
             );
 
-            return this.repository.findMany(scoped);
+            const result = await this.repository.findMany(scoped);
+
+            return { ...result, data: await redactUnreachedRelations(result.data, scoped, sessionTokenSchema, actor) };
         }
 
         const { data: entities, meta } = await this.repository.findMany(parsed);
@@ -169,7 +171,7 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
         }
 
         return {
-            data,
+            data: await redactUnreachedRelations(data, parsed, sessionTokenSchema, actor),
             meta: {
                 ...meta,
                 total,

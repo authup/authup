@@ -16,6 +16,8 @@ import type {
     UserAuthenticatorFindManyOptions,
     UserAuthenticatorSecretsFilter,
 } from '../../../../../core/index.ts';
+import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
+import { UserAuthenticatorEntity, UserEntity } from '../../../../../adapters/database/domains/index.ts';
 import { applyRealmScopeSelect } from '../helpers.ts';
 
 export class UserAuthenticatorRepositoryAdapter implements IUserAuthenticatorRepository {
@@ -39,6 +41,31 @@ export class UserAuthenticatorRepositoryAdapter implements IUserAuthenticatorRep
 
     async removeAllByUser(userId: string, kind: `${UserAuthenticatorKind}`): Promise<void> {
         await this.repository.delete({ userId, kind });
+    }
+
+    async withUserLock<R>(
+        userId: string,
+        fn: (repository: IUserAuthenticatorRepository) => Promise<R>,
+    ): Promise<R> {
+        const dataSource = this.repository.manager.connection;
+
+        if (!isDatabaseTypeRowLockable(dataSource.options.type)) {
+            // better-sqlite3: no FOR UPDATE, and the driver shares one query
+            // runner, so a transaction here would nest inside whatever else
+            // runs on it (the removeGuarded rule)
+            return fn(this);
+        }
+
+        return dataSource.transaction(async (manager) => {
+            await manager.getRepository(UserEntity)
+                .createQueryBuilder('user')
+                .select('user.id')
+                .where('user.id = :id', { id: userId })
+                .setLock('pessimistic_write')
+                .getOne();
+
+            return fn(new UserAuthenticatorRepositoryAdapter(manager.getRepository(UserAuthenticatorEntity)));
+        });
     }
 
     async findOneById(id: string): Promise<UserAuthenticator | null> {

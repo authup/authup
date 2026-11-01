@@ -23,6 +23,7 @@ import { clientPermissionSchema } from '../../../../src/core/entities/client-per
 import { roleSchema } from '../../../../src/core/entities/role/schema.ts';
 import { userRoleSchema } from '../../../../src/core/entities/user-role/schema.ts';
 import { appendQueryConditions, decodeQuery } from '../../../../src/core/query/index.ts';
+import { ReachCheckField } from '../../../../src/core/query/projection.ts';
 
 function collectFieldConditions(condition: ICondition): [string, unknown][] {
     if (isFilters(condition)) {
@@ -199,8 +200,10 @@ describe('core/query', () => {
             ]);
         });
 
-        it('should keep a dotted filter key when its relation gate passes', async () => {
+        it('should keep a dotted filter key when the reader reads its target unrestricted', async () => {
             const evaluator = new FakePermissionEvaluator();
+
+            evaluator.setCompileResult({ verdict: 'allow' });
 
             const parsed = await decodeQuery(
                 { filter: { 'user.name': 'admin' } },
@@ -235,6 +238,39 @@ describe('core/query', () => {
             );
 
             expect(parsed.relations.value.map((relation) => relation.name)).toEqual(['user', 'role']);
+        });
+    });
+
+    describe('sparse relation projection', () => {
+        const decodeSparse = (evaluator: FakePermissionEvaluator) => decodeQuery(
+            { fields: { role: ['id', 'name'] } },
+            { schema: userRoleSchema, actor: buildActor(evaluator) },
+        );
+
+        it('should load the whole relation row for a restricted reach', async () => {
+            const evaluator = new FakePermissionEvaluator();
+
+            evaluator.setCompileResult({ verdict: 'conditional', condition: eq('realmId', 'realm-a') });
+
+            const parsed = await decodeSparse(evaluator);
+            const added = parsed.fields.value
+                .filter((field) => field instanceof ReachCheckField)
+                .map((field) => field.name);
+
+            expect(added).toContain('role.realmId');
+            expect(added).toContain('role.description');
+            expect(added).not.toContain('role.id');
+            expect(added).not.toContain('role.name');
+        });
+
+        it('should keep the projection for an unrestricted reach', async () => {
+            const evaluator = new FakePermissionEvaluator();
+
+            evaluator.setCompileResult({ verdict: 'allow' });
+
+            const parsed = await decodeSparse(evaluator);
+
+            expect(parsed.fields.value.some((field) => field instanceof ReachCheckField)).toBe(false);
         });
     });
 
@@ -352,7 +388,8 @@ describe('core/query', () => {
             expect(field).toBeDefined();
             expect(field!.condition).toBeDefined();
             expect(collectFieldConditions(field!.condition!)).toContainEqual(['realmId', 'realm-a']);
-            expect(evaluator.compileCalls.map((call) => call.name)).toEqual([CLIENT_PERMISSIONS]);
+            // the field gate, then the relation reach widening the sparse projection
+            expect(evaluator.compileCalls.map((call) => call.name)).toEqual([CLIENT_PERMISSIONS, CLIENT_PERMISSIONS]);
         });
 
         it('should not fire for a projection without gated fields', async () => {

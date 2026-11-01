@@ -18,6 +18,34 @@ import type {
 export class FakeUserAuthenticatorRepository implements IUserAuthenticatorRepository {
     public removeCalls: UserAuthenticator[] = [];
 
+    public lockCalls: string[] = [];
+
+    /**
+     * Runs once, right before the first write is serialized: at the user lock
+     * when the caller takes one, else at the first save or remove. Models a
+     * concurrent request committing its own factor change in that instant.
+     */
+    public beforeWrite?: () => Promise<void> | void;
+
+    protected async runBeforeWrite(): Promise<void> {
+        const hook = this.beforeWrite;
+
+        if (!hook) {
+            return;
+        }
+
+        this.beforeWrite = undefined;
+        await hook();
+    }
+
+    async withUserLock<R>(userId: string, fn: (repository: IUserAuthenticatorRepository) => Promise<R>): Promise<R> {
+        this.lockCalls.push(userId);
+
+        await this.runBeforeWrite();
+
+        return fn(this);
+    }
+
     private entities = new Map<string, UserAuthenticator>();
 
     seed(input: Partial<UserAuthenticator>): UserAuthenticator {
@@ -56,6 +84,8 @@ export class FakeUserAuthenticatorRepository implements IUserAuthenticatorReposi
     }
 
     async save(entity: UserAuthenticator): Promise<UserAuthenticator> {
+        await this.runBeforeWrite();
+
         // mirror TypeORM: only provided properties are written — a row
         // loaded without its select:false columns must not clobber them.
         const existing = entity.id ? this.entities.get(entity.id) : undefined;
@@ -72,6 +102,8 @@ export class FakeUserAuthenticatorRepository implements IUserAuthenticatorReposi
     }
 
     async remove(entity: UserAuthenticator): Promise<void> {
+        await this.runBeforeWrite();
+
         this.removeCalls.push(entity);
         this.entities.delete(entity.id);
     }

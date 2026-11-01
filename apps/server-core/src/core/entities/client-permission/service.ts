@@ -22,7 +22,7 @@ import { applyJunctionCreateGrant, buildJunctionUpdateData } from '../../identit
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
 import type { IClientPermissionRepository, IClientPermissionService } from './types.ts';
-import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery, redactUnreachedRelations } from '../../query/index.ts';
 import { clientPermissionSchema } from './schema.ts';
 
 const READ_PERMISSION_NAMES = [
@@ -79,7 +79,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
         const { data: entities, meta } = await this.repository.findMany(parsed);
 
         if (compiled.verdict !== 'post') {
-            return { data: entities, meta };
+            return { data: await redactUnreachedRelations(entities, parsed, clientPermissionSchema, actor), meta };
         }
 
         const data: ClientPermission[] = [];
@@ -101,7 +101,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
             data.push(entity);
         }
 
-        return { data, meta: { ...meta, total } };
+        return { data: await redactUnreachedRelations(data, parsed, clientPermissionSchema, actor), meta: { ...meta, total } };
     }
 
     async getOne(

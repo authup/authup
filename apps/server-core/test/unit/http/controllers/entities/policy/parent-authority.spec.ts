@@ -107,6 +107,16 @@ describe('src/http/controllers/policy (parent authority)', () => {
         await repository.save(child);
     }
 
+    async function removeIfPresent(id: string) {
+        const dataSource = suite.container.resolve(DatabaseInjectionKey.DataSource);
+        const repository = dataSource.getTreeRepository(PolicyEntity);
+        const entity = await repository.findOneBy({ id });
+
+        if (entity) {
+            await repository.remove(entity);
+        }
+    }
+
     async function unplant(childId: string) {
         const dataSource = suite.container.resolve(DatabaseInjectionKey.DataSource);
         const repository = dataSource.getTreeRepository(PolicyEntity);
@@ -213,6 +223,73 @@ describe('src/http/controllers/policy (parent authority)', () => {
         );
 
         expect(await countByName(`parent-authority-placed-${RUN}`)).toBe(1);
+    });
+
+    it('should refuse deleting an own composite holding a descendant of another realm or the global scope', async () => {
+        const { data: root } = await realmAdmin.policy.create({
+            name: `parent-authority-subtree-${RUN}`,
+            type: BuiltInPolicyType.COMPOSITE,
+            realmId: realmBId,
+        });
+
+        const { data: foreign } = await suite.client.policy.create({
+            name: `parent-authority-subtree-foreign-${RUN}`,
+            type: BuiltInPolicyType.TIME,
+            realmId: foreignRealmId,
+        });
+
+        const { data: global } = await suite.client.policy.create({
+            name: `parent-authority-subtree-global-${RUN}`,
+            type: BuiltInPolicyType.TIME,
+        });
+
+        try {
+            await plant(foreign.id, root.id);
+
+            await expectClientError(
+                () => realmAdmin.policy.delete(root.id),
+                { status: 403 },
+            );
+
+            expect(await countByName(`parent-authority-subtree-foreign-${RUN}`)).toBe(1);
+
+            await unplant(foreign.id);
+            await plant(global.id, root.id);
+
+            await expectClientError(
+                () => realmAdmin.policy.delete(root.id),
+                { status: 403 },
+            );
+
+            expect(await countByName(`parent-authority-subtree-global-${RUN}`)).toBe(1);
+            expect(await countByName(`parent-authority-subtree-${RUN}`)).toBe(1);
+        } finally {
+            await unplant(foreign.id);
+            await unplant(global.id);
+            await removeIfPresent(foreign.id);
+            await removeIfPresent(global.id);
+            await removeIfPresent(root.id);
+        }
+    });
+
+    it('should delete an own composite together with its own-realm descendants', async () => {
+        const { data: root } = await realmAdmin.policy.create({
+            name: `parent-authority-own-subtree-${RUN}`,
+            type: BuiltInPolicyType.COMPOSITE,
+            realmId: realmBId,
+        });
+
+        await realmAdmin.policy.create({
+            name: `parent-authority-own-subtree-child-${RUN}`,
+            type: BuiltInPolicyType.TIME,
+            realmId: realmBId,
+            parentId: root.id,
+        });
+
+        await realmAdmin.policy.delete(root.id);
+
+        expect(await countByName(`parent-authority-own-subtree-${RUN}`)).toBe(0);
+        expect(await countByName(`parent-authority-own-subtree-child-${RUN}`)).toBe(0);
     });
 
     it('should refuse attaching a child to a parent of another realm', async () => {

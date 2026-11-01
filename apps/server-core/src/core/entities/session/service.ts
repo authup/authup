@@ -23,7 +23,12 @@ import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/serve
 import type { ISessionManager, ISessionRepository } from '../../authentication/index.ts';
 import { SESSION_FILTER_KEYS } from '../../authentication/index.ts';
 import type { ISessionService, SessionDeleteManyOptions, SessionDeleteManyResult } from './types.ts';
-import { appendQueryConditions, decodeQuery, scopeReadQuery } from '../../query/index.ts';
+import { 
+    appendQueryConditions, 
+    decodeQuery, 
+    redactUnreachedRelations, 
+    scopeReadQuery, 
+} from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { sessionSchema } from './schema.ts';
 
@@ -76,7 +81,9 @@ export class SessionService extends AbstractEntityService implements ISessionSer
         const scope = await this.scopeRead(parsed, actor);
 
         if (!scope.post) {
-            return this.repository.findMany(scope.query);
+            const result = await this.repository.findMany(scope.query);
+
+            return { ...result, data: await redactUnreachedRelations(result.data, scope.query, sessionSchema, actor) };
         }
 
         const { data: entities, meta } = await this.repository.findMany(parsed);
@@ -107,7 +114,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
         }
 
         return {
-            data,
+            data: await redactUnreachedRelations(data, parsed, sessionSchema, actor),
             meta: {
                 ...meta,
                 total,

@@ -208,6 +208,7 @@ describe('UserAuthenticatorService: sessions predating the first factor', () => 
 
     it('keeps the sessions when the user already holds a confirmed factor', async () => {
         await service.enroll({ kind: UserAuthenticatorKind.RECOVERY }, makeActor());
+        await sessionManager.markMfaVerified((await sessionManager.findOneById(ownSessionId))!);
 
         await sessionManager.create({
             id: otherSessionId, 

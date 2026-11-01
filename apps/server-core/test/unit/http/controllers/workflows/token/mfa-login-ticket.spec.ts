@@ -279,6 +279,14 @@ describe('src/http/controllers/token (mfa-pending login ticket)', () => {
 
         await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.EMAIL });
 
+        // a second factor is enrolled from a session that proved the first
+        mailClient.clear();
+        await bearer.userAuthenticator.sendChallenge({ kind: UserAuthenticatorKind.EMAIL });
+        await bearer.userAuthenticator.verifyChallenge({
+            kind: UserAuthenticatorKind.EMAIL,
+            response: /(\d{6})/.exec(mailClient.sent[0].text ?? '')![1],
+        });
+
         const enrolled = await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.TOTP });
         const totp = new TOTP({
             algorithm: 'SHA1',

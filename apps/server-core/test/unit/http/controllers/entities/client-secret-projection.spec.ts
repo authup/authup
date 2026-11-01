@@ -326,10 +326,11 @@ describe('http/controllers (client secret projection)', () => {
         expect(ownRow.client).toBeDefined();
         expect(ownRow.client!.secret).toEqual(ownClientSecret);
 
+        // the foreign client is outside the actor's CLIENT_READ reach, so the
+        // join itself is dropped, not only its secret
         const foreignRow = byClientId.get(foreignClientId)!;
 
-        expect(foreignRow.client).toBeDefined();
-        expect(foreignRow.client!.secret).toBeUndefined();
+        expect(foreignRow.client).toBeUndefined();
     });
 
     it('redacts a foreign hashed secret on the client-permission fields[client] projection', async () => {
@@ -339,8 +340,7 @@ describe('http/controllers (client secret projection)', () => {
         });
 
         expect(response.data).toHaveLength(1);
-        expect(response.data[0].client).toBeDefined();
-        expect(response.data[0].client!.secret).toBeUndefined();
+        expect(response.data[0].client).toBeUndefined();
     });
 
     it('gates the client-role fields[client] projection', async () => {
@@ -354,7 +354,7 @@ describe('http/controllers (client secret projection)', () => {
         const byClientId = new Map(response.data.map((row) => [row.clientId, row]));
 
         expect(byClientId.get(ownClientId)!.client!.secret).toEqual(ownClientSecret);
-        expect(byClientId.get(foreignClientId)!.client!.secret).toBeUndefined();
+        expect(byClientId.get(foreignClientId)!.client).toBeUndefined();
     });
 
     it('gates the client-scope fields[client] projection', async () => {
@@ -368,7 +368,7 @@ describe('http/controllers (client secret projection)', () => {
         const byClientId = new Map(response.data.map((row) => [row.clientId, row]));
 
         expect(byClientId.get(ownClientId)!.client!.secret).toEqual(ownClientSecret);
-        expect(byClientId.get(foreignClientId)!.client!.secret).toBeUndefined();
+        expect(byClientId.get(foreignClientId)!.client).toBeUndefined();
     });
 
     it('gates the explicit include=client + fields[client] projection', async () => {
@@ -393,10 +393,11 @@ describe('http/controllers (client secret projection)', () => {
         expect(ownRow.client).toBeDefined();
         expect(ownRow.client!.secret).toEqual(ownClientSecret);
 
+        // the foreign client is outside the actor's CLIENT_READ reach, so the
+        // join itself is dropped, not only its secret
         const foreignRow = byClientId.get(foreignClientId)!;
 
-        expect(foreignRow.client).toBeDefined();
-        expect(foreignRow.client!.secret).toBeUndefined();
+        expect(foreignRow.client).toBeUndefined();
     });
 
     it('denies a foreign single-read secret projection even under a bare replace-projection', async () => {

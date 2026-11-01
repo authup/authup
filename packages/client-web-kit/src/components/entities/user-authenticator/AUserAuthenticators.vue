@@ -31,7 +31,9 @@ import {
 } from '@vuecs/overlays';
 import { extractErrorContext, injectHTTPClient, useTranslations } from '../../../core';
 import AUserAuthenticatorEnroll from './AUserAuthenticatorEnroll.vue';
+import AUserAuthenticatorStepUp from './AUserAuthenticatorStepUp.vue';
 import { USER_AUTHENTICATOR_KIND_ICONS } from './constants';
+import { useAuthenticatorStepUp } from './step-up';
 
 export default defineComponent({
     components: {
@@ -43,6 +45,7 @@ export default defineComponent({
         VCModalTitle,
         VCModalClose,
         AUserAuthenticatorEnroll,
+        AUserAuthenticatorStepUp,
     },
     props: {
         userId: {
@@ -53,6 +56,7 @@ export default defineComponent({
     emits: ['deleted', 'created'],
     setup(props, { emit }) {
         const apiClient = injectHTTPClient();
+        const stepUp = useAuthenticatorStepUp();
 
         const translations = useTranslations([
             { namespace: TranslatorTranslationNamespace.CLIENT, key: TranslatorTranslationClientKey.MFA_ENROLL_TITLE },
@@ -118,7 +122,12 @@ export default defineComponent({
             }
 
             try {
-                await apiClient.userAuthenticator.delete(props.userId, item.id);
+                const result = await stepUp.run(() => apiClient.userAuthenticator.delete(props.userId, item.id));
+
+                if (result.outcome === 'cancelled') {
+                    return;
+                }
+
                 items.value = items.value.filter((entity) => entity.id !== item.id);
                 emit('deleted', item);
             } catch (e) {
@@ -149,6 +158,7 @@ export default defineComponent({
             kindLabels,
             drop,
             handleCreated,
+            stepUp,
         };
     },
 });
@@ -163,6 +173,12 @@ export default defineComponent({
         >
             {{ error }}
         </VCAlert>
+
+        <AUserAuthenticatorStepUp
+            v-if="stepUp.status.value"
+            class="mb-3"
+            :step-up="stepUp"
+        />
 
         <div class="flex items-center justify-end mb-3">
             <VCButton

@@ -40,6 +40,7 @@ import { userAttributeSchema } from '../entities/user-attribute/schema.ts';
 import { userAuthenticatorSchema } from '../entities/user-authenticator/schema.ts';
 import { userPermissionSchema } from '../entities/user-permission/schema.ts';
 import { userRoleSchema } from '../entities/user-role/schema.ts';
+import { pruneUnreachedRelationKeys, widenSparseRelationProjections } from './reach.ts';
 import type { DecodeQueryOptions, QueryDecodeContext } from './types.ts';
 
 /**
@@ -138,7 +139,31 @@ export async function decodeQuery<RECORD extends ObjectLiteral = ObjectLiteral>(
         context: { actor: options.actor } satisfies QueryDecodeContext,
     });
 
-    return parsed ?? new Query({});
+    if (!parsed) {
+        return new Query({});
+    }
+
+    if (!options.actor) {
+        return parsed;
+    }
+
+    const schema = typeof options.schema === 'string' ?
+        schemaRegistry.get(options.schema) :
+        options.schema as Schema<any>;
+
+    if (!schema) {
+        return parsed;
+    }
+
+    const pruned = await pruneUnreachedRelationKeys(
+        parsed,
+        schema,
+        schemaRegistry,
+        options.actor,
+        { throwOnFailure: options.throwOnFailure },
+    );
+
+    return widenSparseRelationProjections(pruned, schema, schemaRegistry, options.actor);
 }
 
 /**
