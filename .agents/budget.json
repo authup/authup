@@ -2,95 +2,95 @@
     "newTopicBytes": 20000,
     "files": {
         ".agents/architecture.md": {
-            "bytes": 56786,
+            "bytes": 59626,
             "history": 5
         },
         ".agents/conventions.md": {
-            "bytes": 33686,
+            "bytes": 35371,
             "history": 0
         },
         ".agents/structure.md": {
-            "bytes": 46413,
+            "bytes": 48734,
             "history": 2
         },
         ".agents/testing.md": {
-            "bytes": 30800,
+            "bytes": 32340,
             "history": 0
         },
         ".agents/topics/authorization.md": {
-            "bytes": 35610,
+            "bytes": 37391,
             "history": 0
         },
         ".agents/topics/clients.md": {
-            "bytes": 9394,
+            "bytes": 9988,
             "history": 0
         },
         ".agents/topics/consoles.md": {
-            "bytes": 28715,
+            "bytes": 30191,
             "history": 0
         },
         ".agents/topics/deployment.md": {
-            "bytes": 18427,
+            "bytes": 19364,
             "history": 0
         },
         ".agents/topics/device-grant.md": {
-            "bytes": 11489,
+            "bytes": 12064,
             "history": 0
         },
         ".agents/topics/events-stats.md": {
-            "bytes": 17100,
+            "bytes": 17955,
             "history": 0
         },
         ".agents/topics/federation.md": {
-            "bytes": 17815,
+            "bytes": 18791,
             "history": 0
         },
         ".agents/topics/file-map.md": {
-            "bytes": 4087,
+            "bytes": 4599,
             "history": 0
         },
         ".agents/topics/key-store.md": {
-            "bytes": 9503,
+            "bytes": 10015,
             "history": 0
         },
         ".agents/topics/mfa.md": {
-            "bytes": 11354,
+            "bytes": 11922,
             "history": 0
         },
         ".agents/topics/oauth2-authorize.md": {
-            "bytes": 26183,
+            "bytes": 27493,
             "history": 0
         },
         ".agents/topics/oauth2-token.md": {
-            "bytes": 11748,
+            "bytes": 12336,
             "history": 0
         },
         ".agents/topics/paths.md": {
-            "bytes": 8051,
+            "bytes": 8563,
             "history": 0
         },
         ".agents/topics/provisioning.md": {
-            "bytes": 8450,
+            "bytes": 8962,
             "history": 0
         },
         ".agents/topics/query.md": {
-            "bytes": 17680,
+            "bytes": 18564,
             "history": 0
         },
         ".agents/topics/realms.md": {
-            "bytes": 14138,
+            "bytes": 14845,
             "history": 0
         },
         ".agents/topics/sessions.md": {
-            "bytes": 7299,
+            "bytes": 7811,
             "history": 0
         },
         ".agents/topics/ui.md": {
-            "bytes": 36421,
+            "bytes": 38381,
             "history": 5
         },
         "AGENTS.md": {
-            "bytes": 7830,
+            "bytes": 8342,
             "history": 4
         }
     }

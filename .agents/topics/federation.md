@@ -108,9 +108,10 @@ and the exchange reuse it (#3191).
 ignores it strands every federated login; see *Console substitution*.
 
 **The access-policy leg stays at the callback**, denying before a session
-exists. Trade-off: the denial is revealed after the first factor only, and this
-leg keeps its own bounce instead of the ladder's `AUTHORIZE_FAILED` event and
-`denied` metric.
+exists, and it records the same `AUTHORIZE_FAILED` row (`reason:
+accessPolicy`, `sessionId: null`) and `denied` metric as every other leg.
+Trade-off: the denial is revealed after the first factor only, and this leg
+keeps its own bounce to the hosted page.
 
 **Custom-scheme `redirect_uri`.** `routup`'s `sendRedirect` allows http(s) only;
 the callback always targets the hosted page, and `AuthorizeForm` navigates the

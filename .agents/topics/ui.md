@@ -5,7 +5,7 @@ Loaded on demand, not imported by CLAUDE.md. Read it before changing this area.
 ## UI Layer (`apps/client-admin-console`, `apps/client-auth-console`, `packages/client-web-kit`)
 
 The UI sits on the `@vuecs/*` 1.x line: see
-[`.agents/structure.md` → UI Stack](structure.md#ui-stack-appsclient-web-appsserver-coreui-packagesclient-web-kit)
+[structure.md](../structure.md) → *UI Stack*
 for the package matrix. Two architectural notes specific to authup's
 integration are worth knowing before editing UI code:
 
@@ -45,11 +45,10 @@ falls through to `refreshSession()` (an access token revoked on its own is
 legitimately recoverable), and a fresh grant reverts and revokes what it
 staged. Deliberately NOT a `commitSession()` guard - that is the synchronous
 write path whose boolean drives the generation check, and a `false` there would
-leave a live-looking token with a null user. The wire shape is unchanged: the
-server keeps answering with the claims, because the store SOURCES the whole
-session from them (RFC 7662 §2.2 recommends - SHOULD NOT, not MUST NOT -
-trimming an inactive response, and trimming would cost the store its realm,
-subject, permissions, session_id and acr on every restore). This is coupled to
+leave a live-looking token with a null user. An inactive response still carries the
+subject's claims for an expired token, but never `permissions` (the server
+withholds them before loading grants), and the store rejects every response
+whose `active` is false before committing anything from it. This is coupled to
 the introspection endpoint (conventions.md -> *`POST /token/introspect`
 REPORTS, it does not raise*): an EXPIRED token answers 200
 `{active: false}` rather than throwing, so a store relying on a throw to reach
@@ -521,10 +520,15 @@ element in the theme override.
 
 ### Theme and Tailwind rules
 
-- **One theme entry.** `@authup/client-web-theme` composes `tailwindTheme()`
-  from `@vuecs/theme-tailwind` with authup's element overrides and ships one
-  CSS entry that pulls in `tailwindcss`, `@vuecs/design` and the theme-tailwind
-  rebind. Consumers register `app.use(vuecs, { themes: [authupTheme()] })`.
+- **Two theme layers, kit first.** `clientWebKitTheme()`
+  (`@authup/client-web-kit-theme`) extends `tailwindTheme()` from
+  `@vuecs/theme-tailwind`; `clientWebTheme()` (`@authup/client-web-theme`)
+  layers authup's app overrides on top. Register both, in that order:
+  `themes: [clientWebKitTheme(), clientWebTheme()]`
+  (`apps/client-auth-console/src/app.ts`). Dropping the kit theme loses the
+  component defaults. The CSS mirrors it: the kit theme's entry imports `tailwindcss`,
+  `@vuecs/design` and `@vuecs/theme-tailwind`, and the app theme's entry
+  imports the kit theme.
   There is no Bootstrap anywhere: never write Bootstrap-shaped class names
   (`.dropdown*`, `.modal-*`, `.btn`), use the `<VC*>` component.
 - **Tailwind v4 only** (`@tailwindcss/vite` in each console's vite config).

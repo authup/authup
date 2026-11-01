@@ -80,8 +80,10 @@ something silently? If not, leave it out.
 - **`npm run lint:agent-docs` enforces it.** Every file has a byte budget and a
   history-phrase budget in `.agents/budget.json` (CI fails above either).
   Budgets only go down: run `node scripts/lint-agent-docs.mjs --update` after
-  shortening a file, and never raise one to make room. A new topic file needs a
-  budget entry.
+  shortening a file (it keeps about 5% headroom), and never raise one to make
+  room. On a pull request CI compares the budgets with the base branch and
+  fails on any rise. A new topic file needs a budget entry of at most
+  `newTopicBytes`.
 
 ## Commits, Issues & Pull Requests
 

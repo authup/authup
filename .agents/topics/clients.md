@@ -109,8 +109,9 @@ deferred: it costs a data migration and a field rename.
   plain and not routed through `protect` (no realm exists yet).
 - **Audit:** one `CLIENT_SECRET_ROTATED` row (`IDENTITY` scope, `refType:
   client`, `data: { kind: <mode> }`). Never the secret in any form.
-- **Read side (#3351):** `secretReadGate` treats a flagged row like plaintext
-  (only hashed discloses nothing). Realm reach narrows the list WHERE and
+- **Read side (#3351):** `secretReadGate` gates every stored form alike
+  (plaintext, bcrypt hash, cipher blob): a hash is offline-crackable (#3328),
+  and the encrypted flag earns no exemption. Realm reach narrows the list WHERE and
   `getOne`; junction `fields[client]` positions redact. `revealSecret` then
   decrypts a blob in place for a permitted reader; an undecryptable blob or a
   missing cipher drops the field, never 500, never ciphertext.

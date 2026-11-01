@@ -107,7 +107,7 @@ the same ORIGIN, whichever process answers.
      (`apps/server-core/src/cli/commands/config.ts`, default `{'start'}` for
      server-core's dev CLI) is called by authup's root with `{'dev'}`.
 - Container: `entrypoint.sh` strips an optional deprecated `server/core`
-  prefix (removed in v1.0.0), `cd`s into `apps/server-core` (typeorm's
+  prefix (scheduled for removal in v1.0.0), `cd`s into `apps/server-core` (typeorm's
   cwd-relative driver lookup) and execs the CLI with `--configDirectory
   /etc/authup`. `WORKDIR /opt/authup`, `CMD ["start"]`, `HOST`/`PORT` are
   `ENV` defaults (so `-e PORT=` wins). No state directory: only

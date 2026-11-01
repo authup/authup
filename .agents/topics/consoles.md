@@ -15,7 +15,8 @@ protocol: endpoints, issuer and every POST that mints or ends something.
   redirect to `<authConsoleUrl><page>` with the request's own query verbatim
   (`redirectToAuthConsole`, `adapters/http/controllers/workflows/auth-console.ts`,
   `Cache-Control: no-store` since the query carries hints, tokens, redirects).
-  POST on the first six stays the JSON API; `/device` calls live under
+  POST on the first five stays the JSON API (`/logout` is the exception
+  below); `/device` calls live under
   `/device_authorization/*`. No server-side handle for the pending request:
   a cookie handle clobbers across tabs and a TTL breaks mail-borne
   `redirect=` chains.
