@@ -33,6 +33,7 @@ import type { IPolicyRepository, IPolicyService } from './types.ts';
 import { decodeQuery, redactUnreachedRelations, scopeReadQuery } from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { policySchema } from './schema.ts';
+import { StaleRowSignal, assertRowUnchanged, retryOnStaleRow } from '../stale-row/index.ts';
 
 export type PolicyServiceContext = {
     repository: IPolicyRepository;
@@ -383,29 +384,86 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
             throw new EntityNotFoundError();
         }
 
-        if (entity.builtIn) {
-            throw new ValidationError('A built-in policy can not be deleted.');
-        }
-
-        await evaluateRecord(actor.permissionEvaluator, {
-            name: PermissionName.PERMISSION_DELETE,
-            realm: entity.realmId,
-            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
-        });
-
-        if (entity.parentId) {
-            await this.evaluateParent(actor, entity.parentId);
-        }
-
         const { id: entityId } = entity;
 
-        await this.repository.deleteFromTree(entity);
+        // The subtree is authorized outside the delete's transaction (#3526)
+        // and read again under its lock; a child attached or changed in
+        // between aborts the delete, which is then authorized again.
+        const deleted = await retryOnStaleRow({
+            row: entity,
+            reread: () => this.repository.findOneBy({ id: entityId }),
+        }, async (stored) => {
+            if (stored.builtIn) {
+                throw new ValidationError('A built-in policy can not be deleted.');
+            }
 
-        entity.id = entityId;
+            await evaluateRecord(actor.permissionEvaluator, {
+                name: PermissionName.PERMISSION_DELETE,
+                realm: stored.realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: stored },
+            });
+
+            if (stored.parentId) {
+                await this.evaluateParent(actor, stored.parentId);
+            }
+
+            // deleteFromTree removes the whole subtree, so every descendant is
+            // a delete of its own, evaluated in its own realm
+            const descendants = await this.repository.findDescendants(stored);
+
+            for (const descendant of descendants) {
+                await evaluateRecord(actor.permissionEvaluator, {
+                    name: PermissionName.PERMISSION_DELETE,
+                    realm: descendant.realmId ?? null,
+                    data: { [BuiltInPolicyType.ATTRIBUTES]: descendant },
+                });
+            }
+
+            const holdsBuiltIn = descendants.some((descendant) => descendant.builtIn);
+
+            if (holdsBuiltIn) {
+                throw new ValidationError('A policy holding a built-in policy can not be deleted.');
+            }
+
+            const before: Partial<Policy> = { ...stored };
+            const evaluated = new Map(descendants.map((descendant) => [descendant.id, { ...descendant }]));
+
+            await this.repository.transaction(async (repository) => {
+                const current = await repository.findOneBy({ id: entityId });
+
+                if (!current) {
+                    throw new EntityNotFoundError();
+                }
+
+                assertRowUnchanged(before, current);
+
+                const fresh = await repository.findDescendants(current);
+
+                if (fresh.length !== evaluated.size) {
+                    throw new StaleRowSignal();
+                }
+
+                for (const descendant of fresh) {
+                    const snapshot = evaluated.get(descendant.id);
+
+                    if (!snapshot) {
+                        throw new StaleRowSignal();
+                    }
+
+                    assertRowUnchanged(snapshot, descendant);
+                }
+
+                await repository.deleteFromTree(current);
+            });
+
+            return stored;
+        });
+
+        deleted.id = entityId;
 
         // todo: remove after PolicyEntity - parent delete on cascade
-        removeObjectProperty(entity, 'children');
+        removeObjectProperty(deleted, 'children');
 
-        return entity;
+        return deleted;
     }
 }

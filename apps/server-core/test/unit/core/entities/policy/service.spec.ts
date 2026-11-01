@@ -345,6 +345,171 @@ describe('core/entities/policy/service', () => {
         });
     });
 
+    describe('delete of a composite with descendants', () => {
+        function seedNode(name: string, extra: Partial<Policy> = {}): Policy {
+            return repository.seed({
+                id: randomUUID(),
+                name,
+                type: BuiltInPolicyType.COMPOSITE,
+                builtIn: false,
+                invert: false,
+                realmId: null,
+                ...extra,
+            } as Policy);
+        }
+
+        function createRealmBoundActor(realmId: string) {
+            const permissionEvaluator = new FakePermissionEvaluator();
+
+            permissionEvaluator.setBehavior((call) => {
+                if (call.method !== 'evaluate') {
+                    return;
+                }
+
+                if (call.ctx.data?.get(BuiltInPolicyType.REALM_MATCH) !== realmId) {
+                    throw PermissionError.denied('test');
+                }
+            });
+
+            return { permissionEvaluator };
+        }
+
+        it('should refuse a descendant in a foreign realm', async () => {
+            const realmId = randomUUID();
+            const root = seedNode('subtree-root', { realmId });
+            const child = seedNode('subtree-child', { realmId, parentId: root.id });
+            const foreign = seedNode('subtree-foreign', { realmId: randomUUID(), parentId: child.id });
+
+            await expect(service.delete(root.id, createRealmBoundActor(realmId)))
+                .rejects.toThrow(PermissionError);
+
+            expect(await repository.findOneById(root.id)).not.toBeNull();
+            expect(await repository.findOneById(child.id)).not.toBeNull();
+            expect(await repository.findOneById(foreign.id)).not.toBeNull();
+        });
+
+        it('should refuse a global descendant at own reach', async () => {
+            const realmId = randomUUID();
+            const root = seedNode('global-root', { realmId });
+            const global = seedNode('global-child', { realmId: null, parentId: root.id });
+
+            await expect(service.delete(root.id, createRealmBoundActor(realmId)))
+                .rejects.toThrow(PermissionError);
+
+            expect(await repository.findOneById(root.id)).not.toBeNull();
+            expect(await repository.findOneById(global.id)).not.toBeNull();
+        });
+
+        it('should delete an own-realm subtree, evaluating every node in its realm', async () => {
+            const realmId = randomUUID();
+            const root = seedNode('own-root', { realmId });
+            const child = seedNode('own-child', { realmId, parentId: root.id });
+            const grandchild = seedNode('own-grandchild', { realmId, parentId: child.id });
+            const actor = createRealmBoundActor(realmId);
+
+            await service.delete(root.id, actor);
+
+            const deletes = actor.permissionEvaluator.evaluateCalls
+                .filter((call) => call.name === PermissionName.PERMISSION_DELETE)
+                .map((call) => (call.data!.get(BuiltInPolicyType.ATTRIBUTES) as Policy).id);
+
+            expect(deletes).toEqual(expect.arrayContaining([root.id, child.id, grandchild.id]));
+            expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.PERMISSION_DELETE))
+                .toEqual([realmId, realmId, realmId]);
+            expect(await repository.findOneById(root.id)).toBeNull();
+            expect(await repository.findOneById(grandchild.id)).toBeNull();
+        });
+
+        describe('a child attached between the check and the delete', () => {
+            const attachOnce = (child: () => Policy) => {
+                let done = false;
+
+                repository.beforeTransaction = () => {
+                    if (done) {
+                        return;
+                    }
+
+                    done = true;
+                    child();
+                };
+            };
+
+            it('should refuse the delete when the attached child is out of reach', async () => {
+                const realmId = randomUUID();
+                const root = seedNode('race-root', { realmId });
+
+                let foreign: Policy | undefined;
+
+                attachOnce(() => {
+                    foreign = seedNode('race-foreign', { realmId: randomUUID(), parentId: root.id });
+
+                    return foreign;
+                });
+
+                await expect(service.delete(root.id, createRealmBoundActor(realmId)))
+                    .rejects.toThrow(PermissionError);
+
+                expect(await repository.findOneById(root.id)).not.toBeNull();
+                expect(await repository.findOneById(foreign!.id)).not.toBeNull();
+            });
+
+            it('should authorize the attached child and delete it with the subtree', async () => {
+                const realmId = randomUUID();
+                const root = seedNode('race-own-root', { realmId });
+
+                let attached: Policy | undefined;
+
+                attachOnce(() => {
+                    attached = seedNode('race-own-child', { realmId, parentId: root.id });
+
+                    return attached;
+                });
+
+                const actor = createRealmBoundActor(realmId);
+
+                await service.delete(root.id, actor);
+
+                const deletes = actor.permissionEvaluator.evaluateCalls
+                    .filter((call) => call.name === PermissionName.PERMISSION_DELETE)
+                    .map((call) => (call.data!.get(BuiltInPolicyType.ATTRIBUTES) as Policy).id);
+
+                expect(deletes).toContain(attached!.id);
+                expect(repository.transactionCalls).toBe(2);
+                expect(await repository.findOneById(root.id)).toBeNull();
+                expect(await repository.findOneById(attached!.id)).toBeNull();
+            });
+
+            it('should answer a conflict when the subtree never stabilizes', async () => {
+                const realmId = randomUUID();
+                const root = seedNode('race-busy-root', { realmId });
+
+                let counter = 0;
+
+                repository.beforeTransaction = () => {
+                    counter += 1;
+                    seedNode(`race-busy-child-${counter}`, { realmId, parentId: root.id });
+                };
+
+                await expect(service.delete(root.id, createRealmBoundActor(realmId)))
+                    .rejects.toMatchObject({ code: ErrorCode.ENTITY_CONFLICT });
+
+                expect(repository.transactionCalls).toBe(3);
+                expect(await repository.findOneById(root.id)).not.toBeNull();
+            });
+        });
+
+        it('should refuse a built-in descendant', async () => {
+            const root = seedNode('builtin-root');
+            const builtIn = seedNode('builtin-child', { builtIn: true, parentId: root.id });
+
+            await expect(service.delete(root.id, createAllowAllActor()))
+                .rejects.toThrow(ValidationError);
+
+            expect(await repository.findOneById(root.id)).not.toBeNull();
+            expect(await repository.findOneById(builtIn.id)).not.toBeNull();
+        });
+    });
+
     describe('realm defaulting', () => {
         it('should create a global row when realmId is absent', async () => {
             const result = await service.create({

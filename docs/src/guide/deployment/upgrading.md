@@ -25,6 +25,11 @@ child to a built-in policy is refused for every caller. The nested `children` of
 composite are checked for `permission_create` in their own realm, and a nested child
 without a `realmId` is global, so a realm administrator names its realm on each child.
 
+Deleting a composite deletes every policy below it, so the delete now needs
+`permission_delete` on each of them in its own realm, and it is refused when one of them
+is built-in. A realm administrator can no longer delete its composite while a global or
+foreign policy sits below it; an administrator with authority over that policy detaches it first.
+
 Provisioning already removes, on every start, a child of a built-in policy that its
 source does not declare: it is deleted when no permission binds it, and detached
 otherwise. Review the detached policies after the upgrade.

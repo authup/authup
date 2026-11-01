@@ -14,7 +14,18 @@ export interface IPolicyRepository extends IEntityRepository<Policy> {
 
     saveWithEA(entity: Policy, data?: Record<string, any>): Promise<Policy>;
 
+    /**
+     * Every policy below the given one, at any depth, the given one excluded.
+     */
+    findDescendants(entity: Policy): Promise<Policy[]>;
+
     deleteFromTree(entity: Policy): Promise<void>;
+
+    /**
+     * Run fn with a repository whose reads lock the rows they return
+     * (mysql / postgres); a plain passthrough where rows cannot be locked.
+     */
+    transaction<R>(fn: (repository: IPolicyRepository) => Promise<R>): Promise<R>;
 }
 
 export interface IPolicyService extends IReadScoper {
