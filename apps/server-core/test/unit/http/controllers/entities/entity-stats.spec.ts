@@ -23,8 +23,15 @@ import {
     it,
 } from 'vitest';
 import { createTestApplication } from '../../../../app';
-import { BuiltInPolicyType } from '@authup/access';
-import { createFakeRealm, createFakeUser, httpRequest } from '../../../../utils';
+import { BuiltInPolicyType, RealmScope } from '@authup/access';
+import { PermissionName } from '@authup/core-kit';
+import {
+    createFakeClient,
+    createFakeRealm,
+    createFakeRole,
+    createFakeUser,
+    httpRequest,
+} from '../../../../utils';
 import { createFakeTimePolicy } from '../../../../utils/domains/policy';
 
 const DAY_BUCKET = /^\d{4}-\d{2}-\d{2}T00:00:00\.000Z$/;
@@ -199,6 +206,64 @@ describe('src/http/controllers/entities/* (@stats)', () => {
         const { status, body } = await read(
             `/policies/@stats?filter[name]=${name}&filter[children.type]=${BuiltInPolicyType.TIME}` +
             `&filter[createdAt]=${lower}&group=bucket(createdAt,day)&aggregate=count`,
+        );
+
+        expect(status).toEqual(200);
+        expect(body.meta.total).toEqual(1);
+        expect(body.data.reduce((sum, row) => sum + row.count, 0)).toEqual(1);
+    });
+
+    it('counts in the total only the rows a date range of the read policy lets the reader see', async () => {
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+
+        await suite.client.role.create({ ...createFakeRole(), realmId: realm.id });
+
+        await new Promise((resolve) => {
+            setTimeout(resolve, 1100); 
+        });
+
+        const visibleFrom = new Date().toISOString();
+
+        await new Promise((resolve) => {
+            setTimeout(resolve, 1100); 
+        });
+
+        await suite.client.role.create({ ...createFakeRole(), realmId: realm.id });
+
+        const { data: policy } = await suite.client.policy.create({
+            name: `stats-created-after-${Date.now()}`,
+            type: BuiltInPolicyType.ATTRIBUTES,
+            realmId: realm.id,
+            query: { createdAt: { $gte: visibleFrom } },
+        });
+
+        const secret = 'entity-stats-policy-reader';
+        const { data: reader } = await suite.client.client.create({
+            ...createFakeClient(),
+            realmId: realm.id,
+            authMethod: 'secret',
+            tokenBindingMethod: 'none',
+            secret,
+            secretHashed: false,
+            secretEncrypted: false,
+        });
+        const { data: permission } = await suite.client.permission.getOne(PermissionName.ROLE_READ);
+
+        await suite.client.clientPermission.create({
+            clientId: reader.id,
+            permissionId: permission.id,
+            realmScope: RealmScope.OWN,
+            policyId: policy.id,
+        });
+
+        const token = await suite.client.token.createWithClientCredentials({
+            client_id: reader.id,
+            client_secret: secret,
+        });
+
+        const { status, body } = await read(
+            `/roles/@stats${buildStatsQuery(inArray('realmId', [realm.id]))}`,
+            `Bearer ${token.access_token}`,
         );
 
         expect(status).toEqual(200);

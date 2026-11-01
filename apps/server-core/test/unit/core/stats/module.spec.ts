@@ -45,6 +45,7 @@ import {
 import type { EntityStatsDefinition } from '../../../../src/core/index.ts';
 import { EntityStatsService } from '../../../../src/core/index.ts';
 import { decodeQuery } from '../../../../src/core/query/module.ts';
+import { scopeReadQuery } from '../../../../src/core/query/scope.ts';
 import { FakeEventRepository } from '../entities/event/fake-repository.ts';
 import { FakeEntityStatsRepository } from './fake-repository.ts';
 
@@ -626,6 +627,50 @@ describe('EntityStatsService', () => {
 
         expect(data).toHaveLength(0);
         expect(meta.total).toEqual(0);
+    });
+
+    it('keeps a date range the reach carries in the total, dropping only the caller\'s window', async () => {
+        const roles = new FakeEntityStatsRepository<Record<string, any>>();
+        const policyFrom = '2026-09-20T00:00:00.000Z';
+
+        roles.seed({
+            id: randomUUID(), 
+            realmId, 
+            createdAt: new Date(Date.now() - 60_000).toISOString(), 
+        });
+        roles.seed({
+            id: randomUUID(), 
+            realmId, 
+            createdAt: '2026-09-21T12:00:00.000Z', 
+        });
+        roles.seed({
+            id: randomUUID(), 
+            realmId, 
+            createdAt: '2026-09-18T12:00:00.000Z', 
+        });
+
+        const roleStats = new EntityStatsService({
+            definition: {
+                type: 'role',
+                schema: eventSchema,
+                repository: roles,
+                scope: (query, actor) => scopeReadQuery(query, actor, { names: [PermissionName.ROLE_READ] }),
+            },
+            cache,
+        });
+
+        const actor = makeActor();
+
+        evaluatorOf(actor).setCompileResult({
+            verdict: 'conditional',
+            condition: and(eq('realmId', realmId), gte('createdAt', policyFrom)),
+        });
+
+        const { data, meta } = await roleStats.getMany(wire({ from: '2026-09-22T00:00:00.000Z', groups: [] }), actor);
+
+        expect(data).toEqual([{ createdAt: TODAY, count: 1 }]);
+        expect(meta.total).toEqual(2);
+        expect(evaluatorOf(actor).compileCalls).toHaveLength(1);
     });
 
     it('counts every row for an ungated definition', async () => {

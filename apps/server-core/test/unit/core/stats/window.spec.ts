@@ -21,7 +21,12 @@ import {
 } from '@rapiq/core';
 import { isValidationError } from '@authup/errors';
 import { describe, expect, it } from 'vitest';
-import { isPastRawHorizon, resolveStatsWindow, stripWindowConditions } from '../../../../src/core/stats/index.ts';
+import {
+    isPastRawHorizon,
+    readRecordQuery,
+    resolveStatsWindow,
+    splitWindowConditions,
+} from '../../../../src/core/stats/index.ts';
 
 const NOW = new Date('2026-09-23T10:30:00.000Z');
 const HOUR_IN_MS = 3_600_000;
@@ -198,27 +203,43 @@ describe('isPastRawHorizon', () => {
     });
 });
 
-describe('stripWindowConditions', () => {
-    it('drops the top-level range conditions on the date column', () => {
-        const stripped = stripWindowConditions(
-            build(and(gte('createdAt', ago(DAY_IN_MS)), lt('createdAt', NOW.toISOString()), eq('realmId', 'x')), []),
+describe('splitWindowConditions', () => {
+    it('splits the top-level range conditions on the date column off the query', () => {
+        const lower = gte('createdAt', ago(DAY_IN_MS));
+        const upper = lt('createdAt', NOW.toISOString());
+        const { query, window } = splitWindowConditions(
+            build(and(lower, and(eq('realmId', 'x'), upper)), [bucket('createdAt', 'day')]),
             'createdAt',
         );
 
-        expect(stripped.filters.value).toHaveLength(1);
-        expect(stripped.filters.value[0]).toMatchObject({
+        expect(window).toEqual([lower, upper]);
+        expect(query.filters.value).toHaveLength(1);
+        expect(query.filters.value[0]).toMatchObject({
             operator: 'eq',
             field: 'realmId',
             value: 'x',
         });
-        expect(stripped.groups.value).toHaveLength(0);
-        expect(stripped.aggregates.value).toHaveLength(0);
+        expect(query.groups.value).toHaveLength(1);
+        expect(query.aggregates.value).toHaveLength(1);
     });
 
-    it('keeps a range condition nested in an or', () => {
+    it('keeps a range condition nested in an or in the query', () => {
         const condition = or(gte('createdAt', ago(DAY_IN_MS)), eq('name', 'x'));
-        const stripped = stripWindowConditions(build(condition, []), 'createdAt');
+        const { query, window } = splitWindowConditions(build(condition, []), 'createdAt');
 
-        expect(stripped.filters.value).toEqual([condition]);
+        expect(window).toEqual([]);
+        expect(query.filters.value).toEqual([condition]);
+    });
+});
+
+describe('readRecordQuery', () => {
+    it('drops groups and aggregates, keeping the filters', () => {
+        const condition = and(gte('createdAt', ago(DAY_IN_MS)), eq('realmId', 'x'));
+        const grouped = build(condition, [bucket('createdAt', 'day')]);
+        const record = readRecordQuery(grouped);
+
+        expect(record.filters).toEqual(grouped.filters);
+        expect(record.groups.value).toHaveLength(0);
+        expect(record.aggregates.value).toHaveLength(0);
     });
 });
