@@ -343,19 +343,18 @@ export class UserService extends AbstractEntityService implements IUserService {
             // hydrated from the record it loaded, so treating presence alone as
             // an assertion made the rule unreachable from the console: every
             // address change there carried the stale `true` straight through.
-            let emailChanged = false;
+            let addressChanged = false;
 
-            if (
-                validated.email &&
-                (
-                    typeof validated.emailVerified === 'undefined' ||
-                    validated.emailVerified === entity.emailVerified
-                )
-            ) {
+            if (validated.email) {
                 const current = await this.repository.findOneByWithEmail({ id: entity.id });
 
-                emailChanged = !!current && current.email !== validated.email;
+                addressChanged = !!current && current.email !== validated.email;
             }
+
+            const emailChanged = addressChanged && (
+                typeof validated.emailVerified === 'undefined' ||
+                validated.emailVerified === entity.emailVerified
+            );
 
             if (isSelfEdit) {
                 await evaluateRecord(actor.permissionEvaluator, {
@@ -427,6 +426,13 @@ export class UserService extends AbstractEntityService implements IUserService {
 
             if (validated.password) {
                 patch.password = entity.password;
+            }
+
+            // A reset code mailed before the change would undo it: the new
+            // password, or the address the code was not sent to.
+            if (addressChanged || validated.password) {
+                patch.resetHash = null;
+                patch.resetExpires = null;
             }
 
             const { id } = entity;

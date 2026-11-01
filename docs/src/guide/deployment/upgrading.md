@@ -40,6 +40,12 @@ otherwise. Review the detached policies after the upgrade.
 - An email factor an administrator enrolls for a user ends all of that user's sessions.
 - Adding a further factor ends nothing.
 
+### A password or email change invalidates a pending reset link
+
+A password-reset link mailed before the user's password or email address changed no longer
+works. Changing the password through the API or a console, or changing the address (an
+identity provider's attribute sync included), clears the pending reset code. Request a new link if one is still needed.
+
 ## Next release (after v1.0.0-beta.71)
 
 ### `POST /authorization/check` answers realm- and client-owned permissions

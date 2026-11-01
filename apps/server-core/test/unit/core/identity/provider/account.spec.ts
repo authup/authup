@@ -8,6 +8,7 @@
 import { randomUUID } from 'node:crypto';
 import {
     afterAll,
+    afterEach,
     beforeAll,
     describe,
     expect,
@@ -480,6 +481,111 @@ describe('core/identity/provider/account', () => {
         expect(row?.emailVerified).toEqual(true);
 
         await mappings.remove(mapping);
+    });
+
+    describe('a pending reset code', () => {
+        const pending = {
+            resetHash: 'pending-reset-digest',
+            resetExpires: new Date(Date.now() + 60_000).toISOString(),
+        };
+
+        let saved: IdentityProviderAttributeMappingEntity[] = [];
+
+        afterEach(async () => {
+            await suite.dataSource.getRepository(IdentityProviderAttributeMappingEntity).remove(saved);
+            saved = [];
+        });
+
+        const setup = async (id: string, address: string, verified?: boolean) => {
+            const mappings = suite.dataSource.getRepository(IdentityProviderAttributeMappingEntity);
+
+            saved.push(await mappings.save(mappings.create({
+                synchronizationMode: 'always',
+                targetName: 'email',
+                targetValue: address,
+                providerId: provider.id,
+                providerRealmId: provider.realmId,
+            })));
+
+            if (typeof verified === 'boolean') {
+                saved.push(await mappings.save(mappings.create({
+                    synchronizationMode: 'always',
+                    name: 'email_verified',
+                    targetName: 'emailVerified',
+                    targetValue: null,
+                    providerId: provider.id,
+                    providerRealmId: provider.realmId,
+                })));
+            }
+
+            const buildIdentity = () : IdentityProviderIdentity => ({
+                data: typeof verified === 'boolean' ? { ...claims, email_verified: verified } : claims,
+                id,
+                attributeCandidates: { name: [id] },
+                provider,
+            });
+
+            const created = await accountManager.save(buildIdentity());
+
+            return {
+                userId: created.user.id,
+                login: () => accountManager.save(buildIdentity()),
+            };
+        };
+
+        const readReset = (id: string) => suite.dataSource.getRepository(UserEntity).findOne({
+            where: { id },
+            select: {
+                id: true,
+                resetHash: true,
+                resetExpires: true,
+            },
+        });
+
+        it('should be cleared when a sync changes the address', async () => {
+            const { userId, login } = await setup('reset-changed', 'reset-changed@example.com');
+
+            await suite.dataSource.getRepository(UserEntity).update(userId, {
+                email: 'elsewhere@example.com',
+                ...pending,
+            });
+
+            await login();
+
+            const row = await readReset(userId);
+
+            expect(row?.resetHash).toBeNull();
+            expect(row?.resetExpires).toBeNull();
+        });
+
+        it('should be cleared when a sync changes the address and maps its verification', async () => {
+            const { userId, login } = await setup('reset-verified', 'reset-verified@example.com', true);
+
+            await suite.dataSource.getRepository(UserEntity).update(userId, {
+                email: 'elsewhere-verified@example.com',
+                ...pending,
+            });
+
+            await login();
+
+            const row = await readReset(userId);
+
+            expect(row?.resetHash).toBeNull();
+            expect(row?.resetExpires).toBeNull();
+        });
+
+        it('should be kept when the address is unchanged', async () => {
+            const { userId, login } = await setup('reset-same', 'reset-same@example.com');
+
+            await suite.dataSource.getRepository(UserEntity).update(userId, pending);
+
+            await login();
+
+            const row = await readReset(userId);
+
+            expect(row?.resetHash).toEqual(pending.resetHash);
+            expect(row?.resetExpires).toEqual(pending.resetExpires);
+        });
     });
 
     it('should drop a mapped locale that is not a BCP47 tag', async () => {

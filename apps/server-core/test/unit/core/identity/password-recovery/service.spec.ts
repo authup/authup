@@ -14,7 +14,9 @@ import {
     it,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
+import { createAllowAllActor } from '@authup/server-test-kit';
 import { PasswordRecoveryService } from '../../../../../src/core/identity/password-recovery/service.ts';
+import { UserService } from '../../../../../src/core/entities/user/service.ts';
 import { MailTemplateRenderer } from '../../../../../src/core/mail/index.ts';
 import { FakeRealmRepository } from '../../entities/realm/fake-repository.ts';
 import { FakeUserRepository } from '../../entities/user/fake-repository.ts';
@@ -534,6 +536,84 @@ describe('core/identity/password-recovery/service', () => {
                     exceptId: undefined,
                 },
             ]);
+        });
+        // A code mailed before the owner changed its password or its address
+        // must not survive the change: whoever still holds it would otherwise
+        // undo the rotation.
+        describe.each([
+            ['the password', { password: 'changed-password-123' }],
+            ['the address', { email: 'changed@example.com' }],
+        ])('after a change of %s', (_label, change) => {
+            it('should refuse the code mailed before it', async () => {
+                const masterRealm = realmRepository.getMasterRealm();
+                const entity = repository.seed(createFakeUser({
+                    name: 'pending-reset-user',
+                    email: 'pending-reset@example.com',
+                    realmId: masterRealm.id,
+                }));
+
+                const service = new PasswordRecoveryService({
+                    options: {
+                        passwordRecoveryEnabled: true,
+                        emailVerificationEnabled: true,
+                    },
+                    mailClient,
+                    mailTemplateRenderer,
+                    repository,
+                    realmRepository,
+                });
+
+                await service.forgotPassword({ name: 'pending-reset-user' });
+
+                const code = mailClient.sent[0].text!.match(/[0-9a-f]{64}/)![0];
+
+                await new UserService({ repository, realmRepository })
+                    .update(entity.id, change, createAllowAllActor());
+
+                const user = await repository.findOneById(entity.id);
+
+                expect(user!.resetHash).toBeNull();
+                expect(user!.resetExpires).toBeNull();
+
+                await expect(service.resetPassword({
+                    name: 'pending-reset-user',
+                    token: code,
+                    password: 'attacker-password-123',
+                })).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
+            });
+        });
+
+        it('should keep a pending code across an unrelated change', async () => {
+            const masterRealm = realmRepository.getMasterRealm();
+            const entity = repository.seed(createFakeUser({
+                name: 'unrelated-change-user',
+                email: 'unrelated-change@example.com',
+                realmId: masterRealm.id,
+            }));
+
+            const service = new PasswordRecoveryService({
+                options: {
+                    passwordRecoveryEnabled: true,
+                    emailVerificationEnabled: true,
+                },
+                mailClient,
+                mailTemplateRenderer,
+                repository,
+                realmRepository,
+            });
+
+            await service.forgotPassword({ name: 'unrelated-change-user' });
+
+            const code = mailClient.sent[0].text!.match(/[0-9a-f]{64}/)![0];
+
+            await new UserService({ repository, realmRepository })
+                .update(entity.id, { displayName: 'Unrelated', email: 'unrelated-change@example.com' }, createAllowAllActor());
+
+            await expect(service.resetPassword({
+                name: 'unrelated-change-user',
+                token: code,
+                password: 'reset-password-123',
+            })).resolves.toBeDefined();
         });
     });
 });

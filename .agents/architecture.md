@@ -372,7 +372,7 @@ default 10. No composition rules: length only (NIST 800-63B).
 the save, and `UserService.save` does the same on an update carrying
 `password`, keeping only the session the user changed its own password with
 (read from the injected `requestContext`); an administrator's change keeps
-none. An update flipping `active` to false (`UserService` and `ClientService`)
+none. The update also clears a pending reset code, as does an address change, a federated login's included (provisioning does not). An update flipping `active` to false (`UserService` and `ClientService`)
 revokes every session of that subject, and the authorization middleware treats
 a resolved identity that is not `active` as no credential at all: the bearer
 branch and the MFA ticket answer 401, the console cookie leaves the request

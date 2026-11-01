@@ -395,16 +395,22 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
 
         if (
             user &&
-            typeof attributesSelf.email === 'string' &&
-            typeof attributesSelf.emailVerified === 'undefined'
+            typeof attributesSelf.email === 'string'
         ) {
             // account.user is loaded under the default projection and carries
             // no email (select: false); a mapped address that differs from the
-            // stored one drops its verification, as UserService.save does.
+            // stored one drops its verification unless the provider asserts
+            // it, and a reset code mailed to the old address, as
+            // UserService.save does.
             const current = await this.userRepository.findOneById(user.id);
 
             if (current && current.email !== attributesSelf.email) {
-                attributesSelf.emailVerified = false;
+                if (typeof attributesSelf.emailVerified === 'undefined') {
+                    attributesSelf.emailVerified = false;
+                }
+
+                attributesSelf.resetHash = null;
+                attributesSelf.resetExpires = null;
             }
         }
 
