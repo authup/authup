@@ -29,11 +29,11 @@ import {
     TranslatorTranslationAppKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { 
-    DEFAULT_BUTTON_SIZE, 
-    injectHTTPClient, 
-    useTranslation, 
-    wrapFnWithBusyState, 
+import {
+    DEFAULT_BUTTON_SIZE,
+    injectHTTPClient,
+    useTranslation,
+    wrapFnWithBusyState,
 } from '../../../core';
 
 enum ElementType {
@@ -106,6 +106,7 @@ const AEntityDelete = defineComponent({
 
             try {
                 const response = await domainAPI.delete(props.entityId);
+
                 ctx.emit('deleted', { ...response.data, id: props.entityId });
             } catch (e) {
                 ctx.emit('failed', e);
@@ -209,6 +210,7 @@ const AEntityDelete = defineComponent({
             }
 
             let tag : Component | string = 'a';
+
             if (props.elementType === ElementType.DROP_DOWN_ITEM) {
                 if (
                     instance &&
@@ -219,6 +221,7 @@ const AEntityDelete = defineComponent({
             }
 
             let icon : VNodeArrayChildren = [];
+
             if (props.elementIcon) {
                 icon = [
                     h(resolveDynamicComponent('VCIcon') as Component, {
@@ -229,6 +232,7 @@ const AEntityDelete = defineComponent({
             }
 
             let text : VNodeArrayChildren = [];
+
             if (props.withText) {
                 text = [
                     translation.value,

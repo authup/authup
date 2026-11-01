@@ -57,6 +57,7 @@ describe('runDeviceLogin', () => {
         });
         vi.spyOn(process.stderr, 'write').mockImplementation((chunk) => {
             notices.push(String(chunk));
+
             return true;
         });
     });
@@ -70,10 +71,12 @@ describe('runDeviceLogin', () => {
         const transport = createHostTransport({
             'POST /device_authorization': (_request, form) => {
                 forms.push(form);
+
                 return deviceAnswer;
             },
             'POST /token': (_request, form) => {
                 forms.push(form);
+
                 return tokenAnswers.shift() ?? { status: 500, body: {} };
             },
         });
@@ -125,10 +128,12 @@ describe('runDeviceLogin', () => {
         const transport = createHostTransport({
             'POST /device_authorization': (_request, form) => {
                 forms.push(form);
+
                 return { body: device };
             },
             'POST /token': (_request, form) => {
                 forms.push(form);
+
                 return { body: grant };
             },
         });

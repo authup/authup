@@ -70,6 +70,7 @@ describe('adapters/database/domains/path', () => {
 
     it('should refuse two folders with one path in one realm', async () => {
         const realm = await dataSource.getRepository(RealmEntity).save({ name: 'r2' });
+
         await dataSource.getRepository(PathEntity).save({
             name: 'sales',
             path: 'sales',
@@ -78,6 +79,7 @@ describe('adapters/database/domains/path', () => {
         });
 
         let error : unknown;
+
         try {
             await dataSource.getRepository(PathEntity).save({
                 name: 'sales',

@@ -78,9 +78,11 @@ describe('core/identity/provider/account', () => {
         const realmRepository = new RealmRepositoryAdapter(
             suite.dataSource.getRepository(RealmEntity),
         );
+
         realm = await realmRepository.resolve('', true);
 
         const repository = new IdentityProviderRepository(suite.dataSource);
+
         provider = {
             authorizeUrl: '',
             tokenUrl: '',
@@ -141,6 +143,7 @@ describe('core/identity/provider/account', () => {
 
     it('should create user', async () => {
         const account = await accountManager.save(identity);
+
         expect(account).toBeDefined();
 
         expect(account.id).toBeDefined();
@@ -188,6 +191,7 @@ describe('core/identity/provider/account', () => {
 
     it('should create user only once', async () => {
         let account = await accountManager.save(identity);
+
         expect(account).toBeDefined();
 
         const accountId = account.id;
@@ -206,8 +210,8 @@ describe('core/identity/provider/account', () => {
         // index can reject
         const userRepository = suite.dataSource.getRepository(UserEntity);
         const other = await userRepository.save(userRepository.create({
-            name: 'qux', 
-            email: buildUserFakeEmail('qux'), 
+            name: 'qux',
+            email: buildUserFakeEmail('qux'),
             realmId: realm.id,
         }));
 
@@ -222,6 +226,7 @@ describe('core/identity/provider/account', () => {
         })).rejects.toBeInstanceOf(EntityConflictError);
 
         const linked = await accountRepository.findOneByProviderIdentity(identity);
+
         expect(linked?.id).toEqual(account.id);
         expect(linked?.userId).toEqual(account.user.id);
     });
@@ -242,6 +247,7 @@ describe('core/identity/provider/account', () => {
         // the loser read "not linked" before the winner's insert landed; only
         // the unique index sees the winner
         vi.spyOn(accountRepository, 'findOneByProviderIdentity').mockResolvedValueOnce(null);
+
         const loser = await accountManager.save(buildRacer());
 
         expect(loser.id).toEqual(winner.id);
@@ -271,6 +277,7 @@ describe('core/identity/provider/account', () => {
         await idpRoleMappingRepository.save(idpRoleMapping);
 
         const account = await accountManager.save(identity);
+
         expect(account).toBeDefined();
 
         const userRoleRepository = suite.dataSource.getRepository(UserRoleEntity);
@@ -304,6 +311,7 @@ describe('core/identity/provider/account', () => {
         await roleMappingRepository.save(roleMapping);
 
         const account = await accountManager.save(identity);
+
         expect(account).toBeDefined();
 
         const userRoleRepository = suite.dataSource.getRepository(UserRoleEntity);
@@ -337,6 +345,7 @@ describe('core/identity/provider/account', () => {
         await idpPermissionMappingRepository.save(idpPermissionMapping);
 
         const account = await accountManager.save(identity);
+
         expect(account).toBeDefined();
 
         const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);
@@ -378,6 +387,7 @@ describe('core/identity/provider/account', () => {
         await idpPermissionMappingRepository.save(idpPermissionMapping);
 
         const account = await accountManager.save(identity);
+
         expect(account).toBeDefined();
 
         const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);
@@ -408,10 +418,12 @@ describe('core/identity/provider/account', () => {
             provider,
         });
         const created = await accountManager.save(buildIdentity());
+
         expect(created.user.email).toEqual('mapped@example.com');
 
         // the address was changed and vouched for in authup meanwhile
         const users = suite.dataSource.getRepository(UserEntity);
+
         await users.update(created.user.id, { email: 'verified@example.com', emailVerified: true });
 
         await accountManager.save(buildIdentity());
@@ -419,11 +431,12 @@ describe('core/identity/provider/account', () => {
         const row = await users.findOne({
             where: { id: created.user.id },
             select: {
-                id: true, 
-                email: true, 
-                emailVerified: true, 
+                id: true,
+                email: true,
+                emailVerified: true,
             },
         });
+
         expect(row?.email).toEqual('mapped@example.com');
         expect(row?.emailVerified).toEqual(false);
 
@@ -449,6 +462,7 @@ describe('core/identity/provider/account', () => {
         const created = await accountManager.save(buildIdentity());
 
         const users = suite.dataSource.getRepository(UserEntity);
+
         await users.update(created.user.id, { emailVerified: true });
 
         await accountManager.save(buildIdentity());
@@ -461,6 +475,7 @@ describe('core/identity/provider/account', () => {
                 emailVerified: true,
             },
         });
+
         expect(row?.email).toEqual('same@example.com');
         expect(row?.emailVerified).toEqual(true);
 
@@ -494,6 +509,7 @@ describe('core/identity/provider/account', () => {
         });
 
         const user = await accountManagerContext.userRepository.findOneById(account.user.id);
+
         expect(user).toBeDefined();
         expect((user as Record<string, any>).locale).toBeUndefined();
         expect((user as Record<string, any>).colorMode).toEqual('dark');
@@ -508,6 +524,7 @@ describe('core/identity/provider/account', () => {
             attributeCandidates: { name: ['rename-guard'] },
             provider,
         });
+
         expect(account.user.name).toEqual('rename-guard');
 
         const spy = vi.spyOn(accountManagerContext.userRepository, 'saveOneWithEA')
@@ -525,6 +542,7 @@ describe('core/identity/provider/account', () => {
         }
 
         const user = await accountManagerContext.userRepository.findOneById(account.user.id);
+
         expect(user?.name).toEqual('rename-guard');
     });
 
@@ -546,6 +564,7 @@ describe('core/identity/provider/account', () => {
         expect(account.user.pathId).toEqual(folder!.id);
 
         const parent = await paths.findOneBy({ id: folder!.parentId! });
+
         expect(parent?.path).toEqual('sources');
     });
 
@@ -563,6 +582,7 @@ describe('core/identity/provider/account', () => {
             path: 'sources/keycloak',
             realmId: realm.id,
         });
+
         expect(source).not.toBeNull();
         expect(created.user.pathId).toEqual(source!.id);
 
@@ -574,11 +594,13 @@ describe('core/identity/provider/account', () => {
         }));
 
         const users = suite.dataSource.getRepository(UserEntity);
+
         await users.update(created.user.id, { pathId: target.id });
 
         await accountManager.save(buildIdentity());
 
         const row = await users.findOneBy({ id: created.user.id });
+
         expect(row?.pathId).toEqual(target.id);
     });
 
@@ -719,6 +741,7 @@ describe('core/identity/provider/account', () => {
 
             const users = suite.dataSource.getRepository(UserEntity);
             const row = await users.findOneBy({ id: account.user.id });
+
             expect(row?.name).toEqual('enrollment-open');
             expect(row?.active).toEqual(true);
         });
@@ -731,6 +754,7 @@ describe('core/identity/provider/account', () => {
 
             // the gate runs before the first write, so nothing is left behind
             const users = suite.dataSource.getRepository(UserEntity);
+
             expect(await users.findOneBy({ name: 'enrollment-closed' })).toBeNull();
             expect(await accountRepository.findOneByProviderIdentity(buildIdentity('enrollment-closed', gated)))
                 .toBeNull();
@@ -760,7 +784,9 @@ describe('core/identity/provider/account', () => {
                 .rejects.toBeInstanceOf(IdentityProviderEnrollmentDeniedError);
 
             expect(evaluator.calls).toHaveLength(1);
+
             const [call] = evaluator.calls;
+
             expect(call.policyId).toEqual(policyId);
             expect(call.options).toEqual({ realmId: realm.id });
             // the bag is the validated row the login would have created, and
@@ -776,10 +802,12 @@ describe('core/identity/provider/account', () => {
             // resolved before the verdict, so a pathId rule can name it
             const folder = await suite.dataSource.getRepository(PathEntity)
                 .findOneBy({ realmId: realm.id, path: 'sources/keycloak' });
+
             expect(folder).not.toBeNull();
             expect(call.data.get<User>(BuiltInPolicyType.ATTRIBUTES).pathId).toEqual(folder!.id);
 
             const users = suite.dataSource.getRepository(UserEntity);
+
             expect(await users.findOneBy({ name: 'enrollment-denied' })).toBeNull();
         });
 
@@ -797,6 +825,7 @@ describe('core/identity/provider/account', () => {
             expect(evaluator.calls).toHaveLength(1);
 
             const users = suite.dataSource.getRepository(UserEntity);
+
             expect(await users.findOneBy({ name: 'enrollment-permitted' })).not.toBeNull();
         });
 
@@ -809,6 +838,7 @@ describe('core/identity/provider/account', () => {
             const seen : string[] = [];
             const evaluator = new FakeEnrollmentPolicyEvaluator((attributes) => {
                 seen.push(attributes.name);
+
                 return attributes.name.startsWith('corp-');
             });
             const manager = new IdentityProviderAccountManager({
@@ -817,6 +847,7 @@ describe('core/identity/provider/account', () => {
             });
 
             const users = suite.dataSource.getRepository(UserEntity);
+
             await users.save(users.create({
                 name: 'corp-alice',
                 email: buildUserFakeEmail('corp-alice'),
@@ -825,6 +856,7 @@ describe('core/identity/provider/account', () => {
 
             const gated = withAttributes({ enrollmentPolicyId: randomUUID() });
             const colliding = buildIdentity('enrollment-collision', gated);
+
             colliding.attributeCandidates = { name: ['corp-alice', 'mallory'] };
 
             await expect(manager.save(colliding))
@@ -845,6 +877,7 @@ describe('core/identity/provider/account', () => {
                 .rejects.toBeInstanceOf(IdentityProviderEnrollmentDeniedError);
 
             const users = suite.dataSource.getRepository(UserEntity);
+
             expect(await users.findOneBy({ name: 'enrollment-undecided' })).toBeNull();
         });
     });

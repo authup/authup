@@ -41,9 +41,11 @@ export const readEnvBoolStrict : SchemaEnvReader = (raw, name) => {
     }
 
     const normalized = raw.trim().toLowerCase();
+
     if (BOOLEAN_TRUE_VALUES.has(normalized)) {
         return true;
     }
+
     if (BOOLEAN_FALSE_VALUES.has(normalized)) {
         return false;
     }
@@ -58,6 +60,7 @@ export const readEnvInt : SchemaEnvReader = (raw) => toInt(raw);
  */
 export const readEnvArray : SchemaEnvReader = (raw) => {
     const value = toArray(raw);
+
     if (value && value.length > 0) {
         return value;
     }
@@ -87,10 +90,13 @@ export function readSchemaFromEnv<T>(schema: SchemaInput<T>) : Partial<T> {
     const options : Record<string, unknown> = {};
 
     const keys = Object.keys(schema) as (keyof T)[];
+
     for (const key of keys) {
         const entry = schema[key];
+
         if (isSchemaEntryInput(entry)) {
             const value = readSchemaEntryFromEnv(entry);
+
             if (typeof value !== 'undefined') {
                 options[key as string] = value;
             }
@@ -100,6 +106,7 @@ export function readSchemaFromEnv<T>(schema: SchemaInput<T>) : Partial<T> {
 
         if (isSchemaInput(entry)) {
             options[key as string] = readSchemaFromEnv<any>(entry);
+
             continue;
         }
 

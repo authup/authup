@@ -24,6 +24,7 @@ export class OAuth2DeviceCodeVerifier implements IOAuth2DeviceCodeVerifier {
 
     async verify(deviceCode: string, options: OAuth2DeviceCodeVerifyOptions) : Promise<OAuth2DeviceCodeApproved> {
         const entity = await this.repository.findOneById(deviceCode);
+
         if (!entity) {
             throw OAuth2GrantError.invalid();
         }
@@ -34,6 +35,7 @@ export class OAuth2DeviceCodeVerifier implements IOAuth2DeviceCodeVerifier {
 
         if (entity.expires_at <= Math.floor(Date.now() / 1000)) {
             await this.repository.removeById(entity.id);
+
             throw OAuth2DeviceAuthorizationError.expired();
         }
 
@@ -47,10 +49,12 @@ export class OAuth2DeviceCodeVerifier implements IOAuth2DeviceCodeVerifier {
 
         if (entity.decision.status === OAuth2DeviceCodeStatus.DENIED) {
             await this.repository.popOneById(entity.id);
+
             throw OAuth2AccessDeniedError.forClient();
         }
 
         const popped = await this.repository.popOneById(entity.id);
+
         if (!popped || !popped.decision || popped.decision.status !== OAuth2DeviceCodeStatus.APPROVED) {
             throw OAuth2GrantError.invalid();
         }

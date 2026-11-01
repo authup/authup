@@ -39,6 +39,7 @@ function userIdentity(data: Partial<User>): Identity {
 describe('RequestIdentity', () => {
     it('should expose a client identity id as its clientId', () => {
         const identity = new RequestIdentity(clientIdentity({ id: 'c1', realmId: 'r1' }));
+
         expect(identity.clientId).toEqual('c1');
         expect(identity.id).toEqual('c1');
         expect(identity.type).toEqual(IdentityType.CLIENT);
@@ -47,11 +48,13 @@ describe('RequestIdentity', () => {
 
     it('should derive a non-client clientId from the clientId field', () => {
         const identity = new RequestIdentity(userIdentity({ id: 'u1', clientId: 'c9' }));
+
         expect(identity.clientId).toEqual('c9');
     });
 
     it('should return null clientId when clientId is null', () => {
         const identity = new RequestIdentity(userIdentity({ id: 'u1', clientId: null }));
+
         expect(identity.clientId).toBeNull();
     });
 
@@ -60,6 +63,7 @@ describe('RequestIdentity', () => {
             id: 'u1',
             realm: { id: 'r2', name: 'second' } as User['realm'],
         }));
+
         expect(identity.realmId).toEqual('r2');
         expect(identity.realmName).toEqual('second');
     });
@@ -68,9 +72,11 @@ describe('RequestIdentity', () => {
 describe('request identity helpers', () => {
     it('should wrap a raw identity and read it back', () => {
         const event = createFakeEvent();
+
         setRequestIdentity(event, clientIdentity({ id: 'c1' }));
 
         const identity = useRequestIdentity(event);
+
         expect(identity).toBeInstanceOf(RequestIdentity);
         expect(identity?.id).toEqual('c1');
     });
@@ -78,6 +84,7 @@ describe('request identity helpers', () => {
     it('should pass a RequestIdentity instance through unchanged', () => {
         const event = createFakeEvent();
         const wrapped = new RequestIdentity(clientIdentity({ id: 'c2' }));
+
         setRequestIdentity(event, wrapped);
 
         expect(useRequestIdentity(event)).toBe(wrapped);
@@ -93,6 +100,7 @@ describe('request identity helpers', () => {
 
     it('should return the identity from useRequestIdentityOrFail when present', () => {
         const event = createFakeEvent();
+
         setRequestIdentity(event, clientIdentity({ id: 'c1' }));
         expect(useRequestIdentityOrFail(event).id).toEqual('c1');
     });
@@ -105,6 +113,7 @@ describe('request scopes', () => {
 
     it('should store and read scopes', () => {
         const event = createFakeEvent();
+
         setRequestScopes(event, ['global']);
         expect(useRequestScopes(event)).toEqual(['global']);
     });
@@ -117,6 +126,7 @@ describe('request token', () => {
 
     it('should store and read the token', () => {
         const event = createFakeEvent();
+
         setRequestToken(event, 'abc');
         expect(useRequestToken(event)).toEqual('abc');
     });
@@ -129,11 +139,13 @@ describe('request realm id', () => {
 
     it('should fall back to the realmId route param', () => {
         const event = createFakeEvent({ params: { realmId: 'master' } });
+
         expect(getRequestRealmID(event)).toEqual('master');
     });
 
     it('should let a stored realm id win over the route param', () => {
         const event = createFakeEvent({ params: { realmId: 'master' } });
+
         setRequestRealmID(event, 'resolved-uuid');
         expect(getRequestRealmID(event)).toEqual('resolved-uuid');
     });
@@ -141,12 +153,14 @@ describe('request realm id', () => {
     it('should apply the route realm over a body realm', () => {
         const event = createFakeEvent({ params: { realmId: 'route' } });
         const body: Record<string, any> = { realmId: 'body', name: 'x' };
+
         applyRouteRealmIDToBody(event, body);
         expect(body.realmId).toEqual('route');
     });
 
     it('should leave the body realm untouched when no realm is known', () => {
         const body: Record<string, any> = { realmId: 'body' };
+
         applyRouteRealmIDToBody(createFakeEvent(), body);
         expect(body.realmId).toEqual('body');
     });
@@ -162,12 +176,14 @@ describe('buildActorContext', () => {
         setRequestIdentity(event, raw);
 
         const actor = buildActorContext(event);
+
         expect(actor.permissionEvaluator).toBe(evaluator);
         expect(actor.identity).toBe(raw);
     });
 
     it('should assemble an actor context without an identity', () => {
         const event = createFakeEvent();
+
         setRequestPermissionEvaluator(event, new RequestPermissionEvaluator(event, new FakePermissionEvaluator()));
 
         expect(buildActorContext(event).identity).toBeUndefined();

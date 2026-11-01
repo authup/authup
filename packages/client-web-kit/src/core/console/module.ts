@@ -19,6 +19,7 @@ export function resolveConsoleRuntimeConfig(input: ConsoleRuntimeConfigInput) : 
     const basePath = normalizeBasePath(input.basePath ?? input.basePathDefault);
 
     let { apiUrl } = input;
+
     if (!apiUrl) {
         const prefix = basePath.endsWith(input.basePathDefault) ?
             basePath.slice(0, -input.basePathDefault.length) :
@@ -81,6 +82,7 @@ export function resolveCookiePath(apiUrl: string, origin: string) : string {
 
 function normalizeBasePath(input: string) : string {
     let output = input.trim();
+
     if (!output.startsWith('/')) {
         output = `/${output}`;
     }

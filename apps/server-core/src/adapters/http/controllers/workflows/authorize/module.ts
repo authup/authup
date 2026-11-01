@@ -86,6 +86,7 @@ export class AuthorizeController {
             const result = await this.authorizer.authorizeWithRequest(event);
 
             const url = new URL(result.redirectUri);
+
             if (result.state) {
                 url.searchParams.set('state', result.state);
             }
@@ -103,7 +104,9 @@ export class AuthorizeController {
             // denial card.
             if (isOAuth2AccessDeniedError(e) && e.redirectUri) {
                 const url = new URL(e.redirectUri);
+
                 url.searchParams.set('error', OAuth2ErrorCode.ACCESS_DENIED);
+
                 if (e.state) {
                     url.searchParams.set('state', e.state);
                 }
@@ -197,6 +200,7 @@ export class AuthorizeController {
             codeRequest = result.data;
         } catch (e) {
             const normalized = sanitizeError(e);
+
             error = {
                 ...normalized,
                 message: normalized.message,
@@ -211,6 +215,7 @@ export class AuthorizeController {
         if (!error) {
             const query = useRequestQuery(event);
             let mapped : Error | undefined;
+
             if (query.error === OAuth2ErrorCode.ACCESS_DENIED) {
                 mapped = OAuth2AccessDeniedError.forClient();
             } else if (query.error === OAuth2ErrorCode.LOGIN_REQUIRED) {
@@ -219,6 +224,7 @@ export class AuthorizeController {
 
             if (mapped) {
                 const normalized = sanitizeError(mapped);
+
                 error = {
                     ...normalized,
                     message: normalized.message,
@@ -241,6 +247,7 @@ export class AuthorizeController {
             undefined;
 
         const requestURL = new URL(event.request.url);
+
         requestURL.searchParams.delete('provider');
         // Anchored on the page, never on the route that was called:
         // `GET /authorize/info` answers the context of the same authorize

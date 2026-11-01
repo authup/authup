@@ -42,7 +42,9 @@ const TODAY = '2026-06-15';
 
 function shift(day: string, days: number) {
     const date = new Date(`${day}T00:00:00.000Z`);
+
     date.setUTCDate(date.getUTCDate() + days);
+
     return date.toISOString().slice(0, 10);
 }
 
@@ -77,6 +79,7 @@ describe('components/event-aggregator', () => {
         await dataSource.getRepository(EventEntity).createQueryBuilder().delete().execute();
 
         const realm = await dataSource.getRepository(RealmEntity).save({ name: `realm-${randomUUID().slice(0, 8)}` });
+
         realmId = realm.id;
 
         vi.useFakeTimers({ toFake: ['Date'] });
@@ -88,8 +91,8 @@ describe('components/event-aggregator', () => {
     });
 
     async function seed(at: string, input: {
-        realmId?: string | null, 
-        name?: string, 
+        realmId?: string | null,
+        name?: string,
         scope?: string,
         refType?: string | null,
     } = {}) {
@@ -106,6 +109,7 @@ describe('components/event-aggregator', () => {
 
     async function read(day: string) {
         const rows = await dataSource.getRepository(EventAggregateEntity).find({ where: { date: day } });
+
         return rows
             .map((row) => ({
                 realmId: row.realmId,
@@ -158,14 +162,14 @@ describe('components/event-aggregator', () => {
 
         await seed(`${shift(TODAY, -9)}T01:00:00.000Z`);
         await seed(`${shift(TODAY, -3)}T01:00:00.000Z`, {
-            scope: EventScope.ENTITY, 
-            name: 'created', 
-            refType: 'user', 
+            scope: EventScope.ENTITY,
+            name: 'created',
+            refType: 'user',
         });
         await seed(`${shift(TODAY, -1)}T01:00:00.000Z`, {
-            scope: EventScope.ENTITY, 
-            name: 'created', 
-            refType: 'user', 
+            scope: EventScope.ENTITY,
+            name: 'created',
+            refType: 'user',
         });
         await repository.recompute(shift(TODAY, -9));
         await repository.recompute(shift(TODAY, -3));
@@ -181,6 +185,7 @@ describe('components/event-aggregator', () => {
         await seed(`${TODAY}T01:00:00.000Z`);
 
         const component = createEventAggregatorComponent(dataSource, { retentionDays: 0 });
+
         try {
             await component.start();
 
@@ -204,6 +209,7 @@ describe('components/event-aggregator', () => {
             expiring: false,
             createdAt: new Date(`${TODAY}T01:00:00.000Z`) as unknown as string,
         }));
+
         for (let i = 0; i < events.length; i += 500) {
             await dataSource.getRepository(EventEntity).insert(events.slice(i, i + 500));
         }
@@ -242,6 +248,7 @@ describe('components/event-aggregator', () => {
         await seed(`${TODAY}T02:00:00.000Z`);
 
         const replicas = Array.from({ length: 8 }, () => new EventAggregateRepositoryAdapter(dataSource));
+
         await Promise.all(replicas.map((replica) => replica.recompute(TODAY)));
 
         expect(await read(TODAY)).toEqual([
@@ -257,9 +264,11 @@ describe('components/event-aggregator', () => {
 
     it('should pick up a late write into yesterday', async () => {
         const yesterday = shift(TODAY, -1);
+
         await seed(`${yesterday}T10:00:00.000Z`);
 
         const tick = createEventAggregatorTick(repository, { retentionDays: 0 });
+
         await tick();
         expect((await read(yesterday))[0].count).toEqual(1);
 
@@ -270,6 +279,7 @@ describe('components/event-aggregator', () => {
 
     it('should backfill toward the oldest raw event, seven days per tick', async () => {
         const oldest = shift(TODAY, -20);
+
         await seed(`${oldest}T10:00:00.000Z`);
 
         const tick = createEventAggregatorTick(repository, { retentionDays: 0 });
@@ -305,6 +315,7 @@ describe('components/event-aggregator', () => {
 
     it('should prune rollups past their retention, and keep them without one', async () => {
         const old = shift(TODAY, -40);
+
         await dataSource.getRepository(EventAggregateEntity).save({
             date: old,
             realmId,
@@ -343,24 +354,24 @@ describe('components/event-aggregator', () => {
         const live = await dataSource.getRepository(RealmEntity).save({ name: `realm-${randomUUID().slice(0, 8)}` });
 
         await seed(`${TODAY}T01:00:00.000Z`, {
-            scope: EventScope.ENTITY, 
-            name: 'created', 
-            refType: EntityType.REALM, 
+            scope: EventScope.ENTITY,
+            name: 'created',
+            refType: EntityType.REALM,
         });
         await seed(`${TODAY}T02:00:00.000Z`, {
-            scope: EventScope.ENTITY, 
-            name: 'deleted', 
-            refType: EntityType.REALM, 
+            scope: EventScope.ENTITY,
+            name: 'deleted',
+            refType: EntityType.REALM,
         });
         await seed(`${TODAY}T01:00:00.000Z`, {
-            scope: EventScope.ENTITY, 
-            name: 'created', 
-            refType: EntityType.USER, 
+            scope: EventScope.ENTITY,
+            name: 'created',
+            refType: EntityType.USER,
         });
         await seed(`${TODAY}T01:00:00.000Z`, {
-            realmId: live.id, 
-            scope: EventScope.ENTITY, 
-            name: 'created', 
+            realmId: live.id,
+            scope: EventScope.ENTITY,
+            name: 'created',
             refType: EntityType.REALM,
         });
 
@@ -395,9 +406,9 @@ describe('components/event-aggregator', () => {
     it('should restore a deleted realm on the days the tick recomputes, and only there', async () => {
         const older = shift(TODAY, -3);
         const realmRow = {
-            scope: EventScope.ENTITY, 
-            name: 'created', 
-            refType: EntityType.REALM, 
+            scope: EventScope.ENTITY,
+            name: 'created',
+            refType: EntityType.REALM,
         };
 
         await seed(`${older}T01:00:00.000Z`, realmRow);
@@ -405,6 +416,7 @@ describe('components/event-aggregator', () => {
         await seed(`${TODAY}T01:00:00.000Z`, { ...realmRow, name: 'deleted' });
 
         const tick = createEventAggregatorTick(repository, { retentionDays: 0 });
+
         await tick();
         expect(await read(older)).toHaveLength(2);
 
@@ -413,10 +425,10 @@ describe('components/event-aggregator', () => {
         await tick();
 
         expect(await read(TODAY)).toEqual([{
-            ...realmRow, 
-            name: 'deleted', 
-            realmId: null, 
-            count: 1, 
+            ...realmRow,
+            name: 'deleted',
+            realmId: null,
+            count: 1,
         }]);
         // an older day still holding other rows reads as final and is
         // never recomputed: the realm's row of that day stays gone

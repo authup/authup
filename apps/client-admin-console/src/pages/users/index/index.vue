@@ -93,6 +93,7 @@ export default defineComponent({
         // initial load is held back until the first resolution settles;
         // `reloadCollection` covers a list that is busy when one lands.
         const collection = ref<{ load: ListLoadFn<EntityListQueryInput<User>>, busy: boolean } | null>(null);
+
         watch(pathScope.filters, () => {
             if (pathScope.pending.value) {
                 return;

@@ -40,6 +40,7 @@ export class RedisCache implements ICache {
         // from a stored falsy value (`0` counter, `false`, `''`) which must
         // round-trip instead of reading back as null.
         const output = await this.jsonAdapter.get(key);
+
         if (typeof output === 'undefined') {
             return null;
         }
@@ -49,6 +50,7 @@ export class RedisCache implements ICache {
 
     async pop<T = unknown>(key: string): Promise<T | null> {
         const raw = await this.client.getdel(key);
+
         if (!raw) {
             return null;
         }
@@ -109,6 +111,7 @@ export class RedisCache implements ICache {
         // so an interleaved concurrent increment is harmless. Rejects when
         // the key holds a non-integer value.
         const output = await this.client.incrby(key, value);
+
         if (options.ttl) {
             await this.client.pexpire(key, options.ttl);
         }
@@ -135,6 +138,7 @@ export class RedisCache implements ICache {
             const pipeline = this.client.pipeline();
 
             const keys = await this.client.keys(`${options.prefix}*`);
+
             for (const key of keys) {
                 pipeline.del(key);
             }
@@ -143,6 +147,7 @@ export class RedisCache implements ICache {
 
             return;
         }
+
         await this.client.flushdb();
     }
 }

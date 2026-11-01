@@ -36,6 +36,7 @@ describe('http/controller/password-reset', () => {
         await suite.client.user.passwordForgot({ name: user.name });
 
         expect(mailClient.sent).toHaveLength(1);
+
         const token = /([0-9a-f]{64})/.exec(mailClient.sent[0].text ?? '')![1];
 
         await suite.client.user.passwordReset({
@@ -48,6 +49,7 @@ describe('http/controller/password-reset', () => {
             username: user.name,
             password: 'reset-password-123',
         });
+
         expect(grant.access_token).toBeDefined();
     });
 });

@@ -55,6 +55,7 @@ export class OAuth2BackchannelLogoutNotifier implements ISessionRevokeNotifier {
         const tokens = await this.sessionTokenRepository.findBySessionId(session.id);
 
         const clientIds = new Set<string>();
+
         for (const token of tokens) {
             if (token.clientId) {
                 clientIds.add(token.clientId);
@@ -62,8 +63,10 @@ export class OAuth2BackchannelLogoutNotifier implements ISessionRevokeNotifier {
         }
 
         const clients : Client[] = [];
+
         for (const clientId of clientIds) {
             const client = await this.clientRepository.findOneByIdOrName(clientId);
+
             if (client && client.backchannelLogoutUri) {
                 clients.push(client);
             }
@@ -86,6 +89,7 @@ export class OAuth2BackchannelLogoutNotifier implements ISessionRevokeNotifier {
         try {
             const payload = this.buildPayload(session, client);
             const logoutToken = await this.signer.sign(payload);
+
             jti = payload.jti;
 
             // `redirect: 'manual'`: a 3xx is the RP's refusal, not an
@@ -106,6 +110,7 @@ export class OAuth2BackchannelLogoutNotifier implements ISessionRevokeNotifier {
                     `The back-channel logout of client ${client.id} was refused with status ${response.status}.`,
                 );
                 await this.record(session, client, { jti, status: response.status });
+
                 return;
             }
 
@@ -131,9 +136,9 @@ export class OAuth2BackchannelLogoutNotifier implements ISessionRevokeNotifier {
         session: Session,
         client: Client,
         data: {
-            jti?: string, 
-            status?: number, 
-            errorCode?: string 
+            jti?: string,
+            status?: number,
+            errorCode?: string
         },
     ): Promise<void> {
         await this.eventService?.record({
@@ -192,12 +197,15 @@ export class OAuth2BackchannelLogoutNotifier implements ISessionRevokeNotifier {
  */
 function describeFailureCode(input: unknown): string {
     let current: unknown = input;
+
     // bounded like describeCauseChain: a cause chain can be cyclic
     for (let depth = 0; isObject(current) && depth < 8; depth++) {
         const { code, cause } = current as { code?: unknown, cause?: unknown };
+
         if (typeof code === 'string') {
             return code;
         }
+
         current = cause;
     }
 

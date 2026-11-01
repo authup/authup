@@ -37,6 +37,7 @@ export class RoleRepositoryAdapter extends EntityRepositoryAdapter<Role> impleme
 
     async getBoundPermissions(entity: string | Role): Promise<PermissionPolicyBinding[]> {
         const id = typeof entity === 'string' ? entity : entity.id;
+
         return loadBoundPermissions({
             manager: this.repository.manager,
             junctionTarget: RolePermissionEntity,
@@ -48,6 +49,7 @@ export class RoleRepositoryAdapter extends EntityRepositoryAdapter<Role> impleme
 
     async getBoundPermissionsForMany(entities: (string | Role)[]): Promise<PermissionPolicyBinding[]> {
         const results = await Promise.all(entities.map((entity) => this.getBoundPermissions(entity)));
+
         return results.flat();
     }
 }

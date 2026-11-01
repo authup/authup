@@ -38,12 +38,14 @@ const SENSITIVE_QUERY_PARAMS = [
 
 export function redactSensitiveURLParams(url: string): string {
     const queryIndex = url.indexOf('?');
+
     if (queryIndex === -1) {
         return url;
     }
 
     const params = new URLSearchParams(url.substring(queryIndex + 1));
     let redacted = false;
+
     for (const name of SENSITIVE_QUERY_PARAMS) {
         if (params.has(name)) {
             params.set(name, '***');
@@ -76,6 +78,7 @@ export function createLoggerMiddleware(options: LoggerMiddlewareOptions) : Handl
         },
         skip(event, response): boolean {
             const path = event.path || '';
+
             if (path === '/' || path.length === 0) {
                 return true;
             }

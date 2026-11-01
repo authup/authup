@@ -81,8 +81,10 @@ export class ScopeService extends AbstractEntityService implements IScopeService
                 realm: entity.realmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -105,6 +107,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
         await actor.permissionEvaluator.preEvaluateOneOf({ name: PERMISSION_NAMES });
 
         const entity = await this.repository.findOneByIdOrName(idOrName);
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -123,6 +126,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
         actor: ActorContext,
     ): Promise<Scope> {
         const { entity } = await this.save(undefined, data, actor);
+
         return entity;
     }
 
@@ -132,6 +136,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
         actor: ActorContext,
     ): Promise<Scope> {
         const { entity } = await this.save(idOrName, data, actor, { updateOnly: true });
+
         return entity;
     }
 
@@ -142,13 +147,15 @@ export class ScopeService extends AbstractEntityService implements IScopeService
         options: { updateOnly?: boolean } = {},
     ): Promise<{
         entity: Scope,
-        created: boolean 
+        created: boolean
     }> {
         let group: string;
 
         let entity: Scope | null | undefined;
+
         if (idOrName) {
             const where: Record<string, any> = {};
+
             if (isUUID(idOrName)) {
                 where.id = idOrName;
             } else {
@@ -160,6 +167,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
                 // predicate would address a row of whichever realm holds the
                 // name.
                 const realm = await this.realmRepository.resolveOrFail(data.realmId);
+
                 entity = await this.repository.findOneBy({ ...where, realmId: realm.id });
             } else {
                 // No realm value means global on create, so a name key
@@ -171,6 +179,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
 
                 entity = await this.repository.findOneBy(where);
             }
+
             // Only a NAME key may upsert-create. A UUID addresses one specific
             // row, so a miss is a 404 (creating would write a different id).
             if (!entity && (options.updateOnly || where.id)) {
@@ -208,7 +217,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
 
             return {
                 entity,
-                created: false, 
+                created: false,
             };
         }
 
@@ -227,7 +236,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
 
         return {
             entity,
-            created: true, 
+            created: true,
         };
     }
 
@@ -238,6 +247,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.SCOPE_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -249,6 +259,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
         });
 
         const { id: entityId } = entity;
+
         await this.repository.remove(entity);
         entity.id = entityId;
 

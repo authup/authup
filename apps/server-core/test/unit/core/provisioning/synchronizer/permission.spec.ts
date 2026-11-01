@@ -52,6 +52,7 @@ describe('core/provisioning/synchronizer/permission', () => {
             await synchronizer.synchronize(input);
 
             const all = permissionRepository.getAll();
+
             expect(all).toHaveLength(1);
             expect(all[0].name).toBe('test_permission');
             expect(all[0].builtIn).toBe(true);
@@ -114,9 +115,11 @@ describe('core/provisioning/synchronizer/permission', () => {
             await synchronizer.synchronize(input);
 
             const permission = permissionRepository.getAll()[0];
+
             expect(permission).toBeDefined();
 
             const junctions = permissionPolicyRepository.getAll();
+
             expect(junctions).toHaveLength(1);
             expect(junctions[0].permissionId).toBe(permission.id);
             expect(junctions[0].policyId).toBe(policy.id);
@@ -141,6 +144,7 @@ describe('core/provisioning/synchronizer/permission', () => {
 
             const junctions = permissionPolicyRepository.getAll();
             const policyIds = junctions.map((j) => j.policyId).sort();
+
             expect(policyIds).toEqual([policyA.id, policyB.id].sort());
         });
 
@@ -216,6 +220,7 @@ describe('core/provisioning/synchronizer/permission', () => {
             await synchronizer.synchronize(input);
 
             const junction = permissionPolicyRepository.getAll()[0];
+
             expect(junction.permissionRealmId).toBe('permission-realm');
             expect(junction.policyRealmId).toBe('policy-realm');
         });

@@ -15,6 +15,7 @@ export const OAUTH2_REQUEST_ERROR_INSTANCE = Symbol.for('@authup/specs/OAuth2Req
 export class OAuth2RequestError extends OAuth2Error {
     constructor(input?: AuthupErrorInput) {
         const options = normalizeOAuth2ErrorInput(input);
+
         super({
             code: ErrorCode.OAUTH_REQUEST_INVALID,
             message: 'The request is malformed.',

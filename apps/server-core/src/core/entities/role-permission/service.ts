@@ -72,6 +72,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
             name: READ_PERMISSION_NAMES,
             realmAttributeName: this.ownerRealmKey,
         });
+
         if (compiled.verdict === 'deny') {
             parsed = appendQueryConditions(parsed, inArray('id', []));
         } else if (compiled.verdict === 'conditional') {
@@ -93,8 +94,10 @@ export class RolePermissionService extends JunctionEntityService implements IRol
                 realm: this.junctionResourceRealm(entity),
                 data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -111,6 +114,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
         await actor.permissionEvaluator.preEvaluateOneOf({ name: READ_PERMISSION_NAMES });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -138,6 +142,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
             roleId: validated.roleId,
             permissionId: validated.permissionId,
         });
+
         if (existing) {
             throw new EntityConflictError({ entity: 'role-permission' });
         }
@@ -180,6 +185,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
         });
 
         let entity = this.repository.create(validated);
+
         entity = await this.repository.save(entity);
 
         return entity;
@@ -193,6 +199,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_PERMISSION_UPDATE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -202,6 +209,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
         // Resolve the actor's grant for this junction's permission (the existing entity only
         // carries scalar FKs — load the permission relation to derive it).
         const permission = await this.permissionRepository.findOneById(entity.permissionId);
+
         if (permission) {
             // Member-permission gate: an actor may only modify a binding for a permission it
             // holds (mirrors create()).
@@ -217,6 +225,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
         let actorScope: `${RealmScope}` = RealmScope.ANY;
         let actorPolicyFree = true;
         let actorPolicyId: string | null = null;
+
         if (permission && actor.identity) {
             const grant = await this.identityPermissionProvider.resolveJunctionGrant(
                 await this.getActorGrants(actor),
@@ -227,6 +236,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
                     realmScope: validated.realmScope ?? entity.realmScope,
                 },
             );
+
             actorScope = grant.realmScope;
             actorPolicyFree = !grant.policy;
             actorPolicyId = grant.policy ? grant.policy.id : null;
@@ -265,6 +275,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_PERMISSION_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -276,6 +287,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
         });
 
         const { id: entityId } = entity;
+
         await this.repository.remove(entity);
         entity.id = entityId;
 

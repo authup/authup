@@ -38,12 +38,14 @@ export function defineCLILogoutCommand(context: HostCommandContext = {}) {
             const host = resolveHostURL(args.server, document.current);
 
             const entry = document.hosts[host];
+
             if (!entry) {
                 throw new Error(`Not signed in to ${host}.`);
             }
 
             const storage = selectTokenStorage(entry.storage, store);
             const tokens = await storage.read(host);
+
             if (tokens) {
                 const client = new Client({ baseURL: host, transport: context.transport });
                 const revocations : [string | undefined, 'refresh_token' | 'access_token'][] = [
@@ -74,7 +76,9 @@ export function defineCLILogoutCommand(context: HostCommandContext = {}) {
                 }
 
                 const latest = await store.read();
+
                 delete latest.hosts[host];
+
                 if (latest.current === host) {
                     delete latest.current;
                 }

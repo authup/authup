@@ -117,10 +117,12 @@ export class ApplicationBuilder {
 
             if (slot) {
                 modules.push(slot);
+
                 return;
             }
 
             const factory = defaultFactories[name];
+
             if (factory) {
                 modules.push(factory());
             }

@@ -100,9 +100,9 @@ function readDocument() : OpenAPIDocument | undefined {
 
 function operations(input: OpenAPIDocument) {
     const output : {
-        template: string, 
-        method: string, 
-        operation: any 
+        template: string,
+        method: string,
+        operation: any
     }[] = [];
 
     for (const [template, item] of Object.entries(input.paths ?? {})) {
@@ -156,14 +156,15 @@ describe('openapi query surface coverage', () => {
                 const name = path.relative(PACKAGE_PATH, file).split(path.sep).join('/');
 
                 const blocks : {
-                    member: string, 
-                    start: number, 
-                    end: number, 
-                    described: boolean 
+                    member: string,
+                    start: number,
+                    end: number,
+                    described: boolean
                 }[] = [];
                 const markers = /^ {4}@DQuerySchema\(EntityType\.(\w+),\s*'(collection|record|filters|stats)'\)$/gm;
 
                 let marker = markers.exec(source);
+
                 while (marker !== null) {
                     // A method body ends at the first closing brace back at
                     // member indentation; anything nested is indented deeper.
@@ -186,6 +187,7 @@ describe('openapi query surface coverage', () => {
                 const calls = /describeQuerySchema\(\s*(\w+)\s*(?:,\s*(\w+)\s*)?\)/g;
 
                 let call = calls.exec(source);
+
                 while (call !== null) {
                     const block = blocks.find((entry) => call!.index >= entry.start && call!.index < entry.end);
                     const member = identifiers.get(call[1]);
@@ -214,6 +216,7 @@ describe('openapi query surface coverage', () => {
 
                     if (excused.has(key)) {
                         excused.delete(key);
+
                         continue;
                     }
 

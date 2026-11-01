@@ -12,9 +12,11 @@ export abstract class BaseProvisioningSynchronizer<T> implements IProvisioningSy
     // Can be switched to Promise.all() if callers guarantee unique inputs.
     async synchronizeMany(input: T[]): Promise<T[]> {
         const output: T[] = [];
+
         for (const entity of input) {
             output.push(await this.synchronize(entity));
         }
+
         return output;
     }
 

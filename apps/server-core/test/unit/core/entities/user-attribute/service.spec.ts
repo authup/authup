@@ -22,18 +22,20 @@ import {
 } from 'vitest';
 import { ErrorCode, ValidationError } from '@authup/errors';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
+import { ValidupError } from 'validup';
 import { UserAttributeService } from '../../../../../src/core/entities/user-attribute/service.ts';
-import { 
-    FakeEntityRepository, 
-    FakePermissionEvaluator, 
-    createAllowAllActor, 
-    createDenyAllActor,  
+import {
+    FakeEntityRepository,
+    FakePermissionEvaluator,
+    createAllowAllActor,
+    createDenyAllActor,
 } from '@authup/server-test-kit';
 import type { FakeActorContext } from '@authup/server-test-kit';
 import { createFakeUserAttribute } from '../../../../utils/domains/index.ts';
 
 function createUserActor(userId: string, realmId?: string): FakeActorContext {
     const rId = realmId || randomUUID();
+
     return {
         permissionEvaluator: new FakePermissionEvaluator(),
         identity: {
@@ -76,7 +78,9 @@ describe('core/entities/user-attribute/service', () => {
             repository.seed([
                 createFakeUserAttribute({ userId: randomUUID() }),
             ]);
+
             const result = await service.getMany({}, createAllowAllActor());
+
             expect(result.data).toHaveLength(1);
         });
 
@@ -87,15 +91,16 @@ describe('core/entities/user-attribute/service', () => {
             repository.seed([
                 createFakeUserAttribute({
                     name: 'mine',
-                    userId, 
+                    userId,
                 }),
                 createFakeUserAttribute({
                     name: 'other',
-                    userId: otherId, 
+                    userId: otherId,
                 }),
             ]);
 
             const actor = createUserActor(userId);
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.method === 'evaluate' && call.ctx.name === PermissionName.USER_UPDATE) {
                     throw PermissionError.denied('test');
@@ -103,6 +108,7 @@ describe('core/entities/user-attribute/service', () => {
             });
 
             const result = await service.getMany({}, actor);
+
             expect(result.data).toHaveLength(1);
             expect(result.data[0].name).toBe('mine');
             expect(result.meta.total).toBe(1);
@@ -137,12 +143,14 @@ describe('core/entities/user-attribute/service', () => {
             ]);
 
             const actor = createUserActor(userId);
+
             actor.permissionEvaluator.setCompileResult({
                 verdict: 'conditional',
                 condition: eq('realmId', realmId),
             });
 
             const spy = vi.spyOn(repository, 'findMany');
+
             await service.getMany({}, actor);
 
             // the foreign leg compiles USER_UPDATE only — USER_SELF_MANAGE's
@@ -153,6 +161,7 @@ describe('core/entities/user-attribute/service', () => {
             // service built over the seeded rows instead
             const query = spy.mock.calls[0]![0];
             const applied = applyQuery(query, [own, foreignSameRealm, foreignOtherRealm]);
+
             expect(applied.data.map((row) => row.id).sort())
                 .toEqual([own.id, foreignSameRealm.id].sort());
 
@@ -174,13 +183,16 @@ describe('core/entities/user-attribute/service', () => {
             ]);
 
             const actor = createUserActor(userId);
+
             actor.permissionEvaluator.setCompileResult({ verdict: 'deny' });
 
             const spy = vi.spyOn(repository, 'findMany');
+
             await service.getMany({}, actor);
 
             const query = spy.mock.calls[0]![0];
             const applied = applyQuery(query, [own, foreign]);
+
             expect(applied.data.map((row) => row.id)).toEqual([own.id]);
             expect(actor.permissionEvaluator.evaluateCalls).toHaveLength(0);
         });
@@ -190,6 +202,7 @@ describe('core/entities/user-attribute/service', () => {
         it('should return entity when actor can manage', async () => {
             const entity = repository.seed(createFakeUserAttribute({ userId: randomUUID() }));
             const result = await service.getOne(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
         });
 
@@ -197,6 +210,7 @@ describe('core/entities/user-attribute/service', () => {
             const entity = repository.seed(createFakeUserAttribute({ userId: randomUUID() }));
 
             const actor = createUserActor(randomUUID());
+
             actor.permissionEvaluator.deny('evaluate');
 
             await expect(service.getOne(entity.id, actor)).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
@@ -247,9 +261,34 @@ describe('core/entities/user-attribute/service', () => {
             }, createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
 
+        it('should never take the id or timestamps from the body on create', async () => {
+            const foreign = repository.seed(createFakeUserAttribute({
+                name: 'foreign',
+                value: 'kept',
+                userId: randomUUID(),
+            }));
+            const snapshot = { ...foreign };
+            const createdAt = '2000-01-01T00:00:00.000Z';
+
+            const result = await service.create({
+                id: foreign.id,
+                name: 'own',
+                value: 'v',
+                userId: randomUUID(),
+                createdAt,
+                updatedAt: createdAt,
+            }, createAllowAllActor());
+
+            expect(result.id).not.toBe(foreign.id);
+            expect(result.createdAt).not.toBe(createdAt);
+            expect(result.updatedAt).not.toBe(createdAt);
+            expect(await repository.findOneBy({ id: foreign.id })).toEqual(snapshot);
+        });
+
         it('should create entity with user from join data', async () => {
             const userRealmId = randomUUID();
             const userId = randomUUID();
+
             userRealms.set(userId, userRealmId);
 
             const result = await service.create({
@@ -257,6 +296,7 @@ describe('core/entities/user-attribute/service', () => {
                 value: 'val',
                 userId,
             }, createAllowAllActor());
+
             expect(result.id).toBeDefined();
             expect(result.realmId).toBe(userRealmId);
         });
@@ -274,6 +314,7 @@ describe('core/entities/user-attribute/service', () => {
             const actor = createUserActor(randomUUID(), randomUUID());
             const targetId = randomUUID();
             const targetRealmId = randomUUID();
+
             userRealms.set(targetId, targetRealmId);
 
             const result = await service.create({
@@ -294,6 +335,7 @@ describe('core/entities/user-attribute/service', () => {
             const actor = createUserActor(randomUUID(), randomUUID());
             const targetId = randomUUID();
             const targetRealmId = randomUUID();
+
             userRealms.set(targetId, targetRealmId);
 
             const result = await service.create({
@@ -325,6 +367,7 @@ describe('core/entities/user-attribute/service', () => {
             const actor = createUserActor(randomUUID(), randomUUID());
             const targetId = randomUUID();
             const targetRealmId = randomUUID();
+
             userRealms.set(targetId, targetRealmId);
 
             const result = await service.create({
@@ -345,20 +388,22 @@ describe('core/entities/user-attribute/service', () => {
 
             const result = await service.create({
                 name: 'attr',
-                value: 'val', 
+                value: 'val',
             }, actor);
+
             expect(result.userId).toBe(userId);
             expect(result.realmId).toBe(realmId);
         });
 
         it('should throw BadRequestError when no userId and no user identity', async () => {
             const actor = createAllowAllActor();
+
             actor.identity = undefined;
 
             await expect(
                 service.create({
                     name: 'attr',
-                    value: 'val', 
+                    value: 'val',
                 }, actor),
             ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
@@ -376,6 +421,7 @@ describe('core/entities/user-attribute/service', () => {
             const userId = randomUUID();
             const realmId = randomUUID();
             const actor = createUserActor(userId, realmId);
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.ctx.name === PermissionName.USER_UPDATE) {
                     throw PermissionError.denied('test');
@@ -391,8 +437,11 @@ describe('core/entities/user-attribute/service', () => {
             const selfManageCalls = actor.permissionEvaluator.evaluateCalls.filter(
                 (c) => c.name === PermissionName.USER_SELF_MANAGE,
             );
+
             expect(selfManageCalls).toHaveLength(1);
+
             const attributes = selfManageCalls[0].data?.get('attributes');
+
             expect(attributes).toEqual({ theme: 'dark' });
         });
 
@@ -400,6 +449,7 @@ describe('core/entities/user-attribute/service', () => {
             const userId = randomUUID();
             const realmId = randomUUID();
             const actor = createUserActor(userId, realmId);
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.ctx.name === PermissionName.USER_UPDATE) {
                     throw PermissionError.denied('test');
@@ -415,8 +465,11 @@ describe('core/entities/user-attribute/service', () => {
             const selfManageCalls = actor.permissionEvaluator.evaluateCalls.filter(
                 (c) => c.name === PermissionName.USER_SELF_MANAGE,
             );
+
             expect(selfManageCalls).toHaveLength(1);
+
             const attributes = selfManageCalls[0].data?.get('attributes');
+
             expect(attributes).toEqual({ theme: 'dark' });
         });
 
@@ -436,11 +489,13 @@ describe('core/entities/user-attribute/service', () => {
             const updateCalls = actor.permissionEvaluator.evaluateCalls.filter(
                 (c) => c.name === PermissionName.USER_UPDATE,
             );
+
             expect(updateCalls).toHaveLength(1);
 
             const selfManageCalls = actor.permissionEvaluator.evaluateCalls.filter(
                 (c) => c.name === PermissionName.USER_SELF_MANAGE,
             );
+
             expect(selfManageCalls).toHaveLength(0);
         });
 
@@ -465,6 +520,7 @@ describe('core/entities/user-attribute/service', () => {
         // row cannot be fed a bad value by a body that omits the name.
         it('should refuse a bad value on a reserved row even when the name is omitted', async () => {
             const entity = repository.create(createFakeUserAttribute({ name: 'colorMode', value: 'dark' }));
+
             await repository.save(entity);
 
             await expect(service.update(entity.id, { value: 'purple' }, createAllowAllActor()))
@@ -473,10 +529,11 @@ describe('core/entities/user-attribute/service', () => {
 
         it('should accept a good value on a reserved row', async () => {
             const entity = repository.create(createFakeUserAttribute({
-                name: 'locale', 
-                value: 'de', 
-                realmId: randomUUID(), 
+                name: 'locale',
+                value: 'de',
+                realmId: randomUUID(),
             }));
+
             await repository.save(entity);
 
             const result = await service.update(entity.id, { value: 'fr' }, createAllowAllActor());
@@ -489,10 +546,11 @@ describe('core/entities/user-attribute/service', () => {
         // value past the check.
         it('should refuse renaming an unchecked row into a reserved name when its value fails', async () => {
             const entity = repository.create(createFakeUserAttribute({
-                name: 'theme', 
-                value: 'purple', 
-                realmId: randomUUID(), 
+                name: 'theme',
+                value: 'purple',
+                realmId: randomUUID(),
             }));
+
             await repository.save(entity);
 
             await expect(service.update(entity.id, { name: 'colorMode' }, createAllowAllActor()))
@@ -501,10 +559,11 @@ describe('core/entities/user-attribute/service', () => {
 
         it('should check a rename against the value it carries along', async () => {
             const entity = repository.create(createFakeUserAttribute({
-                name: 'theme', 
-                value: 'purple', 
-                realmId: randomUUID(), 
+                name: 'theme',
+                value: 'purple',
+                realmId: randomUUID(),
             }));
+
             await repository.save(entity);
 
             await expect(service.update(entity.id, { name: 'colorMode', value: 'dark' }, createAllowAllActor()))
@@ -521,7 +580,37 @@ describe('core/entities/user-attribute/service', () => {
             }));
 
             const result = await service.update(entity.id, { value: 'new-val' }, createAllowAllActor());
+
             expect(result.value).toBe('new-val');
+        });
+
+        it('should keep the route row id when the body names another', async () => {
+            const ownerId = randomUUID();
+            const entity = repository.seed(createFakeUserAttribute({
+                name: 'own', 
+                value: 'v', 
+                userId: ownerId, 
+            }));
+            const foreign = repository.seed(createFakeUserAttribute({
+                name: 'foreign',
+                value: 'kept',
+                userId: randomUUID(),
+            }));
+            const snapshot = { ...foreign };
+            const createdAt = '2000-01-01T00:00:00.000Z';
+
+            const { id } = entity;
+            const result = await service.update(id, {
+                id: foreign.id,
+                value: 'new',
+                createdAt,
+            }, createAllowAllActor());
+
+            expect(result.id).toBe(id);
+            expect(result.userId).toBe(ownerId);
+            expect(result.value).toBe('new');
+            expect(result.createdAt).not.toBe(createdAt);
+            expect(await repository.findOneBy({ id: foreign.id })).toEqual(snapshot);
         });
 
         it('should preEvaluate USER_UPDATE to gate access', async () => {
@@ -531,6 +620,7 @@ describe('core/entities/user-attribute/service', () => {
             }));
 
             const actor = createAllowAllActor();
+
             await service.update(entity.id, { value: 'new' }, actor);
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.USER_UPDATE });
@@ -549,6 +639,7 @@ describe('core/entities/user-attribute/service', () => {
             }));
 
             const actor = createUserActor(randomUUID());
+
             actor.permissionEvaluator.deny('evaluate');
 
             await expect(service.update(entity.id, { value: 'new' }, actor)).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
@@ -561,6 +652,7 @@ describe('core/entities/user-attribute/service', () => {
                 realmId: 'realm-b',
             } as Partial<UserAttribute>));
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (!(call.method === 'evaluate' && call.ctx.name === PermissionName.USER_UPDATE)) {
                     return;
@@ -569,6 +661,7 @@ describe('core/entities/user-attribute/service', () => {
                 const realm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
                     call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
                     undefined;
+
                 if (typeof realm !== 'undefined' && realm !== 'realm-a') {
                     throw PermissionError.denied('realm');
                 }
@@ -586,6 +679,7 @@ describe('core/entities/user-attribute/service', () => {
             const entity = repository.seed(createFakeUserAttribute({ userId: ownerId, value: 'v' }));
             // the owner, forced onto the self-manage path (lacks USER_UPDATE)
             const actor = createUserActor(ownerId);
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.ctx.name === PermissionName.USER_UPDATE) {
                     throw PermissionError.denied('no user_update');
@@ -593,6 +687,7 @@ describe('core/entities/user-attribute/service', () => {
             });
 
             const result = await service.update(entity.id, { value: 'x', userId: randomUUID() }, actor);
+
             expect(result.userId).toBe(ownerId);
         });
 
@@ -609,6 +704,7 @@ describe('core/entities/user-attribute/service', () => {
                     }
 
                     const attributes = call.ctx.data?.get(BuiltInPolicyType.ATTRIBUTES) as Partial<UserAttribute>;
+
                     if (!attributes.name?.startsWith('app-')) {
                         throw PermissionError.denied('name');
                     }
@@ -617,9 +713,9 @@ describe('core/entities/user-attribute/service', () => {
 
             it('should refuse renaming an unreachable row into reach', async () => {
                 const entity = repository.seed(createFakeUserAttribute({
-                    name: 'other', 
-                    value: 'v', 
-                    userId: randomUUID(), 
+                    name: 'other',
+                    value: 'v',
+                    userId: randomUUID(),
                 }));
 
                 await expect(service.update(entity.id, { name: 'app-theme' }, actor))
@@ -628,20 +724,21 @@ describe('core/entities/user-attribute/service', () => {
 
             it('should allow updating a row that stays in reach', async () => {
                 const entity = repository.seed(createFakeUserAttribute({
-                    name: 'app-theme', 
-                    value: 'v', 
-                    userId: randomUUID(), 
+                    name: 'app-theme',
+                    value: 'v',
+                    userId: randomUUID(),
                 }));
 
                 const result = await service.update(entity.id, { value: 'w' }, actor);
+
                 expect(result.value).toBe('w');
             });
 
             it('should refuse renaming a reachable row out of reach', async () => {
                 const entity = repository.seed(createFakeUserAttribute({
-                    name: 'app-theme', 
-                    value: 'v', 
-                    userId: randomUUID(), 
+                    name: 'app-theme',
+                    value: 'v',
+                    userId: randomUUID(),
                 }));
 
                 await expect(service.update(entity.id, { name: 'other' }, actor))
@@ -650,11 +747,107 @@ describe('core/entities/user-attribute/service', () => {
         });
     });
 
+    describe('name and value shape', () => {
+        const reserved = () => new UserAttributeService({
+            repository,
+            reservedNames: new Set(['email', 'password']),
+        });
+
+        it.each([
+            ['an array', ['email']],
+            ['a number', 1],
+            ['an object', { name: 'email' }],
+            ['null', null],
+            ['an empty string', ' '.repeat(3)],
+            ['an overlong string', 'a'.repeat(256)],
+        ])('should refuse %s as the name on create', async (_label, name) => {
+            await expect(reserved().create({
+                name,
+                value: 'foo@bar.com',
+                userId: randomUUID(),
+            }, createAllowAllActor())).rejects.toBeInstanceOf(ValidupError);
+
+            expect(repository.getAll()).toHaveLength(0);
+        });
+
+        // A one-element array was never matched by the string-only preference
+        // check, so a reserved name smuggled in that way kept any value.
+        it('should refuse an array naming a preference', async () => {
+            await expect(service.create({
+                name: ['colorMode'],
+                value: 'purple',
+                userId: randomUUID(),
+            }, createAllowAllActor())).rejects.toBeInstanceOf(ValidupError);
+
+            expect(repository.getAll()).toHaveLength(0);
+        });
+
+        it('should refuse a missing name on create', async () => {
+            await expect(service.create({ value: 'v', userId: randomUUID() }, createAllowAllActor()))
+                .rejects.toBeInstanceOf(ValidupError);
+        });
+
+        it('should check a padded name against the reserved names after trimming it', async () => {
+            await expect(reserved().create({
+                name: ' email ',
+                value: 'foo@bar.com',
+                userId: randomUUID(),
+            }, createAllowAllActor())).rejects.toThrow(/collides with a User entity column/);
+        });
+
+        it('should check a padded preference name after trimming it', async () => {
+            await expect(service.create({
+                name: ' colorMode',
+                value: 'purple',
+                userId: randomUUID(),
+            }, createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+
+        it.each([
+            ['an array', ['email']],
+            ['null', null],
+            ['a number', 1],
+        ])('should refuse %s as the name on update', async (_label, name) => {
+            const entity = repository.seed(createFakeUserAttribute({
+                name: 'own',
+                value: 'v',
+                userId: randomUUID(),
+            }));
+            const snapshot = { ...entity };
+
+            await expect(reserved().update(entity.id, { name }, createAllowAllActor()))
+                .rejects.toBeInstanceOf(ValidupError);
+
+            expect(await repository.findOneBy({ id: entity.id })).toEqual(snapshot);
+        });
+
+        it.each([
+            ['a string', 'v'],
+            ['a number', 1],
+            ['a boolean', false],
+            ['null', null],
+            ['an array', ['a', 'b']],
+            ['an object', { a: 1 }],
+        ])('should keep accepting %s as the value', async (_label, value) => {
+            const result = await service.create({
+                name: 'attr',
+                value,
+                userId: randomUUID(),
+            }, createAllowAllActor());
+
+            expect(result.value).toEqual(value);
+
+            await expect(service.update(result.id, { value }, createAllowAllActor()))
+                .resolves.toMatchObject({ value });
+        });
+    });
+
     describe('delete', () => {
         it('should delete an existing attribute', async () => {
             const entity = repository.seed(createFakeUserAttribute({ userId: randomUUID() }));
 
             const result = await service.delete(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
         });
 
@@ -666,11 +859,12 @@ describe('core/entities/user-attribute/service', () => {
             const userId = randomUUID();
             const entity = repository.seed(createFakeUserAttribute({
                 name: 'my-attr',
-                userId, 
+                userId,
             }));
 
             const actor = createUserActor(userId);
             const result = await service.delete(entity.id, actor);
+
             expect(result.id).toBe(entity.id);
         });
 
@@ -678,6 +872,7 @@ describe('core/entities/user-attribute/service', () => {
             const entity = repository.seed(createFakeUserAttribute({ userId: randomUUID() }));
 
             const actor = createUserActor(randomUUID());
+
             actor.permissionEvaluator.deny('evaluate');
 
             await expect(service.delete(entity.id, actor)).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });

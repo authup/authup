@@ -57,6 +57,7 @@ describe('src/policy/composite (tri-state algebra)', () => {
                 composite(DecisionStrategy.AFFIRMATIVE, [pending, truthy]),
                 context(),
             );
+
             expect(outcome.success).toBeTruthy();
             expect(outcome.pending).toBeFalsy();
         });
@@ -66,6 +67,7 @@ describe('src/policy/composite (tri-state algebra)', () => {
                 composite(DecisionStrategy.AFFIRMATIVE, [pending, falsy]),
                 context(),
             );
+
             expect(outcome.success).toBeFalsy();
             expect(outcome.pending).toBeTruthy();
         });
@@ -75,6 +77,7 @@ describe('src/policy/composite (tri-state algebra)', () => {
                 composite(DecisionStrategy.AFFIRMATIVE, [falsy, falsy]),
                 context(),
             );
+
             expect(outcome.success).toBeFalsy();
             expect(outcome.pending).toBeFalsy();
         });
@@ -86,6 +89,7 @@ describe('src/policy/composite (tri-state algebra)', () => {
                 composite(DecisionStrategy.UNANIMOUS, [pending, falsy]),
                 context(),
             );
+
             expect(outcome.success).toBeFalsy();
             expect(outcome.pending).toBeFalsy();
         });
@@ -95,6 +99,7 @@ describe('src/policy/composite (tri-state algebra)', () => {
                 composite(DecisionStrategy.UNANIMOUS, [pending, truthy]),
                 context(),
             );
+
             expect(outcome.success).toBeFalsy();
             expect(outcome.pending).toBeTruthy();
         });
@@ -104,6 +109,7 @@ describe('src/policy/composite (tri-state algebra)', () => {
                 composite(DecisionStrategy.UNANIMOUS, [truthy, truthy]),
                 context(),
             );
+
             expect(outcome.success).toBeTruthy();
             expect(outcome.pending).toBeFalsy();
         });
@@ -115,6 +121,7 @@ describe('src/policy/composite (tri-state algebra)', () => {
                 composite(DecisionStrategy.CONSENSUS, [truthy, truthy, pending]),
                 context(),
             );
+
             expect(outcome.success).toBeTruthy();
             expect(outcome.pending).toBeFalsy();
         });
@@ -124,6 +131,7 @@ describe('src/policy/composite (tri-state algebra)', () => {
                 composite(DecisionStrategy.CONSENSUS, [falsy, falsy, pending]),
                 context(),
             );
+
             expect(outcome.success).toBeFalsy();
             expect(outcome.pending).toBeFalsy();
         });
@@ -133,6 +141,7 @@ describe('src/policy/composite (tri-state algebra)', () => {
                 composite(DecisionStrategy.CONSENSUS, [truthy, falsy, pending]),
                 context(),
             );
+
             expect(outcome.success).toBeFalsy();
             expect(outcome.pending).toBeTruthy();
         });
@@ -144,6 +153,7 @@ describe('src/policy/composite (tri-state algebra)', () => {
                 composite(DecisionStrategy.UNANIMOUS, []),
                 context(),
             );
+
             expect(outcome.success).toBeFalsy();
             expect(outcome.pending).toBeFalsy();
             expect(outcome.issues).toBeDefined();
@@ -156,6 +166,7 @@ describe('src/policy/composite (tri-state algebra)', () => {
                     composite(decisionStrategy, []),
                     context(),
                 );
+
                 expect(outcome.success).toBeFalsy();
                 expect(outcome.pending).toBeFalsy();
             }
@@ -166,6 +177,7 @@ describe('src/policy/composite (tri-state algebra)', () => {
                 composite(DecisionStrategy.UNANIMOUS, [], true),
                 context(),
             );
+
             expect(outcome.success).toBeFalsy();
             expect(outcome.issues!.length).toBeGreaterThan(0);
         });
@@ -177,6 +189,7 @@ describe('src/policy/composite (tri-state algebra)', () => {
                 composite(DecisionStrategy.AFFIRMATIVE, [pending], true),
                 context(),
             );
+
             expect(outcome.success).toBeFalsy();
             expect(outcome.pending).toBeTruthy();
         });
@@ -186,6 +199,7 @@ describe('src/policy/composite (tri-state algebra)', () => {
                 composite(DecisionStrategy.UNANIMOUS, [truthy], true),
                 context(),
             );
+
             expect(outcome.success).toBeFalsy();
             expect(outcome.pending).toBeFalsy();
         });

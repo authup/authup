@@ -30,6 +30,7 @@ export function assertConsolePath(name: string, url: string, publicUrl: string) 
     // server-core route (all of which are mounted root-relative). Mounting the
     // browser-facing path would put the console where nothing can reach it.
     const value = publicPath.slice(base.length);
+
     if (!value) {
         // A console with no path of its own would have to own the API's
         // root, where it would shadow the protocol routes and the page

@@ -19,10 +19,11 @@ describe('src/testing/matcher', () => {
 
     it('should match an exact path', () => {
         const match = matchRoute('GET', 'clients', handlers);
+
         expect(match).toBeDefined();
         expect(match!.handler({
-            method: 'GET', 
-            url: 'clients', 
+            method: 'GET',
+            url: 'clients',
             params: {},
             headers: {},
         })).toEqual('many');
@@ -30,15 +31,17 @@ describe('src/testing/matcher', () => {
 
     it('should capture :param segments', () => {
         const match = matchRoute('GET', '/clients/abc-123', handlers);
+
         expect(match).toBeDefined();
         expect(match!.params).toEqual({ id: 'abc-123' });
     });
 
     it('should distinguish methods', () => {
         const match = matchRoute('POST', 'clients', handlers);
+
         expect(match!.handler({
-            method: 'POST', 
-            url: 'clients', 
+            method: 'POST',
+            url: 'clients',
             params: {},
             headers: {},
         })).toEqual('created');
@@ -46,14 +49,16 @@ describe('src/testing/matcher', () => {
 
     it('should ignore query strings', () => {
         const match = matchRoute('GET', 'clients/abc?fields=%2Bsecret', handlers);
+
         expect(match!.params).toEqual({ id: 'abc' });
     });
 
     it('should reject mismatched segment counts', () => {
         const match = matchRoute('GET', 'clients/abc/roles', handlers);
+
         expect(match!.handler({
-            method: 'GET', 
-            url: '', 
+            method: 'GET',
+            url: '',
             params: {},
             headers: {},
         })).toEqual('fallthrough');
@@ -64,9 +69,10 @@ describe('src/testing/matcher', () => {
             '*': () => 'fallthrough',
             'GET /clients/:id': () => 'one',
         });
+
         expect(match!.handler({
-            method: 'GET', 
-            url: '', 
+            method: 'GET',
+            url: '',
             params: {},
             headers: {},
         })).toEqual('one');
@@ -74,6 +80,7 @@ describe('src/testing/matcher', () => {
 
     it('should return null without any match', () => {
         const match = matchRoute('GET', 'clients', { 'DELETE /clients': () => 'nope' });
+
         expect(match).toBeNull();
     });
 });
@@ -93,6 +100,7 @@ describe('src/testing/module', () => {
         });
 
         const response = await client.client.getOne('abc-123');
+
         expect(response.data).toEqual({ id: 'abc-123', name: 'test-client' });
     });
 
@@ -100,6 +108,7 @@ describe('src/testing/module', () => {
         const client = createFakeClient();
 
         const output = await client.client.getMany();
+
         expect(output).toEqual({ data: [], meta: { total: 0 } });
     });
 
@@ -107,6 +116,7 @@ describe('src/testing/module', () => {
         const client = createFakeClient({ fallback: ({ url }) => ({ echoed: url }) });
 
         const response = await client.get('something/else');
+
         expect(response.data).toEqual({ echoed: 'something/else' });
         expect(response.status).toEqual(200);
         expect(response.headers).toBeInstanceOf(Headers);
@@ -116,6 +126,7 @@ describe('src/testing/module', () => {
         const client = createFakeClient({ handlers: { 'POST /clients': ({ body }) => ({ data: body, meta: {} }) } });
 
         const response = await client.client.create({ name: 'foo' });
+
         expect(response.data).toMatchObject({ name: 'foo' });
     });
 
@@ -134,6 +145,7 @@ describe('src/testing/module', () => {
         const client = createFakeClient({ handlers: { 'GET /realms': async () => ({ data: [{ name: 'master' }], meta: { total: 1 } }) } });
 
         const output = await client.realm.getMany();
+
         expect(output.data).toHaveLength(1);
     });
 });

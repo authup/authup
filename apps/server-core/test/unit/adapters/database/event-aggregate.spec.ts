@@ -49,6 +49,7 @@ describe('adapters/database/domains/event-aggregate', () => {
         });
 
         const row = await repository.findOneByOrFail({ id: saved.id });
+
         expect(row.date).toEqual('2026-09-22');
         expect(row.realmId).toBeNull();
         expect(row.count).toEqual(3);

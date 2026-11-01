@@ -25,7 +25,7 @@ export interface IScopeService extends IReadScoper {
         options?: { updateOnly?: boolean },
     ): Promise<{
         entity: Scope,
-        created: boolean 
+        created: boolean
     }>;
     delete(id: string, actor: ActorContext): Promise<Scope>;
 }

@@ -135,6 +135,7 @@ function create<
 
     const resolveBaseQuery = () : IQuery => {
         let contextQuery : IQuery | undefined;
+
         if (context.query) {
             contextQuery = normalizeQueryInput(
                 typeof context.query === 'function' ? context.query() : context.query,
@@ -142,6 +143,7 @@ function create<
         }
 
         let propsQuery : IQuery | undefined;
+
         if (context.props.query) {
             propsQuery = normalizeQueryInput(context.props.query);
         }
@@ -189,6 +191,7 @@ function create<
             inputQuery = normalizeQueryInput(input);
 
             let filtersOverride : IFilters | undefined;
+
             if (
                 input.filters &&
                 !isCondition(input.filters) &&
@@ -209,6 +212,7 @@ function create<
                         input.filters.name,
                         searchEntityNames(context.type, input.filters.name),
                     );
+
                 filtersOverride = defineFilters(
                     transformed as FiltersBuildInput | ICondition,
                 );
@@ -255,9 +259,11 @@ function create<
             serializeFilters(interactiveNext) !== serializeFilters(retained);
 
         const statePagination : PaginationBuildInput = {};
+
         if (typeof pagination?.limit === 'number') {
             statePagination.limit = pagination.limit;
         }
+
         if (typeof pagination?.offset === 'number') {
             statePagination.offset = filtersChanged ? 0 : pagination.offset;
         }
@@ -290,14 +296,17 @@ function create<
 
         return rows.filter((row) => {
             const key = source.getItemKey(row);
+
             if (typeof key === 'undefined') {
                 return true;
             }
+
             if (seen.has(key)) {
                 return false;
             }
 
             seen.add(key);
+
             return true;
         });
     }
@@ -369,6 +378,7 @@ function create<
 
     let loadOnSetup = true;
     const propLoadOnSetup = unref(context.props.loadOnSetup);
+
     if (typeof propLoadOnSetup === 'boolean') {
         loadOnSetup = propLoadOnSetup;
     }
@@ -410,6 +420,7 @@ function create<
         }
 
         const snapshot = hydration.get<EntityCollectionHydrationSnapshot<RECORD>>(handoff.key);
+
         if (!snapshot) {
             return undefined;
         }
@@ -460,9 +471,12 @@ function create<
     // is committed only when this load applies. A composition that throws
     // issues no request, so it supersedes nothing.
     async function run(input: EntityListQueryInput<Entity<RECORD>>) : Promise<DataLoadOutcome | undefined> {
-        if (!getMany) return undefined;
+        if (!getMany) {
+            return undefined;
+        }
 
         let outcome : Promise<DataLoadOutcome>;
+
         try {
             outcome = source.load((current) => ({
                 ...current,
@@ -470,10 +484,12 @@ function create<
             }));
         } catch (e) {
             failed(isError(e) ? e : new Error('The entities could not be loaded.'));
+
             return undefined;
         }
 
         const result = await outcome;
+
         if (result.status === 'failed') {
             failed(isError(result.error) ? result.error : new Error('The entities could not be loaded.'));
         }
@@ -500,6 +516,7 @@ function create<
     function setupInitialLoad() {
         if (isServer) {
             const store = hydration;
+
             if (!store || !handoff) {
                 return;
             }
@@ -521,6 +538,7 @@ function create<
                     total: total.value,
                     pagination: snapshot.meta.pagination,
                 };
+
                 store.set(handoff.key, value);
             });
 
@@ -566,6 +584,7 @@ function create<
                 }
 
                 const next = data.value[source.findIndex(entity)];
+
                 if (next && context.setup && typeof context.setup.emit === 'function') {
                     context.setup.emit('updated', next);
                 }
@@ -593,11 +612,13 @@ function create<
 
     function render(defaults?: EntityCollectionRenderOptions<RECORD>) : VNodeChild {
         let renderOptions : EntityCollectionRenderOptions<RECORD>;
+
         if (defaults) {
             renderOptions = mergeEntityCollectionRenderOptions(context.props, defaults);
         } else {
             renderOptions = context.props;
         }
+
         const headerOpt: ListHeaderOptions<RECORD> | undefined = boolableToObject(renderOptions.header || {});
         const footerOpt: ListFooterOptions<RECORD> | undefined = boolableToObject(renderOptions.footer || {});
         const noMoreOpt: ListNoMoreOptions<RECORD> | undefined = boolableToObject(renderOptions.noMore || {});
@@ -632,6 +653,7 @@ function create<
             withSlotProps = true,
         ): VNodeChild | null => {
             const slot = slots[slotName];
+
             if (slot) {
                 return h(
                     opt?.tag ?? 'div',
@@ -639,9 +661,11 @@ function create<
                     withSlotProps ? slot(slotProps()) : slot(undefined),
                 );
             }
+
             if (opt?.content) {
                 return h(opt.tag ?? 'div', { class: cssClass }, opt.content);
             }
+
             return null;
         };
 
@@ -665,6 +689,7 @@ function create<
         // (legacy buildList contract). Used as the escape hatch for
         // consumers that want full control over the list body.
         const defaultSlot = slots[EntityCollectionSlotName.DEFAULT];
+
         if (defaultSlot) {
             return h(VCList, listProps, () => defaultSlot(slotProps()));
         }
@@ -675,24 +700,36 @@ function create<
             const headerVNode = renderOptions.header !== false ?
                 renderChrome(EntityCollectionSlotName.HEADER, headerOpt, 'vc-list-header') :
                 null;
-            if (headerVNode) children.push(headerVNode);
+
+            if (headerVNode) {
+                children.push(headerVNode);
+            }
 
             // BODY slot — if provided, the consumer renders the full body
             // (e.g. a `<VCTable>` with `:columns` driving auto-render) and
             // per-item rendering is skipped. Otherwise fall back to
             // <VCListBody> + per-item <VCListItem>.
             const bodySlot = slots[EntityCollectionSlotName.BODY];
+
             if (bodySlot) {
                 children.push(bodySlot(slotProps()));
             } else {
                 children.push(h(VCListBody, {}, () => {
                     const renderLoadingBand = (overlay: boolean) => {
-                        if (renderOptions.loading === false) return null;
+                        if (renderOptions.loading === false) {
+                            return null;
+                        }
+
                         const slot = slots[EntityCollectionSlotName.LOADING];
-                        if (slot) return slot(undefined);
+
+                        if (slot) {
+                            return slot(undefined);
+                        }
+
                         if (loadingOpt?.content) {
                             return h(loadingOpt.tag ?? 'div', { class: 'vc-list-loading' }, loadingOpt.content);
                         }
+
                         return h(VCListLoading, { overlay });
                     };
 
@@ -719,12 +756,14 @@ function create<
                             updated: (next: RECORD) => updated(next),
                             deleted: (next: RECORD) => deleted(next),
                         };
+
                         return h(VCListItem, { key: item.id ?? index }, () => {
                             const itemSlot = slots[EntityCollectionSlotName.ITEM];
                             const itemActionsSlot = slots[EntityCollectionSlotName.ITEM_ACTIONS];
                             const itemActionsExtraSlot = slots[EntityCollectionSlotName.ITEM_ACTIONS_EXTRA];
 
                             let body: VNodeChild;
+
                             if (itemSlot) {
                                 body = itemSlot(itemSlotProps);
                             } else if (itemOpt?.content) {
@@ -735,8 +774,10 @@ function create<
                                 const name = hasOwnProperty(item, 'name') && typeof item.name === 'string' ?
                                     item.name :
                                     undefined;
+
                                 if (name) {
                                     const label = translateEntityName(context.type, item as EntityNamed);
+
                                     body = label === name ?
                                         h('span', name) :
                                         h('span', [label, h('small', { class: 'block text-fg-muted' }, name)]);
@@ -762,12 +803,15 @@ function create<
                             // the right — matches every junction picker
                             // (client/user/policy roles) consumer.
                             const actionsNodes: VNodeChild[] = [];
+
                             if (itemActionsSlot) {
                                 actionsNodes.push(itemActionsSlot(itemSlotProps));
                             }
+
                             if (itemActionsExtraSlot) {
                                 actionsNodes.push(itemActionsExtraSlot(itemSlotProps));
                             }
+
                             return [
                                 body,
                                 h(
@@ -782,6 +826,7 @@ function create<
                     if (busy.value) {
                         return [rows, renderLoadingBand(true)];
                     }
+
                     return rows;
                 }));
             }
@@ -804,13 +849,19 @@ function create<
                 total.value === 0
             ) {
                 const noMoreVNode = renderChrome(EntityCollectionSlotName.NO_MORE, noMoreOpt, 'vc-list-no-more', false);
-                if (noMoreVNode) children.push(noMoreVNode);
+
+                if (noMoreVNode) {
+                    children.push(noMoreVNode);
+                }
             }
 
             const footerVNode = renderOptions.footer !== false ?
                 renderChrome(EntityCollectionSlotName.FOOTER, footerOpt, 'vc-list-footer') :
                 null;
-            if (footerVNode) children.push(footerVNode);
+
+            if (footerVNode) {
+                children.push(footerVNode);
+            }
 
             return h(Fragment, children);
         });

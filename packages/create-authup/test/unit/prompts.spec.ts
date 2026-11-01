@@ -11,18 +11,21 @@ import { collectAnswers } from '../../src/prompts.ts';
 
 // Answers are consumed in order; '' takes the prompt's fallback, the way readline's empty line does.
 function createScriptedAsk(script: string[]): {
-    ask: Ask, 
-    questions: string[], 
-    secrets: string[] 
+    ask: Ask,
+    questions: string[],
+    secrets: string[]
 } {
     const questions: string[] = [];
     const secrets: string[] = [];
     const ask: Ask = async (question, fallback, options) => {
         questions.push(question);
+
         if (options?.secret) {
             secrets.push(question);
         }
+
         const answer = script.shift();
+
         if (answer === undefined) {
             throw new Error(`No scripted answer left for: ${question}`);
         }
@@ -31,9 +34,9 @@ function createScriptedAsk(script: string[]): {
     };
 
     return {
-        ask, 
-        questions, 
-        secrets, 
+        ask,
+        questions,
+        secrets,
     };
 }
 
@@ -80,7 +83,9 @@ describe('collectAnswers', () => {
 
     it('should refuse start123 and the empty string as admin password', async () => {
         const script = [...COMPOSE_DEFAULTS];
+
         script.splice(7, 1, 'start123', '', 'real-secret');
+
         const { ask, questions } = createScriptedAsk(script);
 
         const { answers } = await collectAnswers(ask);
@@ -92,7 +97,9 @@ describe('collectAnswers', () => {
 
     it('should re-ask an invalid public url', async () => {
         const script = [...COMPOSE_DEFAULTS];
+
         script.splice(1, 1, 'not a url', 'ftp://auth.example.com', URL);
+
         const { ask, questions } = createScriptedAsk(script);
 
         const { answers } = await collectAnswers(ask);
@@ -103,7 +110,9 @@ describe('collectAnswers', () => {
 
     it('should not offer sqlite for compose', async () => {
         const script = [...COMPOSE_DEFAULTS];
+
         script.splice(2, 1, '3', 'sqlite', '');
+
         const { ask, questions } = createScriptedAsk(script);
 
         const { answers } = await collectAnswers(ask);
@@ -131,7 +140,9 @@ describe('collectAnswers', () => {
 
     it('should force redis on for a worker split and say why', async () => {
         const script = [...COMPOSE_DEFAULTS];
+
         script.splice(8, 3, 'y', '');
+
         const { ask, questions } = createScriptedAsk(script);
 
         const { answers, notes } = await collectAnswers(ask);
@@ -146,18 +157,18 @@ describe('collectAnswers', () => {
     it('should never ask the split questions for docker and take the external database from the prompts', async () => {
         // target, url, database, host, port (invalid, then valid), username, password, name, registration, recovery, admin, redis
         const { ask, questions } = createScriptedAsk([
-            'docker', 
-            URL, 
-            'mysql', 
-            'db.internal', 
-            '70000', 
-            '3307', 
-            '', 
-            'db-secret', 
-            '', 
-            '', 
-            '', 
-            'admin-secret', 
+            'docker',
+            URL,
+            'mysql',
+            'db.internal',
+            '70000',
+            '3307',
+            '',
+            'db-secret',
+            '',
+            '',
+            '',
+            'admin-secret',
             '',
         ]);
 
@@ -183,8 +194,10 @@ describe('collectAnswers', () => {
 
     it('should require an smtp url once registration is on and refuse an http one', async () => {
         const script = [...COMPOSE_DEFAULTS];
+
         // registration, recovery, smtp url (refused, then accepted), email verification
         script.splice(5, 2, 'y', '', 'http://mail.example.com', 'smtp://u:p@mail:587', '');
+
         const { ask, questions } = createScriptedAsk(script);
 
         const { answers } = await collectAnswers(ask);
@@ -203,14 +216,14 @@ describe('collectAnswers', () => {
             'https://auth.example.com/auth',
             'https://auth.example.com',
             '',
-            '', 
-            '', 
-            'db-secret', 
-            '', 
-            '', 
-            'admin-secret', 
-            '', 
-            '', 
+            '',
+            '',
+            'db-secret',
+            '',
+            '',
+            'admin-secret',
+            '',
+            '',
             '',
         ]);
 
@@ -223,7 +236,9 @@ describe('collectAnswers', () => {
 
     it('should accept a sub-path public url for compose', async () => {
         const script = [...COMPOSE_DEFAULTS];
+
         script[1] = 'https://example.com/auth';
+
         const { ask } = createScriptedAsk(script);
 
         const { answers } = await collectAnswers(ask);
@@ -233,7 +248,9 @@ describe('collectAnswers', () => {
 
     it('should bound the admin password to the registry limits and keep its whitespace', async () => {
         const script = [...COMPOSE_DEFAULTS];
+
         script.splice(7, 1, 'ab', 'a'.repeat(257), 'it\'s p\\nass', ' spaced secret ');
+
         const { ask, questions } = createScriptedAsk(script);
 
         const { answers } = await collectAnswers(ask);
@@ -245,18 +262,18 @@ describe('collectAnswers', () => {
     it('should require a database host for a container target instead of prefilling the loopback', async () => {
         // target, url, database, host (blank refused, then given), port, username, password, name, registration, recovery, admin, redis
         const { ask, questions } = createScriptedAsk([
-            'docker', 
-            URL, 
-            'postgres', 
-            '', 
-            'db.internal', 
-            '', 
-            '', 
-            'db-secret', 
-            '', 
-            '', 
-            '', 
-            'admin-secret', 
+            'docker',
+            URL,
+            'postgres',
+            '',
+            'db.internal',
+            '',
+            '',
+            'db-secret',
+            '',
+            '',
+            '',
+            'admin-secret',
             '',
         ]);
 
@@ -271,11 +288,13 @@ describe('collectAnswers', () => {
         // target, url, database, bundled, db password, registration, recovery, smtp url, email verification, admin, worker, console, redis
         const on = createScriptedAsk(['', URL, '', '', 'db-secret', 'y', '', 'smtp://u:p@mail:587', '', 'admin-secret', '', '', '']);
         const { answers } = await collectAnswers(on.ask);
+
         expect(answers.emailVerificationEnabled).toEqual(true);
         expect(countAsked(on.questions, 'Verify email')).toEqual(1);
 
         const off = createScriptedAsk([...COMPOSE_DEFAULTS]);
         const result = await collectAnswers(off.ask);
+
         expect(result.answers.emailVerificationEnabled).toEqual(false);
         expect(countAsked(off.questions, 'Verify email')).toEqual(0);
     });
@@ -284,14 +303,17 @@ describe('collectAnswers', () => {
         // target, url, cert-manager, database, bundled, db password, registration, recovery, admin, worker, console, redis
         const helm = createScriptedAsk(['helm', URL, 'y', '', '', 'db-secret', '', '', 'admin-secret', '', '', '']);
         const { answers } = await collectAnswers(helm.ask);
+
         expect(answers.tlsCertManager).toEqual(true);
         expect(countAsked(helm.questions, 'cert-manager')).toEqual(1);
 
         const plain = createScriptedAsk(['helm', 'http://auth.example.com', '', '', 'db-secret', '', '', 'admin-secret', '', '', '']);
+
         expect((await collectAnswers(plain.ask)).answers.tlsCertManager).toEqual(false);
         expect(countAsked(plain.questions, 'cert-manager')).toEqual(0);
 
         const compose = createScriptedAsk([...COMPOSE_DEFAULTS]);
+
         await collectAnswers(compose.ask);
         expect(countAsked(compose.questions, 'cert-manager')).toEqual(0);
     });

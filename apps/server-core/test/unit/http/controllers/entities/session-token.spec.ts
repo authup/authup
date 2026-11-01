@@ -30,7 +30,8 @@ const REDIRECT_URI = 'https://example.com/redirect';
 
 function decodeJwtPayload(token: string): Record<string, any> {
     const [, payload] = token.split('.');
-    return JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+
+    return JSON.parse(new TextDecoder().decode(Uint8Array.fromBase64(payload, { alphabet: 'base64url' })));
 }
 
 describe('src/http/controllers/session-token', () => {
@@ -54,6 +55,7 @@ describe('src/http/controllers/session-token', () => {
         }));
 
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: client.id,
@@ -98,6 +100,7 @@ describe('src/http/controllers/session-token', () => {
         });
 
         const bearer = new HTTPClient({ baseURL: suite.baseURL });
+
         bearer.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
 
         const sessionId = decodeJwtPayload(login.access_token).session_id!;
@@ -117,13 +120,13 @@ describe('src/http/controllers/session-token', () => {
         };
     }
 
-    const admin = { Authorization: `Basic ${Buffer.from('admin:start123').toString('base64')}` };
+    const admin = { Authorization: `Basic ${Buffer.from('admin:start123').toBase64()}` };
 
     it('lists the tokens of a session, one row per application', async () => {
         const {
-            sessionId, 
-            firstApp, 
-            secondApp, 
+            sessionId,
+            firstApp,
+            secondApp,
         } = await buildTwoAppSession();
 
         const response = await httpRequest(
@@ -132,6 +135,7 @@ describe('src/http/controllers/session-token', () => {
             `/session-tokens?filter[sessionId]=${sessionId}`,
             { headers: admin },
         );
+
         expect(response.status).toEqual(200);
 
         const body = await response.json();
@@ -152,6 +156,7 @@ describe('src/http/controllers/session-token', () => {
             `/session-tokens?filter[sessionId]=${sessionId}&include=client`,
             { headers: admin },
         );
+
         expect(response.status).toEqual(200);
 
         const body = await response.json();
@@ -173,9 +178,9 @@ describe('src/http/controllers/session-token', () => {
         // without CLIENT_READ cannot include the client relation, so the
         // summary has to ride the row unconditionally.
         const {
-            sessionId, 
-            firstApp, 
-            firstGrant, 
+            sessionId,
+            firstApp,
+            firstGrant,
         } = await buildTwoAppSession();
 
         const response = await httpRequest(
@@ -184,6 +189,7 @@ describe('src/http/controllers/session-token', () => {
             `/session-tokens?filter[sessionId]=${sessionId}`,
             { headers: { Authorization: `Bearer ${firstGrant.access_token}` } },
         );
+
         expect(response.status).toEqual(200);
 
         const body = await response.json();
@@ -207,9 +213,11 @@ describe('src/http/controllers/session-token', () => {
             `/session-tokens?filter[clientId]=${secondApp.id}`,
             { headers: admin },
         );
+
         expect(response.status).toEqual(200);
 
         const body = await response.json();
+
         expect(body.data.map((row: any) => row.sessionId)).toContain(sessionId);
     });
 
@@ -230,6 +238,7 @@ describe('src/http/controllers/session-token', () => {
             `/session-tokens?filter[sessionId]=${sessionId}&filter[clientId]=${secondApp.id}`,
             { headers: admin },
         );
+
         expect(response.status).toEqual(202);
         expect((await response.json()).count).toBeGreaterThanOrEqual(1);
 
@@ -248,6 +257,7 @@ describe('src/http/controllers/session-token', () => {
         // The session itself survives, which is the whole point: revoking one
         // application must not sign the user out of the others.
         const session = await suite.client.session.getOne(sessionId);
+
         expect(session.data.id).toEqual(sessionId);
 
         // The untouched application can still refresh: the session and its
@@ -257,6 +267,7 @@ describe('src/http/controllers/session-token', () => {
             client_id: firstApp.id,
             client_secret: firstSecret,
         });
+
         expect(typeof refreshed.access_token).toEqual('string');
 
         // The revoked one cannot. The row is the authority for refresh
@@ -284,9 +295,11 @@ describe('src/http/controllers/session-token', () => {
 
         const mySessionId = decodeJwtPayload(myLogin.access_token).session_id!;
         const otherSessionId = decodeJwtPayload(otherLogin.access_token).session_id!;
+
         expect(mySessionId).not.toEqual(otherSessionId);
 
         const response = await httpRequest(suite, 'GET', '/session-tokens', { headers: { Authorization: `Bearer ${myLogin.access_token}` } });
+
         expect(response.status).toEqual(200);
 
         const body = await response.json();
@@ -322,7 +335,9 @@ describe('src/http/controllers/session-token', () => {
         const rows = await suite.dataSource
             .getRepository(SessionTokenEntity)
             .find({ where: { sessionId: otherSessionId } });
+
         expect(rows.length).toBeGreaterThan(0);
+
         for (const row of rows) {
             expect(row.revokedAt).toBeNull();
         }
@@ -342,7 +357,9 @@ describe('src/http/controllers/session-token', () => {
         );
 
         expect(response.status).toEqual(200);
+
         const body = await response.json();
+
         expect(body.data.length).toBeGreaterThan(0);
     });
 
@@ -384,11 +401,13 @@ describe('src/http/controllers/session-token', () => {
             `/session-tokens?filter[sessionId]=${sessionId}&filter[foobar]=x`,
             { headers: admin },
         );
+
         expect(response.status).toEqual(400);
 
         const untouched = await suite.dataSource
             .getRepository(SessionTokenEntity)
             .find({ where: { sessionId } });
+
         expect(untouched.length).toBeGreaterThan(0);
         expect(untouched.every((row) => row.revokedAt === null)).toBe(true);
     });
@@ -423,13 +442,16 @@ describe('src/http/controllers/session-token', () => {
         const { sessionId } = await buildTwoAppSession();
 
         const response = await httpRequest(suite, 'DELETE', `/session-tokens?${query}`, { headers: admin });
+
         expect(response.status).toBeGreaterThanOrEqual(400);
         expect(response.status).toBeLessThan(500);
 
         const rows = await suite.dataSource
             .getRepository(SessionTokenEntity)
             .find({ where: { sessionId } });
+
         expect(rows.length).toBeGreaterThan(0);
+
         for (const row of rows) {
             expect(row.revokedAt).toBeNull();
         }
@@ -467,6 +489,7 @@ describe('src/http/controllers/session-token', () => {
             `/session-tokens?filter[sessionId]=${sessionId}&filter[session.realmId]=${session.realmId}`,
             { headers: admin },
         );
+
         expect(matching.status).toEqual(200);
         expect((await matching.json()).data.length).toBeGreaterThan(0);
 
@@ -477,6 +500,7 @@ describe('src/http/controllers/session-token', () => {
             `/session-tokens?filter[sessionId]=${sessionId}&filter[session.realmId]=${foreignRealm}`,
             { headers: admin },
         );
+
         expect(excluded.status).toEqual(200);
         expect((await excluded.json()).data).toHaveLength(0);
     });
@@ -486,6 +510,7 @@ describe('src/http/controllers/session-token', () => {
         const { jti } = decodeJwtPayload(secondGrant.access_token);
 
         const response = await httpRequest(suite, 'DELETE', `/session-tokens/${jti}`, { headers: admin });
+
         expect(response.status).toEqual(202);
 
         // The response body must reflect the revoke it just performed, not the
@@ -495,6 +520,7 @@ describe('src/http/controllers/session-token', () => {
         const row = await suite.dataSource
             .getRepository(SessionTokenEntity)
             .findOne({ where: { id: jti } });
+
         expect(row!.revokedAt).not.toBeNull();
     });
 });

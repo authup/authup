@@ -28,7 +28,7 @@ import { createTestApplication } from '../../../../app';
 
 // base64url-safe JWT payload decode (atob chokes on -/_).
 function decodeJwtPayload(token: string): Record<string, any> {
-    return JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf8'));
+    return JSON.parse(new TextDecoder().decode(Uint8Array.fromBase64(token.split('.')[1], { alphabet: 'base64url' })));
 }
 
 // A dependency-free OIDC conformance smoke: the discovery document must be
@@ -47,6 +47,7 @@ describe('OIDC conformance smoke', () => {
         await suite.setup();
 
         const response = await fetch(`${suite.baseURL}/realms/${REALM_MASTER_NAME}/.well-known/openid-configuration`);
+
         discovery = await response.json();
     });
 
@@ -63,6 +64,7 @@ describe('OIDC conformance smoke', () => {
             'jwks_uri',
             'userinfo_endpoint',
         ];
+
         for (const field of requiredStringFields) {
             expect(typeof discovery[field], field).toEqual('string');
             expect(discovery[field].length, field).toBeGreaterThan(0);
@@ -73,6 +75,7 @@ describe('OIDC conformance smoke', () => {
             'subject_types_supported',
             'id_token_signing_alg_values_supported',
         ];
+
         for (const field of requiredArrayFields) {
             expect(Array.isArray(discovery[field]), field).toBe(true);
             expect(discovery[field].length, field).toBeGreaterThan(0);
@@ -111,6 +114,7 @@ describe('OIDC conformance smoke', () => {
 
         // endpoints share the issuer origin
         const issuerOrigin = new URL(discovery.issuer).origin;
+
         expect(new URL(discovery.authorization_endpoint).origin).toEqual(issuerOrigin);
         expect(new URL(discovery.jwks_uri).origin).toEqual(issuerOrigin);
     });
@@ -121,6 +125,7 @@ describe('OIDC conformance smoke', () => {
         // key set is empty and the assertions below would be vacuous.
         const password = generateOAuth2CodeVerifier();
         const { data: signer } = await suite.client.user.create(createFakeUser({ password }));
+
         await suite.client.token.createWithPassword({ username: signer.name, password });
 
         // discovery endpoints are built from publicUrl (not the random test
@@ -130,6 +135,7 @@ describe('OIDC conformance smoke', () => {
 
         expect(Array.isArray(body.keys)).toBe(true);
         expect(body.keys.length).toBeGreaterThan(0);
+
         for (const key of body.keys) {
             expect(typeof key.kty, 'kty').toEqual('string');
             expect(key.kty.length, 'kty').toBeGreaterThan(0);
@@ -144,8 +150,10 @@ describe('OIDC conformance smoke', () => {
             secret: null,
             redirectUri: 'https://app.example.com/**',
         }));
+
         for (const scopeName of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {
             const { data: scope } = await suite.client.scope.getOne(scopeName);
+
             await suite.client.clientScope.create({ scopeId: scope.id, clientId: client.id });
         }
 
@@ -154,6 +162,7 @@ describe('OIDC conformance smoke', () => {
 
         const login = await suite.client.token.createWithPassword({ username: user.name, password });
         const userClient = new HTTPClient({ baseURL: suite.baseURL });
+
         userClient.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
 
         const codeVerifier = generateOAuth2CodeVerifier();
@@ -179,6 +188,7 @@ describe('OIDC conformance smoke', () => {
         });
 
         expect(tokens.id_token).toBeDefined();
+
         const payload: OAuth2TokenPayload = decodeJwtPayload(tokens.id_token!);
 
         // OIDC Core §2 REQUIRED id_token claims
@@ -201,8 +211,11 @@ describe('OIDC conformance smoke', () => {
         // the co-issued access token is signature-valid (works on a protected
         // endpoint) — proving the realm signing key behind the id_token is sound
         const meClient = new HTTPClient({ baseURL: suite.baseURL });
+
         meClient.setAuthorizationHeader({ type: 'Bearer', token: tokens.access_token });
+
         const me = await meClient.userInfo.get();
+
         expect(me).toBeDefined();
     });
 });

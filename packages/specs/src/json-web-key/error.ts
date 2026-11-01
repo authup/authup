@@ -13,6 +13,7 @@ export const JWK_ERROR_INSTANCE = Symbol.for('@authup/specs/JWKError');
 export class JWKError extends AuthupError {
     constructor(input?: AuthupErrorInput) {
         const options: AuthupErrorOptions = typeof input === 'string' ? { message: input } : (input ?? {});
+
         super({
             code: ErrorCode.JWK_INVALID,
             message: 'The JWK is invalid.',
@@ -58,6 +59,7 @@ export class JWKError extends AuthupError {
 
     static notFoundForRealm(id: string, name?: string) {
         let key: string;
+
         if (name) {
             key = `${name} (${id})`;
         } else {

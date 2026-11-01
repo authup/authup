@@ -62,8 +62,10 @@ async function main(): Promise<void> {
         },
         allowPositionals: false,
     });
+
     if (values.help) {
         console.log(USAGE);
+
         return;
     }
 
@@ -72,11 +74,13 @@ async function main(): Promise<void> {
 
     const { ask, close } = createReadlineAsk();
     let collected: Awaited<ReturnType<typeof collectAnswers>>;
+
     try {
         collected = await collectAnswers(ask);
     } finally {
         close();
     }
+
     const { answers, notes } = collected;
 
     const rendered = RENDERERS[answers.target](answers, VERSION);
@@ -88,12 +92,14 @@ async function main(): Promise<void> {
             return false;
         }
     });
+
     if (directories.length > 0) {
         console.error(`Cannot write over a directory: ${directories.join(', ')}.`);
         process.exit(1);
     }
 
     const existing = files.filter((name) => fs.existsSync(path.join(process.cwd(), name)));
+
     if (existing.length > 0 && !values.force) {
         console.error(`Refusing to overwrite: ${existing.join(', ')}. Re-run with --force.`);
         process.exit(1);
@@ -102,7 +108,9 @@ async function main(): Promise<void> {
     for (const name of files) {
         const target = path.join(process.cwd(), name);
         const secret = SECRET_FILES.has(name);
+
         fs.writeFileSync(target, rendered[name], secret ? { encoding: 'utf8', mode: 0o600 } : 'utf8');
+
         if (secret) {
             // writeFileSync's mode applies to a file it creates, so an overwrite keeps whatever the old one had
             fs.chmodSync(target, 0o600);
@@ -112,16 +120,19 @@ async function main(): Promise<void> {
     for (const note of notes) {
         console.log(note);
     }
+
     console.log(`Written: ${files.join(', ')}`);
     console.log('Next steps:');
+
     for (const step of nextSteps(answers)) {
         console.log(`  ${step}`);
     }
+
     console.log(`Docs: ${DOCS_URL}`);
 }
 
 main().catch((e) => {
-    console.error(e instanceof Error ? e.message : String(e));
+    console.error(Error.isError(e) ? e.message : String(e));
     process.exit(1);
 });
 

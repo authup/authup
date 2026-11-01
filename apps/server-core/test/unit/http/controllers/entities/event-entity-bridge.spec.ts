@@ -31,7 +31,7 @@ import {
 } from '../../../../utils';
 
 const SECRET_KEY_REGEX = /(password|secret|hash|token|credential)/i;
-const ADMIN_AUTHORIZATION = `Basic ${Buffer.from('admin:start123').toString('base64')}`;
+const ADMIN_AUTHORIZATION = `Basic ${Buffer.from('admin:start123').toBase64()}`;
 
 /**
  * End-to-end coverage for the entity-CRUD audit bridge (plan 057 Stage 2):
@@ -52,13 +52,16 @@ describe('event (entity-CRUD bridge)', () => {
         // Another spec on the shared database may create an `admin` in a
         // foreign realm, so the lookup is scoped to the master realm.
         const { data: master } = await suite.client.realm.getOne(REALM_MASTER_NAME);
+
         masterRealmId = master.id;
+
         const { data } = await suite.client.user.getMany({
             filters: {
                 name: 'admin',
                 realmId: master.id,
             },
         });
+
         expect(data).toHaveLength(1);
         adminUserId = data[0].id;
     });
@@ -79,7 +82,9 @@ describe('event (entity-CRUD bridge)', () => {
         });
 
         expect(data).toHaveLength(1);
+
         const [row] = data;
+
         expect(row.refType).toEqual('role');
         expect(row.refId).toEqual(role.id);
         expect(row.actorType).toEqual('user');
@@ -95,6 +100,7 @@ describe('event (entity-CRUD bridge)', () => {
 
     it('records an updated row with a next/previous scalar diff', async () => {
         const { data: role } = await suite.client.role.create(createFakeRole({ description: 'before' }));
+
         await suite.client.role.update(role.id, { description: 'after' });
 
         const { data } = await suite.client.event.getMany({
@@ -106,7 +112,9 @@ describe('event (entity-CRUD bridge)', () => {
         });
 
         expect(data).toHaveLength(1);
+
         const [row] = data;
+
         expect(row.refType).toEqual('role');
         expect(row.data).toBeDefined();
         expect(row.data!.diff.description).toEqual({
@@ -127,6 +135,7 @@ describe('event (entity-CRUD bridge)', () => {
             secretHashed: false,
             secretEncrypted: false,
         });
+
         await suite.client.client.update(client.id, { secret: nextSecret });
 
         const { data } = await suite.client.event.getMany({
@@ -138,12 +147,15 @@ describe('event (entity-CRUD bridge)', () => {
         });
 
         expect(data.length).toBeGreaterThanOrEqual(1);
+
         for (const row of data) {
             const serialized = JSON.stringify(row.data ?? {});
+
             expect(serialized).not.toContain(secret);
             expect(serialized).not.toContain(nextSecret);
 
             const diffKeys = Object.keys(row.data?.diff ?? {});
+
             expect(diffKeys.filter((key) => SECRET_KEY_REGEX.test(key))).toHaveLength(0);
         }
     });
@@ -153,6 +165,7 @@ describe('event (entity-CRUD bridge)', () => {
         const { data: user } = await suite.client.user.create(createFakeUser({ password }));
 
         const { data: permission } = await suite.client.permission.getOne(PermissionName.ROLE_CREATE);
+
         await suite.client.userPermission.create({
             userId: user.id,
             permissionId: permission.id,
@@ -163,6 +176,7 @@ describe('event (entity-CRUD bridge)', () => {
             password,
         });
         const actor = new HTTPClient({ baseURL: suite.baseURL });
+
         actor.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
 
         const { data: role } = await actor.role.create(createFakeRole({ realmId: user.realmId }));
@@ -174,8 +188,11 @@ describe('event (entity-CRUD bridge)', () => {
                 actorId: user.id,
             },
         });
+
         expect(login.data).toHaveLength(1);
+
         const { sessionId } = login.data[0];
+
         expect(sessionId).toBeTruthy();
         expect(sessionId).toEqual(login.data[0].refId);
 
@@ -196,6 +213,7 @@ describe('event (entity-CRUD bridge)', () => {
 
     it('records a deleted row for an entity delete', async () => {
         const { data: role } = await suite.client.role.create(createFakeRole());
+
         await suite.client.role.delete(role.id);
 
         const { data } = await suite.client.event.getMany({
@@ -232,6 +250,7 @@ describe('event (entity-CRUD bridge)', () => {
             secretEncrypted: false,
         });
         const { data: permission } = await suite.client.permission.getOne(PermissionName.EVENT_READ);
+
         await suite.client.clientPermission.create({
             clientId: actorClient.id,
             permissionId: permission.id,
@@ -242,6 +261,7 @@ describe('event (entity-CRUD bridge)', () => {
             client_secret: actorSecret,
         });
         const actor = new HTTPClient({ baseURL: suite.baseURL });
+
         actor.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
 
         // control: the own-realm entity row IS visible
@@ -252,6 +272,7 @@ describe('event (entity-CRUD bridge)', () => {
                 refId: ownRole.id,
             },
         });
+
         expect(own.data.some((row) => row.refId === ownRole.id)).toBe(true);
 
         // the foreign-realm entity row must NOT appear
@@ -262,6 +283,7 @@ describe('event (entity-CRUD bridge)', () => {
                 refId: foreignRole.id,
             },
         });
+
         expect(foreign.data.some((row) => row.refId === foreignRole.id)).toBe(false);
     });
 
@@ -283,6 +305,7 @@ describe('event (entity-CRUD bridge)', () => {
                 refId: binding.id,
             },
         });
+
         expect(recorded.data).toHaveLength(1);
         expect(recorded.data[0].refType).toEqual('rolePermission');
         expect(recorded.data[0].realmId).toEqual(realmB.id);
@@ -294,8 +317,11 @@ describe('event (entity-CRUD bridge)', () => {
             `/realms/master/events${query}`,
             { headers: { Authorization: ADMIN_AUTHORIZATION } },
         );
+
         expect(ownRouteResponse.status).toEqual(200);
+
         const ownRouteBody = await ownRouteResponse.json() as { data: Event[] };
+
         expect(ownRouteBody.data).toHaveLength(0);
 
         const foreignRouteResponse = await httpRequest(
@@ -304,8 +330,11 @@ describe('event (entity-CRUD bridge)', () => {
             `/realms/${realmB.id}/events${query}`,
             { headers: { Authorization: ADMIN_AUTHORIZATION } },
         );
+
         expect(foreignRouteResponse.status).toEqual(200);
+
         const foreignRouteBody = await foreignRouteResponse.json() as { data: Event[] };
+
         expect(foreignRouteBody.data.map((row) => row.id)).toEqual([recorded.data[0].id]);
 
         const wrongRouteRecord = await httpRequest(
@@ -314,6 +343,7 @@ describe('event (entity-CRUD bridge)', () => {
             `/realms/master/events/${recorded.data[0].id}`,
             { headers: { Authorization: ADMIN_AUTHORIZATION } },
         );
+
         expect(wrongRouteRecord.status).toEqual(404);
 
         const actorSecret = 'bridge-own-or-null-actor-secret';
@@ -326,6 +356,7 @@ describe('event (entity-CRUD bridge)', () => {
             secretEncrypted: false,
         });
         const { data: eventRead } = await suite.client.permission.getOne(PermissionName.EVENT_READ);
+
         await suite.client.clientPermission.create({
             clientId: actorClient.id,
             permissionId: eventRead.id,
@@ -337,9 +368,11 @@ describe('event (entity-CRUD bridge)', () => {
             client_secret: actorSecret,
         });
         const actor = new HTTPClient({ baseURL: suite.baseURL });
+
         actor.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
 
         const foreign = await actor.event.getMany({ filters: { id: recorded.data[0].id } });
+
         expect(foreign.data).toHaveLength(0);
         expect(foreign.meta.total).toEqual(0);
 
@@ -347,6 +380,7 @@ describe('event (entity-CRUD bridge)', () => {
             filters: { id: recorded.data[0].id },
             pagination: { limit: 1, offset: 1 },
         });
+
         expect(foreignBeyondPage.data).toHaveLength(0);
         expect(foreignBeyondPage.meta.total).toEqual(0);
     });

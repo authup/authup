@@ -39,7 +39,7 @@ The [`authup`](https://github.com/authup/authup/tree/master/apps/authup) CLI dep
 npm install @authup/server-admin-console
 ```
 
-Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`. The package is ESM-only and ships the `authup-admin-console` binary. `@authup/client-admin-console` comes with it as a dependency.
+Node.js `>=26.0.0`. The package is ESM-only and ships the `authup-admin-console` binary. `@authup/client-admin-console` comes with it as a dependency.
 
 ## Usage
 

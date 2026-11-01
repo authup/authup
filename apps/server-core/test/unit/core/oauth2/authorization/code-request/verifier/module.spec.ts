@@ -62,7 +62,9 @@ class FakeClientRepository implements IOAuth2ClientRepository {
             path: null,
             ...client,
         };
+
         this.clients.push(entity);
+
         return entity;
     }
 
@@ -121,6 +123,7 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
                 authMethod: 'secret',
                 tokenBindingMethod: 'none',
             });
+
             await expect(
                 verifier.verify({
                     client_id: client.id,
@@ -132,6 +135,7 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
 
         it('should reject public clients without PKCE for the code flow', async () => {
             const client = clientRepository.seed({ authMethod: 'none', tokenBindingMethod: 'none' });
+
             await expect(
                 verifier.verify({
                     client_id: client.id,
@@ -143,6 +147,7 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
 
         it('should reject public clients without state for the code flow', async () => {
             const client = clientRepository.seed({ authMethod: 'none', tokenBindingMethod: 'none' });
+
             await expect(
                 verifier.verify({
                     client_id: client.id,
@@ -160,6 +165,7 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
                 code_challenge: 'challenge',
                 state: 's',
             });
+
             expect(result.client.id).toBe(client.id);
         });
 
@@ -169,11 +175,13 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
                 client_id: client.id,
                 response_type: OAuth2AuthorizationResponseType.CODE,
             });
+
             expect(result.client.id).toBe(client.id);
         });
 
         it('should require PKCE for public clients regardless of response_type (code-only pipeline)', async () => {
             const client = clientRepository.seed({ authMethod: 'none', tokenBindingMethod: 'none' });
+
             await expect(verifier.verify({
                 client_id: client.id,
                 response_type: OAuth2AuthorizationResponseType.TOKEN,
@@ -186,6 +194,7 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
                 tokenBindingMethod: 'none',
                 grantTypes: 'client_credentials',
             });
+
             await expect(
                 verifier.verify({
                     client_id: client.id,
@@ -204,6 +213,7 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
                 client_id: client.id,
                 response_type: OAuth2AuthorizationResponseType.CODE,
             });
+
             expect(result.client.id).toBe(client.id);
         });
 
@@ -217,6 +227,7 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
                 client_id: client.id,
                 response_type: OAuth2AuthorizationResponseType.CODE,
             });
+
             expect(result.client.id).toBe(client.id);
         });
 
@@ -229,6 +240,7 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
                 tokenBindingMethod: 'none',
                 redirectUri: null,
             });
+
             await expect(
                 verifier.verify({
                     client_id: client.id,
@@ -246,6 +258,7 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
                 tokenBindingMethod: 'none',
                 redirectUri: null,
             });
+
             await expect(
                 verifier.verify({
                     client_id: client.id,
@@ -262,6 +275,7 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
                 client_id: client.id,
                 response_type: OAuth2AuthorizationResponseType.CODE,
             });
+
             expect(result.client.id).toBe(client.id);
             expect(result.redirectUriVerified).toBe(false);
         });
@@ -277,6 +291,7 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
                 response_type: OAuth2AuthorizationResponseType.CODE,
                 redirect_uri: 'https://app.example.com/callback',
             });
+
             expect(result.redirectUriVerified).toBe(true);
         });
 
@@ -291,6 +306,7 @@ describe('OAuth2AuthorizationCodeRequestVerifier', () => {
                 response_type: OAuth2AuthorizationResponseType.CODE,
                 redirect_uri: 'https://app.example.com/callback',
             });
+
             expect(result.redirectUriVerified).toBe(true);
         });
 

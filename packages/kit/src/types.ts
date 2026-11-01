@@ -8,10 +8,10 @@
 export type ObjectLiteral = Record<string | number, any>;
 export type Result<T> = {
     success: true;
-    data: T 
+    data: T
 } | {
     success: false;
-    error: Error 
+    error: Error
 };
 
 export type ObjectRequired<

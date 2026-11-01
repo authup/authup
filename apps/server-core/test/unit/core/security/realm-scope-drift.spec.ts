@@ -19,6 +19,7 @@ describe('realm-scope drift guard (core-kit REALM_SCOPE <-> access RealmScope)',
     it('the two value sets agree', () => {
         const coreKit = Object.values(REALM_SCOPE).sort();
         const access = Object.values(RealmScope).sort();
+
         expect(coreKit).toEqual(access);
     });
 });

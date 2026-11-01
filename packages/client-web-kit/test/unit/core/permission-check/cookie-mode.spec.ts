@@ -60,9 +60,11 @@ describe('core/permission-check (cookie mode)', () => {
         const store = buildStore();
 
         let outcome!: Ref<boolean>;
+
         mount(defineComponent({
             setup() {
                 const checker = createPermissionCheckerReactiveFn({ store });
+
                 outcome = checker({ name: 'user_read' });
 
                 return () => h('div');
@@ -88,9 +90,11 @@ describe('core/permission-check (cookie mode)', () => {
 
         let owned!: Ref<boolean>;
         let bare!: Ref<boolean>;
+
         mount(defineComponent({
             setup() {
                 const checker = createPermissionCheckerReactiveFn({ store });
+
                 owned = checker({ name: 'owned_read', realmId: AUTHORIZATION_REALM });
                 bare = checker({ name: 'owned_read' });
 

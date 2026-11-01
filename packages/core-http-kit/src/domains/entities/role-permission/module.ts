@@ -26,6 +26,7 @@ export class RolePermissionAPI extends BaseAPI implements IRolePermissionAPI {
 
     async getMany(data?: EntityQueryInput<RolePermission>) : Promise<EntityCollectionResponse<RolePermission>> {
         const response = await this.client.get(`role-permissions${buildQueryString(data)}`);
+
         return response.data;
     }
 

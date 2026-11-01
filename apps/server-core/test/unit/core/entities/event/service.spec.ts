@@ -30,11 +30,13 @@ const otherUserId = randomUUID();
 
 function makeActor(options: { allow: boolean, identity?: boolean } = { allow: true }): ActorContext {
     const evaluator = new FakePermissionEvaluator();
+
     if (!options.allow) {
         evaluator.denyAll();
     }
 
     const actor: ActorContext = { permissionEvaluator: evaluator };
+
     if (options.identity !== false) {
         actor.identity = {
             type: IdentityType.USER,
@@ -95,7 +97,9 @@ describe('EventService', () => {
             });
 
             expect(repository.rows).toHaveLength(1);
+
             const [row] = repository.rows;
+
             expect(row.id).toBeTypeOf('string');
             expect(row.id.length).toBeGreaterThan(0);
             expect(row.scope).toEqual(EventScope.OAUTH2);
@@ -152,16 +156,20 @@ describe('EventService', () => {
 
         it('stamps expires_at from the configured retention window', async () => {
             const retentionDays = 30;
+
             await buildService({ retentionDays }).record({
                 scope: EventScope.OAUTH2,
                 name: EventName.LOGIN,
             });
 
             const [row] = repository.rows;
+
             expect(row.expiring).toBeTruthy();
             expect(row.expiresAt).not.toBeNull();
+
             const delta = new Date(row.expiresAt!).getTime() -
                 (Date.now() + (retentionDays * DAY_IN_MS));
+
             expect(Math.abs(delta)).toBeLessThan(60_000);
         });
 
@@ -172,14 +180,18 @@ describe('EventService', () => {
             });
 
             const [row] = repository.rows;
+
             expect(row.expiresAt).not.toBeNull();
+
             const delta = new Date(row.expiresAt!).getTime() -
                 (Date.now() + (90 * DAY_IN_MS));
+
             expect(Math.abs(delta)).toBeLessThan(60_000);
         });
 
         it('honors a per-event retentionDays override for expiring/expires_at', async () => {
             const retentionDays = 7;
+
             await buildService({ retentionDays: 365 }).record({
                 scope: EventScope.ENTITY,
                 name: EventName.CREATED,
@@ -187,10 +199,13 @@ describe('EventService', () => {
             });
 
             const [row] = repository.rows;
+
             expect(row.expiring).toBeTruthy();
             expect(row.expiresAt).not.toBeNull();
+
             const delta = new Date(row.expiresAt!).getTime() -
                 (Date.now() + (retentionDays * DAY_IN_MS));
+
             expect(Math.abs(delta)).toBeLessThan(60_000);
         });
 
@@ -202,6 +217,7 @@ describe('EventService', () => {
             });
 
             const [row] = repository.rows;
+
             expect(row.expiring).toBeFalsy();
             expect(row.expiresAt).toBeNull();
         });
@@ -242,6 +258,7 @@ describe('EventService', () => {
         it('scopes an actor without event_read to its own rows', async () => {
             seedOwn();
             seedOwn();
+
             const foreign = seedForeign();
 
             const actor = makeActor({ allow: false });
@@ -254,6 +271,7 @@ describe('EventService', () => {
 
         it('rejects an anonymous (identity-less) actor without the read permission', async () => {
             const actor = makeActor({ allow: false, identity: false });
+
             await expect(service.getMany({}, actor)).rejects.toBeDefined();
         });
 
@@ -270,6 +288,7 @@ describe('EventService', () => {
 
         it('applies the route realm as a mandatory repository constraint', async () => {
             const ownRealm = seedForeign();
+
             seedForeign({ realmId: otherRealmId });
 
             const actor = makeActor({ allow: true });
@@ -281,6 +300,7 @@ describe('EventService', () => {
 
         it('combines the route realm with the self-service owner constraint', async () => {
             const ownRealm = seedOwn();
+
             seedOwn({ realmId: otherRealmId });
 
             const actor = makeActor({ allow: false });
@@ -293,15 +313,18 @@ describe('EventService', () => {
         it('applies actor realm reach before pagination', async () => {
             const ownRealm = seedForeign();
             const global = seedForeign({ realmId: null });
+
             seedForeign({ realmId: otherRealmId });
 
             const actor = makeActor({ allow: true });
+
             (actor.permissionEvaluator as FakePermissionEvaluator).setBehavior(({ method, ctx }) => {
                 if (method !== 'evaluate') {
                     return;
                 }
 
                 const resourceRealm = ctx.data?.get<string | null>(BuiltInPolicyType.REALM_MATCH);
+
                 if (resourceRealm !== realmId && resourceRealm !== null) {
                     throw new PermissionError({ message: 'Realm denied' });
                 }
@@ -315,6 +338,7 @@ describe('EventService', () => {
 
         it('preserves the backing total when all page rows are authorized', async () => {
             const visible = seedForeign();
+
             repository.findMany = async () => ({
                 data: [visible],
                 meta: {
@@ -334,6 +358,7 @@ describe('EventService', () => {
         it('subtracts rows denied during per-row authorization from the backing total', async () => {
             const visible = seedForeign();
             const denied = seedForeign();
+
             repository.findMany = async () => ({
                 data: [visible, denied],
                 meta: {
@@ -344,16 +369,19 @@ describe('EventService', () => {
             });
 
             const actor = makeActor({ allow: true });
+
             (actor.permissionEvaluator as FakePermissionEvaluator).setBehavior(({ method, ctx }) => {
                 if (method !== 'evaluate' || ctx.options?.policiesIncluded) {
                     return;
                 }
 
                 const attributes = ctx.data?.get<Event>(BuiltInPolicyType.ATTRIBUTES);
+
                 if (attributes?.id === denied.id) {
                     throw new PermissionError({ message: 'Event denied' });
                 }
             });
+
             const { data, meta } = await service.getMany({}, actor);
 
             expect(data.map((row) => row.id)).toEqual([visible.id]);
@@ -367,7 +395,9 @@ describe('EventService', () => {
 
             // preEvaluate passes (holds the permission) but per-row evaluate denies
             const evaluator = new FakePermissionEvaluator();
+
             evaluator.deny('evaluate');
+
             const actor: ActorContext = {
                 permissionEvaluator: evaluator,
                 identity: { type: IdentityType.USER, data: { id: userId, realmId } as User },
@@ -388,6 +418,7 @@ describe('EventService', () => {
             const actor = makeActor({ allow: false });
 
             const result = await service.getOne(row.id, actor);
+
             expect(result.id).toEqual(row.id);
             expect((actor.permissionEvaluator as FakePermissionEvaluator).preEvaluateCalls).toHaveLength(0);
         });
@@ -404,6 +435,7 @@ describe('EventService', () => {
             const actor = makeActor({ allow: true });
 
             const result = await service.getOne(row.id, actor);
+
             expect(result.id).toEqual(row.id);
         });
 
@@ -417,6 +449,7 @@ describe('EventService', () => {
 
         it('throws when the row does not exist', async () => {
             const actor = makeActor({ allow: true });
+
             await expect(service.getOne(randomUUID(), actor)).rejects.toBeDefined();
         });
     });
@@ -425,6 +458,7 @@ describe('EventService', () => {
         // the log is append-only: writes happen via record(), pruning via the
         // retention sweep — the service must not grow mutation methods.
         const methods = Object.getOwnPropertyNames(EventService.prototype);
+
         expect(methods).not.toContain('create');
         expect(methods).not.toContain('update');
         expect(methods).not.toContain('save');

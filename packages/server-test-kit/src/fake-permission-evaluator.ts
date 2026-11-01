@@ -68,6 +68,7 @@ export class FakePermissionEvaluator implements IPermissionEvaluator {
      */
     async compile(ctx: PermissionCompileContext): Promise<PermissionCompileResult> {
         this.compileCalls.push(ctx);
+
         return this.compileResult;
     }
 
@@ -80,15 +81,19 @@ export class FakePermissionEvaluator implements IPermissionEvaluator {
     }
 
     denyAll(error: Error = PermissionError.denied('test')) {
-        this.behavior = () => { throw error; };
+        this.behavior = () => {
+            throw error;
+        };
     }
 
     deny(method: EvaluatorMethodName, error: Error = PermissionError.denied('test')) {
         const previous = this.behavior;
+
         this.behavior = (call) => {
             if (call.method === method) {
                 throw error;
             }
+
             return previous(call);
         };
     }

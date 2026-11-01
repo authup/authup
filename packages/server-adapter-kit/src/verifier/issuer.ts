@@ -45,6 +45,7 @@ type KeyLookup = {
  */
 function readKeyLookup(context: KeySourceContext) : KeyLookup {
     const { kid } = context.token.header;
+
     if (typeof kid !== 'string' || !isUUID(kid)) {
         throw JWTError.headerPropertyInvalid('kid');
     }
@@ -53,6 +54,7 @@ function readKeyLookup(context: KeySourceContext) : KeyLookup {
     // '..' would change the key URL: '/realms/../jwks/<kid>' is the flat key
     // endpoint, which serves a key of any realm.
     const { realm_id: realmId } = context.token.claims;
+
     if (typeof realmId !== 'string' || !isUUID(realmId)) {
         throw JWTError.payloadPropertyInvalid('realm_id');
     }
@@ -68,6 +70,7 @@ function createKeyLoader(client: Client) : KeyLoader {
         const { kid, realmId } = readKeyLookup(context);
 
         let jwk : OAuth2JsonWebKey;
+
         try {
             jwk = await client.getJwk(kid, realmId);
         } catch (e) {
@@ -95,12 +98,14 @@ export function createAuthupIssuer(ctx: AuthupIssuerContext) : Issuer {
     const load = createKeyLoader(ctx.client);
 
     let keys : KeySource;
+
     if (ctx.jwkCache === false) {
         keys = load;
     } else {
         keys = cachedKeys(load, {
             key: (context) => {
                 const { kid, realmId } = readKeyLookup(context);
+
                 return `${realmId}:${kid}`;
             },
             ttl: ctx.jwkCache?.ttl,

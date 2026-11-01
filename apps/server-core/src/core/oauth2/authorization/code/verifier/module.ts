@@ -21,6 +21,7 @@ export class OAuth2AuthorizationCodeVerifier implements IOAuth2AuthorizationCode
 
     async verify(code: string, options: IOAuth2AuthorizationCodeVerifyOptions) : Promise<OAuth2AuthorizationCode> {
         const entity = await this.repository.popOneById(code);
+
         if (!entity) {
             throw OAuth2GrantError.invalid();
         }
@@ -67,6 +68,7 @@ export class OAuth2AuthorizationCodeVerifier implements IOAuth2AuthorizationCode
             // explicitly sent code_challenge_method=S256.
             if (entity.code_challenge_method === OAuth2AuthorizationCodeChallengeMethod.SHA_256) {
                 const codeVerifierHash = await buildOAuth2CodeChallenge(options.codeVerifier);
+
                 if (codeVerifierHash !== entity.code_challenge) {
                     throw OAuth2GrantError.invalid('PKCE code_verifier mismatch.');
                 }

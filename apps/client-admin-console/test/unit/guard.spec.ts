@@ -143,13 +143,15 @@ describe('src/guard', () => {
             saveLoginRedirect('/users?page=2#row-7');
 
             const result = await guard(createRoute({ path: '/' }), createRoute({ path: '/' }));
+
             expect(result).toEqual({
-                path: '/users', 
-                query: { page: '2' }, 
-                hash: '#row-7', 
+                path: '/users',
+                query: { page: '2' },
+                hash: '#row-7',
             });
 
             const again = await guard(createRoute({ path: '/' }), createRoute({ path: '/' }));
+
             expect(again).toBeUndefined();
         });
 
@@ -164,6 +166,7 @@ describe('src/guard', () => {
             sessionStorage.setItem(LOGIN_REDIRECT_STORAGE_KEY, value);
 
             const result = await guard(createRoute({ path: '/' }), createRoute({ path: '/' }));
+
             expect(result).toBeUndefined();
             expect(sessionStorage.getItem(LOGIN_REDIRECT_STORAGE_KEY)).toBeNull();
         });

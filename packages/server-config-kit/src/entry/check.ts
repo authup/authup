@@ -14,19 +14,7 @@ import { isObject } from '@authup/kit';
  * level.
  */
 export function isSchemaEntryInput(input: unknown) : input is SchemaEntryInput<any, any> {
-    if (!isObject(input)) {
-        return false;
-    }
-
-    if (typeof input.type === 'undefined') {
-        return false;
-    }
-
-    if (typeof input.description !== 'string') {
-        return false;
-    }
-
-    return true;
+    return !(!isObject(input) || (typeof input.type === 'undefined')) && typeof input.description === 'string';
 }
 
 /**

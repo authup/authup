@@ -78,11 +78,14 @@ describe('src/domains/workflows/oauth2/device-authorization', () => {
         expect(response).toEqual(DEVICE_AUTHORIZATION_RESPONSE);
 
         expect(transport.requests).toHaveLength(1);
+
         const [request] = transport.requests;
+
         expect(request.method).toEqual('POST');
         expect(request.url).toEqual('http://fake.test/device_authorization');
 
         const headers = readHeaders(request);
+
         expect(headers.get('content-type')).toEqual('application/x-www-form-urlencoded');
         expect(headers.get('accept')).toEqual('application/json');
 
@@ -94,6 +97,7 @@ describe('src/domains/workflows/oauth2/device-authorization', () => {
 
     it('should not send the client authorization header on create', async () => {
         const { client, transport } = createClient(() => ({ body: DEVICE_AUTHORIZATION_RESPONSE }));
+
         client.setAuthorizationHeader({ type: 'Bearer', token: 'abc' });
 
         await client.deviceAuthorization.create({ client_id: 'foo' });
@@ -103,6 +107,7 @@ describe('src/domains/workflows/oauth2/device-authorization', () => {
 
     it('should keep the client authorization header on create when inherited', async () => {
         const { client, transport } = createClient(() => ({ body: DEVICE_AUTHORIZATION_RESPONSE }));
+
         client.setAuthorizationHeader({ type: 'Bearer', token: 'abc' });
 
         await client.deviceAuthorization.create({ client_id: 'foo' }, { authorizationHeaderInherit: true });
@@ -112,6 +117,7 @@ describe('src/domains/workflows/oauth2/device-authorization', () => {
 
     it('should replace the client authorization header with the request one', async () => {
         const { client, transport } = createClient(() => ({ body: DEVICE_AUTHORIZATION_RESPONSE }));
+
         client.setAuthorizationHeader({ type: 'Bearer', token: 'abc' });
 
         await client.deviceAuthorization.create({ client_id: 'foo' }, { authorizationHeader: { type: 'Bearer', token: 'other' } });
@@ -121,6 +127,7 @@ describe('src/domains/workflows/oauth2/device-authorization', () => {
 
     it('should move the client credentials from the body into a basic header', async () => {
         const { client, transport } = createClient(() => ({ body: DEVICE_AUTHORIZATION_RESPONSE }));
+
         client.setAuthorizationHeader({ type: 'Bearer', token: 'abc' });
 
         await client.deviceAuthorization.create({
@@ -130,12 +137,14 @@ describe('src/domains/workflows/oauth2/device-authorization', () => {
         }, { clientCredentialsAsHeader: true });
 
         const [request] = transport.requests;
+
         expect(readHeaders(request).get('authorization')).toEqual('Basic Zm9vOmJhcg==');
         expect(readForm(request)).toEqual({ scope: 'global' });
     });
 
     it('should keep the client authorization header on lookup', async () => {
         const { client, transport } = createClient(() => ({ body: DEVICE_AUTHORIZATION_INFO }));
+
         client.setAuthorizationHeader({ type: 'Bearer', token: 'abc' });
 
         const info = await client.deviceAuthorization.lookup({ user_code: 'BCDF-GHJK' });
@@ -143,10 +152,12 @@ describe('src/domains/workflows/oauth2/device-authorization', () => {
         expect(info).toEqual(DEVICE_AUTHORIZATION_INFO);
 
         const [request] = transport.requests;
+
         expect(request.method).toEqual('POST');
         expect(request.url).toEqual('http://fake.test/device_authorization/lookup');
 
         const headers = readHeaders(request);
+
         expect(headers.get('authorization')).toEqual('Bearer abc');
         expect(headers.get('content-type')).toContain('application/json');
 
@@ -155,6 +166,7 @@ describe('src/domains/workflows/oauth2/device-authorization', () => {
 
     it('should post approve and deny with the client authorization header', async () => {
         const { client, transport } = createClient((request) => ({ body: { status: request.url.endsWith('/approve') ? 'approved' : 'denied' } }));
+
         client.setAuthorizationHeader({ type: 'Bearer', token: 'abc' });
 
         const approved = await client.deviceAuthorization.approve({ user_code: 'BCDF-GHJK' });
@@ -193,6 +205,7 @@ describe('src/domains/workflows/oauth2/token', () => {
         expect(response.access_token).toEqual('at');
 
         const [request] = transport.requests;
+
         expect(request.method).toEqual('POST');
         expect(request.url).toEqual('http://fake.test/token');
         expect(readForm(request)).toEqual({

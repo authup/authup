@@ -94,8 +94,10 @@ export class PathService extends AbstractEntityService implements IPathService {
                 realm: entity.realmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -121,6 +123,7 @@ export class PathService extends AbstractEntityService implements IPathService {
         // a folder is addressed by id or by its FULL path: the repository's
         // name lookup matches `path`, never the single segment `name`
         const entity = await this.repository.findOneByIdOrName(id, realmKey);
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -147,6 +150,7 @@ export class PathService extends AbstractEntityService implements IPathService {
         // the join-column lookup off a null on a non-nullable column.
         if (validated.realmId === null) {
             const input: Partial<Path> = validated;
+
             delete input.realmId;
         }
 
@@ -154,6 +158,7 @@ export class PathService extends AbstractEntityService implements IPathService {
 
         if (!isPropertySet(validated, 'realmId') || !validated.realmId) {
             const actorRealmId = this.getActorRealmId(actor);
+
             if (!actorRealmId) {
                 throw new ValidationError('A path needs a realm.');
             }
@@ -162,6 +167,7 @@ export class PathService extends AbstractEntityService implements IPathService {
         }
 
         const parent = await this.resolveParent(this.repository, validated.parentId ?? null, validated.realmId);
+
         // the validator omits an absent optional key, so a root folder is
         // stamped explicitly rather than left undefined: the created record
         // must read like a later fetch of the same row
@@ -196,6 +202,7 @@ export class PathService extends AbstractEntityService implements IPathService {
             );
 
             const path = buildPathForParent(parentLocked, validated.name);
+
             assertPathBounds(path);
 
             const entity = repository.create({
@@ -216,6 +223,7 @@ export class PathService extends AbstractEntityService implements IPathService {
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PATH_UPDATE });
 
         const entity = await this.repository.findOneByIdOrName(id, realmKey);
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -262,6 +270,7 @@ export class PathService extends AbstractEntityService implements IPathService {
             // transaction: a rename of an ANCESTOR is the race the re-read
             // alone cannot see, since the two requests read different rows.
             const current = await repository.findOneBy({ id: entity.id });
+
             if (!current) {
                 throw new EntityNotFoundError();
             }
@@ -285,8 +294,10 @@ export class PathService extends AbstractEntityService implements IPathService {
             // whose new path is too long can not leave the subtree half
             // rewritten
             assertPathBounds(nextPath);
+
             const rewritten = descendants.map((descendant) => {
                 const path = `${nextPath}${descendant.path.slice(previousPath.length)}`;
+
                 assertPathBounds(path);
 
                 return { descendant, path };
@@ -317,6 +328,7 @@ export class PathService extends AbstractEntityService implements IPathService {
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PATH_DELETE });
 
         const entity = await this.repository.findOneByIdOrName(id, realmKey);
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -328,6 +340,7 @@ export class PathService extends AbstractEntityService implements IPathService {
         });
 
         const { id: entityId } = entity;
+
         await this.repository.remove(entity);
         entity.id = entityId;
 
@@ -354,6 +367,7 @@ export class PathService extends AbstractEntityService implements IPathService {
             entity.parentId;
 
         const parent = await this.resolveParent(repository, parentId, entity.realmId);
+
         if (
             parent &&
             (
@@ -382,6 +396,7 @@ export class PathService extends AbstractEntityService implements IPathService {
         }
 
         const parent = await repository.findOneById(parentId);
+
         if (!parent) {
             throw new ValidationError('The parent path does not exist.');
         }

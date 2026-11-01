@@ -33,6 +33,7 @@ async function failingRequest(status: number, body: unknown) : Promise<unknown> 
             }),
         }),
     });
+
     client.setAuthorizationHeader({ type: 'Bearer', token: 'secret-access' });
 
     try {
@@ -98,7 +99,9 @@ describe('runHostCommand', () => {
             '@instanceof': ['@ebec/core/BaseError', '@authup/errors/AuthupError'],
         });
 
-        const rejection = runHostCommand(async () => { throw original; });
+        const rejection = runHostCommand(async () => {
+            throw original;
+        });
 
         await expect(rejection).rejects.toThrow('expired_token: The token expired.');
         await rejection.catch((e: Error) => {

@@ -8,9 +8,9 @@
 import { BearerTokenMalformedError } from '@authup/errors';
 import type { ITokenVerifier, TokenVerificationData } from '@authup/server-adapter-kit';
 import {
-    describe, 
-    expect, 
-    it, 
+    describe,
+    expect,
+    it,
     vi,
 } from 'vitest';
 import { verifySocket } from '../../src';
@@ -50,6 +50,7 @@ describe('verifySocket', () => {
 
     it('strips a Bearer prefix from the handshake token', async () => {
         const verify = vi.fn(async () => sampleData);
+
         await verifySocket(createSocket({ token: 'Bearer abc.def.ghi' }), { tokenVerifier: createVerifier(verify) });
 
         expect(verify).toHaveBeenCalledWith('abc.def.ghi', verifyOptions);
@@ -63,6 +64,7 @@ describe('verifySocket', () => {
         const certificateThumbprintBySocket = vi.fn(async () => 'expected-thumbprint');
 
         const socket = createSocket({ token: 'abc' });
+
         await verifySocket(socket, {
             tokenVerifier: createVerifier(verify),
             certificateThumbprintBySocket,
@@ -72,16 +74,21 @@ describe('verifySocket', () => {
 
         const [, options] = verify.mock.calls[0];
         const provider = options?.certificateThumbprint;
+
         expect(provider).toBeTypeOf('function');
-        if (typeof provider === 'function') {
-            await expect(provider()).resolves.toBe('expected-thumbprint');
-            expect(certificateThumbprintBySocket).toHaveBeenCalledWith(socket);
+
+        if (!(typeof provider === 'function')) {
+            return;
         }
+
+        await expect(provider()).resolves.toBe('expected-thumbprint');
+        expect(certificateThumbprintBySocket).toHaveBeenCalledWith(socket);
     });
 
     it('rejects with BearerTokenMalformedError on a malformed Bearer-prefixed token', async () => {
         const verify = vi.fn();
         let caught: unknown;
+
         try {
             await verifySocket(createSocket({ token: 'Bearer ' }), { tokenVerifier: createVerifier(verify) });
         } catch (e) {
@@ -99,6 +106,7 @@ describe('verifySocket', () => {
         });
 
         let caught: unknown;
+
         try {
             await verifySocket(createSocket({ token: 'bad-token' }), { tokenVerifier: createVerifier(verify) });
         } catch (e) {

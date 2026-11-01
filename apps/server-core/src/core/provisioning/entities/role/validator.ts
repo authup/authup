@@ -17,12 +17,15 @@ export class RoleProvisioningValidator extends Container<RoleProvisioningEntity>
         super.initialize();
 
         const strategyValidator = new ProvisioningStrategyValidator();
+
         this.mount('strategy', { optional: true }, strategyValidator);
 
         const dataValidator = new RoleValidator();
+
         this.mount('attributes', dataValidator);
 
         const relationsValidator = new RoleProvisioningRelationsValidator();
+
         this.mount('relations', { optional: true }, relationsValidator);
     }
 }

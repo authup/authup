@@ -6,9 +6,9 @@
  */
 
 import {
-    beforeAll, 
-    describe, 
-    expect, 
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { JWTError } from '@authup/specs';
@@ -20,7 +20,7 @@ import {
     createSymmetricKey,
     extractTokenHeader,
     extractTokenPayload,
-    signToken, 
+    signToken,
     verifyToken,
 } from '../../src';
 
@@ -53,7 +53,7 @@ describe('src/json-web-token', () => {
     it('should sign and decrypt with symmetric key', async () => {
         const data : JWTClaims = {
             text: 'secretText',
-            foo_bar: 'baz', 
+            foo_bar: 'baz',
         };
 
         const signedText = await signToken(data, {
@@ -176,6 +176,7 @@ describe('src/json-web-token', () => {
         });
 
         const header = extractTokenHeader(signedText);
+
         expect(header).toBeDefined();
         expect(header.typ).toEqual('JWT');
         expect(header.alg).toEqual('RS256');
@@ -191,10 +192,29 @@ describe('src/json-web-token', () => {
         });
 
         const header = extractTokenPayload(signedText);
+
         expect(header).toBeDefined();
         expect(header.text).toEqual(data.text);
         expect(header.exp).toBeDefined();
         expect(header.iat).toBeDefined();
+    });
+
+    it('should preserve Latin-1 header decoding', () => {
+        const encoded = Buffer.from(JSON.stringify({ kid: 'é' }), 'latin1').toBase64();
+
+        expect(extractTokenHeader(`${encoded}.e30.signature`).kid).toEqual('é');
+    });
+
+    it('should decode UTF-8 base64url payloads', () => {
+        const claims = { name: 'Пётр 😀' };
+        const encoded = Buffer.from(JSON.stringify(claims)).toBase64({ alphabet: 'base64url', omitPadding: true });
+
+        expect(extractTokenPayload(`e30.${encoded}.signature`)).toEqual(claims);
+    });
+
+    it.each(['e30!', 'e30===', 'e30=e30', 'e'])('should reject malformed encoded JSON: %s', (encoded) => {
+        expect(() => extractTokenHeader(`${encoded}.e30.signature`)).toThrow();
+        expect(() => extractTokenPayload(`e30.${encoded}.signature`)).toThrow();
     });
 
     it('not decode header', async () => {

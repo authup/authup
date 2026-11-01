@@ -6,6 +6,7 @@
  */
 
 import { buildPermissionKey, normalizeRealmScope, projectAuthorizationPolicy } from '@authup/access';
+import { ScopeName } from '@authup/core-kit';
 import type { OAuth2TokenPermission } from '@authup/specs';
 import { OAuth2RequestError } from '@authup/specs';
 import { readPolicyId } from '../../authorization/module.ts';
@@ -37,7 +38,8 @@ import type {
  * The projection is the grants the token carries (`getForToken`), exactly what
  * a request made with it evaluates, so both endpoints report what the server's
  * own evaluator resolves: a user's grants owned by another client are absent
- * (#3597).
+ * (#3597), and a credential whose scopes lack `global` reports none, since a
+ * request made with it evaluates none (#3749).
  *
  * @returns null when the subject is not of the token's realm.
  * @throws OAuth2RequestError when the subject no longer resolves.
@@ -47,6 +49,7 @@ export async function resolveIntrospectionSubject(
     input: OAuth2IntrospectionSubjectInput,
 ) : Promise<OAuth2IntrospectionSubject | null> {
     const identity = await ctx.identityResolver.resolve(input.token.sub_kind, input.token.sub);
+
     if (!identity) {
         // todo: differentiate between client & user
         throw OAuth2RequestError.identityInvalid();
@@ -70,11 +73,22 @@ export async function resolveIntrospectionSubject(
         };
     }
 
+    if (!input.scopes.includes(ScopeName.GLOBAL)) {
+        return {
+            identity,
+            claims,
+            active: true,
+            permissions: [],
+        };
+    }
+
     const bindings = await ctx.identityPermissionProvider.getForToken(input.token);
 
     const permissions : OAuth2TokenPermission[] = [];
+
     for (const binding of bindings) {
         const policies : string[] = [];
+
         try {
             for (const policy of binding.policies ?? []) {
                 policies.push(readPolicyId(policy));
@@ -83,8 +97,9 @@ export async function resolveIntrospectionSubject(
         } catch (e) {
             ctx.logger?.warn(
                 `Dropped a grant of permission ${buildPermissionKey(binding.permission)} from the introspection: ` +
-                `${e instanceof Error ? e.message : String(e)}`,
+                `${Error.isError(e) ? e.message : String(e)}`,
             );
+
             continue;
         }
 

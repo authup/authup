@@ -94,8 +94,10 @@ export class OAuth2AuthorizationGate implements IOAuth2AuthorizationGate {
         const nowSeconds = Math.floor(Date.now() / 1000);
         let authTime = nowSeconds;
         let session : Session | null = null;
+
         if (options.sessionId) {
             session = await this.sessionManager.findOneById(options.sessionId);
+
             if (session && session.createdAt) {
                 authTime = Math.floor(new Date(session.createdAt).getTime() / 1000);
             }
@@ -150,10 +152,12 @@ export class OAuth2AuthorizationGate implements IOAuth2AuthorizationGate {
             // upstream is the default, not a refusal to prove anything.
             if (challenge.required && data.acr_values) {
                 const acrValues = data.acr_values.split(' ');
+
                 if (acrValues.includes(OAuth2AuthenticationContextClass.MFA)) {
                     const mfaAtSeconds = session?.mfaAt ?
                         Math.floor(new Date(session.mfaAt).getTime() / 1000) :
                         null;
+
                     if (mfaAtSeconds === null || nowSeconds - mfaAtSeconds > this.mfaFreshnessMaxAge) {
                         throw OAuth2MfaRequiredError.stepUpRequired();
                     }
@@ -165,6 +169,7 @@ export class OAuth2AuthorizationGate implements IOAuth2AuthorizationGate {
         // requested: a plain authorize never throws here). The hosted page
         // renders the login form for prompt=login; this is the server backstop.
         const prompts = data.prompt ? data.prompt.split(' ') : [];
+
         if (
             prompts.includes(OAuth2AuthorizationPrompt.LOGIN) &&
             nowSeconds - authTime > this.promptLoginMaxAge
@@ -177,6 +182,7 @@ export class OAuth2AuthorizationGate implements IOAuth2AuthorizationGate {
             data.max_age !== null
         ) {
             const maxAge = Number(data.max_age);
+
             if (
                 Number.isFinite(maxAge) &&
                 nowSeconds - authTime > maxAge
@@ -195,6 +201,7 @@ export class OAuth2AuthorizationGate implements IOAuth2AuthorizationGate {
             let allowed = false;
 
             const subject = toIdentityPolicyData(identity);
+
             if (subject && this.accessPolicyEvaluator) {
                 allowed = await this.accessPolicyEvaluator.evaluate(
                     options.client.accessPolicyId,

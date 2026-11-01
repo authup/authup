@@ -73,7 +73,7 @@ export default defineComponent({
         let counter = 0;
         const items = ref<{
             id: number,
-            value: string 
+            value: string
         }[]>([]);
 
         const add = (item?: string) => {
@@ -113,6 +113,7 @@ export default defineComponent({
 
         const handleUpdated = (id: number, value: string) => {
             const index = items.value.findIndex((el) => el.id === id);
+
             if (index > -1 && items.value[index]) {
                 items.value[index].value = value;
             }
@@ -126,6 +127,7 @@ export default defineComponent({
             }
 
             const index = items.value.findIndex((el) => el.id === id);
+
             if (index > -1) {
                 items.value.splice(index, 1);
             }

@@ -23,8 +23,8 @@ import type {
     EntityRecordResponse,
     EntityStatsResponse,
     ScopeCreatePayload,
-    ScopeSavePayload, 
-    ScopeUpdatePayload, 
+    ScopeSavePayload,
+    ScopeUpdatePayload,
 } from '@authup/core-http-kit';
 import type { Scope } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
@@ -32,8 +32,8 @@ import type { IEntityStatsService, IScopeService  } from '../../../../../core/in
 import {
     RECORD_QUERY_PARAMETERS,
     STATS_QUERY_PARAMETERS,
-    describeQuerySchema, 
-    scopeSchema, 
+    describeQuerySchema,
+    scopeSchema,
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -156,6 +156,7 @@ export class ScopeController {
         );
 
         event.response.status = created ? 201 : 202;
+
         return { data: entity, meta: {} };
     }
 

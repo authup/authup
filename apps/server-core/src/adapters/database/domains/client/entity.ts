@@ -6,7 +6,7 @@
  */
 
 import {
-    BeforeInsert, 
+    BeforeInsert,
     BeforeUpdate,
     Column,
     CreateDateColumn,
@@ -48,25 +48,25 @@ export class ClientEntity implements Client {
 
     @Index()
     @Column({
-        name: 'built_in', 
-        type: 'boolean', 
-        default: false, 
+        name: 'built_in',
+        type: 'boolean',
+        default: false,
     })
     builtIn: boolean;
 
     @Column({
-        name: 'auth_method', 
-        type: 'varchar', 
-        length: 16, 
-        default: ClientAuthMethod.NONE, 
+        name: 'auth_method',
+        type: 'varchar',
+        length: 16,
+        default: ClientAuthMethod.NONE,
     })
     authMethod: `${ClientAuthMethod}`;
 
     @Column({
-        name: 'token_binding_method', 
-        type: 'varchar', 
-        length: 16, 
-        default: ClientTokenBindingMethod.NONE, 
+        name: 'token_binding_method',
+        type: 'varchar',
+        length: 16,
+        default: ClientTokenBindingMethod.NONE,
     })
     tokenBindingMethod: `${ClientTokenBindingMethod}`;
 
@@ -80,10 +80,10 @@ export class ClientEntity implements Client {
 
     @Index()
     @Column({
-        name: 'display_name', 
-        type: 'varchar', 
-        length: 256, 
-        nullable: true, 
+        name: 'display_name',
+        type: 'varchar',
+        length: 256,
+        nullable: true,
     })
     displayName: string | null;
 
@@ -106,25 +106,25 @@ export class ClientEntity implements Client {
     secret: string | null;
 
     @Column({
-        name: 'secret_hashed', 
-        type: 'boolean', 
-        default: false, 
+        name: 'secret_hashed',
+        type: 'boolean',
+        default: false,
     })
     secretHashed: boolean;
 
     @Column({
-        name: 'secret_encrypted', 
-        type: 'boolean', 
-        default: false, 
+        name: 'secret_encrypted',
+        type: 'boolean',
+        default: false,
     })
     secretEncrypted: boolean;
 
     // ------------------------------------------------------------------
 
     @Column({
-        name: 'redirect_uri', 
-        type: 'text', 
-        nullable: true, 
+        name: 'redirect_uri',
+        type: 'text',
+        nullable: true,
     })
     redirectUri: string | null;
 
@@ -132,9 +132,9 @@ export class ClientEntity implements Client {
     // same origin-pattern string to both, so a large trusted-origin set must
     // not overflow only this column.
     @Column({
-        name: 'post_logout_redirect_uri', 
-        type: 'text', 
-        nullable: true, 
+        name: 'post_logout_redirect_uri',
+        type: 'text',
+        nullable: true,
     })
     postLogoutRedirectUri: string | null;
 
@@ -162,18 +162,18 @@ export class ClientEntity implements Client {
     accessPolicy: Policy | null;
 
     @Column({
-        name: 'grant_types', 
-        type: 'varchar', 
-        length: 512, 
-        nullable: true, 
+        name: 'grant_types',
+        type: 'varchar',
+        length: 512,
+        nullable: true,
     })
     grantTypes: string | null;
 
     @Column({
-        name: 'base_url', 
-        type: 'varchar', 
-        length: 2000, 
-        nullable: true, 
+        name: 'base_url',
+        type: 'varchar',
+        length: 2000,
+        nullable: true,
     })
     baseUrl: string | null;
 

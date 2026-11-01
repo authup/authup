@@ -23,79 +23,157 @@ import { MFA_THROTTLED_ERROR_INSTANCE, type MfaThrottledError } from './mfa-thro
 import { UNAUTHORIZED_ERROR_INSTANCE, type UnauthorizedError } from './unauthorized.ts';
 
 export function isAuthHeaderError(input: unknown): input is AuthHeaderError {
-    if (matchesInstanceof(input, AUTH_HEADER_ERROR_INSTANCE)) return true;
-    if (!isAuthupError(input)) return false;
+    if (matchesInstanceof(input, AUTH_HEADER_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
     return input.code === ErrorCode.HTTP_HEADER_AUTH_TYPE_UNSUPPORTED;
 }
 
 export function isBearerTokenMalformedError(input: unknown): input is BearerTokenMalformedError {
-    if (matchesInstanceof(input, BEARER_TOKEN_MALFORMED_ERROR_INSTANCE)) return true;
-    if (!isAuthupError(input)) return false;
+    if (matchesInstanceof(input, BEARER_TOKEN_MALFORMED_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
     return input.code === ErrorCode.HTTP_BEARER_TOKEN_MALFORMED;
 }
 
 export function isBadRequestError(input: unknown): input is BadRequestError {
-    if (matchesInstanceof(input, BAD_REQUEST_ERROR_INSTANCE)) return true;
-    if (!isAuthupError(input)) return false;
+    if (matchesInstanceof(input, BAD_REQUEST_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
     return input.code === ErrorCode.BAD_REQUEST;
 }
 
 export function isValidationError(input: unknown): input is ValidationError {
-    if (matchesInstanceof(input, VALIDATION_ERROR_INSTANCE)) return true;
-    if (!isAuthupError(input)) return false;
+    if (matchesInstanceof(input, VALIDATION_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
     return input.code === ErrorCode.BAD_REQUEST;
 }
 
 export function isUnauthorizedError(input: unknown): input is UnauthorizedError {
-    if (matchesInstanceof(input, UNAUTHORIZED_ERROR_INSTANCE)) return true;
-    if (!isAuthupError(input)) return false;
+    if (matchesInstanceof(input, UNAUTHORIZED_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
     return input.code === ErrorCode.IDENTITY_UNAUTHORIZED;
 }
 
 export function isEntityNotFoundError(input: unknown): input is EntityNotFoundError {
-    if (matchesInstanceof(input, ENTITY_NOT_FOUND_ERROR_INSTANCE)) return true;
-    if (!isAuthupError(input)) return false;
+    if (matchesInstanceof(input, ENTITY_NOT_FOUND_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
     return input.code === ErrorCode.ENTITY_NOT_FOUND;
 }
 
 export function isEntityConflictError(input: unknown): input is EntityConflictError {
-    if (matchesInstanceof(input, ENTITY_CONFLICT_ERROR_INSTANCE)) return true;
-    if (!isAuthupError(input)) return false;
+    if (matchesInstanceof(input, ENTITY_CONFLICT_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
     return input.code === ErrorCode.ENTITY_CONFLICT;
 }
 
 export function isEntityInactiveError(input: unknown): input is EntityInactiveError {
-    if (matchesInstanceof(input, ENTITY_INACTIVE_ERROR_INSTANCE)) return true;
-    if (!isAuthupError(input)) return false;
+    if (matchesInstanceof(input, ENTITY_INACTIVE_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
     return input.code === ErrorCode.ENTITY_INACTIVE;
 }
 
 export function isEntityCredentialsInvalidError(input: unknown): input is EntityCredentialsInvalidError {
-    if (matchesInstanceof(input, ENTITY_CREDENTIALS_INVALID_ERROR_INSTANCE)) return true;
-    if (!isAuthupError(input)) return false;
+    if (matchesInstanceof(input, ENTITY_CREDENTIALS_INVALID_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
     return input.code === ErrorCode.ENTITY_CREDENTIALS_INVALID;
 }
 
 export function isInternalError(input: unknown): input is InternalError {
-    if (matchesInstanceof(input, INTERNAL_ERROR_INSTANCE)) return true;
-    if (!isAuthupError(input)) return false;
+    if (matchesInstanceof(input, INTERNAL_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
     return input.code === ErrorCode.INTERNAL_ERROR;
 }
 
 export function isLoginThrottledError(input: unknown): input is LoginThrottledError {
-    if (matchesInstanceof(input, LOGIN_THROTTLED_ERROR_INSTANCE)) return true;
-    if (!isAuthupError(input)) return false;
+    if (matchesInstanceof(input, LOGIN_THROTTLED_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
     return input.code === ErrorCode.LOGIN_ATTEMPT_THROTTLED;
 }
 
 export function isMfaThrottledError(input: unknown): input is MfaThrottledError {
-    if (matchesInstanceof(input, MFA_THROTTLED_ERROR_INSTANCE)) return true;
-    if (!isAuthupError(input)) return false;
+    if (matchesInstanceof(input, MFA_THROTTLED_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
     return input.code === ErrorCode.MFA_ATTEMPT_THROTTLED;
 }
 
 export function isDeviceVerificationThrottledError(input: unknown): input is DeviceVerificationThrottledError {
-    if (matchesInstanceof(input, DEVICE_VERIFICATION_THROTTLED_ERROR_INSTANCE)) return true;
-    if (!isAuthupError(input)) return false;
+    if (matchesInstanceof(input, DEVICE_VERIFICATION_THROTTLED_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
     return input.code === ErrorCode.OAUTH_DEVICE_VERIFICATION_THROTTLED;
 }

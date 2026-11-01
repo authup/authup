@@ -57,6 +57,7 @@ function splitList(input?: unknown): string[] {
  */
 export function buildIdentityProviderAcrValues(provider: Partial<OAuth2IdentityProviderBase>): string | undefined {
     const values = splitList(provider.requiredAcr);
+
     return values.length > 0 ? values.join(' ') : undefined;
 }
 
@@ -94,6 +95,7 @@ export function assertIdentityProviderAssurance(
     }
 
     let claims : Record<string, any>;
+
     try {
         // `?? {}` against the declared return type on purpose: a payload of
         // literal `null` parses, so the claim reads below would throw a
@@ -133,7 +135,9 @@ export function assertIdentityProviderAssurance(
 
     if (requiredAmr.length > 0) {
         const amr = Array.isArray(claims.amr) ? claims.amr : [];
-        if (requiredAmr.every((value) => !amr.includes(value))) {
+        const lacksRequiredAmr = requiredAmr.every((value) => !amr.includes(value));
+
+        if (lacksRequiredAmr) {
             throw new IdentityProviderAssuranceError(
                 `The identity provider amr claim does not satisfy: ${requiredAmr.join(', ')}.`,
             );

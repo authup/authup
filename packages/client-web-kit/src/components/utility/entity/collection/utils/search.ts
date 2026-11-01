@@ -36,6 +36,7 @@ export function buildEntitySearchCondition(
 
     const extra : ICondition[] = (ENTITY_SEARCH_FIELDS[type as EntityType] || [])
         .map((field) => contains(field, value));
+
     if (names.length > 0) {
         extra.push(and(
             inArray(ENTITY_SEARCH_FIELD_DEFAULT, names),

@@ -15,6 +15,7 @@ export const OAUTH2_RESPONSE_TYPE_ERROR_INSTANCE = Symbol.for('@authup/specs/OAu
 export class OAuth2ResponseTypeError extends OAuth2Error {
     constructor(input?: AuthupErrorInput) {
         const options = normalizeOAuth2ErrorInput(input);
+
         super({
             code: ErrorCode.OAUTH_RESPONSE_TYPE_UNSUPPORTED,
             message: 'The authorization server does not support obtaining an access token using this method.',

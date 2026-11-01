@@ -115,6 +115,7 @@ export class DataSourceOptionsBuilder {
     // silently target sqlite and report nothing to do.
     buildWithEnvOrDefault() {
         const options = readDataSourceOptionsFromEnv();
+
         if (options) {
             return this.normalize(options);
         }

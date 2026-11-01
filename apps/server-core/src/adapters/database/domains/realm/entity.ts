@@ -24,31 +24,31 @@ export class RealmEntity implements Realm {
     @Column({
         type: 'varchar',
         length: 128,
-        unique: true, 
+        unique: true,
     })
     name: string;
 
     @Index()
     @Column({
-        name: 'display_name', 
-        type: 'varchar', 
-        length: 256, 
-        nullable: true, 
+        name: 'display_name',
+        type: 'varchar',
+        length: 256,
+        nullable: true,
     })
     displayName: string | null;
 
     @Column({
         type: 'text',
         nullable: true,
-        default: null, 
+        default: null,
     })
     description: string | null;
 
     @Index()
     @Column({
-        name: 'built_in', 
-        type: 'boolean', 
-        default: false, 
+        name: 'built_in',
+        type: 'boolean',
+        default: false,
     })
     builtIn: boolean;
 

@@ -141,11 +141,13 @@ export default defineComponent({
         // stamps both confirmations again.
         const handleLoginRequired = () => {
             const prompts = (props.codeRequest?.prompt ?? '').split(' ').filter(Boolean);
+
             // Only redirect the OIDC error to a *verified* redirect_uri; an
             // unverified one degrades to interactive re-auth (falling through to
             // the login form) instead of dead-ending on a frozen spinner.
             if (prompts.includes(OAuth2AuthorizationPrompt.NONE) && props.redirectUriVerified) {
                 silentErrorCode.value = OAuth2ErrorCode.LOGIN_REQUIRED;
+
                 return;
             }
 
@@ -211,6 +213,7 @@ export default defineComponent({
 
         const refreshMfaStatus = async () => {
             mfaResolving.value = true;
+
             try {
                 mfaStatus.value = await httpClient.userAuthenticator.challenge(challengeOptions());
             } catch {
@@ -243,6 +246,7 @@ export default defineComponent({
 
         onMounted(async () => {
             const federated = props.federatedLogin;
+
             if (!federated) {
                 return;
             }
@@ -308,10 +312,12 @@ export default defineComponent({
             // subject's grant).
             if (!props.client || props.client.builtIn) {
                 consentStatus.value = { covered: false };
+
                 return;
             }
 
             const subjectId = user.value?.id;
+
             if (!subjectId) {
                 // No resolved user yet: stay pending (loading text) until the
                 // session settles; a settled non-user session (client)
@@ -319,6 +325,7 @@ export default defineComponent({
                 if (userSettled.value) {
                     consentStatus.value = { covered: false };
                 }
+
                 return;
             }
 
@@ -355,6 +362,7 @@ export default defineComponent({
                 if (!loggedIn.value || user.value?.id !== subjectId) {
                     return;
                 }
+
                 consentStatus.value = { covered: false };
             }
         };
@@ -399,10 +407,13 @@ export default defineComponent({
             if (value && !mfaStatus.value && !mfaResolving.value) {
                 Promise.resolve().then(() => refreshMfaStatus());
             }
-            if (!value) {
-                mfaStatus.value = null;
-                mfaSatisfiedLocal.value = false;
+
+            if (value) {
+                return;
             }
+
+            mfaStatus.value = null;
+            mfaSatisfiedLocal.value = false;
         }, { immediate: true });
 
         // Set up front rather than after a tick: without a prefetch to wait
@@ -419,6 +430,7 @@ export default defineComponent({
         // track settlement so the chooser can offer an escape hatch instead
         // of spinning forever on the loading text.
         const userSettled = ref<boolean>(!!user.value);
+
         if (!userSettled.value) {
             Promise.resolve()
                 .then(() => store.resolve())
@@ -441,6 +453,7 @@ export default defineComponent({
         // watch below skips its first run for it, which would otherwise reset
         // the adopted decision and fetch it again.
         let consentHydrated = false;
+
         if (!props.federatedLogin && props.client && !props.client.builtIn) {
             useHydratedValue<{ covered: boolean }>({
                 key: `authup:authorize:consent:${user.value?.id ?? ''}:${props.client.id}:${requestedScopeTokens.value.join(' ')}`,
@@ -465,10 +478,12 @@ export default defineComponent({
             () => {
                 if (consentHydrated) {
                     consentHydrated = false;
+
                     return;
                 }
 
                 consentStatus.value = null;
+
                 if (loggedIn.value && !isServerRuntime()) {
                     Promise.resolve().then(() => refreshConsentStatus());
                 }
@@ -545,6 +560,7 @@ export default defineComponent({
             // redirect (the store's max_age backstop). Emit it once it is known.
             if (isSilent && silentErrorCode.value) {
                 const redirect = silentRedirect(silentErrorCode.value);
+
                 if (redirect) {
                     return redirect;
                 }
@@ -583,6 +599,7 @@ export default defineComponent({
                 // when the redirect_uri was not verified).
                 if (isSilent) {
                     const redirect = silentRedirect(OAuth2ErrorCode.LOGIN_REQUIRED);
+
                     if (redirect) {
                         return redirect;
                     }
@@ -634,6 +651,7 @@ export default defineComponent({
                 // Silent: can't reuse a foreign-realm session → login_required.
                 if (isSilent) {
                     const redirect = silentRedirect(OAuth2ErrorCode.LOGIN_REQUIRED);
+
                     if (redirect) {
                         return redirect;
                     }
@@ -675,7 +693,9 @@ export default defineComponent({
 
                 return wrapChild(h(AAccountPrompt, {
                     identityName: user.value.name ?? user.value.displayName ?? '',
-                    onContinue: () => { accountConfirmedLocal.value = true; },
+                    onContinue: () => {
+                        accountConfirmedLocal.value = true;
+                    },
                     onSwitch: switchAccount,
                 }));
             }
@@ -696,7 +716,9 @@ export default defineComponent({
                     return wrapChild(h(AMfaChallengeForm, {
                         kinds: mfaStatus.value.kinds,
                         challenge: mfaStatus.value.challenge ?? null,
-                        onDone: () => { mfaSatisfiedLocal.value = true; },
+                        onDone: () => {
+                            mfaSatisfiedLocal.value = true;
+                        },
                         onFailed: (message: string) => emit('failed', message),
                     }));
                 }
@@ -740,6 +762,7 @@ export default defineComponent({
                 consentStatus.value?.covered !== true
             ) {
                 const redirect = silentRedirect(OAuth2ErrorCode.CONSENT_REQUIRED);
+
                 if (redirect) {
                     return redirect;
                 }

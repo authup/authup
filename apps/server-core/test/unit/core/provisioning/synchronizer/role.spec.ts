@@ -70,6 +70,7 @@ describe('core/provisioning/synchronizer/role', () => {
         await synchronizer.synchronize(buildInput());
 
         const stored = await roleRepository.findOneBy({ name: 'ops', realmId });
+
         expect(rolePermissionRepository.getAll()).toEqual([
             expect.objectContaining({ roleId: stored!.id }),
         ]);

@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-adapter-web",
     "type": "module",
-    "version": "1.0.0-beta.71",
+    "version": "1.0.0-beta.72",
     "description": "Verify the Authup access token of a Web Request, in any framework built on it.",
     "exports": {
         "./package.json": "./package.json",
@@ -16,7 +16,7 @@
         "dist/"
     ],
     "engines": {
-        "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
+        "node": ">=26.0.0"
     },
     "scripts": {
         "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
@@ -52,13 +52,13 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/server-adapter-kit": "^1.0.0-beta.71"
+        "@authup/server-adapter-kit": "^1.0.0-beta.72"
     },
     "devDependencies": {
-        "@authup/core-http-kit": "^1.0.0-beta.71",
-        "@authup/errors": "^1.0.0-beta.71",
-        "@authup/server-kit": "^1.0.0-beta.71",
-        "@authup/specs": "^1.0.0-beta.71",
+        "@authup/core-http-kit": "^1.0.0-beta.72",
+        "@authup/errors": "^1.0.0-beta.72",
+        "@authup/server-kit": "^1.0.0-beta.72",
+        "@authup/specs": "^1.0.0-beta.72",
         "vitest": "^5.0.3"
     },
     "publishConfig": {

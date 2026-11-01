@@ -53,14 +53,17 @@ function respond(status: number, body: unknown) : Response {
  */
 export async function introspectToken(input: RequestInfo | URL, init?: RequestInit) : Promise<Response> {
     const url = input instanceof Request ? input.url : String(input);
+
     if (url !== INTROSPECTION_ENDPOINT) {
         return respond(404, { code: ErrorCode.JWT_INVALID });
     }
 
     const token = new URLSearchParams(String(init?.body ?? '')).get('token');
+
     switch (token) {
         case ErrorCode.JWT_INVALID: {
             const error = JWTError.payloadInvalid();
+
             return respond(400, { code: error.code, message: error.message });
         }
         case BoundTokenID: {

@@ -16,9 +16,9 @@ import type { Client } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
 import { OAuth2ErrorCode, OAuth2TokenGrant } from '@authup/specs';
 import {
-    createFakeClient, 
-    createFakeUser, 
-    expectClientError, 
+    createFakeClient,
+    createFakeUser,
+    expectClientError,
     httpRequest,
 } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
@@ -33,6 +33,7 @@ describe('token grantTypes enforcement', () => {
         await suite.setup();
 
         const userInput = createFakeUser();
+
         await suite.client.user.create(userInput);
         username = userInput.name;
         password = userInput.password!;
@@ -44,6 +45,7 @@ describe('token grantTypes enforcement', () => {
 
     const createConfidentialClient = async (grantTypes: string | null) : Promise<Client> => {
         const input = createFakeClient();
+
         input.active = true;
         input.authMethod = 'secret';
         input.tokenBindingMethod = 'none';
@@ -108,7 +110,9 @@ describe('token grantTypes enforcement', () => {
         });
 
         expect(response.status).toEqual(400);
+
         const body = await response.json();
+
         expect(body.code).toEqual(ErrorCode.OAUTH_CLIENT_UNAUTHORIZED);
         expect(body.error).toEqual(OAuth2ErrorCode.UNAUTHORIZED_CLIENT);
     });
@@ -125,8 +129,11 @@ describe('token grantTypes enforcement', () => {
                 client_secret: entity.secret!,
             },
         });
+
         expect(grantResponse.status).toEqual(200);
+
         const grantBody = await grantResponse.json();
+
         expect(grantBody.refresh_token).toBeDefined();
 
         const refreshResponse = await httpRequest(suite, 'POST', '/token', {
@@ -139,7 +146,9 @@ describe('token grantTypes enforcement', () => {
         });
 
         expect(refreshResponse.status).toEqual(400);
+
         const refreshBody = await refreshResponse.json();
+
         expect(refreshBody.code).toEqual(ErrorCode.OAUTH_CLIENT_UNAUTHORIZED);
         expect(refreshBody.error).toEqual(OAuth2ErrorCode.UNAUTHORIZED_CLIENT);
     });
@@ -156,7 +165,9 @@ describe('token grantTypes enforcement', () => {
                 client_secret: entity.secret!,
             },
         });
+
         expect(grantResponse.status).toEqual(200);
+
         const grantBody = await grantResponse.json();
 
         const refreshResponse = await httpRequest(suite, 'POST', '/token', {
@@ -167,6 +178,7 @@ describe('token grantTypes enforcement', () => {
                 client_secret: entity.secret!,
             },
         });
+
         expect(refreshResponse.status).toEqual(200);
     });
 
@@ -176,14 +188,16 @@ describe('token grantTypes enforcement', () => {
         const response = await httpRequest(suite, 'POST', '/token', {
             form: {
                 grant_type: OAuth2TokenGrant.DEVICE_CODE,
-                device_code: randomBytes(32).toString('hex'),
+                device_code: randomBytes(32).toHex(),
                 client_id: entity.id,
                 client_secret: entity.secret!,
             },
         });
 
         expect(response.status).toEqual(400);
+
         const body = await response.json();
+
         expect(body.code).toEqual(ErrorCode.OAUTH_CLIENT_UNAUTHORIZED);
         expect(body.error).toEqual(OAuth2ErrorCode.UNAUTHORIZED_CLIENT);
     });
@@ -194,14 +208,16 @@ describe('token grantTypes enforcement', () => {
         const response = await httpRequest(suite, 'POST', '/token', {
             form: {
                 grant_type: OAuth2TokenGrant.DEVICE_CODE,
-                device_code: randomBytes(32).toString('hex'),
+                device_code: randomBytes(32).toHex(),
                 client_id: entity.id,
                 client_secret: entity.secret!,
             },
         });
 
         expect(response.status).toEqual(400);
+
         const body = await response.json();
+
         expect(body.code).toEqual(ErrorCode.OAUTH_GRANT_INVALID);
         expect(body.error).toEqual(OAuth2ErrorCode.INVALID_GRANT);
     });
@@ -218,7 +234,9 @@ describe('token grantTypes enforcement', () => {
                 client_secret: entity.secret!,
             },
         });
+
         expect(grantResponse.status).toEqual(200);
+
         const grantBody = await grantResponse.json();
 
         const refreshResponse = await httpRequest(suite, 'POST', '/token', {
@@ -231,7 +249,9 @@ describe('token grantTypes enforcement', () => {
         });
 
         expect(refreshResponse.status).toEqual(200);
+
         const refreshBody = await refreshResponse.json();
+
         expect(refreshBody.access_token).toBeDefined();
     });
 });

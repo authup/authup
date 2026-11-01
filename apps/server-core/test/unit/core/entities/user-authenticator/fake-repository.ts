@@ -33,7 +33,9 @@ export class FakeUserAuthenticatorRepository implements IUserAuthenticatorReposi
             updatedAt: new Date().toISOString(),
             ...input,
         } as UserAuthenticator;
+
         this.entities.set(entity.id, entity);
+
         return entity;
     }
 
@@ -57,9 +59,12 @@ export class FakeUserAuthenticatorRepository implements IUserAuthenticatorReposi
         // mirror TypeORM: only provided properties are written — a row
         // loaded without its select:false columns must not clobber them.
         const existing = entity.id ? this.entities.get(entity.id) : undefined;
+
         if (existing) {
             const merged = { ...existing, ...entity } as UserAuthenticator;
+
             this.entities.set(merged.id, merged);
+
             return merged;
         }
 
@@ -84,18 +89,22 @@ export class FakeUserAuthenticatorRepository implements IUserAuthenticatorReposi
         // carry the secret material (the columns are ABSENT, not null,
         // so a later save() leaves them untouched).
         const output : Partial<UserAuthenticator> = { ...entity };
+
         delete output.secret;
         delete output.codes;
+
         return output as UserAuthenticator;
     }
 
     async findOneById(id: string): Promise<UserAuthenticator | null> {
         const entity = this.entities.get(id);
+
         return entity ? this.sanitize(entity) : null;
     }
 
     async findOneWithSecretsById(id: string): Promise<UserAuthenticator | null> {
         const entity = this.entities.get(id);
+
         return entity ? { ...entity } : null;
     }
 
@@ -110,9 +119,18 @@ export class FakeUserAuthenticatorRepository implements IUserAuthenticatorReposi
         filter: UserAuthenticatorSecretsFilter = {},
     ): Promise<UserAuthenticator[]> {
         return this.getAll().filter((entity) => {
-            if (entity.userId !== userId) return false;
-            if (filter.kind && entity.kind !== filter.kind) return false;
-            if (typeof filter.confirmed !== 'undefined' && entity.confirmed !== filter.confirmed) return false;
+            if (entity.userId !== userId) {
+                return false;
+            }
+
+            if (filter.kind && entity.kind !== filter.kind) {
+                return false;
+            }
+
+            if (typeof filter.confirmed !== 'undefined' && entity.confirmed !== filter.confirmed) {
+                return false;
+            }
+
             return true;
         }).map((entity) => ({ ...entity }));
     }
@@ -126,6 +144,7 @@ export class FakeUserAuthenticatorRepository implements IUserAuthenticatorReposi
         options: UserAuthenticatorFindManyOptions = {},
     ): Promise<EntityRepositoryFindManyResult<UserAuthenticator>> {
         let data = this.getAll();
+
         if (options.owner) {
             data = data.filter((entity) => entity.userId === options.owner!.userId);
         }

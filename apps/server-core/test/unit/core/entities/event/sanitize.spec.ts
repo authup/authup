@@ -53,6 +53,7 @@ describe('sanitizeEventData', () => {
 
         // and never lets it ride alongside an allowlisted key
         const mixed = sanitizeEventData({ grantType: 'password', [key]: 'super-secret-value' });
+
         expect(mixed).toEqual({ grantType: 'password' });
     });
 
@@ -104,6 +105,7 @@ describe('sanitizeEventData', () => {
 
     it('keeps a string of exactly 512 characters untouched', () => {
         const value = 'b'.repeat(512);
+
         expect(sanitizeEventData({ reason: value })).toEqual({ reason: value });
     });
 
@@ -169,10 +171,10 @@ describe('sanitizeEventData', () => {
             const output = sanitizeEventData({
                 diff: {
                     description: {
-                        next: 'after', 
-                        previous: 'before', 
-                        smuggled: 'oops', 
-                    }, 
+                        next: 'after',
+                        previous: 'before',
+                        smuggled: 'oops',
+                    },
                 },
             });
 

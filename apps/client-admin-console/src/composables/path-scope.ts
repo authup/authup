@@ -86,9 +86,11 @@ export async function collectPathPages(
 
     for (let page = 0; page < PATH_SCOPE_PAGE_LIMIT; page += 1) {
         const response = await load(page * PATH_SCOPE_LIMIT);
+
         data.push(...response.data);
 
         const total = response.meta?.total ?? data.length;
+
         if (response.data.length === 0 || data.length >= total) {
             return {
                 data,
@@ -152,6 +154,7 @@ export async function reloadCollection<T extends ObjectLiteral>(
     get: () => ReloadableCollection<T> | null,
 ) : Promise<void> {
     reloadGeneration += 1;
+
     const generation = reloadGeneration;
 
     for (;;) {
@@ -160,6 +163,7 @@ export async function reloadCollection<T extends ObjectLiteral>(
         }
 
         const collection = get();
+
         if (!collection) {
             return;
         }
@@ -168,6 +172,7 @@ export async function reloadCollection<T extends ObjectLiteral>(
             // Back to the first page: the narrowed set is shorter, so the
             // retained offset would ask for rows past its end.
             await collection.load({ pagination: { offset: 0 } });
+
             return;
         }
 
@@ -252,6 +257,7 @@ export function readPathScopeQuery(value: unknown) : string | null {
     }
 
     const path = value.trim().toLowerCase();
+
     return path.length > 0 ? path : null;
 }
 
@@ -358,9 +364,11 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
     const loadOptions = async () => {
         const current = ++optionsGeneration;
         const realmId = toValue(context.realmId);
+
         if (!realmId || !enabled()) {
             options.value = [];
             optionsTruncated.value = false;
+
             return;
         }
 
@@ -412,6 +420,7 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
             missing.value = false;
             truncated.value = false;
             paths.value = [];
+
             return;
         }
 
@@ -424,6 +433,7 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
             // constant-false filter and the load taken in that window would
             // list nothing. The watcher re-runs when the realm arrives.
             resolving.value = true;
+
             return;
         }
 
@@ -435,6 +445,7 @@ export function usePathScope(context: PathScopeContext = {}) : PathScope {
         let resolved : Path[];
         let overflowed = false;
         let failure = false;
+
         try {
             const collected = await collectPathPages((offset) => httpClient.path.getMany(defineQuery<Path>({
                 filters: and(eq('realmId', realmId), buildPathScopeCondition(value)),

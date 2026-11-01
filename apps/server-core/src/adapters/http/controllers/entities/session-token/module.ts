@@ -89,6 +89,7 @@ export class SessionTokenController {
         const result = await this.service.deleteMany(useRequestQuery(event), actor);
 
         event.response.status = 202;
+
         return result;
     }
 
@@ -101,6 +102,7 @@ export class SessionTokenController {
         const entity = await this.service.delete(id, actor);
 
         event.response.status = 202;
+
         return { data: entity, meta: {} };
     }
 }

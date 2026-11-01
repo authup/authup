@@ -67,6 +67,7 @@ describe('core/entities/trust-anchor/service', () => {
             repository.seed(buildTrustAnchor());
 
             const result = await service.getMany({}, createAllowAllActor());
+
             expect(result.data).toHaveLength(1);
         });
 
@@ -79,18 +80,21 @@ describe('core/entities/trust-anchor/service', () => {
 
             const actor = createAllowAllActor();
             let calls = 0;
+
             actor.permissionEvaluator.setBehavior(({ method }) => {
                 if (method !== 'evaluateOneOf') {
                     return;
                 }
 
                 calls += 1;
+
                 if (calls === 2) {
                     throw new PermissionError({ message: 'denied' });
                 }
             });
 
             const result = await service.getMany({}, actor);
+
             expect(result.data).toHaveLength(1);
             expect(result.meta.total).toEqual(1);
         });
@@ -146,6 +150,7 @@ describe('core/entities/trust-anchor/service', () => {
 
         it('rejects a duplicate name in the same realm', async () => {
             const realmId = randomUUID();
+
             repository.seed(buildTrustAnchor({ name: 'duplicate-ca', realmId }));
 
             await expect(service.create({
@@ -157,6 +162,7 @@ describe('core/entities/trust-anchor/service', () => {
 
         it('evaluates KEY_CREATE with anchor attributes', async () => {
             const actor = createAllowAllActor();
+
             await service.create({
                 name: 'permission-ca',
                 certificate: CA_CERTIFICATE,
@@ -188,12 +194,14 @@ describe('core/entities/trust-anchor/service', () => {
 
     const createRestrictedActor = (name: string, reachable: (attributes: Record<string, any>) => boolean) => {
         const actor = createAllowAllActor();
+
         actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
             if (method !== 'evaluate' || ctx.name !== name) {
                 return;
             }
 
             const attributes = ctx.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+
             if (!reachable(attributes)) {
                 throw PermissionError.denied(name);
             }
@@ -233,6 +241,7 @@ describe('core/entities/trust-anchor/service', () => {
                 { name: 'team-b' },
                 createRestrictedActor(PermissionName.KEY_UPDATE, reachable),
             );
+
             expect(entity.name).toEqual('team-b');
         });
 
@@ -252,6 +261,7 @@ describe('core/entities/trust-anchor/service', () => {
             const [seeded] = repository.seed([buildTrustAnchor()]);
 
             const deleted = await service.delete(seeded.id, createAllowAllActor());
+
             expect(deleted.id).toEqual(seeded.id);
             expect(repository.getAll()).toHaveLength(0);
         });
@@ -262,10 +272,12 @@ describe('core/entities/trust-anchor/service', () => {
 
         const buildActor = (actorId: string) => {
             const actor = createAllowAllActor();
+
             actor.identity = {
                 type: IdentityType.USER,
                 data: { id: actorId, name: 'admin' } as User,
             };
+
             return actor;
         };
 
@@ -297,7 +309,9 @@ describe('core/entities/trust-anchor/service', () => {
             }, buildActor(actorId));
 
             expect(eventService.recordCalls).toHaveLength(1);
+
             const [call] = eventService.recordCalls;
+
             expect(call).toMatchObject({
                 scope: EventScope.ENTITY,
                 name: EventName.CREATED,
@@ -321,7 +335,9 @@ describe('core/entities/trust-anchor/service', () => {
             await service.update(seeded.id, { enabled: false }, buildActor(randomUUID()));
 
             expect(eventService.recordCalls).toHaveLength(1);
+
             const [call] = eventService.recordCalls;
+
             expect(call.name).toEqual(EventName.UPDATED);
             expect(call.data).toEqual({
                 name: 'primary-ca',
@@ -336,7 +352,9 @@ describe('core/entities/trust-anchor/service', () => {
             await service.delete(seeded.id, buildActor(randomUUID()));
 
             expect(eventService.recordCalls).toHaveLength(1);
+
             const [call] = eventService.recordCalls;
+
             expect(call.name).toEqual(EventName.DELETED);
             expect(call.refType).toEqual(EntityType.TRUST_ANCHOR);
             expect(call.refId).toEqual(seeded.id);

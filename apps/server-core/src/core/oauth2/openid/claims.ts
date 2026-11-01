@@ -119,10 +119,12 @@ export class OAuth2OpenIDClaimsBuilder {
         const result = {} as OpenIDTokenPayload;
 
         const keys = Object.keys(attributeMap) as (keyof OpenIDClaims)[];
+
         for (const key_ of keys) {
             const attribute = attributeMap[key_];
 
             let value : unknown;
+
             if (typeof attribute === 'string') {
                 if (!hasOwnProperty(attributes, attribute)) {
                     continue;

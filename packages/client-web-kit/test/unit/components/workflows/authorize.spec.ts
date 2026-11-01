@@ -6,9 +6,9 @@
  */
 
 import type {
-    Client, 
-    Consent, 
-    OAuth2AuthorizationCodeRequest, 
+    Client,
+    Consent,
+    OAuth2AuthorizationCodeRequest,
     Realm,
     User,
 } from '@authup/core-kit';
@@ -93,6 +93,7 @@ function seedLoggedIn(store: Store, realmId = REALM.id, withUser = true) {
             updatedAt: now,
         },
     };
+
     store.setUser(user);
 }
 
@@ -192,7 +193,9 @@ function mountAuthorize(overrides: MountOverrides = {}) {
             // a user-less session's re-resolve attempt must settle by failing —
             // the default fallback would otherwise fake a truthy "user".
             'GET /userinfo': userInfoHandler ??
-                (() => { throw new Error('userinfo unavailable'); }),
+                (() => {
+                    throw new Error('userinfo unavailable');
+                }),
             // The store refuses to commit a session reported as inactive, and
             // builds its evaluator from the catalog plus the introspected
             // subject. A user-less session introspects as a client subject,
@@ -327,6 +330,7 @@ function mountAuthorize(overrides: MountOverrides = {}) {
                 {
                     install(app: App) {
                         store = injectStore(pinia, app);
+
                         if (loggedIn) {
                             seedLoggedIn(store, realmId, withUser);
                         }
@@ -337,9 +341,9 @@ function mountAuthorize(overrides: MountOverrides = {}) {
     });
 
     return {
-        wrapper, 
-        store: () => store, 
-        httpClient, 
+        wrapper,
+        store: () => store,
+        httpClient,
     };
 }
 
@@ -350,6 +354,7 @@ const authorizeForm = (wrapper: ReturnType<typeof mountAuthorize>['wrapper']) =>
 describe('AAuthorize prompt=select_account', () => {
     it('shows the account chooser for a lingering (restored) session', async () => {
         const { wrapper } = mountAuthorize();
+
         await flushPromises();
 
         expect(hasChooser(wrapper)).toBe(true);
@@ -357,6 +362,7 @@ describe('AAuthorize prompt=select_account', () => {
 
     it('skips the chooser once a login happens on this page (lastAuthOrigin=login)', async () => {
         const { wrapper, store } = mountAuthorize();
+
         await flushPromises();
         expect(hasChooser(wrapper)).toBe(true);
 
@@ -373,6 +379,7 @@ describe('AAuthorize prompt=select_account', () => {
             prompt: OAuth2AuthorizationPrompt.SELECT_ACCOUNT,
             clientBuiltIn: true,
         });
+
         await flushPromises();
 
         wrapper.findComponent(AAccountPrompt).vm.$emit('continue');
@@ -387,6 +394,7 @@ describe('AAuthorize prompt=select_account', () => {
 
     it('keeps the chooser when only a session restore settles (lastAuthOrigin=restore)', async () => {
         const { wrapper, store } = mountAuthorize();
+
         await flushPromises();
 
         // a cookie restore stamps RESTORE, not LOGIN — it must NOT suppress
@@ -402,9 +410,11 @@ describe('AAuthorize prompt=select_account', () => {
         // a non-user (client) session — once resolution settles, the
         // chooser must render its escape hatch instead of the loading text.
         const { wrapper } = mountAuthorize({ withUser: false });
+
         await flushPromises();
 
         const prompt = wrapper.findComponent(AAccountPrompt);
+
         expect(prompt.exists()).toBe(true);
         // no resolved user → no "Continue as X", only "use another account"
         expect(prompt.props('identityName')).toEqual('');
@@ -412,6 +422,7 @@ describe('AAuthorize prompt=select_account', () => {
 
     it('drops to the login form when "use another account" is chosen on an unresolvable user', async () => {
         const { wrapper } = mountAuthorize({ withUser: false });
+
         await flushPromises();
 
         wrapper.findComponent(AAccountPrompt).vm.$emit('switch');
@@ -438,9 +449,11 @@ describe('AAuthorize prompt=none (silent)', () => {
             prompt: OAuth2AuthorizationPrompt.NONE,
             loggedIn: false,
         });
+
         await flushPromises();
 
         const redirect = silentRedirect(wrapper);
+
         expect(redirect.exists()).toBe(true);
         expect(redirect.props('error')).toEqual('login_required');
         expect(redirect.props('state')).toEqual('state-1');
@@ -452,9 +465,11 @@ describe('AAuthorize prompt=none (silent)', () => {
             prompt: OAuth2AuthorizationPrompt.NONE,
             realmId: 'other-realm',
         });
+
         await flushPromises();
 
         const redirect = silentRedirect(wrapper);
+
         expect(redirect.exists()).toBe(true);
         expect(redirect.props('error')).toEqual('login_required');
     });
@@ -464,9 +479,11 @@ describe('AAuthorize prompt=none (silent)', () => {
             prompt: OAuth2AuthorizationPrompt.NONE,
             clientBuiltIn: false,
         });
+
         await flushPromises();
 
         const redirect = silentRedirect(wrapper);
+
         expect(redirect.exists()).toBe(true);
         expect(redirect.props('error')).toEqual('consent_required');
     });
@@ -476,6 +493,7 @@ describe('AAuthorize prompt=none (silent)', () => {
             prompt: OAuth2AuthorizationPrompt.NONE,
             clientBuiltIn: true,
         });
+
         await flushPromises();
 
         expect(silentRedirect(wrapper).exists()).toBe(false);
@@ -497,6 +515,7 @@ describe('AAuthorize prompt=none (silent)', () => {
             clientBuiltIn: true,
             redirectUriVerified: false,
         });
+
         await flushPromises();
 
         expect(silentRedirect(wrapper).exists()).toBe(false);
@@ -513,6 +532,7 @@ describe('AAuthorize prompt=none (silent)', () => {
             clientBuiltIn: true,
             redirectUriVerified: false,
         });
+
         await flushPromises();
 
         authorizeForm(wrapper).vm.$emit('loginRequired');
@@ -527,6 +547,7 @@ describe('AAuthorize prompt=none (silent)', () => {
             prompt: '',
             clientBuiltIn: true,
         });
+
         await flushPromises();
 
         expect(store().accessToken).not.toBeNull();
@@ -544,6 +565,7 @@ describe('AAuthorize prompt=none (silent)', () => {
             loggedIn: false,
             redirectUriVerified: false,
         });
+
         await flushPromises();
 
         // never redirect an OIDC error to an unverified URI — show the login form
@@ -560,6 +582,7 @@ describe('AAuthorize consent covering probe (plan 055)', () => {
             prompt: '',
             consentRows: [consentRow('global'), consentRow('openid')],
         });
+
         await flushPromises();
 
         expect(wrapper.find('.authorize-form-stub').exists()).toBe(true);
@@ -572,6 +595,7 @@ describe('AAuthorize consent covering probe (plan 055)', () => {
             prompt: '',
             consentRows: [consentRow('global')],
         });
+
         await flushPromises();
 
         expect(wrapper.find('.authorize-form-stub').exists()).toBe(true);
@@ -584,6 +608,7 @@ describe('AAuthorize consent covering probe (plan 055)', () => {
             prompt: '',
             consentRows: [consentRow('global'), consentRow('openid', past)],
         });
+
         await flushPromises();
 
         expect(authorizeForm(wrapper).props('consentGranted')).toBe(false);
@@ -594,6 +619,7 @@ describe('AAuthorize consent covering probe (plan 055)', () => {
             prompt: '',
             consentHandler: () => new Promise(() => {}),
         });
+
         await flushPromises();
 
         expect(wrapper.find('.authorize-form-stub').exists()).toBe(false);
@@ -603,8 +629,11 @@ describe('AAuthorize consent covering probe (plan 055)', () => {
     it('falls back to interactive consent (covered=false) when the probe errors', async () => {
         const { wrapper } = mountAuthorize({
             prompt: '',
-            consentHandler: () => { throw new Error('probe unavailable'); },
+            consentHandler: () => {
+                throw new Error('probe unavailable');
+            },
         });
+
         await flushPromises();
 
         // fail safe: never auto-consent on an unknown covering state
@@ -620,6 +649,7 @@ describe('AAuthorize consent covering probe (plan 055)', () => {
             clientBuiltIn: true,
             consentHandler: () => new Promise(() => {}),
         });
+
         await flushPromises();
 
         expect(wrapper.find('.authorize-form-stub').exists()).toBe(true);
@@ -635,11 +665,15 @@ describe('AAuthorize consent covering probe (plan 055)', () => {
             prompt: '',
             consentRows: [consentRow('global'), consentRow('openid')],
         });
+
         await flushPromises();
 
         const probe = httpClient.requests.find((request) => request.url.includes('consents'));
+
         expect(probe).toBeTruthy();
+
         const probeUrl = decodeURIComponent(probe!.url);
+
         // v2 expression dialect: the subject filter travels as an
         // and(...) expression inside the single filter parameter.
         expect(probeUrl).toContain("eq(sub,'user-1')");
@@ -657,6 +691,7 @@ describe('AAuthorize consent covering probe (plan 055)', () => {
                 { ...consentRow('openid'), sub: 'user-2' },
             ],
         });
+
         await flushPromises();
 
         expect(authorizeForm(wrapper).props('consentGranted')).toBe(false);
@@ -677,6 +712,7 @@ describe('AAuthorize prompt=none consent covering (plan 055)', () => {
             prompt: OAuth2AuthorizationPrompt.NONE,
             consentRows: [consentRow('global'), consentRow('openid')],
         });
+
         await flushPromises();
 
         expect(silentRedirect(wrapper).exists()).toBe(false);
@@ -690,9 +726,11 @@ describe('AAuthorize prompt=none consent covering (plan 055)', () => {
             prompt: OAuth2AuthorizationPrompt.NONE,
             consentRows: [consentRow('global')],
         });
+
         await flushPromises();
 
         const redirect = silentRedirect(wrapper);
+
         expect(redirect.exists()).toBe(true);
         expect(redirect.props('error')).toEqual('consent_required');
     });
@@ -704,6 +742,7 @@ describe('AAuthorize prompt=login (re-auth)', () => {
             prompt: OAuth2AuthorizationPrompt.LOGIN,
             clientBuiltIn: true,
         });
+
         await flushPromises();
 
         // logged in, but prompt=login forces re-auth: the login form shows (not
@@ -717,6 +756,7 @@ describe('AAuthorize prompt=login (re-auth)', () => {
             prompt: OAuth2AuthorizationPrompt.LOGIN,
             clientBuiltIn: true,
         });
+
         await flushPromises();
         expect(wrapper.find('.login-form-stub').exists()).toBe(true);
 
@@ -732,6 +772,7 @@ describe('AAuthorize prompt=login (re-auth)', () => {
             prompt: OAuth2AuthorizationPrompt.LOGIN,
             clientBuiltIn: true,
         });
+
         await flushPromises();
 
         store().lastAuthOrigin = StoreAuthOrigin.LOGIN;
@@ -757,22 +798,23 @@ describe('AAuthorize federated login', () => {
     });
 
     const userInfo = () => ({
-        id: 'user-1', 
-        name: 'jdoe', 
-        realmId: REALM.id, 
+        id: 'user-1',
+        name: 'jdoe',
+        realmId: REALM.id,
     });
 
     it('completes the pending login and counts it as fresh', async () => {
         const {
-            wrapper, 
-            store, 
-            httpClient, 
+            wrapper,
+            store,
+            httpClient,
         } = mountAuthorize({
             loggedIn: false,
             federatedLogin,
             loginCompleteHandler: grant,
             userInfoHandler: userInfo,
         });
+
         await flushPromises();
 
         expect(httpClient.requests.some(
@@ -793,6 +835,7 @@ describe('AAuthorize federated login', () => {
             federatedLogin,
             loginCompleteHandler: () => new Promise(() => { /* never settles */ }),
         });
+
         await flushPromises();
 
         expect(wrapper.find('.login-form-stub').exists()).toBe(false);
@@ -803,8 +846,11 @@ describe('AAuthorize federated login', () => {
         const { wrapper } = mountAuthorize({
             loggedIn: false,
             federatedLogin,
-            loginCompleteHandler: () => { throw new Error('the login request is unknown'); },
+            loginCompleteHandler: () => {
+                throw new Error('the login request is unknown');
+            },
         });
+
         await flushPromises();
 
         expect(wrapper.emitted('failed')).toBeTruthy();
@@ -823,8 +869,11 @@ describe('AAuthorize federated login', () => {
             clientBuiltIn: true,
             prompt: '',
             federatedLogin,
-            loginCompleteHandler: () => { throw new Error('the redemption failed'); },
+            loginCompleteHandler: () => {
+                throw new Error('the redemption failed');
+            },
         });
+
         await flushPromises();
 
         expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(false);
@@ -846,8 +895,11 @@ describe('AAuthorize federated login', () => {
             clientBuiltIn: true,
             prompt: '',
             federatedLogin,
-            loginCompleteHandler: () => { throw new Error('the redemption failed'); },
+            loginCompleteHandler: () => {
+                throw new Error('the redemption failed');
+            },
         });
+
         await flushPromises();
 
         expect(wrapper.emitted('failed')).toBeTruthy();
@@ -873,6 +925,7 @@ describe('AAuthorize federated login', () => {
                 );
             },
         });
+
         await flushPromises();
 
         expect(store().accessToken).not.toBeNull();
@@ -888,6 +941,7 @@ describe('AAuthorize federated login', () => {
 describe('AAuthorize challenge request', () => {
     it('asks the challenge endpoint about the acr_values it is satisfying', async () => {
         const { httpClient } = mountAuthorize({ acrValues: 'urn:authup:mfa' });
+
         await flushPromises();
 
         const challengeRequest = httpClient.requests.find(
@@ -900,6 +954,7 @@ describe('AAuthorize challenge request', () => {
 
     it('leaves the query bare when the request asks for nothing', async () => {
         const { httpClient } = mountAuthorize();
+
         await flushPromises();
 
         const challengeRequest = httpClient.requests.find(
@@ -922,6 +977,7 @@ describe('AAuthorize MFA gate', () => {
             prompt: '',
             challengeHandler: () => new Promise(() => { /* never settles */ }),
         });
+
         await flushPromises();
 
         // a builtIn client auto-submits on mount, so the form must not render
@@ -939,9 +995,11 @@ describe('AAuthorize MFA gate', () => {
                 kinds: ['totp'],
             }),
         });
+
         await flushPromises();
 
         const challenge = wrapper.findComponent(AMfaChallengeForm);
+
         expect(challenge.exists()).toBe(true);
         expect(challenge.props('kinds')).toEqual(['totp']);
         // no session-less ticket on this path: the bearer already exists
@@ -958,6 +1016,7 @@ describe('AAuthorize MFA gate', () => {
                 kinds: ['totp'],
             }),
         });
+
         await flushPromises();
 
         wrapper.findComponent(AMfaChallengeForm).vm.$emit('done');
@@ -975,6 +1034,7 @@ describe('AAuthorize MFA gate', () => {
                 kinds: [],
             }),
         });
+
         await flushPromises();
 
         expect(wrapper.findComponent(AUserAuthenticatorEnroll).exists()).toBe(true);
@@ -990,6 +1050,7 @@ describe('AAuthorize MFA gate', () => {
                 kinds: [],
             }),
         });
+
         await flushPromises();
 
         expect(wrapper.findComponent(AMfaChallengeForm).exists()).toBe(false);
@@ -1003,8 +1064,11 @@ describe('AAuthorize MFA gate', () => {
     it('fails open to consent when the status cannot be fetched', async () => {
         const { wrapper } = mountAuthorize({
             prompt: '',
-            challengeHandler: () => { throw new Error('challenge unavailable'); },
+            challengeHandler: () => {
+                throw new Error('challenge unavailable');
+            },
         });
+
         await flushPromises();
 
         expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(true);

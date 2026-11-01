@@ -38,7 +38,7 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
         return this.cache.get<OAuth2TokenPayload>(
             buildCacheKey({
                 prefix: CacheOAuth2Prefix.TOKEN_CLAIMS,
-                key: signature, 
+                key: signature,
             }),
         );
     }
@@ -83,7 +83,7 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
         return this.cache.get<OAuth2TokenPayload>(
             buildCacheKey({
                 prefix: CacheOAuth2Prefix.TOKEN,
-                key: id, 
+                key: id,
             }),
         );
     }
@@ -92,14 +92,16 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
 
     async removeById(id: string): Promise<void> {
         const token = await this.findOneById(id);
+
         if (!token) {
             return;
         }
 
         const key = buildCacheKey({
             prefix: CacheOAuth2Prefix.TOKEN,
-            key: id, 
+            key: id,
         });
+
         await this.cache.drop(key);
 
         await this.setInactive(id, token.exp);
@@ -113,7 +115,7 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
         await this.cache.set(
             buildCacheKey({
                 prefix: CacheOAuth2Prefix.TOKEN,
-                key: payload.jti, 
+                key: payload.jti,
             }),
             payload,
             { ttl: this.buildTTL(payload.exp) },
@@ -136,7 +138,7 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
         await this.cache.set(
             buildCacheKey({
                 prefix: CacheOAuth2Prefix.TOKEN_CLAIMS,
-                key: signature, 
+                key: signature,
             }),
             normalized,
             { ttl: this.buildTTL(data.exp) },
@@ -202,6 +204,7 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
     protected buildTTL(utc?: number) {
         if (typeof utc === 'number') {
             const ttl = (utc * 1000) - Date.now();
+
             if (ttl > 0) {
                 return ttl;
             }

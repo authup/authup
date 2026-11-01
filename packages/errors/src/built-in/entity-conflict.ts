@@ -16,6 +16,7 @@ export class EntityConflictError extends AuthupError {
     constructor(input?: string | AuthupEntityErrorOptions) {
         const options: AuthupEntityErrorOptions = typeof input === 'string' ? { message: input } : (input ?? {});
         const { entity, ...rest } = options;
+
         super({
             code: ErrorCode.ENTITY_CONFLICT,
             message: entity ? `The ${entity} already exists.` : 'Entity already exists.',

@@ -43,6 +43,7 @@ function withIdentity(
             realmId,
         } as User,
     } as ActorContext['identity'];
+
     return actor;
 }
 
@@ -126,6 +127,7 @@ describe('IdentityProviderAccountService', () => {
             seedForeign();
 
             const actor = withIdentity(createAllowAllActor());
+
             (actor.permissionEvaluator as FakePermissionEvaluator).deny('evaluate');
 
             const result = await service.getMany({}, actor);
@@ -151,6 +153,7 @@ describe('IdentityProviderAccountService', () => {
             const entity = seedForeign();
 
             const actor = withIdentity(createDenyAllActor());
+
             await expect(service.getOne(entity.id, actor)).rejects.toBeDefined();
         });
 
@@ -158,6 +161,7 @@ describe('IdentityProviderAccountService', () => {
             const entity = seedOwn();
 
             const actor = withIdentity(createAllowAllActor());
+
             await expect(service.getOne(entity.id, actor, { realmId: otherRealmId }))
                 .rejects.toBeInstanceOf(EntityNotFoundError);
         });
@@ -166,10 +170,11 @@ describe('IdentityProviderAccountService', () => {
     describe('delete', () => {
         it('deletes an own row without any permission', async () => {
             userRepository.seed({
-                id: userId, 
-                realmId, 
-                password: 'hashed', 
+                id: userId,
+                realmId,
+                password: 'hashed',
             } as Partial<User>);
+
             const entity = seedOwn();
 
             const actor = withIdentity(createDenyAllActor());
@@ -183,19 +188,22 @@ describe('IdentityProviderAccountService', () => {
             const entity = seedForeign();
 
             const actor = withIdentity(createDenyAllActor());
+
             await expect(service.delete(entity.id, actor)).rejects.toBeDefined();
             expect(repository.removeCalls).toHaveLength(0);
         });
 
         it('blocks unlinking the last account of a password-less user', async () => {
             userRepository.seed({
-                id: userId, 
-                realmId, 
-                password: null, 
+                id: userId,
+                realmId,
+                password: null,
             } as Partial<User>);
+
             const entity = seedOwn();
 
             const actor = withIdentity(createDenyAllActor());
+
             await expect(service.delete(entity.id, actor))
                 .rejects.toBeInstanceOf(IdentityProviderAccountUnlinkBlockedError);
             expect(repository.removeCalls).toHaveLength(0);
@@ -203,13 +211,15 @@ describe('IdentityProviderAccountService', () => {
 
         it('blocks an admin the same way', async () => {
             userRepository.seed({
-                id: otherUserId, 
-                realmId, 
-                password: null, 
+                id: otherUserId,
+                realmId,
+                password: null,
             } as Partial<User>);
+
             const entity = seedForeign();
 
             const actor = withIdentity(createAllowAllActor());
+
             await expect(service.delete(entity.id, actor))
                 .rejects.toBeInstanceOf(IdentityProviderAccountUnlinkBlockedError);
             expect(repository.removeCalls).toHaveLength(0);
@@ -217,13 +227,15 @@ describe('IdentityProviderAccountService', () => {
 
         it('allows unlinking when the user has a password', async () => {
             userRepository.seed({
-                id: userId, 
-                realmId, 
-                password: 'hashed', 
+                id: userId,
+                realmId,
+                password: 'hashed',
             } as Partial<User>);
+
             const entity = seedOwn();
 
             const actor = withIdentity(createDenyAllActor());
+
             await service.delete(entity.id, actor);
 
             expect(repository.removeCalls).toHaveLength(1);
@@ -231,11 +243,13 @@ describe('IdentityProviderAccountService', () => {
 
         it('allows unlinking when another linked account remains', async () => {
             userRepository.seed({
-                id: userId, 
-                realmId, 
-                password: null, 
+                id: userId,
+                realmId,
+                password: null,
             } as Partial<User>);
+
             const entity = seedOwn();
+
             repository.seed({
                 providerId: randomUUID(),
                 providerUserId: 'external-own-2',
@@ -244,6 +258,7 @@ describe('IdentityProviderAccountService', () => {
             });
 
             const actor = withIdentity(createDenyAllActor());
+
             await service.delete(entity.id, actor);
 
             expect(repository.removeCalls).toHaveLength(1);
@@ -255,13 +270,17 @@ describe('IdentityProviderAccountService', () => {
                 realmId,
                 password: 'hashed',
             } as Partial<User>);
+
             const entity = seedOwn();
 
             const actor = withIdentity(createDenyAllActor());
+
             await service.delete(entity.id, actor);
 
             expect(eventService.recordCalls).toHaveLength(1);
+
             const [call] = eventService.recordCalls;
+
             expect(call).toMatchObject({
                 name: EventName.IDENTITY_PROVIDER_UNLINKED,
                 refType: EventRefType.IDENTITY_PROVIDER_ACCOUNT,
@@ -276,6 +295,7 @@ describe('IdentityProviderAccountService', () => {
             const entity = seedOwn();
 
             const actor = withIdentity(createAllowAllActor());
+
             await expect(service.delete(entity.id, actor, { realmId: otherRealmId }))
                 .rejects.toBeInstanceOf(EntityNotFoundError);
         });

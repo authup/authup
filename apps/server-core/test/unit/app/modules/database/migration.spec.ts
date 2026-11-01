@@ -47,6 +47,7 @@ describe('app/modules/database/migration', () => {
         const showMigrations = vi.fn().mockResolvedValue(true);
 
         const variants: any[] = [undefined, [], {}];
+
         for (const migrations of variants) {
             const dataSource = createDataSource({ migrations }, showMigrations);
 

@@ -21,6 +21,7 @@ export const VALIDATION_ERROR_INSTANCE = Symbol.for('@authup/errors/ValidationEr
 export class ValidationError extends AuthupError {
     constructor(input?: string | AuthupErrorOptions) {
         const options: AuthupErrorOptions = typeof input === 'string' ? { message: input } : (input ?? {});
+
         super({
             code: ErrorCode.BAD_REQUEST,
             ...options,

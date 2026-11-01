@@ -21,8 +21,8 @@ import type {
     EntityCollectionResponse,
     EntityRecordResponse,
     EntityStatsResponse,
-    KeyCreatePayload, 
-    KeyUpdatePayload, 
+    KeyCreatePayload,
+    KeyUpdatePayload,
 } from '@authup/core-http-kit';
 import type { Key } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
@@ -30,8 +30,8 @@ import type { IEntityStatsService, IKeyService  } from '../../../../../core/inde
 import {
     RECORD_QUERY_PARAMETERS,
     STATS_QUERY_PARAMETERS,
-    describeQuerySchema, 
-    keySchema, 
+    describeQuerySchema,
+    keySchema,
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -112,6 +112,7 @@ export class KeyController {
         @DContext() event: IAppEvent,
     ): Promise<EntityRecordResponse<Key>> {
         applyRouteRealmIDToBody(event, data);
+
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 

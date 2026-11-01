@@ -58,6 +58,7 @@ describe('http/controllers/path (tree)', () => {
 
         for (const name of [PermissionName.USER_READ]) {
             const { data: permission } = await suite.client.permission.getOne(name);
+
             await suite.client.rolePermission.create({
                 roleId: role.id,
                 permissionId: permission.id,
@@ -101,6 +102,7 @@ describe('http/controllers/path (tree)', () => {
 
     it('does not treat `_` in a folder name as a LIKE wildcard', async () => {
         const underscore = await create('a_b');
+
         await create('leaf', underscore.id);
 
         // `axb` matches the LIKE pattern `a_b/%` but is NOT a descendant
@@ -110,12 +112,15 @@ describe('http/controllers/path (tree)', () => {
         await suite.client.path.update(underscore.id, { name: 'a_c' } as any);
 
         const { data: after } = await suite.client.path.getOne(otherLeaf.id);
+
         expect(after.path).toBe('axb/leaf');
     });
 
     it('does not rewrite a sibling sharing the renamed prefix', async () => {
         const sales = await create('sales');
+
         await create('berlin', sales.id);
+
         const sales2 = await create('sales2');
         const sales2Leaf = await create('berlin', sales2.id);
 
@@ -151,6 +156,7 @@ describe('http/controllers/path (tree)', () => {
 
     it('refuses two folders with the same name under one parent', async () => {
         const root = await create('dup');
+
         await create('same', root.id);
 
         await expectClientError(
@@ -170,12 +176,14 @@ describe('http/controllers/path (tree)', () => {
         const { data: user } = await suite.client.user.create(
             createFakeUser({ realmId: realm.id, pathId: sub.id } as any),
         );
+
         expect(user.pathId).toBe(sub.id);
 
         await suite.client.path.update(dept.id, { name: 'division' } as any);
 
         // the user follows by id: the joined relation reads the NEW path
         const { data: afterRename } = await suite.client.user.getOne(user.id, { relations: ['path'] } as any);
+
         expect(afterRename.pathId).toBe(sub.id);
         expect((afterRename as any).path.path).toBe('division/sub');
 
@@ -185,6 +193,7 @@ describe('http/controllers/path (tree)', () => {
         await expectClientError(() => suite.client.path.getOne(sub.id), { status: 404 });
 
         const { data: afterDelete } = await suite.client.user.getOne(user.id);
+
         expect(afterDelete.pathId).toBeNull();
     });
 
@@ -199,10 +208,12 @@ describe('http/controllers/path (tree)', () => {
 
         // but the ungated relation still hydrates on a user it may read
         const { data } = await restricted.user.getOne(user.id, { relations: ['path'] } as any);
+
         expect((data as any).path.path).toBe('visible');
 
         // and the id filter narrows the list
         const { data: filtered } = await restricted.user.getMany({ filters: { pathId: folder.id } } as any);
+
         expect(filtered.every((item) => item.pathId === folder.id)).toBe(true);
         expect(filtered.some((item) => item.id === user.id)).toBe(true);
     });
@@ -236,6 +247,7 @@ describe('http/controllers/path (tree)', () => {
 
         for (let i = 0; i < 15; i++) {
             const entry = await create(`m${i}`, parentId);
+
             chain.push(entry);
             parentId = entry.id;
         }
@@ -256,6 +268,7 @@ describe('http/controllers/path (tree)', () => {
         );
 
         const { data: unchanged } = await suite.client.path.getOne(child.id);
+
         expect(unchanged.path).toBe('mover/child');
     });
 });

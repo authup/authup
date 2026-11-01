@@ -35,6 +35,12 @@ export type OAuth2IntrospectionSubjectInput = {
      * must not pay for a permission read.
      */
     active: boolean,
+    /**
+     * The scopes of the credential the projection describes. Without `global`
+     * a request made with it evaluates no grants (#3723), so none are
+     * reported (#3749).
+     */
+    scopes: string[],
 };
 
 export type OAuth2IntrospectionSubject = {

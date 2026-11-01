@@ -23,7 +23,9 @@ export class MemoryCache implements ICache {
     async pop<T = unknown>(key: string): Promise<T | null> {
         if (this.instance.has(key)) {
             const output = this.instance.get(key);
+
             this.instance.delete(key);
+
             return output as T;
         }
 
@@ -38,6 +40,7 @@ export class MemoryCache implements ICache {
         // Distinguish "absent/expired" (undefined) from a stored falsy value —
         // a `0` counter or `false`/`''` must round-trip, not read back as null.
         const output = this.instance.get(key);
+
         if (typeof output === 'undefined') {
             return null;
         }
@@ -57,6 +60,7 @@ export class MemoryCache implements ICache {
         }
 
         this.instance.set(key, value, { ttl: options.ttl });
+
         return true;
     }
 
@@ -66,6 +70,7 @@ export class MemoryCache implements ICache {
         }
 
         this.instance.set(key, value, { ttl });
+
         return true;
     }
 
@@ -81,12 +86,15 @@ export class MemoryCache implements ICache {
         // The read + write run in a single synchronous tick (no await
         // between), so this is atomic within the single-threaded process.
         const current = this.instance.get(key);
+
         if (typeof current !== 'undefined' && typeof current !== 'number') {
             throw new Error(`The value at key ${key} is not a number.`);
         }
 
         const output = (current ?? 0) + value;
+
         this.instance.set(key, output, { ttl: options.ttl });
+
         return output;
     }
 
@@ -104,6 +112,7 @@ export class MemoryCache implements ICache {
         if (options.prefix) {
             const keys = this.instance.keys();
             let iterator = keys.next();
+
             while (!iterator.done) {
                 if (typeof iterator.value !== 'string') {
                     continue;

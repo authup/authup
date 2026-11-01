@@ -80,6 +80,7 @@ describe('authup login', () => {
         notices = [];
         vi.spyOn(process.stderr, 'write').mockImplementation((chunk) => {
             notices.push(String(chunk));
+
             return true;
         });
     });
@@ -96,10 +97,12 @@ describe('authup login', () => {
         const transport = createHostTransport({
             'POST /device_authorization': (_request, form) => {
                 forms.push(form);
+
                 return { body: device };
             },
             'POST /token': (_request, form) => {
                 forms.push(form);
+
                 return { body: grant };
             },
         });

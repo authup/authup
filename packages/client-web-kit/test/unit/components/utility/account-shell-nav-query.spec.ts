@@ -24,14 +24,14 @@ const REF = 'http://localhost:3000/';
 function buildItems(query?: Record<string, string>) : AAccountShellNavItem[] {
     return [
         {
-            key: 'overview', 
-            label: 'Overview', 
-            link: { to: '/', query }, 
+            key: 'overview',
+            label: 'Overview',
+            link: { to: '/', query },
             active: true,
         },
         {
-            key: 'password', 
-            label: 'Password', 
+            key: 'password',
+            label: 'Password',
             link: { to: '/password', query },
         },
     ];
@@ -83,6 +83,7 @@ async function mountWithRouter(props: Record<string, any>) {
 // Select tabs by `:not(--back)`: the back entry leads the strip and shares
 // the nav-link class, but it points off-site and carries no ref query.
 const TABS = '.a-account-shell-nav-link:not(.a-account-shell-nav-link--back)';
+
 describe('AAccountShell nav query threading', () => {
     it('nav hrefs carry the ref query', async () => {
         const wrapper = await mountWithRouter({
@@ -99,6 +100,7 @@ describe('AAccountShell nav query threading', () => {
 
         // The back entry itself points off-site and must NOT gain the query.
         const back = wrapper.find('.a-account-shell-nav-link--back');
+
         expect(back.attributes('href')).toEqual(REF);
     });
 

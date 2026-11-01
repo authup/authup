@@ -38,6 +38,7 @@ function mountSocketConsumer(realmId?: string) {
             provide(SocketClientSymbol, {
                 connect: async (namespace: string) => {
                     namespaces.push(namespace);
+
                     return socket;
                 },
             });
@@ -54,6 +55,7 @@ function mountSocketConsumer(realmId?: string) {
 describe('defineEntitySocketManager', () => {
     it('should connect to the namespace the server publishes the realm to', async () => {
         const namespaces = mountSocketConsumer('realm-id');
+
         await flushPromises();
 
         expect(namespaces).toEqual([buildEntityNamespaceName('realm-id')]);
@@ -61,6 +63,7 @@ describe('defineEntitySocketManager', () => {
 
     it('should connect to the default namespace without a realm', async () => {
         const namespaces = mountSocketConsumer();
+
         await flushPromises();
 
         expect(namespaces).toEqual(['/']);

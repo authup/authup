@@ -15,6 +15,7 @@ export const UNAUTHORIZED_ERROR_INSTANCE = Symbol.for('@authup/errors/Unauthoriz
 export class UnauthorizedError extends AuthupError {
     constructor(input?: string | AuthupErrorOptions) {
         const options: AuthupErrorOptions = typeof input === 'string' ? { message: input } : (input ?? {});
+
         super({
             code: ErrorCode.IDENTITY_UNAUTHORIZED,
             message: 'Authentication required.',

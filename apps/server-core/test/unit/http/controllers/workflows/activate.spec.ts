@@ -38,15 +38,18 @@ describe('http/controller/activate', () => {
     it('accepts a mailed activation code once', async () => {
         const user = createFakeUser();
         const response = await suite.client.user.register(user);
+
         expect(response.active).toBeFalsy();
 
         expect(mailClient.sent).toHaveLength(1);
+
         const token = /([0-9a-f]{64})/.exec(mailClient.sent[0].text ?? '')![1];
 
         await suite.client.user.activate(token);
 
         const row = await suite.dataSource.getRepository(UserEntity).createQueryBuilder('user')
             .addSelect('user.activateHash').where('user.name = :name', { name: user.name }).getOne();
+
         expect(row?.active).toBe(true);
         expect(row?.activateHash).toBeNull();
 

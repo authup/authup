@@ -28,7 +28,7 @@ export function createPathValidator() {
                     ctx.issues.push({
                         input: ctx.value,
                         code: 'custom',
-                        message: e instanceof Error ? e.message : 'The path is not valid.',
+                        message: Error.isError(e) ? e.message : 'The path is not valid.',
                     });
                 }
             }),

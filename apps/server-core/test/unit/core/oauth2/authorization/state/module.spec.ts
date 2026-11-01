@@ -8,9 +8,9 @@
 import { randomUUID } from 'node:crypto';
 import { OAuth2Error } from '@authup/specs';
 import {
-    beforeEach, 
-    describe, 
-    expect, 
+    beforeEach,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { OAuth2AuthorizationStateManager } from '../../../../../../src/core/oauth2/authorization/state/module.ts';
@@ -24,13 +24,17 @@ class FakeStateRepository implements IOAuth2AuthorizeStateRepository {
 
     async insert(data: OAuth2AuthorizationState): Promise<string> {
         const id = randomUUID();
+
         this.store.set(id, data);
+
         return id;
     }
 
     async popOneById(id: string): Promise<OAuth2AuthorizationState | null> {
         const payload = this.store.get(id) ?? null;
+
         this.store.delete(id);
+
         return payload;
     }
 
@@ -55,6 +59,7 @@ describe('OAuth2AuthorizationStateManager', () => {
                 userAgent: 'Mozilla/5.0',
             };
             const id = await manager.save(state);
+
             expect(typeof id).toBe('string');
             expect(id.length).toBeGreaterThan(0);
         });
@@ -69,8 +74,9 @@ describe('OAuth2AuthorizationStateManager', () => {
             const id = await manager.save(state);
             const result = await manager.verify(id, {
                 ip: '10.0.0.1',
-                userAgent: 'TestAgent', 
+                userAgent: 'TestAgent',
             });
+
             expect(result.ip).toBe('10.0.0.1');
             expect(result.userAgent).toBe('TestAgent');
         });
@@ -83,6 +89,7 @@ describe('OAuth2AuthorizationStateManager', () => {
 
         it('should throw when IP does not match', async () => {
             const id = await manager.save({ ip: '10.0.0.1' });
+
             await expect(
                 manager.verify(id, { ip: '10.0.0.2' }),
             ).rejects.toThrow(OAuth2Error);
@@ -91,24 +98,27 @@ describe('OAuth2AuthorizationStateManager', () => {
         it('should throw when user agent does not match', async () => {
             const id = await manager.save({
                 ip: '10.0.0.1',
-                userAgent: 'Chrome', 
+                userAgent: 'Chrome',
             });
+
             await expect(
                 manager.verify(id, {
                     ip: '10.0.0.1',
-                    userAgent: 'Firefox', 
+                    userAgent: 'Firefox',
                 }),
             ).rejects.toThrow(OAuth2Error);
         });
 
         it('should remove state after verify (single-use)', async () => {
             const id = await manager.save({ ip: '10.0.0.1' });
+
             await manager.verify(id, { ip: '10.0.0.1' });
             expect(repository.has(id)).toBe(false);
         });
 
         it('should refuse a second verify of the same state', async () => {
             const id = await manager.save({ ip: '10.0.0.1' });
+
             await manager.verify(id, { ip: '10.0.0.1' });
             await expect(
                 manager.verify(id, { ip: '10.0.0.1' }),
@@ -121,12 +131,14 @@ describe('OAuth2AuthorizationStateManager', () => {
                 manager.verify(id, { ip: '10.0.0.1' }),
                 manager.verify(id, { ip: '10.0.0.1' }),
             ]);
+
             expect(outcomes.map((outcome) => outcome.status).sort()).toEqual(['fulfilled', 'rejected']);
             expect(repository.has(id)).toBe(false);
         });
 
         it('should remove state even when IP mismatch (replay prevention)', async () => {
             const id = await manager.save({ ip: '10.0.0.1' });
+
             await expect(
                 manager.verify(id, { ip: '10.0.0.2' }),
             ).rejects.toThrow(OAuth2Error);
@@ -137,14 +149,16 @@ describe('OAuth2AuthorizationStateManager', () => {
             const id = await manager.save({ ip: '10.0.0.1' });
             const result = await manager.verify(id, {
                 ip: '10.0.0.1',
-                userAgent: 'anything', 
+                userAgent: 'anything',
             });
+
             expect(result.ip).toBe('10.0.0.1');
         });
 
         it('should skip IP check when payload has empty ip', async () => {
             const id = await manager.save({ ip: '' });
             const result = await manager.verify(id, { ip: '99.99.99.99' });
+
             expect(result).toBeDefined();
         });
     });

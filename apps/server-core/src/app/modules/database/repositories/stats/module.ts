@@ -40,6 +40,7 @@ export class EntityStatsRepositoryAdapter<T extends ObjectLiteral> implements IE
 
     async count(query: IQuery): Promise<number> {
         const qb = this.repository.createQueryBuilder(this.alias);
+
         applyQuery(qb, query);
 
         return qb.getCount();

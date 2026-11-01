@@ -69,9 +69,11 @@ function buildRouteTemplates(router: IApp): RouteTemplates {
         const segments = toPathSegments(route.path);
         const label = `/${segments.join('/')}`;
         const key = `${route.method || ''} ${label}`;
+
         if (seen.has(key)) {
             continue;
         }
+
         seen.add(key);
 
         if (route.method) {
@@ -148,6 +150,7 @@ export function registerPrometheusMiddleware(router: IApp, input?: OptionsInput)
         normalizePath: createRouteTemplateNormalizePath(router),
         skip(event) {
             let { path } = event;
+
             if (!path.startsWith('/')) {
                 path = `/${path}`;
             }

@@ -15,6 +15,7 @@ export const OAUTH2_DEVICE_AUTHORIZATION_ERROR_INSTANCE = Symbol.for('@authup/sp
 export class OAuth2DeviceAuthorizationError extends OAuth2Error {
     constructor(input?: AuthupErrorInput) {
         const options = normalizeOAuth2ErrorInput(input);
+
         super({
             code: ErrorCode.OAUTH_AUTHORIZATION_PENDING,
             message: 'The authorization request is still pending.',

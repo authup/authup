@@ -56,6 +56,7 @@ export const APolicyParentAssignment = defineComponent({
                     manager.data.value.parentId = props.parentId;
                 } else {
                     manager.data.value.parentId = null;
+
                     if (manager.data.value.parent) {
                         manager.data.value.parent = null;
                     }

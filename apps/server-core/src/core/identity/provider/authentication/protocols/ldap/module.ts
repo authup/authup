@@ -86,7 +86,12 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
     }
 
     async authenticate(name: string, password: string) : Promise<User> {
+        if (!this.provider.enabled) {
+            throw new EntityCredentialsInvalidError({ entity: 'user' });
+        }
+
         let bind = await this.safeBind();
+
         if (!bind.success) {
             await this.safeUnbind();
 
@@ -94,8 +99,10 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
         }
 
         const entity = await this.findOneByName(name);
+
         if (!entity) {
             await this.safeUnbind();
+
             throw new EntityCredentialsInvalidError({ entity: 'user' });
         }
 
@@ -139,6 +146,7 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
 
         if (!this.client.isDn(user)) {
             const nameAttribute = this.provider.userNameAttribute || 'cn';
+
             user = `${nameAttribute}=${user},${this.client.resolveDn(this.provider.userBaseDn, this.provider.baseDn)}`;
         }
 
@@ -151,12 +159,12 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
 
             return {
                 success: true,
-                data: null, 
+                data: null,
             };
         } catch (e) {
             return {
                 success: false,
-                error: e as Error, 
+                error: e as Error,
             };
         }
     }
@@ -171,12 +179,12 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
 
             return {
                 success: true,
-                data: null, 
+                data: null,
             };
         } catch (e) {
             return {
                 success: false,
-                error: e as Error, 
+                error: e as Error,
             };
         }
     }
@@ -224,6 +232,7 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
 
     protected extractCnFromDn(dn: string) : string | undefined {
         const match = /^cn=([^,]+)/i.exec(dn);
+
         return match ? match[1].trim() : undefined;
     }
 
@@ -232,6 +241,7 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
         const memberAttribute = this.provider.groupMemberAttribute || 'member';
 
         let filter : Filter;
+
         if (this.provider.groupFilter) {
             filter = buildFilter(this.provider.groupFilter, {
                 name_attribute: nameAttribute,
@@ -263,14 +273,17 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
 
         const attributeKey = this.provider.groupNameAttribute || 'cn';
         const names : string[] = [];
+
         for (const entity of entities) {
             const attribute = entity[attributeKey];
+
             if (typeof attribute === 'undefined') {
                 continue;
             }
 
             if (typeof attribute === 'string') {
                 names.push(attribute);
+
                 continue;
             }
 

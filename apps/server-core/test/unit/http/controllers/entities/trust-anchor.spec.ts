@@ -52,9 +52,11 @@ describe('src/http/controllers/trust-anchor', () => {
         expect(created.realmId).toEqual(realm.id);
 
         const { data: byId } = await suite.client.trustAnchor.getOne(created.id);
+
         expect(byId.id).toEqual(created.id);
 
         const byName = await suite.client.get(`realms/${realm.id}/trust-anchors/primary-client-ca`);
+
         expect(byName.data.data.id).toEqual(created.id);
     });
 
@@ -140,6 +142,7 @@ describe('src/http/controllers/trust-anchor', () => {
         });
 
         const { data: deleted } = await suite.client.trustAnchor.delete(created.id);
+
         expect(deleted.id).toEqual(created.id);
 
         await expectClientError(
@@ -154,6 +157,7 @@ describe('src/http/controllers/trust-anchor', () => {
             certificate: CA_CERTIFICATE,
             realmId: realm.id,
         });
+
         await suite.client.trustAnchor.update(created.id, { enabled: false });
         await suite.client.trustAnchor.delete(created.id);
 
@@ -162,6 +166,7 @@ describe('src/http/controllers/trust-anchor', () => {
         expect(data).toHaveLength(3);
         expect(new Set(data.map((row) => row.name)))
             .toEqual(new Set(['created', 'updated', 'deleted']));
+
         for (const row of data) {
             expect(row.realmId).toEqual(realm.id);
             expect(row.actorType).toEqual('user');
@@ -172,6 +177,7 @@ describe('src/http/controllers/trust-anchor', () => {
         }
 
         const updatedRow = data.find((row) => row.name === 'updated');
+
         expect(updatedRow!.data!.diff).toEqual({ enabled: { next: false, previous: true } });
     });
 });

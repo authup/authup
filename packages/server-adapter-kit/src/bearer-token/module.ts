@@ -13,11 +13,13 @@ export function extractBearerToken(authorization: string | undefined): string | 
     }
 
     const spaceIndex = authorization.indexOf(' ');
+
     if (spaceIndex === -1) {
         throw new BearerTokenMalformedError();
     }
 
     const scheme = authorization.substring(0, spaceIndex);
+
     if (scheme.toLowerCase() !== 'bearer') {
         throw new BearerTokenMalformedError(
             'Only Bearer tokens are accepted as authentication method.',
@@ -25,6 +27,7 @@ export function extractBearerToken(authorization: string | undefined): string | 
     }
 
     const token = authorization.substring(spaceIndex + 1);
+
     if (token.length === 0) {
         throw new BearerTokenMalformedError('The bearer token value is empty.');
     }

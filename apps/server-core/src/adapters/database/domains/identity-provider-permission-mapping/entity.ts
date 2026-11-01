@@ -17,10 +17,10 @@ import {
 } from 'typeorm';
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type {
-    IdentityProviderMappingSyncMode, 
+    IdentityProviderMappingSyncMode,
     IdentityProviderPermissionMapping,
-    Realm, 
-    Role, 
+    Realm,
+    Role,
 } from '@authup/core-kit';
 import { IdentityProviderEntity } from '../identity-provider/index.ts';
 import { PermissionEntity } from '../permission/index.ts';
@@ -33,31 +33,31 @@ export class IdentityProviderPermissionMappingEntity implements IdentityProvider
     id: string;
 
     @Column({
-        name: 'synchronization_mode', 
-        type: 'varchar', 
-        length: 64, 
-        nullable: true, 
+        name: 'synchronization_mode',
+        type: 'varchar',
+        length: 64,
+        nullable: true,
     })
     synchronizationMode: `${IdentityProviderMappingSyncMode}` | null;
 
     @Column({
         type: 'varchar',
         length: 64,
-        nullable: true, 
+        nullable: true,
     })
     name: string | null;
 
     @Column({
         type: 'varchar',
         length: 128,
-        nullable: true, 
+        nullable: true,
     })
     value: string | null;
 
     @Column({
-        name: 'value_is_regex', 
-        type: 'boolean', 
-        default: false, 
+        name: 'value_is_regex',
+        type: 'boolean',
+        default: false,
     })
     valueIsRegex: boolean;
 
@@ -83,7 +83,7 @@ export class IdentityProviderPermissionMappingEntity implements IdentityProvider
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'permission_realm_id' })
     permissionRealm: RealmEntity | null;

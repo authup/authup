@@ -60,6 +60,7 @@ describe('src/policy', () => {
 
     it('should evaluate with valid data', async () => {
         const outcome = await enforcer.evaluate(compositePolicy, definePolicyEvaluationContext({ data: new PolicyData({ attributes: { name: 'admin' } }) }));
+
         expect(outcome.success).toBeTruthy();
     });
 
@@ -96,6 +97,7 @@ describe('src/policy', () => {
 
         it('should not write a registration back onto the supplied evaluators', () => {
             const engine = new PolicyEngine(PolicyDefaultEvaluators);
+
             engine.registerEvaluator(CUSTOM_TYPE, probeEvaluator);
 
             expect(CUSTOM_TYPE in PolicyDefaultEvaluators).toBeFalsy();
@@ -108,11 +110,13 @@ describe('src/policy', () => {
             second.registerEvaluator(CUSTOM_TYPE, probeEvaluator);
 
             const registered = await second.evaluate(probePolicy, definePolicyEvaluationContext({ data: new PolicyData({}) }));
+
             expect(registered.success).toBeTruthy();
 
             // The sibling never registered the type, so it must still fail
             // closed instead of borrowing the other engine's evaluator.
             const foreign = await first.evaluate(probePolicy, definePolicyEvaluationContext({ data: new PolicyData({}) }));
+
             expect(foreign.success).toBeFalsy();
         });
     });
@@ -128,6 +132,7 @@ describe('src/policy', () => {
             const policy = definePolicyWithType(BuiltInPolicyType.IDENTITY, { types: ['user'] });
 
             const outcome = await enforcer.evaluate(policy, definePolicyEvaluationContext());
+
             expect(outcome.success).toBeFalsy();
             expect(outcome.pending).toBeTruthy();
             expect(outcome.issues).toHaveLength(1);
@@ -140,6 +145,7 @@ describe('src/policy', () => {
             });
 
             const outcome = await enforcer.evaluate(policy, definePolicyEvaluationContext());
+
             expect(outcome.success).toBeFalsy();
             expect(outcome.pending).toBeTruthy();
         });
@@ -149,6 +155,7 @@ describe('src/policy', () => {
             const data = new PolicyData({ [BuiltInPolicyType.IDENTITY]: identityData });
 
             const outcome = await enforcer.evaluate(policy, definePolicyEvaluationContext({ data }));
+
             expect(outcome.success).toBeTruthy();
             expect(outcome.pending).toBeFalsy();
         });
@@ -172,6 +179,7 @@ describe('src/policy', () => {
             const data = new PolicyData({ [BuiltInPolicyType.IDENTITY]: identityData });
 
             const outcome = await enforcer.evaluate(policy, definePolicyEvaluationContext({ data }));
+
             expect(outcome.success).toBeFalsy();
             expect(outcome.pending).toBeTruthy();
 
@@ -182,6 +190,7 @@ describe('src/policy', () => {
                     [BuiltInPolicyType.ATTRIBUTES]: { name: 'guest' },
                 }),
             }));
+
             expect(allowed.success).toBeTruthy();
             expect(allowed.pending).toBeFalsy();
 
@@ -192,6 +201,7 @@ describe('src/policy', () => {
                     [BuiltInPolicyType.ATTRIBUTES]: { name: 'admin' },
                 }),
             }));
+
             expect(denied.success).toBeFalsy();
             expect(denied.pending).toBeFalsy();
         });

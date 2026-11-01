@@ -22,6 +22,7 @@ export async function guessOauth2GrantTypeByRequest(
     const grantType = pick('grant_type');
 
     const validGrantTypes = Object.values(OAuth2TokenGrant);
+
     if (validGrantTypes.includes(grantType)) {
         return grantType;
     }
@@ -36,6 +37,7 @@ export async function guessOauth2GrantTypeByRequest(
     // ------------------------------------------------------------------
 
     const refreshToken = pick('refresh_token');
+
     if (refreshToken) {
         return OAuth2TokenGrant.REFRESH_TOKEN;
     }
@@ -43,6 +45,7 @@ export async function guessOauth2GrantTypeByRequest(
     // ------------------------------------------------------------------
 
     const code = pick('code');
+
     if (code) {
         return OAuth2TokenGrant.AUTHORIZATION_CODE;
     }

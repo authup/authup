@@ -31,6 +31,7 @@ export class LoggerModule implements IModule {
         }
 
         const result = container.tryResolve(ConfigInjectionKey);
+
         if (!result.success || !result.data.logger) {
             container.register(LoggerInjectionKey, { useFactory: createNoopLogger });
 

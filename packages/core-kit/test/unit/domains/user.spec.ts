@@ -27,6 +27,7 @@ describe('src/domains/user', () => {
             const validator = new UserValidator();
 
             const output = await validator.run({ password: 'a'.repeat(10) });
+
             expect(output.password).toEqual('a'.repeat(10));
         });
 
@@ -36,6 +37,7 @@ describe('src/domains/user', () => {
             await expect(validator.run({ password: 'a'.repeat(11) })).rejects.toThrow();
 
             const output = await validator.run({ password: 'a'.repeat(12) });
+
             expect(output.password).toEqual('a'.repeat(12));
         });
 
@@ -45,6 +47,7 @@ describe('src/domains/user', () => {
             await expect(validator.run({ password: 'a'.repeat(513) })).rejects.toThrow();
 
             const output = await validator.run({ password: 'a'.repeat(512) });
+
             expect(output.password).toEqual('a'.repeat(512));
         });
     });

@@ -176,14 +176,14 @@ describe('permission/authorization/check-evaluator', () => {
             permissions: [
                 { name: 'user_read', targetRealms: [REALM_ID] },
                 {
-                    name: 'user_read', 
-                    realmId: REALM_ID, 
-                    targetRealms: [null], 
+                    name: 'user_read',
+                    realmId: REALM_ID,
+                    targetRealms: [null],
                 },
                 {
-                    name: 'user_read', 
-                    clientId: CLIENT_ID, 
-                    targetRealms: [null], 
+                    name: 'user_read',
+                    clientId: CLIENT_ID,
+                    targetRealms: [null],
                 },
             ],
         })).resolves.toBeDefined();
@@ -192,20 +192,20 @@ describe('permission/authorization/check-evaluator', () => {
     it('matches an owned definition by the realm and client of the context', async () => {
         const evaluator = await buildEvaluator([
             {
-                name: 'mtb_query_submit', 
-                realmId: REALM_ID, 
-                targetRealms: [REALM_ID], 
+                name: 'mtb_query_submit',
+                realmId: REALM_ID,
+                targetRealms: [REALM_ID],
             },
             {
-                name: 'report_export', 
-                realmId: REALM_ID, 
-                clientId: CLIENT_ID, 
-                targetRealms: [REALM_ID], 
+                name: 'report_export',
+                realmId: REALM_ID,
+                clientId: CLIENT_ID,
+                targetRealms: [REALM_ID],
             },
             {
-                name: 'report_import', 
-                clientId: CLIENT_ID, 
-                targetRealms: [null], 
+                name: 'report_import',
+                clientId: CLIENT_ID,
+                targetRealms: [null],
             },
         ]);
 
@@ -228,9 +228,9 @@ describe('permission/authorization/check-evaluator', () => {
     it('matches a bare name against the global definition only', async () => {
         const evaluator = await buildEvaluator([
             {
-                name: 'user_read', 
-                realmId: REALM_ID, 
-                targetRealms: [REALM_ID], 
+                name: 'user_read',
+                realmId: REALM_ID,
+                targetRealms: [REALM_ID],
             },
             { name: 'user_read', targetRealms: [null] },
         ]);

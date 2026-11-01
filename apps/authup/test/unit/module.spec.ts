@@ -56,6 +56,7 @@ async function resolveSubCommand(command: EntryPointCommand, name: string) : Pro
         command.subCommands);
 
     const subCommand = subCommands?.[name];
+
     if (!subCommand) {
         throw new Error(`The entry point declares no "${name}" command.`);
     }
@@ -72,6 +73,7 @@ async function resolveArgsDef(command: CommandDef) : Promise<ArgsDef> {
 describe('createCLIEntryPointCommand', () => {
     it('carries the authup meta and every command', async () => {
         const command = await createCLIEntryPointCommand();
+
         expect(command.meta).toMatchObject({ name: 'authup' });
         expect(Object.keys(command.subCommands ?? {}).sort()).toEqual([
             'api',

@@ -37,30 +37,30 @@ export class RoleEntity implements Role {
 
     @Index()
     @Column({
-        name: 'built_in', 
-        type: 'boolean', 
-        default: false, 
+        name: 'built_in',
+        type: 'boolean',
+        default: false,
     })
     builtIn: boolean;
 
     @Column({
         type: 'varchar',
-        length: 128, 
+        length: 128,
     })
     name: string;
 
     @Index()
     @Column({
-        name: 'display_name', 
-        type: 'varchar', 
-        length: 256, 
-        nullable: true, 
+        name: 'display_name',
+        type: 'varchar',
+        length: 256,
+        nullable: true,
     })
     displayName: string | null;
 
     @Column({
         type: 'text',
-        nullable: true, 
+        nullable: true,
     })
     description: string | null;
 
@@ -68,7 +68,7 @@ export class RoleEntity implements Role {
     @Column({
         type: 'varchar',
         length: 16,
-        nullable: true, 
+        nullable: true,
     })
     target: string | null;
 
@@ -93,7 +93,7 @@ export class RoleEntity implements Role {
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'realm_id' })
     realm: Realm | null;

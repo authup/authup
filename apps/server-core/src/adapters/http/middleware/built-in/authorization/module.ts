@@ -135,12 +135,15 @@ export class AuthorizationMiddleware {
         // is authoritative, so memoize the promise on the request store (the
         // store is shared by every re-entry of the same request).
         const pending = event.store[runSymbol] as Promise<void> | undefined;
+
         if (pending) {
             return pending;
         }
 
         const promise = this.runInner(event);
+
         event.store[runSymbol] = promise;
+
         return promise;
     }
 
@@ -148,6 +151,7 @@ export class AuthorizationMiddleware {
         // Per request, because what a subject holds depends on the token it
         // presents (#3597): the evaluator is handed the request's grants.
         const grants = this.createGrantsResolver(event);
+
         setRequestGrantsResolver(event, grants);
 
         const requestAccessContext = new RequestPermissionEvaluator(
@@ -159,14 +163,17 @@ export class AuthorizationMiddleware {
                 clientId: null,
             }),
         );
+
         setRequestPermissionEvaluator(event, requestAccessContext);
 
         const headerValue = event.headers.get('authorization');
+
         if (!headerValue) {
             // The bearer/Basic path is untouched, and the header keeps
             // winning: the cookie is only consulted when the request presents
             // no credential of its own.
             await this.runCookieSession(event);
+
             return;
         }
 
@@ -174,11 +181,13 @@ export class AuthorizationMiddleware {
 
         if (header.type === AuthorizationHeaderType.BEARER) {
             await this.verifyBearerAuthorizationHeader(event, header);
+
             return;
         }
 
         if (header.type === AuthorizationHeaderType.BASIC) {
             await this.verifyBasicAuthorizationHeader(event, header);
+
             return;
         }
 
@@ -197,13 +206,16 @@ export class AuthorizationMiddleware {
 
         return (identity) => {
             const token = useRequestTokenPayload(event);
+
             if (token && token.sub === identity.id && token.sub_kind === identity.type) {
                 tokenGrants = tokenGrants || this.identityPermissionProvider.getForToken(token);
+
                 return tokenGrants;
             }
 
             const key = `${identity.type}:${identity.id}`;
             let grants = identityGrants.get(key);
+
             if (!grants) {
                 grants = this.identityPermissionProvider.getFor(identity);
                 identityGrants.set(key, grants);
@@ -227,6 +239,7 @@ export class AuthorizationMiddleware {
     protected async runCookieSession(event: IAppEvent): Promise<void> {
         try {
             const { baseURL } = this.options;
+
             if (!baseURL) {
                 // The origin gate cannot be evaluated without publicUrl, so
                 // the cookie is not honoured at all.
@@ -234,31 +247,25 @@ export class AuthorizationMiddleware {
             }
 
             const secret = useRequestCookie(event, buildSessionCookieName(baseURL));
-            if (typeof secret !== 'string' || secret.length === 0) {
-                return;
-            }
 
-            // Finding 2 of plan 088, and an invariant rather than a detail:
-            // an ambient cookie must never reach the OAuth2 issuance surface,
+            // An ambient cookie must never reach the OAuth2 issuance surface,
             // or one script execution on this origin turns it back into a
             // portable token pair.
-            if (isOAuth2IssuancePath(event.path)) {
-                return;
-            }
-
-            if (!isSameOriginRequest(event, baseURL, { logger: this.logger })) {
+            if (
+                typeof secret !== 'string' ||
+                secret.length === 0 ||
+                isOAuth2IssuancePath(event.path) ||
+                !isSameOriginRequest(event, baseURL, { logger: this.logger })
+            ) {
                 return;
             }
 
             const session = await this.sessionRepository.findOneBySecret(secret);
-            if (!session) {
-                return;
-            }
 
             // The consoles are user surfaces. A client-subject session would
             // otherwise authenticate here and then produce a sign-in loop in a
             // console that can only render a user.
-            if (session.subKind !== IdentityType.USER) {
+            if (!session || session.subKind !== IdentityType.USER) {
                 return;
             }
 
@@ -274,6 +281,7 @@ export class AuthorizationMiddleware {
                 IdentityType.USER,
                 session.sub,
             );
+
             if (!isTokenSubjectActive(identity, { realm_id: session.realmId })) {
                 return;
             }
@@ -309,8 +317,10 @@ export class AuthorizationMiddleware {
         secret: string,
     ): Promise<void> {
         const refreshedAt = session.refreshedAt || session.createdAt;
+
         if (refreshedAt) {
             const threshold = new Date(refreshedAt).getTime() + SESSION_REFRESH_THROTTLE;
+
             if (threshold > Date.now()) {
                 return;
             }
@@ -320,6 +330,7 @@ export class AuthorizationMiddleware {
         // so a miss here means the session is gone and there is nothing to
         // slide (the write itself would refuse a gone row as well).
         const current = await this.sessionManager.findOneById(session.id);
+
         if (!current) {
             return;
         }
@@ -333,6 +344,7 @@ export class AuthorizationMiddleware {
         // session was used — the hard cap the sliding decision rejected, with
         // the server-side slide happening and never being observable.
         const ttl = new Date(refreshed.expiresAt).getTime() - Date.now();
+
         if (ttl > 0 && this.options.baseURL) {
             setSessionCookie(event, this.options.baseURL, secret, ttl);
         }
@@ -346,9 +358,12 @@ export class AuthorizationMiddleware {
         header: BearerAuthorizationHeader,
     ) {
         const payload = await this.oauth2TokenVerifier.verify(header.token);
+
         await this.verifyCertificateBinding(event, payload);
+
         if (payload.kind === OAuth2TokenKind.MFA) {
             await this.verifyMfaLoginTicket(event, payload);
+
             return;
         }
 
@@ -373,6 +388,7 @@ export class AuthorizationMiddleware {
         }
 
         const session = await this.sessionManager.findOneById(payload.session_id);
+
         if (!session) {
             throw JWTError.expired();
         }
@@ -407,16 +423,18 @@ export class AuthorizationMiddleware {
             payload.sub,
         );
 
-        if (identity) {
-            // A deactivated subject, or one of another realm than the token
-            // names, is refused like a gone session.
-            if (!isTokenSubjectActive(identity, payload)) {
-                throw JWTError.expired();
-            }
-
-            setRequestIdentity(event, identity);
-            setRequestTokenPayload(event, payload);
+        if (!identity) {
+            return;
         }
+
+        // A deactivated subject, or one of another realm than the token
+        // names, is refused like a gone session.
+        if (!isTokenSubjectActive(identity, payload)) {
+            throw JWTError.expired();
+        }
+
+        setRequestIdentity(event, identity);
+        setRequestTokenPayload(event, payload);
     }
 
     protected async verifyCertificateBinding(event: IAppEvent, payload: OAuth2TokenPayload): Promise<void> {
@@ -425,6 +443,7 @@ export class AuthorizationMiddleware {
         }
 
         const expectedThumbprint = payload.cnf['x5t#S256'];
+
         if (typeof expectedThumbprint !== 'string' || expectedThumbprint.length === 0) {
             throw JWTError.invalid();
         }
@@ -434,6 +453,7 @@ export class AuthorizationMiddleware {
                 event,
                 this.options.certificateSource ?? 'disabled',
             );
+
             if (!evidence || evidence.thumbprint !== expectedThumbprint) {
                 throw JWTError.invalid();
             }
@@ -475,6 +495,7 @@ export class AuthorizationMiddleware {
         }
 
         const session = await this.sessionManager.findOneById(payload.session_id);
+
         if (!session) {
             throw JWTError.expired();
         }
@@ -497,6 +518,7 @@ export class AuthorizationMiddleware {
             payload.sub_kind,
             payload.sub,
         );
+
         if (!isTokenSubjectActive(identity, payload)) {
             throw JWTError.expired();
         }
@@ -513,6 +535,7 @@ export class AuthorizationMiddleware {
     ) {
         if (this.options.clientAuthBasic) {
             const authenticator = await this.authenticateBasic(event, this.clientAuthenticator, header);
+
             if (authenticator.success) {
                 setRequestScopes(event, [ScopeName.GLOBAL]);
                 setRequestIdentity(event, {
@@ -522,20 +545,24 @@ export class AuthorizationMiddleware {
             }
         }
 
-        if (this.options.userAuthBasic) {
-            const authenticated = await this.authenticateBasic(event, this.userAuthenticator, header);
-
-            if (
-                authenticated.success &&
-                !(await this.userAuthenticatorRepository?.hasConfirmedByUser(authenticated.data.id))
-            ) {
-                setRequestScopes(event, [ScopeName.GLOBAL]);
-                setRequestIdentity(event, {
-                    type: IdentityType.USER,
-                    data: authenticated.data,
-                });
-            }
+        if (!this.options.userAuthBasic) {
+            return;
         }
+
+        const authenticated = await this.authenticateBasic(event, this.userAuthenticator, header);
+
+        if (
+            !authenticated.success ||
+            await this.userAuthenticatorRepository?.hasConfirmedByUser(authenticated.data.id)
+        ) {
+            return;
+        }
+
+        setRequestScopes(event, [ScopeName.GLOBAL]);
+        setRequestIdentity(event, {
+            type: IdentityType.USER,
+            data: authenticated.data,
+        });
     }
 
     /**
@@ -552,11 +579,13 @@ export class AuthorizationMiddleware {
         header: BasicAuthorizationHeader,
     ): Promise<Result<T>> {
         const realmId = getRequestRealmID(event);
+
         if (!realmId) {
             return authenticator.safeAuthenticate(header.username, header.password, REALM_MASTER_NAME);
         }
 
         const result = await authenticator.safeAuthenticate(header.username, header.password, realmId);
+
         if (result.success || isUUID(header.username)) {
             return result;
         }

@@ -31,6 +31,7 @@ describe('src/http/controllers/identity-provider', () => {
         await suite.setup();
 
         const client = createLdapTestClient();
+
         await client.bind();
         await createLdapTestUserAccount(client, ldapUserName);
         await client.unbind();
@@ -40,6 +41,7 @@ describe('src/http/controllers/identity-provider', () => {
         await suite.teardown();
 
         const client = createLdapTestClient();
+
         await client.bind();
         await dropLdapTestUserAccount(client, ldapUserName);
         await client.unbind();

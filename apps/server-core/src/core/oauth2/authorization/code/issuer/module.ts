@@ -32,6 +32,7 @@ export class OAuth2AuthorizationCodeIssuer implements IOAuth2AuthorizationCodeIs
         // relation (realm row deleted without cascade) must fail closed as a
         // clean OAuth2 error — never a TypeError → 500.
         const { realm } = identity.data;
+
         if (!realm) {
             throw OAuth2RequestError.identityInvalid();
         }

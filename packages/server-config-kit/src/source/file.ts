@@ -53,11 +53,13 @@ export function readSchemaFromFileTree<T>(
     const data : Record<string, unknown> = {};
 
     const keys = Object.keys(schema) as (keyof T)[];
+
     for (const key of keys) {
         const entry = schema[key];
 
         if (isSchemaEntryInput(entry)) {
             const value = readTreePath(tree, entry.path || (key as string));
+
             if (typeof value !== 'undefined') {
                 data[key as string] = value;
             }
@@ -67,6 +69,7 @@ export function readSchemaFromFileTree<T>(
 
         if (isSchemaInput(entry)) {
             const value = readSchemaFromFileTree<any>(tree, entry);
+
             // a section the document does not spell stays absent, like a key
             if (Object.keys(value).length > 0) {
                 data[key as string] = value;
@@ -91,14 +94,17 @@ function collectSchemaPaths<T>(
     traversed: Set<string>,
 ) : void {
     const keys = Object.keys(schema) as (keyof T)[];
+
     for (const key of keys) {
         const entry = schema[key];
 
         if (isSchemaEntryInput(entry)) {
             const path = entry.path || (key as string);
+
             claimed.add(path);
 
             const segments = path.split('.');
+
             for (let i = 1; i < segments.length; i++) {
                 traversed.add(segments.slice(0, i).join('.'));
             }
@@ -108,6 +114,7 @@ function collectSchemaPaths<T>(
 
         if (isSchemaInput(entry)) {
             collectSchemaPaths<any>(entry, claimed, traversed);
+
             continue;
         }
 
@@ -158,6 +165,7 @@ export function findUnknownSchemaPaths<T>(
 
             if (traversed.has(path) && isRecord(value)) {
                 walk(value, path);
+
                 continue;
             }
 

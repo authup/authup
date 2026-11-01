@@ -37,7 +37,9 @@ export class FakeSessionRepository implements ISessionRepository {
             id: session.id || randomUUID(),
             ...session,
         } as Session;
+
         this.sessions.set(entity.id, entity);
+
         return entity;
     }
 
@@ -58,6 +60,7 @@ export class FakeSessionRepository implements ISessionRepository {
 
     async updateSecret(id: string, secret: string | null): Promise<void> {
         const session = this.sessions.get(id);
+
         if (session) {
             session.secret = secret;
         }
@@ -68,6 +71,7 @@ export class FakeSessionRepository implements ISessionRepository {
         options: SessionFindManyOptions = {},
     ): Promise<EntityRepositoryFindManyResult<Session>> {
         let { data } = applyQuery(new Query({ filters: query.filters }), this.sessions.values().toArray());
+
         if (options.owner) {
             data = data.filter((s) => this.ownedBy(s, options.owner!));
         }
@@ -90,6 +94,7 @@ export class FakeSessionRepository implements ISessionRepository {
         // the real filter semantics: the in-memory adapter evaluates the
         // same IR the typeorm adapter lowers to SQL
         const predicate = compileFilters(query.filters);
+
         return this.sessions.values().toArray()
             .filter((session) => predicate(session));
     }
@@ -100,11 +105,13 @@ export class FakeSessionRepository implements ISessionRepository {
 
     async update(session: Session, patch: SessionUpdatePatch): Promise<Session> {
         const current = this.sessions.get(session.id);
+
         if (!current) {
             throw JWTError.expired();
         }
 
         Object.assign(current, patch);
+
         return Object.assign(session, patch);
     }
 
@@ -118,6 +125,7 @@ export class FakeSessionRepository implements ISessionRepository {
 
     async removeById(id: string): Promise<void> {
         const session = this.sessions.get(id);
+
         if (session) {
             await this.remove(session);
         }

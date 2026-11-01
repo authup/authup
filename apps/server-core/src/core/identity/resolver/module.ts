@@ -6,10 +6,10 @@
  */
 
 import type {
-    Client, 
-    ClientIdentity, 
-    Identity, 
-    User, 
+    Client,
+    ClientIdentity,
+    Identity,
+    User,
     UserIdentity,
 } from '@authup/core-kit';
 import { IdentityType } from '@authup/core-kit';
@@ -66,7 +66,7 @@ export class IdentityResolver implements IIdentityResolver {
         if (data) {
             return {
                 type: IdentityType.CLIENT,
-                data, 
+                data,
             };
         }
 
@@ -88,7 +88,7 @@ export class IdentityResolver implements IIdentityResolver {
         if (data) {
             return {
                 type: IdentityType.USER,
-                data, 
+                data,
             };
         }
 

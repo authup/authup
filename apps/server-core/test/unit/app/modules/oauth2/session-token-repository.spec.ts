@@ -45,6 +45,7 @@ describe('app/modules/oauth2/repositories/session-token', () => {
         const realm = await dataSource.getRepository(RealmEntity).save(
             dataSource.getRepository(RealmEntity).create({ name: 'master', builtIn: true }),
         );
+
         realmId = realm.id;
     });
 
@@ -111,6 +112,7 @@ describe('app/modules/oauth2/repositories/session-token', () => {
         await dataSource.getRepository(SessionEntity).delete({ id: sessionId });
 
         let error : unknown;
+
         try {
             await repository.create(buildInput(sessionId));
         } catch (e) {
@@ -134,6 +136,7 @@ describe('app/modules/oauth2/repositories/session-token', () => {
         await dataSource.getRepository(ClientEntity).delete({ id: clientId });
 
         let error : unknown;
+
         try {
             await repository.create(buildInput(sessionId, clientId));
         } catch (e) {
@@ -180,6 +183,7 @@ describe('app/modules/oauth2/repositories/session-token', () => {
             // would leave a permanent backlog behind.
             const sessionId = await createSession();
             const past = new Date(Date.now() - 60_000).toISOString();
+
             for (let i = 0; i < 5; i++) {
                 await seedExpired(sessionId, past);
             }
@@ -197,6 +201,7 @@ describe('app/modules/oauth2/repositories/session-token', () => {
         it('bounds each statement to the batch size', async () => {
             const sessionId = await createSession();
             const past = new Date(Date.now() - 60_000).toISOString();
+
             for (let i = 0; i < 5; i++) {
                 await seedExpired(sessionId, past);
             }
@@ -206,10 +211,12 @@ describe('app/modules/oauth2/repositories/session-token', () => {
             const deleteSpy = vi.spyOn(ormRepository, 'delete');
 
             const repository = new SessionTokenRepositoryAdapter(dataSource);
+
             await repository.deleteExpired(new Date().toISOString(), { batchSize: 2 });
 
             expect(deleteSpy).toHaveBeenCalledTimes(3);
             expect(findSpy).toHaveBeenCalledTimes(3);
+
             for (const [options] of findSpy.mock.calls) {
                 expect(options?.take).toEqual(2);
             }
@@ -222,15 +229,18 @@ describe('app/modules/oauth2/repositories/session-token', () => {
             // typeorm ignores a falsy take, which would silently restore the
             // single unbounded DELETE the batching exists to prevent.
             const sessionId = await createSession();
+
             await seedExpired(sessionId, new Date(Date.now() - 60_000).toISOString());
 
             const ormRepository = dataSource.getRepository(SessionTokenEntity);
             const findSpy = vi.spyOn(ormRepository, 'find');
 
             const repository = new SessionTokenRepositoryAdapter(dataSource);
+
             await repository.deleteExpired(new Date().toISOString(), { batchSize: 0 });
 
             expect(findSpy).toHaveBeenCalled();
+
             for (const [options] of findSpy.mock.calls) {
                 expect(options?.take).toEqual(SESSION_TOKEN_EXPIRY_SWEEP_BATCH_SIZE);
             }
@@ -240,6 +250,7 @@ describe('app/modules/oauth2/repositories/session-token', () => {
 
         it('keeps rows that have not expired', async () => {
             const sessionId = await createSession();
+
             await seedExpired(sessionId, new Date(Date.now() + 600_000).toISOString());
             await seedExpired(sessionId, new Date(Date.now() - 60_000).toISOString());
 

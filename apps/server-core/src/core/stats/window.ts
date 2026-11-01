@@ -49,10 +49,13 @@ function readBound(conjuncts: ICondition[], field: string, operators: string[]):
 
 function snap(input: Date, unit: StatsWindow['unit']): Date {
     const date = new Date(input);
+
     date.setUTCMinutes(0, 0, 0);
+
     if (unit !== 'hour') {
         date.setUTCHours(0);
     }
+
     if (unit === 'month') {
         date.setUTCDate(1);
     }
@@ -62,6 +65,7 @@ function snap(input: Date, unit: StatsWindow['unit']): Date {
 
 function advance(input: Date, unit: StatsWindow['unit']): Date {
     const date = new Date(input);
+
     if (unit === 'hour') {
         date.setUTCHours(date.getUTCHours() + 1);
     } else if (unit === 'day') {
@@ -85,6 +89,7 @@ export function resolveStatsWindow(query: IQuery, options: StatsWindowOptions): 
 
     const [group] = query.groups?.value ?? [];
     const unit = group?.lowering?.args[0];
+
     if (
         !group ||
         group.lowering?.fn !== 'bucket' ||
@@ -96,6 +101,7 @@ export function resolveStatsWindow(query: IQuery, options: StatsWindowOptions): 
 
     const conjuncts = readConjuncts(query.filters);
     const lowerBounds = readBound(conjuncts, dateColumn, LOWER_BOUND_OPERATORS);
+
     if (lowerBounds.length === 0) {
         throw new ValidationError(`The filter must carry a lower bound on ${dateColumn}.`);
     }
@@ -108,14 +114,17 @@ export function resolveStatsWindow(query: IQuery, options: StatsWindowOptions): 
         now;
 
     let buckets = 0;
+
     for (let start = from; start < to; start = advance(start, unit)) {
         buckets++;
+
         if (buckets > STATS_MAX_BUCKETS) {
             throw new ValidationError(`The window spans more than ${STATS_MAX_BUCKETS} buckets.`);
         }
     }
 
     const { rawHorizonDays } = options;
+
     if (
         unit === 'hour' &&
         rawHorizonDays &&
@@ -151,24 +160,40 @@ export function isPastRawHorizon(window: StatsWindow, horizonDays: number | unde
     return new Date(window.from) < snap(new Date(now.getTime() - (horizonDays * DAY_IN_MS)), unit);
 }
 
-/**
- * The record query behind a grouped one, without its top-level range
- * conditions on the date column (the window). A range nested in an `or`
- * stays, so it keeps narrowing. Groups and aggregates are dropped: what is
- * left counts rows.
- */
-export function stripWindowConditions(query: IQuery, dateColumn: string): Query {
-    const conjuncts = readConjuncts(query.filters).filter(
-        (condition) => !isRangeCondition(
-            condition,
-            dateColumn,
-            [...LOWER_BOUND_OPERATORS, ...UPPER_BOUND_OPERATORS],
-        ),
-    );
+function isWindowCondition(condition: ICondition, dateColumn: string): boolean {
+    return isRangeCondition(condition, dateColumn, [...LOWER_BOUND_OPERATORS, ...UPPER_BOUND_OPERATORS]);
+}
 
+/**
+ * A grouped query split into its window (the top-level range conditions on
+ * the date column) and the query without it, groups and aggregates kept. A
+ * range nested in an `or` is not part of the window.
+ */
+export function splitWindowConditions(query: IQuery, dateColumn: string): { query: Query, window: ICondition[] } {
+    const conjuncts = readConjuncts(query.filters);
+
+    return {
+        query: new Query({
+            fields: query.fields,
+            filters: new Filters('and', conjuncts.filter((condition) => !isWindowCondition(condition, dateColumn))),
+            relations: query.relations,
+            pagination: query.pagination,
+            sorts: query.sorts,
+            groups: query.groups,
+            aggregates: query.aggregates,
+        }),
+        window: conjuncts.filter((condition) => isWindowCondition(condition, dateColumn)),
+    };
+}
+
+/**
+ * The record query behind a grouped one: groups and aggregates dropped,
+ * what is left counts rows.
+ */
+export function readRecordQuery(query: IQuery): Query {
     return new Query({
         fields: query.fields,
-        filters: new Filters('and', conjuncts),
+        filters: query.filters,
         relations: query.relations,
         pagination: query.pagination,
         sorts: query.sorts,

@@ -67,11 +67,13 @@ export function useEntityNameTranslator() : (type: string, entity: EntityNamed) 
     return (type, entity) => {
         const name = entity.name || '';
         const displayName = (entity.displayName || '').trim();
+
         if (displayName.length > 0) {
             return displayName;
         }
 
         const namespace = ENTITY_NAME_NAMESPACES[type];
+
         if (!name || !namespace || !entity.builtIn) {
             return name;
         }
@@ -94,15 +96,19 @@ export function useEntityNameSearch() : (type: string, text: string) => string[]
         const namespace = ENTITY_NAME_NAMESPACES[type];
         const keys = ENTITY_NAME_KEYS[type];
         const needle = text.trim().toLowerCase();
+
         if (!namespace || !keys || needle.length === 0) {
             return [];
         }
 
         const output : string[] = [];
+
         for (const key of keys) {
             const label = readCatalogName(ilingo, locale.value, namespace, key);
+
             if (label && label.toLowerCase().includes(needle)) {
                 output.push(key);
+
                 if (output.length >= ENTITY_NAME_SEARCH_LIMIT) {
                     break;
                 }

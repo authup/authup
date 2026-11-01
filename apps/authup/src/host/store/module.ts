@@ -26,6 +26,7 @@ export function resolveHostsDirectory(env: NodeJS.ProcessEnv = process.env) : st
  */
 export function parseHostTokens(raw: string, origin: string) : HostTokens {
     let input : unknown;
+
     try {
         input = JSON.parse(raw);
     } catch {
@@ -33,6 +34,7 @@ export function parseHostTokens(raw: string, origin: string) : HostTokens {
     }
 
     const result = hostTokensSchema.safeParse(input);
+
     if (!result.success) {
         throw new Error(`The tokens kept in the ${origin} are not readable. Run \`authup login\` again.`);
     }
@@ -42,6 +44,7 @@ export function parseHostTokens(raw: string, origin: string) : HostTokens {
 
 async function parseHostsDocument(raw: string, file: string) : Promise<HostsDocument> {
     let input : unknown;
+
     try {
         input = JSON.parse(raw);
     } catch {
@@ -78,6 +81,7 @@ export function createHostStore(directory: string) : IHostStore {
         directory,
         async read() {
             let raw : string;
+
             try {
                 raw = await fs.readFile(file, 'utf8');
             } catch (e) {
@@ -94,6 +98,7 @@ export function createHostStore(directory: string) : IHostStore {
             await fs.mkdir(directory, { recursive: true, mode: 0o700 });
 
             const temporary = `${file}.${process.pid}.tmp`;
+
             await fs.writeFile(temporary, `${JSON.stringify(document, null, 4)}\n`, { mode: 0o600 });
             await fs.rename(temporary, file);
         },

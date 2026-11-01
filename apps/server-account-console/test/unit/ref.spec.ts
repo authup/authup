@@ -67,6 +67,7 @@ describe('resolveRef', () => {
 
     it('should reject an over-long value', () => {
         const long = `https://admin.example.com/${'a'.repeat(3000)}`;
+
         expect(resolveRef(long, TRUSTED)).toBeUndefined();
     });
 

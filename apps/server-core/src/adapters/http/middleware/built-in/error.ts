@@ -23,12 +23,13 @@ export function registerErrorMiddleware(router: IApp, options: ErrorMiddlewareOp
         // as `cause`, so this is the error as it was actually raised. An
         // AppError routup built from an options bag (a body parser's 413)
         // carries that bag as `cause`, and only the AppError holds its status.
-        const original = error.cause instanceof Error ? error.cause : error;
+        const original = Error.isError(error.cause) ? error.cause : error;
 
         const next = sanitizeError(original);
         const status = httpStatusFromCode(next.code);
 
         const payload = serializeError(next);
+
         setRequestErrorCode(event, next.code);
 
         if (status >= 500) {
@@ -39,6 +40,7 @@ export function registerErrorMiddleware(router: IApp, options: ErrorMiddlewareOp
                 // an outbound failure diagnosable.
                 options.logger.error(describeError(original));
             }
+
             payload.message = 'An internal server error occurred.';
         }
 
@@ -75,6 +77,7 @@ export function registerErrorMiddleware(router: IApp, options: ErrorMiddlewareOp
         }
 
         event.response.status = status;
+
         return payload;
     }));
 }

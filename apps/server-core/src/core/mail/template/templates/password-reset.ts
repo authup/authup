@@ -6,11 +6,11 @@
  */
 
 import { TranslatorTranslationMailKey } from '@authup/i18n';
-import { 
-    action, 
-    code, 
-    note, 
-    paragraph, 
+import {
+    action,
+    code,
+    note,
+    paragraph,
 } from '../../format/blocks.ts';
 import { defineMailTemplate } from '../define.ts';
 import { MailTemplateName } from '../types.ts';

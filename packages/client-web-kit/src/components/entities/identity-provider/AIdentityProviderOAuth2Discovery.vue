@@ -96,6 +96,7 @@ export default defineComponent({
 
             try {
                 const response = await apiClient.get(form.url);
+
                 if (isOpenIDProviderMetadata(response.data)) {
                     setup.emit('lookup', response.data);
                     lookupValid.value = true;

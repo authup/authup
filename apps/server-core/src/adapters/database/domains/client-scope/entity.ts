@@ -36,7 +36,7 @@ export class ClientScopeEntity implements ClientScope {
     @Index()
     @Column({
         type: 'boolean',
-        default: false, 
+        default: false,
     })
     default: boolean;
 
@@ -65,7 +65,7 @@ export class ClientScopeEntity implements ClientScope {
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'client_realm_id' })
     clientRealm: RealmEntity | null;
@@ -86,7 +86,7 @@ export class ClientScopeEntity implements ClientScope {
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'scope_realm_id' })
     scopeRealm: RealmEntity | null;

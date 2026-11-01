@@ -34,12 +34,15 @@ export function installSocketManager(app: App, options: SocketManagerInstallOpti
         state,
     ) => {
         const normalizedToken = state.accessToken ?? undefined;
-        if (normalizedToken !== oldValue.value) {
-            oldValue.value = normalizedToken;
 
-            Promise.resolve()
-                .then(() => manager.reconnect());
+        if (!(normalizedToken !== oldValue.value)) {
+            return;
         }
+
+        oldValue.value = normalizedToken;
+
+        Promise.resolve()
+            .then(() => manager.reconnect());
     });
 
     provideSocketManager(manager, app);

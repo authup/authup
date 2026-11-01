@@ -24,6 +24,7 @@ export function buildBucketAxis(meta: Pick<EventStatsMeta, 'from' | 'to' | 'buck
 
     for (const at = new Date(meta.from); at.getTime() <= end;) {
         axis.push(at.toISOString());
+
         if (meta.bucket === 'hour') {
             at.setUTCHours(at.getUTCHours() + 1);
         } else if (meta.bucket === 'day') {
@@ -43,6 +44,7 @@ export function buildBucketAxis(meta: Pick<EventStatsMeta, 'from' | 'to' | 'buck
  */
 export function alignStats(data: Pick<EntityStatsRow, 'createdAt' | 'count'>[], axis: string[]): number[] {
     const byBucket = new Map<string, number>();
+
     for (const row of data) {
         byBucket.set(row.createdAt, (byBucket.get(row.createdAt) ?? 0) + row.count);
     }
@@ -77,9 +79,11 @@ export function rankEventStats(data: EventStatsRow[]): EventStatsRank[] {
     // method the console's browser floor (Safari 16.4) does not have
     const totals = new Map<string, EventStatsRank>();
     const ranks : EventStatsRank[] = [];
+
     for (const row of data) {
         const key = `${row.scope}:${row.name}`;
         let entry = totals.get(key);
+
         if (!entry) {
             entry = {
                 scope: row.scope,
@@ -89,6 +93,7 @@ export function rankEventStats(data: EventStatsRow[]): EventStatsRank[] {
             totals.set(key, entry);
             ranks.push(entry);
         }
+
         entry.count += row.count;
     }
 

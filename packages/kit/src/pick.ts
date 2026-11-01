@@ -14,6 +14,7 @@ export function pickRecord<
     K extends keyof T,
 >(data: T, keys: K[]) : PickRecord<T, K> {
     const output : PickRecord<T, K> = {} as PickRecord<T, K>;
+
     for (const key of keys) {
         output[key] = data[key];
     }
@@ -33,8 +34,10 @@ export function omitRecord<
 
     let index : number;
     const output = {} as OmitRecord<T, K>;
+
     for (const dataKey of dataKeys) {
         index = keys.indexOf(dataKey);
+
         if (index !== -1) {
             continue;
         }

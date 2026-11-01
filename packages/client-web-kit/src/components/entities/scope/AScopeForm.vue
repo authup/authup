@@ -9,11 +9,11 @@ import { EntityType, ScopeValidator } from '@authup/core-kit';
 import { ValidatorGroup, generateName } from '@authup/kit';
 import { useValidup } from '@validup/vue';
 import { TranslatorTranslationEntityKey, TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { 
-    assignFormProperties, 
-    injectStore, 
-    storeToRefs, 
-    useTranslations, 
+import {
+    assignFormProperties,
+    injectStore,
+    storeToRefs,
+    useTranslations,
 } from '../../../core';
 import type { PropType } from 'vue';
 import {
@@ -159,21 +159,21 @@ export default defineComponent({
         const translationsDefault = useTranslations(
             [
                 {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.NAME, 
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.NAME,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.DISPLAY_NAME, 
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.DISPLAY_NAME,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.DESCRIPTION, 
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.DESCRIPTION,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.ENTITY, 
-                    key: TranslatorTranslationEntityKey.REALM, 
-                    count: 1, 
+                    namespace: TranslatorTranslationNamespace.ENTITY,
+                    key: TranslatorTranslationEntityKey.REALM,
+                    count: 1,
                 },
             ],
         );

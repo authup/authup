@@ -47,14 +47,15 @@ describe('src/domains/workflows/authorization', () => {
         const permissions = [
             { name: 'user_read', targetRealms: [null] },
             {
-                name: 'mtb_query_submit', 
-                realmId: 'realm-a', 
-                targetRealms: ['realm-a'], 
+                name: 'mtb_query_submit',
+                realmId: 'realm-a',
+                targetRealms: ['realm-a'],
             },
         ];
 
         function createClient(cacheControl?: string) {
             const headers : Record<string, string> = {};
+
             if (cacheControl) {
                 headers['cache-control'] = cacheControl;
             }

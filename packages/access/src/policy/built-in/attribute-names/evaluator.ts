@@ -62,10 +62,11 @@ export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
             // Non-string entries fail closed as invalid data — silently skipping
             // them would fail open in denylist (invert) mode.
             const data = ctx.data.get(BuiltInPolicyType.ATTRIBUTE_NAMES);
-            if (
-                !Array.isArray(data) ||
-                data.some((entry) => typeof entry !== 'string')
-            ) {
+
+            const hasInvalidAttributeNames = !Array.isArray(data) ||
+                data.some((entry) => typeof entry !== 'string');
+
+            if (hasInvalidAttributeNames) {
                 return {
                     success: false,
                     issues: [
@@ -85,6 +86,7 @@ export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
 
         if (hasAttributes) {
             const data = await this.attributesEvaluator.accessData(ctx);
+
             if (data) {
                 // Nested paths are a deliberate feature: an attribute object like
                 // `{user: {name: 'x'}}` flattens to `{'user.name': 'x'}` and is matched
@@ -94,6 +96,7 @@ export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
                 // NOT catch a nested `user.realmId` write — that's by design, the
                 // policy is precise about which path it covers.
                 const attributes = flattenObject(data);
+
                 for (const key of Object.keys(attributes)) {
                     keys.add(key);
                 }
@@ -108,9 +111,11 @@ export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
         // produce nonsensical "deny iff all keys are in the list" semantics
         // for partial inputs.
         const issues : PolicyIssue[] = [];
+
         for (const key of keys) {
             const inList = policy.names.includes(key);
             const denied = policy.invert ? inList : !inList;
+
             if (denied) {
                 issues.push(definePolicyIssueItem({
                     code: PolicyIssueCode.EVALUATION_DENIED,

@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-config-kit",
     "type": "module",
-    "version": "1.0.0-beta.71",
+    "version": "1.0.0-beta.72",
     "description": "Declare a config type once and derive its environment reader, defaults, validation and JSON Schema.",
     "license": "Apache-2.0",
     "exports": {
@@ -25,7 +25,7 @@
         "test:coverage": "cross-env NODE_ENV=test vitest run --coverage"
     },
     "engines": {
-        "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
+        "node": ">=26.0.0"
     },
     "keywords": [
         "auth",
@@ -49,7 +49,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/kit": "^1.0.0-beta.71",
+        "@authup/kit": "^1.0.0-beta.72",
         "@validup/zod": "^2.0.1",
         "envix": "^1.5.0",
         "validup": "^2.0.1",

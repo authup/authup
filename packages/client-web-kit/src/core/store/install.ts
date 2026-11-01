@@ -10,9 +10,9 @@ import { useCookies } from '@vueuse/integrations/useCookies';
 import { defineStore } from 'pinia';
 import type { App } from 'vue';
 import type {
-    CookieGetFn, 
-    CookieOptions, 
-    CookieSetFn, 
+    CookieGetFn,
+    CookieOptions,
+    CookieSetFn,
     CookieUnsetFn,
 } from '../../types';
 import { COOKIE_PATH, STORE_ID } from './constants';
@@ -27,6 +27,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
     }
 
     const storeDispatcher = createStoreDispatcher();
+
     provideStoreDispatcher(storeDispatcher, app);
 
     const storeFactory = defineStore(
@@ -42,22 +43,27 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
     const store = storeFactory(options.pinia);
 
     let cookieGet : CookieGetFn;
+
     if (options.cookieGet) {
         cookieGet = options.cookieGet;
     } else {
         const cookies = useCookies();
+
         cookieGet = cookies.get;
     }
 
     let cookieSet: CookieSetFn;
+
     if (options.cookieSet) {
         cookieSet = options.cookieSet;
     } else {
         const cookies = useCookies();
+
         cookieSet = cookies.set;
     }
 
     let cookieUnset : CookieUnsetFn;
+
     if (options.cookieUnset) {
         cookieUnset = options.cookieUnset;
     } else if (options.cookieSet) {
@@ -66,6 +72,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         };
     } else {
         const cookies = useCookies();
+
         cookieUnset = cookies.remove;
     }
 
@@ -118,12 +125,14 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         }
 
         let path = '';
+
         for (const segment of pathname.split('/')) {
             if (!segment) {
                 continue;
             }
 
             path += `/${segment}`;
+
             if (path === cookiePath) {
                 continue;
             }
@@ -190,6 +199,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
             }
 
             const value = cookieGet(key);
+
             if (!value) {
                 continue;
             }
@@ -199,26 +209,31 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
                     if (!store.accessToken) {
                         store.accessToken = value;
                     }
+
                     break;
                 case CookieName.ACCESS_TOKEN_EXPIRE_DATE:
                     if (!store.accessTokenExpireDate) {
                         store.accessTokenExpireDate = new Date(value);
                     }
+
                     break;
                 case CookieName.REFRESH_TOKEN:
                     if (!store.refreshToken) {
                         store.refreshToken = value;
                     }
+
                     break;
                 case CookieName.ID_TOKEN:
                     if (!store.idToken) {
                         store.idToken = value;
                     }
+
                     break;
                 case CookieName.REALM_MANAGEMENT:
                     if (!store.realmManagement) {
                         store.setRealmManagement(value);
                     }
+
                     break;
             }
         }
@@ -256,6 +271,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
             (input) => {
                 if (input) {
                     const maxAge = maxAgeFn();
+
                     cookieSet(CookieName.ACCESS_TOKEN, input, {
                         maxAge,
                         ...cookieOptions,

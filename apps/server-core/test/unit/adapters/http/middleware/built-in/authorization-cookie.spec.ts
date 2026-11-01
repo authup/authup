@@ -195,6 +195,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
             subKind: IdentityType.USER,
             realmId,
         });
+
         suite.tokenVerifier.seed(BEARER, {
             kind: OAuth2TokenKind.ACCESS,
             realm_id: realmId,
@@ -316,6 +317,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
         const realmId = randomUUID();
         const user = createUser(realmId);
         const session = createUserSession(user);
+
         session.subKind = IdentityType.CLIENT;
 
         const suite = createSuite(session, user);
@@ -393,6 +395,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
         const realmId = randomUUID();
         const user = createUser(realmId);
         const session = createUserSession(user);
+
         // beyond the throttle window
         session.refreshedAt = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
@@ -435,9 +438,11 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
         const realmId = randomUUID();
         const user = createUser(realmId);
         const session = createUserSession(user);
+
         session.refreshedAt = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
         const suite = createSuite(session, user);
+
         // the guard against resurrecting a deleted row re-reads through the
         // manager, so the row has to be live there for a slide to happen
         await suite.sessionManager.create(session);
@@ -470,9 +475,11 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
         const realmId = randomUUID();
         const user = createUser(realmId);
         const session = createUserSession(user);
+
         session.refreshedAt = new Date().toISOString();
 
         const suite = createSuite(session, user);
+
         await suite.sessionManager.create(session);
 
         const event = createFakeEvent({
@@ -494,6 +501,7 @@ describe('src/adapters/http/middleware/built-in/authorization (cookie session)',
         const session = createUserSession(user);
 
         const suite = createSuite(session, user);
+
         await suite.sessionManager.create(session);
 
         const event = createFakeEvent({

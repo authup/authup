@@ -6,10 +6,10 @@
  */
 
 import {
-    ErrorCode, 
-    ValidationError, 
-    isAuthupError, 
-    markInstanceof, 
+    ErrorCode,
+    ValidationError,
+    isAuthupError,
+    markInstanceof,
     matchesInstanceof,
 } from '@authup/errors';
 
@@ -26,7 +26,13 @@ export class IdentityProviderAccountUnlinkBlockedError extends ValidationError {
 }
 
 export function isIdentityProviderAccountUnlinkBlockedError(input: unknown): input is IdentityProviderAccountUnlinkBlockedError {
-    if (matchesInstanceof(input, IDENTITY_PROVIDER_ACCOUNT_UNLINK_BLOCKED_ERROR_INSTANCE)) return true;
-    if (!isAuthupError(input)) return false;
+    if (matchesInstanceof(input, IDENTITY_PROVIDER_ACCOUNT_UNLINK_BLOCKED_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
     return input.code === ErrorCode.IDENTITY_PROVIDER_ACCOUNT_UNLINK_BLOCKED;
 }

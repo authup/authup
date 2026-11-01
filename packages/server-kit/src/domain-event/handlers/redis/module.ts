@@ -22,11 +22,13 @@ export class DomainEventRedisHandler implements IDomainEventHandler {
         const data = JSON.stringify(transformDomainEventData(ctx.content));
 
         const pipeline = this.driver.pipeline();
+
         for (let i = 0; i < ctx.destinations.length; i++) {
             const { namespace } = ctx.destinations[i];
             const keyPrefix = (namespace ? `${namespace}:` : '');
 
             let key = keyPrefix + buildDomainEventChannelName(ctx.destinations[i].channel);
+
             pipeline.publish(key, data);
 
             if (typeof ctx.destinations[i].channel === 'function') {

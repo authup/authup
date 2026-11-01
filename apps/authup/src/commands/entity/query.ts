@@ -32,12 +32,14 @@ function readInteger(name: string, value: string | undefined) : string | undefin
  */
 function readTerms(name: string, value: string) : (string | CallBuildInput)[] {
     const terms = value.match(/[^,()]+(\([^()]*\))?/g) ?? [];
+
     if (terms.join(',') !== value) {
         throw new Error(`Invalid --${name} "${value}": expected <column> or <function>(<args>), comma-separated.`);
     }
 
     return terms.map((term) => {
         const open = term.indexOf('(');
+
         if (open === -1) {
             return term;
         }
@@ -58,8 +60,10 @@ export function readEntityQuery(args: EntityQueryArgs) : IQuery | undefined {
     const params = new URLSearchParams();
 
     const conditions = (args.filter ?? '').split('&').filter((part) => part.length > 0);
+
     for (const condition of conditions) {
         const index = condition.indexOf('=');
+
         if (index <= 0) {
             throw new Error(`Invalid --filter condition "${condition}": expected <key>=<expression>.`);
         }
@@ -80,11 +84,13 @@ export function readEntityQuery(args: EntityQueryArgs) : IQuery | undefined {
     }
 
     const limit = readInteger('limit', args.limit);
+
     if (limit !== undefined) {
         params.set('page[limit]', limit);
     }
 
     const offset = readInteger('offset', args.offset);
+
     if (offset !== undefined) {
         params.set('page[offset]', offset);
     }
@@ -106,6 +112,7 @@ export function readEntityStatsQuery<
     const query : EntityStatsQuery<T> = {};
 
     const filters = readEntityQuery({ filter: args.filter })?.filters;
+
     if (filters) {
         query.filters = filters;
     }

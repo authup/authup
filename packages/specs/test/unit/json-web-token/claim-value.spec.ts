@@ -21,6 +21,7 @@ const claims : JWTClaims = {
 describe('src/json-web-token', () => {
     it('should get claim value', () => {
         let value = getJWTClaimByPattern(claims, 'iss');
+
         expect(value).toEqual(['https://google.de']);
 
         value = getJWTClaimByPattern(claims, 'iss', /google/);
@@ -59,6 +60,7 @@ describe('src/json-web-token', () => {
 
     it('should get nested claim value', () => {
         let value = getJWTClaimByPattern(claims, 'realm_access.roles');
+
         expect(value).toEqual([claims.realm_access.roles]);
 
         value = getJWTClaimByPattern(claims, 'realm_access.roles.*', 'foo');

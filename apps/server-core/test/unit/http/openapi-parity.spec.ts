@@ -104,9 +104,9 @@ function serialize<T>(input: T) : T {
 
 function operations(input: OpenAPIDocument) {
     const output : {
-        template: string, 
-        method: string, 
-        operation: OpenAPIOperation 
+        template: string,
+        method: string,
+        operation: OpenAPIOperation
     }[] = [];
 
     for (const [template, item] of Object.entries(input.paths ?? {})) {
@@ -115,9 +115,9 @@ function operations(input: OpenAPIDocument) {
 
             if (operation) {
                 output.push({
-                    template, 
-                    method, 
-                    operation, 
+                    template,
+                    method,
+                    operation,
                 });
             }
         }
@@ -199,9 +199,11 @@ describe('openapi document parity', () => {
         await suite.setup();
 
         const collection = await suite.client.role.getMany();
+
         collectionSchema = collection.meta.schema;
 
         const record = await suite.client.role.getOne(collection.data[0].id);
+
         recordSchema = record.meta.schema;
     });
 
@@ -288,9 +290,9 @@ describe('openapi document parity', () => {
             const failures : string[] = [];
 
             for (const {
-                template, 
-                method, 
-                operation, 
+                template,
+                method,
+                operation,
             } of operations(requireDocument())) {
                 const declared = new Set(parameterNames(operation, 'path'));
 
@@ -312,9 +314,9 @@ describe('openapi document parity', () => {
             let marked = 0;
 
             for (const {
-                template, 
-                method, 
-                operation, 
+                template,
+                method,
+                operation,
             } of operations(target)) {
                 const marker = operation['x-query-schema'];
 
@@ -328,6 +330,7 @@ describe('openapi document parity', () => {
 
                 if (!description) {
                     failures.push(`${method.toUpperCase()} ${template}: marked '${marker.schema}', which the document does not describe.`);
+
                     continue;
                 }
 

@@ -49,9 +49,11 @@ describe('src/http realm key store (zero-config MFA + jwks hygiene)', () => {
         });
 
         const bearer = new HTTPClient({ baseURL: suite.baseURL });
+
         bearer.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
 
         const enrolled = await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.TOTP });
+
         expect(enrolled.meta.secret).toBeDefined();
 
         const totp = new TOTP({
@@ -61,6 +63,7 @@ describe('src/http realm key store (zero-config MFA + jwks hygiene)', () => {
             secret: Secret.fromBase32(enrolled.meta.secret!),
         });
         const confirmed = await bearer.userAuthenticator.confirm('@me', enrolled.data.id, { code: totp.generate() });
+
         expect(confirmed.data.confirmed).toBeTruthy();
 
         // an enc key exists for the user's realm ...
@@ -68,6 +71,7 @@ describe('src/http realm key store (zero-config MFA + jwks hygiene)', () => {
             realmId: user.realmId,
             use: JWKUse.ENCRYPTION,
         });
+
         expect(encKeys.length).toBeGreaterThanOrEqual(1);
 
         // ... and the seed at rest is a self-describing blob bound to one of them
@@ -78,6 +82,7 @@ describe('src/http realm key store (zero-config MFA + jwks hygiene)', () => {
             .getOne();
 
         const [version, keyId] = device!.secret!.split('.');
+
         expect(version).toEqual('v1');
         expect(encKeys.map((key) => key.id)).toContain(keyId);
         expect(device!.secret).not.toContain(enrolled.meta.secret!);
@@ -85,9 +90,11 @@ describe('src/http realm key store (zero-config MFA + jwks hygiene)', () => {
 
     it('never surfaces enc keys via jwks', async () => {
         const response = await httpRequest(suite, 'GET', '/jwks');
+
         expect(response.status).toEqual(200);
 
         const body = await response.json() as { keys: { kty: string }[] };
+
         expect(body.keys.length).toBeGreaterThanOrEqual(1);
 
         for (const key of body.keys) {

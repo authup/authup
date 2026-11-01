@@ -59,6 +59,7 @@ function createUpstreamApplication(): TestHTTPApplication {
     const modules = new ApplicationBuilder()
         .withConfig(new ConfigModule(async () => {
             const config = await normalizeConfig(readConfigRawFromEnv<Config>(CONFIG_SCHEMA)) as Config;
+
             config.port = 0;
             config.middlewareRateLimit = false;
             config.middlewarePrometheus = false;
@@ -66,6 +67,7 @@ function createUpstreamApplication(): TestHTTPApplication {
             config.userAdminEnabled = true;
             config.userAuthBasic = true;
             config.redis = false;
+
             return config;
         }))
         .withLogger()
@@ -110,7 +112,8 @@ describe('authup federating to authup', () => {
 
     beforeAll(async () => {
         const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(CODE_VERIFIER));
-        codeChallenge = Buffer.from(new Uint8Array(digest)).toString('base64url');
+
+        codeChallenge = Buffer.from(new Uint8Array(digest)).toBase64({ alphabet: 'base64url', omitPadding: true });
 
         await downstream.setup();
         await upstream.setup();
@@ -132,6 +135,7 @@ describe('authup federating to authup', () => {
 
         for (const scopeName of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {
             const { data: scope } = await downstream.client.scope.getOne(scopeName);
+
             await downstream.client.clientScope.create({ scopeId: scope.id, clientId: rpClient.id });
         }
 
@@ -157,6 +161,7 @@ describe('authup federating to authup', () => {
 
         for (const scopeName of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {
             const { data: scope } = await upstream.client.scope.getOne(scopeName);
+
             await upstream.client.clientScope.create({ scopeId: scope.id, clientId: upstreamClient.id });
         }
     }, TWO_INSTANCE_HOOK_TIMEOUT);
@@ -176,17 +181,20 @@ describe('authup federating to authup', () => {
             state: RP_STATE,
             code_challenge: codeChallenge,
             code_challenge_method: 'S256',
-        })).toString('base64url');
+        })).toBase64({ alphabet: 'base64url', omitPadding: true });
 
         // 1. The relying party's request reaches the downstream instance, which
         //    sends the browser to the upstream instance.
         const out = await httpRequest(downstream, 'GET', `identity-providers/${provider.id}/authorize-out?codeRequest=${codeRequest}`, { redirect: 'manual' });
+
         expect(out.status).toEqual(302);
 
         const upstreamURL = new URL(out.headers.get('location') as string);
+
         expect(upstreamURL.origin).toEqual(new URL(upstream.baseURL).origin);
 
         const brokerState = upstreamURL.searchParams.get('state') as string;
+
         expect(brokerState).toBeTruthy();
 
         // 2. The person authenticates on the upstream instance and approves.
@@ -209,9 +217,11 @@ describe('authup federating to authup', () => {
                 state: brokerState,
             }),
         });
+
         expect(approve.status).toEqual(200);
 
         const { url: callbackURL } = await approve.json();
+
         expect(new URL(callbackURL).origin).toEqual(new URL(downstreamPublicURL).origin);
 
         // The browser resolves publicUrl to the running instance; here that is
@@ -223,23 +233,27 @@ describe('authup federating to authup', () => {
         //    redeems it at the upstream token endpoint for real.
         // httpRequest passes an absolute url straight through.
         const startCookie = (out.headers.get('set-cookie') ?? '').match(/authup_federated_login=([^;]*)/);
+
         expect(startCookie?.[1]).toBeTruthy();
 
         const back = await httpRequest(downstream, 'GET', callbackTarget, {
             redirect: 'manual',
             headers: { cookie: `authup_federated_login=${(startCookie as RegExpMatchArray)[1]}` },
         });
+
         expect(back.status).toEqual(302);
 
         // 4. The downstream instance sends the browser to its own hosted
         //    authorize page with a login handle, which the page redeems for
         //    the session the callback established (plan 094).
         const hostedURL = new URL(back.headers.get('location') as string);
+
         expect(hostedURL.pathname.endsWith('/authorize')).toBe(true);
         expect(hostedURL.searchParams.get('code')).toBeNull();
 
         const pendingLoginCookie = (back.headers.get('set-cookie') ?? '')
             .match(/authup_federated_login=([^;]*)/);
+
         expect(pendingLoginCookie?.[1]).toBeTruthy();
 
         const redeem = await httpRequest(
@@ -254,7 +268,9 @@ describe('authup federating to authup', () => {
                 },
             },
         );
+
         expect(redeem.status).toEqual(200);
+
         const grant = await redeem.json();
 
         // 5. The consent post issues the relying party's code, the same call
@@ -264,11 +280,13 @@ describe('authup federating to authup', () => {
                 authorization: `Bearer ${grant.access_token}`,
                 'content-type': 'application/json',
             },
-            body: Buffer.from(codeRequest, 'base64url').toString('utf-8'),
+            body: new TextDecoder().decode(Uint8Array.fromBase64(codeRequest, { alphabet: 'base64url' })),
         });
+
         expect(rpApprove.status).toEqual(200);
 
         const rpURL = new URL((await rpApprove.json()).url);
+
         expect(`${rpURL.origin}${rpURL.pathname}`).toEqual(RP_REDIRECT_URI);
         expect(rpURL.searchParams.get('state')).toEqual(RP_STATE);
 

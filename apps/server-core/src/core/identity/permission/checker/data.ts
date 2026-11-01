@@ -108,6 +108,7 @@ async function authorizeCheckFor(
     await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_CHECK });
 
     const subject = await identityResolver.resolve(identity.type, identity.id);
+
     if (!subject) {
         throw new EntityNotFoundError();
     }

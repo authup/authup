@@ -20,6 +20,7 @@ export class RealmResolverMiddleware {
 
     async run(event: IAppEvent) {
         const value = event.params.realmId;
+
         if (typeof value !== 'string' || !value) {
             return;
         }
@@ -27,6 +28,7 @@ export class RealmResolverMiddleware {
         // A UUID key is looked up too (cached by id): an unknown realm in the
         // route answers 404 whichever way it is named.
         const realm = await this.realmRepository.resolve(value);
+
         if (!realm) {
             throw new EntityNotFoundError(`realm '${value}' not found`);
         }

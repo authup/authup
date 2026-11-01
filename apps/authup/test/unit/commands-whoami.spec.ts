@@ -31,6 +31,7 @@ describe('authup whoami', () => {
         output = [];
         vi.spyOn(process.stdout, 'write').mockImplementation((chunk) => {
             output.push(String(chunk));
+
             return true;
         });
         vi.spyOn(Date, 'now').mockReturnValue(1_000_000);

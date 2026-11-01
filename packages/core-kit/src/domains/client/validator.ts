@@ -35,6 +35,7 @@ function buildRedirectPatternSchema(name: string) {
         .check((ctx) => {
             const validator = z.url();
             const urls = ctx.value.split(',');
+
             for (const url of urls) {
                 try {
                     validator.parse(url);
@@ -57,6 +58,7 @@ function buildRedirectPatternSchema(name: string) {
                 }
 
                 const parsed = new URL(url);
+
                 if (parsed.username || parsed.password) {
                     ctx.issues.push({
                         input: url,
@@ -92,6 +94,7 @@ const backchannelLogoutUriSchema = z
     .max(2000)
     .check((ctx) => {
         let parsed: URL;
+
         try {
             parsed = new URL(ctx.value);
         } catch {

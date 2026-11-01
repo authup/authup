@@ -16,6 +16,7 @@ export class EntityNotFoundError extends AuthupError {
     constructor(input?: string | AuthupEntityErrorOptions) {
         const options: AuthupEntityErrorOptions = typeof input === 'string' ? { message: input } : (input ?? {});
         const { entity, ...rest } = options;
+
         super({
             code: ErrorCode.ENTITY_NOT_FOUND,
             message: entity ? `The ${entity} was not found.` : 'Entity not found.',

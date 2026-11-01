@@ -71,6 +71,7 @@ function buildApp(seed: Record<string, unknown> = {}, cookiePath?: string, cooki
 
     const pinia = createPinia();
     const app = createApp({ render: () => h('div') });
+
     app.use(pinia);
 
     installStore(app, {
@@ -81,9 +82,9 @@ function buildApp(seed: Record<string, unknown> = {}, cookiePath?: string, cooki
         cookieGet: (key) => jar.get(key),
         cookieSet: (key, value, options) => {
             setCalls.push({
-                key, 
-                value, 
-                options, 
+                key,
+                value,
+                options,
             });
             jar.set(key, value);
         },
@@ -96,9 +97,9 @@ function buildApp(seed: Record<string, unknown> = {}, cookiePath?: string, cooki
     const store = injectStore(pinia, app);
 
     return {
-        store, 
-        httpClient, 
-        setCalls, 
+        store,
+        httpClient,
+        setCalls,
         unsetCalls,
     };
 }
@@ -147,6 +148,7 @@ describe('core/store/install-cookies', () => {
         await store.login({ name: 'admin', password: 'start123' });
 
         const keys = setCalls.map((call) => call.key);
+
         expect(keys).toContain(CookieName.ACCESS_TOKEN);
         expect(keys).toContain(CookieName.ACCESS_TOKEN_EXPIRE_DATE);
         expect(keys).toContain(CookieName.REFRESH_TOKEN);
@@ -160,6 +162,7 @@ describe('core/store/install-cookies', () => {
 
         // the access-token cookie rides the grant-derived expire date
         const accessTokenCall = setCalls.find((call) => call.key === CookieName.ACCESS_TOKEN);
+
         expect(accessTokenCall).toBeDefined();
         expect(accessTokenCall!.options.maxAge).toBeTypeOf('number');
         expect(accessTokenCall!.options.maxAge!).toBeGreaterThan(0);
@@ -175,27 +178,29 @@ describe('core/store/install-cookies', () => {
             displayName: 'Other',
             description: 'never persisted',
         };
+
         store.setRealmManagement(row);
 
         const realmCall = setCalls.find((call) => call.key === CookieName.REALM_MANAGEMENT);
+
         expect(realmCall).toBeDefined();
         expect(realmCall!.value).toStrictEqual({
-            id: 'realm-2', 
-            name: 'other', 
-            displayName: 'Other', 
+            id: 'realm-2',
+            name: 'other',
+            displayName: 'Other',
         });
         expect(store.realmManagement).toStrictEqual({
-            id: 'realm-2', 
-            name: 'other', 
-            displayName: 'Other', 
+            id: 'realm-2',
+            name: 'other',
+            displayName: 'Other',
         });
     });
 
     it('unsets every cookie on logout', async () => {
         const {
-            store, 
-            setCalls, 
-            unsetCalls, 
+            store,
+            setCalls,
+            unsetCalls,
         } = buildApp();
 
         await store.login({ name: 'admin', password: 'start123' });
@@ -248,6 +253,7 @@ describe('core/store/install-cookies path', () => {
         });
 
         expect(setCalls).not.toHaveLength(0);
+
         for (const call of setCalls) {
             expect(call.options.path).toEqual('/');
         }
@@ -255,6 +261,7 @@ describe('core/store/install-cookies path', () => {
         await store.logout();
 
         expect(unsetCalls).not.toHaveLength(0);
+
         for (const call of unsetCalls) {
             expect(call.options.path).toEqual('/');
         }
@@ -273,6 +280,7 @@ describe('core/store/install-cookies path', () => {
         const { unsetCalls } = buildApp();
 
         const paths = new Set(unsetCalls.map((call) => call.options.path));
+
         expect(paths).toEqual(new Set(['/console', '/console/account', '/console/account/password']));
 
         for (const path of paths) {
@@ -294,6 +302,7 @@ describe('core/store/install-cookies path', () => {
         const { unsetCalls } = buildApp();
 
         const paths = new Set(unsetCalls.map((call) => call.options.path));
+
         expect(paths).toEqual(new Set(['/console', '/console/account']));
     });
 
@@ -327,6 +336,7 @@ describe('core/store/install-cookies path', () => {
 
         expect(setCalls).not.toHaveLength(0);
         expect(unsetCalls).not.toHaveLength(0);
+
         for (const call of [...setCalls, ...unsetCalls]) {
             expect(call.options.path).toEqual('/auth');
         }
@@ -350,9 +360,11 @@ describe('core/store/install-cookies attributes', () => {
         setLocation('https:');
 
         const { store, setCalls } = buildApp();
+
         await store.login({ name: 'admin', password: 'start123' });
 
         expect(setCalls).not.toHaveLength(0);
+
         for (const call of setCalls) {
             expect(call.options.secure).toBe(true);
             expect(call.options.sameSite).toEqual('lax');
@@ -363,9 +375,11 @@ describe('core/store/install-cookies attributes', () => {
         setLocation('http:');
 
         const { store, setCalls } = buildApp({}, undefined, true);
+
         await store.login({ name: 'admin', password: 'start123' });
 
         expect(setCalls).not.toHaveLength(0);
+
         for (const call of setCalls) {
             expect(call.options.secure).toBe(true);
         }
@@ -375,9 +389,11 @@ describe('core/store/install-cookies attributes', () => {
         setLocation('http:');
 
         const { store, setCalls } = buildApp();
+
         await store.login({ name: 'admin', password: 'start123' });
 
         expect(setCalls).not.toHaveLength(0);
+
         for (const call of setCalls) {
             expect(call.options.secure).toBeUndefined();
             expect(call.options.sameSite).toEqual('lax');

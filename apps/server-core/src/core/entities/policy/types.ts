@@ -29,7 +29,7 @@ export interface IPolicyService extends IReadScoper {
         options?: { updateOnly?: boolean },
     ): Promise<{
         entity: Policy,
-        created: boolean, 
+        created: boolean,
     }>;
     delete(id: string, actor: ActorContext): Promise<Policy>;
 }

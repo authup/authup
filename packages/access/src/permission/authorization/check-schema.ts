@@ -57,12 +57,14 @@ export async function parseAuthorizationCheckEvaluatorInput(
     };
 
     const seen = new Set<string>();
+
     for (const [i, permission] of permissions.entries()) {
         const key = buildPermissionKey({
             name: permission.name,
             realmId: permission.realmId ?? null,
             clientId: permission.clientId ?? null,
         });
+
         if (seen.has(key)) {
             throw new ValidupError([defineIssueItem({
                 message: `The permission ${key} is answered more than once.`,

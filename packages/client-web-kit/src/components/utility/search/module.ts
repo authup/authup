@@ -18,7 +18,9 @@ function debounce<T extends Fn>(func: T, timeout = 200) {
 
     return (...args: Parameters<T>) => {
         clearTimeout(timer);
-        timer = setTimeout(() => { func(...args); }, timeout);
+        timer = setTimeout(() => {
+            func(...args);
+        }, timeout);
     };
 }
 
@@ -40,6 +42,7 @@ export function buildListSearch(
     }
 
     let iconContent : VNodeChild | undefined;
+
     if (hasNormalizedSlot(ListSearchSlotName.ICON)) {
         iconContent = normalizeSlot(ListSearchSlotName.ICON, {}, ctx.slots);
     }

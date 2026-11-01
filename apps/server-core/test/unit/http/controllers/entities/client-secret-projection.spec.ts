@@ -78,6 +78,7 @@ describe('http/controllers (client secret projection)', () => {
             secretHashed: false,
             secretEncrypted: false,
         });
+
         ownClientId = ownClient.id;
 
         const { data: foreignClient } = await suite.client.client.create({
@@ -87,6 +88,7 @@ describe('http/controllers (client secret projection)', () => {
             secretHashed: false,
             secretEncrypted: false,
         });
+
         foreignClientId = foreignClient.id;
 
         const { data: foreignHashedClient } = await suite.client.client.create({
@@ -96,6 +98,7 @@ describe('http/controllers (client secret projection)', () => {
             secretHashed: true,
             secretEncrypted: false,
         });
+
         foreignHashedClientId = foreignHashedClient.id;
 
         const { data: ownHashedClient } = await suite.client.client.create({
@@ -104,6 +107,7 @@ describe('http/controllers (client secret projection)', () => {
             secretHashed: true,
             secretEncrypted: false,
         });
+
         ownHashedClientId = ownHashedClient.id;
 
         // encrypted secrets follow the plaintext rule: decrypted for a reader
@@ -114,6 +118,7 @@ describe('http/controllers (client secret projection)', () => {
             secretHashed: false,
             secretEncrypted: true,
         });
+
         ownEncryptedClientId = ownEncryptedClient.id;
 
         const { data: foreignEncryptedClient } = await suite.client.client.create({
@@ -123,6 +128,7 @@ describe('http/controllers (client secret projection)', () => {
             secretHashed: false,
             secretEncrypted: true,
         });
+
         foreignEncryptedClientId = foreignEncryptedClient.id;
 
         const { data: foreignPublicClient } = await suite.client.client.create({
@@ -130,6 +136,7 @@ describe('http/controllers (client secret projection)', () => {
             realmId: realmB.id,
             authMethod: 'none',
         });
+
         foreignPublicClientId = foreignPublicClient.id;
 
         statsFrom = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -166,6 +173,7 @@ describe('http/controllers (client secret projection)', () => {
             secretEncrypted: false,
         });
         const { data: clientRead } = await suite.client.permission.getOne(PermissionName.CLIENT_READ);
+
         await suite.client.clientPermission.create({
             clientId: restrictedClient.id,
             permissionId: clientRead.id,
@@ -181,18 +189,22 @@ describe('http/controllers (client secret projection)', () => {
             PermissionName.CLIENT_ROLE_READ,
             PermissionName.CLIENT_SCOPE_READ,
         ];
+
         for (const name of junctionGrantNames) {
             const { data: grant } = await suite.client.permission.getOne(name);
+
             await suite.client.clientPermission.create({
                 clientId: restrictedClient.id,
                 permissionId: grant.id,
                 realmScope: RealmScope.ANY,
             });
         }
+
         const restrictedToken = await suite.client.token.createWithClientCredentials({
             client_id: restrictedClient.id,
             client_secret: restrictedActorSecret,
         });
+
         restrictedActor = new HTTPClient({ baseURL: suite.baseURL });
         restrictedActor.setAuthorizationHeader({ type: 'Bearer', token: restrictedToken.access_token });
     });
@@ -208,7 +220,9 @@ describe('http/controllers (client secret projection)', () => {
         });
 
         expect(response.data).toHaveLength(2);
+
         const byId = new Map(response.data.map((row) => [row.id, row]));
+
         expect(byId.get(ownClientId)!.secret).toEqual(ownClientSecret);
         expect(byId.get(foreignClientId)!.secret).toEqual(foreignClientSecret);
     });
@@ -274,6 +288,7 @@ describe('http/controllers (client secret projection)', () => {
 
     it('serves an own-realm hashed secret on a single read and denies a foreign one', async () => {
         const own = await restrictedActor.client.getOne(ownHashedClientId, { fields: ['+secret'] });
+
         expect(isBCryptHash(own.data.secret!)).toBe(true);
 
         // the single read has no field to redact, so a foreign hashed row is
@@ -303,13 +318,16 @@ describe('http/controllers (client secret projection)', () => {
 
         // the parent collection is unaffected by the gate
         expect(response.data).toHaveLength(2);
+
         const byClientId = new Map(response.data.map((row) => [row.clientId, row]));
 
         const ownRow = byClientId.get(ownClientId)!;
+
         expect(ownRow.client).toBeDefined();
         expect(ownRow.client!.secret).toEqual(ownClientSecret);
 
         const foreignRow = byClientId.get(foreignClientId)!;
+
         expect(foreignRow.client).toBeDefined();
         expect(foreignRow.client!.secret).toBeUndefined();
     });
@@ -332,7 +350,9 @@ describe('http/controllers (client secret projection)', () => {
         });
 
         expect(response.data).toHaveLength(2);
+
         const byClientId = new Map(response.data.map((row) => [row.clientId, row]));
+
         expect(byClientId.get(ownClientId)!.client!.secret).toEqual(ownClientSecret);
         expect(byClientId.get(foreignClientId)!.client!.secret).toBeUndefined();
     });
@@ -344,7 +364,9 @@ describe('http/controllers (client secret projection)', () => {
         });
 
         expect(response.data).toHaveLength(2);
+
         const byClientId = new Map(response.data.map((row) => [row.clientId, row]));
+
         expect(byClientId.get(ownClientId)!.client!.secret).toEqual(ownClientSecret);
         expect(byClientId.get(foreignClientId)!.client!.secret).toBeUndefined();
     });
@@ -363,13 +385,16 @@ describe('http/controllers (client secret projection)', () => {
         });
 
         expect(response.data).toHaveLength(2);
+
         const byClientId = new Map(response.data.map((row) => [row.clientId, row]));
 
         const ownRow = byClientId.get(ownClientId)!;
+
         expect(ownRow.client).toBeDefined();
         expect(ownRow.client!.secret).toEqual(ownClientSecret);
 
         const foreignRow = byClientId.get(foreignClientId)!;
+
         expect(foreignRow.client).toBeDefined();
         expect(foreignRow.client!.secret).toBeUndefined();
     });

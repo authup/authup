@@ -27,7 +27,8 @@ const REDIRECT_URI = 'https://example.com/redirect';
 
 function decodeJwtPayload(token: string): OAuth2TokenPayload {
     const [, payload] = token.split('.');
-    return JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8'));
+
+    return JSON.parse(new TextDecoder().decode(Uint8Array.fromBase64(payload, { alphabet: 'base64url' })));
 }
 
 // Plan 086 part 2: per-application attribution lives on `auth_session_tokens`,
@@ -68,6 +69,7 @@ describe('src/http/controllers/token (session-token client attribution)', () => 
         }));
 
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: client.id,
@@ -78,11 +80,13 @@ describe('src/http/controllers/token (session-token client attribution)', () => 
 
     async function readTokenRow(token: string): Promise<SessionTokenEntity> {
         const { jti } = decodeJwtPayload(token);
+
         expect(jti).toBeDefined();
 
         const row = await suite.dataSource
             .getRepository(SessionTokenEntity)
             .findOne({ where: { id: jti! } });
+
         expect(row).not.toBeNull();
 
         return row!;
@@ -102,6 +106,7 @@ describe('src/http/controllers/token (session-token client attribution)', () => 
             password,
         });
         const bearer = new HTTPClient({ baseURL: suite.baseURL });
+
         bearer.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
         await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.EMAIL });
 
@@ -126,22 +131,28 @@ describe('src/http/controllers/token (session-token client attribution)', () => 
                 ...clientCredentials,
             },
         });
+
         expect(rejected.status).toEqual(400);
+
         const rejectedBody = await rejected.json();
+
         expect(typeof rejectedBody.mfa_token).toEqual('string');
 
         const viaTicket = new HTTPClient({ baseURL: suite.baseURL });
+
         viaTicket.setAuthorizationHeader({ type: 'Bearer', token: rejectedBody.mfa_token });
 
         mailClient.clear();
         await viaTicket.userAuthenticator.sendChallenge({ kind: UserAuthenticatorKind.EMAIL });
         expect(mailClient.sent).toHaveLength(1);
+
         const code = /(\d{6})/.exec(mailClient.sent[0].text ?? '')![1];
 
         const verified = await viaTicket.userAuthenticator.verifyChallenge({
             kind: UserAuthenticatorKind.EMAIL,
             response: code,
         });
+
         expect(verified.token).toBeDefined();
 
         return verified.token!;
@@ -172,6 +183,7 @@ describe('src/http/controllers/token (session-token client attribution)', () => 
         });
 
         const row = await readTokenRow(grant.access_token);
+
         expect(row.kind).toEqual('access');
         expect(row.clientId).toEqual(confidentialClient.id);
 
@@ -182,6 +194,7 @@ describe('src/http/controllers/token (session-token client attribution)', () => 
         const rows = await suite.dataSource
             .getRepository(SessionTokenEntity)
             .find({ where: { sessionId: row.sessionId } });
+
         expect(rows).toHaveLength(1);
     });
 
@@ -281,24 +294,30 @@ describe('src/http/controllers/token (session-token client attribution)', () => 
         });
 
         const bearer = new HTTPClient({ baseURL: suite.baseURL });
+
         bearer.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
+
         const sessionId = decodeJwtPayload(login.access_token).session_id!;
 
         // 2) the first application authorizes on that session
         const firstGrant = await authorizeAndExchange(bearer, firstApp, firstSecret);
+
         expect(decodeJwtPayload(firstGrant.access_token).session_id).toEqual(sessionId);
 
         // The session's subject is a user, so its client-subject FK stays
         // null no matter how many applications authorize on it.
         const afterFirst = await suite.client.session.getOne(sessionId);
+
         expect(afterFirst.data.clientId).toBeNull();
 
         // 3) the second application authorizes on the SAME session, using the
         //    same bearer — the shared cookie jar of the IdP origin.
         const secondGrant = await authorizeAndExchange(bearer, secondApp, secondSecret);
+
         expect(decodeJwtPayload(secondGrant.access_token).session_id).toEqual(sessionId);
 
         const afterSecond = await suite.client.session.getOne(sessionId);
+
         expect(afterSecond.data.clientId).toBeNull();
 
         // attribution that IS per application lives on the token rows
@@ -310,6 +329,7 @@ describe('src/http/controllers/token (session-token client attribution)', () => 
         // and both applications rode one browser session, as Authentik and
         // Keycloak also model it (no sibling session per application).
         const sessions = await suite.client.session.getMany({ filters: { sub: user.id } });
+
         expect(sessions.data.filter((s) => s.sub === user.id)).toHaveLength(1);
     });
 
@@ -322,6 +342,7 @@ describe('src/http/controllers/token (session-token client attribution)', () => 
         // application — the fail-closed answer for a consumer gating on the
         // attribution.
         const anonymous = await completeMfaLogin(await createEmailFactorUser(password), password);
+
         expect((await readTokenRow(anonymous.access_token)).clientId).toBeNull();
         expect((await readTokenRow(anonymous.refresh_token!)).clientId).toBeNull();
 
@@ -334,6 +355,7 @@ describe('src/http/controllers/token (session-token client attribution)', () => 
             client_id: confidentialClient.id,
             client_secret: confidentialSecret,
         });
+
         expect((await readTokenRow(attributed.access_token)).clientId).toEqual(confidentialClient.id);
         expect((await readTokenRow(attributed.refresh_token!)).clientId).toEqual(confidentialClient.id);
     });

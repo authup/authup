@@ -35,9 +35,11 @@ describe('http/controllers/user (self-manage)', () => {
             password: knownPassword,
             active: true,
         });
+
         entity = created;
 
         const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_SELF_MANAGE);
+
         // an own-reach grant: a self-edit is evaluated against the STORED
         // row's realm, which an own grant reaches
         await suite.client.userPermission.create({
@@ -124,6 +126,7 @@ describe('http/controllers/user (self-manage)', () => {
         );
 
         const { data: current } = await suite.client.user.getOne(entity.id);
+
         expect(current.pathId).toBeNull();
     });
 
@@ -190,6 +193,7 @@ describe('http/controllers/user (self-manage)', () => {
         });
 
         const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_SELF_MANAGE);
+
         await suite.client.userPermission.create({
             userId: user.id,
             permissionId: permission.id,
@@ -203,6 +207,7 @@ describe('http/controllers/user (self-manage)', () => {
         });
 
         const client = new HTTPClient({ baseURL: suite.baseURL });
+
         client.setAuthorizationHeader({
             type: 'Bearer',
             token: tokenResponse.access_token,
@@ -214,6 +219,7 @@ describe('http/controllers/user (self-manage)', () => {
         );
 
         const { data: current } = await suite.client.user.getOne(user.id);
+
         expect(current.displayName).not.toBe('none-renamed');
     });
 

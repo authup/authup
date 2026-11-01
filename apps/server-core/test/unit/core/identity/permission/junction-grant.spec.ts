@@ -24,6 +24,7 @@ describe('core/identity/permission/junction-grant', () => {
     describe('applyJunctionCreateGrant', () => {
         it('caps reach to an own grant and stamps no policy (policy-free own actor)', () => {
             const validated: Record<string, any> = {};
+
             applyJunctionCreateGrant(validated, { realmScope: RealmScope.OWN });
             expect(validated.realmScope).toBe(RealmScope.OWN);
             expect(validated.policyId).toBeNull();
@@ -31,6 +32,7 @@ describe('core/identity/permission/junction-grant', () => {
 
         it('inherits the grant policy at the capped reach (policy-bound any actor, any request)', () => {
             const validated: Record<string, any> = { realmScope: RealmScope.ANY };
+
             applyJunctionCreateGrant(validated, { realmScope: RealmScope.ANY, policy });
             expect(validated.realmScope).toBe(RealmScope.ANY);
             expect(validated.policyId).toBe('policy-1');
@@ -38,12 +40,14 @@ describe('core/identity/permission/junction-grant', () => {
 
         it('caps an over-broad request down to the grant reach', () => {
             const validated: Record<string, any> = { realmScope: RealmScope.ANY };
+
             applyJunctionCreateGrant(validated, { realmScope: RealmScope.OWN });
             expect(validated.realmScope).toBe(RealmScope.OWN);
         });
 
         it('leaves an explicit policyId untouched for a genuinely unrestricted (any, policy-free) actor', () => {
             const validated: Record<string, any> = { realmScope: RealmScope.OWN, policyId: 'explicit' };
+
             applyJunctionCreateGrant(validated, { realmScope: RealmScope.ANY });
             // any + policy-free => the explicit policyId stands; reach capped to the request.
             expect(validated.realmScope).toBe(RealmScope.OWN);
@@ -60,6 +64,7 @@ describe('core/identity/permission/junction-grant', () => {
                 actorPolicyFree: true,
                 actorPolicyId: null,
             });
+
             expect(result.realmScope).toBe(RealmScope.OWN);
             expect(result.policyId).toBeNull();
         });
@@ -72,6 +77,7 @@ describe('core/identity/permission/junction-grant', () => {
                 actorPolicyFree: true,
                 actorPolicyId: null,
             });
+
             expect(result.policyId).toBeNull();
             expect(result).not.toHaveProperty('realmScope');
         });
@@ -84,6 +90,7 @@ describe('core/identity/permission/junction-grant', () => {
                 actorPolicyFree: true,
                 actorPolicyId: null,
             });
+
             expect(result.realmScope).toBe(RealmScope.OWN);
             expect(result.policyId).toBeNull();
         });
@@ -96,6 +103,7 @@ describe('core/identity/permission/junction-grant', () => {
                 actorPolicyFree: false,
                 actorPolicyId: 'policy-1',
             });
+
             expect(result.policyId).toBe('policy-1');
             expect(result.realmScope).toBe(RealmScope.OWN);
         });
@@ -108,6 +116,7 @@ describe('core/identity/permission/junction-grant', () => {
                 actorPolicyFree: true,
                 actorPolicyId: null,
             });
+
             expect(result.policyId).toBeNull();
             expect(result.realmScope).toBe(RealmScope.OWN);
         });
@@ -120,6 +129,7 @@ describe('core/identity/permission/junction-grant', () => {
                 actorPolicyFree: true,
                 actorPolicyId: null,
             });
+
             expect(result.policyId).toBe('explicit');
             expect(result).not.toHaveProperty('realmScope');
         });
@@ -132,6 +142,7 @@ describe('core/identity/permission/junction-grant', () => {
                 actorPolicyFree: true,
                 actorPolicyId: null,
             });
+
             expect(result).toEqual({});
         });
     });

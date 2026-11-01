@@ -40,13 +40,13 @@ export default defineComponent({
 
         const translationsDefault = useTranslations([
             {
-                namespace: TranslatorTranslationNamespace.COMMON, 
-                key: TranslatorTranslationCommonKey.GENERAL, 
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.GENERAL,
             },
             {
-                namespace: TranslatorTranslationNamespace.ENTITY, 
-                key: TranslatorTranslationEntityKey.POLICY, 
-                count: 1, 
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.POLICY,
+                count: 1,
             },
         ]);
 
@@ -59,6 +59,7 @@ export default defineComponent({
         // A record that cannot be loaded sends the visitor back to the
         // collection; the template renders nothing until then (`v-if`).
         let entity : Ref<Policy | null> = ref(null);
+
         try {
             entity = ref(await httpClient
                 .policy

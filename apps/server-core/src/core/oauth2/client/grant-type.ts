@@ -35,6 +35,7 @@ export function assertClientGrantAllowed(client: Pick<Client, 'grantTypes'>, gra
     }
 
     const allowed = client.grantTypes.split(/[\s,]+/);
+
     if (!allowed.includes(grantType)) {
         throw OAuth2ClientUnauthorizedError.grantType(grantType);
     }

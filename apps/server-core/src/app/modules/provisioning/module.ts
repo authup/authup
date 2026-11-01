@@ -75,8 +75,8 @@ import {
     RoleRepositoryAdapter,
     ScopeRepositoryAdapter,
     UserPermissionRepositoryAdapter,
-    UserRepositoryAdapter, 
-    UserRoleRepositoryAdapter, 
+    UserRepositoryAdapter,
+    UserRoleRepositoryAdapter,
 } from '../database/repositories/index.ts';
 import { DATABASE_LOCK_OPTIONS, DatabaseInjectionKey } from '../database/index.ts';
 import type { IModule } from 'orkos';
@@ -117,6 +117,7 @@ export class ProvisionerModule implements IModule {
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
 
         const queryRunner = dataSource.createQueryRunner();
+
         try {
             await withDatabaseLock(
                 queryRunner,
@@ -135,6 +136,7 @@ export class ProvisionerModule implements IModule {
         const config = container.resolve(ConfigInjectionKey);
         const logger = container.resolve(LoggerInjectionKey);
         const provisioningDir = config.provisioningDirectoryPath;
+
         if (fs.existsSync(provisioningDir)) {
             sources.push(new FileProvisioningSource({ cwd: provisioningDir, logger }));
         } else {
@@ -155,6 +157,7 @@ export class ProvisionerModule implements IModule {
         // ---------------------------------------------------------------
         const wildcardEntry = extractWildcardRealmEntry(data);
         let wildcardVariants : Map<string, RealmProvisioningRelations> | undefined;
+
         if (wildcardEntry) {
             wildcardVariants = expandWildcardRealmEntry(wildcardEntry, data);
         }
@@ -330,9 +333,11 @@ export class ProvisionerModule implements IModule {
         // paths cannot drift. Registered only when a wildcard entry was
         // declared.
         let wildcardProvisioner : WildcardRealmProvisioner | undefined;
+
         if (container.has(ProvisioningInjectionKey.WildcardRealmProvisioner)) {
             container.unregister(ProvisioningInjectionKey.WildcardRealmProvisioner);
         }
+
         if (wildcardEntry) {
             wildcardProvisioner = new WildcardRealmProvisioner({
                 relations: wildcardEntry.relations ?? {},
@@ -347,9 +352,11 @@ export class ProvisionerModule implements IModule {
         // repository transactions, better-sqlite3 shares one query runner,
         // and a pool-bound fan-out across realms has deadlocked before.
         const realms = await realmRepository.find();
+
         for (const realm of realms) {
             await systemClientProvisioner.ensureForRealm(realm);
             await keyProvisioner.ensureForRealm(realm);
+
             // Realms with an explicit entry were already covered by the
             // wildcard expansion inside the graph sync above.
             if (wildcardProvisioner && !wildcardProvisioner.hasExplicitEntry(realm)) {
@@ -367,6 +374,7 @@ export class ProvisionerModule implements IModule {
         policyRepository: PolicyRepositoryAdapter,
     ): Promise<void> {
         const defaultPolicy = await policyRepository.findOneByName(SystemPolicyName.DEFAULT);
+
         if (!defaultPolicy) {
             return;
         }
@@ -379,6 +387,7 @@ export class ProvisionerModule implements IModule {
         const bound = await junctionRepo.find({ select: { permissionId: true } });
         const boundIds = new Set(bound.map((row) => row.permissionId));
         const missing = permissions.filter((permission) => !boundIds.has(permission.id));
+
         if (missing.length === 0) {
             return;
         }

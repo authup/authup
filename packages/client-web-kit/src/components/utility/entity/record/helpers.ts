@@ -29,15 +29,15 @@ export function buildEntityVSlotProps<T>(
 
 export function defineEntityVEmitOptions<T>(): EntityVEmitOptions<T> {
     return {
-         
+
         failed: (_item: Error) => true,
-         
+
         created: (_item: T) => true,
-         
+
         deleted: (_item: T) => true,
-         
+
         updated: (_item: T) => true,
-         
+
         resolved: (_item?: T) => true,
     };
 }

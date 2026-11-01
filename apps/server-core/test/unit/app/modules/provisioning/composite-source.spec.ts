@@ -8,8 +8,8 @@
 import { RealmScope } from '@authup/access';
 import { Container } from 'eldin';
 import {
-    describe, 
-    expect, 
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { CompositeProvisioningSource } from '../../../../../src/app/modules/provisioning/sources/index.ts';
@@ -25,6 +25,7 @@ function createSource(data: RootProvisioningEntity) : IProvisioningSource {
 
 async function loadComposite(...sources: RootProvisioningEntity[]) : Promise<RootProvisioningEntity> {
     const composite = new CompositeProvisioningSource(sources.map((data) => createSource(data)));
+
     return composite.load(container);
 }
 
@@ -61,6 +62,7 @@ describe('app/modules/provisioning/sources/composite', () => {
         expect(output.realms).toHaveLength(1);
 
         const [realm] = output.realms!;
+
         expect(realm.attributes.builtIn).toBe(true);
         expect(realm.strategy?.type).toEqual(ProvisioningEntityStrategyType.MERGE);
         expect(realm.relations?.users).toHaveLength(1);
@@ -74,10 +76,10 @@ describe('app/modules/provisioning/sources/composite', () => {
             {
                 scopes: [{
                     attributes: {
-                        name: 'scope', 
-                        builtIn: true, 
-                        description: 'first', 
-                    }, 
+                        name: 'scope',
+                        builtIn: true,
+                        description: 'first',
+                    },
                 }],
             },
             { scopes: [{ attributes: { name: 'scope', description: 'second' } }] },
@@ -115,6 +117,7 @@ describe('app/modules/provisioning/sources/composite', () => {
         );
 
         const [client] = output.realms![0].relations!.clients!;
+
         expect(client.attributes.builtIn).toBe(true);
         expect(client.attributes.active).toBe(true);
         expect(client.relations?.globalRoles).toEqual(['admin', 'service']);
@@ -165,6 +168,7 @@ describe('app/modules/provisioning/sources/composite', () => {
         );
 
         const [role] = output.roles!;
+
         expect(role.relations?.globalPermissionsRealmScope).toEqual(RealmScope.ANY);
         expect(role.relations?.globalPermissionsRealmScopeOverrides).toEqual({
             [RealmScope.OWN]: ['a', 'b'],
@@ -222,6 +226,7 @@ describe('app/modules/provisioning/sources/composite', () => {
         // (later source wins, so a list can also shrink) — they never union
         // like relation lists.
         const [policy] = output.policies!;
+
         expect(policy.extraAttributes).toEqual({ invert: true, names: ['x'] });
         expect(policy.children!.map((child) => child.attributes.name))
             .toEqual(['child-a', 'child-b']);

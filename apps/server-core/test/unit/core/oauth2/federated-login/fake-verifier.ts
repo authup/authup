@@ -21,7 +21,7 @@ export class FakeVerifier implements IOAuth2AuthorizationCodeRequestVerifier {
     async verify(data: OAuth2AuthorizationCodeRequest) {
         this.calls.push(data);
 
-        if (this.result instanceof Error) {
+        if (Error.isError(this.result)) {
             throw this.result;
         }
 

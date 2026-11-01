@@ -87,28 +87,36 @@ export const APermissionPolicyBindingButton = defineComponent({
         const detailPolicy = ref<Policy | null>(null);
 
         const entityRef = toRef(props, 'entity');
+
         watch(entityRef, (val) => {
             currentPolicyId.value = val?.policyId ?? null;
             currentRealmScope.value = val?.realmScope ?? (val?.id ? null : REALM_SCOPE.OWN);
         }, { deep: true });
 
         const handlePolicySelect = async (policyId: string | null) => {
-            if (busy.value) return;
+            if (busy.value) {
+                return;
+            }
 
             // Create mode: stage the choice; it is committed by the `create` emit.
             if (isCreateMode()) {
                 currentPolicyId.value = policyId;
+
                 return;
             }
 
             const entityId = props.entity?.id;
             const api = pickEntityAPI(client, props.entityType);
 
-            if (!entityId || !api?.update) return;
+            if (!entityId || !api?.update) {
+                return;
+            }
 
             busy.value = true;
+
             try {
                 const response = await api.update(entityId, { policyId });
+
                 currentPolicyId.value = policyId;
                 emit('updated', response.data);
             } catch (e) {
@@ -121,22 +129,29 @@ export const APermissionPolicyBindingButton = defineComponent({
         };
 
         const handleRealmScopeSelect = async (scope: RealmScopeValue) => {
-            if (busy.value || currentRealmScope.value === scope) return;
+            if (busy.value || currentRealmScope.value === scope) {
+                return;
+            }
 
             // Create mode: stage the choice; it is committed by the `create` emit.
             if (isCreateMode()) {
                 currentRealmScope.value = scope;
+
                 return;
             }
 
             const entityId = props.entity?.id;
             const api = pickEntityAPI(client, props.entityType);
 
-            if (!entityId || !api?.update) return;
+            if (!entityId || !api?.update) {
+                return;
+            }
 
             busy.value = true;
+
             try {
                 const response = await api.update(entityId, { realmScope: scope });
+
                 // Reflect the server-capped value: a restricted actor's chosen scope may be
                 // narrowed server-side, so prefer the persisted scope from the response.
                 currentRealmScope.value = (
@@ -162,19 +177,25 @@ export const APermissionPolicyBindingButton = defineComponent({
         // sync its manager (manager.created); it flows back as `props.entity` (now with an id),
         // switching the control to edit mode. The server caps the chosen scope.
         const handleCreate = async () => {
-            if (busy.value || !isCreateMode() || !props.entity) return;
+            if (busy.value || !isCreateMode() || !props.entity) {
+                return;
+            }
 
             const api = pickEntityAPI(client, props.entityType);
 
-            if (!api?.create) return;
+            if (!api?.create) {
+                return;
+            }
 
             busy.value = true;
+
             try {
                 const response = await api.create({
                     ...props.entity,
                     realmScope: currentRealmScope.value ?? undefined,
                     policyId: currentPolicyId.value ?? undefined,
                 });
+
                 emit('created', response.data);
                 modalOpen.value = false;
             } catch (e) {
@@ -292,6 +313,7 @@ export const APermissionPolicyBindingButton = defineComponent({
                         undefined,
                     ...realmScopeOptions.map((scope) => {
                         const isSelected = current === scope;
+
                         return h(VCButton, {
                             key: scope,
                             size: props.size,
@@ -325,6 +347,7 @@ export const APermissionPolicyBindingButton = defineComponent({
 
                     let selectColor: 'neutral' | 'success' = 'neutral';
                     let selectVariant: 'solid' | 'soft' = 'soft';
+
                     if (busy.value) {
                         selectVariant = 'solid';
                     } else if (isSelected) {
@@ -348,6 +371,7 @@ export const APermissionPolicyBindingButton = defineComponent({
                                 disabled: busy.value,
                                 onClick(e: Event) {
                                     e.preventDefault();
+
                                     if (isSelected) {
                                         handlePolicySelect(null);
                                     } else {
@@ -424,6 +448,7 @@ export const APermissionPolicyBindingButton = defineComponent({
 
             let triggerColor: 'neutral' | 'primary' = 'neutral';
             let triggerVariant: 'solid' | 'soft' = 'soft';
+
             if (busy.value) {
                 triggerVariant = 'solid';
             } else if (!createMode && currentPolicyId.value) {
@@ -454,6 +479,7 @@ export const APermissionPolicyBindingButton = defineComponent({
                     open: modalOpen.value,
                     'onUpdate:open': (value: boolean) => {
                         modalOpen.value = value;
+
                         // Closing the list also discards any open detail view —
                         // the detail is a sibling VCModal, so clear its state on
                         // the same close path to keep the two modals in sync.

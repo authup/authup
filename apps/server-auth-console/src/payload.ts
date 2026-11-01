@@ -105,6 +105,7 @@ export function createFeaturesReader(client: Client) : () => Promise<StatusRespo
         const clear = () => {
             pending = undefined;
         };
+
         pending.then(clear, clear);
 
         return pending;
@@ -154,6 +155,7 @@ export function buildWorkflowPageData(
 
     if (options.realmAware) {
         const realmId = typeof query.realmId === 'string' ? query.realmId : query.realm_id;
+
         data.realmId = typeof realmId === 'string' ? realmId : undefined;
     }
 
@@ -175,6 +177,7 @@ export function buildWorkflowPageData(
  */
 export function readUILocalesHint(event: IAppEvent) : string | undefined {
     const { ui_locales: uiLocales } = useRequestQuery(event);
+
     if (typeof uiLocales !== 'string') {
         return undefined;
     }
@@ -216,11 +219,13 @@ export function readUIColorModeHint(event: IAppEvent) : string | undefined {
  */
 export function readDeviceUserCode(event: IAppEvent) : string | undefined {
     const query = useRequestQuery(event);
+
     if (typeof query.user_code !== 'string') {
         return undefined;
     }
 
     const canonical = query.user_code.toUpperCase().replace(/[^A-Z0-9]/g, '');
+
     if (canonical.length === 0 || canonical.length > 16) {
         return undefined;
     }

@@ -30,7 +30,7 @@ import { createTestApplication } from '../../../../../app';
 
 const USER_AGENT = 'link-spec-agent';
 
-const encode = (input: Record<string, any>) => Buffer.from(JSON.stringify(input)).toString('base64url');
+const encode = (input: Record<string, any>) => Buffer.from(JSON.stringify(input)).toBase64({ alphabet: 'base64url', omitPadding: true });
 
 describe('identity-provider link flow', () => {
     const accountConsoleUrl = 'https://account.example.net/account';
@@ -67,6 +67,7 @@ describe('identity-provider link flow', () => {
                     res.statusCode = 400;
                     res.setHeader('content-type', 'application/json');
                     res.end(JSON.stringify(tokenEndpointError));
+
                     return;
                 }
 
@@ -74,8 +75,10 @@ describe('identity-provider link flow', () => {
                     sub: externalUserId,
                     email: 'linked@example.com',
                 })}.x`;
+
                 res.setHeader('content-type', 'application/json');
                 res.end(JSON.stringify({ access_token: accessToken, token_type: 'Bearer' }));
+
                 return;
             }
 
@@ -88,8 +91,10 @@ describe('identity-provider link flow', () => {
         idpURL = `http://127.0.0.1:${(idpServer.address() as AddressInfo).port}`;
 
         const logger = createNoopLogger();
+
         logger.error = ((message: unknown) => {
             logLines.push(typeof message === 'string' ? message : String(message));
+
             return logger;
         }) as Logger['error'];
         suite.container.register(LoggerInjectionKey, { useValue: logger });
@@ -104,6 +109,7 @@ describe('identity-provider link flow', () => {
         }))).data;
 
         const password = generateOAuth2CodeVerifier();
+
         user = (await suite.client.user.create(createFakeUser({
             realmId: realm.id,
             password,
@@ -114,6 +120,7 @@ describe('identity-provider link flow', () => {
             password,
             realm_id: realm.id,
         });
+
         userToken = login.access_token;
     });
 
@@ -131,11 +138,13 @@ describe('identity-provider link flow', () => {
                 'user-agent': USER_AGENT,
             },
         });
+
         expect(response.status).toEqual(200);
 
         const body = await response.json();
         const url = new URL(body.url);
         const state = url.searchParams.get('state');
+
         expect(state).toBeTruthy();
 
         return { url, state: state as string };
@@ -151,9 +160,11 @@ describe('identity-provider link flow', () => {
                 redirect: 'manual',
             },
         );
+
         expect(response.status).toEqual(302);
 
         const location = response.headers.get('location');
+
         expect(location).toBeTruthy();
 
         return new URL(location as string);
@@ -161,6 +172,7 @@ describe('identity-provider link flow', () => {
 
     function handleOf(target: URL): string {
         const handle = target.searchParams.get('linkHandle');
+
         expect(handle).toBeTruthy();
         expect(target.searchParams.get('provider')).toEqual(provider.id);
 
@@ -187,6 +199,7 @@ describe('identity-provider link flow', () => {
         expect(url.searchParams.get('redirect_uri')).toContain(`identity-providers/${provider.id}/authorize-in`);
 
         const target = await completeCallback(state);
+
         expect(target.origin).toEqual('https://account.example.net');
         expect(target.pathname).toEqual('/account/connected-accounts');
         expect(target.searchParams.get('linkError')).toBeNull();
@@ -195,12 +208,15 @@ describe('identity-provider link flow', () => {
 
         // the callback is unauthenticated, so it writes NOTHING (#3439)
         const before = await suite.client.get(`identity-provider-accounts?filter[userId]=${user.id}`);
+
         expect(before.data.data).toHaveLength(0);
 
         const confirmed = await confirmLink(handle, userToken);
+
         expect(confirmed.status).toEqual(200);
 
         const rows = await suite.client.get(`identity-provider-accounts?filter[userId]=${user.id}`);
+
         expect(rows.data.data).toHaveLength(1);
         expect(rows.data.data[0].providerUserId).toEqual(externalUserId);
         expect(rows.data.data[0].providerId).toEqual(provider.id);
@@ -212,9 +228,11 @@ describe('identity-provider link flow', () => {
         const target = await completeCallback(state);
 
         const confirmed = await confirmLink(handleOf(target), userToken);
+
         expect(confirmed.status).toEqual(200);
 
         const rows = await suite.client.get(`identity-provider-accounts?filter[userId]=${user.id}`);
+
         expect(rows.data.data).toHaveLength(1);
     });
 
@@ -236,16 +254,19 @@ describe('identity-provider link flow', () => {
         // the callback no longer decides this: the conflict surfaces on the
         // authenticated confirm, where it can carry a real localized error
         const confirmed = await confirmLink(handleOf(target), login.access_token);
+
         expect(confirmed.status).toEqual(400);
 
         // still linked to the FIRST user only
         const rows = await suite.client.get(`identity-provider-accounts?filter[providerId]=${provider.id}`);
+
         expect(rows.data.data).toHaveLength(1);
         expect(rows.data.data[0].userId).toEqual(user.id);
     });
 
     it('rejects a replayed state', async () => {
         const { state } = await requestLink(userToken);
+
         await completeCallback(state);
 
         const response = await httpRequest(
@@ -257,12 +278,14 @@ describe('identity-provider link flow', () => {
                 redirect: 'manual',
             },
         );
+
         // one-time state: the second use fails outside the link path
         expect(response.status).not.toEqual(302);
     });
 
     it('rejects a link-request without a bearer', async () => {
         const response = await httpRequest(suite, 'POST', `identity-providers/${provider.id}/link-request`, { headers: { 'user-agent': USER_AGENT } });
+
         expect(response.status).toEqual(401);
     });
 
@@ -280,6 +303,7 @@ describe('identity-provider link flow', () => {
                 'user-agent': USER_AGENT,
             },
         });
+
         expect(response.status).toEqual(400);
     });
 
@@ -305,6 +329,7 @@ describe('identity-provider link flow', () => {
             authorizeUrl: `${idpURL}/authorize`,
             requiredAcr: 'urn:loa:silver',
         }))).data;
+
         logLines.length = 0;
 
         // the outbound request asks for it as well
@@ -314,9 +339,11 @@ describe('identity-provider link flow', () => {
                 'user-agent': USER_AGENT,
             },
         });
+
         expect(requested.status).toEqual(200);
 
         const url = new URL((await requested.json()).url);
+
         expect(url.searchParams.get('acr_values')).toEqual('urn:loa:silver');
 
         // the fake provider answers with no id_token at all, so there is
@@ -339,6 +366,7 @@ describe('identity-provider link flow', () => {
         expect(logLines.join('\n')).toContain('id_token');
 
         const rows = await suite.client.get(`identity-provider-accounts?filter[providerId]=${strictProvider.id}`);
+
         expect(rows.data.data).toHaveLength(0);
 
         await suite.client.identityProvider.delete(strictProvider.id);
@@ -354,6 +382,7 @@ describe('identity-provider link flow', () => {
         expect(target.searchParams.get('linkError')).toEqual('link_failed');
 
         const log = logLines.join('\n');
+
         expect(log).toContain('upstream status: 400');
         expect(log).toContain('code is invalid');
 
@@ -391,9 +420,11 @@ describe('identity-provider link flow', () => {
         const target = await completeCallback(state);
 
         const response = await confirmLink(handleOf(target), login.access_token);
+
         expect(response.status).toEqual(400);
 
         const rows = await suite.client.get(`identity-provider-accounts?filter[providerUserId]=${externalUserId}`);
+
         expect(rows.data.data).toHaveLength(0);
 
         externalUserId = 'external-user-1';
@@ -409,6 +440,7 @@ describe('identity-provider link flow', () => {
             headers: { 'user-agent': USER_AGENT, 'content-type': 'application/json' },
             body: JSON.stringify({ handle: handleOf(target) }),
         });
+
         expect(response.status).toEqual(401);
 
         externalUserId = 'external-user-1';
@@ -455,6 +487,7 @@ describe('identity-provider link flow', () => {
         const target = await completeCallback(state);
 
         const response = await confirmLink(handleOf(target), userToken, otherProvider.id);
+
         expect(response.status).toEqual(400);
 
         externalUserId = 'external-user-1';
@@ -480,8 +513,11 @@ describe('identity-provider link flow', () => {
                 redirect: 'manual',
             },
         );
+
         expect(response.status).toEqual(302);
+
         const target = new URL(response.headers.get('location') as string);
+
         expect(target.searchParams.get('linked')).toBeNull();
         expect(target.searchParams.get('linkError')).toEqual('link_failed');
     });

@@ -10,9 +10,9 @@ import type { IIdentityResolver } from '../../../../src/core/identity/resolver/t
 
 export class FakeIdentityResolver implements IIdentityResolver {
     public resolveCalls: {
-        type: `${IdentityType}`; 
-        key: string; 
-        realmKey?: string 
+        type: `${IdentityType}`;
+        key: string;
+        realmKey?: string
     }[] = [];
 
     private identity: Identity | null = null;
@@ -23,10 +23,11 @@ export class FakeIdentityResolver implements IIdentityResolver {
 
     async resolve(type: `${IdentityType}`, key: string, realmKey?: string): Promise<Identity | null> {
         this.resolveCalls.push({
-            type, 
-            key, 
-            realmKey, 
+            type,
+            key,
+            realmKey,
         });
+
         return this.identity;
     }
 }

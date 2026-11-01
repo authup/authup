@@ -23,14 +23,15 @@ function getOrCreateCounter<T extends string>(
     labelNames: T[] = [],
 ): Counter<T> {
     const existing = register.getSingleMetric(name);
+
     if (existing) {
         return existing as Counter<T>;
     }
 
     return new Counter<T>({
-        name, 
-        help, 
-        labelNames, 
+        name,
+        help,
+        labelNames,
     });
 }
 

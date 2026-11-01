@@ -17,28 +17,35 @@ export async function readFromLocations(
     locations: RequestDataLocation[],
 ): Promise<Record<string, any>> {
     const out: Record<string, any> = {};
+
     for (const loc of locations) {
         switch (loc) {
             case 'body': {
                 const body = await readRequestBody(event);
+
                 if (body && typeof body === 'object') {
                     Object.assign(out, body);
                 }
+
                 break;
             }
             case 'query': {
                 Object.assign(out, useRequestQuery(event));
+
                 break;
             }
             case 'params': {
                 Object.assign(out, event.params);
+
                 break;
             }
             case 'cookies': {
                 Object.assign(out, useRequestCookies(event));
+
                 break;
             }
         }
     }
+
     return out;
 }

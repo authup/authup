@@ -9,37 +9,12 @@ import { isObject } from '@authup/kit';
 import type { OpenIDProviderMetadata } from './type';
 
 export function isOpenIDProviderMetadata(input: unknown) : input is OpenIDProviderMetadata {
-    if (!isObject(input)) {
-        return false;
-    }
-
-    if (typeof input.issuer !== 'string') {
-        return false;
-    }
-
-    if (typeof input.authorization_endpoint !== 'string') {
-        return false;
-    }
-
-    if (typeof input.jwks_uri !== 'string') {
-        return false;
-    }
-
-    if (!Array.isArray(input.response_types_supported)) {
-        return false;
-    }
-
-    if (!Array.isArray(input.subject_types_supported)) {
-        return false;
-    }
-
-    if (!Array.isArray(input.id_token_signing_alg_values_supported)) {
-        return false;
-    }
-
-    if (typeof input.token_endpoint !== 'string') {
-        return false;
-    }
-
-    return true;
+    return isObject(input) &&
+        typeof input.issuer === 'string' &&
+        typeof input.authorization_endpoint === 'string' &&
+        typeof input.jwks_uri === 'string' &&
+        Array.isArray(input.response_types_supported) &&
+        Array.isArray(input.subject_types_supported) &&
+        Array.isArray(input.id_token_signing_alg_values_supported) &&
+        typeof input.token_endpoint === 'string';
 }

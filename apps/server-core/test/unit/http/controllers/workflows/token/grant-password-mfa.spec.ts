@@ -56,23 +56,29 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
         });
 
         const bearer = new HTTPClient({ baseURL: suite.baseURL });
+
         bearer.setAuthorizationHeader({ type: 'Bearer', token: preLogin.access_token });
 
         let challenge = await bearer.userAuthenticator.challenge();
+
         expect(challenge.required).toBeFalsy();
 
         // Basic credentials authenticate a user holding no confirmed factor
         const basic = new HTTPClient({ baseURL: suite.baseURL });
+
         basic.setAuthorizationHeader({
             type: 'Basic',
             username: user.name,
             password,
         });
+
         const basicMe = await basic.user.getOne('@me');
+
         expect(basicMe.data.id).toEqual(user.id);
 
         // 2) enroll + confirm a TOTP device on @me
         const enrolled = await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.TOTP });
+
         expect(enrolled.meta.secret).toBeDefined();
         expect(enrolled.meta.uri).toContain('otpauth://totp/');
         expect(enrolled.meta.qr).toContain('data:image/png');
@@ -85,10 +91,12 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
         });
 
         const confirmed = await bearer.userAuthenticator.confirm('@me', enrolled.data.id, { code: totp.generate() });
+
         expect(confirmed.data.confirmed).toBeTruthy();
 
         // the read surface never carries secret material
         const list = await bearer.userAuthenticator.getMany('@me');
+
         expect(list.data).toHaveLength(1);
         expect(list.data[0].secret ?? null).toBeNull();
         expect(list.data[0].codes ?? null).toBeNull();
@@ -99,8 +107,11 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
 
         // 3) the grant now rejects a password-only login
         const withoutOtp = await passwordGrant({ username: user.name, password });
+
         expect(withoutOtp.status).toEqual(400);
+
         const withoutOtpBody = await withoutOtp.json();
+
         expect(withoutOtpBody.code).toEqual(ErrorCode.OAUTH_MFA_REQUIRED);
         expect(withoutOtpBody.error).toEqual(OAuth2ErrorCode.MFA_REQUIRED);
         // the challengeable kinds ride the error so the hosted login form can
@@ -120,8 +131,11 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
             password,
             otp: totp.generate({ timestamp: Date.now() - 30_000 }),
         });
+
         expect(withOtp.status).toEqual(200);
+
         const withOtpBody = await withOtp.json();
+
         expect(withOtpBody.access_token).toBeDefined();
 
         // 5) /authorize backstop: the PRE-enrollment bearer session carries
@@ -135,6 +149,7 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
             tokenBindingMethod: 'none',
         }));
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: oauthClient.id,
@@ -163,9 +178,11 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
             kind: UserAuthenticatorKind.TOTP,
             response: totp.generate(),
         });
+
         expect(verified.verified).toBeTruthy();
 
         const authorizeResponse = await bearer.authorize.confirm(authorizeInput);
+
         expect(new URL(authorizeResponse.url).searchParams.get('code')).toBeTruthy();
 
         // 7) an invalid otp keeps the grant closed
@@ -174,8 +191,11 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
             password,
             otp: '000000',
         });
+
         expect(withBadOtp.status).toEqual(400);
+
         const withBadOtpBody = await withBadOtp.json();
+
         expect(withBadOtpBody.code).toEqual(ErrorCode.OAUTH_MFA_REQUIRED);
     });
 
@@ -188,9 +208,11 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
             password,
         });
         const bearer = new HTTPClient({ baseURL: suite.baseURL });
+
         bearer.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
 
         const enrolled = await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.RECOVERY });
+
         expect(enrolled.meta.codes).toHaveLength(10);
 
         const [code] = enrolled.meta.codes!;
@@ -202,6 +224,7 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
                 otp: code,
             },
         });
+
         expect(withRecovery.status).toEqual(200);
 
         // single use — the same code is rejected on replay
@@ -213,8 +236,11 @@ describe('src/http/controllers/token (password grant + authorize MFA)', () => {
                 otp: code,
             },
         });
+
         expect(replay.status).toEqual(400);
+
         const replayBody = await replay.json();
+
         expect(replayBody.code).toEqual(ErrorCode.OAUTH_MFA_REQUIRED);
     });
 });

@@ -1,5 +1,43 @@
 # Change Log
 
+## [1.0.0-beta.72](https://github.com/authup/authup/compare/v1.0.0-beta.71...v1.0.0-beta.72) (2026-10-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-core:** a permission, role, scope or policy created without a realmId is now global instead of landing in the caller's realm; a realm admin must send its realm id or receives 403. A name-keyed PUT or update without realmId addresses the global row (users, clients and identity providers: the caller's realm). An unknown realmId in the body answers 400. clientId can no longer be changed on update. Existing rows are not migrated; see the upgrade notes.
+* `realms` on POST /authorization/check now selects the definition realms; the former meaning is `targetRealms`, in the request and on each entry. GET /authorization answers realmId, clientId and decisionStrategy. Upgrade the server and @authup/client-web-kit together.
+
+### Features
+
+* check realm- and client-owned permissions in the batch authorization check ([#3770](https://github.com/authup/authup/issues/3770)) ([bff9f21](https://github.com/authup/authup/commit/bff9f21fce84cd6756578a55e203a784299fb53a)), closes [#3769](https://github.com/authup/authup/issues/3769)
+* **server-core:** treat an absent and a null realmId alike on create ([#3771](https://github.com/authup/authup/issues/3771)) ([e72bfc5](https://github.com/authup/authup/commit/e72bfc535932f4a9becc66c9e1158d3a28b557d9))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 6 updates ([#3762](https://github.com/authup/authup/issues/3762)) ([355fb17](https://github.com/authup/authup/commit/355fb17ffe76ecf53d3d4c352138a20bd1410fda))
+* **server-core:** report no grants for an introspected token without the global scope ([#3773](https://github.com/authup/authup/issues/3773)) ([1a6aecc](https://github.com/authup/authup/commit/1a6aeccfb8c05c1322b0f9c6a4f481e1f967bf8b)), closes [#3749](https://github.com/authup/authup/issues/3749)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+    * @authup/core-http-kit bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+    * @authup/core-kit bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+    * @authup/errors bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+    * @authup/i18n bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+    * @authup/kit bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+    * @authup/server-config bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+    * @authup/server-config-kit bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+    * @authup/server-console-kit bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+    * @authup/server-kit bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+    * @authup/specs bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+  * devDependencies
+    * @authup/server-test-kit bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+
 ## [1.0.0-beta.71](https://github.com/authup/authup/compare/v1.0.0-beta.70...v1.0.0-beta.71) (2026-10-20)
 
 

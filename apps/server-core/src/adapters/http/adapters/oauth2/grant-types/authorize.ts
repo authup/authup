@@ -64,6 +64,7 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
         const code = this.pickStringParam(body, query, 'code');
         const redirectUri = this.pickStringParam(body, query, 'redirect_uri');
         const codeVerifier = this.pickStringParam(body, query, 'code_verifier');
+
         if (!code) {
             throw OAuth2RequestError.malformed();
         }
@@ -126,6 +127,7 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
         key: string,
     ): string | undefined {
         const value = body?.[key] ?? query?.[key];
+
         return typeof value === 'string' && value.length > 0 ? value : undefined;
     }
 }

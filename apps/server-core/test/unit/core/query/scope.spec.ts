@@ -24,11 +24,13 @@ const NAMES = [PermissionName.USER_READ, PermissionName.USER_UPDATE];
 
 function makeActor(options: { allow?: boolean, identity?: boolean } = {}): ActorContext {
     const evaluator = new FakePermissionEvaluator();
+
     if (options.allow === false) {
         evaluator.denyAll();
     }
 
     const actor: ActorContext = { permissionEvaluator: evaluator };
+
     if (options.identity !== false) {
         actor.identity = {
             type: IdentityType.USER,
@@ -48,15 +50,17 @@ const ownership = eq('id', 'u1');
 describe('scopeReadQuery', () => {
     it('passes the query through on allow', async () => {
         const actor = makeActor();
+
         evaluatorOf(actor).setCompileResult({ verdict: 'allow' });
+
         const query = new Query({});
 
         const scope = await scopeReadQuery(query, actor, { names: NAMES, ownership });
 
         expect(scope).toEqual({
-            query, 
-            post: false, 
-            ownership, 
+            query,
+            post: false,
+            ownership,
         });
         expect(evaluatorOf(actor).preEvaluateOneOfCalls.map((call) => call.name)).toEqual([NAMES]);
         expect(evaluatorOf(actor).compileCalls.map((call) => call.name)).toEqual([NAMES]);
@@ -65,7 +69,9 @@ describe('scopeReadQuery', () => {
     it('ORs the ownership term into a conditional reach', async () => {
         const actor = makeActor();
         const condition = eq('realmId', 'r1');
+
         evaluatorOf(actor).setCompileResult({ verdict: 'conditional', condition });
+
         const query = new Query({});
 
         const scope = await scopeReadQuery(query, actor, { names: NAMES, ownership });
@@ -77,7 +83,9 @@ describe('scopeReadQuery', () => {
     it('appends the bare reach without an ownership term', async () => {
         const actor = makeActor();
         const condition = eq('realmId', 'r1');
+
         evaluatorOf(actor).setCompileResult({ verdict: 'conditional', condition });
+
         const query = new Query({});
 
         const scope = await scopeReadQuery(query, actor, { names: NAMES });
@@ -87,7 +95,9 @@ describe('scopeReadQuery', () => {
 
     it('narrows a deny to the ownership term, or to nothing', async () => {
         const actor = makeActor();
+
         evaluatorOf(actor).setCompileResult({ verdict: 'deny' });
+
         const query = new Query({});
 
         expect((await scopeReadQuery(query, actor, { names: NAMES, ownership })).query)
@@ -98,15 +108,17 @@ describe('scopeReadQuery', () => {
 
     it('hands a post verdict back unlowered', async () => {
         const actor = makeActor();
+
         evaluatorOf(actor).setCompileResult({ verdict: 'post' });
+
         const query = new Query({});
 
         const scope = await scopeReadQuery(query, actor, { names: NAMES, ownership });
 
         expect(scope).toEqual({
-            query, 
-            post: true, 
-            ownership, 
+            query,
+            post: true,
+            ownership,
         });
     });
 
@@ -123,15 +135,15 @@ describe('scopeReadQuery', () => {
         const query = new Query({});
 
         const scope = await scopeReadQuery(query, actor, {
-            names: NAMES, 
-            ownership, 
-            selfService: true, 
+            names: NAMES,
+            ownership,
+            selfService: true,
         });
 
         expect(scope).toEqual({
-            query: appendQueryConditions(query, ownership), 
-            post: false, 
-            ownership, 
+            query: appendQueryConditions(query, ownership),
+            post: false,
+            ownership,
         });
         expect(evaluatorOf(actor).compileCalls).toHaveLength(0);
     });
@@ -150,15 +162,16 @@ describe('scopeReadQuery', () => {
         const scope = await scopeReadQuery(query, actor, { names: NAMES, compile: false });
 
         expect(scope).toEqual({
-            query, 
-            post: false, 
-            ownership: null, 
+            query,
+            post: false,
+            ownership: null,
         });
         expect(evaluatorOf(actor).compileCalls).toHaveLength(0);
     });
 
     it('passes the realm column on to the compile', async () => {
         const actor = makeActor();
+
         evaluatorOf(actor).setCompileResult({ verdict: 'allow' });
 
         await scopeReadQuery(new Query({}), actor, { names: NAMES, realmAttributeName: 'userRealmId' });
@@ -170,10 +183,11 @@ describe('scopeReadQuery', () => {
 describe('narrowReadScope', () => {
     it('returns a lowered scope unchanged', () => {
         const query = new Query({});
+
         expect(narrowReadScope({
-            query, 
-            post: false, 
-            ownership: null, 
+            query,
+            post: false,
+            ownership: null,
         })).toBe(query);
     });
 
@@ -182,15 +196,15 @@ describe('narrowReadScope', () => {
         const owner = and(eq('sub', 'u1'), eq('subKind', 'user'));
 
         expect(narrowReadScope({
-            query, 
-            post: true, 
-            ownership: owner, 
+            query,
+            post: true,
+            ownership: owner,
         }))
             .toEqual(appendQueryConditions(query, owner));
         expect(narrowReadScope({
-            query, 
-            post: true, 
-            ownership: null, 
+            query,
+            post: true,
+            ownership: null,
         }))
             .toEqual(appendQueryConditions(query, inArray('id', [])));
     });

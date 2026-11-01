@@ -89,6 +89,7 @@ describe('adapters/database/data-source/options', () => {
         const config = await normalizeConfig({ env: 'development' });
 
         const container = new Container();
+
         container.register(ConfigInjectionKey, { useValue: config });
 
         const options = await withDatabaseEnv({}, () => new ProbeDatabaseModule().build(container));
@@ -98,9 +99,11 @@ describe('adapters/database/data-source/options', () => {
 
     it('should pin postgres and mysql to UTC on every build', () => {
         const postgres = new DataSourceOptionsBuilder().buildWith({ type: 'postgres' }) as DataSourceOptions & { extra: Record<string, any> };
+
         expect(postgres.extra.options).toContain('TimeZone=UTC');
 
         const mysql = new DataSourceOptionsBuilder().buildWith({ type: 'mysql' });
+
         expect(mysql).toMatchObject({ timezone: 'Z', dateStrings: ['DATE'] });
     });
 

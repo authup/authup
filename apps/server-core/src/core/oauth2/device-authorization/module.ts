@@ -25,11 +25,11 @@ import type { IOAuth2AuthorizationGate, OAuth2AuthorizationGateResult } from '..
 import type { IOAuth2ClientRepository } from '../client/types.ts';
 import { resolveGrantedScope } from '../scope/helpers.ts';
 import type { IOAuth2ScopeRepository } from '../scope/types.ts';
-import type { 
-    EventRecordInput, 
-    EventRequestContext, 
-    IConsentService, 
-    IEventService, 
+import type {
+    EventRecordInput,
+    EventRequestContext,
+    IConsentService,
+    IEventService,
 } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 import {
@@ -101,7 +101,7 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
         const scope = resolveGrantedScope(scopes.map((entry) => entry.name), options.scope);
 
         for (let attempt = 0; attempt < OAUTH2_DEVICE_USER_CODE_MINT_ATTEMPTS; attempt++) {
-            const id = randomBytes(32).toString('hex');
+            const id = randomBytes(32).toHex();
             const userCode = generateDeviceUserCode();
 
             const saved = await this.repository.save({
@@ -159,6 +159,7 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
         const { code, client } = await this.resolveForDecision(userCode, identity);
 
         let result : OAuth2AuthorizationGateResult;
+
         try {
             result = await this.gate.evaluate({ realm_id: code.realm_id }, identity, {
                 sessionId: options.sessionId,
@@ -171,6 +172,7 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
                     data: { reason: 'accessPolicy', grantType: OAuth2TokenGrant.DEVICE_CODE },
                 });
             }
+
             this.metrics?.recordAuthorize(classifyAuthorizeFailure(e));
 
             throw e;
@@ -184,6 +186,7 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
             auth_time: result.authTime,
             auth_method: result.session?.authMethod ?? null,
         }, code.expires_at);
+
         if (!claimed) {
             throw OAuth2GrantError.invalid(USER_CODE_INVALID_MESSAGE);
         }
@@ -213,9 +216,9 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
         await this.eventService?.record({
             ...this.buildClientAttribution(EventName.AUTHORIZE, code, client, identity),
             data: {
-                reason: 'device', 
-                grantType: OAuth2TokenGrant.DEVICE_CODE, 
-                scope: code.scope, 
+                reason: 'device',
+                grantType: OAuth2TokenGrant.DEVICE_CODE,
+                scope: code.scope,
             },
         });
         this.metrics?.recordAuthorize('issued');
@@ -225,6 +228,7 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
         const { code, client } = await this.resolveForDecision(userCode, identity);
 
         const claimed = await this.repository.decide(code.id, { status: OAuth2DeviceCodeStatus.DENIED }, code.expires_at);
+
         if (!claimed) {
             throw OAuth2GrantError.invalid(USER_CODE_INVALID_MESSAGE);
         }
@@ -235,9 +239,9 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
         await this.eventService?.record({
             ...this.buildClientAttribution(EventName.AUTHORIZE_FAILED, code, client, identity),
             data: {
-                reason: 'denied', 
-                grantType: OAuth2TokenGrant.DEVICE_CODE, 
-                scope: code.scope, 
+                reason: 'denied',
+                grantType: OAuth2TokenGrant.DEVICE_CODE,
+                scope: code.scope,
             },
         });
         this.metrics?.recordAuthorize('denied');
@@ -267,6 +271,7 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
         const actorKey = this.buildActorKey(identity);
 
         let retryAfter : number | null;
+
         try {
             retryAfter = await this.repository.lookupThrottle(actorKey);
         } catch {

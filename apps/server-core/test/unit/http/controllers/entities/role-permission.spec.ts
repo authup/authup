@@ -6,10 +6,10 @@
  */
 
 import {
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import type { RolePermission } from '@authup/core-kit';

@@ -23,6 +23,7 @@ export class IdentityProviderOAuth2AttributesValidator extends Container<OAuth2I
                 .nullable()
                 .check((ctx) => {
                     let protocol : string | null | undefined;
+
                     if (typeof ctx.value === 'string') {
                         protocol = getIdentityProviderProtocolForPreset(ctx.value);
                     }

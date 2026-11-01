@@ -6,10 +6,10 @@
  */
 
 import {
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { EqualityFilter } from 'ldapjs';
@@ -53,7 +53,9 @@ describe('adapters/ldap', () => {
                 value: 'foo',
             }),
         });
+
         expect(users.length).toEqual(1);
+
         const user = users.pop();
 
         expect(user!.dn).toEqual('cn=foo,dc=example,dc=com');

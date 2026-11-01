@@ -56,10 +56,12 @@ describe('src/http/controllers/identity-provider (secrets at rest)', () => {
         expect((created as OAuth2IdentityProvider).clientSecret).toEqual(input.clientSecret);
 
         const value = await stored(created.id, 'clientSecret');
+
         expect(value).not.toEqual(input.clientSecret);
         expect(isRealmCipherBlob(value!)).toBe(true);
 
         const { data: read } = await suite.client.identityProvider.getOne(created.id);
+
         expect((read as OAuth2IdentityProvider).clientSecret).toEqual(input.clientSecret);
     });
 
@@ -69,20 +71,23 @@ describe('src/http/controllers/identity-provider (secrets at rest)', () => {
         const before = await stored(created.id, 'clientSecret');
 
         await suite.client.identityProvider.update(created.id, { ...input, clientSecret: 'rotated-secret' });
+
         const rotated = await stored(created.id, 'clientSecret');
+
         expect(rotated).not.toEqual(before);
         expect(isRealmCipherBlob(rotated!)).toBe(true);
 
         // a partial update that says nothing about the secret leaves the blob
         // as it is (keepAll), and the read still decrypts it
         await suite.client.identityProvider.update(created.id, {
-            ...input, 
-            clientSecret: undefined, 
-            displayName: 'renamed', 
+            ...input,
+            clientSecret: undefined,
+            displayName: 'renamed',
         });
         expect(await stored(created.id, 'clientSecret')).toEqual(rotated);
 
         const { data: read } = await suite.client.identityProvider.getOne(created.id);
+
         expect((read as OAuth2IdentityProvider).clientSecret).toEqual('rotated-secret');
     });
 
@@ -96,14 +101,18 @@ describe('src/http/controllers/identity-provider (secrets at rest)', () => {
             .update({ providerId: created.id, name: 'clientSecret' }, { value: 'legacy-plain' });
 
         const { data: read } = await suite.client.identityProvider.getOne(created.id);
+
         expect((read as OAuth2IdentityProvider).clientSecret).toEqual('legacy-plain');
 
         await suite.client.identityProvider.update(created.id, { ...input, clientSecret: 'legacy-plain' });
+
         const value = await stored(created.id, 'clientSecret');
+
         expect(value).not.toEqual('legacy-plain');
         expect(isRealmCipherBlob(value!)).toBe(true);
 
         const { data: reread } = await suite.client.identityProvider.getOne(created.id);
+
         expect((reread as OAuth2IdentityProvider).clientSecret).toEqual('legacy-plain');
     });
 
@@ -115,20 +124,24 @@ describe('src/http/controllers/identity-provider (secrets at rest)', () => {
         const { data: created } = await suite.client.identityProvider.create(oauth2);
 
         const value = await stored(created.id, 'clientSecret');
+
         expect(value).not.toEqual(oauth2.clientSecret);
         expect(isRealmCipherBlob(value!)).toBe(true);
 
         const { data: read } = await suite.client.identityProvider.getOne(created.id);
+
         expect((read as OAuth2IdentityProvider).clientSecret).toEqual('v1.looks-like-a-blob');
 
         const ldap = createFakeLdapIdentityProvider({ password: 'v1.key.payload' });
         const { data: createdLdap } = await suite.client.identityProvider.create(ldap);
 
         const password = await stored(createdLdap.id, 'password');
+
         expect(password).not.toEqual(ldap.password);
         expect(isRealmCipherBlob(password!)).toBe(true);
 
         const { data: readLdap } = await suite.client.identityProvider.getOne(createdLdap.id);
+
         expect((readLdap as LdapIdentityProvider).password).toEqual('v1.key.payload');
     });
 
@@ -137,10 +150,12 @@ describe('src/http/controllers/identity-provider (secrets at rest)', () => {
         const { data: created } = await suite.client.identityProvider.create(input);
 
         const value = await stored(created.id, 'password');
+
         expect(value).not.toEqual(input.password);
         expect(isRealmCipherBlob(value!)).toBe(true);
 
         const { data: read } = await suite.client.identityProvider.getOne(created.id);
+
         expect((read as LdapIdentityProvider).password).toEqual(input.password);
     });
 
@@ -161,6 +176,7 @@ describe('src/http/controllers/identity-provider (secrets at rest)', () => {
         // a blob written before values were JSON-quoted (#3671) is stored
         // bare, and still counts as a reference
         const blob = (await stored(created.id, 'clientSecret'))!;
+
         await dataSource
             .createQueryBuilder()
             .update(IdentityProviderAttributeEntity)
@@ -175,18 +191,24 @@ describe('src/http/controllers/identity-provider (secrets at rest)', () => {
 
         // disabled: the provider stays readable, the secret is withheld
         await suite.client.key.update(keyId, { status: KeyStatus.DISABLED });
+
         const { data: withheld } = await suite.client.identityProvider.getOne(created.id);
+
         expect(withheld.id).toEqual(created.id);
         expect((withheld as OAuth2IdentityProvider).clientSecret).toBeUndefined();
 
         // re-enabled: recoverable again, the blob was never touched
         await suite.client.key.update(keyId, { status: KeyStatus.ACTIVE });
+
         const { data: recovered } = await suite.client.identityProvider.getOne(created.id);
+
         expect((recovered as OAuth2IdentityProvider).clientSecret).toEqual(input.clientSecret);
 
         // crypto-shredded: the provider survives, its secret does not
         await suite.client.key.delete(keyId, { force: true });
+
         const { data: shredded } = await suite.client.identityProvider.getOne(created.id);
+
         expect((shredded as OAuth2IdentityProvider).clientSecret).toBeUndefined();
     });
 });

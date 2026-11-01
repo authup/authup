@@ -50,6 +50,7 @@ export async function extractTokenFromRequest(event: IAppEvent) : Promise<string
         try {
             const validator = new TokenRequestValidator();
             const data = await validator.run({ token: body.token });
+
             return data.token;
         } catch (e) {
             if (!isValidupError(e)) {
@@ -63,6 +64,7 @@ export async function extractTokenFromRequest(event: IAppEvent) : Promise<string
     // No token parameter at all: the request is about the bearer itself
     // (`GET /token/introspect` with only an Authorization header).
     const token = useRequestToken(event);
+
     if (!token) {
         throw new ValidupError([
             defineIssueItem({

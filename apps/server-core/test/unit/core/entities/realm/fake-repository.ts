@@ -40,6 +40,7 @@ export class FakeRealmRepository extends FakeEntityRepository<Realm> implements 
         }
 
         const entity = await this.findOneByName(key);
+
         return entity ? entity.id : null;
     }
 
@@ -50,7 +51,10 @@ export class FakeRealmRepository extends FakeEntityRepository<Realm> implements 
     async resolve(id: string | undefined, withFallback?: boolean): Promise<Realm | null> {
         if (id) {
             const entity = await this.findOneByIdOrName(id);
-            if (entity) return entity;
+
+            if (entity) {
+                return entity;
+            }
         }
 
         if (withFallback) {
@@ -62,6 +66,7 @@ export class FakeRealmRepository extends FakeEntityRepository<Realm> implements 
 
     async resolveOrFail(key: string): Promise<Realm> {
         const entity = await this.resolve(key);
+
         if (!entity) {
             throw new ValidationError(`The realmId '${key}' does not reference an existing realm.`);
         }

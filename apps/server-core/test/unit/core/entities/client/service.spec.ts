@@ -65,6 +65,7 @@ describe('core/entities/client/service', () => {
 
     const buildSelfActor = (clientId: string): FakeActorContext => {
         const realmId = randomUUID();
+
         return {
             permissionEvaluator: new FakePermissionEvaluator(),
             identity: {
@@ -84,7 +85,9 @@ describe('core/entities/client/service', () => {
     describe('getMany', () => {
         it('should return entities when actor has permission', async () => {
             repository.seed([createFakeClient()]);
+
             const result = await service.getMany({}, createAllowAllActor());
+
             expect(result.data).toHaveLength(1);
         });
 
@@ -103,10 +106,12 @@ describe('core/entities/client/service', () => {
             ]);
 
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setCompileResult({ verdict: 'allow' });
             actor.permissionEvaluator.deny('evaluateOneOf');
 
             const result = await service.getMany({}, actor);
+
             expect(result.data).toHaveLength(2);
             expect(result.meta.total).toBe(2);
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
@@ -114,24 +119,28 @@ describe('core/entities/client/service', () => {
 
         it('should drop rows outside the realm reach on a post verdict', async () => {
             const realmA = randomUUID();
+
             repository.seed([
                 createFakeClient({ name: 'own', realmId: realmA }),
                 createFakeClient({ name: 'foreign', realmId: randomUUID() }),
             ]);
 
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.method !== 'evaluateOneOf') {
                     return;
                 }
 
                 const attributes = call.ctx.data?.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+
                 if (!attributes || attributes.realmId !== realmA) {
                     throw new PermissionError({ message: 'denied' });
                 }
             });
 
             const result = await service.getMany({}, actor);
+
             expect(result.data.map((row) => row.name)).toEqual(['own']);
             expect(result.meta.total).toBe(1);
         });
@@ -148,15 +157,18 @@ describe('core/entities/client/service', () => {
             ]);
 
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setCompileResult({ verdict: 'allow' });
 
             const spy = vi.spyOn(repository, 'findMany');
+
             await service.getMany({}, actor);
 
             // secret is not part of the default projection, so the schema gate
             // never fires: the one compile is the row reach, both rows list
             const query = spy.mock.calls[0]![0];
             const applied = applyQuery(query, rows);
+
             expect(applied.data).toHaveLength(2);
             expect(actor.permissionEvaluator.compileCalls).toHaveLength(1);
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
@@ -195,12 +207,14 @@ describe('core/entities/client/service', () => {
             ]);
 
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setCompileResult({
                 verdict: 'conditional',
                 condition: eq('realmId', realmA),
             });
 
             const spy = vi.spyOn(repository, 'findMany');
+
             await service.getMany({ fields: '+secret' }, actor);
 
             // the reach rides the decoded query as a row condition, so the
@@ -208,10 +222,12 @@ describe('core/entities/client/service', () => {
             // keeps a covered value and a secret-less row keeps its null
             const query = spy.mock.calls[0]![0];
             const applied = applyQuery(query, rows);
+
             expect(applied.data.map((row) => row.name).sort())
                 .toEqual(['plain-covered', 'safe']);
 
             const byName = new Map(applied.data.map((row) => [row.name, row]));
+
             expect(byName.get('safe')).toHaveProperty('secret', null);
             expect(byName.get('plain-covered')).toHaveProperty('secret', 'mysecret');
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
@@ -245,6 +261,7 @@ describe('core/entities/client/service', () => {
             ]);
 
             const result = await service.getMany({}, createAllowAllActor());
+
             expect(result.data).toHaveLength(1);
         });
 
@@ -257,17 +274,21 @@ describe('core/entities/client/service', () => {
         it('should return entity by id', async () => {
             const entity = repository.seed(createFakeClient({ name: 'test-client' }));
             const result = await service.getOne(entity.id, createAllowAllActor());
+
             expect(result.name).toBe('test-client');
         });
 
         it('should return entity by name', async () => {
             repository.seed([createFakeClient({ name: 'my-client' })]);
+
             const result = await service.getOne('my-client', createAllowAllActor());
+
             expect(result.name).toBe('my-client');
         });
 
         it('should return entity by name with realmId', async () => {
             const realmId = randomUUID();
+
             realmRepository.seed([{
                 id: realmId,
                 name: 'client-realm',
@@ -279,6 +300,7 @@ describe('core/entities/client/service', () => {
             })]);
 
             const result = await service.getOne('scoped-client', createAllowAllActor(), undefined, realmId);
+
             expect(result.name).toBe('scoped-client');
         });
 
@@ -303,6 +325,7 @@ describe('core/entities/client/service', () => {
             }));
 
             const actor = createAllowAllActor();
+
             await service.getOne(entity.id, actor);
 
             expect(actor.permissionEvaluator.evaluateOneOfCalls.length).toBeGreaterThan(0);
@@ -317,6 +340,7 @@ describe('core/entities/client/service', () => {
             }));
 
             const actor = createAllowAllActor();
+
             await service.getOne(entity.id, actor);
 
             expect(actor.permissionEvaluator.evaluateOneOfCalls.length).toBeGreaterThan(0);
@@ -358,7 +382,9 @@ describe('core/entities/client/service', () => {
             await service.getOne(entity.id, createAllowAllActor(), { fields: '+secret' });
 
             expect(findOneSpy).toHaveBeenCalledTimes(1);
+
             const [id, query, realm] = findOneSpy.mock.calls[0];
+
             expect(id).toBe(entity.id);
             expect(realm).toBeUndefined();
             expect(isQuery(query)).toBe(true);
@@ -374,9 +400,11 @@ describe('core/entities/client/service', () => {
                     data: { id: entity.id, name: 'self-client' } as any,
                 },
             };
+
             actor.permissionEvaluator.denyAll();
 
             const result = await service.getOne(entity.id, actor);
+
             expect(result.id).toBe(entity.id);
             expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toHaveLength(0);
             expect(actor.permissionEvaluator.preEvaluateCalls).toHaveLength(0);
@@ -392,9 +420,11 @@ describe('core/entities/client/service', () => {
                     data: { id: entity.id, name: 'self-client' } as any,
                 },
             };
+
             actor.permissionEvaluator.denyAll();
 
             const result = await service.getOne('self-client', actor);
+
             expect(result.id).toBe(entity.id);
             expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toHaveLength(0);
         });
@@ -408,6 +438,7 @@ describe('core/entities/client/service', () => {
                     data: { id: randomUUID(), name: 'shared-name' } as any,
                 },
             };
+
             actor.permissionEvaluator.deny('preEvaluateOneOf');
 
             await expect(service.getOne('shared-name', actor)).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
@@ -423,6 +454,7 @@ describe('core/entities/client/service', () => {
                     data: { id: randomUUID(), name: 'self-client' } as any,
                 },
             };
+
             actor.permissionEvaluator.deny('preEvaluateOneOf');
 
             await expect(service.getOne(target.id, actor)).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
@@ -442,10 +474,12 @@ describe('core/entities/client/service', () => {
                     data: { id: entity.id, name: 'self-secret-projection' } as any,
                 },
             };
+
             actor.permissionEvaluator.denyAll();
             actor.permissionEvaluator.setCompileResult({ verdict: 'deny' });
 
             const findOneSpy = vi.spyOn(repository, 'findOne');
+
             await service.getOne(entity.id, actor, { fields: '+secret' });
 
             // the schema gate answers with a self-scoped CONDITION, never a
@@ -453,6 +487,7 @@ describe('core/entities/client/service', () => {
             // isMe bypass stays the authoritative single-read path
             const [, query] = findOneSpy.mock.calls[0]!;
             const secretField = query!.fields.value.find((field) => field.name === 'secret');
+
             expect(secretField).toBeDefined();
             expect(secretField!.condition).toBeDefined();
         });
@@ -471,9 +506,11 @@ describe('core/entities/client/service', () => {
                     data: { id: entity.id, name: 'self-secret' } as any,
                 },
             };
+
             actor.permissionEvaluator.denyAll();
 
             const result = await service.getOne(entity.id, actor);
+
             expect(result.id).toBe(entity.id);
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
@@ -519,6 +556,7 @@ describe('core/entities/client/service', () => {
 
         it('should call preCheck with CLIENT_CREATE', async () => {
             const actor = createAllowAllActor();
+
             await service.create({ name: 'test-client' }, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.CLIENT_CREATE });
         });
@@ -534,6 +572,7 @@ describe('core/entities/client/service', () => {
             const actor = createNonMasterRealmActor(realmId);
 
             const result = await service.create({ name: 'realm-client' }, actor);
+
             expect(result.realmId).toBe(realmId);
         });
     });
@@ -548,6 +587,7 @@ describe('core/entities/client/service', () => {
             );
 
             const stored = await repository.findOneWithSecret({ id: entity.id });
+
             expect(stored!.secret).not.toEqual(lookalike);
             expect(isBCryptHash(stored!.secret!)).toBe(true);
         });
@@ -555,14 +595,15 @@ describe('core/entities/client/service', () => {
         it('should encrypt the secret when created in encrypted mode', async () => {
             const entity = await service.create(
                 createFakeClient({
-                    secret: 'start1234', 
-                    secretEncrypted: true, 
-                    realmId: cipherRealmId, 
+                    secret: 'start1234',
+                    secretEncrypted: true,
+                    realmId: cipherRealmId,
                 }),
                 createAllowAllActor(),
             );
 
             const stored = await repository.findOneWithSecret({ id: entity.id });
+
             expect(stored!.secretEncrypted).toBe(true);
             expect(isRealmCipherBlob(stored!.secret!)).toBe(true);
             expect(await cipher.decrypt(stored!.secret!, cipherRealmId)).toEqual('start1234');
@@ -580,6 +621,7 @@ describe('core/entities/client/service', () => {
             const entity = repository.seed(createFakeClient({ name: 'old-name' }));
 
             const result = await service.update(entity.id, { name: 'new-name' }, createAllowAllActor());
+
             expect(result.name).toBe('new-name');
         });
 
@@ -591,6 +633,7 @@ describe('core/entities/client/service', () => {
 
         it('should open one repository transaction for the write and none on create (#3526)', async () => {
             const entity = await service.create(createFakeClient({ realmId: randomUUID() }), createAllowAllActor());
+
             expect(repository.transactionCalls).toBe(0);
 
             await service.update(entity.id, { displayName: 'New Display' }, createAllowAllActor());
@@ -606,6 +649,7 @@ describe('core/entities/client/service', () => {
             }));
 
             const result = await service.update(entity.id, { description: 'updated' }, createAllowAllActor());
+
             expect(result.secret).toBeDefined();
             expect(result.secret).not.toBeNull();
         });
@@ -619,6 +663,7 @@ describe('core/entities/client/service', () => {
             }));
 
             const result = await service.update(entity.id, { authMethod: 'none', tokenBindingMethod: 'none' }, createAllowAllActor());
+
             expect(result.secret).toBeNull();
         });
     });
@@ -634,6 +679,7 @@ describe('core/entities/client/service', () => {
             await service.update(entity.id, { secret: 'new-plain' }, createAllowAllActor());
 
             const stored = await repository.findOneWithSecret({ id: entity.id });
+
             expect(stored!.secret).toEqual('new-plain');
             expect(stored!.secretHashed).toBe(false);
         });
@@ -649,6 +695,7 @@ describe('core/entities/client/service', () => {
             ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
 
             const stored = await repository.findOneWithSecret({ id: entity.id });
+
             expect(stored!.secretHashed).toBe(true);
             expect(isBCryptHash(stored!.secret!)).toBe(true);
         });
@@ -665,6 +712,7 @@ describe('core/entities/client/service', () => {
             ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
 
             const current = await repository.findOneWithSecret({ id: entity.id });
+
             expect(current!.secret).toEqual(stored);
         });
 
@@ -678,6 +726,7 @@ describe('core/entities/client/service', () => {
             await service.update(entity.id, { secretHashed: true }, createAllowAllActor());
 
             const stored = await repository.findOneWithSecret({ id: entity.id });
+
             expect(stored!.secret).toEqual('keep');
             expect(stored!.secretHashed).toBe(false);
         });
@@ -769,6 +818,7 @@ describe('core/entities/client/service', () => {
 
             beforeEach(() => {
                 const realm = realmRepository.getMasterRealm();
+
                 reachable = pathRepository.seed(createFakePath({ realmId: realm.id, path: 'analyses' })).id;
                 unreachable = pathRepository.seed(createFakePath({ realmId: realm.id, path: 'other' })).id;
 
@@ -779,6 +829,7 @@ describe('core/entities/client/service', () => {
                     }
 
                     const attributes = call.ctx.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+
                     if (attributes.pathId !== reachable) {
                         throw PermissionError.denied('test');
                     }
@@ -801,6 +852,7 @@ describe('core/entities/client/service', () => {
                 }));
 
                 const result = await service.update(entity.id, { displayName: 'Renamed' }, actor);
+
                 expect(result.displayName).toBe('Renamed');
             });
 
@@ -818,8 +870,8 @@ describe('core/entities/client/service', () => {
     describe('save (upsert)', () => {
         it('should create when entity not found', async () => {
             const {
-                entity, 
-                created, 
+                entity,
+                created,
             } = await service.save(
                 undefined,
                 { name: 'upserted-client' },
@@ -834,6 +886,7 @@ describe('core/entities/client/service', () => {
             const entity = repository.seed(createFakeClient({ name: 'old' }));
 
             const { created } = await service.save(entity.id, { name: 'updated' }, createAllowAllActor());
+
             expect(created).toBe(false);
         });
 
@@ -865,6 +918,7 @@ describe('core/entities/client/service', () => {
             const entity = repository.seed(createFakeClient({ name: 'self-client' }));
 
             const actor = buildSelfActor(entity.id);
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
                     throw PermissionError.denied('test');
@@ -872,6 +926,7 @@ describe('core/entities/client/service', () => {
             });
 
             const result = await service.update(entity.id, { displayName: 'Self Updated' }, actor);
+
             expect(result.displayName).toBe('Self Updated');
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.CLIENT_SELF_MANAGE });
@@ -887,6 +942,7 @@ describe('core/entities/client/service', () => {
             }));
 
             const actor = buildSelfActor(entity.id);
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
                     throw PermissionError.denied('test');
@@ -898,8 +954,11 @@ describe('core/entities/client/service', () => {
             const selfManageCall = actor.permissionEvaluator.evaluateCalls.find(
                 (c) => c.name === PermissionName.CLIENT_SELF_MANAGE,
             );
+
             expect(selfManageCall).toBeDefined();
+
             const attrs = selfManageCall!.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+
             expect(attrs).toHaveProperty('description', 'updated-desc');
             expect(attrs).not.toHaveProperty('id');
             expect(attrs).not.toHaveProperty('builtIn');
@@ -910,6 +969,7 @@ describe('core/entities/client/service', () => {
             const entity = repository.seed(createFakeClient({ name: 'self-realm-client', realmId }));
 
             const actor = buildSelfActor(entity.id);
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
                     throw PermissionError.denied('test');
@@ -921,6 +981,7 @@ describe('core/entities/client/service', () => {
             const selfManageCall = actor.permissionEvaluator.evaluateCalls.find(
                 (c) => c.name === PermissionName.CLIENT_SELF_MANAGE,
             );
+
             expect(selfManageCall!.data!.get(BuiltInPolicyType.REALM_MATCH)).toEqual(realmId);
         });
 
@@ -928,6 +989,7 @@ describe('core/entities/client/service', () => {
             const entity = repository.seed(createFakeClient({ name: 'other-client' }));
 
             const actor = buildSelfActor(randomUUID());
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
                     throw PermissionError.denied('test');
@@ -943,6 +1005,7 @@ describe('core/entities/client/service', () => {
             const entity = repository.seed(createFakeClient({ name: 'self-client' }));
 
             const actor = buildSelfActor(entity.id);
+
             actor.permissionEvaluator.denyAll();
 
             await expect(
@@ -958,6 +1021,7 @@ describe('core/entities/client/service', () => {
             }));
 
             const actor = buildSelfActor(entity.id);
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
                     throw PermissionError.denied('test');
@@ -965,6 +1029,7 @@ describe('core/entities/client/service', () => {
             });
 
             const result = await service.update(entity.id, { displayName: 'kept' }, actor);
+
             expect(result.realmId).toBe(realmId);
         });
     });
@@ -984,6 +1049,7 @@ describe('core/entities/client/service', () => {
             expect(result.entity.secretEncrypted).toBe(false);
 
             const stored = await repository.findOneWithSecret({ id: entity.id });
+
             expect(stored!.secret).not.toEqual('start1234');
             expect(isBCryptHash(stored!.secret!)).toBe(true);
         });
@@ -997,6 +1063,7 @@ describe('core/entities/client/service', () => {
             expect(result.secret).not.toEqual('old');
 
             const stored = await repository.findOneWithSecret({ id: entity.id });
+
             expect(stored!.secret).toEqual(result.secret);
         });
 
@@ -1009,6 +1076,7 @@ describe('core/entities/client/service', () => {
             const result = await service.rotateSecret(entity.id, {}, createAllowAllActor());
 
             const stored = await repository.findOneWithSecret({ id: entity.id });
+
             expect(stored!.secretHashed).toBe(true);
             expect(isBCryptHash(stored!.secret!)).toBe(true);
             expect(stored!.secret).not.toEqual(result.secret);
@@ -1027,6 +1095,7 @@ describe('core/entities/client/service', () => {
             );
 
             const stored = await repository.findOneWithSecret({ id: entity.id });
+
             expect(stored!.secret).toEqual('start1234');
             expect(stored!.secretHashed).toBe(false);
             expect(stored!.secretEncrypted).toBe(false);
@@ -1046,6 +1115,7 @@ describe('core/entities/client/service', () => {
             expect(result.entity.secretHashed).toBe(false);
 
             const stored = await repository.findOneWithSecret({ id: entity.id });
+
             expect(isRealmCipherBlob(stored!.secret!)).toBe(true);
             expect(await cipher.decrypt(stored!.secret!, cipherRealmId)).toEqual('start1234');
         });
@@ -1062,6 +1132,7 @@ describe('core/entities/client/service', () => {
             const result = await service.rotateSecret(entity.id, {}, createAllowAllActor());
 
             const stored = await repository.findOneWithSecret({ id: entity.id });
+
             expect(stored!.secretEncrypted).toBe(true);
             expect(isRealmCipherBlob(stored!.secret!)).toBe(true);
             expect(await cipher.decrypt(stored!.secret!, cipherRealmId)).toEqual(result.secret);
@@ -1076,6 +1147,7 @@ describe('core/entities/client/service', () => {
             ).rejects.toThrow();
 
             const stored = await repository.findOneWithSecret({ id: entity.id });
+
             expect(stored!.secret).toEqual('keep');
         });
 
@@ -1108,11 +1180,13 @@ describe('core/entities/client/service', () => {
             const entity = repository.seed(createFakeClient({ realmId: randomUUID() }));
 
             const actor = createAllowAllActor();
+
             await service.rotateSecret(entity.id, {}, actor);
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.CLIENT_UPDATE });
 
             const call = actor.permissionEvaluator.evaluateCalls.find((c) => c.name === PermissionName.CLIENT_UPDATE);
+
             expect(call).toBeDefined();
             expect(call!.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES)).toHaveProperty('id', entity.id);
             expect(call!.data!.get(BuiltInPolicyType.REALM_MATCH)).toEqual(entity.realmId);
@@ -1126,6 +1200,7 @@ describe('core/entities/client/service', () => {
             ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
 
             const stored = await repository.findOneWithSecret({ id: entity.id });
+
             expect(stored!.secret).toEqual('keep');
         });
 
@@ -1133,6 +1208,7 @@ describe('core/entities/client/service', () => {
             const entity = repository.seed(createFakeClient({ secret: 'old' }));
 
             const actor = buildSelfActor(entity.id);
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
                     throw PermissionError.denied('test');
@@ -1140,11 +1216,15 @@ describe('core/entities/client/service', () => {
             });
 
             const result = await service.rotateSecret(entity.id, { secret: 'start1234' }, actor);
+
             expect(result.secret).toEqual('start1234');
 
             const call = actor.permissionEvaluator.evaluateCalls.find((c) => c.name === PermissionName.CLIENT_SELF_MANAGE);
+
             expect(call).toBeDefined();
+
             const attrs = call!.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+
             expect(attrs).toHaveProperty('secret');
             expect(attrs).not.toHaveProperty('secretHashed');
             expect(attrs).not.toHaveProperty('secretEncrypted');
@@ -1154,6 +1234,7 @@ describe('core/entities/client/service', () => {
             const entity = repository.seed(createFakeClient({ secret: 'old' }));
 
             const actor = buildSelfActor(entity.id);
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
                     throw PermissionError.denied('test');
@@ -1164,6 +1245,7 @@ describe('core/entities/client/service', () => {
 
             const call = actor.permissionEvaluator.evaluateCalls.find((c) => c.name === PermissionName.CLIENT_SELF_MANAGE);
             const attrs = call!.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+
             expect(attrs).toHaveProperty('secretHashed', true);
             expect(attrs).toHaveProperty('secretEncrypted', false);
         });
@@ -1172,6 +1254,7 @@ describe('core/entities/client/service', () => {
             const entity = repository.seed(createFakeClient({ secret: 'keep' }));
 
             const actor = buildSelfActor(randomUUID());
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
                     throw PermissionError.denied('test');
@@ -1214,6 +1297,7 @@ describe('core/entities/client/service', () => {
         it('should delete an existing client', async () => {
             const entity = repository.seed(createFakeClient());
             const result = await service.delete(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
         });
 
@@ -1224,12 +1308,14 @@ describe('core/entities/client/service', () => {
         it('should call preCheck with CLIENT_DELETE', async () => {
             const entity = repository.seed(createFakeClient());
             const actor = createAllowAllActor();
+
             await service.delete(entity.id, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.CLIENT_DELETE });
         });
 
         it('should throw when actor lacks permission', async () => {
             const entity = repository.seed(createFakeClient());
+
             await expect(service.delete(entity.id, createDenyAllActor())).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });

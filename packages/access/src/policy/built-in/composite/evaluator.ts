@@ -113,6 +113,7 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
 
                 if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
                     const success = maybeInvertPolicyOutcome(false, policy.invert);
+
                     return {
                         success,
                         // When `invert` flips a child-failure into success,
@@ -135,15 +136,18 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
         // Settle the remainder: the composite settles despite pending children only
         // when no resolution of those children could change the outcome.
         let settled : boolean | null;
+
         switch (decisionStrategy) {
             case DecisionStrategy.AFFIRMATIVE: {
                 // every settled child failed; any pending child could still succeed
                 settled = pending > 0 ? null : false;
+
                 break;
             }
             case DecisionStrategy.UNANIMOUS: {
                 // every settled child succeeded; any pending child could still fail
                 settled = pending > 0 ? null : count > 0;
+
                 break;
             }
             default: {
@@ -171,6 +175,7 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
             // rapiq's null-inclusive-complement not() — negation applies to the
             // condition even though the pending success stays uninverted.
             let condition : ICondition | null = null;
+
             if (
                 pendingWithoutCondition === 0 &&
                 ctx.withConditions &&
@@ -179,6 +184,7 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
             ) {
                 if (pendingConditions.length === 1) {
                     const [first] = pendingConditions;
+
                     condition = first ?? null;
                 } else if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
                     condition = or(...pendingConditions);
@@ -204,6 +210,7 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
         }
 
         const success = maybeInvertPolicyOutcome(false, policy.invert);
+
         return {
             success,
             issues: success ? [] : [

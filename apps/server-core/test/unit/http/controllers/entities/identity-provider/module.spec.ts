@@ -67,6 +67,7 @@ describe('src/http/controllers/identity-provider', () => {
 
         for (const permissionName of options.permissionNames ?? []) {
             const { data: permission } = await suite.client.permission.getOne(permissionName);
+
             await suite.client.clientPermission.create({
                 clientId: client.id,
                 permissionId: permission.id,
@@ -79,6 +80,7 @@ describe('src/http/controllers/identity-provider', () => {
         });
 
         const httpClient = new HTTPClient({ baseURL: suite.baseURL });
+
         httpClient.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
 
         return httpClient;
@@ -136,6 +138,7 @@ describe('src/http/controllers/identity-provider', () => {
         const { data: read } = await suite.client
             .identityProvider
             .getOne(created.id);
+
         expect((read as OAuth2IdentityProvider).clientId).toBe('123456');
 
         await suite.client.identityProvider.delete(created.id);
@@ -210,6 +213,7 @@ describe('src/http/controllers/identity-provider', () => {
         // the documented anonymous substitute for the gated record read: it
         // stays safe only while findMany does not extend with extra attributes
         const body = await response.text();
+
         expect(body).toContain(oAuth2IdentityProvider.id!);
         expect(body).not.toContain(oAuth2IdentityProvider.clientSecret);
     });
@@ -234,6 +238,7 @@ describe('src/http/controllers/identity-provider', () => {
         // ties the resulting login handle to this browser (plan 094)
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
         const { data: client } = await suite.client.client.create(createFakeClient());
+
         await suite.client.clientScope.create({ scopeId: scope.id, clientId: client.id });
 
         const codeRequest = base64URLEncode(JSON.stringify({
@@ -284,11 +289,13 @@ describe('src/http/controllers/identity-provider', () => {
         // the typed client answers the base entity; the OAuth2 attributes ride
         // it as EA rows, which is what the narrower type describes
         const attributes = read as OAuth2IdentityProvider;
+
         expect(attributes.requiredAmr).toEqual('mfa hwk');
         expect(attributes.requiredAcr).toEqual('urn:loa:silver, urn:loa:gold');
 
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
         const { data: client } = await suite.client.client.create(createFakeClient());
+
         await suite.client.clientScope.create({ scopeId: scope.id, clientId: client.id });
 
         const codeRequest = base64URLEncode(JSON.stringify({
@@ -324,6 +331,7 @@ describe('src/http/controllers/identity-provider', () => {
 
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
         const { data: client } = await suite.client.client.create(createFakeClient());
+
         await suite.client.clientScope.create({ scopeId: scope.id, clientId: client.id });
 
         const codeRequest = base64URLEncode(JSON.stringify({
@@ -344,6 +352,7 @@ describe('src/http/controllers/identity-provider', () => {
         expect(response.status).toEqual(302);
 
         const responseURL = new URL(response.headers.get('location') as string);
+
         expect(responseURL.searchParams.get('acr_values')).toEqual('1');
 
         await suite.client.identityProvider.delete(created.id);
@@ -382,6 +391,7 @@ describe('src/http/controllers/identity-provider', () => {
         const { data: read } = await suite.client.identityProvider.getOne(created.id);
 
         const attributes = read as OAuth2IdentityProvider;
+
         expect(attributes.enrollmentEnabled).toBe(false);
         expect(attributes.enrollmentPolicyId).toEqual(policyId);
 
@@ -395,6 +405,7 @@ describe('src/http/controllers/identity-provider', () => {
 
         const { data: cleared } = await suite.client.identityProvider.getOne(created.id);
         const clearedAttributes = cleared as OAuth2IdentityProvider;
+
         expect(clearedAttributes.enrollmentEnabled ?? null).toBeNull();
         expect(clearedAttributes.enrollmentPolicyId ?? null).toBeNull();
 
@@ -410,6 +421,7 @@ describe('src/http/controllers/identity-provider', () => {
         const { data: read } = await suite.client.identityProvider.getOne(created.id);
 
         const attributes = read as LdapIdentityProvider;
+
         expect(attributes.enrollmentEnabled).toBe(false);
         expect(attributes.enrollmentPolicyId).toEqual(policyId);
 
@@ -462,6 +474,7 @@ describe('src/http/controllers/identity-provider', () => {
         // exactly what automation predating the field sends: the whole OAuth2
         // configuration it knows about, and nothing about `requiredAmr`
         const unaware : Record<string, any> = { ...entity };
+
         delete unaware.requiredAmr;
 
         await suite.client.identityProvider.update(created.id, {
@@ -504,6 +517,7 @@ describe('src/http/controllers/identity-provider', () => {
         const { data: created } = await suite.client.identityProvider.create(entity);
 
         const oauth2 = createFakeOAuth2IdentityProvider();
+
         await suite.client.identityProvider.update(created.id, {
             protocol: IdentityProviderProtocol.OAUTH2,
             clientId: oauth2.clientId,

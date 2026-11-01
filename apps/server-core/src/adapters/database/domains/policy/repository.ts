@@ -37,6 +37,7 @@ export class PolicyRepository extends EATreeRepository<Policy, PolicyAttribute> 
         // columns — an id-only stub would yield a `type`-less tree that every
         // engine consumer fails closed on (policyEvaluatorNotFound).
         const entity = await this.findOneBy({ id });
+
         if (!entity) {
             return null;
         }

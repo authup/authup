@@ -95,11 +95,11 @@ function mountSessionCollection() {
         'GET /sessions': () => ({
             data: [],
             meta: {
-                total: 0, 
-                limit: 10, 
-                offset: 0, 
-            }, 
-        }), 
+                total: 0,
+                limit: 10,
+                offset: 0,
+            },
+        }),
     });
 }
 
@@ -118,9 +118,11 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
                 sorts: { updatedAt: 'DESC' },
             },
         });
+
         await flushPromises();
 
         const [request] = listRequests(httpClient.requests);
+
         expect(request).toBeDefined();
         expect(request.searchParams.get('filter')).toEqual("in(realmId,'realm-1',null)");
         expect(request.searchParams.get('sort')).toEqual('-updatedAt');
@@ -129,14 +131,17 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
 
     it('accepts an assembled query (IQuery prop) as base', async () => {
         const { httpClient } = mountCollection({ query: defineQuery<Role>({ filters: { realmId: ['realm-1', null] } }) });
+
         await flushPromises();
 
         const [request] = listRequests(httpClient.requests);
+
         expect(request.searchParams.get('filter')).toEqual("in(realmId,'realm-1',null)");
     });
 
     it('search input cannot displace the injected scope (AND composition)', async () => {
         const { wrapper, httpClient } = mountCollection({ query: { filters: { realmId: ['realm-1', null] } } });
+
         await flushPromises();
 
         await (wrapper.vm as any).load({
@@ -145,6 +150,7 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
         });
 
         const requests = listRequests(httpClient.requests);
+
         expect(requests).toHaveLength(2);
         expect(requests[1].searchParams.get('filter'))
             .toEqual("and(or(contains(name,'foo'),contains(displayName,'foo')),in(realmId,'realm-1',null))");
@@ -153,12 +159,14 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
         await (wrapper.vm as any).load({ filters: { realmId: 'other' } });
 
         const next = listRequests(httpClient.requests);
+
         expect(next[2].searchParams.get('filter'))
             .toEqual("and(eq(realmId,'other'),in(realmId,'realm-1',null))");
     });
 
     it('a pagination-only load keeps the current search', async () => {
         const { wrapper, httpClient } = mountCollection({ query: { filters: { realmId: ['realm-1', null] } } });
+
         await flushPromises();
 
         await (wrapper.vm as any).load({
@@ -168,6 +176,7 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
         await (wrapper.vm as any).load({ pagination: { offset: 10 } });
 
         const requests = listRequests(httpClient.requests);
+
         expect(requests).toHaveLength(3);
         expect(requests[2].searchParams.get('filter'))
             .toEqual("and(or(contains(name,'foo'),contains(displayName,'foo')),in(realmId,'realm-1',null))");
@@ -184,6 +193,7 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
      */
     it('an assembled filter load carrying offset 0 returns to the first page', async () => {
         const { wrapper, httpClient } = mountCollection({ query: { filters: { realmId: ['realm-1', null] } } });
+
         await flushPromises();
 
         await (wrapper.vm as any).load({ pagination: { limit: 10, offset: 20 } });
@@ -195,6 +205,7 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
         }));
 
         const requests = listRequests(httpClient.requests);
+
         // the encoder omits an offset of 0, so absent and "0" both mean the
         // first page. Without the reset this reads "20" and the page renders
         // empty under a non-zero total.
@@ -213,12 +224,14 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
      */
     it('a filter change drops the retained offset without the caller asking', async () => {
         const { wrapper, httpClient } = mountCollection({ query: { filters: { realmId: ['realm-1', null] } } });
+
         await flushPromises();
 
         await (wrapper.vm as any).load({ pagination: { limit: 10, offset: 20 } });
         await (wrapper.vm as any).load(defineQuery({ filters: { name: 'foo' } }));
 
         const requests = listRequests(httpClient.requests);
+
         expect(requests[2].searchParams.get('page[offset]') ?? '0').toEqual('0');
         // the page size is not a narrowing parameter and survives
         expect(requests[2].searchParams.get('page[limit]')).toEqual('10');
@@ -231,6 +244,7 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
      */
     it('a load repeating the same filters keeps the current page', async () => {
         const { wrapper, httpClient } = mountCollection({ query: { filters: { realmId: ['realm-1', null] } } });
+
         await flushPromises();
 
         await (wrapper.vm as any).load({ filters: { name: 'foo' } });
@@ -238,6 +252,7 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
         await (wrapper.vm as any).load({ filters: { name: 'foo' } });
 
         const requests = listRequests(httpClient.requests);
+
         expect(requests[3].searchParams.get('page[offset]')).toEqual('20');
     });
 
@@ -247,6 +262,7 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
      */
     it('an explicit offset survives a filter change', async () => {
         const { wrapper, httpClient } = mountCollection({ query: { filters: { realmId: ['realm-1', null] } } });
+
         await flushPromises();
 
         await (wrapper.vm as any).load({ pagination: { limit: 10, offset: 20 } });
@@ -256,6 +272,7 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
         }));
 
         const requests = listRequests(httpClient.requests);
+
         expect(requests[2].searchParams.get('page[offset]')).toEqual('30');
     });
 
@@ -267,12 +284,14 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
      */
     it.each(['sorts', 'sort'] as const)('a load carrying %s replaces the retained sorts', async (key) => {
         const { wrapper, httpClient } = mountCollection({ query: { filters: { realmId: ['realm-1', null] } } });
+
         await flushPromises();
 
         await (wrapper.vm as any).load({ [key]: { updatedAt: 'DESC' } });
         await (wrapper.vm as any).load({ [key]: { name: 'ASC' } });
 
         const requests = listRequests(httpClient.requests);
+
         expect(requests[1].searchParams.get('sort')).toEqual('-updatedAt');
         expect(requests[2].searchParams.get('sort')).toEqual('name');
     });
@@ -290,6 +309,7 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
         const { wrapper, httpClient } = mountKitComponent(component, {}, {
             'GET /roles': async (req: FakeRequest) => {
                 const url = new URL(req.url, 'http://fake.test');
+
                 if (!gated && url.searchParams.get('filter')) {
                     gated = true;
                     await gate;
@@ -305,9 +325,11 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
                 };
             },
         });
+
         await flushPromises();
 
         const inFlight = (wrapper.vm as any).load({ filters: { name: 'admin' } });
+
         await flushPromises();
         expect(gated).toBe(true);
 
@@ -321,6 +343,7 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
 
         const requests = listRequests(httpClient.requests);
         const last = requests[requests.length - 1];
+
         expect(last.searchParams.get('page[offset]')).toEqual('10');
         expect(last.searchParams.get('filter')).toEqual(requests[1].searchParams.get('filter'));
         expect(last.searchParams.get('filter')).toBeTruthy();
@@ -334,39 +357,45 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
      */
     it('a load carrying only undefined sort spellings keeps the retained sorts', async () => {
         const { wrapper, httpClient } = mountCollection({ query: { filters: { realmId: ['realm-1', null] } } });
+
         await flushPromises();
 
         await (wrapper.vm as any).load({ sorts: { updatedAt: 'DESC' } });
         await (wrapper.vm as any).load({
-            sorts: undefined, 
-            sort: undefined, 
-            pagination: { offset: 10 }, 
+            sorts: undefined,
+            sort: undefined,
+            pagination: { offset: 10 },
         });
 
         const requests = listRequests(httpClient.requests);
+
         expect(requests[2].searchParams.get('sort')).toEqual('-updatedAt');
         expect(requests[2].searchParams.get('page[offset]')).toEqual('10');
     });
 
     it('clearing the search (empty filters) resets to the base scope', async () => {
         const { wrapper, httpClient } = mountCollection({ query: { filters: { realmId: ['realm-1', null] } } });
+
         await flushPromises();
 
         await (wrapper.vm as any).load({ filters: { name: 'foo' } });
         await (wrapper.vm as any).load({ filters: {} });
 
         const requests = listRequests(httpClient.requests);
+
         expect(requests[2].searchParams.get('filter'))
             .toEqual("in(realmId,'realm-1',null)");
     });
 
     it('searches name alone for an entity carrying no extra search field', async () => {
         const { wrapper, httpClient } = mountSessionCollection();
+
         await flushPromises();
 
         await (wrapper.vm as any).load({ filters: { name: 'foo' } });
 
         const requests = listRequests(httpClient.requests, '/sessions');
+
         expect(requests[1].searchParams.get('filter'))
             .toEqual("contains(name,'foo')");
     });
@@ -376,23 +405,27 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
             { query: { filters: { realmId: ['realm-1', null] } } },
             { queryFilters: (q) => or(contains('name', q), contains('displayName', q)) },
         );
+
         await flushPromises();
 
         await (wrapper.vm as any).load({ filters: { name: 'foo' } });
 
         const requests = listRequests(httpClient.requests);
+
         expect(requests[1].searchParams.get('filter'))
             .toEqual("and(or(contains(name,'foo'),contains(displayName,'foo')),in(realmId,'realm-1',null))");
     });
 
     it('an assembled load input replaces the interactive state wholesale', async () => {
         const { wrapper, httpClient } = mountCollection({ query: { filters: { realmId: ['realm-1', null] } } });
+
         await flushPromises();
 
         await (wrapper.vm as any).load({ filters: { name: 'foo' } });
         await (wrapper.vm as any).load(defineQuery<Role>({ filters: { displayName: 'bar' } }));
 
         const requests = listRequests(httpClient.requests);
+
         expect(requests[2].searchParams.get('filter'))
             .toEqual("and(eq(displayName,'bar'),in(realmId,'realm-1',null))");
     });
@@ -402,9 +435,11 @@ describe('defineEntityCollectionManager (rapiq IR composition)', () => {
             { query: { filters: { realmId: ['realm-1', null] } } },
             { query: () => ({ filters: { clientId: 'c-1' } }) as any },
         );
+
         await flushPromises();
 
         const [request] = listRequests(httpClient.requests);
+
         expect(request.searchParams.get('filter'))
             .toEqual("and(in(realmId,'realm-1',null),eq(clientId,'c-1'))");
     });
@@ -433,6 +468,7 @@ describe('defineEntityCollectionManager (hydration handoff)', () => {
             {},
             { hydrationStore: hydration.store },
         );
+
         await flushPromises();
 
         expect(listRequests(httpClient.requests)).toHaveLength(0);
@@ -462,6 +498,7 @@ describe('defineEntityCollectionManager (hydration handoff)', () => {
             },
             { hydrationStore: hydration.store },
         );
+
         await flushPromises();
 
         expect(listRequests(httpClient.requests)).toHaveLength(1);
@@ -475,6 +512,7 @@ describe('defineEntityCollectionManager (hydration handoff)', () => {
             {},
             { hydrationStore: hydration.store },
         );
+
         await flushPromises();
 
         expect(listRequests(httpClient.requests)).toHaveLength(1);

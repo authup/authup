@@ -75,10 +75,12 @@ describe('createHostClient', () => {
         const transport = createHostTransport({
             'GET /users': (request) => {
                 bearers.push(bearerOf(request.headers));
+
                 return bearers.length === 1 ? expired : { body: { data: [{ id: 'u1' }], meta: { total: 1 } } };
             },
             'POST /token': (_request, form) => {
                 expect(form).toEqual({ grant_type: 'refresh_token', refresh_token: 'old-refresh' });
+
                 return {
                     body: {
                         access_token: 'new-access',
@@ -107,6 +109,7 @@ describe('createHostClient', () => {
 
     it('adopts a rotation another process saved instead of replaying its own refresh token', async () => {
         const storage = createFileTokenStorage(store);
+
         await storage.write(host, {
             accessToken: 'other-access',
             refreshToken: 'other-refresh',
@@ -118,10 +121,12 @@ describe('createHostClient', () => {
         const transport = createHostTransport({
             'GET /users': (request) => {
                 bearers.push(bearerOf(request.headers));
+
                 return bearers.length === 1 ? expired : { body: { data: [], meta: { total: 0 } } };
             },
             'POST /token': () => {
                 tokenCalls += 1;
+
                 return { status: 400, body: { code: 'invalid_grant', message: 'replayed' } };
             },
         });
@@ -202,6 +207,7 @@ describe('openHost', () => {
 
     it('opens the current host with its stored tokens', async () => {
         const store = createHostStore(resolveHostsDirectory());
+
         await store.write({
             current: host,
             hosts: {

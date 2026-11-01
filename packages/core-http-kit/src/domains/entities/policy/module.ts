@@ -41,6 +41,7 @@ export class PolicyAPI extends BaseAPI implements IPolicyAPI {
         OUTPUT extends PolicyResponse = PolicyResponse,
     >(data?: EntityQueryInput<Policy & { parentId?: string | null }>): Promise<EntityCollectionResponse<OUTPUT>> {
         const response = await this.client.get(`policies${buildQueryString(data)}`);
+
         return response.data;
     }
 

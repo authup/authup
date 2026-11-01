@@ -73,6 +73,7 @@ describe('http/controllers/security (junction realm-isolation — all junctions)
 
         // --- members the actor can legitimately reference (own/global) ---
         const { data: roleReadPermission } = await suite.client.permission.getOne(PermissionName.ROLE_READ);
+
         ctx.roleReadPermissionId = roleReadPermission.id;
         ctx.emptyRoleId = (await suite.client.role.create(createFakeRole({ realmId: null }))).data.id; // no perms => supersettable
         ctx.globalScopeId = (await suite.client.scope.create(createFakeScope({ realmId: null }))).data.id;
@@ -91,8 +92,10 @@ describe('http/controllers/security (junction realm-isolation — all junctions)
             PermissionName.ROLE_READ, // the member attached by the *-permission junctions
             PermissionName.ROLE_CREATE, // for the entity CONTROL below
         ];
+
         for (const name of grants) {
             const { data: permission } = await suite.client.permission.getOne(name);
+
             await suite.client.clientPermission.create({ clientId: cA.id, permissionId: permission.id });
         }
 
@@ -100,6 +103,7 @@ describe('http/controllers/security (junction realm-isolation — all junctions)
             client_id: cA.id,
             client_secret: knownSecret,
         });
+
         actor = new HTTPClient({ baseURL: suite.baseURL });
         actor.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
     });
@@ -122,71 +126,72 @@ describe('http/controllers/security (junction realm-isolation — all junctions)
         body: (ownerId: string, c: Record<string, any>) => Record<string, any>;
     }[] = [
         {
-            name: 'role-permission', 
-            api: 'rolePermission', 
-            ownerA: 'roleA', 
-            ownerB: 'roleB', 
-            body: (id, c) => ({ roleId: id, permissionId: c.roleReadPermissionId }), 
+            name: 'role-permission',
+            api: 'rolePermission',
+            ownerA: 'roleA',
+            ownerB: 'roleB',
+            body: (id, c) => ({ roleId: id, permissionId: c.roleReadPermissionId }),
         },
         {
-            name: 'user-permission', 
-            api: 'userPermission', 
-            ownerA: 'userA', 
-            ownerB: 'userB', 
-            body: (id, c) => ({ userId: id, permissionId: c.roleReadPermissionId }), 
+            name: 'user-permission',
+            api: 'userPermission',
+            ownerA: 'userA',
+            ownerB: 'userB',
+            body: (id, c) => ({ userId: id, permissionId: c.roleReadPermissionId }),
         },
         {
-            name: 'client-permission', 
-            api: 'clientPermission', 
-            ownerA: 'clientA', 
-            ownerB: 'clientB', 
-            body: (id, c) => ({ clientId: id, permissionId: c.roleReadPermissionId }), 
+            name: 'client-permission',
+            api: 'clientPermission',
+            ownerA: 'clientA',
+            ownerB: 'clientB',
+            body: (id, c) => ({ clientId: id, permissionId: c.roleReadPermissionId }),
         },
         {
-            name: 'user-role', 
-            api: 'userRole', 
-            ownerA: 'userA', 
-            ownerB: 'userB', 
-            body: (id, c) => ({ userId: id, roleId: c.emptyRoleId }), 
+            name: 'user-role',
+            api: 'userRole',
+            ownerA: 'userA',
+            ownerB: 'userB',
+            body: (id, c) => ({ userId: id, roleId: c.emptyRoleId }),
         },
         {
-            name: 'client-role', 
-            api: 'clientRole', 
-            ownerA: 'clientA', 
-            ownerB: 'clientB', 
-            body: (id, c) => ({ clientId: id, roleId: c.emptyRoleId }), 
+            name: 'client-role',
+            api: 'clientRole',
+            ownerA: 'clientA',
+            ownerB: 'clientB',
+            body: (id, c) => ({ clientId: id, roleId: c.emptyRoleId }),
         },
         {
-            name: 'client-scope', 
-            api: 'clientScope', 
-            ownerA: 'clientA', 
-            ownerB: 'clientB', 
-            body: (id, c) => ({ clientId: id, scopeId: c.globalScopeId }), 
+            name: 'client-scope',
+            api: 'clientScope',
+            ownerA: 'clientA',
+            ownerB: 'clientB',
+            body: (id, c) => ({ clientId: id, scopeId: c.globalScopeId }),
         },
         {
-            name: 'identity-provider-role-mapping', 
-            api: 'identityProviderRoleMapping', 
-            ownerA: 'providerA', 
-            ownerB: 'providerB', 
-            body: (id, c) => ({ providerId: id, roleId: c.emptyRoleId }), 
+            name: 'identity-provider-role-mapping',
+            api: 'identityProviderRoleMapping',
+            ownerA: 'providerA',
+            ownerB: 'providerB',
+            body: (id, c) => ({ providerId: id, roleId: c.emptyRoleId }),
         },
         {
-            name: 'permission-policy', 
-            api: 'permissionPolicy', 
-            ownerA: 'permissionA', 
-            ownerB: 'permissionB', 
-            body: (id, c) => ({ permissionId: id, policyId: c.globalPolicyId }), 
+            name: 'permission-policy',
+            api: 'permissionPolicy',
+            ownerA: 'permissionA',
+            ownerB: 'permissionB',
+            body: (id, c) => ({ permissionId: id, policyId: c.globalPolicyId }),
         },
     ];
 
     describe.each(JUNCTIONS)('$name owner-realm gating', ({
-        api, 
-        ownerA, 
-        ownerB, 
-        body, 
+        api,
+        ownerA,
+        ownerB,
+        body,
     }) => {
         it('allows the restricted actor on an OWN-realm owner (setup is valid)', async () => {
             const result = await (actor as any)[api].create(body(ctx[ownerA].id, ctx));
+
             expect(result.data.id).toBeDefined();
         });
 

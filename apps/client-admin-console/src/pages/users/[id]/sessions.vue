@@ -121,6 +121,7 @@ export default defineComponent({
             }
 
             revoking.value = true;
+
             try {
                 const response = await httpClient.session.deleteMany({ filters: { userId: props.entity.id } });
 

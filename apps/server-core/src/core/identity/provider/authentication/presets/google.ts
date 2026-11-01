@@ -35,6 +35,7 @@ export class IdentityProviderGoogleAuthenticator extends IdentityProviderOAuth2A
          */
         if (input.id_token) {
             const idTokenPayload = extractTokenPayload(input.id_token) as OpenIDTokenPayload;
+
             // the mappers read `data`: Google carries email_verified here (#3674)
             data = { ...payload, ...idTokenPayload };
 

@@ -42,6 +42,7 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
 
     async verify(token: string, options: OAuth2TokenVerifyOptions = {}) : Promise<OAuth2TokenPayload> {
         const header = extractTokenHeader(token);
+
         if (!header.kid) {
             throw JWTError.headerPropertyInvalid('kid');
         }
@@ -55,6 +56,7 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
         }
 
         let payload = await this.tokenRepository.findOneBySignature(token);
+
         if (payload) {
             if (!payload.jti) {
                 throw JWTError.payloadPropertyInvalid('jti');
@@ -62,6 +64,7 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
 
             if (!options.skipActiveCheck) {
                 const isInactive = await this.isInactive(payload.jti);
+
                 if (isInactive) {
                     throw JWTError.notActive();
                 }
@@ -78,6 +81,7 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
         // terminal branch instead of a refresh - so a key rotation ended every
         // live browser session. It also stopped echoing the supplied `kid`.
         const key = await this.keyStore.resolveById(header.kid);
+
         if (!key) {
             throw JWTError.headerPropertyInvalid('kid');
         }
@@ -107,6 +111,7 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
                     },
                     { ignoreExpiry: options.ignoreExpiry },
                 );
+
                 break;
             }
             case JWKType.EC: {
@@ -127,6 +132,7 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
                     },
                     { ignoreExpiry: options.ignoreExpiry },
                 );
+
                 break;
             }
             default: {
@@ -175,6 +181,7 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
 
         if (!options.skipActiveCheck) {
             const isInactive = await this.isInactive(payload.jti);
+
             if (isInactive) {
                 throw JWTError.notActive();
             }

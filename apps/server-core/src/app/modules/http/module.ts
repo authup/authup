@@ -78,6 +78,7 @@ export class HTTPModule implements IModule {
         // (getRequestIP, hostname, protocol) resolves the trust contract from
         // the app options — call sites must NOT pass their own `trustProxy`.
         let app : IApp;
+
         try {
             app = new App({ options: { trustProxy: config.trustProxy } });
         } catch (e) {
@@ -85,7 +86,7 @@ export class HTTPModule implements IModule {
             // constructor; its error ("invalid IP address: …") does not name
             // the offending config key — attribute it.
             throw new AuthupError(
-                `Invalid trustProxy (TRUST_PROXY) configuration: ${e instanceof Error ? e.message : String(e)}`,
+                `Invalid trustProxy (TRUST_PROXY) configuration: ${Error.isError(e) ? e.message : String(e)}`,
             );
         }
 
@@ -95,6 +96,7 @@ export class HTTPModule implements IModule {
         await this.middleware.mountBefore(app, container);
 
         await this.controller.mount(app, container);
+
         if (this.options.mount) {
             await this.options.mount(app);
         }
@@ -195,7 +197,9 @@ export class HTTPModule implements IModule {
 
         container.unregister(MetricsInjectionKey);
 
-        if (!this.instance) return;
+        if (!this.instance) {
+            return;
+        }
 
         container.unregister(HTTPInjectionKey.Server);
 

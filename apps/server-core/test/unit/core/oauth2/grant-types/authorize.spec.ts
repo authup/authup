@@ -29,6 +29,7 @@ import { FakeOAuth2OpenIDTokenIssuer } from '../../helpers/fake-oauth2-openid-to
 import { FakeOAuth2TokenIssuer } from '../../helpers/fake-oauth2-token-issuer.ts';
 import { FakeSessionManager } from '../../helpers/fake-session-manager.ts';
 import { FakeIdentityResolver } from '../../helpers/fake-identity-resolver.ts';
+import { createConcurrentFirstFactor } from './concurrent-first-factor.ts';
 
 describe('OAuth2AuthorizeGrant', () => {
     let accessTokenIssuer: FakeOAuth2TokenIssuer;
@@ -103,6 +104,13 @@ describe('OAuth2AuthorizeGrant', () => {
             keyStore,
             identityResolver,
             sessionManager,
+            mfaChallengeProvider: {
+                challenge: async () => ({
+                    required: false, 
+                    enrollmentRequired: false, 
+                    kinds: [], 
+                }), 
+            },
         });
     });
 
@@ -136,6 +144,7 @@ describe('OAuth2AuthorizeGrant', () => {
 
     it('should reuse the bearer session when the code carries a matching session_id', async () => {
         const sessionId = randomUUID();
+
         // pre-seed a client-less bearer session (as created by the SSR password grant)
         await sessionManager.create({
             id: sessionId,
@@ -162,6 +171,7 @@ describe('OAuth2AuthorizeGrant', () => {
 
         // the issued tokens reference the reused session
         const payload = expect.objectContaining({ session_id: sessionId });
+
         expect(accessTokenIssuer.issueCalls).toContainEqual(payload);
         expect(refreshTokenIssuer.issueCalls).toContainEqual(payload);
 
@@ -176,6 +186,7 @@ describe('OAuth2AuthorizeGrant', () => {
     it('should never write the authorizing client onto the session subject FK', async () => {
         const sessionId = randomUUID();
         const firstClientId = randomUUID();
+
         // the session was already claimed by another application
         await sessionManager.create({
             id: sessionId,
@@ -196,19 +207,23 @@ describe('OAuth2AuthorizeGrant', () => {
         expect(sessionManager.refreshCalls[0]).toEqual(
             expect.objectContaining({ id: sessionId, clientId: firstClientId }),
         );
+
         const stored = await sessionManager.findOneById(sessionId);
+
         expect(stored?.clientId).toEqual(firstClientId);
         expect(stored?.clientId).not.toEqual(clientId);
 
         // ... while the tokens are minted for the authorizing application,
         // which is what their auth_session_tokens rows are attributed from.
         const payload = expect.objectContaining({ session_id: sessionId, client_id: clientId });
+
         expect(accessTokenIssuer.issueCalls).toContainEqual(payload);
         expect(refreshTokenIssuer.issueCalls).toContainEqual(payload);
     });
 
     it('should answer invalid_grant when the reused session ends before it is refreshed', async () => {
         const sessionId = randomUUID();
+
         await sessionManager.create({
             id: sessionId,
             sub: userId,
@@ -220,6 +235,7 @@ describe('OAuth2AuthorizeGrant', () => {
         };
 
         let error: unknown;
+
         try {
             await grant.runWith(buildCode({ session_id: sessionId }));
         } catch (e) {
@@ -232,6 +248,7 @@ describe('OAuth2AuthorizeGrant', () => {
 
     async function expectInvalidGrant(promise: Promise<unknown>) {
         let error: unknown;
+
         try {
             await promise;
         } catch (e) {
@@ -251,6 +268,7 @@ describe('OAuth2AuthorizeGrant', () => {
 
     it('should refuse the code when the referenced session belongs to another subject', async () => {
         const sessionId = randomUUID();
+
         await sessionManager.create({
             id: sessionId,
             sub: randomUUID(), // different subject
@@ -268,6 +286,7 @@ describe('OAuth2AuthorizeGrant', () => {
 
     it('should refuse the code when the referenced session belongs to another realm', async () => {
         const sessionId = randomUUID();
+
         await sessionManager.create({
             id: sessionId,
             sub: userId,
@@ -329,6 +348,7 @@ describe('OAuth2AuthorizeGrant', () => {
 
     it('should mint an id_token with sid = the reused session for an openid code', async () => {
         const sessionId = randomUUID();
+
         await sessionManager.create({
             id: sessionId,
             sub: userId,
@@ -347,7 +367,9 @@ describe('OAuth2AuthorizeGrant', () => {
         }));
 
         expect(openIdTokenIssuer.issueCalls).toHaveLength(1);
+
         const idTokenPayload = openIdTokenIssuer.issueCalls[0];
+
         // sid is the REUSED session, not the code's session_id by coincidence
         expect(idTokenPayload.sid).toEqual(sessionId);
         expect(idTokenPayload.auth_time).toEqual(authTime);
@@ -403,6 +425,7 @@ describe('OAuth2AuthorizeGrant', () => {
 
     it('should mint amr/acr from the reused session (password login)', async () => {
         const sessionId = randomUUID();
+
         await sessionManager.create({
             id: sessionId,
             sub: userId,
@@ -419,6 +442,7 @@ describe('OAuth2AuthorizeGrant', () => {
         }));
 
         const claims = expect.objectContaining({ amr: ['pwd'], acr: 'urn:authup:pwd' });
+
         expect(openIdTokenIssuer.issueCalls).toContainEqual(claims);
         // deliberately on the access token too
         expect(accessTokenIssuer.issueCalls).toContainEqual(claims);
@@ -426,6 +450,7 @@ describe('OAuth2AuthorizeGrant', () => {
 
     it('should mint the mfa acr once the session carries a second-factor proof', async () => {
         const sessionId = randomUUID();
+
         await sessionManager.create({
             id: sessionId,
             sub: userId,
@@ -448,6 +473,7 @@ describe('OAuth2AuthorizeGrant', () => {
 
     it('should mint no amr/acr for a pre-column session (null auth_method)', async () => {
         const sessionId = randomUUID();
+
         await sessionManager.create({
             id: sessionId,
             sub: userId,
@@ -462,7 +488,96 @@ describe('OAuth2AuthorizeGrant', () => {
         }));
 
         const [payload] = openIdTokenIssuer.issueCalls;
+
         expect(payload).not.toHaveProperty('amr');
         expect(payload).not.toHaveProperty('acr');
+    });
+
+    describe('a first factor stored concurrently with a session-less redemption', () => {
+        function build(enabled = true) {
+            const factor = createConcurrentFirstFactor(sessionManager, {
+                userId, 
+                realmId, 
+                enabled, 
+            });
+            const guarded = new OAuth2AuthorizeGrant({
+                accessTokenIssuer,
+                refreshTokenIssuer,
+                openIdTokenIssuer,
+                keyStore,
+                identityResolver,
+                sessionManager,
+                mfaChallengeProvider: factor.service,
+            });
+
+            return { grant: guarded, ...factor };
+        }
+
+        it('should revoke the created session and refuse the code', async () => {
+            const { grant: guarded, enrollAfterInsert } = build();
+
+            enrollAfterInsert();
+
+            await expectInvalidGrant(guarded.runWith(buildCode({ auth_method: 'pwd' })));
+
+            expect(sessionManager.createCalls).toHaveLength(1);
+            expect(sessionManager.revokeCalls).toHaveLength(1);
+            expect(accessTokenIssuer.issueCalls).toHaveLength(0);
+        });
+
+        it('should leave the session alone when mfa is disabled', async () => {
+            const { grant: guarded, enrollAfterInsert } = build(false);
+
+            enrollAfterInsert();
+
+            const result = await guarded.runWith(buildCode({ auth_method: 'pwd' }));
+
+            expect(result).toHaveProperty('access_token');
+            expect(sessionManager.revokeCalls).toHaveLength(0);
+        });
+
+        it('should not look up factors for an externally authenticated code', async () => {
+            const {
+                grant: guarded, 
+                enrollAfterInsert, 
+                lookups, 
+            } = build();
+
+            enrollAfterInsert();
+
+            const result = await guarded.runWith(buildCode({ auth_method: 'ext' }));
+
+            expect(result).toHaveProperty('access_token');
+            expect(lookups).not.toHaveBeenCalled();
+            expect(sessionManager.revokeCalls).toHaveLength(0);
+        });
+
+        it('should not look up factors when the code reuses a session', async () => {
+            const { grant: guarded, lookups } = build();
+            const sessionId = randomUUID();
+
+            await sessionManager.create({
+                id: sessionId,
+                sub: userId,
+                subKind: OAuth2SubKind.USER,
+                realmId,
+                authMethod: 'pwd',
+                mfaAt: null,
+            });
+
+            await guarded.runWith(buildCode({ session_id: sessionId }));
+
+            expect(lookups).not.toHaveBeenCalled();
+        });
+
+        it('should issue tokens when the user still holds no factor', async () => {
+            const { grant: guarded, lookups } = build();
+
+            const result = await guarded.runWith(buildCode({ auth_method: 'pwd' }));
+
+            expect(result).toHaveProperty('access_token');
+            expect(lookups).toHaveBeenCalledTimes(1);
+            expect(sessionManager.revokeCalls).toHaveLength(0);
+        });
     });
 });

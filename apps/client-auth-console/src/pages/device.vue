@@ -36,6 +36,7 @@ export default defineComponent({
             }
 
             const url = new URL(window.location.href);
+
             if (!url.searchParams.has('provider') && !url.searchParams.has('error')) {
                 return;
             }
@@ -49,16 +50,19 @@ export default defineComponent({
 
         const requestPath = computed<string>(() => {
             const params = new URLSearchParams();
+
             if (payload.data.userCode) {
                 params.set('user_code', payload.data.userCode);
             }
 
             const qs = params.toString();
+
             return `/device${qs ? `?${qs}` : ''}`;
         });
 
         const buildWorkflowLink = (path: string) : LinkProps => {
             const params = new URLSearchParams();
+
             params.set('redirect', requestPath.value);
 
             return { href: withBasePath(`${path}?${params.toString()}`) };

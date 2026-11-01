@@ -61,8 +61,10 @@ export function createFieldsReadGate(
 
         for (const name of names) {
             const gate = gates[name];
+
             if (!gate || !context || !context.actor) {
                 record[name] = true;
+
                 continue;
             }
 

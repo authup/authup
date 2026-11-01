@@ -60,6 +60,7 @@ export default defineComponent({
         // collection; the template renders nothing until then (`v-if`).
         let entity : Ref<Realm | null> = ref(null);
         let endpoints : Ref<RealmEndpoints | null> = ref(null);
+
         try {
             const response = await httpClient
                 .realm
@@ -108,23 +109,25 @@ export default defineComponent({
                 });
             }
 
-            if (entity.value) {
-                const previousName = entity.value.name;
+            if (!entity.value) {
+                return;
+            }
 
-                extendObject(entity.value, e);
+            const previousName = entity.value.name;
 
-                // A rename moves the issuer, and the update response carries
-                // no meta, so the endpoints are re-read from the record.
-                if (typeof e.name !== 'undefined' && e.name !== previousName) {
-                    try {
-                        const response = await httpClient
-                            .realm
-                            .getOne(entity.value.id);
+            extendObject(entity.value, e);
 
-                        endpoints.value = response.meta.endpoints;
-                    } catch (error) {
-                        handleFailed(error);
-                    }
+            // A rename moves the issuer, and the update response carries
+            // no meta, so the endpoints are re-read from the record.
+            if (typeof e.name !== 'undefined' && e.name !== previousName) {
+                try {
+                    const response = await httpClient
+                        .realm
+                        .getOne(entity.value.id);
+
+                    endpoints.value = response.meta.endpoints;
+                } catch (error) {
+                    handleFailed(error);
                 }
             }
         };

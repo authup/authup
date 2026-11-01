@@ -30,6 +30,7 @@ function createActor(calls: PermissionEvaluationContext[]): ActorContext {
 describe('AbstractEntityService.evaluateUpdate (#3654)', () => {
     it('should evaluate the stored row and then the updated row, each with its own realm', async () => {
         const calls: PermissionEvaluationContext[] = [];
+
         await new Service().run(
             createActor(calls),
             'client_update',
@@ -52,6 +53,7 @@ describe('AbstractEntityService.evaluateUpdate (#3654)', () => {
             permissionEvaluator: {
                 evaluate: async (ctx: PermissionEvaluationContext) => {
                     calls.push(String(ctx.name));
+
                     throw new Error('denied');
                 },
             },

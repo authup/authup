@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { 
-    beforeEach, 
-    describe, 
-    expect, 
-    it, 
+import {
+    beforeEach,
+    describe,
+    expect,
+    it,
 } from 'vitest';
 import { App, defineCoreHandler } from 'routup';
 import { ErrorCode } from '@authup/errors';
@@ -32,6 +32,7 @@ function createRecordingLogger() {
 
     logger.error = ((message: unknown) => {
         lines.push(typeof message === 'string' ? message : String(message));
+
         return logger;
     }) as Logger['error'];
 
@@ -41,6 +42,7 @@ function createRecordingLogger() {
 function createUpstreamResponseError(body: unknown, status = 400) {
     const request: RequestOptions = { method: 'POST', url: UPSTREAM_URL };
     const response = new Response(null, { status, statusText: 'Bad Request' }) as HapicResponse;
+
     Object.defineProperty(response, 'data', { get: () => body });
 
     return createClientError({ request, response });
@@ -51,6 +53,7 @@ describe('registerErrorMiddleware', () => {
 
     function dispatch(error: unknown) {
         const app = new App();
+
         app.get('/failing', defineCoreHandler(() => {
             throw error;
         }));

@@ -36,6 +36,7 @@ export async function expectClientError<T>(
     expected: ExpectedClientError,
 ): Promise<void> {
     let error: unknown;
+
     try {
         await fn();
     } catch (e) {
@@ -47,7 +48,7 @@ export async function expectClientError<T>(
     }
 
     if (!isClientError(error)) {
-        const message = error instanceof Error ? error.message : String(error);
+        const message = Error.isError(error) ? error.message : String(error);
         throw new Error(`Expected ClientError, got: ${message}`);
     }
 

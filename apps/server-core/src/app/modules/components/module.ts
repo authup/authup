@@ -59,6 +59,7 @@ export class ComponentsModule implements IModule {
             }
 
             logger.info('The worker is disabled by configuration (core.worker.enabled: false).');
+
             return;
         }
 
@@ -79,6 +80,7 @@ export class ComponentsModule implements IModule {
         // independently, so either non-zero retention needs the cleaner.
         const securitySweep = config.eventLogRetentionDays > 0;
         const entitySweep = config.eventLogEntityEnabled && config.eventLogEntityRetentionDays > 0;
+
         if (config.eventLogEnabled && (securitySweep || entitySweep)) {
             registry.push({
                 name: 'event-cleaner',
@@ -100,6 +102,7 @@ export class ComponentsModule implements IModule {
         }
 
         const components = registry.map((entry) => entry.component);
+
         this.registry = registry;
         this.startedAt = Date.now();
 
@@ -123,6 +126,7 @@ export class ComponentsModule implements IModule {
         const logger = container.tryResolve(LoggerInjectionKey);
 
         const components = this.registry.map((entry) => entry.component);
+
         this.registry = [];
         this.startedAt = undefined;
 

@@ -5,11 +5,11 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { 
-    AAuthApp, 
-    AAuthShell, 
-    AWorkflowDisabledNotice, 
-    createColorMode, 
+import {
+    AAuthApp,
+    AAuthShell,
+    AWorkflowDisabledNotice,
+    createColorMode,
 } from '@authup/client-web-kit';
 import { VCIcon } from '@vuecs/icon';
 import { computed, defineComponent } from 'vue';

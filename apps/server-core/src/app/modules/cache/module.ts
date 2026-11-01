@@ -24,6 +24,7 @@ export class CacheModule implements IModule {
 
     async setup(container: IContainer): Promise<void> {
         const result = container.tryResolve(ConfigInjectionKey);
+
         if (!result.success || !result.data.redis) {
             container.register(CacheInjectionKey, { useFactory: () => new MemoryCache() });
 

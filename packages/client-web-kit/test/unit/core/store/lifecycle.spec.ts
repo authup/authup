@@ -57,14 +57,15 @@ function buildStore(handlers: Record<string, FakeHandler> = {}) {
     const store = createStore({ httpClient, dispatcher });
 
     const events : string[] = [];
+
     dispatcher.on('*', (...args) => {
         events.push(args[0]);
     });
 
     return {
-        store, 
-        httpClient, 
-        dispatcher, 
+        store,
+        httpClient,
+        dispatcher,
         events,
     };
 }
@@ -132,11 +133,12 @@ describe('core/store/lifecycle', () => {
     it('reverts a login whose introspection failed: nothing committed, staged tokens revoked', async () => {
         let introspectCalls = 0;
         const {
-            store, 
-            httpClient, 
+            store,
+            httpClient,
         } = buildStore({
             'POST /token/introspect': () => {
                 introspectCalls += 1;
+
                 if (introspectCalls === 1) {
                     throw new Error('introspection down');
                 }
@@ -155,6 +157,7 @@ describe('core/store/lifecycle', () => {
         // otherwise the server session would be orphaned (unreachable by any
         // later logout)
         const revokeRequests = requestsTo(httpClient, 'POST', '/token/revoke');
+
         expect(revokeRequests).toHaveLength(2);
         expect(revokeRequests[0].body).toMatchObject({ token: 'at-1' });
         expect(revokeRequests[1].body).toMatchObject({ token: 'rt-1' });
@@ -171,8 +174,8 @@ describe('core/store/lifecycle', () => {
     // the freshly granted token as one the server will not honour.
     it('reverts a login whose grant introspects inactive', async () => {
         const {
-            store, 
-            httpClient, 
+            store,
+            httpClient,
         } = buildStore({ 'POST /token/introspect': () => ({ ...INTROSPECTION_RESPONSE, active: false }) });
 
         await expect(store.login({ name: 'admin', password: 'start123' })).rejects.toThrow();
@@ -183,18 +186,20 @@ describe('core/store/lifecycle', () => {
         expect(store.lastAuthOrigin.value).toBeNull();
 
         const revokeRequests = requestsTo(httpClient, 'POST', '/token/revoke');
+
         expect(revokeRequests).toHaveLength(2);
     });
 
     it('logout is local-only: revokes both tokens, never touches the sessions API', async () => {
         const {
-            store, 
-            httpClient, 
-            events, 
+            store,
+            httpClient,
+            events,
         } = buildStore();
 
         await store.login({ name: 'admin', password: 'start123' });
         events.length = 0;
+
         const requestCount = httpClient.requests.length;
 
         await store.logout();
@@ -210,6 +215,7 @@ describe('core/store/lifecycle', () => {
         expect(store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
 
         const logoutRequests = httpClient.requests.slice(requestCount);
+
         expect(logoutRequests).toHaveLength(2);
         expect(logoutRequests.map((request) => pathname(request))).toEqual([
             '/token/revoke',
@@ -227,6 +233,7 @@ describe('core/store/lifecycle', () => {
         const { store, httpClient } = buildStore();
 
         await store.login({ name: 'admin', password: 'start123' });
+
         const requestCount = httpClient.requests.length;
 
         await store.logout({ revoke: false });
@@ -239,6 +246,7 @@ describe('core/store/lifecycle', () => {
         const { store, httpClient } = buildStore();
 
         await store.login({ name: 'admin', password: 'start123' });
+
         const requestCount = httpClient.requests.length;
 
         await store.logout({ revoke: false, revokeTokens: false });
@@ -278,11 +286,13 @@ describe('core/store/lifecycle', () => {
         expect(store.status.value).toEqual(StoreAuthStatus.UNAUTHENTICATED);
 
         const tokenRequests = requestsTo(httpClient, 'POST', '/token');
+
         expect(tokenRequests).toHaveLength(1);
         expect(tokenRequests[0].body).toMatchObject({ grant_type: 'refresh_token' });
 
         // cleanup captured the refresh token before nulling and revoked it
         const revokeRequests = requestsTo(httpClient, 'POST', '/token/revoke');
+
         expect(revokeRequests).toHaveLength(1);
         expect(revokeRequests[0].body).toMatchObject({ token: 'rt-1' });
     });
@@ -290,9 +300,9 @@ describe('core/store/lifecycle', () => {
     it('recovers via the refresh retry branch when introspection fails once', async () => {
         let introspectCalls = 0;
         const {
-            store, 
-            httpClient, 
-            events, 
+            store,
+            httpClient,
+            events,
         } = buildStore({
             'POST /token': (request) => {
                 expect((request.body as Record<string, string>).grant_type).toEqual('refresh_token');
@@ -306,6 +316,7 @@ describe('core/store/lifecycle', () => {
             },
             'POST /token/introspect': () => {
                 introspectCalls += 1;
+
                 if (introspectCalls === 1) {
                     throw new Error('introspection down');
                 }
@@ -332,9 +343,9 @@ describe('core/store/lifecycle', () => {
 
     it('resolves without a session and without a request', async () => {
         const {
-            store, 
-            httpClient, 
-            events, 
+            store,
+            httpClient,
+            events,
         } = buildStore();
 
         await store.resolve();
@@ -358,6 +369,7 @@ describe('core/store/lifecycle', () => {
         });
 
         const tokenRequests = requestsTo(httpClient, 'POST', '/token');
+
         expect(tokenRequests).toHaveLength(1);
         expect(tokenRequests[0].body).toMatchObject({
             grant_type: 'authorization_code',
@@ -370,6 +382,7 @@ describe('core/store/lifecycle', () => {
 
         // cleanup on the SUCCESS path revokes the previous tokens
         const revokeRequests = requestsTo(httpClient, 'POST', '/token/revoke');
+
         expect(revokeRequests).toHaveLength(2);
         expect(revokeRequests[0].body).toMatchObject({ token: 'old-at' });
         expect(revokeRequests[1].body).toMatchObject({ token: 'old-rt' });
@@ -461,8 +474,8 @@ describe('core/store/lifecycle', () => {
 
     it('aborts the commit when a logout interleaves with the staged login window', async () => {
         const {
-            store, 
-            httpClient, 
+            store,
+            httpClient,
         } = buildStore({
             'POST /token/introspect': async () => {
                 await store.logout();
@@ -479,6 +492,7 @@ describe('core/store/lifecycle', () => {
         expect(store.lastAuthOrigin.value).toBeNull();
 
         const revokeRequests = requestsTo(httpClient, 'POST', '/token/revoke');
+
         expect(revokeRequests).toHaveLength(2);
         expect(revokeRequests[0].body).toMatchObject({ token: 'at-1' });
         expect(revokeRequests[1].body).toMatchObject({ token: 'rt-1' });
@@ -520,6 +534,7 @@ describe('core/store/lifecycle', () => {
 
         const revoked = requestsTo(httpClient, 'POST', '/token/revoke')
             .map((request) => (request.body as Record<string, string>).token);
+
         expect(revoked).toContain('at-late');
         expect(revoked).toContain('rt-late');
     });
@@ -554,6 +569,7 @@ describe('core/store/lifecycle', () => {
         await store.resolve();
 
         const introspections = requestsTo(httpClient, 'POST', '/token/introspect');
+
         expect(introspections).toHaveLength(2);
         expect(introspections[1].body).toMatchObject({ token: 'at-2' });
     });

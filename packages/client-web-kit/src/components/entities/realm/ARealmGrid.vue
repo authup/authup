@@ -101,12 +101,14 @@ export default defineComponent({
 
         const filtered = computed(() => {
             const term = search.value.trim().toLowerCase();
+
             if (!term) {
                 return items.value;
             }
 
             return items.value.filter((realm) => {
                 const haystack = `${realm.displayName || ''} ${realm.name || ''}`.toLowerCase();
+
                 return haystack.includes(term);
             });
         });

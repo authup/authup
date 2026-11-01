@@ -17,6 +17,7 @@ export function normalizeAsymmetricKeyPairCreateOptions(
     options: AsymmetricKeyPairCreateOptionsInput,
 ) : AsymmetricKeyPairCreateOptions {
     let optionsNormalized : AsymmetricKeyPairCreateOptions;
+
     switch (options.name) {
         case CryptoAsymmetricAlgorithm.RSASSA_PKCS1_V1_5:
         case CryptoAsymmetricAlgorithm.RSA_PSS:
@@ -27,6 +28,7 @@ export function normalizeAsymmetricKeyPairCreateOptions(
                 hash: 'SHA-256',
                 ...options,
             };
+
             break;
         }
         case CryptoAsymmetricAlgorithm.ECDSA:
@@ -45,6 +47,7 @@ export function normalizeAsymmetricKeyImportOptions(
     options: AsymmetricKeyImportOptionsInput,
 ) : AsymmetricKeyPairImportOptions {
     let optionsNormalized : AsymmetricKeyPairImportOptions;
+
     switch (options.name) {
         case CryptoAsymmetricAlgorithm.RSASSA_PKCS1_V1_5:
         case CryptoAsymmetricAlgorithm.RSA_PSS:
@@ -53,6 +56,7 @@ export function normalizeAsymmetricKeyImportOptions(
                 hash: 'SHA-256',
                 ...options,
             };
+
             break;
         }
         case CryptoAsymmetricAlgorithm.ECDSA:

@@ -8,19 +8,19 @@
 import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
 import {
-    beforeEach, 
-    describe, 
-    expect, 
+    beforeEach,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { ErrorCode } from '@authup/errors';
 import { ScopeService } from '../../../../../src/core/entities/scope/service.ts';
-import { 
-    createAllowAllActor, 
-    createDenyAllActor, 
-    createMasterRealmActor, 
-    createNonMasterRealmActor, 
+import {
+    createAllowAllActor,
+    createDenyAllActor,
+    createMasterRealmActor,
+    createNonMasterRealmActor,
 } from '@authup/server-test-kit';
 import { FakeRealmRepository } from '../realm/fake-repository.ts';
 import { readEvaluatedRecordRealms } from '../../helpers/index.ts';
@@ -37,7 +37,7 @@ describe('core/entities/scope/service', () => {
         realmRepository = new FakeRealmRepository();
         service = new ScopeService({
             repository,
-            realmRepository, 
+            realmRepository,
         });
     });
 
@@ -48,11 +48,13 @@ describe('core/entities/scope/service', () => {
             ]);
 
             const result = await service.getMany({}, createAllowAllActor());
+
             expect(result.data).toHaveLength(1);
         });
 
         it('should call preCheckOneOf with scope permissions', async () => {
             const actor = createAllowAllActor();
+
             await service.getMany({}, actor);
 
             expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
@@ -76,6 +78,7 @@ describe('core/entities/scope/service', () => {
             const entity = repository.seed(createFakeScope({ name: 'test-scope' }));
 
             const result = await service.getOne(entity.id, createAllowAllActor());
+
             expect(result.name).toBe('test-scope');
         });
 
@@ -99,6 +102,7 @@ describe('core/entities/scope/service', () => {
 
         it('should call preCheck with SCOPE_CREATE permission', async () => {
             const actor = createAllowAllActor();
+
             await service.create({ name: 'new-scope' }, actor);
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.SCOPE_CREATE });
@@ -122,6 +126,7 @@ describe('core/entities/scope/service', () => {
             const entity = repository.seed(createFakeScope({ name: 'old-name' }));
 
             const result = await service.update(entity.id, { name: 'new-name' }, createAllowAllActor());
+
             expect(result.name).toBe('new-name');
         });
 
@@ -135,16 +140,19 @@ describe('core/entities/scope/service', () => {
     describe('update with a restricted grant (#3654)', () => {
         const restrictedActor = () => {
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
                 if (method !== 'evaluate') {
                     return;
                 }
 
                 const attributes = ctx.data?.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+
                 if (!attributes?.name?.startsWith('reach-')) {
                     throw PermissionError.denied('out of reach');
                 }
             });
+
             return actor;
         };
 
@@ -171,6 +179,7 @@ describe('core/entities/scope/service', () => {
             const entity = repository.seed(createFakeScope({ name: 'reach-name' }));
 
             const result = await service.update(entity.id, { name: 'reach-renamed' }, restrictedActor());
+
             expect(result.name).toBe('reach-renamed');
         });
 
@@ -186,8 +195,8 @@ describe('core/entities/scope/service', () => {
     describe('save (upsert)', () => {
         it('should create when entity not found', async () => {
             const {
-                entity, 
-                created, 
+                entity,
+                created,
             } = await service.save(
                 undefined,
                 { name: 'upserted-scope' },
@@ -248,7 +257,7 @@ describe('core/entities/scope/service', () => {
             const result = await service.create(
                 {
                     name: 'global-scope',
-                    realmId: null, 
+                    realmId: null,
                 },
                 actor,
             );
@@ -262,9 +271,11 @@ describe('core/entities/scope/service', () => {
             const entity = repository.seed(createFakeScope());
 
             const result = await service.delete(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
 
             const found = await repository.findOneById(entity.id);
+
             expect(found).toBeNull();
         });
 
@@ -292,9 +303,9 @@ describe('core/entities/scope/service', () => {
             const global = seedEntity('name-scoped', null);
 
             return {
-                master, 
-                global, 
-                scoped, 
+                master,
+                global,
+                scoped,
             };
         }
 

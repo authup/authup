@@ -53,6 +53,7 @@ export function loadAuthorizationRequest(): AuthorizationRequest | undefined {
     }
 
     const raw = sessionStorage.getItem(STORAGE_KEY);
+
     if (!raw) {
         return undefined;
     }
@@ -112,11 +113,14 @@ export function buildAuthorizeURL(ctx: BuildAuthorizeURLContext): string {
     const base = ctx.baseURL.replace(/\/+$/, '');
 
     const params = new URLSearchParams();
+
     params.set('response_type', 'code');
     params.set('client_id', ctx.clientId);
+
     if (ctx.realmId) {
         params.set('realm_id', ctx.realmId);
     }
+
     params.set('scope', ctx.scope ?? 'global openid');
     params.set('redirect_uri', ctx.redirectUri);
     params.set('state', ctx.state);
@@ -124,15 +128,19 @@ export function buildAuthorizeURL(ctx: BuildAuthorizeURLContext): string {
     params.set('code_challenge_method', ctx.codeChallengeMethod);
 
     const prompt = ctx.prompt ?? OAuth2AuthorizationPrompt.SELECT_ACCOUNT;
+
     if (prompt) {
         params.set('prompt', prompt);
     }
+
     if (typeof ctx.maxAge !== 'undefined') {
         params.set('max_age', String(ctx.maxAge));
     }
+
     if (ctx.loginHint) {
         params.set('login_hint', ctx.loginHint);
     }
+
     // Defaulted from the two preference cookies rather than left to the
     // caller: the values are already in this document, every caller would
     // have to re-derive the same pair, and one that forgot would silently
@@ -141,11 +149,13 @@ export function buildAuthorizeURL(ctx: BuildAuthorizeURLContext): string {
     // is a plain function a router guard calls, where there is no component
     // instance to inject a manager from.
     const uiLocales = ctx.uiLocales ?? readPreferenceCookie(LOCALE_COOKIE, LOCALE_UNSET);
+
     if (uiLocales) {
         params.set('ui_locales', uiLocales);
     }
 
     const uiColorMode = ctx.uiColorMode ?? readPreferenceCookie(COLOR_MODE_COOKIE, COLOR_MODE_UNSET);
+
     if (uiColorMode) {
         params.set('ui_color_mode', uiColorMode);
     }
@@ -169,23 +179,29 @@ export function buildEndSessionURL(ctx: BuildEndSessionURLContext): string {
     const base = ctx.baseURL.replace(/\/+$/, '');
 
     const params = new URLSearchParams();
+
     if (ctx.idTokenHint) {
         params.set('id_token_hint', ctx.idTokenHint);
     }
+
     if (ctx.clientId) {
         params.set('client_id', ctx.clientId);
     }
+
     if (ctx.postLogoutRedirectUri) {
         params.set('post_logout_redirect_uri', ctx.postLogoutRedirectUri);
     }
+
     if (ctx.state) {
         params.set('state', ctx.state);
     }
+
     if (ctx.realmId) {
         params.set('realm_id', ctx.realmId);
     }
 
     const qs = params.toString();
+
     return `${base}/logout${qs ? `?${qs}` : ''}`;
 }
 
@@ -223,10 +239,12 @@ export function buildConsoleLoginURL(ctx: BuildConsoleLoginURLContext): string {
     const target = ctx.console || 'account';
 
     const params = new URLSearchParams();
+
     if (ctx.realmId) {
         params.set('realmId', ctx.realmId);
     }
 
     const qs = params.toString();
+
     return `${base}/console/${target}/login/start${qs ? `?${qs}` : ''}`;
 }

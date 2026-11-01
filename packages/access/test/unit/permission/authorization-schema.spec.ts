@@ -38,9 +38,9 @@ function parseCatalog(catalog: unknown) {
 
 function parseGrants(grants: unknown) {
     return parseAuthorizationEvaluatorInput({
-        catalog: createCatalog([]), 
-        grants, 
-        identity, 
+        catalog: createCatalog([]),
+        grants,
+        identity,
     })
         .then((parsed) => parsed.grants);
 }

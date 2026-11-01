@@ -22,6 +22,7 @@ export function provideSocketManager(manager: ClientManager, app?: App) {
 
 export function injectSocketManager(app?: App) : ClientManager {
     const manager = inject<ClientManager>(SocketClientSymbol, app);
+
     if (!manager) {
         throw new Error('The socket manager has not been injected in the app context.');
     }

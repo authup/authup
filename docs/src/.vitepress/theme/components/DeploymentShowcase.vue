@@ -91,7 +91,7 @@ export default defineComponent({
                 title: 'Bare Metal',
                 summary: 'Install on any host that runs Node.js: no container runtime required.',
                 bullets: [
-                    'Node.js 20+ on Linux / macOS / Windows',
+                    'Node.js 26+ on Linux / macOS / Windows',
                     'CLI-driven start and migrate',
                     'SQLite, PostgreSQL or MySQL',
                 ],

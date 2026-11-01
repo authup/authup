@@ -151,8 +151,10 @@ export default defineComponent({
             e: Error,
         ) => {
             const ctx = extractErrorContext(e);
+
             if (ctx.status !== 409 || typeof ctx.data?.references !== 'number') {
                 emit('failed', e);
+
                 return;
             }
 
@@ -174,6 +176,7 @@ export default defineComponent({
 
             try {
                 const deleted = await httpClient.key.delete(row.id, { force: true });
+
                 deletedCb({ ...deleted.data, id: row.id });
             } catch (err) {
                 emit('failed', err);

@@ -32,6 +32,7 @@ export class OAuth2TokenSigner implements IOAuth2TokenSigner {
         }
 
         let token : string;
+
         if (key.type === JWKType.OCT) {
             token = await signToken(
                 payload,

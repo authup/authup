@@ -60,6 +60,7 @@ export function loadAccountConsoleRef() : string | undefined {
     // anyone whose browser blocks storage.
     try {
         const value = sessionStorage.getItem(ACCOUNT_CONSOLE_REF_STORAGE_KEY);
+
         if (!value) {
             return undefined;
         }

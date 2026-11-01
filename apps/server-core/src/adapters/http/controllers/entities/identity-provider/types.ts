@@ -14,8 +14,8 @@ import type {
     IIdentityProviderRepository,
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2AuthorizationStateManager,
-    IOAuth2FederatedLoginService, 
-    IRealmRepository, 
+    IOAuth2FederatedLoginService,
+    IRealmRepository,
 } from '../../../../../core/index.ts';
 
 export type IdentityProviderControllerOptions = {

@@ -6,13 +6,13 @@
  */
 
 import {
-    Column, 
-    CreateDateColumn, 
-    Entity, 
-    Index, 
-    JoinColumn, 
-    ManyToOne, 
-    PrimaryGeneratedColumn, 
+    Column,
+    CreateDateColumn,
+    Entity,
+    Index,
+    JoinColumn,
+    ManyToOne,
+    PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
@@ -37,15 +37,15 @@ export class SessionEntity implements Session {
     @Index()
     @Column({
         type: 'varchar',
-        length: 64, 
+        length: 64,
     })
     sub: string;
 
     @Index()
     @Column({
-        name: 'sub_kind', 
-        type: 'varchar', 
-        length: 64, 
+        name: 'sub_kind',
+        type: 'varchar',
+        length: 64,
     })
     subKind: string;
 
@@ -70,16 +70,16 @@ export class SessionEntity implements Session {
     @Index()
     @Column({
         name: 'ip_address',
-        type: 'varchar', 
-        length: 45, 
+        type: 'varchar',
+        length: 45,
     })
     ipAddress: string;
 
     @Index()
     @Column({
-        name: 'user_agent', 
-        type: 'varchar', 
-        length: 512, 
+        name: 'user_agent',
+        type: 'varchar',
+        length: 512,
     })
     userAgent: string;
 
@@ -87,42 +87,42 @@ export class SessionEntity implements Session {
 
     @Index()
     @Column({
-        name: 'expires_at', 
-        type: 'varchar', 
-        length: 28, 
+        name: 'expires_at',
+        type: 'varchar',
+        length: 28,
     })
     expiresAt: string;
 
     @Column({
-        name: 'refreshed_at', 
-        type: 'varchar', 
-        length: 28, 
-        nullable: true, 
+        name: 'refreshed_at',
+        type: 'varchar',
+        length: 28,
+        nullable: true,
     })
     refreshedAt: string | null;
 
     @Index()
     @Column({
-        name: 'seen_at', 
-        type: 'varchar', 
-        length: 28, 
-        nullable: true, 
+        name: 'seen_at',
+        type: 'varchar',
+        length: 28,
+        nullable: true,
     })
     seenAt: string | null;
 
     @Column({
-        name: 'mfa_at', 
-        type: 'varchar', 
-        length: 28, 
-        nullable: true, 
+        name: 'mfa_at',
+        type: 'varchar',
+        length: 28,
+        nullable: true,
     })
     mfaAt: string | null;
 
     @Column({
-        name: 'auth_method', 
-        type: 'varchar', 
-        length: 16, 
-        nullable: true, 
+        name: 'auth_method',
+        type: 'varchar',
+        length: 16,
+        nullable: true,
     })
     authMethod: `${SessionAuthMethod}` | null;
 
@@ -138,30 +138,30 @@ export class SessionEntity implements Session {
 
     @Index()
     @Column({
-        name: 'client_id', 
-        nullable: true, 
-        default: null, 
+        name: 'client_id',
+        nullable: true,
+        default: null,
     })
     clientId: Client['id'] | null;
 
     @ManyToOne(() => ClientEntity, {
         onDelete: 'CASCADE',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'client_id' })
     client: ClientEntity | null;
 
     @Index()
     @Column({
-        name: 'user_id', 
-        nullable: true, 
-        default: null, 
+        name: 'user_id',
+        nullable: true,
+        default: null,
     })
     userId: User['id'] | null;
 
     @ManyToOne(() => UserEntity, {
         onDelete: 'CASCADE',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'user_id' })
     user: UserEntity | null;

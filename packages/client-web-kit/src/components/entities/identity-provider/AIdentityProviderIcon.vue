@@ -15,9 +15,9 @@ import { AIdentityProviderProtocol } from './AIdentityProviderProtocol';
 
 export default defineComponent({
     components: {
-        AIdentityProviderPreset, 
-        AIdentityProviderProtocol, 
-        VCIcon, 
+        AIdentityProviderPreset,
+        AIdentityProviderProtocol,
+        VCIcon,
     },
     inheritAttrs: false,
     props: {

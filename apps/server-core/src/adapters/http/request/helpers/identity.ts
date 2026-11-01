@@ -21,6 +21,7 @@ export class RequestIdentity {
 
     get clientId() {
         const { raw } = this;
+
         if (raw.type === IdentityType.CLIENT) {
             return raw.data.id;
         }
@@ -67,6 +68,7 @@ export function setRequestIdentity(event: IAppEvent, input: Identity | RequestId
 
 export function useRequestIdentityOrFail(event: IAppEvent) : RequestIdentity {
     const identity = useRequestIdentity(event);
+
     if (!identity) {
         throw new UnauthorizedError();
     }

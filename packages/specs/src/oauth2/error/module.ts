@@ -22,6 +22,7 @@ export function normalizeOAuth2ErrorInput(input?: AuthupErrorInput): AuthupError
 export class OAuth2Error extends AuthupError {
     constructor(input?: AuthupErrorInput) {
         const options = normalizeOAuth2ErrorInput(input);
+
         super({
             code: ErrorCode.OAUTH_REQUEST_INVALID,
             message: 'OAuth2 request invalid',

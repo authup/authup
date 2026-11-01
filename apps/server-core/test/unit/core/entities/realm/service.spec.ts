@@ -10,9 +10,9 @@ import {
     REALM_MASTER_NAME,
 } from '@authup/core-kit';
 import {
-    beforeEach, 
-    describe, 
-    expect, 
+    beforeEach,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
@@ -49,6 +49,7 @@ describe('core/entities/realm/service', () => {
     describe('getMany', () => {
         it('should return entities without actor context', async () => {
             const result = await service.getMany({});
+
             expect(result.data.length).toBeGreaterThanOrEqual(1);
         });
     });
@@ -56,12 +57,14 @@ describe('core/entities/realm/service', () => {
     describe('getOne', () => {
         it('should return the master realm by name', async () => {
             const result = await service.getOne(REALM_MASTER_NAME);
+
             expect(result.name).toBe(REALM_MASTER_NAME);
         });
 
         it('should return realm by id', async () => {
             const masterRealm = repository.getMasterRealm();
             const result = await service.getOne(masterRealm.id);
+
             expect(result.name).toBe(REALM_MASTER_NAME);
         });
 
@@ -85,6 +88,7 @@ describe('core/entities/realm/service', () => {
 
         it('should call preCheck with REALM_CREATE permission', async () => {
             const actor = createAllowAllActor();
+
             await service.create({ name: 'test-realm' }, actor);
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.REALM_CREATE });
@@ -109,11 +113,13 @@ describe('core/entities/realm/service', () => {
             );
 
             const found = await repository.findOneById(result.id);
+
             expect(found).not.toBeNull();
         });
 
         it('should invoke the realm provisioners for the new realm when wired', async () => {
             const provisioner = new RecordingRealmProvisioner();
+
             service = new RealmService({
                 repository,
                 realmProvisioners: [provisioner],
@@ -129,6 +135,7 @@ describe('core/entities/realm/service', () => {
 
         it('should not invoke the realm provisioners when updating an existing realm', async () => {
             const provisioner = new RecordingRealmProvisioner();
+
             service = new RealmService({
                 repository,
                 realmProvisioners: [provisioner],
@@ -149,6 +156,7 @@ describe('core/entities/realm/service', () => {
             // a provisioner failure is logged + swallowed, not propagated,
             // and must not starve the provisioners after it.
             const provisioner = new RecordingRealmProvisioner();
+
             service = new RealmService({
                 repository,
                 realmProvisioners: [
@@ -167,7 +175,9 @@ describe('core/entities/realm/service', () => {
             );
 
             expect(result.id).toBeDefined();
+
             const found = await repository.findOneById(result.id);
+
             expect(found).not.toBeNull();
             expect(provisioner.calls).toEqual([result.id]);
         });
@@ -177,10 +187,11 @@ describe('core/entities/realm/service', () => {
         it('should update an existing realm', async () => {
             const entity = repository.seed(createFakeRealm({
                 name: 'old-realm',
-                builtIn: false, 
+                builtIn: false,
             }));
 
             const result = await service.update(entity.id, { name: 'new-realm' }, createAllowAllActor());
+
             expect(result.name).toBe('new-realm');
         });
 
@@ -214,6 +225,7 @@ describe('core/entities/realm/service', () => {
             const entity = repository.seed(createFakeRealm({ builtIn: false }));
 
             const actor = createAllowAllActor();
+
             await service.update(entity.id, { description: 'updated description' }, actor);
 
             expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.REALM_UPDATE))
@@ -224,12 +236,14 @@ describe('core/entities/realm/service', () => {
     describe('update with a restricted grant (#3654)', () => {
         function createRestrictedActor() {
             const permissionEvaluator = new FakePermissionEvaluator();
+
             permissionEvaluator.setBehavior((call) => {
                 if (call.method !== 'evaluate' || call.ctx.name !== PermissionName.REALM_UPDATE) {
                     return;
                 }
 
                 const attributes = call.ctx.data?.get(BuiltInPolicyType.ATTRIBUTES) as Partial<Realm>;
+
                 if (!attributes?.name?.startsWith('reach-')) {
                     throw PermissionError.denied('test');
                 }
@@ -251,6 +265,7 @@ describe('core/entities/realm/service', () => {
             const entity = repository.seed(createFakeRealm({ name: 'reach-a', builtIn: false }));
 
             const result = await service.update(entity.id, { name: 'reach-b' }, createRestrictedActor());
+
             expect(result.name).toBe('reach-b');
         });
 
@@ -267,8 +282,8 @@ describe('core/entities/realm/service', () => {
     describe('save (upsert)', () => {
         it('should create when entity not found', async () => {
             const {
-                entity, 
-                created, 
+                entity,
+                created,
             } = await service.save(
                 undefined,
                 { name: 'upserted-realm' },
@@ -282,7 +297,7 @@ describe('core/entities/realm/service', () => {
         it('should update when entity found', async () => {
             const entity = repository.seed(createFakeRealm({
                 name: 'old-realm',
-                builtIn: false, 
+                builtIn: false,
             }));
 
             const { created } = await service.save(
@@ -306,9 +321,11 @@ describe('core/entities/realm/service', () => {
             const entity = repository.seed(createFakeRealm({ builtIn: false }));
 
             const result = await service.delete(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
 
             const found = await repository.findOneById(entity.id);
+
             expect(found).toBeNull();
         });
 
@@ -330,6 +347,7 @@ describe('core/entities/realm/service', () => {
             const entity = repository.seed(createFakeRealm({ builtIn: false }));
 
             const actor = createAllowAllActor();
+
             await service.delete(entity.id, actor);
 
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.REALM_DELETE });
@@ -339,6 +357,7 @@ describe('core/entities/realm/service', () => {
             const entity = repository.seed(createFakeRealm({ builtIn: false }));
 
             const actor = createAllowAllActor();
+
             await service.delete(entity.id, actor);
 
             expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.REALM_DELETE))

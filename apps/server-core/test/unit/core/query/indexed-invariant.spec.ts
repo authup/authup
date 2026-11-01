@@ -6,10 +6,10 @@
  */
 
 import {
-    and, 
-    contains, 
-    defineQuery, 
-    inArray, 
+    and,
+    contains,
+    defineQuery,
+    inArray,
     or,
 } from '@rapiq/core';
 import { describe, expect, it } from 'vitest';
@@ -132,9 +132,11 @@ describe('core/query (indexed invariant)', () => {
             // `sorts` in rapiq 2.1.0). Decoding a key the schema allows
             // proves the pipeline under test is live for THIS schema.
             const [permitted] = allowed;
+
             expect(permitted, 'schema declares no sort key to control against').toBeDefined();
 
             const control = await decodeQuery({ sort: permitted }, { schema });
+
             expect(JSON.stringify(control.sorts ?? null)).toContain(permitted);
 
             const parsed = await decodeQuery({ sort: 'totallyBogusColumn' }, { schema });
@@ -180,6 +182,7 @@ describe('core/query (indexed invariant)', () => {
                     contains('name', 'foo');
 
                 const shapes = [search];
+
                 if (allowed.includes('realmId')) {
                     // header realm switcher: active realm + global rows
                     shapes.push(and(inArray('realmId', [REALM_ID, null] as any), search));
@@ -187,11 +190,13 @@ describe('core/query (indexed invariant)', () => {
 
                 for (const filters of shapes) {
                     const encoded = queryCodec.encode(defineQuery({ filters } as any));
+
                     expect(encoded).toBeTruthy();
 
                     // throws (keyNotAllowed / keyCombinationNotIndexed) on regression
-                     
+
                     const parsed = await decodeQuery(encoded as string, { schema });
+
                     expect(JSON.stringify(parsed.filters)).toContain('foo');
                 }
             },

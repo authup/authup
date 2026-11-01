@@ -15,6 +15,7 @@ export const OAUTH2_SERVER_ERROR_INSTANCE = Symbol.for('@authup/specs/OAuth2Serv
 export class OAuth2ServerError extends OAuth2Error {
     constructor(input?: AuthupErrorInput) {
         const options = normalizeOAuth2ErrorInput(input);
+
         super({
             code: ErrorCode.INTERNAL_ERROR,
             message: 'An internal server error occurred.',

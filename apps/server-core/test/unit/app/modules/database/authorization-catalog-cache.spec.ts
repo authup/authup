@@ -52,11 +52,13 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
 
     async function findDefinition(name: string) {
         const definitions = await provider.findDefinitions();
+
         return definitions.find(([permission]) => permission.name === name && permission.realmId === null);
     }
 
     async function findGrantTree(id: string) {
         const trees = await provider.findGrantPolicies();
+
         return trees.find((tree) => readId(tree) === id);
     }
 
@@ -69,6 +71,7 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
         await provider.findGrantPolicies();
 
         const spy = vi.spyOn(PolicyRepository.prototype, 'findDescendantsTreeById');
+
         try {
             const definitions = await provider.findDefinitions();
             const trees = await provider.findGrantPolicies();
@@ -86,11 +89,13 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
         const [permission, trees] = first.find(([, policies]) => policies.length > 0)!;
         const { name } = permission;
         const { type } = (trees[0]!);
+
         permission.name = 'mutated';
         trees[0]!.type = 'mutated';
 
         const second = await provider.findDefinitions();
         const [, secondTrees] = second.find(([entry]) => entry.name === name)!;
+
         expect(second.some(([entry]) => entry.name === 'mutated')).toBe(false);
         expect(secondTrees[0]!.type).toEqual(type);
     });
@@ -101,9 +106,11 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
         const first = await provider.findDefinitions();
         const [permission] = first[0]!;
         const { name } = permission;
+
         permission.name = 'mutated';
 
         const second = await provider.findDefinitions();
+
         expect(second.some(([entry]) => entry.name === 'mutated')).toBe(false);
         expect(second.some(([entry]) => entry.name === name)).toBe(true);
     });
@@ -120,6 +127,7 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
 
         await suite.dataSource.transaction(async (manager) => {
             const permissions = manager.getRepository(PermissionEntity);
+
             await permissions.save(permissions.create({ name: 'issue3599_committed' }));
 
             // a concurrent reader repopulating the keys with pre-commit rows
@@ -128,15 +136,16 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
         });
 
         expect(await cache.getFromCache({
-            identifier: AUTHORIZATION_EPOCH_CACHE_KEY, 
-            query: '', 
-            duration: 60_000, 
+            identifier: AUTHORIZATION_EPOCH_CACHE_KEY,
+            query: '',
+            duration: 60_000,
         })).toBeUndefined();
         expect(await findDefinition('issue3599_committed')).toBeDefined();
     });
 
     it('never serves a read that an invalidation overtook', async () => {
         const permissions = suite.dataSource.getRepository(PermissionEntity);
+
         await provider.findDefinitions();
 
         // A read takes its rows, a write commits and invalidates, a second
@@ -146,8 +155,10 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
         const spy = vi.spyOn(provider as unknown as { readDefinitions: () => Promise<unknown> }, 'readDefinitions')
             .mockImplementationOnce(async () => {
                 const rows = await original();
+
                 await permissions.save(permissions.create({ name: 'issue3599_overtaken' }));
                 await provider.findDefinitions();
+
                 return rows;
             });
 
@@ -179,6 +190,7 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
         });
 
         const permission = await permissions.save(permissions.create({ name: 'issue3599_subtree' }));
+
         await junctions.save(junctions.create({ permissionId: permission.id, policyId: to.id }));
 
         type Tree = { id: string, children?: Tree[] };
@@ -207,6 +219,7 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
             children: [createFakeTimePolicy()],
         });
         const permission = await permissions.save(permissions.create({ name: 'issue3599_child' }));
+
         await junctions.save(junctions.create({ permissionId: permission.id, policyId: parent.id }));
 
         const children = async () => ((await findDefinition(permission.name))?.[1][0] as { children?: BasePolicy[] })
@@ -217,6 +230,7 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
         // a bare save carries no attribute rows, so only the policy's own
         // insert hook can report it
         const policies = suite.dataSource.getRepository(PolicyEntity);
+
         await policies.save(policies.create({
             name: 'issue3599_bare_child',
             type: BuiltInPolicyType.IDENTITY,
@@ -245,6 +259,7 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
     it('sees a permission unowned by deleting its client', async () => {
         const permissions = suite.dataSource.getRepository(PermissionEntity);
         const { data: client } = await suite.client.client.create(createFakeClient());
+
         await permissions.save(permissions.create({ name: 'issue3599_owned', clientId: client.id }));
 
         const find = async () => (await provider.findDefinitions())
@@ -260,6 +275,7 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
     it('sees the permissions of a deleted realm disappear', async () => {
         const permissions = suite.dataSource.getRepository(PermissionEntity);
         const { data: realm } = await suite.client.realm.create(createFakeRealm());
+
         await permissions.save(permissions.create({ name: 'issue3599_realm', realmId: realm.id }));
 
         const find = async () => (await provider.findDefinitions())
@@ -276,6 +292,7 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
         await provider.findDefinitions();
 
         const permissions = suite.dataSource.getRepository(PermissionEntity);
+
         await permissions.save(permissions.create({ name: 'issue3599_created' }));
 
         expect(await findDefinition('issue3599_created')).toBeDefined();
@@ -290,6 +307,7 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
         expect((await findDefinition(permission.name))?.[1]).toEqual([]);
 
         const junction = await junctions.save(junctions.create({ permissionId: permission.id, policyId: policy.id }));
+
         expect((await findDefinition(permission.name))?.[1].map(readId)).toEqual([policy.id]);
 
         await junctions.remove(junction);
@@ -302,11 +320,13 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
         const policies = suite.dataSource.getRepository(PolicyEntity);
         const permission = await permissions.save(permissions.create({ name: 'issue3599_policy' }));
         const { data: policy } = await suite.client.policy.create(createFakeTimePolicy());
+
         await junctions.save(junctions.create({ permissionId: permission.id, policyId: policy.id }));
 
         expect((await findDefinition(permission.name))?.[1][0]).toMatchObject({ invert: false });
 
         const entity = await policies.findOneByOrFail({ id: policy.id });
+
         entity.invert = true;
         await policies.save(entity);
 
@@ -319,6 +339,7 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
         const attributes = suite.dataSource.getRepository(PolicyAttributeEntity);
         const permission = await permissions.save(permissions.create({ name: 'issue3599_attribute' }));
         const { data: policy } = await suite.client.policy.create(createFakeTimePolicy());
+
         await junctions.save(junctions.create({ permissionId: permission.id, policyId: policy.id }));
 
         expect((await findDefinition(permission.name))?.[1][0]).toMatchObject({
@@ -327,6 +348,7 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
         });
 
         const attribute = await attributes.findOneByOrFail({ policyId: policy.id, name: 'start' });
+
         attribute.value = '09:00:00';
         await attributes.save(attribute);
 

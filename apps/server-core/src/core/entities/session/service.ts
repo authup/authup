@@ -74,6 +74,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
         // OR-alternative, and stands alone for an actor without SESSION_READ.
         // A non-expressible policy falls back to the per-row loop below.
         const scope = await this.scopeRead(parsed, actor);
+
         if (!scope.post) {
             return this.repository.findMany(scope.query);
         }
@@ -86,6 +87,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
         for (const entity of entities) {
             if (this.isOwnedBy(entity, actor)) {
                 data.push(entity);
+
                 continue;
             }
 
@@ -94,8 +96,10 @@ export class SessionService extends AbstractEntityService implements ISessionSer
                 realm: entity.realmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -113,6 +117,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
 
     async getOne(id: string, actor: ActorContext): Promise<Session> {
         const entity = await this.repository.findOneById(id);
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -131,6 +136,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
 
     async delete(id: string, actor: ActorContext): Promise<Session> {
         const entity = await this.repository.findOneById(id);
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -180,6 +186,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
         }
 
         let parsed;
+
         try {
             parsed = SessionService.queryCodec.decode(query);
         } catch {
@@ -232,6 +239,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
         };
 
         let sessions: Session[];
+
         if (this.hasFilter(query)) {
             const parsed = await decodeQuery(query, {
                 schema: sessionSchema,
@@ -290,6 +298,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
         );
 
         const toRevoke: Session[] = [];
+
         for (const session of sessions) {
             // Own sessions are always deletable by the actor (mirrors getMany).
             // Otherwise per-session realm-match: a realm_admin only reaches
@@ -301,6 +310,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
                     realm: session.realmId,
                     data: { [BuiltInPolicyType.ATTRIBUTES]: session },
                 });
+
                 if (!reached) {
                     continue;
                 }

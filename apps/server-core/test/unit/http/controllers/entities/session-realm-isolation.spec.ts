@@ -38,22 +38,28 @@ describe('session (realm isolation)', () => {
         // a session in the foreign realm (B)
         const passwordB = 'session-iso-foreign-pw';
         const userB = createFakeUser({ realmId: realmB.id, password: passwordB });
+
         await suite.client.user.create(userB);
+
         const loginB = await suite.client.token.createWithPassword({
             username: userB.name,
             password: passwordB,
             realm_id: realmB.id,
         });
+
         foreignSessionId = (await suite.client.token.introspect({ token: loginB.access_token }, { authorizationHeaderInherit: true })).session_id!;
 
         // a session in the actor's own realm (master)
         const passwordM = 'session-iso-own-pw';
         const userM = createFakeUser({ password: passwordM });
+
         await suite.client.user.create(userM);
+
         const loginM = await suite.client.token.createWithPassword({
             username: userM.name,
             password: passwordM,
         });
+
         ownSessionId = (await suite.client.token.introspect({ token: loginM.access_token }, { authorizationHeaderInherit: true })).session_id!;
 
         // a restricted actor in master holding SESSION_READ at the default `own` scope
@@ -66,12 +72,14 @@ describe('session (realm isolation)', () => {
             secretEncrypted: false,
         });
         const { data: permission } = await suite.client.permission.getOne(PermissionName.SESSION_READ);
+
         await suite.client.clientPermission.create({ clientId: cA.id, permissionId: permission.id });
 
         const token = await suite.client.token.createWithClientCredentials({
             client_id: cA.id,
             client_secret: knownSecret,
         });
+
         actor = new HTTPClient({ baseURL: suite.baseURL });
         actor.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
     });
@@ -83,10 +91,12 @@ describe('session (realm isolation)', () => {
     it('keeps a foreign-realm session hidden even when realm_id is projected away', async () => {
         // control: the own-realm session IS visible to the own-scoped reader
         const own = await actor.session.getMany({ filters: { id: ownSessionId }, fields: ['id', 'sub'] });
+
         expect(own.data.some((s) => s.id === ownSessionId)).toBe(true);
 
         // the foreign-realm session must NOT appear despite fields=id,sub omitting realm_id
         const foreign = await actor.session.getMany({ filters: { id: foreignSessionId }, fields: ['id', 'sub'] });
+
         expect(foreign.data.some((s) => s.id === foreignSessionId)).toBe(false);
     });
 });

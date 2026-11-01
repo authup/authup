@@ -15,6 +15,7 @@ export const OAUTH2_CLIENT_ERROR_INSTANCE = Symbol.for('@authup/specs/OAuth2Clie
 export class OAuth2ClientError extends OAuth2Error {
     constructor(input?: AuthupErrorInput) {
         const options = normalizeOAuth2ErrorInput(input);
+
         super({
             code: ErrorCode.OAUTH_CLIENT_INVALID,
             message: 'Client authentication failed',

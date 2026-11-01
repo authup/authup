@@ -28,6 +28,7 @@ type CompositePolicy = BasePolicy & {
  */
 function buildGrant(binding: PermissionPolicyBinding): PermissionGrant {
     let policy: BasePolicy | undefined;
+
     if (binding.policies && binding.policies.length === 1) {
         policy = binding.policies[0];
     } else if (binding.policies && binding.policies.length > 1) {
@@ -36,6 +37,7 @@ function buildGrant(binding: PermissionPolicyBinding): PermissionGrant {
             decisionStrategy: binding.permission.decisionStrategy || DecisionStrategy.UNANIMOUS,
             children: binding.policies,
         };
+
         policy = composite;
     }
 
@@ -58,6 +60,7 @@ export function aggregatePermissionPolicyBindings(
     const grouped: Record<string, PermissionPolicyBinding[]> = input
         .reduce((previous, current) => {
             const key = buildPermissionKey(current.permission);
+
             if (!previous[key]) {
                 previous[key] = [];
             }
@@ -68,6 +71,7 @@ export function aggregatePermissionPolicyBindings(
         }, {} as Record<string, PermissionPolicyBinding[]>);
 
     const output: PermissionPolicyBindingAggregated[] = [];
+
     for (const group of Object.values(grouped)) {
         output.push({
             permission: group[0]!.permission,

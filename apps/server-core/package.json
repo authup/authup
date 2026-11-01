@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-core",
     "type": "module",
-    "version": "1.0.0-beta.71",
+    "version": "1.0.0-beta.72",
     "description": "The Authup identity provider: OAuth2 and OpenID Connect endpoints plus the management API, as a library.",
     "license": "AGPL-3.0-only",
     "main": "dist/index.mjs",
@@ -39,7 +39,7 @@
         "check:types": "tsc -p tsconfig.test.json"
     },
     "engines": {
-        "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
+        "node": ">=26.0.0"
     },
     "keywords": [
         "auth",
@@ -74,20 +74,20 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/access": "^1.0.0-beta.71",
-        "@authup/core-http-kit": "^1.0.0-beta.71",
-        "@authup/core-kit": "^1.0.0-beta.71",
-        "@authup/errors": "^1.0.0-beta.71",
-        "@authup/i18n": "^1.0.0-beta.71",
-        "@authup/kit": "^1.0.0-beta.71",
-        "@authup/server-config": "^1.0.0-beta.71",
-        "@authup/server-config-kit": "^1.0.0-beta.71",
-        "@authup/server-console-kit": "^1.0.0-beta.71",
-        "@authup/server-kit": "^1.0.0-beta.71",
-        "@authup/specs": "^1.0.0-beta.71",
+        "@authup/access": "^1.0.0-beta.72",
+        "@authup/core-http-kit": "^1.0.0-beta.72",
+        "@authup/core-kit": "^1.0.0-beta.72",
+        "@authup/errors": "^1.0.0-beta.72",
+        "@authup/i18n": "^1.0.0-beta.72",
+        "@authup/kit": "^1.0.0-beta.72",
+        "@authup/server-config": "^1.0.0-beta.72",
+        "@authup/server-config-kit": "^1.0.0-beta.72",
+        "@authup/server-console-kit": "^1.0.0-beta.72",
+        "@authup/server-kit": "^1.0.0-beta.72",
+        "@authup/specs": "^1.0.0-beta.72",
         "@ebec/http": "^4.3.2",
         "@hapic/oauth2": "^4.0.2",
-        "@peculiar/x509": "^2.2.0",
+        "@peculiar/x509": "^3.1.0",
         "@rapiq/adapter-memory": "^2.4.0",
         "@rapiq/adapter-sql": "^2.4.0",
         "@rapiq/adapter-typeorm": "^2.4.0",
@@ -106,7 +106,7 @@
         "change-case": "^5.4.4",
         "citty": "^0.2.2",
         "confinity": "^2.0.1",
-        "dotenv": "^18.0.8",
+        "dotenv": "^18.0.9",
         "dycraft": "^1.1.0",
         "eldin": "^1.3.0",
         "envix": "^1.5.0",
@@ -116,7 +116,7 @@
         "ldapjs": "^3.0.7",
         "locter": "^4.1.1",
         "mysql2": "^3.24.5",
-        "nodemailer": "^10.1.7",
+        "nodemailer": "^10.2.1",
         "orkos": "^1.1.1",
         "otpauth": "^9.5.2",
         "pg": "^8.23.1",
@@ -133,7 +133,7 @@
         "zod": "^4.6.7"
     },
     "devDependencies": {
-        "@authup/server-test-kit": "^1.0.0-beta.71",
+        "@authup/server-test-kit": "^1.0.0-beta.72",
         "@faker-js/faker": "^10.6.0",
         "@trapi/cli": "^2.1.2",
         "@trapi/core": "^2.1.1",

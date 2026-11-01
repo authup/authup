@@ -41,17 +41,20 @@ export default defineComponent({
         const resolveScopesAvailable = async () => {
             if (props.scopesAvailable) {
                 scopesAvailableNormalized.value = props.scopesAvailable;
+
                 return;
             }
 
-            if (props.client.id) {
-                const { data: clientScopes } = await httpClient.clientScope.getMany({
-                    filters: { clientId: props.client.id },
-                    relations: ['scope'],
-                });
-
-                scopesAvailableNormalized.value = clientScopes.map((clientScope) => clientScope.scope);
+            if (!props.client.id) {
+                return;
             }
+
+            const { data: clientScopes } = await httpClient.clientScope.getMany({
+                filters: { clientId: props.client.id },
+                relations: ['scope'],
+            });
+
+            scopesAvailableNormalized.value = clientScopes.map((clientScope) => clientScope.scope);
         };
 
         Promise.resolve()

@@ -6,10 +6,10 @@
  */
 
 import {
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { createTestApplication } from '../../../../app';
@@ -62,6 +62,7 @@ describe('src/http/controllers/role', () => {
         });
 
         const { data: read } = await suite.client.roleAttribute.getOne(created.id);
+
         expect(read.value).toBe('123');
 
         await suite.client.roleAttribute.delete(created.id);
@@ -179,6 +180,7 @@ describe('src/http/controllers/role', () => {
         const { data: other } = await suite.client.client.create(createFakeClient());
 
         const { data: role } = await suite.client.role.create(createFakeRole({ clientId: owner.id }));
+
         expect(role.clientId).toEqual(owner.id);
 
         // a request body: the update payload type does not carry clientId
@@ -189,6 +191,7 @@ describe('src/http/controllers/role', () => {
         expect(updated.clientId).toEqual(owner.id);
 
         const { data: read } = await suite.client.role.getOne(role.id);
+
         expect(read.clientId).toEqual(owner.id);
     });
 });

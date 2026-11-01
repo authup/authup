@@ -84,6 +84,7 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
             // the keys it knows and silently drops the rest (tada5hi/hapic#1071)
             // - drop this once `acr_values` is part of AuthorizeParameters.
             const acrValues = buildIdentityProviderAcrValues(this.provider);
+
             if (acrValues) {
                 url.searchParams.set('acr_values', acrValues);
             }
@@ -108,6 +109,7 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
         assertIdentityProviderAssurance(this.provider, token.id_token);
 
         const identity = await this.buildIdentityWithTokenGrantResponse(token);
+
         if (this.options.clientId) {
             identity.clientId = this.options.clientId;
         }
@@ -126,14 +128,15 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
     async safeAuthenticate(params: OAuth2AuthorizationCodeGrantPayload): Promise<Result<User>> {
         try {
             const data = await this.authenticate(params);
+
             return {
                 success: true,
-                data, 
+                data,
             };
         } catch (e) {
             return {
                 success: false,
-                error: e as Error, 
+                error: e as Error,
             };
         }
     }
@@ -154,6 +157,7 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
         if (typeof input.id_token === 'string') {
             try {
                 const idToken = extractTokenPayload(input.id_token);
+
                 // OIDC Core 3.1.3.7: the claims now drive mapped roles and
                 // permissions, so an id_token about another subject is dropped
                 if (typeof idToken.sub === 'string' && idToken.sub !== payload.sub) {

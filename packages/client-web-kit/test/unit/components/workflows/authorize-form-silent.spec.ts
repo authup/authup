@@ -69,7 +69,9 @@ const client: Client = {
 };
 
 // a non-login_required failure (transient 500 / network blip)
-const failHandler: FakeHandler = () => { throw new Error('boom'); };
+const failHandler: FakeHandler = () => {
+    throw new Error('boom');
+};
 
 function mountForm(silent: boolean, authorizeHandler: FakeHandler = failHandler) {
     const pinia = createPinia();
@@ -87,10 +89,10 @@ function mountForm(silent: boolean, authorizeHandler: FakeHandler = failHandler)
 
     return mount(AuthorizeForm, {
         props: {
-            client, 
-            codeRequest, 
-            scopes: [], 
-            silent, 
+            client,
+            codeRequest,
+            scopes: [],
+            silent,
         },
         global: {
             components: {
@@ -122,6 +124,7 @@ describe('AuthorizeForm silent (prompt=none)', () => {
         // code) — zero interactive UI, the silent-success contract.
         const codeUrl = 'https://app.example.com/cb?code=abc123&state=state-1';
         const wrapper = mountForm(true, () => ({ url: codeUrl }));
+
         await flushPromises();
 
         expect(window.location.href).toEqual(codeUrl);
@@ -131,6 +134,7 @@ describe('AuthorizeForm silent (prompt=none)', () => {
 
     it('emits failed (no interactive UI) when silent and auto-consent fails', async () => {
         const wrapper = mountForm(true);
+
         await flushPromises();
 
         // the parent redirects an OIDC error; the form must NOT render the
@@ -141,6 +145,7 @@ describe('AuthorizeForm silent (prompt=none)', () => {
 
     it('falls back to interactive manual consent when NOT silent', async () => {
         const wrapper = mountForm(false);
+
         await flushPromises();
 
         // non-silent: the manual-consent UI renders (retry path), no failed emit

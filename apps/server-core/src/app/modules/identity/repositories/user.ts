@@ -58,6 +58,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
         // canonicalized here: the cache key must be the one the subscriber drops.
         const isId = isUUID(input);
         const key = isId ? input.toLowerCase() : input;
+
         if (isId) {
             query.where('user.id = :id', { id: key });
         } else {
@@ -73,6 +74,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
         }
 
         const { columns } = this.repository.metadata;
+
         for (const column of columns) {
             if (!column.isSelect) {
                 query.addSelect(`user.${column.propertyName}`);
@@ -90,6 +92,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
         }
 
         const entity = await query.getOne();
+
         if (entity) {
             return this.repository.extendOneWithEA(entity);
         }
@@ -99,6 +102,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
 
     async saveOneWithEA(user: Partial<User>, extraAttributes: Record<string, any>): Promise<User> {
         const entity = this.repository.create(user);
+
         return this.repository.saveOneWithEA(entity, extraAttributes);
     }
 
@@ -121,8 +125,10 @@ export class UserIdentityRepository implements IUserIdentityRepository {
         });
 
         const entitiesToDelete : UserPermission[] = [];
+
         for (const entity of entities) {
             const index = idsToDelete.indexOf(entity.permissionId);
+
             if (index === -1) {
                 continue;
             }
@@ -135,6 +141,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
         }
 
         const entitiesToCreate : UserPermission[] = [];
+
         for (const item of items) {
             if (item.operation !== IdentityProviderMapperOperation.CREATE) {
                 continue;
@@ -143,6 +150,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
             const index = entities.findIndex(
                 (entity) => entity.permissionId === item.value,
             );
+
             if (index !== -1) {
                 continue;
             }
@@ -177,8 +185,10 @@ export class UserIdentityRepository implements IUserIdentityRepository {
         });
 
         const entitiesToDelete : UserRole[] = [];
+
         for (const entity of entities) {
             const index = idsToDelete.indexOf(entity.roleId);
+
             if (index === -1) {
                 continue;
             }
@@ -191,12 +201,14 @@ export class UserIdentityRepository implements IUserIdentityRepository {
         }
 
         const entitiesToCreate : UserRole[] = [];
+
         for (const item of items) {
             if (item.operation !== IdentityProviderMapperOperation.CREATE) {
                 continue;
             }
 
             const index = entities.findIndex((entity) => entity.roleId === item.value);
+
             if (index !== -1) {
                 continue;
             }

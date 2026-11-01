@@ -19,11 +19,13 @@ export function buildSchemaDefaults<T>(schema: SchemaInput<T>) : Partial<T> {
     const defaults : Record<string, unknown> = {};
 
     const keys = Object.keys(schema) as (keyof SchemaInput<T>)[];
+
     for (const key of keys) {
         const data = schema[key];
 
         if (isSchemaEntryInput(data)) {
             const value: unknown = data.default;
+
             if (typeof value === 'undefined') {
                 continue;
             }
@@ -37,6 +39,7 @@ export function buildSchemaDefaults<T>(schema: SchemaInput<T>) : Partial<T> {
 
         if (isSchemaInput(data)) {
             defaults[key as string] = buildSchemaDefaults<any>(data);
+
             continue;
         }
 

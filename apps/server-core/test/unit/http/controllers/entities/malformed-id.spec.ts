@@ -124,7 +124,7 @@ const CASES: Case[] = [
 describe('src/http/controllers/entities (malformed id)', () => {
     const suite = createTestApplication();
 
-    const basic = `Basic ${Buffer.from('admin:start123').toString('base64')}`;
+    const basic = `Basic ${Buffer.from('admin:start123').toBase64()}`;
 
     beforeAll(async () => {
         await suite.setup();

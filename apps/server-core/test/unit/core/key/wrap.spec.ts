@@ -15,23 +15,25 @@ import {
     wrapKeyMaterial,
 } from '../../../../src/core/key/index.ts';
 
-const kek = new SymmetricCipher(Buffer.alloc(32, 1).toString('base64'));
+const kek = new SymmetricCipher(Buffer.alloc(32, 1).toBase64());
 
 describe('core/key/wrap', () => {
     it('round-trips key material through the KEK', async () => {
-        const material = Buffer.alloc(32, 7).toString('base64');
+        const material = Buffer.alloc(32, 7).toBase64();
 
         const wrapped = await wrapKeyMaterial(kek, material);
+
         expect(wrapped.startsWith(WRAPPED_KEY_MATERIAL_PREFIX)).toBeTruthy();
         expect(wrapped).not.toContain(material);
         expect(isWrappedKeyMaterial(wrapped)).toBeTruthy();
 
         const unwrapped = await unwrapKeyMaterial(kek, wrapped);
+
         expect(unwrapped).toEqual(material);
     });
 
     it('passes plaintext material through untouched (with and without a KEK)', async () => {
-        const material = Buffer.alloc(32, 7).toString('base64');
+        const material = Buffer.alloc(32, 7).toBase64();
 
         expect(isWrappedKeyMaterial(material)).toBeFalsy();
         expect(await unwrapKeyMaterial(null, material)).toEqual(material);
@@ -42,6 +44,7 @@ describe('core/key/wrap', () => {
         const wrapped = await wrapKeyMaterial(kek, 'material');
 
         expect.assertions(2);
+
         try {
             await unwrapKeyMaterial(null, wrapped);
         } catch (e) {
@@ -52,7 +55,7 @@ describe('core/key/wrap', () => {
 
     it('fails on a wrong KEK (GCM authentication)', async () => {
         const wrapped = await wrapKeyMaterial(kek, 'material');
-        const other = new SymmetricCipher(Buffer.alloc(32, 2).toString('base64'));
+        const other = new SymmetricCipher(Buffer.alloc(32, 2).toBase64());
 
         await expect(unwrapKeyMaterial(other, wrapped)).rejects.toThrow();
     });

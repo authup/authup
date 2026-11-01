@@ -18,17 +18,17 @@ export function paragraph(text: string): MailParagraphBlock {
 
 export function code(label: string, value: string): MailCodeBlock {
     return {
-        type: 'code', 
-        label, 
-        value, 
+        type: 'code',
+        label,
+        value,
     };
 }
 
 export function action(label: string, url: string): MailActionBlock {
     return {
-        type: 'action', 
-        label, 
-        url, 
+        type: 'action',
+        label,
+        url,
     };
 }
 

@@ -45,6 +45,7 @@ export default defineNuxtPlugin({
             const requiresLogin = route.matched.some(
                 (matched) => !!matched.meta[RouteMetaKey.REQUIRE_LOGGED_IN],
             );
+
             if (!requiresLogin) {
                 return;
             }

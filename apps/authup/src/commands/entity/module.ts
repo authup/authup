@@ -109,6 +109,7 @@ function defineEntityCommand(type: EntityName, probe: EntityAPI, context: HostCo
             run: ({ args }) => runHostCommand(async () => {
                 const query = readEntityQuery(args);
                 const api = await open(args.server);
+
                 if (!api.getMany) {
                     throw unsupported(noun, 'list');
                 }
@@ -130,6 +131,7 @@ function defineEntityCommand(type: EntityName, probe: EntityAPI, context: HostCo
             run: ({ args }) => runHostCommand(async () => {
                 const query = readEntityQuery(args);
                 const api = await open(args.server);
+
                 if (!api.getOne) {
                     throw unsupported(noun, 'get');
                 }
@@ -146,6 +148,7 @@ function defineEntityCommand(type: EntityName, probe: EntityAPI, context: HostCo
             run: ({ args }) => runHostCommand(async () => {
                 const data = await readEntityData(args.data);
                 const api = await open(args.server);
+
                 if (!api.create) {
                     throw unsupported(noun, 'create');
                 }
@@ -166,6 +169,7 @@ function defineEntityCommand(type: EntityName, probe: EntityAPI, context: HostCo
             run: ({ args }) => runHostCommand(async () => {
                 const data = await readEntityData(args.data);
                 const api = await open(args.server);
+
                 if (!api.update) {
                     throw unsupported(noun, 'update');
                 }
@@ -181,6 +185,7 @@ function defineEntityCommand(type: EntityName, probe: EntityAPI, context: HostCo
             args: { ...RECORD_ARGS, ...HOST_ARGS },
             run: ({ args }) => runHostCommand(async () => {
                 const api = await open(args.server);
+
                 if (!api.delete) {
                     throw unsupported(noun, 'delete');
                 }
@@ -197,6 +202,7 @@ function defineEntityCommand(type: EntityName, probe: EntityAPI, context: HostCo
             run: ({ args }) => runHostCommand(async () => {
                 const query = readEntityStatsQuery<EntityRecord>(args);
                 const api = await open(args.server);
+
                 if (!api.getStats) {
                     throw unsupported(noun, 'stats');
                 }
@@ -212,6 +218,7 @@ function defineEntityCommand(type: EntityName, probe: EntityAPI, context: HostCo
             args: { ...HOST_ARGS },
             run: ({ args }) => runHostCommand(async () => {
                 const api = await open(args.server);
+
                 if (!api.getSchema) {
                     throw unsupported(noun, 'schema');
                 }
@@ -248,6 +255,7 @@ export function defineCLIEntityCommands(context: HostCommandContext = {}) : Reco
         }
 
         const api = pickEntityAPI(probe, type as keyof EntityTypeMap);
+
         if (!api) {
             continue;
         }

@@ -19,6 +19,7 @@ export abstract class IdentityProviderAccountBaseMapper implements IIdentityProv
         mapping: IdentityProviderBaseMapping,
     ) : [IdentityProviderMapperOperation, unknown] | [IdentityProviderMapperOperation] {
         let operation : IdentityProviderMapperOperation;
+
         if (
             mapping.synchronizationMode === IdentityProviderMappingSyncMode.ONCE &&
             identity.operation === IdentityProviderIdentityOperation.UPDATE

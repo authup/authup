@@ -10,8 +10,8 @@ import { getWindowPayload } from './window';
 
 const payload = getWindowPayload();
 const {
-    app, 
-    router, 
+    app,
+    router,
 } = createApp(payload);
 
 router.isReady().then(() => {

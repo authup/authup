@@ -26,6 +26,7 @@ export function hasHTTPClient(app?: App) : boolean {
 
 export function injectHTTPClient(app?: App) {
     const instance = inject<IClient>(HTTPClientSymbol, app);
+
     if (!instance) {
         throw new Error('The api client has not been injected.');
     }

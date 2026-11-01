@@ -9,10 +9,10 @@ import type { EntityListQueryInput } from '../../../../../core';
 import type { PropType } from 'vue';
 import type {
     EntityCollectionVEmitOptions,
-    ListBodyOptions, 
-    ListFooterOptions, 
-    ListHeaderOptions, 
-    ListLoadingOptions, 
+    ListBodyOptions,
+    ListFooterOptions,
+    ListHeaderOptions,
+    ListLoadingOptions,
     ListNoMoreOptions,
 } from '../types';
 

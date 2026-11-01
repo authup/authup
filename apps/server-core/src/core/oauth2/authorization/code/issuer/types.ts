@@ -6,9 +6,9 @@
  */
 
 import type {
-    Identity, 
-    OAuth2AuthorizationCode, 
-    OAuth2AuthorizationCodeRequest, 
+    Identity,
+    OAuth2AuthorizationCode,
+    OAuth2AuthorizationCodeRequest,
     SessionAuthMethod,
 } from '@authup/core-kit';
 

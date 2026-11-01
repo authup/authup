@@ -15,6 +15,7 @@ export const INTERNAL_ERROR_INSTANCE = Symbol.for('@authup/errors/InternalError'
 export class InternalError extends AuthupError {
     constructor(input?: string | AuthupErrorOptions) {
         const options: AuthupErrorOptions = typeof input === 'string' ? { message: input } : (input ?? {});
+
         super({
             code: ErrorCode.INTERNAL_ERROR,
             message: 'An internal error occurred.',

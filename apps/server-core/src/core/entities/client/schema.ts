@@ -55,6 +55,7 @@ const schemaMapping = {
  */
 async function secretReadGate(actor: ActorContext) : Promise<KeyValidationVerdict> {
     const compiled = await actor.permissionEvaluator.compile({ name: CLIENT_READ_PERMISSIONS });
+
     if (compiled.verdict === 'allow') {
         return true;
     }

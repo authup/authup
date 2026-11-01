@@ -75,6 +75,7 @@ function create<
     let lastInput : ResourceManagerResolveContext<RECORD> | undefined;
     const toInput = (rctx: ResourceManagerResolveContext<RECORD>) => {
         const key = JSON.stringify(rctx);
+
         if (key !== lastInputKey || !lastInput) {
             lastInputKey = key;
             lastInput = rctx;
@@ -85,6 +86,7 @@ function create<
 
     const buildQuery = (rctx: ResourceManagerResolveContext<RECORD>) : IQuery | undefined => {
         let query : IQuery | undefined;
+
         if (rctx.query) {
             query = normalizeQueryInput(rctx.query);
         }
@@ -95,6 +97,7 @@ function create<
 
         if (ctx.props.queryFilters) {
             const current = query || new Query();
+
             query = new Query({
                 fields: current.fields,
                 relations: current.relations,
@@ -108,6 +111,7 @@ function create<
 
         if (ctx.props.queryFields) {
             const current = query || new Query();
+
             query = new Query({
                 filters: current.filters,
                 relations: current.relations,
@@ -146,6 +150,7 @@ function create<
         if (id && domainAPI.getOne) {
             try {
                 const response = await domainAPI.getOne(id, query);
+
                 return { data: response.data, meta: { resolved: true } };
             } catch (e) {
                 if (e instanceof Error) {
@@ -286,12 +291,15 @@ function create<
         // the source, which still holds the previous one while a load is in
         // flight.
         const current = entity.value;
+
         if (!current) {
             notifyUpdated(value);
+
             return;
         }
 
         const next = extendObject({ ...current }, value) as RECORD;
+
         entity.value = next;
         notifyUpdated(next);
     };
@@ -342,12 +350,14 @@ function create<
     const update = async (data: Partial<RECORD>) => {
         const id = entityId.value;
         const api = domainAPI?.update?.bind(domainAPI);
+
         if (!api || writing || !id) {
             return;
         }
 
         await write(id, async () => {
             const response = await api(id, data);
+
             entity.value = response.data;
             notifyUpdated(response.data);
         });
@@ -356,12 +366,14 @@ function create<
     const remove = async () : Promise<void> => {
         const id = entityId.value;
         const api = domainAPI?.delete?.bind(domainAPI);
+
         if (!api || writing || !id) {
             return;
         }
 
         await write(id, async () => {
             const response = await api(id);
+
             entity.value = undefined;
             deleted(response.data);
         });
@@ -369,12 +381,14 @@ function create<
 
     const create = async (data: Partial<RECORD>) : Promise<void> => {
         const api = domainAPI?.create?.bind(domainAPI);
+
         if (!api || writing) {
             return;
         }
 
         await write(undefined, async () => {
             const response = await api(data);
+
             created(response.data);
         });
     };
@@ -429,6 +443,7 @@ function create<
     if (ctx.props) {
         const propEntityRef = toRef(ctx.props, 'entity');
         const propsEntityId = computed(() => (propEntityRef.value ? propEntityRef.value.id : undefined));
+
         watch(propsEntityId, (val) => {
             entity.value = propEntityRef.value;
 
@@ -455,6 +470,7 @@ function create<
     const resolve = async (rctx: ResourceManagerResolveContext<RECORD> = {}) => {
         if (reloading) {
             await reloading;
+
             return;
         }
 
@@ -472,13 +488,15 @@ function create<
     const resolveOrFail = async (resolveContext: ResourceManagerResolveContext<RECORD> = {}) => {
         await resolve(resolveContext);
 
-        if (typeof entity.value === 'undefined') {
-            if (!error.value) {
-                throw EntityRecordError.unresolvable();
-            }
-
-            throw error.value;
+        if (!(typeof entity.value === 'undefined')) {
+            return;
         }
+
+        if (!error.value) {
+            throw EntityRecordError.unresolvable();
+        }
+
+        throw error.value;
     };
 
     if (ctx.query) {
@@ -490,6 +508,7 @@ function create<
             () => {
                 if (!initialized) {
                     initialized = true;
+
                     return;
                 }
 
@@ -508,6 +527,7 @@ function create<
                     reloading = undefined;
                     announce();
                 });
+
                 reloading = promise;
             },
             { immediate: true },

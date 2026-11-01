@@ -48,6 +48,7 @@ export async function loadBoundPermissions<E extends PermissionJunction & Object
     });
 
     const policyIds = new Set<string>();
+
     for (const entry of entries) {
         if (entry.policyId) {
             policyIds.add(entry.policyId);
@@ -58,6 +59,7 @@ export async function loadBoundPermissions<E extends PermissionJunction & Object
 
     return entries.map((entry) => {
         const policies: BasePolicy[] = [];
+
         if (entry.policyId && policyTrees[entry.policyId]) {
             policies.push(policyTrees[entry.policyId]);
         }
@@ -87,10 +89,12 @@ export async function loadPolicyTrees(
     );
 
     const result: Record<string, BasePolicy> = {};
+
     for (const [id, tree] of trees) {
         if (tree) {
             result[id] = tree;
         }
     }
+
     return result;
 }

@@ -106,9 +106,11 @@ describe('src/client/rebase', () => {
 
         it.each(PAIRS)('should dispatch %s exactly like a client based on %s', async (publicURL, internalURL) => {
             const before = new MemoryTransport({ fetch: () => ({ status: 200, body: {} }) });
+
             await record(new Client({ baseURL: internalURL, transport: before }));
 
             const after = new MemoryTransport({ fetch: () => ({ status: 200, body: {} }) });
+
             await record(new Client({
                 baseURL: publicURL,
                 transport: createRebasedTransport(publicURL, internalURL, after),
@@ -139,6 +141,7 @@ describe('src/client/rebase', () => {
             await client.token.introspect({ token: 'token' }).catch(() => undefined);
 
             expect(transport.requests.length).toEqual(2);
+
             for (const request of transport.requests) {
                 expect(request.url.startsWith('http://127.0.0.1:3000/')).toBe(true);
             }

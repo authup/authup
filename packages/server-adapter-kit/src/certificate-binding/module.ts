@@ -22,6 +22,7 @@ export function assertTokenCertificateBinding(
     }
 
     const expected = payload.cnf['x5t#S256'];
+
     if (
         typeof expected !== 'string' ||
         !certificateThumbprint ||

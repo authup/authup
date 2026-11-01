@@ -75,6 +75,7 @@ describe('IdentityGrantType', () => {
             sub_kind: OAuth2SubKind.USER,
             session_id: expect.any(String),
         });
+
         expect(accessTokenIssuer.issueCalls).toContainEqual(expectedPayload);
         expect(refreshTokenIssuer.issueCalls).toContainEqual(expectedPayload);
 

@@ -26,7 +26,13 @@ export class IdentityProviderAccountAlreadyLinkedError extends ValidationError {
 }
 
 export function isIdentityProviderAccountAlreadyLinkedError(input: unknown): input is IdentityProviderAccountAlreadyLinkedError {
-    if (matchesInstanceof(input, IDENTITY_PROVIDER_ACCOUNT_ALREADY_LINKED_ERROR_INSTANCE)) return true;
-    if (!isAuthupError(input)) return false;
+    if (matchesInstanceof(input, IDENTITY_PROVIDER_ACCOUNT_ALREADY_LINKED_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
     return input.code === ErrorCode.IDENTITY_PROVIDER_ACCOUNT_ALREADY_LINKED;
 }

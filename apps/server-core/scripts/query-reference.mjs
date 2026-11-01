@@ -86,15 +86,16 @@ function readRoutes(document) {
     for (const [template, item] of Object.entries(document.paths ?? {})) {
         for (const method of HTTP_METHODS) {
             const marker = item[method]?.[MARKER_KEY];
+
             if (!marker) {
                 continue;
             }
 
             if (!output.has(marker.schema)) {
                 output.set(marker.schema, {
-                    collection: [], 
-                    record: [], 
-                    filters: [], 
+                    collection: [],
+                    record: [],
+                    filters: [],
                 });
             }
 
@@ -145,25 +146,29 @@ function buildParameterTable(description) {
     const rows = [];
 
     const {
-        selectable, 
-        projection, 
-        optional, 
+        selectable,
+        projection,
+        optional,
     } = readFields(description);
+
     if (selectable.length > 0) {
         rows.push(['`fields`', codes(selectable)]);
     }
 
     const filters = description.filters?.allowed;
+
     if (filters) {
         rows.push(['`filter`', filters.length > 0 ? codes(filters) : 'none']);
     }
 
     const sorts = description.sorts?.allowed;
+
     if (sorts) {
         rows.push(['`sort`', sorts.length > 0 ? codes(sorts) : 'none']);
     }
 
     const { relations } = description;
+
     if (relations) {
         const targets = relations.schemas ?? {};
         const rendered = (relations.allowed ?? []).map((name) => {

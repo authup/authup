@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { 
-    beforeEach, 
-    describe, 
-    expect, 
-    it, 
-    vi, 
+import {
+    beforeEach,
+    describe,
+    expect,
+    it,
+    vi,
 } from 'vitest';
 
 const logout = vi.fn();
@@ -42,9 +42,9 @@ describe('usePageError', () => {
 
     it('should hold a failure as a retryable error state', async () => {
         const {
-            error, 
-            capture, 
-            reset, 
+            error,
+            capture,
+            reset,
         } = usePageError();
         const failure = Object.assign(new Error('Request failed'), { response: { status: 500, data: { code: 'internal_error' } } });
 

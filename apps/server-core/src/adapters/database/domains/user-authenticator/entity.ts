@@ -76,11 +76,11 @@ export class UserAuthenticatorEntity implements UserAuthenticator {
 
     @Index()
     @Column({
-        name: 'last_used_at', 
-        type: 'varchar', 
-        length: 28, 
-        nullable: true, 
-        default: null, 
+        name: 'last_used_at',
+        type: 'varchar',
+        length: 28,
+        nullable: true,
+        default: null,
     })
     lastUsedAt: string | null;
 

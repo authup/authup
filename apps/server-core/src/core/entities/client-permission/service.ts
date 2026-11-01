@@ -69,6 +69,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
             name: READ_PERMISSION_NAMES,
             realmAttributeName: this.ownerRealmKey,
         });
+
         if (compiled.verdict === 'deny') {
             parsed = appendQueryConditions(parsed, inArray('id', []));
         } else if (compiled.verdict === 'conditional') {
@@ -90,8 +91,10 @@ export class ClientPermissionService extends JunctionEntityService implements IC
                 realm: this.junctionResourceRealm(entity),
                 data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -108,6 +111,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
         await actor.permissionEvaluator.preEvaluateOneOf({ name: READ_PERMISSION_NAMES });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -135,6 +139,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
             clientId: validated.clientId,
             permissionId: validated.permissionId,
         });
+
         if (existing) {
             throw new EntityConflictError({ entity: 'client-permission' });
         }
@@ -174,6 +179,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
         });
 
         let entity = this.repository.create(validated);
+
         entity = await this.repository.save(entity);
 
         return entity;
@@ -187,6 +193,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_PERMISSION_UPDATE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -194,6 +201,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
         const validated = await this.validator.run(data, { group: ValidatorGroup.UPDATE });
 
         const permission = await this.permissionRepository.findOneById(entity.permissionId);
+
         if (permission) {
             // Member-permission gate: an actor may only modify a binding for a permission it
             // holds (mirrors create()).
@@ -207,6 +215,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
         let actorScope: `${RealmScope}` = RealmScope.ANY;
         let actorPolicyFree = true;
         let actorPolicyId: string | null = null;
+
         if (permission && actor.identity) {
             const grant = await this.identityPermissionProvider.resolveJunctionGrant(
                 await this.getActorGrants(actor),
@@ -217,6 +226,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
                     realmScope: validated.realmScope ?? entity.realmScope,
                 },
             );
+
             actorScope = grant.realmScope;
             actorPolicyFree = !grant.policy;
             actorPolicyId = grant.policy ? grant.policy.id : null;
@@ -255,6 +265,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_PERMISSION_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -266,6 +277,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
         });
 
         const { id: entityId } = entity;
+
         await this.repository.remove(entity);
         entity.id = entityId;
 

@@ -18,6 +18,7 @@ import type { RealmEndpoints } from '@authup/core-http-kit';
 export function resolveURL(base: string, relative: string): string {
     const normalized = base.endsWith('/') ? base : `${base}/`;
     const stripped = relative.startsWith('/') ? relative.slice(1) : relative;
+
     return new URL(stripped, normalized).href;
 }
 

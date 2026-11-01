@@ -39,6 +39,7 @@ describe('http/controllers/client (secret rotation)', () => {
             tokenBindingMethod: 'none',
             secret: 'start1234',
         });
+
         entity = data;
     });
 
@@ -57,6 +58,7 @@ describe('http/controllers/client (secret rotation)', () => {
             client_id: entity.id,
             client_secret: meta.secret,
         });
+
         expect(grant.access_token).toBeDefined();
 
         await expectClientError(
@@ -89,9 +91,11 @@ describe('http/controllers/client (secret rotation)', () => {
             secret: 'plain-rotated',
             mode: ClientSecretMode.PLAIN,
         });
+
         expect(meta.secret).toEqual('plain-rotated');
 
         const { data } = await suite.client.client.getOne(entity.id, { fields: ['+secret'] });
+
         expect(data.secret).toEqual('plain-rotated');
         expect(data.secretHashed).toBe(false);
     });
@@ -107,12 +111,15 @@ describe('http/controllers/client (secret rotation)', () => {
             client_id: entity.id,
             client_secret: meta.secret,
         });
+
         expect(grant.access_token).toBeDefined();
 
         const { data: read } = await suite.client.client.getOne(entity.id, { fields: ['+secret'] });
+
         expect(read.secret).toEqual(meta.secret);
 
         const { data: rows } = await suite.client.client.getMany({ fields: ['+secret'], filters: { id: [entity.id] } });
+
         expect(rows).toHaveLength(1);
         expect(rows[0].secret).toEqual(meta.secret);
     });
@@ -123,26 +130,29 @@ describe('http/controllers/client (secret rotation)', () => {
             secret: 'created-encrypted',
             secretEncrypted: true,
         });
+
         encryptedClientId = data.id;
 
         expect(data.secretEncrypted).toBe(true);
 
         const { data: read } = await suite.client.client.getOne(data.id, { fields: ['+secret'] });
+
         expect(read.secret).toEqual('created-encrypted');
 
         const grant = await suite.client.token.createWithClientCredentials({
             client_id: data.id,
             client_secret: 'created-encrypted',
         });
+
         expect(grant.access_token).toBeDefined();
     });
 
     it('should refuse hashed and encrypted at once', async () => {
         await expectClientError(
             () => suite.client.client.create({
-                ...createFakeClient(), 
-                secretHashed: true, 
-                secretEncrypted: true, 
+                ...createFakeClient(),
+                secretHashed: true,
+                secretEncrypted: true,
             }),
             { status: 400, code: ErrorCode.BAD_REQUEST },
         );
@@ -171,6 +181,7 @@ describe('http/controllers/client (secret rotation)', () => {
         });
 
         const { data: permission } = await suite.client.permission.getOne(PermissionName.CLIENT_SELF_MANAGE);
+
         await suite.client.clientPermission.create({
             clientId: self.id,
             permissionId: permission.id,
@@ -182,9 +193,11 @@ describe('http/controllers/client (secret rotation)', () => {
         });
 
         const selfClient = new HTTPClient({ baseURL: suite.baseURL });
+
         selfClient.setAuthorizationHeader({ type: 'Bearer', token: grant.access_token });
 
         const { data, meta } = await selfClient.client.rotateSecret('@me');
+
         expect(data.id).toEqual(self.id);
         expect(meta.secret).not.toEqual(knownSecret);
 
@@ -192,6 +205,7 @@ describe('http/controllers/client (secret rotation)', () => {
             client_id: self.id,
             client_secret: meta.secret,
         });
+
         expect(rotated.access_token).toBeDefined();
 
         // a mode change is a denylisted attribute for a self-managing client
@@ -210,6 +224,7 @@ describe('http/controllers/client (secret rotation)', () => {
     // last: it crypto-shreds the realm's enc key
     it('should count an encrypted client secret as a reference of the realm enc key', async () => {
         const { data: keys } = await suite.client.key.getMany({ filters: { realmId: entity.realmId, use: 'enc' } });
+
         expect(keys).toHaveLength(1);
 
         await expectClientError(

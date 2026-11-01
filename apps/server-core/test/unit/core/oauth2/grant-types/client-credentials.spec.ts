@@ -49,6 +49,7 @@ describe('ClientCredentialsGrant', () => {
         await grant.runWith(client);
 
         expect(accessTokenIssuer.issueCalls).toHaveLength(1);
+
         const payload = accessTokenIssuer.issueCalls[0];
 
         expect(payload.realm_id).toEqual(realmId);

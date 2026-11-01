@@ -76,6 +76,7 @@ export default defineComponent({
         const loadPath = async () => {
             try {
                 const response = await httpClient.user.getOne('@me', { relations: ['path'] });
+
                 path.value = response.data.path;
             } catch {
                 path.value = null;
@@ -90,6 +91,7 @@ export default defineComponent({
                 pageError.reset();
             } catch (e) {
                 await pageError.capture(e);
+
                 return;
             }
 

@@ -18,6 +18,7 @@ const VALUE = '2026-01-01T00:00:00.000Z';
  */
 const PAIRS = schemas.flatMap((schema) => {
     const description = schema.describe();
+
     return (description.filters?.allowed || [])
         .filter((key: string) => TIMESTAMP_FILTER_KEYS.includes(key))
         .map((key: string) => [description.name, key] as [string, string]);
@@ -37,6 +38,7 @@ describe('core/query (timestamp filters)', () => {
     it.each(PAIRS)('should accept a range on %s.%s', async (schema, key) => {
         for (const prefix of ['<', '<=', '>', '>=']) {
             const query = await decode(schema, key, `${prefix}${VALUE}`);
+
             expect(query.filters).toBeDefined();
         }
     });
@@ -44,6 +46,7 @@ describe('core/query (timestamp filters)', () => {
     it.each(PAIRS)('should refuse equality on %s.%s', async (schema, key) => {
         for (const value of [VALUE, `!${VALUE}`, `${VALUE},${VALUE}`]) {
             const error = await decode(schema, key, value).catch((e) => e);
+
             expect(isParseError(error)).toBe(true);
             expect(error.issues.map((issue: { message: string }) => issue.message).join()).toContain('range operators');
         }

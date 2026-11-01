@@ -32,6 +32,7 @@ export async function applyTheme(
     // A directory may carry only a fragment, or only a stylesheet, so the
     // manifest is not a precondition for applying the theme.
     const manifest = await provider.getManifest();
+
     if (manifest?.title) {
         body = stampDocumentTitle(body, escapeHtml(manifest.title));
     }
@@ -43,6 +44,7 @@ export async function applyTheme(
     }
 
     const head = await provider.getHead(basePath);
+
     if (head) {
         body = injectHeadContent(body, head);
     }

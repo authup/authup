@@ -145,11 +145,14 @@ describe('is-simple-url-match', () => {
         const valuePaths = ['', '/', '/cb', '/auth/callback', '/a/b/c', '/cb?x=1', '/cb#f'];
 
         const regressions: string[] = [];
+
         for (const host of hosts) {
             for (const patternPath of patternPaths) {
                 const pattern = `https://${host}${patternPath}`;
+
                 for (const valuePath of valuePaths) {
                     const value = `https://${host}${valuePath}`;
+
                     if (isSimpleMatch(value, pattern) && !isSimpleURLMatch(value, pattern)) {
                         regressions.push(`${value} ~ ${pattern}`);
                     }

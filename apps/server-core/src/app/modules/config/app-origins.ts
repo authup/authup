@@ -17,6 +17,7 @@ import type { Config } from './types.ts';
  */
 export function getAppOrigins(config: Pick<Config, 'publicUrl' | 'trustedOrigins'>): string[] {
     const origins = new Set<string>();
+
     origins.add(new URL(config.publicUrl).origin);
 
     for (const origin of config.trustedOrigins ?? []) {

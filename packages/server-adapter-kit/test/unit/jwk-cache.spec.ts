@@ -30,9 +30,9 @@ const REALM_B = '8b3f6d4c-5e2a-4c7b-9d0f-1a2b3c4d5e6f';
 // the token cache is off, so every verify reaches the key source.
 function create(jwkCache?: TokenVerifierContext['jwkCache']) {
     return new TokenVerifier({
-        baseURL: 'http://localhost:3001', 
-        jwkCache, 
-        cache: false, 
+        baseURL: 'http://localhost:3001',
+        jwkCache,
+        cache: false,
     });
 }
 
@@ -43,6 +43,7 @@ describe('jwk cache', () => {
 
     async function sign(kid = KID_A, realmId = REALM_A) {
         const now = Math.floor(Date.now() / 1000);
+
         return faker.sign({
             ...TokenPayload,
             realm_id: realmId,
@@ -94,6 +95,7 @@ describe('jwk cache', () => {
 
     it('expires an entry at exactly ttl', async () => {
         let now = Date.now();
+
         vi.spyOn(Date, 'now').mockImplementation(() => now);
 
         const verifier = create({ ttl: 10 });
@@ -123,6 +125,7 @@ describe('jwk cache', () => {
 
     it('keeps keys in memory for the redis cache', async () => {
         const cache = new RedisTokenCache({} as ConstructorParameters<typeof RedisTokenCache>[0]);
+
         vi.spyOn(cache, 'get').mockResolvedValue(undefined);
         vi.spyOn(cache, 'set').mockResolvedValue(undefined);
 
@@ -137,7 +140,9 @@ describe('jwk cache', () => {
 
     it('shares one flight between concurrent misses', async () => {
         const { promise: deferred, resolve: release } = Promise.withResolvers<OAuth2JsonWebKey>();
+
         getJwk.mockImplementation(() => deferred);
+
         const verifier = create();
         const token = await sign();
 
@@ -154,7 +159,9 @@ describe('jwk cache', () => {
 
     it('shares one rejected flight and stores nothing', async () => {
         const { promise: deferred, reject } = Promise.withResolvers<OAuth2JsonWebKey>();
+
         getJwk.mockImplementationOnce(() => deferred);
+
         const verifier = create();
         const token = await sign();
 
@@ -167,6 +174,7 @@ describe('jwk cache', () => {
         reject(new Error('ECONNRESET'));
 
         const [x, y] = await pending;
+
         expect(x.status).toBe('rejected');
         expect(y.status).toBe('rejected');
         expect(getJwk).toHaveBeenCalledTimes(1);
@@ -177,8 +185,10 @@ describe('jwk cache', () => {
 
     it('bounds a stalled flight by the timeout', async () => {
         const token = await sign();
+
         vi.useFakeTimers();
         getJwk.mockImplementationOnce(() => new Promise<OAuth2JsonWebKey>(() => {}));
+
         const verifier = create({ timeout: 5 });
 
         const first = verifier.verify(token);
@@ -198,13 +208,18 @@ describe('jwk cache', () => {
 
     it('does not store the late result of a timed-out flight', async () => {
         const token = await sign();
+
         vi.useFakeTimers();
+
         const { promise: late, resolve: release } = Promise.withResolvers<OAuth2JsonWebKey>();
+
         getJwk.mockImplementationOnce(() => late);
+
         const verifier = create({ timeout: 5 });
 
         const first = verifier.verify(token);
         const settled = expect(first).rejects.toBeInstanceOf(JWTError);
+
         await vi.waitFor(() => expect(getJwk).toHaveBeenCalled());
         await vi.advanceTimersByTimeAsync(5_000);
         await settled;

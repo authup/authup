@@ -20,6 +20,7 @@ import { injectPayload } from './di';
  */
 export function resolveBasePath(payload?: HydrationPayload) : string {
     const basePath = payload?.config?.basePath;
+
     if (typeof basePath === 'string') {
         return basePath;
     }

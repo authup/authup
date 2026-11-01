@@ -120,6 +120,7 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
 
     async resolveOrCreate(realmId: string, use: `${JWKUse}`): Promise<Key> {
         const entity = await this.findActiveKey(realmId, use);
+
         if (entity) {
             return this.afterLoad(this.repository, entity);
         }
@@ -147,11 +148,13 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
         const cacheKey = `${realmId}:${use}`;
 
         const inFlight = this.mints.get(cacheKey);
+
         if (inFlight) {
             return inFlight;
         }
 
         const promise = this.mint(realmId, use);
+
         this.mints.set(cacheKey, promise);
 
         return promise.finally(() => {
@@ -166,11 +169,13 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
         // that has since completed and left the map, so the in-flight
         // check alone would not see it.
         const entity = await this.findActiveKey(realmId, use);
+
         if (entity) {
             return this.afterLoad(repository, entity);
         }
 
         const total = await repository.countBy({ realmId, use });
+
         if (total > 0) {
             // an admin who disabled every key meant it — do not silently
             // re-mint around the kill switch.
@@ -256,6 +261,7 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
         realmId: string,
     ) : Promise<Key> {
         const raw = new Uint8Array(32);
+
         getRandomValues(raw);
 
         const material = arrayBufferToBase64(raw.buffer);
@@ -292,6 +298,7 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
 
         if (isWrappedKeyMaterial(entity.decryptionKey)) {
             entity.decryptionKey = await unwrapKeyMaterial(this.secretsCipher, entity.decryptionKey);
+
             return entity;
         }
 
@@ -300,6 +307,7 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
             // hardens existing rows without a migration step. Best-effort —
             // the material stays readable either way.
             const material = entity.decryptionKey;
+
             try {
                 await repository.update(entity.id, { decryptionKey: await wrapKeyMaterial(this.secretsCipher, material) });
             } catch (e) {
@@ -308,6 +316,7 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
                 // read-only replica) means the row is never hardened at rest.
                 this.logger?.warn(`Failed to wrap key material at rest for key ${entity.id}.`, { error: e });
             }
+
             entity.decryptionKey = material;
         }
 
@@ -328,6 +337,7 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
 
     async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<Key>> {
         const qb = this.repository.createQueryBuilder('keyEntity');
+
         qb.groupBy('keyEntity.id');
 
         const { pagination } = applyQuery(qb, query);
@@ -354,6 +364,7 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
 
         if (realmKey) {
             const realmId = await this.realmRepository.resolveId(realmKey);
+
             if (!realmId) {
                 return null;
             }
@@ -397,9 +408,13 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
             !isWrappedKeyMaterial(entity.decryptionKey)
         ) {
             const material = entity.decryptionKey;
+
             entity.decryptionKey = await wrapKeyMaterial(this.secretsCipher, material);
+
             const saved = await this.repository.save(entity as KeyEntity);
+
             saved.decryptionKey = material;
+
             return saved;
         }
 

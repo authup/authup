@@ -148,6 +148,7 @@ export class HTTPMiddlewareModule {
 
     async mountSwagger(router: IApp, container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
+
         if (!this.isEnabled(config.middlewareSwagger)) {
             return;
         }

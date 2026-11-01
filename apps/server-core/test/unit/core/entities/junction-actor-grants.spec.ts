@@ -37,14 +37,16 @@ describe('core/entities (junction delegation checks the actor grants)', () => {
     ) : Case[] => [
         [`${owner}-permission create`, async (provider) => {
             const repository = new FakeEntityRepository<any>();
+
             repository.onValidateJoinColumns((data: any) => {
                 data.permission = { name: 'custom_perm', realmId: null };
                 data[owner] = { realmId: null };
             });
+
             const service = new Service({
-                repository, 
-                permissionRepository: new FakeEntityRepository<Permission>(), 
-                identityPermissionProvider: provider, 
+                repository,
+                permissionRepository: new FakeEntityRepository<Permission>(),
+                identityPermissionProvider: provider,
             });
 
             return service.create({ [`${owner}Id`]: randomUUID(), permissionId: randomUUID() }, actor());
@@ -54,14 +56,14 @@ describe('core/entities (junction delegation checks the actor grants)', () => {
             const permissionRepository = new FakeEntityRepository<Permission>();
             const permission = permissionRepository.seed({ name: 'custom_perm', realmId: null });
             const entity = repository.seed({
-                permissionId: permission.id, 
-                policyId: null, 
-                [`${owner}RealmId`]: null, 
+                permissionId: permission.id,
+                policyId: null,
+                [`${owner}RealmId`]: null,
             });
             const service = new Service({
-                repository, 
-                permissionRepository, 
-                identityPermissionProvider: provider, 
+                repository,
+                permissionRepository,
+                identityPermissionProvider: provider,
             });
 
             return service.update(entity.id, { policyId: null }, actor());
@@ -72,10 +74,12 @@ describe('core/entities (junction delegation checks the actor grants)', () => {
         `${owner}-role create`,
         async (provider) => {
             const repository = new FakeEntityRepository<any>();
+
             repository.onValidateJoinColumns((data: any) => {
                 data.role = { realmId: null, clientId: null };
                 data[owner] = { realmId: null };
             });
+
             const service = new Service({ repository, identityPermissionProvider: provider });
 
             return service.create({ [`${owner}Id`]: randomUUID(), roleId: randomUUID() }, actor());
@@ -90,10 +94,12 @@ describe('core/entities (junction delegation checks the actor grants)', () => {
         roleJunction(ClientRoleService, 'client'),
         ['identity-provider-role-mapping create', async (provider) => {
             const repository = new FakeEntityRepository<any>();
+
             repository.onValidateJoinColumns((data: any) => {
                 data.provider = { realmId: null };
                 data.role = { realmId: null, clientId: null };
             });
+
             const service = new IdentityProviderRoleMappingService({
                 repository,
                 roleRepository: new FakeEntityRepository<Role>(),
@@ -113,9 +119,9 @@ describe('core/entities (junction delegation checks the actor grants)', () => {
                 name: 'old',
             });
             const service = new IdentityProviderRoleMappingService({
-                repository, 
-                roleRepository, 
-                identityPermissionProvider: provider, 
+                repository,
+                roleRepository,
+                identityPermissionProvider: provider,
             });
 
             return service.update(entity.id, { name: 'new' }, actor());

@@ -1,5 +1,25 @@
 # Change Log
 
+## [1.0.0-beta.72](https://github.com/authup/authup/compare/v1.0.0-beta.71...v1.0.0-beta.72) (2026-10-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-core:** a permission, role, scope or policy created without a realmId is now global instead of landing in the caller's realm; a realm admin must send its realm id or receives 403. A name-keyed PUT or update without realmId addresses the global row (users, clients and identity providers: the caller's realm). An unknown realmId in the body answers 400. clientId can no longer be changed on update. Existing rows are not migrated; see the upgrade notes.
+
+### Features
+
+* **server-core:** treat an absent and a null realmId alike on create ([#3771](https://github.com/authup/authup/issues/3771)) ([e72bfc5](https://github.com/authup/authup/commit/e72bfc535932f4a9becc66c9e1158d3a28b557d9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+    * @authup/kit bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+    * @authup/specs bumped from ^1.0.0-beta.71 to ^1.0.0-beta.72
+
 ## [1.0.0-beta.71](https://github.com/authup/authup/compare/v1.0.0-beta.70...v1.0.0-beta.71) (2026-10-20)
 
 

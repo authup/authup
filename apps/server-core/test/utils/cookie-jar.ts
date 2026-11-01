@@ -38,6 +38,7 @@ export class TestCookieJar {
         for (const header of headers) {
             const [pair, ...attributes] = header.split(';').map((part) => part.trim());
             const index = pair.indexOf('=');
+
             if (index < 0) {
                 continue;
             }
@@ -50,21 +51,25 @@ export class TestCookieJar {
 
             for (const attribute of attributes) {
                 const [key, attributeValue = ''] = attribute.split('=');
+
                 switch (key.toLowerCase()) {
                     case 'path': {
                         path = attributeValue || '/';
+
                         break;
                     }
                     case 'max-age': {
                         if (Number(attributeValue) <= 0) {
                             expired = true;
                         }
+
                         break;
                     }
                     case 'expires': {
                         if (new Date(attributeValue).getTime() <= Date.now()) {
                             expired = true;
                         }
+
                         break;
                     }
                     default:
@@ -74,13 +79,14 @@ export class TestCookieJar {
 
             if (expired) {
                 this.cookies.delete(name);
+
                 continue;
             }
 
             this.cookies.set(name, {
-                value, 
-                path, 
-                expired, 
+                value,
+                path,
+                expired,
             });
         }
     }

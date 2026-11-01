@@ -55,6 +55,7 @@ function findCollectionRequests(httpClient: FakeClient) : FakeRequest[] {
 describe('APathForm', () => {
     it('should post the segment name, a null parent and the realm', async () => {
         const { wrapper, httpClient } = mountForm();
+
         await flushPromises();
 
         wrapper.findComponent({ name: 'ANameInput' }).vm.$emit('update:modelValue', 'berlin');
@@ -64,6 +65,7 @@ describe('APathForm', () => {
         await flushPromises();
 
         const request = findCreateRequest(httpClient);
+
         expect(request).toBeDefined();
         expect(request!.body).toMatchObject({
             name: 'berlin',
@@ -78,6 +80,7 @@ describe('APathForm', () => {
     // neither holds nor submits it.
     it('should never send the derived path', async () => {
         const { wrapper, httpClient } = mountForm();
+
         await flushPromises();
 
         wrapper.findComponent({ name: 'ANameInput' }).vm.$emit('update:modelValue', 'berlin');
@@ -87,6 +90,7 @@ describe('APathForm', () => {
         await flushPromises();
 
         const request = findCreateRequest(httpClient);
+
         expect(request).toBeDefined();
         expect(request!.body).not.toHaveProperty('path');
 
@@ -98,6 +102,7 @@ describe('APathForm', () => {
     // rendered at all, and it appears once the realm picker sets one.
     it('should not load the parent picker before a realm is known', async () => {
         const { wrapper, httpClient } = mountForm({});
+
         await flushPromises();
 
         expect(wrapper.findComponent(APathPicker).exists()).toBe(false);
@@ -108,11 +113,13 @@ describe('APathForm', () => {
 
     it('should scope the parent picker to the realm it was given', async () => {
         const { wrapper, httpClient } = mountForm();
+
         await flushPromises();
 
         expect(wrapper.findComponent(APathPicker).exists()).toBe(true);
 
         const requests = findCollectionRequests(httpClient);
+
         expect(requests.length).toBeGreaterThan(0);
         expect(decodeURIComponent(requests[0]!.url)).toContain(`in(realmId,'${REALM_ID}')`);
 
@@ -132,9 +139,11 @@ describe('APathForm', () => {
                 realmId: REALM_ID,
             },
         });
+
         await flushPromises();
 
         const requests = findCollectionRequests(httpClient);
+
         expect(requests.length).toBeGreaterThan(0);
         expect(decodeURIComponent(requests[0]!.url))
             .toContain(`and(in(realmId,'${REALM_ID}'),not(or(eq(path,'sales'),startsWith(path,'sales/'))))`);
@@ -150,11 +159,13 @@ describe('APaths', () => {
     // display name instead.
     it('should search the derived path and the display name, never the segment name', async () => {
         const { wrapper, httpClient } = mountKitComponent(APaths, {}, { 'GET /paths': collectionHandler });
+
         await flushPromises();
 
         const collection = wrapper.vm as unknown as {
             load: (input: { filters: Record<string, string> }) => Promise<void>
         };
+
         await collection.load({ filters: { name: 'berlin' } });
         await flushPromises();
 

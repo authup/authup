@@ -12,9 +12,9 @@ import path from 'node:path';
 import process from 'node:process';
 import { ModuleStatus } from 'orkos';
 import {
-    describe, 
-    expect, 
-    it, 
+    describe,
+    expect,
+    it,
     vi,
 } from 'vitest';
 import {
@@ -106,6 +106,7 @@ describe('app/factory', () => {
         const { logger, lines } = createRecordingLogger();
 
         const app = createWorkerApplication({ config: new ConfigModule(buildWorkerConfig) });
+
         app.container.register(LoggerInjectionKey, { useValue: logger });
 
         await app.setup();
@@ -118,6 +119,7 @@ describe('app/factory', () => {
             // none, so the schema must still have been created.
             const dataSource = app.container.resolve(DatabaseInjectionKey.DataSource);
             const queryRunner = dataSource.createQueryRunner();
+
             try {
                 expect(await queryRunner.hasTable('auth_realms')).toBeTruthy();
             } finally {
@@ -133,10 +135,12 @@ describe('app/factory', () => {
             // the first sweep runs right after start; wait for it to land
             await vi.waitFor(async () => {
                 const body = await (await fetch(`${baseURL}/`)).json();
+
                 expect(body.components[0].lastSuccessAt).not.toBeNull();
             }, { timeout: 10_000, interval: 50 });
 
             const response = await fetch(`${baseURL}/`);
+
             expect(response.status).toEqual(200);
             expect(await response.json()).toMatchObject({
                 healthy: true,
@@ -164,6 +168,7 @@ describe('app/factory', () => {
         // a process started for nothing but the sweeps must not come up idle:
         // worker mode requires core.worker.enabled rather than ignoring it.
         const app = createWorkerApplication({ config: new ConfigModule(() => buildWorkerConfig({ worker: { enabled: false, port: 0 } })) });
+
         app.container.register(LoggerInjectionKey, { useValue: createNoopLogger() });
 
         try {

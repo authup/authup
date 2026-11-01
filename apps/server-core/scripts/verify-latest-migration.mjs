@@ -61,11 +61,14 @@ const describeDifference = (actual, expected) => {
 
 const check = (label, actual, expected) => {
     const ok = JSON.stringify(actual) === JSON.stringify(expected);
+
     results.push({ ok, label });
     console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${ok ? '' : `  ${describeDifference(actual, expected)}`}`);
 };
 
-const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
+const sleep = (ms) => new Promise((resolve) => {
+    setTimeout(resolve, ms);
+});
 
 async function bootApplication(env = {}) {
     const child = spawn('node', ['dist/cli/index.mjs', 'start'], {
@@ -82,8 +85,13 @@ async function bootApplication(env = {}) {
     });
 
     let output = '';
-    child.stdout.on('data', (chunk) => { output += chunk.toString(); });
-    child.stderr.on('data', (chunk) => { output += chunk.toString(); });
+
+    child.stdout.on('data', (chunk) => {
+        output += chunk.toString();
+    });
+    child.stderr.on('data', (chunk) => {
+        output += chunk.toString();
+    });
 
     for (let i = 0; i < 120; i++) {
         if (child.exitCode !== null) {
@@ -92,6 +100,7 @@ async function bootApplication(env = {}) {
 
         try {
             const response = await fetch(`http://127.0.0.1:${port}/`);
+
             if (response.ok) {
                 return child;
             }
@@ -103,6 +112,7 @@ async function bootApplication(env = {}) {
     }
 
     child.kill('SIGKILL');
+
     throw new Error(`server did not become ready\n${output}`);
 }
 
@@ -140,9 +150,9 @@ async function login() {
 
 await dropDatabase({ options, ifExist: true });
 await createDatabase({
-    options, 
-    synchronize: false, 
-    ifNotExist: true, 
+    options,
+    synchronize: false,
+    ifNotExist: true,
 });
 
 // Cleanup cannot sit at the end of the happy path. Any check can exit,
@@ -155,6 +165,7 @@ let dataSource;
 async function cleanup() {
     if (child) {
         const running = child;
+
         child = undefined;
         await stopApplication(running).catch(() => {});
     }
@@ -174,7 +185,9 @@ for (const event of ['uncaughtException', 'unhandledRejection']) {
 
 console.log(`[${dialect}] booting the application to populate the schema`);
 child = await bootApplication();
+
 const grant = await login();
+
 check('login before migration round-trip', typeof grant.access_token === 'string', true);
 await stopApplication(child);
 
@@ -194,6 +207,7 @@ const probeUser = await userRepository.save(userRepository.create({
 }));
 
 const consentRepository = dataSource.getRepository(ConsentEntity);
+
 await consentRepository.save(consentRepository.create({
     clientId: client.id,
     sub: probeUser.id,
@@ -204,6 +218,7 @@ await consentRepository.save(consentRepository.create({
 }));
 
 const authenticatorRepository = dataSource.getRepository(UserAuthenticatorEntity);
+
 await authenticatorRepository.save(authenticatorRepository.create({
     kind: 'recovery',
     codes: '[]',
@@ -213,6 +228,7 @@ await authenticatorRepository.save(authenticatorRepository.create({
 }));
 
 const trustAnchorRepository = dataSource.getRepository(TrustAnchorEntity);
+
 await trustAnchorRepository.save(trustAnchorRepository.create({
     name: 'migration-probe-anchor',
     certificate: '-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----',
@@ -228,6 +244,7 @@ const provider = await providerRepository.save(providerRepository.create({
 }));
 
 const accountRepository = dataSource.getRepository(IdentityProviderAccountEntity);
+
 await accountRepository.save(accountRepository.create({
     providerId: provider.id,
     providerRealmId: realm.id,
@@ -259,6 +276,7 @@ const snapshot = async () => {
 
     for (const TABLE of TABLES) {
         const rows = await dataSource.query(`SELECT COUNT(*) AS c FROM ${quote(TABLE)}`);
+
         out[TABLE] = Number(rows[0].c);
     }
 
@@ -302,6 +320,7 @@ const values = async () => {
 
 const before = await snapshot();
 const valuesBefore = await values();
+
 console.log(`[${dialect}] populated: ${JSON.stringify(before)}`);
 check('every asserted table holds rows', TABLES.every((table) => before[table] > 0), true);
 check('no drift after the full chain', await drift(), 0);
@@ -330,17 +349,21 @@ const withoutAddedColumns = (snapshotValues) => Object.fromEntries(
 const withoutDroppedColumns = (snapshotValues) => Object.fromEntries(
     Object.entries(snapshotValues).filter(([column]) => !droppedColumns.has(column)),
 );
+
 check('column values unchanged after revert', withoutDroppedColumns(valuesAfterRevert), withoutAddedColumns(valuesBefore));
 
 await dataSource.runMigrations({ transaction: options.migrationsTransactionMode });
 check('row counts unchanged after re-run', await snapshot(), before);
+
 const valuesAfterRerun = await values();
+
 check('column values unchanged after re-run', withoutAddedColumns(valuesAfterRerun), withoutAddedColumns(valuesBefore));
 check('re-run restores the added columns', [...addedColumns].every((column) => column in valuesAfterRerun), true);
 check('re-run drops the dropped columns again', [...droppedColumns].every((column) => !(column in valuesAfterRerun)), true);
 check('no drift after re-run', await drift(), 0);
 
 let rejected = false;
+
 try {
     await dataSource.query(
         dialect === 'postgres' ?
@@ -358,6 +381,7 @@ try {
 } catch {
     rejected = true;
 }
+
 check('foreign keys reject an orphan insert', rejected, true);
 
 // a second user, so the rejection can only come from the
@@ -368,6 +392,7 @@ const duplicateUser = await userRepository.save(userRepository.create({
     realmId: realm.id,
 }));
 let duplicateRejected = false;
+
 try {
     await accountRepository.insert(accountRepository.create({
         providerId: provider.id,
@@ -379,6 +404,7 @@ try {
 } catch {
     duplicateRejected = true;
 }
+
 check('one external identity links to one user', duplicateRejected, true);
 
 const cascadeUser = await userRepository.save(userRepository.create({
@@ -386,6 +412,7 @@ const cascadeUser = await userRepository.save(userRepository.create({
     email: 'migration-cascade-probe@example.com',
     realmId: realm.id,
 }));
+
 await authenticatorRepository.save(authenticatorRepository.create({
     kind: 'recovery',
     codes: '[]',
@@ -400,7 +427,9 @@ await dataSource.destroy();
 
 console.log(`[${dialect}] rebooting the application against the migrated schema`);
 child = await bootApplication();
+
 const grantAfter = await login();
+
 check('login after migration round-trip', typeof grantAfter.access_token === 'string', true);
 await stopApplication(child);
 
@@ -414,11 +443,14 @@ await stopApplication(child);
  */
 console.log(`[${dialect}] rebooting with boot-time migration disabled`);
 child = await bootApplication({ MIGRATION_ENABLED: 'false' });
+
 const grantWithoutMigration = await login();
+
 check('login with boot-time migration disabled', typeof grantWithoutMigration.access_token === 'string', true);
 await stopApplication(child);
 
 const failed = results.filter((result) => !result.ok);
+
 console.log(`\n[${dialect}] ${results.length - failed.length}/${results.length} checks passed`);
 
 await cleanup();

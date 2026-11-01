@@ -46,6 +46,7 @@ describe('password change ends the other sessions', () => {
         const password = 'change-before-password';
         const { data: user } = await suite.client.user.create(createFakeUser({ password }));
         const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_SELF_MANAGE);
+
         await suite.client.userPermission.create({
             userId: user.id,
             permissionId: permission.id,
@@ -55,10 +56,12 @@ describe('password change ends the other sessions', () => {
         const other = await login(user.name, password);
 
         const self = new HTTPClient({ baseURL: suite.baseURL });
+
         self.setAuthorizationHeader({ type: 'Bearer', token: current.access_token });
         await self.user.update(user.id, { password: 'change-after-password' });
 
         const refreshed = await refresh(other.refresh_token!);
+
         expect(refreshed.status).toEqual(400);
         expect((await me(other.access_token)).status).toEqual(401);
 

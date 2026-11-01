@@ -47,6 +47,7 @@ describe.skipIf(!enforcesLength)('adapters/database/extra-attribute-repository (
         await expect(repository.saveOneWithEA<Record<string, any>>(entity, { ['x'.repeat(300)]: 'value' })).rejects.toThrow();
 
         const stored = await suite.dataSource.getRepository(PolicyEntity).findOneBy({ name });
+
         expect(stored).toBeNull();
     });
 
@@ -56,12 +57,14 @@ describe.skipIf(!enforcesLength)('adapters/database/extra-attribute-repository (
             name,
             type: BuiltInPolicyType.COMPOSITE,
         });
+
         await repository.saveOneWithEA<Record<string, any>>(entity, { decisionStrategy: 'unanimous' });
 
         entity.displayName = 'changed';
         await expect(repository.saveOneWithEA<Record<string, any>>(entity, { ['x'.repeat(300)]: 'value' })).rejects.toThrow();
 
         const stored = await suite.dataSource.getRepository(PolicyEntity).findOneByOrFail({ name });
+
         expect(stored.displayName).not.toEqual('changed');
         expect(await repository.findOneWithEAByPrimaryColumn(stored.id)).toEqual({ decisionStrategy: 'unanimous' });
     });

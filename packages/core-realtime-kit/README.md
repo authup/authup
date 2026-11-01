@@ -31,7 +31,7 @@ When an entity changes, Authup's server publishes the change through `@authup/se
 npm install @authup/core-realtime-kit socket.io-client
 ```
 
-`socket.io-client` (`^4.8.4`) is a peer dependency: you install it. ESM only. Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`, or a browser bundler.
+`socket.io-client` (`^4.8.4`) is a peer dependency: you install it. ESM only. Node.js `>=26.0.0`, or a browser bundler.
 
 ## Usage
 

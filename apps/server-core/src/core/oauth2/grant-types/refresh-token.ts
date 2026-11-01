@@ -66,6 +66,7 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         options: OAuth2GrantRunWIthOptions = {},
     ) : Promise<OAuth2TokenGrantResponse> {
         let payload : OAuth2TokenPayload;
+
         if (typeof input === 'string') {
             // The auth_session_tokens row — not the cache blocklist — is the
             // authority for refresh-token validity, so skip the active check.
@@ -77,6 +78,7 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         if (!payload.jti) {
             throw JWTError.payloadPropertyInvalid('jti');
         }
+
         if (!payload.session_id) {
             throw JWTError.payloadPropertyInvalid('session_id');
         }
@@ -97,19 +99,23 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         const identity = payload.sub && payload.sub_kind ?
             await this.identityResolver.resolve(payload.sub_kind, payload.sub) :
             null;
+
         if (!isTokenSubjectActive(identity, payload)) {
             throw OAuth2GrantError.invalid();
         }
 
         const row = await this.sessionTokenRepository.findOneById(payload.jti);
+
         if (!row || row.kind !== 'refresh') {
             // Row missing = expired-and-swept or a pre-rotation legacy token
             // (hard cutover). Either way the client must re-authenticate.
             throw OAuth2GrantError.invalid('refresh token is unknown');
         }
+
         if (row.revokedAt) {
             throw OAuth2GrantError.invalid('refresh token has been revoked');
         }
+
         if (row.sessionId !== payload.session_id) {
             // The row is written with the token's own session_id and jti is
             // globally unique, so a mismatch means corruption / jti reuse — fail
@@ -121,6 +127,7 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         // anything is consumed or revoked, so a token naming another
         // subject's session leaves that session untouched.
         const session = await this.sessionManager.findOneById(payload.session_id);
+
         if (!session) {
             throw JWTError.payloadPropertyInvalid('session_id');
         }
@@ -133,13 +140,16 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         const nowISO = now.toISOString();
 
         const consumed = await this.sessionTokenRepository.markRefreshConsumed(payload.jti, nowISO);
+
         if (!consumed) {
             // Lost the atomic consume — either a replay of an already-rotated
             // token, or a benign concurrent-refresh race the grace window
             // absorbs.
             const withinGrace = await this.isWithinGraceWindow(payload.jti, now);
+
             if (!withinGrace) {
                 await this.revokeFamily(row.sessionId, payload.jti, nowISO);
+
                 throw OAuth2GrantError.invalid('refresh token replay detected; session revoked');
             }
         }
@@ -237,6 +247,7 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         }
 
         const current = await this.sessionTokenRepository.findOneById(jti);
+
         if (
             !current ||
             current.revokedAt !== null ||
@@ -249,6 +260,7 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         // Grace applies ONLY to the most-recent consumed token: a consumed
         // descendant proves the rotation advanced past this one (stale replay).
         const chainAdvanced = await this.sessionTokenRepository.hasConsumedChild(jti);
+
         return !chainAdvanced;
     }
 
@@ -280,6 +292,7 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         // token's real expiry (unix seconds) so a long-lived refresh token
         // cannot resurface as active via introspection after the fallback 1h.
         const rows = await this.sessionTokenRepository.revokeBySessionId(sessionId, at);
+
         await Promise.allSettled(rows.map((row) => this.tokenRepository.setInactive(
             row.id,
             Math.floor(new Date(row.expiresAt).getTime() / 1_000),

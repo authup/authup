@@ -107,6 +107,7 @@ function mountForm(
     const seedRealm = {
         install(app: App) {
             const store = injectStore(pinia, app);
+
             store.realm = realm;
         },
     };
@@ -138,12 +139,14 @@ function findCreateRequest(httpClient: FakeClient, path: string) : FakeRequest |
 
 async function submit(entry: FormCase, realm: { id: string, name: string }) {
     const { wrapper, httpClient } = mountForm(entry, realm);
+
     await flushPromises();
 
     wrapper.findComponent(AFormSubmit).vm.$emit('submit');
     await flushPromises();
 
     const request = findCreateRequest(httpClient, entry.path);
+
     wrapper.unmount();
 
     return request;

@@ -43,7 +43,7 @@ export class KeyProvisioner implements IKeyProvisioner {
                 // "at least one row exists", so log and continue.
                 if (this.logger) {
                     this.logger.warn(
-                        `Failed to provision ${use} key for realm ${realm.id}: ${e instanceof Error ? e.message : String(e)}`,
+                        `Failed to provision ${use} key for realm ${realm.id}: ${Error.isError(e) ? e.message : String(e)}`,
                     );
                 }
             }

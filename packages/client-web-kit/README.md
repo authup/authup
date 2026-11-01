@@ -39,7 +39,7 @@ A Vue app that signs in at Authup needs the same client half every time: a sessi
 npm install @authup/client-web-kit
 ```
 
-The package is ESM-only and needs Node.js `^22.13.0 || ^23.5.0 || >=24.0.0` for builds and server rendering.
+The package is ESM-only and needs Node.js `>=26.0.0` for builds and server rendering.
 
 The consumer installs the singletons the kit shares with the app (a second copy would split them):
 

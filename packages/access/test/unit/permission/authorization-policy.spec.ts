@@ -89,9 +89,9 @@ describe('permission/authorization/policy', () => {
         const validators = { ...PolicyDefaultValidators, weekday: new WeekdayPolicyValidator() };
 
         expect(await projectAuthorizationPolicy({
-            id: 'p5', 
-            type: 'weekday', 
-            weekday: 3, 
+            id: 'p5',
+            type: 'weekday',
+            weekday: 3,
         }, validators))
             .toEqual({ type: 'weekday', weekday: 3 });
         expect(await projectAuthorizationPolicy({
@@ -126,6 +126,7 @@ describe('permission/authorization/policy', () => {
 
     it('refuses the withheld node even when a registry names it, and never reads the prototype', async () => {
         const validators = { ...PolicyDefaultValidators, [AUTHORIZATION_POLICY_WITHHELD_TYPE]: new WeekdayPolicyValidator() };
+
         await expect(projectAuthorizationPolicy({ type: AUTHORIZATION_POLICY_WITHHELD_TYPE, weekday: 1 }, validators))
             .rejects.toThrow();
         await expect(projectAuthorizationPolicy({ type: 'constructor' })).rejects.toThrow();

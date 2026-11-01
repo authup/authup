@@ -7,10 +7,10 @@
 
 import type { ICondition } from '@rapiq/core';
 import {
-    eq, 
-    inArray, 
-    nin, 
-    not, 
+    eq,
+    inArray,
+    nin,
+    not,
     or,
 } from '@rapiq/core';
 import { DecisionStrategy, hasOwnProperty  } from '@authup/kit';
@@ -60,6 +60,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
      */
     async toCondition(value: Record<string, any>, ctx: PolicyEvaluationContext) : Promise<ICondition | null> {
         let policy;
+
         try {
             policy = await this.validator.run(value);
         } catch {
@@ -67,6 +68,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
         }
 
         const identity = await this.identityEvaluator.accessData(ctx);
+
         if (!identity) {
             return null;
         }
@@ -80,6 +82,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
                 'realmId';
 
             let condition : ICondition;
+
             if (scope === RealmScope.ANY) {
                 // constant-true: nin([]) matches everything (rapiq ConstantPlan)
                 condition = nin(field, []);
@@ -95,9 +98,11 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
                 // resource SCALAR — which has no row-column counterpart, so parity holds
                 // for realistic row-shaped data (see the exactness caveat above).
                 const terms : ICondition[] = [];
+
                 if (realmId !== null && scope !== RealmScope.NONE) {
                     terms.push(eq(field, realmId));
                 }
+
                 if (scope === RealmScope.OWN_OR_NULL && (realmId !== null || identity.realmName != null)) {
                     terms.push(eq(field, null));
                 }
@@ -127,12 +132,15 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
         // (only an UNDEFINED identity value never matches a DB value, so it drops out).
         const key = policy.attributeName;
         const terms : ICondition[] = [];
+
         if (policy.attributeNullMatchAll) {
             terms.push(eq(key, null));
         }
+
         if (identity.realmId !== undefined) {
             terms.push(eq(key, identity.realmId));
         }
+
         if (identity.realmName !== undefined) {
             terms.push(eq(key, identity.realmName));
         }
@@ -142,6 +150,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
         }
 
         const condition = terms.length === 1 ? terms[0]! : or(...terms);
+
         return policy.invert ? not(condition) : condition;
     }
 
@@ -150,6 +159,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
         const policy = await this.validator.run(value);
 
         const identity = await this.identityEvaluator.accessData(ctx);
+
         if (!identity) {
             return {
                 success: false,
@@ -178,6 +188,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
                 // instead of neutral-passing.
                 if (ctx.withConditions) {
                     const condition = await this.toCondition(value, ctx);
+
                     return {
                         success: false,
                         pending: true,
@@ -189,6 +200,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
             }
 
             const resourceRealm = ctx.data.get<string | string[] | null>(BuiltInPolicyType.REALM_MATCH);
+
             return {
                 success: maybeInvertPolicyOutcome(
                     realmScopeMatches(
@@ -203,6 +215,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
         }
 
         const attributes = await this.attributesEvaluator.accessData(ctx);
+
         if (!attributes) {
             return {
                 success: false,
@@ -217,6 +230,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
         }
 
         let keys : string[];
+
         if (policy.attributeName) {
             if (Array.isArray(policy.attributeName)) {
                 keys = policy.attributeName;
@@ -235,9 +249,11 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
         }
 
         const attributeNameStrict = policy.attributeNameStrict ?? true;
+
         if (!attributeNameStrict) {
             const resourceKeys = Object.keys(attributes);
             const keysToAdd : string[] = [];
+
             for (const resourceKey of resourceKeys) {
                 let contains : boolean = false;
 
@@ -247,6 +263,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
                         resourceKey.includes(key)
                     ) {
                         contains = true;
+
                         break;
                     }
                 }

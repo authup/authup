@@ -39,7 +39,9 @@ export class FakeConsentRepository implements IConsentRepository {
             updatedAt: new Date().toISOString(),
             ...consent,
         } as Consent;
+
         this.consents.set(entity.id, entity);
+
         return entity;
     }
 
@@ -54,6 +56,7 @@ export class FakeConsentRepository implements IConsentRepository {
         this.findManyCalls.push({ query, options });
 
         let data = this.rows();
+
         if (options.owner) {
             data = data.filter((consent) => this.ownedBy(consent, options.owner!));
         }

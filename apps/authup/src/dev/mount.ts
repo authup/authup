@@ -42,6 +42,7 @@ export function compose(dev: ConsoleDevServer | undefined, handler: IApp) : IApp
     }
 
     const app = new App();
+
     app.use(createOpenInEditorGuard());
     app.use(fromNodeMiddleware(dev.middlewares));
     app.use(handler);

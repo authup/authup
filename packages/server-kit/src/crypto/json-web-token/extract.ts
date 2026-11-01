@@ -19,6 +19,7 @@ export function extractTokenHeader(
     token: string,
 ) : JWTHeader {
     const parts = token.split('.');
+
     if (parts.length !== 3) {
         throw JWTError.invalid();
     }
@@ -26,7 +27,7 @@ export function extractTokenHeader(
     const [headerBase64] = parts;
 
     try {
-        const payload = atob(headerBase64);
+        const payload = Buffer.from(Uint8Array.fromBase64(headerBase64)).toString('latin1');
 
         return JSON.parse(payload);
 
@@ -57,6 +58,7 @@ export function extractTokenPayload(
     token: string,
 ) : JWTClaims {
     const parts = token.split('.');
+
     if (parts.length !== 3) {
         throw JWTError.invalid();
     }
@@ -70,8 +72,7 @@ export function extractTokenPayload(
         // other, so a token carrying a name like `Пётр` or an emoji failed to
         // decode at all.
         const normalized = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
-        const binary = atob(normalized);
-        const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+        const bytes = Uint8Array.fromBase64(normalized);
 
         return JSON.parse(new TextDecoder().decode(bytes));
     } catch {

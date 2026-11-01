@@ -48,9 +48,11 @@ export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implement
             realmId,
             certificateEvidence,
         );
+
         if (client.authMethod === ClientAuthMethod.NONE) {
             throw OAuth2ClientError.invalid();
         }
+
         const confirmation = this.clientAuthenticator.resolveTokenBinding(client, certificateEvidence);
 
         assertClientGrantAllowed(client, OAuth2TokenGrant.CLIENT_CREDENTIALS);

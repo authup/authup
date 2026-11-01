@@ -76,6 +76,7 @@ describe('core/entities/session-token/service', () => {
         const realmId = randomUUID();
         const loaded = await seedToken(repository, { realmId });
         const orphan = await seedToken(repository);
+
         repository.listed = [loaded, orphan];
 
         const actor = createMasterRealmActor();
@@ -87,6 +88,7 @@ describe('core/entities/session-token/service', () => {
         const call = actor.permissionEvaluator.evaluateCalls.find(
             (c) => c.name === PermissionName.SESSION_READ,
         );
+
         expect(call!.data!.get(BuiltInPolicyType.REALM_MATCH)).toEqual(realmId);
     });
 
@@ -94,6 +96,7 @@ describe('core/entities/session-token/service', () => {
         repository.listed = [await seedToken(repository, {})];
 
         const actor = createMasterRealmActor();
+
         actor.permissionEvaluator.setBehavior(({ method }) => {
             if (method === 'evaluate') {
                 throw new Error('provider unavailable');

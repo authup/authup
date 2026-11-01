@@ -42,6 +42,7 @@ export class FakeUserRepository extends FakeEntityRepository<User> implements IU
 
     async transaction<R>(fn: (repository: IUserRepository) => Promise<R>): Promise<R> {
         this.transactionCalls += 1;
+
         return fn(this);
     }
 }

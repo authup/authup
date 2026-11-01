@@ -16,6 +16,7 @@ export class EntityInactiveError extends AuthupError {
     constructor(input?: string | AuthupEntityErrorOptions) {
         const options: AuthupEntityErrorOptions = typeof input === 'string' ? { message: input } : (input ?? {});
         const { entity, ...rest } = options;
+
         super({
             code: ErrorCode.ENTITY_INACTIVE,
             message: entity ? `The ${entity} is inactive.` : 'Entity is inactive.',

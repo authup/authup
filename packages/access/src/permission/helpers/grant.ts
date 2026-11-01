@@ -45,6 +45,7 @@ const NON_SEMANTIC_POLICY_KEYS = new Set<string>([
  */
 function normalizePolicyForEquality(policy: BasePolicy): Record<string, unknown> {
     const result: Record<string, unknown> = {};
+
     for (const [key, value] of Object.entries(policy as Record<string, unknown>)) {
         if (NON_SEMANTIC_POLICY_KEYS.has(key)) {
             continue;
@@ -55,6 +56,7 @@ function normalizePolicyForEquality(policy: BasePolicy): Record<string, unknown>
             Array.isArray(value)
         ) {
             result[key] = value.map((child) => normalizePolicyForEquality(child as BasePolicy));
+
             continue;
         }
 

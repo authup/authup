@@ -41,7 +41,7 @@ You rarely install it directly: to protect an API, use one of the server adapter
 npm install @authup/server-kit
 ```
 
-It ships native bindings through `@node-rs/bcrypt` and `@node-rs/jsonwebtoken`, and depends on `winston`, `redis-extension` and the Socket.IO Redis emitter. The package is ESM only and needs Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`.
+It ships native bindings through `@node-rs/bcrypt` and `@node-rs/jsonwebtoken`, and depends on `winston`, `redis-extension` and the Socket.IO Redis emitter. The package is ESM only and needs Node.js `>=26.0.0`.
 
 ## Usage
 

@@ -12,6 +12,7 @@ import type { AsymmetricKeyPairCreateOptionsInput } from './types';
 
 export async function createAsymmetricKeyPair(options: AsymmetricKeyPairCreateOptionsInput) : Promise<CryptoKeyPair> {
     const optionsNormalized = normalizeAsymmetricKeyPairCreateOptions(options);
+
     return subtle.generateKey(
         optionsNormalized,
         true,

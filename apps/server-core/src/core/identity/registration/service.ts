@@ -58,10 +58,12 @@ export class RegistrationService implements IRegistrationService {
         }
 
         const validator = new Container({});
+
         validator.mount(new UserValidator({
             pathsToInclude: ['email', 'name', 'password', 'realmId'],
             passwordMinLength: this.options.passwordMinLength,
         }));
+
         const validated = await validator.run(data, { group: 'create' });
 
         await this.repository.validateJoinColumns(validated);
@@ -69,9 +71,10 @@ export class RegistrationService implements IRegistrationService {
         // the code is mailed, only its digest is stored, so reading the table
         // yields nothing that activates an account.
         let activateCode : string | undefined;
+
         if (this.options.emailVerificationEnabled) {
             validated.active = false;
-            activateCode = randomBytes(32).toString('hex');
+            activateCode = randomBytes(32).toHex();
             validated.activateHash = digestSHA256(activateCode);
         } else {
             validated.active = true;
@@ -80,10 +83,12 @@ export class RegistrationService implements IRegistrationService {
         const entity = this.repository.create(validated);
 
         const credentialsService = new UserCredentialsService();
+
         entity.password = entity.password || createNanoID(64);
         entity.password = await credentialsService.protect(entity.password);
 
         const realm = await this.realmRepository.resolve(entity.realmId, true);
+
         entity.realmId = realm.id;
 
         await this.repository.save(entity);
@@ -106,6 +111,7 @@ export class RegistrationService implements IRegistrationService {
                 });
             } catch {
                 await this.repository.remove(entity);
+
                 throw new ValidationError('Registration failed. Could not send activation email.');
             }
         }

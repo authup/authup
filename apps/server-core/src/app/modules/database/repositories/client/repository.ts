@@ -69,6 +69,7 @@ export class ClientRepositoryAdapter extends EntityRepositoryAdapter<Client> imp
 
     async transaction<R>(fn: (repository: IClientRepository) => Promise<R>): Promise<R> {
         const dataSource = this.repository.manager.connection;
+
         if (!isDatabaseTypeRowLockable(dataSource.options.type)) {
             // better-sqlite3: no FOR UPDATE, and the driver shares ONE query
             // runner, so a transaction here would nest as a savepoint inside
@@ -107,6 +108,7 @@ export class ClientRepositoryAdapter extends EntityRepositoryAdapter<Client> imp
 
     async getBoundPermissions(entity: string | Client): Promise<PermissionPolicyBinding[]> {
         const id = typeof entity === 'string' ? entity : entity.id;
+
         return loadBoundPermissions({
             manager: this.repository.manager,
             junctionTarget: ClientPermissionEntity,

@@ -29,6 +29,7 @@ describe('src/policy/identity', () => {
                 },
             }),
         }));
+
         expect(outcome.success).toBeTruthy();
     });
 
@@ -46,6 +47,7 @@ describe('src/policy/identity', () => {
                 },
             }),
         }));
+
         expect(outcome.success).toBeTruthy();
     });
 
@@ -63,6 +65,7 @@ describe('src/policy/identity', () => {
                 },
             }),
         }));
+
         expect(outcome.success).toBeFalsy();
     });
 
@@ -72,6 +75,7 @@ describe('src/policy/identity', () => {
         const evaluator = new IdentityPolicyEvaluator();
 
         const outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext());
+
         expect(outcome.success).toBeFalsy();
     });
 });

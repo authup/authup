@@ -81,6 +81,7 @@ export class UserAuthenticatorRepositoryAdapter implements IUserAuthenticatorRep
 
     async hasConfirmedByUser(userId: string): Promise<boolean> {
         const count = await this.repository.countBy({ userId, confirmed: true });
+
         return count > 0;
     }
 

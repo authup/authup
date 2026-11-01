@@ -62,6 +62,7 @@ export class RequestPermissionEvaluator implements IPermissionEvaluator {
 
     protected async extendContext<T extends PermissionEvaluationContext | PermissionCompileContext>(ctx: T) : Promise<T> {
         const identity = useRequestPolicyIdentity(this.event);
+
         if (identity) {
             // The grants travel with the identity they belong to, loaded here
             // rather than inside the engine: a failed load then fails the

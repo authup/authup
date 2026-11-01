@@ -34,11 +34,13 @@ export class DatabaseLogger extends AdvancedConsoleLogger {
                 case 'schema-build':
                 case 'migration':
                     this.logger.debug(`[DB]: ${message.message}`);
+
                     break;
 
                 case 'info':
                 case 'query':
                     this.logger.info(`[DB]: ${message.message}`);
+
                     break;
 
                 case 'warn':
@@ -48,6 +50,7 @@ export class DatabaseLogger extends AdvancedConsoleLogger {
                     } else {
                         this.logger.warn(`[DB]: ${message.message}`);
                     }
+
                     break;
 
                 case 'error':
@@ -57,6 +60,7 @@ export class DatabaseLogger extends AdvancedConsoleLogger {
                     } else {
                         this.logger.error(`[DB]: ${message.message}`);
                     }
+
                     break;
             }
         }

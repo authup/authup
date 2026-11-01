@@ -70,8 +70,8 @@ import type {
     IdentityProviderCreatePayload,
     IdentityProviderLinkConfirmPayload,
     IdentityProviderLinkRequestResponse,
-    IdentityProviderSavePayload, 
-    IdentityProviderUpdatePayload, 
+    IdentityProviderSavePayload,
+    IdentityProviderUpdatePayload,
 } from '@authup/core-http-kit';
 import { IDENTITY_PROVIDER_LOGIN_NOT_PENDING } from '@authup/core-http-kit';
 import { URL } from 'node:url';
@@ -86,8 +86,8 @@ import type {
     IOAuth2FederatedLoginService,
     IRealmRepository,
     IdentityProviderIdentity,
-    OAuth2AuthorizationState, 
-    OAuth2AuthorizationStateLink, 
+    OAuth2AuthorizationState,
+    OAuth2AuthorizationStateLink,
 } from '../../../../../core/index.ts';
 import {
     OAUTH2_FEDERATED_LOGIN_COOKIE,
@@ -99,9 +99,9 @@ import {
     decodeQuery,
     describeQuerySchema,
     formatDeviceUserCode,
-    identityProviderSchema, 
+    identityProviderSchema,
     isRealmReachable,
-    normalizeDeviceUserCode, 
+    normalizeDeviceUserCode,
 } from '../../../../../core/index.ts';
 import {
     applyRouteRealmIDToBody,
@@ -267,6 +267,7 @@ export class IdentityProviderController {
         const paramId = useRequestParamID(event);
 
         const permissionEvaluator = useRequestPermissionEvaluator(event);
+
         await permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_DELETE });
 
         const entity = await this.repository.findOneBy({ id: paramId });
@@ -329,6 +330,7 @@ export class IdentityProviderController {
         const query = useRequestQuery(event);
 
         let target : Pick<OAuth2AuthorizationState, 'codeRequest' | 'device'>;
+
         if (typeof query.codeRequest === 'string') {
             let codeRequestDecoded: OAuth2AuthorizationCodeRequest;
 
@@ -356,6 +358,7 @@ export class IdentityProviderController {
             // which user codes exist (RFC 8628 section 5.1). The device flow's
             // own lookup resolves the code, once the person is signed in.
             const userCode = normalizeDeviceUserCode(query.user_code);
+
             if (!userCode) {
                 throw OAuth2RequestError.malformed('The user code is malformed.');
             }
@@ -374,6 +377,7 @@ export class IdentityProviderController {
         // whoever mints the state (#3439). Keycloak and Authentik bind the
         // same hop to a cookie for the same reason.
         const browserNonce = createNanoID();
+
         this.setFederatedLoginCookie(event, browserNonce);
 
         const state = await this.saveAuthorizationState(event, {
@@ -401,6 +405,7 @@ export class IdentityProviderController {
         }
 
         const identity = useRequestIdentityOrFail(event);
+
         if (identity.type !== IdentityType.USER) {
             throw new BadRequestError('Only a user can link an identity provider account.');
         }
@@ -432,6 +437,7 @@ export class IdentityProviderController {
         const data = await this.verifyAuthorizationState(event);
 
         const { link } = data;
+
         if (link) {
             return this.completeLink(event, entity, data, link);
         }
@@ -450,6 +456,7 @@ export class IdentityProviderController {
         // renders its request (or the user code) again and the next attempt
         // carries one.
         const browserNonce = useRequestCookie(event, OAUTH2_FEDERATED_LOGIN_COOKIE);
+
         if (
             typeof browserNonce !== 'string' ||
             !data.browserNonce ||
@@ -539,6 +546,7 @@ export class IdentityProviderController {
         this.assertSameOrigin(event);
 
         const pendingLoginId = useRequestCookie(event, OAUTH2_FEDERATED_LOGIN_COOKIE);
+
         if (typeof pendingLoginId !== 'string' || pendingLoginId.length === 0) {
             // Marked, because this refusal alone means the completion never
             // began: the caller was not in a federated login at all. The
@@ -569,11 +577,14 @@ export class IdentityProviderController {
         let group: string;
         const id = getRequestParamID(event, { isUUID: false });
         const body = await readRequestBody(event);
+
         applyRouteRealmIDToBody(event, body);
 
         let entity: IdentityProvider | null | undefined;
+
         if (id) {
             const where: Record<string, any> = {};
+
             if (isUUID(id)) {
                 where.id = id;
             } else {
@@ -585,6 +596,7 @@ export class IdentityProviderController {
                 // predicate would address a row of whichever realm holds the
                 // name.
                 const realm = await this.realmRepository.resolveOrFail(body.realmId);
+
                 where.realmId = realm.id;
                 entity = await this.repository.findOneBy(where);
             } else if (where.id) {
@@ -596,10 +608,12 @@ export class IdentityProviderController {
                 // without one cannot create here either, so it matches
                 // nothing.
                 const actorRealmId = useRequestIdentity(event)?.realmId;
+
                 entity = actorRealmId ?
                     await this.repository.findOneBy({ ...where, realmId: actorRealmId }) :
                     null;
             }
+
             // Only a NAME key may upsert-create. A UUID addresses one specific
             // row, so a miss is a 404 (creating would write a different id).
             if (!entity && (options.updateOnly || where.id)) {
@@ -610,6 +624,7 @@ export class IdentityProviderController {
         }
 
         const permissionEvaluator = useRequestPermissionEvaluator(event);
+
         if (entity) {
             await permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_UPDATE });
 
@@ -631,6 +646,7 @@ export class IdentityProviderController {
         // join-column lookup off a null on a non-nullable column.
         if (data.realmId === null) {
             const input: Partial<IdentityProvider> = data;
+
             delete input.realmId;
         }
 
@@ -639,6 +655,7 @@ export class IdentityProviderController {
         if (entity) {
             // The stored row and the merged row must both pass (#3654).
             const next = { ...entity, ...data };
+
             await evaluateRecordUpdate(permissionEvaluator, {
                 name: PermissionName.IDENTITY_PROVIDER_UPDATE,
                 current: {
@@ -653,6 +670,7 @@ export class IdentityProviderController {
         } else {
             if (!data.realmId) {
                 const identity = useRequestIdentityOrFail(event);
+
                 data.realmId = identity.realmId;
             }
 
@@ -797,17 +815,20 @@ export class IdentityProviderController {
         }
 
         const identity = useRequestIdentityOrFail(event);
+
         if (identity.type !== IdentityType.USER) {
             throw new BadRequestError('Only a user can link an identity provider account.');
         }
 
         const body = await readRequestBody(event);
         const handle = isObject(body) ? body.handle : undefined;
+
         if (typeof handle !== 'string' || handle.length === 0) {
             throw new BadRequestError('The account link handle is missing.');
         }
 
         const link = await this.linkStore.consume(handle);
+
         if (!link) {
             throw new BadRequestError('The account link request is unknown or expired.');
         }
@@ -864,6 +885,7 @@ export class IdentityProviderController {
         key: 'name' | 'email',
     ) : string | null {
         const candidates = identity.attributeCandidates?.[key] || [];
+
         for (const candidate of candidates) {
             if (typeof candidate === 'string' && candidate.length > 0) {
                 return candidate;
@@ -896,6 +918,7 @@ export class IdentityProviderController {
 
     private buildHostedDeviceURL(userCode: string): URL {
         const url = new URL(resolveURL(this.options.baseURL, 'device'));
+
         url.searchParams.set('user_code', formatDeviceUserCode(userCode));
 
         return url;
@@ -905,9 +928,11 @@ export class IdentityProviderController {
         const url = new URL(resolveURL(this.options.baseURL, 'authorize'));
 
         const codeRequestKeys = Object.keys(codeRequest);
+
         for (const codeRequestKey_ of codeRequestKeys) {
             const codeRequestKey = codeRequestKey_ as keyof OAuth2AuthorizationCodeRequest;
             const codeRequestValue = codeRequest[codeRequestKey];
+
             // Preserve meaningful falsy values (e.g. max_age=0, which OIDC
             // treats as prompt=login) — only skip absent ones.
             if (typeof codeRequestValue !== 'undefined' && codeRequestValue !== null) {
@@ -1001,6 +1026,7 @@ export class IdentityProviderController {
 
     private async verifyAuthorizationState(event: IAppEvent): Promise<OAuth2AuthorizationState> {
         const query = useRequestQuery(event);
+
         if (typeof query.state !== 'string') {
             throw OAuth2RequestError.stateInvalid();
         }

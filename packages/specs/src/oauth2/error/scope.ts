@@ -15,6 +15,7 @@ export const OAUTH2_SCOPE_ERROR_INSTANCE = Symbol.for('@authup/specs/OAuth2Scope
 export class OAuth2ScopeError extends OAuth2Error {
     constructor(input?: AuthupErrorInput) {
         const options = normalizeOAuth2ErrorInput(input);
+
         super({
             code: ErrorCode.OAUTH_SCOPE_INVALID,
             message: 'The scope is invalid.',

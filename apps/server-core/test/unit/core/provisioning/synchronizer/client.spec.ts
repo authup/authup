@@ -104,6 +104,7 @@ describe('core/provisioning/synchronizer/client', () => {
         await synchronizer.synchronize(buildInput({ secret: 'raw-secret', secretHashed: true }));
 
         const [stored] = clientRepository.getAll();
+
         expect(stored.secretHashed).toBe(true);
         expect(stored.secret).not.toEqual('raw-secret');
         expect(isBCryptHash(stored.secret!)).toBe(true);
@@ -115,6 +116,7 @@ describe('core/provisioning/synchronizer/client', () => {
         await synchronizer.synchronize(buildInput({ secret: hashed, secretHashed: true }));
 
         const [stored] = clientRepository.getAll();
+
         expect(stored.secret).toEqual(hashed);
     });
 
@@ -131,6 +133,7 @@ describe('core/provisioning/synchronizer/client', () => {
         await synchronizer.synchronize(buildInput({ secret: 'rotated-raw', secretHashed: true }));
 
         const stored = await clientRepository.findOneBy({ id: existing.id });
+
         expect(stored!.secret).not.toEqual('rotated-raw');
         expect(isBCryptHash(stored!.secret!)).toBe(true);
     });
@@ -139,6 +142,7 @@ describe('core/provisioning/synchronizer/client', () => {
         await synchronizer.synchronize(buildInput({ secret: 'plain', secretHashed: false }));
 
         const [stored] = clientRepository.getAll();
+
         expect(stored.secret).toEqual('plain');
     });
 
@@ -146,6 +150,7 @@ describe('core/provisioning/synchronizer/client', () => {
         await synchronizer.synchronize(buildInput({ secret: 'raw-secret', secretEncrypted: true }));
 
         const [stored] = clientRepository.getAll();
+
         expect(stored.secretEncrypted).toBe(true);
         expect(isRealmCipherBlob(stored.secret!)).toBe(true);
         expect(await cipher.decrypt(stored.secret!, realmId)).toEqual('raw-secret');
@@ -157,15 +162,16 @@ describe('core/provisioning/synchronizer/client', () => {
         await synchronizer.synchronize(buildInput({ secret: blob, secretEncrypted: true }));
 
         const [stored] = clientRepository.getAll();
+
         expect(stored.secret).toEqual(blob);
     });
 
     it('should refuse hashed and encrypted at once', async () => {
         await expect(
             synchronizer.synchronize(buildInput({
-                secret: 'raw', 
-                secretHashed: true, 
-                secretEncrypted: true, 
+                secret: 'raw',
+                secretHashed: true,
+                secretEncrypted: true,
             })),
         ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
 
@@ -174,9 +180,9 @@ describe('core/provisioning/synchronizer/client', () => {
     // #3632: declaring the folder is the ask, so it rides a selective merge
     it('should refile an existing client under a selective merge', async () => {
         const existing = clientRepository.seed({
-            name: 'gitops', 
-            realmId, 
-            authMethod: 'none', 
+            name: 'gitops',
+            realmId,
+            authMethod: 'none',
             displayName: 'GitOps',
         });
 
@@ -188,15 +194,16 @@ describe('core/provisioning/synchronizer/client', () => {
 
         const folder = await pathRepository.findOneBy({ realmId, path: 'ci' });
         const stored = await clientRepository.findOneBy({ id: existing.id });
+
         expect(stored!.displayName).toEqual('GitOps 2');
         expect(stored!.pathId).toEqual(folder!.id);
     });
 
     it('should create no folder for an existing client under createOnly', async () => {
         const existing = clientRepository.seed({
-            name: 'gitops', 
-            realmId, 
-            authMethod: 'none', 
+            name: 'gitops',
+            realmId,
+            authMethod: 'none',
         });
 
         await synchronizer.synchronize({
@@ -208,6 +215,7 @@ describe('core/provisioning/synchronizer/client', () => {
         expect(pathRepository.getAll()).toHaveLength(0);
 
         const stored = await clientRepository.findOneBy({ id: existing.id });
+
         expect(stored!.pathId ?? null).toBeNull();
     });
 
@@ -246,6 +254,7 @@ describe('core/provisioning/synchronizer/client', () => {
         } as ClientProvisioningEntity);
 
         const stored = await clientRepository.findOneBy({ name: 'gitops', realmId });
+
         expect(clientRoleRepository.getAll()).toEqual([
             expect.objectContaining({ clientId: stored!.id, roleId: role.id }),
         ]);

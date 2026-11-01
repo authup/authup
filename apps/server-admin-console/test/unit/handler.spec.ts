@@ -94,6 +94,7 @@ describe('createHandler', () => {
         expect(response.headers.get('content-type')).toContain('text/html');
 
         const body = await response.text();
+
         expect(body).toContain('window.__AUTHUP__');
     });
 
@@ -101,6 +102,7 @@ describe('createHandler', () => {
         const body = await (await fetch(`${baseURL}/`)).text();
 
         const match = body.match(/src="([^"]*\/assets\/[^"]+\.js)"/);
+
         expect(match).toBeTruthy();
 
         // the href is public-path shaped; the proxy strips the service's own
@@ -127,6 +129,7 @@ describe('createHandler', () => {
         );
 
         const local = serve(substituted, { port: 0, silent: true });
+
         await local.ready();
 
         try {

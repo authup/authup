@@ -45,15 +45,16 @@ describe('core/provisioning/synchronizer canonical names', () => {
         });
 
         const all = permissionRepository.getAll();
+
         expect(all).toHaveLength(1);
         expect(all[0].name).toBe('test_permission');
     });
 
     it('should match an existing canonical row for a mixed-case provisioned entity', async () => {
         permissionRepository.seed({
-            name: 'test_permission', 
-            realmId: null, 
-            clientId: null, 
+            name: 'test_permission',
+            realmId: null,
+            clientId: null,
         });
 
         await synchronizer.synchronize({

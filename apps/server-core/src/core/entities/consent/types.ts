@@ -86,10 +86,10 @@ export interface IConsentRepository {
      * existing rows. Race-safe under the 4-column unique index.
      */
     insertMissing(input: {
-        clientId: string, 
-        realmId: string, 
-        owner: ConsentOwner, 
-        scopes: string[] 
+        clientId: string,
+        realmId: string,
+        owner: ConsentOwner,
+        scopes: string[]
     }): Promise<void>;
 
     remove(entity: Consent): Promise<void>;

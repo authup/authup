@@ -55,8 +55,10 @@ describe('identity permission binding compilation', () => {
             data: data(),
             withConditions: true,
         }));
+
         expect(compiled.pending).toBe(true);
         expect(compiled.condition).toBeDefined();
+
         const predicate = compileFilters(compiled.condition! as IFilter | IFilters, { caseSensitive: true });
 
         const rows = [
@@ -86,12 +88,16 @@ describe('identity permission binding compilation', () => {
                 allowed: false,
             },
         ];
+
         for (const row of rows) {
             const concreteData = data();
+
             concreteData.set(BuiltInPolicyType.REALM_MATCH, row.realmId);
             concreteData.set(BuiltInPolicyType.ATTRIBUTES, row);
+
             const settled = await engine.evaluate(policy, definePolicyEvaluationContext({ data: concreteData }));
             const expected = invert ? !row.allowed : row.allowed;
+
             expect(settled.success, JSON.stringify(row)).toBe(expected);
             expect(predicate(row), JSON.stringify(row)).toBe(expected);
         }
@@ -102,11 +108,15 @@ describe('identity permission binding compilation', () => {
         const policy = definePolicyWithType(BuiltInPolicyType.REALM_MATCH, { scope: 'ownOrNull' });
         const data = definePolicyData({ [BuiltInPolicyType.IDENTITY]: { ...identity, realmId: null } });
         const compiled = await engine.evaluate(policy, definePolicyEvaluationContext({ data, withConditions: true }));
+
         expect(compiled.condition).toBeDefined();
+
         const predicate = compileFilters(compiled.condition! as IFilter | IFilters, { caseSensitive: true });
 
         data.set(BuiltInPolicyType.REALM_MATCH, null);
+
         const settled = await engine.evaluate(policy, definePolicyEvaluationContext({ data }));
+
         expect(settled.success).toBe(false);
         expect(predicate({ realmId: null })).toBe(false);
     });
@@ -132,10 +142,12 @@ describe('identity permission binding compilation', () => {
             withConditions: true,
             realmAttributeName: 'roleRealmId',
         }));
+
         expect(compiled.condition).toBeDefined();
 
         const foreignRealmId = '11111111-2222-4333-8444-555555555555';
         const predicate = compileFilters(compiled.condition! as IFilter | IFilters, { caseSensitive: true });
+
         expect(predicate({ roleRealmId: identity.realmId })).toBeTruthy();
         expect(predicate({ roleRealmId: null })).toBeTruthy();
         expect(predicate({ roleRealmId: foreignRealmId })).toBeFalsy();
@@ -148,6 +160,7 @@ describe('identity permission binding compilation', () => {
             withConditions: true,
         }));
         const fallbackPredicate = compileFilters(fallback.condition! as IFilter | IFilters, { caseSensitive: true });
+
         expect(fallbackPredicate({ realmId: identity.realmId })).toBeTruthy();
         expect(fallbackPredicate({ realmId: foreignRealmId })).toBeFalsy();
         // NOTE deliberately not asserted against a row CARRYING no `realmId` key:
@@ -186,6 +199,7 @@ describe('identity permission binding compilation', () => {
             withConditions: true,
             realmAttributeName: 'roleRealmId',
         }));
+
         expect(junction.pending).toBe(true);
         // no condition => PermissionEvaluator.compile answers `post`, the sound fallback
         expect(junction.condition).toBeUndefined();
@@ -195,8 +209,11 @@ describe('identity permission binding compilation', () => {
             data: data(),
             withConditions: true,
         }));
+
         expect(entity.condition).toBeDefined();
+
         const predicate = compileFilters(entity.condition! as IFilter | IFilters, { caseSensitive: true });
+
         expect(predicate({ realmId: identity.realmId })).toBeTruthy();
     });
 });
@@ -233,9 +250,9 @@ describe('identity permission binding recursion (#3633)', () => {
         })],
     ])('settles a grant whose policy carries %s false instead of recursing', async (_label, grantPolicy) => {
         const outcome = await run([{
-            permission, 
-            realmScope: 'any', 
-            policies: [grantPolicy], 
+            permission,
+            realmScope: 'any',
+            policies: [grantPolicy],
         }]);
 
         expect(outcome.success).toBe(false);
@@ -266,9 +283,9 @@ describe('identity permission binding recursion (#3633)', () => {
             children: [definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {})],
         };
         const outcome = await run([{
-            permission, 
-            realmScope: 'any', 
-            policies: [raw], 
+            permission,
+            realmScope: 'any',
+            policies: [raw],
         }]);
 
         expect(outcome.success).toBe(true);
@@ -278,9 +295,9 @@ describe('identity permission binding recursion (#3633)', () => {
         const raw : PolicyWithType = { type: BuiltInPolicyType.COMPOSITE, children: [null] };
         const outcome = await run([
             {
-                permission, 
-                realmScope: 'any', 
-                policies: [raw], 
+                permission,
+                realmScope: 'any',
+                policies: [raw],
             },
             { permission, realmScope: 'any' },
         ]);

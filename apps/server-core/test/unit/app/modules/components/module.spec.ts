@@ -10,10 +10,10 @@ import { createNoopLogger } from '@authup/server-kit';
 import { Container } from 'eldin';
 import type { DataSource } from 'typeorm';
 import {
-    afterEach, 
-    describe, 
-    expect, 
-    it, 
+    afterEach,
+    describe,
+    expect,
+    it,
     vi,
 } from 'vitest';
 import { CacheInjectionKey } from '../../../../../src/app/modules/cache';
@@ -60,6 +60,7 @@ const createContext = (config: Config) : ComponentsTestContext => {
     // components, so it is asserted rather than discarded.
     const infoLines : string[] = [];
     const logger = createNoopLogger();
+
     logger.info = ((message: unknown) => {
         infoLines.push(String(message));
 
@@ -67,15 +68,16 @@ const createContext = (config: Config) : ComponentsTestContext => {
     }) as Logger['info'];
 
     const container = new Container();
+
     container.register(ConfigInjectionKey, { useValue: config });
     container.register(CacheInjectionKey, { useValue: {} as ICache });
     container.register(DatabaseInjectionKey.DataSource, { useValue: dataSource });
     container.register(LoggerInjectionKey, { useValue: logger });
 
     return {
-        container, 
-        findMock, 
-        infoLines, 
+        container,
+        findMock,
+        infoLines,
     };
 };
 
@@ -91,9 +93,9 @@ describe('app/modules/components', () => {
         vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
 
         const {
-            container, 
-            findMock, 
-            infoLines, 
+            container,
+            findMock,
+            infoLines,
         } = createContext(config);
 
         const module = new ComponentsModule();
@@ -123,9 +125,9 @@ describe('app/modules/components', () => {
         vi.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
 
         const {
-            container, 
-            findMock, 
-            infoLines, 
+            container,
+            findMock,
+            infoLines,
         } = createContext(config);
 
         const module = new ComponentsModule();
@@ -187,12 +189,14 @@ describe('app/modules/components', () => {
         const { container, findMock } = createContext(config);
 
         const module = new ComponentsModule();
+
         expect(module.getHealth().healthy).toBeFalsy();
 
         await module.setup(container);
         await flushMicrotasks();
 
         const healthy = module.getHealth();
+
         expect(healthy.healthy).toBeTruthy();
         expect(healthy.components).toEqual([{
             name: 'oauth2-cleaner',
@@ -208,7 +212,9 @@ describe('app/modules/components', () => {
         expect(module.getHealth().healthy).toBeTruthy();
 
         await vi.advanceTimersByTimeAsync(2 * 60_000);
+
         const overdue = module.getHealth();
+
         expect(overdue.healthy).toBeFalsy();
         expect(overdue.components[0]).toEqual({
             name: 'oauth2-cleaner',
@@ -238,6 +244,7 @@ describe('app/modules/components', () => {
         findMock.mockRejectedValue(new Error('database gone'));
 
         const module = new ComponentsModule();
+
         await module.setup(container);
         await flushMicrotasks();
 
@@ -247,10 +254,10 @@ describe('app/modules/components', () => {
         expect(module.getHealth()).toEqual({
             healthy: false,
             components: [{
-                name: 'oauth2-cleaner', 
-                lastSuccessAt: null, 
-                runningSince: null, 
-                overdue: true, 
+                name: 'oauth2-cleaner',
+                lastSuccessAt: null,
+                runningSince: null,
+                overdue: true,
             }],
         });
 
@@ -266,11 +273,13 @@ describe('app/modules/components', () => {
         const { container, findMock } = createContext(config);
 
         const module = new ComponentsModule();
+
         await module.setup(container);
         await flushMicrotasks();
 
         // the next pass does not return, as a large drain or a hung query would
         const pass = Promise.withResolvers<unknown[]>();
+
         findMock.mockReturnValue(pass.promise);
         await vi.advanceTimersByTimeAsync(60_000);
 
@@ -303,16 +312,21 @@ describe('app/modules/components', () => {
         const { container, findMock } = createContext(config);
 
         const module = new ComponentsModule();
+
         await module.setup(container);
         await flushMicrotasks();
 
         const pass = Promise.withResolvers<unknown[]>();
+
         findMock.mockReturnValue(pass.promise);
         await vi.advanceTimersByTimeAsync(60_000);
 
         // the database is never torn down beneath a running sweep
         let tornDown = false;
-        const teardown = module.teardown(container).then(() => { tornDown = true; });
+        const teardown = module.teardown(container).then(() => {
+            tornDown = true;
+        });
+
         await flushMicrotasks();
         expect(tornDown).toBeFalsy();
 
@@ -330,6 +344,7 @@ describe('app/modules/components', () => {
         const { container, findMock } = createContext(config);
 
         const module = new ComponentsModule();
+
         await module.setup(container);
         await flushMicrotasks();
 
@@ -339,9 +354,11 @@ describe('app/modules/components', () => {
         // still scheduled while teardown waits for oauth2-cleaner.
         const pass = Promise.withResolvers<unknown[]>();
         let held = false;
+
         findMock.mockImplementation(async (options: { where?: { expiring?: boolean } }) => {
             if (!held && !options.where?.expiring) {
                 held = true;
+
                 return pass.promise;
             }
 
@@ -350,7 +367,9 @@ describe('app/modules/components', () => {
         await vi.advanceTimersByTimeAsync(60_000);
 
         const teardown = module.teardown(container);
+
         await flushMicrotasks();
+
         const calls = findMock.mock.calls.length;
 
         // while the held pass drains, no component sweeps again
@@ -372,12 +391,14 @@ describe('app/modules/components', () => {
         const { container } = createContext(config);
 
         const module = new ComponentsModule();
+
         await module.setup(container);
         await flushMicrotasks();
 
         await vi.advanceTimersByTimeAsync(6 * 60_000);
 
         const health = module.getHealth();
+
         expect(health.healthy).toBeFalsy();
         expect(health.components.map((c) => [c.name, c.overdue])).toEqual([
             ['oauth2-cleaner', false],

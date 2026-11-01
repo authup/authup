@@ -430,6 +430,10 @@ the current contract and restores the intended decision.
 
 ### Permission
 
+Permission names are trimmed and lowercased, must be 3 to 128 characters long,
+and accept `a-z`, `0-9`, `-`, `_`, `.`, and `:` (for example, `run:read` or
+`agent:worker-1:approve`). Other entity names do not accept `:`.
+
 | Field        | Type               | Description                          |
 |--------------|--------------------|--------------------------------------|
 | `strategy`   | `Strategy`         | Sync strategy (optional)             |

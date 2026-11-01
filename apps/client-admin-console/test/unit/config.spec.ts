@@ -35,6 +35,7 @@ describe('src/config', () => {
 
     it('should derive the api url from the base path when nothing is injected', () => {
         const config = resolveAdminConsoleConfig({}, { origin: 'https://auth.example.com' });
+
         expect(config.apiUrl).toEqual('https://auth.example.com');
         expect(config.basePath).toEqual('/console/admin');
         // a standalone host, or a dist served by an older server

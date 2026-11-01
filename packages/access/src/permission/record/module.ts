@@ -41,6 +41,7 @@ function buildRecordData(name: string | string[], target: RecordTarget): PolicyD
     }
 
     let data : PolicyData;
+
     if (target.data instanceof PolicyData) {
         data = target.data.clone();
     } else if (isPolicyDataLike(target.data)) {
@@ -94,6 +95,7 @@ export async function evaluateRecordOneOf(
 async function asPredicate(fn: () => Promise<void>): Promise<boolean> {
     try {
         await fn();
+
         return true;
     } catch (error) {
         if (isPermissionError(error)) {
@@ -171,5 +173,6 @@ export async function hasUnboundedReach(
         realmId: owner.realmId,
         clientId: owner.clientId,
     });
+
     return result.verdict === 'allow';
 }

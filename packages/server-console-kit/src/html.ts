@@ -31,9 +31,11 @@ export function readUIClientPreferences(event: IAppEvent) : UIClientPreferences 
  */
 export function stampHtmlAttributes(html: string, preferences: UIClientPreferences) : string {
     let htmlAttrs = 'lang="en"';
+
     if (preferences.locale && /^[a-zA-Z]{2,3}(-[a-zA-Z0-9]+)*$/.test(preferences.locale)) {
         htmlAttrs = `lang="${preferences.locale}"`;
     }
+
     if (preferences.colorMode === 'dark' || preferences.colorMode === 'light') {
         htmlAttrs += ` class="${preferences.colorMode}"`;
     }
@@ -73,6 +75,7 @@ export function injectHeadContent(html: string, content: string) : string {
     }
 
     const index = html.toLowerCase().indexOf('</head>');
+
     if (index === -1) {
         return html;
     }
@@ -137,7 +140,7 @@ export function applyUIPageHeaders(event: IAppEvent) : void {
  */
 export function rebaseAssetURLs(html: string, viteBase: string, assetBasePath: string) : string {
     return html.replace(
-        new RegExp(`(src|href)="${viteBase.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}`, 'g'),
+        new RegExp(`(src|href)="${RegExp.escape(viteBase)}`, 'g'),
         (_match, attribute) => `${attribute}="${assetBasePath}`,
     );
 }

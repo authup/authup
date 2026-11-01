@@ -129,6 +129,7 @@ describe('is-simple-match', () => {
         const corpus: string[] = [];
         const build = (prefix: string, depth: number) => {
             corpus.push(prefix);
+
             if (depth === 0) {
                 return;
             }
@@ -137,9 +138,11 @@ describe('is-simple-match', () => {
                 build(prefix + character, depth - 1);
             }
         };
+
         build('', 4);
 
         const divergences: string[] = [];
+
         for (const value of corpus) {
             for (const pattern of corpus) {
                 if (isSimpleMatch(value, pattern) !== reference(value, pattern)) {

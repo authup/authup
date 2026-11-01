@@ -12,6 +12,7 @@ import { useRequestIdentityOrFail } from '../../../request/index.ts';
 export class ForceLoggedInMiddleware implements HandlerInterface {
     public run(event: IAppEvent) {
         useRequestIdentityOrFail(event);
+
         return event.next();
     }
 }

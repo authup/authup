@@ -80,6 +80,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
                 ...ctx,
                 name: [ctx.name],
             });
+
             return;
         }
 
@@ -99,6 +100,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
                 realmId: ctx.realmId,
                 clientId: ctx.clientId,
             });
+
             if (!binding) {
                 issues.push(defineIssueItem({
                     code: ErrorCode.PERMISSION_NOT_FOUND,
@@ -133,6 +135,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
             }
 
             const data = dataBase.clone();
+
             data.set(BuiltInPolicyType.PERMISSION_BINDING, binding);
 
             const compositePolicy : CompositePolicy = {
@@ -254,6 +257,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
                 realmId: ctx.realmId,
                 clientId: ctx.clientId,
             });
+
             if (!binding) {
                 // unresolvable permission — a settled-false disjunct, drops out
                 continue;
@@ -269,6 +273,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
             }
 
             const data = dataBase.clone();
+
             data.set(BuiltInPolicyType.PERMISSION_BINDING, binding);
 
             const compositePolicy : CompositePolicy = {
@@ -310,6 +315,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
 
         if (conditions.length === 1) {
             const [condition] = conditions;
+
             return { verdict: 'conditional', condition: condition! };
         }
 

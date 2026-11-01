@@ -48,6 +48,7 @@ describe('grant-authorize session reuse', () => {
                 tokenBindingMethod: 'none',
             }));
         const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: client.id,
@@ -59,11 +60,13 @@ describe('grant-authorize session reuse', () => {
             .createWithPassword({ username: user.name, password });
 
         const userClient = new HTTPClient({ baseURL: suite.baseURL });
+
         userClient.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
 
         const loginIntrospect = await userClient.token.introspect({ token: login.access_token }, { authorizationHeaderInherit: true });
         const userId = loginIntrospect.sub!;
         const loginSessionId = loginIntrospect.session_id!;
+
         expect(loginSessionId).toBeDefined();
 
         // 2) that same bearer authorizes the web/confidential client (SSR POST /authorize)
@@ -92,7 +95,9 @@ describe('grant-authorize session reuse', () => {
         expect(tokenResponse.access_token).toBeDefined();
 
         const exchangeClient = new HTTPClient({ baseURL: suite.baseURL });
+
         exchangeClient.setAuthorizationHeader({ type: 'Bearer', token: tokenResponse.access_token });
+
         const exchangeIntrospect = await exchangeClient.token.introspect({ token: tokenResponse.access_token }, { authorizationHeaderInherit: true });
 
         // the exchanged token rides the very same session as the login
@@ -101,6 +106,7 @@ describe('grant-authorize session reuse', () => {
         // 4) exactly ONE session exists for the user — no duplicate on login
         const sessions = await suite.client.session.getMany({ filters: { sub: userId } });
         const own = sessions.data.filter((s) => s.sub === userId);
+
         expect(own).toHaveLength(1);
         expect(own[0].id).toEqual(loginSessionId);
         // and the reused session now carries the authorizing client
@@ -126,6 +132,7 @@ describe('grant-authorize session reuse', () => {
                     tokenBindingMethod: 'none',
                 }));
             const { data: scope } = await suite.client.scope.getOne(ScopeName.GLOBAL);
+
             await suite.client.clientScope.create({
                 scopeId: scope.id,
                 clientId: client.id,
@@ -133,6 +140,7 @@ describe('grant-authorize session reuse', () => {
 
             const login = await suite.client.token.createWithPassword({ username: user.name, password });
             const userClient = new HTTPClient({ baseURL: suite.baseURL });
+
             userClient.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
 
             const { url } = await userClient.authorize.confirm({

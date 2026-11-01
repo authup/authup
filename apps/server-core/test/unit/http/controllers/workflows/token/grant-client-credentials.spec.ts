@@ -25,6 +25,7 @@ describe('refresh-token', () => {
         await suite.setup();
 
         const input = createFakeClient();
+
         input.active = true;
         input.authMethod = 'secret';
         input.tokenBindingMethod = 'none';

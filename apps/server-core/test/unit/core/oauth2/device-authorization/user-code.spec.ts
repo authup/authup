@@ -20,8 +20,10 @@ describe('core/oauth2/device-authorization/user-code', () => {
         expect(OAUTH2_DEVICE_USER_CODE_LENGTH).toEqual(8);
 
         const pattern = /^[BCDFGHJKLMNPQRSTVWXZ]{8}$/;
+
         for (let i = 0; i < 1000; i++) {
             const code = generateDeviceUserCode();
+
             expect(code).toHaveLength(8);
             expect(code).toMatch(pattern);
             expect(code).not.toMatch(/[AEIOUY0-9]/);

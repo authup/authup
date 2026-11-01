@@ -70,6 +70,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
             name: READ_PERMISSION_NAMES,
             realmAttributeName: this.ownerRealmKey,
         });
+
         if (compiled.verdict === 'deny') {
             parsed = appendQueryConditions(parsed, inArray('id', []));
         } else if (compiled.verdict === 'conditional') {
@@ -91,8 +92,10 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
                 realm: this.junctionResourceRealm(entity),
                 data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -109,6 +112,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
         await actor.permissionEvaluator.preEvaluateOneOf({ name: READ_PERMISSION_NAMES });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -136,6 +140,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
             providerId: validated.providerId,
             roleId: validated.roleId,
         });
+
         if (existing) {
             throw new EntityConflictError({ entity: 'identity-provider-role-mapping' });
         }
@@ -164,6 +169,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
                     id: validated.roleId,
                 }),
             );
+
             if (!hasPermissions) {
                 throw new PermissionError({ message: 'You don\'t own the required permissions.' });
             }
@@ -177,6 +183,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
         });
 
         let entity = this.repository.create(validated);
+
         entity = await this.repository.save(entity);
 
         return entity;
@@ -190,6 +197,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -204,6 +212,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
         // and the permission-junction member gate (#3164): you may not modify a role-conferring
         // mapping for a role you no longer own.
         const role = await this.roleRepository.findOneById(entity.roleId);
+
         if (role && actor.identity) {
             const hasPermissions = await this.identityPermissionProvider.isSuperset(
                 await this.getActorGrants(actor),
@@ -212,6 +221,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
                     id: role.id,
                 }),
             );
+
             if (!hasPermissions) {
                 throw new PermissionError({ message: 'You don\'t own the required permissions.' });
             }
@@ -239,6 +249,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -251,6 +262,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
         });
 
         const { id: entityId } = entity;
+
         await this.repository.remove(entity);
         entity.id = entityId;
 

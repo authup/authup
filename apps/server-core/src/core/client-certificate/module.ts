@@ -103,6 +103,7 @@ export class ClientCertificateValidator implements IClientCertificateValidator {
 
         for (const anchor of anchors) {
             const anchorCertificate = parseAnchorCertificate(anchor);
+
             if (!anchorCertificate) {
                 continue;
             }
@@ -115,12 +116,14 @@ export class ClientCertificateValidator implements IClientCertificateValidator {
                 budget,
                 this.crypto,
             );
+
             if (!path) {
                 continue;
             }
 
             try {
                 assertCertificationPath(path);
+
                 return;
             } catch {
                 // A chain reaching this anchor failed its CA constraints;
@@ -139,6 +142,7 @@ export function assertClientCertificateEvidenceValidForBinding(
     assertCertificateCurrent(evidence.certificate);
 
     const constraints = evidence.certificate.getExtension(BasicConstraintsExtension);
+
     if (constraints?.ca) {
         throw new ValidationError('A CA certificate cannot be used as a client certificate.');
     }
@@ -146,6 +150,7 @@ export function assertClientCertificateEvidenceValidForBinding(
 
 export function parseClientCertificateChain(pem: string): X509Certificate[] {
     const blocks = pem.match(CERTIFICATE_BLOCK_PATTERN);
+
     if (!blocks || blocks.length === 0) {
         throw new ValidationError('The certificate chain could not be parsed.');
     }
@@ -211,6 +216,7 @@ async function continuePath(
 
     for (let index = 0; index < available.length; index += 1) {
         const candidate = available[index];
+
         if (
             !candidate ||
             sameCertificate(current, candidate) ||
@@ -227,6 +233,7 @@ async function continuePath(
             budget,
             crypto,
         );
+
         if (next) {
             return next;
         }
@@ -246,8 +253,10 @@ async function isIssuedBy(
     }
 
     const authorityKeyIdentifier = certificate.getExtension(AuthorityKeyIdentifierExtension);
+
     if (authorityKeyIdentifier?.keyId) {
         const subjectKeyIdentifier = issuer.getExtension(SubjectKeyIdentifierExtension);
+
         if (subjectKeyIdentifier && subjectKeyIdentifier.keyId !== authorityKeyIdentifier.keyId) {
             return false;
         }
@@ -260,6 +269,7 @@ async function isIssuedBy(
     if (budget.remaining <= 0) {
         return false;
     }
+
     budget.remaining -= 1;
 
     try {
@@ -287,6 +297,7 @@ function assertCertificationPath(path: X509Certificate[]): void {
 
     for (let index = 1; index < path.length; index += 1) {
         const certificate = path[index];
+
         if (!certificate) {
             throw new ValidationError('The client certificate chain is invalid.');
         }
@@ -296,6 +307,7 @@ function assertCertificationPath(path: X509Certificate[]): void {
         // it carries are the operator's responsibility, so the RFC 5280
         // conformance checks below apply only to the issued intermediates.
         const isAnchor = index === path.length - 1;
+
         if (!isAnchor) {
             assertCertificateExtensionsUnderstood(certificate);
             assertStrongSignature(certificate);
@@ -303,12 +315,15 @@ function assertCertificationPath(path: X509Certificate[]): void {
         }
 
         assertCertificateCurrent(certificate);
+
         const constraints = certificate.getExtension(BasicConstraintsExtension);
+
         if (!constraints?.ca) {
             throw new ValidationError('The client certificate chain contains a non-CA issuer.');
         }
 
         const keyUsage = certificate.getExtension(KeyUsagesExtension);
+
         if (keyUsage && (keyUsage.usages & KeyUsageFlags.keyCertSign) === 0) {
             throw new ValidationError('A client certificate issuer cannot sign certificates.');
         }
@@ -327,6 +342,7 @@ function assertCertificationPath(path: X509Certificate[]): void {
 
 function assertClientCertificatePurpose(certificate: X509Certificate): void {
     const extendedKeyUsage = certificate.getExtension(ExtendedKeyUsageExtension);
+
     if (
         extendedKeyUsage &&
         !extendedKeyUsage.usages.includes(ExtendedKeyUsage.clientAuth)
@@ -335,6 +351,7 @@ function assertClientCertificatePurpose(certificate: X509Certificate): void {
     }
 
     const keyUsage = certificate.getExtension(KeyUsagesExtension);
+
     if (keyUsage && (keyUsage.usages & KeyUsageFlags.digitalSignature) === 0) {
         throw new ValidationError('The certificate cannot prove possession of its private key.');
     }
@@ -349,6 +366,7 @@ function assertClientCertificatePurpose(certificate: X509Certificate): void {
  */
 function assertIssuerExtendedKeyUsage(certificate: X509Certificate): void {
     const extendedKeyUsage = certificate.getExtension(ExtendedKeyUsageExtension);
+
     if (
         extendedKeyUsage &&
         !extendedKeyUsage.usages.includes(ExtendedKeyUsage.clientAuth) &&
@@ -368,6 +386,7 @@ function assertClientCertificateIdentity(certificate: X509Certificate, clientId:
         [];
 
     const expected = buildClientCertificateURI(clientId);
+
     if (authupUris.length !== 1 || authupUris[0] !== expected) {
         throw new ValidationError(`The certificate must contain exactly one Authup client URI SAN: ${expected}.`);
     }
@@ -375,6 +394,7 @@ function assertClientCertificateIdentity(certificate: X509Certificate, clientId:
 
 function assertCertificateCurrent(certificate: X509Certificate): void {
     const now = Date.now();
+
     if (
         certificate.notBefore.getTime() > now ||
         certificate.notAfter.getTime() < now
@@ -395,6 +415,7 @@ function assertCertificateExtensionsUnderstood(certificate: X509Certificate): vo
 
 function assertStrongSignature(certificate: X509Certificate): void {
     const hash = certificate.signatureAlgorithm?.hash?.name;
+
     if (typeof hash === 'string' && WEAK_SIGNATURE_HASHES.has(hash.toUpperCase())) {
         throw new ValidationError(`The certificate is signed with a weak algorithm (${hash}).`);
     }

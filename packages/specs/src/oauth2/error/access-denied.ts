@@ -23,6 +23,7 @@ export class OAuth2AccessDeniedError extends OAuth2Error {
 
     constructor(input?: AuthupErrorOptions & { redirectUri?: string | null, state?: string | null }) {
         const options = normalizeOAuth2ErrorInput(input);
+
         super({
             code: ErrorCode.OAUTH_ACCESS_DENIED,
             message: 'Access to the requested application is not permitted.',

@@ -17,6 +17,7 @@ export async function readConfigRaw<T extends ObjectLiteral>(
     options: ConfigRawReadOptions<T> = {},
 ) : Promise<Partial<T>> {
     let fs : Partial<T> | undefined;
+
     if (options.fs) {
         const fsOptions = boolableToObject(options.fs);
         const { tree } = await readConfigFileTree(fsOptions);
@@ -25,8 +26,10 @@ export async function readConfigRaw<T extends ObjectLiteral>(
     }
 
     let env : Partial<T> | undefined;
+
     if (options.env) {
         const envOptions = boolableToObject(options.env);
+
         env = readConfigRawFromEnv(schema, envOptions);
     }
 

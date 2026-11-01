@@ -67,6 +67,7 @@ describe('client update reach (#3654)', () => {
             secretEncrypted: false,
         });
         const { data: permission } = await suite.client.permission.getOne(PermissionName.CLIENT_UPDATE);
+
         await suite.client.clientPermission.create({
             clientId: delegateClient.id,
             permissionId: permission.id,
@@ -78,6 +79,7 @@ describe('client update reach (#3654)', () => {
             client_id: delegateClient.id,
             client_secret: delegateSecret,
         });
+
         delegate = new HTTPClient({ baseURL: suite.baseURL });
         delegate.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
     });
@@ -93,11 +95,13 @@ describe('client update reach (#3654)', () => {
         );
 
         const { data: current } = await suite.client.client.getOne(outside.id);
+
         expect(current.pathId).toBeNull();
     });
 
     it('should update a client that stays in the folder', async () => {
         const { data } = await delegate.client.update(inside.id, { displayName: 'still inside' });
+
         expect(data.displayName).toEqual('still inside');
     });
 
@@ -108,6 +112,7 @@ describe('client update reach (#3654)', () => {
         );
 
         const { data: current } = await suite.client.client.getOne(inside.id);
+
         expect(current.pathId).toEqual(folderId);
     });
 });

@@ -31,7 +31,7 @@
 npm install @authup/kit
 ```
 
-ESM only. Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`; the helpers use Web APIs only (`URL`, `atob`, `btoa`), so they also run in a browser.
+ESM only. Node.js `>=26.0.0`; the helpers use Web APIs only (`URL`, `atob`, `btoa`), so they also run in a browser.
 
 ## Usage
 

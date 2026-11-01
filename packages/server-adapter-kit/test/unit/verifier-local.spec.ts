@@ -35,6 +35,7 @@ function encodeSegment(input: Record<string, any>) : string {
 
 function buildPayload(input: Record<string, any> = {}) {
     const now = Math.floor(Date.now() / 1000);
+
     return {
         ...TokenPayload,
         iat: now,
@@ -56,6 +57,7 @@ describe('verifier local', () => {
         faker = new Faker();
 
         const pair = await generateKeyPair('ES256', { extractable: true });
+
         ecPrivateKey = pair.privateKey;
         ecJwk = {
             ...(await exportJWK(pair.publicKey)),
@@ -90,6 +92,7 @@ describe('verifier local', () => {
         ['a space in the signature', (token: string) => `${token.slice(0, -4)} ${token.slice(-4)}`],
         ['a tab in the payload', (token: string) => {
             const [header, payload, signature] = token.split('.');
+
             return `${header}.${payload.slice(0, 4)}\t${payload.slice(4)}.${signature}`;
         }],
     ])('should reject a valid token altered by %s', async (_label, alter) => {
@@ -101,6 +104,7 @@ describe('verifier local', () => {
 
     it('should reject a realm key without an algorithm with a JWTError', async () => {
         const jwk : Partial<OAuth2JsonWebKey> = { ...await faker.useJwk() };
+
         delete jwk.alg;
         getJwk.mockResolvedValueOnce(jwk);
 
@@ -118,6 +122,7 @@ describe('verifier local', () => {
             true,
             ['sign', 'verify'],
         );
+
         getJwk.mockResolvedValueOnce({
             ...(await exportJWK(pair.publicKey)),
             alg: 'RS256',
@@ -175,6 +180,7 @@ describe('verifier local', () => {
             .sign(ecPrivateKey);
 
         const output = await verifier.verify(token);
+
         expect(output.sub).toEqual(TokenPayload.sub);
     });
 
@@ -194,6 +200,7 @@ describe('verifier local', () => {
         const token = await faker.sign(buildPayload({ nbf: Math.floor(Date.now() / 1000) + 30 }));
 
         const output = await verifier.verify(token);
+
         expect(output.sub).toEqual(TokenPayload.sub);
     });
 
@@ -203,6 +210,7 @@ describe('verifier local', () => {
         const token = await faker.sign(buildPayload({ name: 'Пётр' }));
 
         const output = await verifier.verify(token);
+
         expect(output.name).toEqual('Пётр');
         expect(getJwk).toHaveBeenCalledWith(FAKER_KEY_ID, TokenPayload.realm_id);
     });
@@ -219,32 +227,40 @@ describe('verifier local', () => {
         ['a malformed token', async () => 'a.b'],
         ['a token naming no realm', async () => {
             const payload : Record<string, any> = buildPayload();
+
             delete payload.realm_id;
+
             return faker.sign(payload);
         }],
         ['a kid that is no uuid', async () => faker.sign(buildPayload(), '../users')],
         ['an unknown kid', async () => {
             getJwk.mockRejectedValueOnce(Object.assign(new Error('not found'), { response: { status: 404 } }));
+
             return faker.sign(buildPayload());
         }],
         ['a failed key fetch', async () => {
             getJwk.mockRejectedValueOnce(new Error('ECONNRESET'));
+
             return faker.sign(buildPayload());
         }],
         ['a forged signature', async () => {
             getJwk.mockResolvedValueOnce(await new Faker().useJwk());
+
             return faker.sign(buildPayload());
         }],
         ['an expired token', async () => {
             getJwk.mockResolvedValueOnce(await faker.useJwk());
+
             return faker.sign(buildPayload({ exp: Math.floor(Date.now() / 1000) - 3600 }));
         }],
         ['a refresh token', async () => {
             getJwk.mockResolvedValueOnce(await faker.useJwk());
+
             return faker.sign(buildPayload({ kind: 'refresh_token' }));
         }],
         ['a certificate-bound token without a thumbprint', async () => {
             getJwk.mockResolvedValueOnce(await faker.useJwk());
+
             return faker.sign(buildPayload({ cnf: { 'x5t#S256': 'thumbprint' } }));
         }],
     ])('should reject %s with a JWTError, never a VouchlyError', async (_label, build) => {

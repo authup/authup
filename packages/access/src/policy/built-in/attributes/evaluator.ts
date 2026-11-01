@@ -73,6 +73,7 @@ export class AttributesPolicyEvaluator<
         const policy = await this.validator.run(value);
 
         const data = await this.accessData(ctx);
+
         if (!data) {
             return {
                 success: false,
@@ -125,24 +126,29 @@ export class AttributesPolicyEvaluator<
             return;
         }
 
-        if (isObject(query)) {
-            const keys = Object.keys(query);
-            for (const key of keys) {
-                const value = query[key];
+        if (!isObject(query)) {
+            return;
+        }
 
-                if (isObject(value) || Array.isArray(value)) {
-                    this.fixQuery(value);
-                    continue;
-                }
+        const keys = Object.keys(query);
 
-                if (
-                    key === '$regex' &&
-                    typeof value === 'string'
-                ) {
-                    const fragments = value.match(/\/(.*?)\/([a-z]*)?$/i);
-                    if (fragments && fragments[1] !== undefined) {
-                        query[key] = new RegExp(fragments[1], fragments[2] || '');
-                    }
+        for (const key of keys) {
+            const value = query[key];
+
+            if (isObject(value) || Array.isArray(value)) {
+                this.fixQuery(value);
+
+                continue;
+            }
+
+            if (
+                key === '$regex' &&
+                typeof value === 'string'
+            ) {
+                const fragments = value.match(/\/(.*?)\/([a-z]*)?$/i);
+
+                if (fragments && fragments[1] !== undefined) {
+                    query[key] = new RegExp(fragments[1], fragments[2] || '');
                 }
             }
         }

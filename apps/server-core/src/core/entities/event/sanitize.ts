@@ -76,15 +76,12 @@ function sanitizeDiff(input: unknown): Record<string, any> | null {
     const output: Record<string, any> = {};
 
     for (const [key, entry] of Object.entries(input)) {
-        if (EVENT_DIFF_SECRET_KEY_REGEX.test(key)) {
-            continue;
-        }
-
-        if (!isObject(entry)) {
+        if (EVENT_DIFF_SECRET_KEY_REGEX.test(key) || !isObject(entry)) {
             continue;
         }
 
         const { next, previous } = entry;
+
         if (!isDiffScalar(next) || !isDiffScalar(previous)) {
             continue;
         }
@@ -124,6 +121,7 @@ export function sanitizeEventData(
     }
 
     const diff = sanitizeDiff(input.diff);
+
     if (diff) {
         output.diff = diff;
     }

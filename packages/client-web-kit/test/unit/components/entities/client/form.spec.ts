@@ -163,9 +163,11 @@ describe('AClientForm access policy', () => {
     it('renders the access-policy picker hydrated from the entity and realm-scoped (incl. global)', async () => {
         const entity = createEntity();
         const { wrapper } = mountForm(entity);
+
         await flushPromises();
 
         const picker = wrapper.findComponent({ name: 'APolicyPicker' });
+
         expect(picker.exists()).toBe(true);
         expect(picker.props('value')).toEqual(entity.accessPolicyId);
         expect(picker.props('query')).toEqual(defineQuery({ filters: { realmId: ['realm-1', null] } }));
@@ -174,9 +176,11 @@ describe('AClientForm access policy', () => {
     it('submits a changed accessPolicyId on update', async () => {
         const entity = createEntity();
         const { wrapper, httpClient } = mountForm(entity);
+
         await flushPromises();
 
         const picker = wrapper.findComponent({ name: 'APolicyPicker' });
+
         picker.vm.$emit('change', ['1b2c3d4e-5f60-4172-8394-a5b6c7d8e9f0']);
         await flushPromises();
 
@@ -184,6 +188,7 @@ describe('AClientForm access policy', () => {
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
+
         expect(request).toBeDefined();
         expect(request!.body).toMatchObject({ accessPolicyId: '1b2c3d4e-5f60-4172-8394-a5b6c7d8e9f0' });
     });
@@ -191,9 +196,11 @@ describe('AClientForm access policy', () => {
     it('submits null when the picker selection is cleared', async () => {
         const entity = createEntity();
         const { wrapper, httpClient } = mountForm(entity);
+
         await flushPromises();
 
         const picker = wrapper.findComponent({ name: 'APolicyPicker' });
+
         picker.vm.$emit('change', []);
         await flushPromises();
 
@@ -201,6 +208,7 @@ describe('AClientForm access policy', () => {
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
+
         expect(request).toBeDefined();
         expect(request!.body).toHaveProperty('accessPolicyId', null);
     });
@@ -251,14 +259,14 @@ describe('AClientForm untouched url lists', () => {
                     VCFormSwitch: { props: ['modelValue', 'label', 'labelContent'], template: '<input type="checkbox" />' },
                     VCFormSelect: { props: ['modelValue', 'options'], template: '<select />' },
                     VCFormCheckboxGroup: {
-                        name: 'VCFormCheckboxGroup', 
-                        props: ['modelValue'], 
-                        template: '<div><slot /></div>', 
+                        name: 'VCFormCheckboxGroup',
+                        props: ['modelValue'],
+                        template: '<div><slot /></div>',
                     },
                     VCFormCheckbox: {
-                        name: 'VCFormCheckbox', 
-                        props: ['value', 'label', 'labelContent'], 
-                        template: '<input type="checkbox" />', 
+                        name: 'VCFormCheckbox',
+                        props: ['value', 'label', 'labelContent'],
+                        template: '<input type="checkbox" />',
                     },
                 },
                 plugins: [pinia, [vuecs, {}], [{ install }, options]],
@@ -274,6 +282,7 @@ describe('AClientForm untouched url lists', () => {
             (candidate) => candidate.method === 'POST' &&
                 new URL(candidate.url, 'http://localhost').pathname === '/clients',
         );
+
         expect(request).toBeDefined();
         expect(request!.body).toHaveProperty('redirectUri', null);
         expect(request!.body).toHaveProperty('postLogoutRedirectUri', null);
@@ -288,9 +297,11 @@ describe('AClientForm post-logout redirect uris', () => {
 
     it('hydrates from the comma-separated column, independently of redirectUri', async () => {
         const entity = createEntity();
+
         entity.postLogoutRedirectUri = 'https://app.example.com/bye,https://alt.example.com/**';
 
         const { wrapper } = mountForm(entity);
+
         await flushPromises();
 
         expect(findList(wrapper).props('names')).toEqual([
@@ -304,6 +315,7 @@ describe('AClientForm post-logout redirect uris', () => {
 
     it('submits the patterns comma-joined', async () => {
         const { wrapper, httpClient } = mountForm(createEntity());
+
         await flushPromises();
 
         findList(wrapper).vm.$emit('changed', [
@@ -316,15 +328,18 @@ describe('AClientForm post-logout redirect uris', () => {
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
+
         expect(request).toBeDefined();
         expect(request!.body).toMatchObject({ postLogoutRedirectUri: 'https://app.example.com/bye,https://alt.example.com/**' });
     });
 
     it('submits null when every pattern is removed', async () => {
         const entity = createEntity();
+
         entity.postLogoutRedirectUri = 'https://app.example.com/bye';
 
         const { wrapper, httpClient } = mountForm(entity);
+
         await flushPromises();
 
         findList(wrapper).vm.$emit('changed', []);
@@ -334,6 +349,7 @@ describe('AClientForm post-logout redirect uris', () => {
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
+
         expect(request).toBeDefined();
         expect(request!.body).toHaveProperty('postLogoutRedirectUri', null);
     });
@@ -347,6 +363,7 @@ describe('AClientForm post-logout redirect uris', () => {
 describe('AClientForm checkbox indicator', () => {
     it('renders a glyph in the checked box and nothing in the unchecked ones', async () => {
         const entity = createEntity();
+
         entity.grantTypes = 'authorization_code';
 
         const pinia = createPinia();
@@ -401,6 +418,7 @@ describe('AClientForm grant types', () => {
 
     it('offers every supported grant type as an option', async () => {
         const { wrapper } = mountForm(createEntity());
+
         await flushPromises();
 
         const values = wrapper
@@ -418,9 +436,11 @@ describe('AClientForm grant types', () => {
 
     it('hydrates the selection from the delimited column', async () => {
         const entity = createEntity();
+
         entity.grantTypes = 'authorization_code refresh_token';
 
         const { wrapper } = mountForm(entity);
+
         await flushPromises();
 
         expect(findGroup(wrapper).props('modelValue')).toEqual([
@@ -431,9 +451,11 @@ describe('AClientForm grant types', () => {
 
     it('keeps an unknown grant type as a checked option instead of stripping it', async () => {
         const entity = createEntity();
+
         entity.grantTypes = 'authorization_code,urn:example:grant';
 
         const { wrapper } = mountForm(entity);
+
         await flushPromises();
 
         expect(findGroup(wrapper).props('modelValue')).toContain('urn:example:grant');
@@ -446,6 +468,7 @@ describe('AClientForm grant types', () => {
 
     it('submits the selection as a space-delimited allowlist', async () => {
         const { wrapper, httpClient } = mountForm(createEntity());
+
         await flushPromises();
 
         findGroup(wrapper).vm.$emit('update:modelValue', ['authorization_code', 'refresh_token']);
@@ -455,6 +478,7 @@ describe('AClientForm grant types', () => {
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
+
         expect(request).toBeDefined();
         expect(request!.body).toMatchObject({ grantTypes: 'authorization_code refresh_token' });
     });
@@ -463,9 +487,11 @@ describe('AClientForm grant types', () => {
     // must send null — an empty string would also fail the validator's min(3).
     it('submits null when the selection is cleared', async () => {
         const entity = createEntity();
+
         entity.grantTypes = 'authorization_code';
 
         const { wrapper, httpClient } = mountForm(entity);
+
         await flushPromises();
 
         findGroup(wrapper).vm.$emit('update:modelValue', []);
@@ -475,6 +501,7 @@ describe('AClientForm grant types', () => {
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
+
         expect(request).toBeDefined();
         expect(request!.body).toHaveProperty('grantTypes', null);
     });
@@ -494,12 +521,15 @@ describe('AClientForm home and back-channel logout urls', () => {
         ['backchannelLogoutUri', 'https://app.example.com/logout', 'https://app.example.com/backchannel'],
     ] as const)('hydrates %s from the entity and submits the typed value', async (key, initial, next) => {
         const entity = createEntity();
+
         entity[key] = initial;
 
         const { wrapper, httpClient } = mountForm(entity);
+
         await flushPromises();
 
         const input = findInput(wrapper, initial);
+
         expect(input).toBeDefined();
 
         input!.vm.$emit('update:modelValue', next);
@@ -509,6 +539,7 @@ describe('AClientForm home and back-channel logout urls', () => {
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
+
         expect(request).toBeDefined();
         expect(request!.body).toMatchObject({ [key]: next });
     });
@@ -518,12 +549,15 @@ describe('AClientForm home and back-channel logout urls', () => {
         ['backchannelLogoutUri', 'https://app.example.com/logout'],
     ] as const)('submits null for %s when the input is cleared', async (key, initial) => {
         const entity = createEntity();
+
         entity[key] = initial;
 
         const { wrapper, httpClient } = mountForm(entity);
+
         await flushPromises();
 
         const input = findInput(wrapper, initial);
+
         expect(input).toBeDefined();
 
         input!.vm.$emit('update:modelValue', '');
@@ -533,6 +567,7 @@ describe('AClientForm home and back-channel logout urls', () => {
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
+
         expect(request).toBeDefined();
         expect(request!.body).toHaveProperty(key, null);
     });
@@ -550,8 +585,10 @@ describe('AClientForm secret rotation', () => {
 
     function createHashedEntity() : Client {
         const entity = createEntity();
+
         entity.secret = BCRYPT;
         entity.secretHashed = true;
+
         return entity;
     }
 
@@ -568,6 +605,7 @@ describe('AClientForm secret rotation', () => {
     // through the component tree rather than the wrapper's own DOM.
     async function openDialog(wrapper: ReturnType<typeof mountForm>['wrapper']) {
         const rotate = findRotate(wrapper);
+
         await rotate.findComponent(VCButton).trigger('click');
         await flushPromises();
 
@@ -578,6 +616,7 @@ describe('AClientForm secret rotation', () => {
         const submit = rotate
             .findAllComponents(VCButton)
             .find((button) => button.props('type') === 'submit');
+
         expect(submit).toBeDefined();
 
         await submit!.trigger('click');
@@ -586,6 +625,7 @@ describe('AClientForm secret rotation', () => {
 
     it('keeps the hashed switch and the inline secret input on create', async () => {
         const { wrapper } = mountForm();
+
         await flushPromises();
 
         expect(findSwitches(wrapper)).toHaveLength(2);
@@ -595,6 +635,7 @@ describe('AClientForm secret rotation', () => {
 
     it('renders the rotate button and no secret input for a hashed client', async () => {
         const { wrapper } = mountForm(createHashedEntity());
+
         await flushPromises();
 
         expect(findSwitches(wrapper)).toHaveLength(1);
@@ -604,6 +645,7 @@ describe('AClientForm secret rotation', () => {
 
     it('renders the secret input and the rotate button for a plain client', async () => {
         const { wrapper } = mountForm(createEntity());
+
         await flushPromises();
 
         expect(findSwitches(wrapper)).toHaveLength(1);
@@ -613,12 +655,14 @@ describe('AClientForm secret rotation', () => {
 
     it('sends neither the mode nor an unchanged secret on update', async () => {
         const { wrapper, httpClient } = mountForm(createEntity());
+
         await flushPromises();
 
         wrapper.findComponent(AFormSubmit).vm.$emit('submit');
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
+
         expect(request).toBeDefined();
         expect(request!.body).not.toHaveProperty('secretHashed');
         expect(request!.body).not.toHaveProperty('secret');
@@ -626,6 +670,7 @@ describe('AClientForm secret rotation', () => {
 
     it('sends the changed secret of a plain client on update', async () => {
         const { wrapper, httpClient } = mountForm(createEntity());
+
         await flushPromises();
 
         wrapper.findComponent({ name: 'ASecretInput' }).vm.$emit('update:modelValue', 'next-secret');
@@ -635,6 +680,7 @@ describe('AClientForm secret rotation', () => {
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
+
         expect(request).toBeDefined();
         expect(request!.body).toMatchObject({ secret: 'next-secret' });
         expect(request!.body).not.toHaveProperty('secretHashed');
@@ -648,15 +694,18 @@ describe('AClientForm secret rotation', () => {
                 meta: { secret: 'rotated-plaintext-one' },
             }),
         });
+
         await flushPromises();
 
         const rotate = await openDialog(wrapper);
+
         rotate.findComponent({ name: 'ASecretInput' }).vm.$emit('update:modelValue', 'typed-secret');
         await flushPromises();
 
         await submitDialog(rotate);
 
         const request = findRotateRequest(httpClient, entity.id);
+
         expect(request).toBeDefined();
         expect(request!.body).toEqual({ secret: 'typed-secret', mode: 'hashed' });
 
@@ -674,19 +723,22 @@ describe('AClientForm secret rotation', () => {
         const { wrapper, httpClient } = mountForm(entity, {
             'POST /clients/:id/secret': () => ({
                 data: {
-                    ...entity, 
-                    secret: 'rotated-plaintext-two', 
-                    updatedAt: '2026-01-02T00:00:00.000Z', 
+                    ...entity,
+                    secret: 'rotated-plaintext-two',
+                    updatedAt: '2026-01-02T00:00:00.000Z',
                 },
                 meta: { secret: 'rotated-plaintext-two' },
             }),
         });
+
         await flushPromises();
 
         const rotate = await openDialog(wrapper);
+
         await submitDialog(rotate);
 
         const request = findRotateRequest(httpClient, entity.id);
+
         expect(request).toBeDefined();
         expect(request!.body).toEqual({ mode: 'plain' });
         expect(document.body.textContent).toContain('rotated-plaintext-two');
@@ -696,14 +748,17 @@ describe('AClientForm secret rotation', () => {
 
     it('offers the plain, hashed and encrypted storage modes', async () => {
         const { wrapper } = mountForm(createHashedEntity());
+
         await flushPromises();
 
         const rotate = await openDialog(wrapper);
         const group = rotate.findComponent(VCFormRadioGroup);
+
         expect(group.exists()).toBe(true);
 
         const values = (group.props('options') as { value: unknown }[])
             .map((option) => option.value);
+
         expect(values).toEqual(['plain', 'hashed', 'encrypted']);
 
         wrapper.unmount();
@@ -715,7 +770,9 @@ describe('AClientForm secret rotation', () => {
     // and the hint explaining what the mode depends on is rendered for it.
     it('rotates a legacy secretEncrypted client into an encrypted secret by default', async () => {
         const entity = createEntity();
+
         entity.secretEncrypted = true;
+
         const { wrapper, httpClient } = mountForm(entity, {
             'POST /clients/:id/secret': () => ({
                 data: {
@@ -726,15 +783,18 @@ describe('AClientForm secret rotation', () => {
                 meta: { secret: 'rotated-plaintext-three' },
             }),
         });
+
         await flushPromises();
 
         const rotate = await openDialog(wrapper);
+
         expect(rotate.findComponent(VCFormRadioGroup).props('modelValue')).toEqual('encrypted');
         expect(document.body.textContent).toContain('encryption key');
 
         await submitDialog(rotate);
 
         const request = findRotateRequest(httpClient, entity.id);
+
         expect(request).toBeDefined();
         expect(request!.body).toEqual({ mode: 'encrypted' });
 

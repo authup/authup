@@ -7,11 +7,11 @@
 
 import type { ObjectLiteral } from '@authup/kit';
 import { FakeEntityRepository } from '@authup/server-test-kit';
-import { 
-    beforeEach, 
-    describe, 
-    expect, 
-    it, 
+import {
+    beforeEach,
+    describe,
+    expect,
+    it,
 } from 'vitest';
 import { ProvisioningEntityResolver } from '../../../../../src/core/provisioning/synchronizer/entity-resolver.ts';
 
@@ -20,6 +20,7 @@ class RecordingRepository extends FakeEntityRepository<ObjectLiteral> {
 
     async findManyBy(where: Record<string, any>): Promise<ObjectLiteral[]> {
         this.calls.push(where);
+
         return [];
     }
 }

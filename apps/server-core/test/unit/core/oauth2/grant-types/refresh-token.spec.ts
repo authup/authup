@@ -125,6 +125,7 @@ describe('OAuth2RefreshTokenGrant', () => {
 
     it('should refuse a subject of another realm than the token names', async () => {
         const payload = await seed();
+
         identityResolver.setIdentity({
             type: 'user',
             data: {
@@ -136,12 +137,15 @@ describe('OAuth2RefreshTokenGrant', () => {
 
         await expect(build().runWith(payload)).rejects.toThrow();
         expect(refreshTokenIssuer.issueCalls).toHaveLength(0);
+
         const row = await sessionTokenRepository.findOneById(refreshJti);
+
         expect(row?.consumedAt).toBeNull();
     });
 
     it('should refuse an inactive subject', async () => {
         const payload = await seed();
+
         identityResolver.setIdentity({
             type: 'user',
             data: {
@@ -158,6 +162,7 @@ describe('OAuth2RefreshTokenGrant', () => {
     it('should refuse a session of another realm than the token names', async () => {
         const payload = await seed();
         const session = await sessionManager.findOneById(sessionId);
+
         session!.realmId = randomUUID();
 
         await expect(build().runWith(payload)).rejects.toThrow();
@@ -167,13 +172,16 @@ describe('OAuth2RefreshTokenGrant', () => {
     it('should leave a session of another subject untouched', async () => {
         const payload = await seed();
         const session = await sessionManager.findOneById(sessionId);
+
         session!.sub = randomUUID();
 
         const grant = build();
+
         await expect(grant.runWith(payload)).rejects.toThrow();
         await expect(grant.runWith(payload)).rejects.toThrow();
 
         const row = await sessionTokenRepository.findOneById(refreshJti);
+
         expect(row?.consumedAt).toBeNull();
         expect(row?.revokedAt).toBeFalsy();
         expect(sessionManager.revokeCalls).toHaveLength(0);
@@ -191,6 +199,7 @@ describe('OAuth2RefreshTokenGrant', () => {
 
         // the presented refresh token row was consumed
         const row = await sessionTokenRepository.findOneById(refreshJti);
+
         expect(row?.consumedAt).not.toBeNull();
 
         // exactly one new refresh + access token issued
@@ -261,6 +270,7 @@ describe('OAuth2RefreshTokenGrant', () => {
 
         // replay: the same (now consumed) token again
         let error: unknown;
+
         try {
             await grant.runWith(payload);
         } catch (e) {
@@ -290,7 +300,9 @@ describe('OAuth2RefreshTokenGrant', () => {
         await expect(grant.runWith(payload)).rejects.toBeDefined();
 
         expect(eventService.recordCalls).toHaveLength(1);
+
         const [record] = eventService.recordCalls;
+
         expect(record.scope).toEqual(EventScope.OAUTH2);
         expect(record.name).toEqual(EventName.REFRESH_REPLAY_DETECTED);
         expect(record.refType).toEqual(EventRefType.SESSION);
@@ -328,10 +340,13 @@ describe('OAuth2RefreshTokenGrant', () => {
 
     it('should reject when the row session_id does not match the token session_id', async () => {
         const payload = await seed();
+
         payload.session_id = randomUUID(); // diverges from the stored row's session_id
+
         const grant = build();
 
         let error: unknown;
+
         try {
             await grant.runWith(payload);
         } catch (e) {
@@ -346,11 +361,14 @@ describe('OAuth2RefreshTokenGrant', () => {
 
     it('should reject an unknown refresh token (no row) without touching the session', async () => {
         const payload = await seed();
+
         // present a token whose jti has no row
         payload.jti = randomUUID();
+
         const grant = build();
 
         let error: unknown;
+
         try {
             await grant.runWith(payload);
         } catch (e) {
@@ -364,10 +382,13 @@ describe('OAuth2RefreshTokenGrant', () => {
 
     it('should reject an already-revoked refresh token without re-revoking the family', async () => {
         const payload = await seed();
+
         await sessionTokenRepository.revokeById(refreshJti, new Date().toISOString());
+
         const grant = build();
 
         let error: unknown;
+
         try {
             await grant.runWith(payload);
         } catch (e) {
@@ -385,6 +406,7 @@ describe('OAuth2RefreshTokenGrant', () => {
         const grant = build();
 
         let error: unknown;
+
         try {
             await grant.runWith(payload);
         } catch (e) {
@@ -401,6 +423,7 @@ describe('OAuth2RefreshTokenGrant', () => {
 
         // first use consumes the token
         await grant.runWith(payload);
+
         // second use within the grace window (still the chain tip — no consumed child)
         const response = await grant.runWith(payload);
 
@@ -420,6 +443,7 @@ describe('OAuth2RefreshTokenGrant', () => {
 
         // the rotation chain advances past it: a consumed descendant now exists
         const childJti = randomUUID();
+
         await sessionTokenRepository.create({
             id: childJti,
             sessionId,
@@ -433,6 +457,7 @@ describe('OAuth2RefreshTokenGrant', () => {
 
         // replaying the now-stale ancestor within the window is NOT graced
         let error: unknown;
+
         try {
             await grant.runWith(payload);
         } catch (e) {
@@ -459,6 +484,7 @@ describe('OAuth2RefreshTokenGrant', () => {
         };
 
         let error: unknown;
+
         try {
             await grant.runWith(payload);
         } catch (e) {
@@ -478,6 +504,7 @@ describe('OAuth2RefreshTokenGrant', () => {
         };
 
         let error: unknown;
+
         try {
             await grant.runWith(payload);
         } catch (e) {
@@ -503,6 +530,7 @@ describe('OAuth2RefreshTokenGrant', () => {
         };
 
         let error: unknown;
+
         try {
             await grant.runWith(payload);
         } catch (e) {
@@ -521,6 +549,7 @@ describe('OAuth2RefreshTokenGrant', () => {
         const grant = build();
 
         const failure = new Error('signing key unavailable');
+
         refreshTokenIssuer.issue = async () => {
             throw failure;
         };

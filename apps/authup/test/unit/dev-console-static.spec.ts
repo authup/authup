@@ -19,6 +19,7 @@ import { createViteReadShell } from '../../src/dev/index.ts';
 import { captureEvent } from '../utils/event.ts';
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'authup-dev-'));
+
 fs.writeFileSync(path.join(root, 'index.html'), '<html><body><!--admin-config--></body></html>');
 
 afterAll(() => {

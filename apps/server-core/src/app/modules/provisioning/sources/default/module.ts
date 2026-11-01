@@ -8,20 +8,20 @@
 import { BuiltInPolicyType, RealmScope, SystemPolicyName } from '@authup/access';
 import { DecisionStrategy } from '@authup/kit';
 import type {
-    Client, 
-    Permission, 
-    Role, 
-    Scope, 
+    Client,
+    Permission,
+    Role,
+    Scope,
     User,
 } from '@authup/core-kit';
 import {
     ClientAuthMethod,
     ClientTokenBindingMethod,
-    PermissionName, 
-    REALM_MASTER_NAME, 
-    ROLE_ADMIN_NAME, 
-    ROLE_REALM_ADMIN_NAME, 
-    ScopeName, 
+    PermissionName,
+    REALM_MASTER_NAME,
+    ROLE_ADMIN_NAME,
+    ROLE_REALM_ADMIN_NAME,
+    ScopeName,
     buildUserFakeEmail,
 } from '@authup/core-kit';
 import type { IContainer } from 'eldin';
@@ -158,6 +158,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                 };
 
                 const policies = policiesByPermission[name];
+
                 if (policies) {
                     entity.relations = { policies };
                 }
@@ -242,6 +243,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
         ];
 
         let userStrategy : ProvisioningEntityStrategy<User> | undefined;
+
         if (userAttributes.length > 0) {
             userStrategy = {
                 type: ProvisioningEntityStrategyType.MERGE,

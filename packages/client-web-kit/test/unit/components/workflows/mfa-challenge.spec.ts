@@ -17,14 +17,14 @@ import { mountKitComponent } from '../../../utils';
 
 vi.mock('@simplewebauthn/browser', () => ({
     startAuthentication: vi.fn(async () => ({
-        id: 'cred-1', 
-        response: {}, 
-        type: 'public-key', 
+        id: 'cred-1',
+        response: {},
+        type: 'public-key',
     })),
     startRegistration: vi.fn(async () => ({
-        id: 'cred-1', 
-        response: {}, 
-        type: 'public-key', 
+        id: 'cred-1',
+        response: {},
+        type: 'public-key',
     })),
 }));
 
@@ -40,6 +40,7 @@ describe('AMfaChallengeForm', () => {
             (r) => r.method === 'POST' &&
                 new URL(r.url, 'http://localhost').pathname === '/authenticators/challenge',
         );
+
         expect(request).toBeDefined();
         expect(request!.body).toEqual({ kind: 'totp', response: '123456' });
         expect(wrapper.emitted('done')).toBeTruthy();
@@ -50,7 +51,9 @@ describe('AMfaChallengeForm', () => {
         const { wrapper } = mountKitComponent(AMfaChallengeForm, {}, {
             'POST /authenticators/challenge': () => {
                 const error = new Error('invalid') as Error & { response?: unknown };
+
                 error.response = { status: 400, data: { message: 'The verification code is not valid.' } };
+
                 throw error;
             },
         });
@@ -76,8 +79,11 @@ describe('AMfaChallengeForm', () => {
             (r) => r.method === 'POST' &&
                 new URL(r.url, 'http://localhost').pathname === '/authenticators/challenge',
         );
+
         expect(verifyRequest).toBeDefined();
+
         const verifyBody = verifyRequest!.body as Record<string, string>;
+
         expect(verifyBody.kind).toEqual('webauthn');
         // the assertion is forwarded as a JSON string
         expect(JSON.parse(verifyBody.response).id).toEqual('cred-1');
@@ -98,6 +104,7 @@ describe('AMfaChallengeForm', () => {
             (r) => r.method === 'POST' &&
                 new URL(r.url, 'http://localhost').pathname === '/authenticators/challenge/send',
         );
+
         expect(sendRequest).toBeDefined();
         expect(sendRequest!.body).toEqual({ kind: 'email' });
 
@@ -110,6 +117,7 @@ describe('AMfaChallengeForm', () => {
             (r) => r.method === 'POST' &&
                 new URL(r.url, 'http://localhost').pathname === '/authenticators/challenge',
         );
+
         expect(verifyRequest!.body).toEqual({ kind: 'email', response: '123456' });
         expect(wrapper.emitted('done')).toBeTruthy();
     });
@@ -128,6 +136,7 @@ describe('AMfaChallengeForm', () => {
             (r) => r.method === 'POST' &&
                 new URL(r.url, 'http://localhost').pathname === '/authenticators/challenge',
         );
+
         expect(request!.body).toEqual({ kind: 'recovery', response: 'abcde-fghij' });
     });
 });

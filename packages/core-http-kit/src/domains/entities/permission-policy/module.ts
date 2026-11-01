@@ -25,6 +25,7 @@ export class PermissionPolicyAPI extends BaseAPI implements IPermissionPolicyAPI
 
     async getMany(data?: EntityQueryInput<PermissionPolicy>) : Promise<EntityCollectionResponse<PermissionPolicy>> {
         const response = await this.client.get(`permission-policies${buildQueryString(data)}`);
+
         return response.data;
     }
 

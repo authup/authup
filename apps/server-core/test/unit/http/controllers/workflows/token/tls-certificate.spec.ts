@@ -36,12 +36,13 @@ const WRONG_LEAF_PEM = readCertificate('client-wrong-leaf.pem');
 const SELF_SIGNED_LEAF_PEM = readCertificate('non-ca-certificate.pem');
 
 function structured(certificatePEM: string): string {
-    return `:${new X509Certificate(certificatePEM).raw.toString('base64')}:`;
+    return `:${new X509Certificate(certificatePEM).raw.toBase64()}:`;
 }
 
 function decodeJwtPayload(token: string): OAuth2TokenPayload {
     const [, payload] = token.split('.');
-    return JSON.parse(Buffer.from(payload!, 'base64url').toString('utf8'));
+
+    return JSON.parse(new TextDecoder().decode(Uint8Array.fromBase64(payload!, { alphabet: 'base64url' })));
 }
 
 function certificateHeaders(leafPEM: string, chainPEM?: string): Record<string, string> {
@@ -92,9 +93,11 @@ describe('OAuth2 TLS client authentication and certificate-bound tokens', () => 
             'GET',
             `/realms/${realm.id}/.well-known/openid-configuration`,
         );
+
         expect(response.status).toBe(200);
 
         const discovery = await response.json() as Record<string, any>;
+
         expect(discovery.token_endpoint_auth_methods_supported).toContain('tls_client_auth');
         expect(discovery.tls_client_certificate_bound_access_tokens).toBe(true);
         expect(discovery.mtls_endpoint_aliases.token_endpoint)
@@ -111,16 +114,19 @@ describe('OAuth2 TLS client authentication and certificate-bound tokens', () => 
         };
 
         const withoutCertificate = await httpRequest(suite, 'POST', '/token', { form });
+
         expect(withoutCertificate.status).toBe(401);
 
         const response = await httpRequest(suite, 'POST', '/token', {
             form,
             headers: certificateHeaders(LEAF_PEM, INTERMEDIATE_PEM),
         });
+
         expect(response.status).toBe(200);
 
         const tokens = await response.json() as OAuth2TokenGrantResponse;
         const payload = decodeJwtPayload(tokens.access_token);
+
         expect(payload.cnf?.['x5t#S256']).toEqual(
             createHash('sha256')
                 .update(new X509Certificate(LEAF_PEM).raw)
@@ -132,6 +138,7 @@ describe('OAuth2 TLS client authentication and certificate-bound tokens', () => 
         // every other JWT failure.
         const protectedByAuthorizationMiddleware = `/realms/${realm.id}/.well-known/openid-configuration`;
         const withoutBoundCertificate = await httpRequest(suite, 'GET', protectedByAuthorizationMiddleware, { headers: { Authorization: `Bearer ${tokens.access_token}` } });
+
         expect(withoutBoundCertificate.status).toBe(401);
 
         const withWrongCertificate = await httpRequest(suite, 'GET', protectedByAuthorizationMiddleware, {
@@ -140,6 +147,7 @@ describe('OAuth2 TLS client authentication and certificate-bound tokens', () => 
                 ...certificateHeaders(WRONG_LEAF_PEM),
             },
         });
+
         expect(withWrongCertificate.status).toBe(401);
 
         const withBoundCertificate = await httpRequest(suite, 'GET', protectedByAuthorizationMiddleware, {
@@ -148,6 +156,7 @@ describe('OAuth2 TLS client authentication and certificate-bound tokens', () => 
                 ...certificateHeaders(LEAF_PEM, INTERMEDIATE_PEM),
             },
         });
+
         expect(withBoundCertificate.status).toBe(200);
     });
 
@@ -170,9 +179,11 @@ describe('OAuth2 TLS client authentication and certificate-bound tokens', () => 
             },
             headers: certificateHeaders(SELF_SIGNED_LEAF_PEM),
         });
+
         expect(login.status).toBe(200);
 
         const tokens = await login.json() as OAuth2TokenGrantResponse;
+
         expect(tokens.refresh_token).toBeDefined();
         expect(decodeJwtPayload(tokens.access_token).cnf?.['x5t#S256']).toBeTruthy();
         expect(decodeJwtPayload(tokens.refresh_token!).cnf)
@@ -186,6 +197,7 @@ describe('OAuth2 TLS client authentication and certificate-bound tokens', () => 
                 realm_id: realm.id,
             },
         });
+
         expect(withoutCertificate.status).toBe(401);
 
         const refreshed = await httpRequest(suite, 'POST', '/token', {
@@ -197,6 +209,7 @@ describe('OAuth2 TLS client authentication and certificate-bound tokens', () => 
             },
             headers: certificateHeaders(SELF_SIGNED_LEAF_PEM),
         });
+
         expect(refreshed.status).toBe(200);
     });
 });

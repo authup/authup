@@ -21,12 +21,12 @@ export default defineComponent({
     async setup(props, { emit }) {
         const translationsDefault = useTranslations([
             {
-                namespace: TranslatorTranslationNamespace.COMMON, 
-                key: TranslatorTranslationCommonKey.GENERAL, 
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.GENERAL,
             },
             {
-                namespace: TranslatorTranslationNamespace.FIELD, 
-                key: TranslatorTranslationFieldKey.PASSWORD, 
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.PASSWORD,
             },
         ]);
 

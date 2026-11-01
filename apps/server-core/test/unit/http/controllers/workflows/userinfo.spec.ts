@@ -49,7 +49,7 @@ describe('src/http/controllers/workflows/userinfo', () => {
     });
 
     it('should leave an explicit projection untouched', async () => {
-        const response = await httpRequest(suite, 'GET', '/userinfo?fields=name', { headers: { Authorization: `Basic ${Buffer.from('admin:start123').toString('base64')}` } });
+        const response = await httpRequest(suite, 'GET', '/userinfo?fields=name', { headers: { Authorization: `Basic ${Buffer.from('admin:start123').toBase64()}` } });
         const body = await response.json();
 
         expect(response.status).toEqual(200);

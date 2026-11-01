@@ -55,12 +55,14 @@ describe('core/entities/policy/service', () => {
     describe('update with a restricted grant (#3654)', () => {
         function createRestrictedActor() {
             const permissionEvaluator = new FakePermissionEvaluator();
+
             permissionEvaluator.setBehavior((call) => {
                 if (call.method !== 'evaluate' || call.ctx.name !== PermissionName.PERMISSION_UPDATE) {
                     return;
                 }
 
                 const attributes = call.ctx.data?.get(BuiltInPolicyType.ATTRIBUTES) as Partial<Policy>;
+
                 if (!attributes?.name?.startsWith('reach-')) {
                     throw PermissionError.denied('test');
                 }
@@ -99,6 +101,7 @@ describe('core/entities/policy/service', () => {
             const entity = seed('reach-a');
 
             const result = await service.update(entity.id, { name: 'reach-b' }, createRestrictedActor());
+
             expect(result.name).toBe('reach-b');
         });
 
@@ -109,6 +112,236 @@ describe('core/entities/policy/service', () => {
                 service.update(entity.id, { name: 'outside' }, createRestrictedActor()),
             ).rejects.toThrow(PermissionError);
             expect((await repository.findOneById(entity.id))?.name).toBe('reach-a');
+        });
+    });
+
+    describe('parent authority', () => {
+        function seedParent(name: string, extra: Partial<Policy> = {}): Policy {
+            return repository.seed({
+                id: randomUUID(),
+                name,
+                type: BuiltInPolicyType.COMPOSITE,
+                builtIn: false,
+                invert: false,
+                realmId: null,
+                ...extra,
+            } as Policy);
+        }
+
+        function createRealmDenyingActor(deniedRealmId: string | null) {
+            const permissionEvaluator = new FakePermissionEvaluator();
+
+            permissionEvaluator.setBehavior((call) => {
+                if (call.method !== 'evaluate') {
+                    return;
+                }
+
+                if (call.ctx.data?.get(BuiltInPolicyType.REALM_MATCH) === deniedRealmId) {
+                    throw PermissionError.denied('test');
+                }
+            });
+
+            return { permissionEvaluator };
+        }
+
+        it('should refuse a built-in parent on create', async () => {
+            const parent = seedParent('system-parent', { builtIn: true });
+
+            await expect(service.create({
+                name: 'attach-builtin',
+                type: BuiltInPolicyType.COMPOSITE,
+                parentId: parent.id,
+            }, createAllowAllActor())).rejects.toThrow(ValidationError);
+            expect(await repository.findOneBy({ name: 'attach-builtin' })).toBeNull();
+        });
+
+        it('should evaluate the update of the parent in the parent\'s realm on create', async () => {
+            const realmId = randomUUID();
+            const parent = seedParent('realm-parent', { realmId });
+            const actor = createAllowAllActor();
+
+            await service.create({
+                name: 'attach-child',
+                type: BuiltInPolicyType.COMPOSITE,
+                realmId,
+                parentId: parent.id,
+            }, actor);
+
+            const updates = actor.permissionEvaluator.evaluateCalls
+                .filter((call) => call.name === PermissionName.PERMISSION_UPDATE);
+
+            expect(updates).toHaveLength(1);
+            expect(updates[0].data!.get(BuiltInPolicyType.REALM_MATCH)).toBe(realmId);
+            expect((updates[0].data!.get(BuiltInPolicyType.ATTRIBUTES) as Policy).id).toBe(parent.id);
+        });
+
+        it('should refuse a parent the actor cannot update on create', async () => {
+            const foreignRealmId = randomUUID();
+            const parent = seedParent('foreign-parent', { realmId: foreignRealmId });
+
+            await expect(service.create({
+                name: 'attach-foreign',
+                type: BuiltInPolicyType.COMPOSITE,
+                realmId: randomUUID(),
+                parentId: parent.id,
+            }, createRealmDenyingActor(foreignRealmId))).rejects.toThrow(PermissionError);
+            expect(await repository.findOneBy({ name: 'attach-foreign' })).toBeNull();
+        });
+
+        it('should keep a global child under a realm parent the actor can update', async () => {
+            const realmId = randomUUID();
+            const parent = seedParent('own-parent', { realmId });
+
+            const entity = await service.create({
+                name: 'global-child',
+                type: BuiltInPolicyType.COMPOSITE,
+                parentId: parent.id,
+            }, createAllowAllActor());
+
+            expect(entity.realmId).toBeNull();
+            expect(entity.parentId).toBe(parent.id);
+        });
+
+        it('should refuse moving a policy under a parent the actor cannot update', async () => {
+            const realmId = randomUUID();
+            const foreignRealmId = randomUUID();
+            const parent = seedParent('foreign-target', { realmId: foreignRealmId });
+            const entity = seedParent('movable', { realmId });
+
+            await expect(service.update(entity.id, { parentId: parent.id }, createRealmDenyingActor(foreignRealmId)))
+                .rejects.toThrow(PermissionError);
+            expect((await repository.findOneById(entity.id))?.parentId).toBeFalsy();
+        });
+
+        it('should refuse moving a policy under a built-in parent', async () => {
+            const parent = seedParent('builtin-target', { builtIn: true });
+            const entity = seedParent('movable-builtin', { realmId: randomUUID() });
+
+            await expect(service.update(entity.id, { parentId: parent.id }, createAllowAllActor()))
+                .rejects.toThrow(ValidationError);
+            expect((await repository.findOneById(entity.id))?.parentId).toBeFalsy();
+        });
+
+        it('should refuse detaching a policy from a parent the actor cannot update', async () => {
+            const realmId = randomUUID();
+            const foreignRealmId = randomUUID();
+            const parent = seedParent('foreign-source', { realmId: foreignRealmId });
+            const entity = seedParent('attached', { realmId, parentId: parent.id });
+
+            await expect(service.update(entity.id, { parentId: null }, createRealmDenyingActor(foreignRealmId)))
+                .rejects.toThrow(PermissionError);
+            expect((await repository.findOneById(entity.id))?.parentId).toBe(parent.id);
+        });
+
+        it('should not evaluate the parent when an update keeps it', async () => {
+            const realmId = randomUUID();
+            const parent = seedParent('kept-parent', { realmId: randomUUID() });
+            const entity = seedParent('kept-child', { realmId, parentId: parent.id });
+            const actor = createAllowAllActor();
+
+            await service.update(entity.id, { parentId: parent.id, name: 'kept-child-renamed' }, actor);
+
+            expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.PERMISSION_UPDATE))
+                .toEqual([realmId, realmId]);
+        });
+
+        it('should evaluate the create of a nested child in the child\'s realm', async () => {
+            const realmId = randomUUID();
+            const foreignRealmId = randomUUID();
+
+            await expect(service.create({
+                name: 'nested-parent',
+                type: BuiltInPolicyType.COMPOSITE,
+                realmId,
+                children: [{
+                    name: 'nested-foreign-child',
+                    type: BuiltInPolicyType.COMPOSITE,
+                    realmId: foreignRealmId,
+                }],
+            }, createRealmDenyingActor(foreignRealmId))).rejects.toThrow(PermissionError);
+            expect(await repository.findOneBy({ name: 'nested-parent' })).toBeNull();
+        });
+        it('should evaluate the authority over a built-in parent before refusing it', async () => {
+            const parent = seedParent('system-parent-unauthorized', { builtIn: true });
+
+            await expect(service.create({
+                name: 'attach-builtin-unauthorized',
+                type: BuiltInPolicyType.COMPOSITE,
+                realmId: randomUUID(),
+                parentId: parent.id,
+            }, createRealmDenyingActor(null))).rejects.toThrow(PermissionError);
+        });
+
+        it('should refuse updating a built-in policy before evaluating its parent', async () => {
+            const foreignRealmId = randomUUID();
+            const parent = seedParent('builtin-update-target', { realmId: foreignRealmId });
+            const entity = seedParent('builtin-update', { builtIn: true });
+
+            await expect(service.update(entity.id, { parentId: parent.id }, createRealmDenyingActor(foreignRealmId)))
+                .rejects.toThrow(ValidationError);
+        });
+
+        it('should detach a child from a built-in parent with authority over the parent', async () => {
+            const parent = seedParent('builtin-source', { builtIn: true });
+            const entity = seedParent('planted', { realmId: randomUUID(), parentId: parent.id });
+
+            const updated = await service.update(entity.id, { parentId: null }, createAllowAllActor());
+
+            expect(updated.parentId).toBeNull();
+        });
+
+        it('should move a child away from a built-in parent with authority over both parents', async () => {
+            const realmId = randomUUID();
+            const parent = seedParent('builtin-move-source', { builtIn: true });
+            const target = seedParent('builtin-move-target', { realmId });
+            const entity = seedParent('planted-movable', { realmId, parentId: parent.id });
+
+            const updated = await service.update(entity.id, { parentId: target.id }, createAllowAllActor());
+
+            expect(updated.parentId).toBe(target.id);
+        });
+
+        it('should refuse detaching a child from a built-in parent without authority over it', async () => {
+            const parent = seedParent('builtin-source-unauthorized', { builtIn: true });
+            const entity = seedParent('planted-unauthorized', { realmId: randomUUID(), parentId: parent.id });
+
+            await expect(service.update(entity.id, { parentId: null }, createRealmDenyingActor(null)))
+                .rejects.toThrow(PermissionError);
+            expect((await repository.findOneById(entity.id))?.parentId).toBe(parent.id);
+        });
+
+        it('should refuse deleting a child of a parent the actor cannot update', async () => {
+            const realmId = randomUUID();
+            const foreignRealmId = randomUUID();
+            const parent = seedParent('delete-foreign-parent', { realmId: foreignRealmId });
+            const entity = seedParent('delete-attached', { realmId, parentId: parent.id });
+
+            await expect(service.delete(entity.id, createRealmDenyingActor(foreignRealmId)))
+                .rejects.toThrow(PermissionError);
+            expect(await repository.findOneById(entity.id)).not.toBeNull();
+        });
+
+        it('should evaluate the update of the parent in the parent\'s realm on delete', async () => {
+            const realmId = randomUUID();
+            const parentRealmId = randomUUID();
+            const parent = seedParent('delete-parent', { realmId: parentRealmId });
+            const entity = seedParent('delete-child', { realmId, parentId: parent.id });
+            const actor = createAllowAllActor();
+
+            await service.delete(entity.id, actor);
+
+            expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.PERMISSION_UPDATE))
+                .toEqual([parentRealmId]);
+            expect(await repository.findOneById(entity.id)).toBeNull();
+        });
+
+        it('should delete a child of a built-in parent with authority over the parent', async () => {
+            const parent = seedParent('delete-builtin-parent', { builtIn: true });
+            const entity = seedParent('delete-planted', { realmId: randomUUID(), parentId: parent.id });
+
+            await service.delete(entity.id, createAllowAllActor());
+
+            expect(await repository.findOneById(entity.id)).toBeNull();
         });
     });
 
@@ -156,6 +389,7 @@ describe('core/entities/policy/service', () => {
             }, createAllowAllActor());
 
             const stored = await repository.findOneById(entity.id) as Record<string, any>;
+
             expect(stored.types).toEqual(['user']);
             expect(stored.foo).toBeUndefined();
             expect(stored.builtIn).toBeFalsy();
@@ -170,6 +404,7 @@ describe('core/entities/policy/service', () => {
             }, createAllowAllActor());
 
             const stored = await repository.findOneById(entity.id) as Record<string, any>;
+
             expect(stored.decisionStrategy).toEqual('affirmative');
             expect(stored.foo).toBeUndefined();
         });
@@ -200,10 +435,10 @@ describe('core/entities/policy/service', () => {
 
             await expect(service.update(entity.id, {
                 children: [{
-                    name: 'custom-update-child', 
-                    type: 'custom', 
-                    foo: 'bar', 
-                }], 
+                    name: 'custom-update-child',
+                    type: 'custom',
+                    foo: 'bar',
+                }],
             }, createAllowAllActor())).rejects.toThrow(ValidationError);
         });
 
@@ -212,9 +447,9 @@ describe('core/entities/policy/service', () => {
                 name: 'composite-custom-child',
                 type: BuiltInPolicyType.COMPOSITE,
                 children: [{
-                    name: 'custom-child', 
-                    type: 'custom', 
-                    foo: 'bar', 
+                    name: 'custom-child',
+                    type: 'custom',
+                    foo: 'bar',
                 }],
             }, createAllowAllActor())).rejects.toThrow(ValidationError);
         });
@@ -228,6 +463,7 @@ describe('core/entities/policy/service', () => {
             }, createAllowAllActor());
 
             const stored = await repository.findOneById(entity.id) as Record<string, any>;
+
             expect(stored.type).toEqual('custom');
             expect(stored.displayName).toEqual('Custom');
         });
@@ -268,6 +504,7 @@ describe('core/entities/policy/service', () => {
             }, createAllowAllActor());
 
             const stored = await repository.findOneById(entity.id) as Record<string, any>;
+
             expect(stored.range).toEqual('10.0.0.0/8');
             expect(stored.foo).toBeUndefined();
         });
@@ -280,6 +517,7 @@ describe('core/entities/policy/service', () => {
             }, createAllowAllActor());
 
             const stored = await repository.findOneById(entity.id) as Record<string, any>;
+
             expect(stored.start).toEqual('2020-01-01');
             expect(Object.keys(stored)).not.toContain('end');
         });
@@ -297,6 +535,7 @@ describe('core/entities/policy/service', () => {
             }, createAllowAllActor());
 
             const stored = await repository.findOneById(entity.id) as Record<string, any>;
+
             expect(stored.attributeName).toEqual('realmId');
             expect(stored.foo).toBeUndefined();
         });
@@ -318,9 +557,9 @@ describe('core/entities/policy/service', () => {
             const global = seedEntity('name-scoped', null);
 
             return {
-                master, 
-                global, 
-                scoped, 
+                master,
+                global,
+                scoped,
             };
         }
 

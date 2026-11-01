@@ -10,12 +10,12 @@ import { IdentityType } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import { JWTError } from '@authup/specs';
 import { SESSION_REVOKE_CONCURRENCY } from './constants.ts';
-import type { 
-    ISessionManager, 
-    ISessionRepository, 
-    ISessionRevokeNotifier, 
-    SessionManagerContext, 
-    SessionManagerOptions, 
+import type {
+    ISessionManager,
+    ISessionRepository,
+    ISessionRevokeNotifier,
+    SessionManagerContext,
+    SessionManagerOptions,
     SessionOwner,
 } from './types.ts';
 
@@ -54,10 +54,12 @@ export class SessionManager implements ISessionManager {
         switch (input.subKind) {
             case IdentityType.CLIENT: {
                 input.clientId = input.sub;
+
                 break;
             }
             case IdentityType.USER: {
                 input.userId = input.sub;
+
                 break;
             }
         }
@@ -116,6 +118,7 @@ export class SessionManager implements ISessionManager {
 
     async revoke(id: string): Promise<void> {
         const session = await this.repository.findOneById(id);
+
         if (!session) {
             return;
         }
@@ -125,12 +128,13 @@ export class SessionManager implements ISessionManager {
         // until AFTER, so a client is never told about a session that still
         // exists. A failed read costs the notification, never the removal.
         let clients : Client[] = [];
+
         if (this.revokeNotifier) {
             try {
                 clients = await this.revokeNotifier.resolve(session);
             } catch (e) {
                 this.logger?.warn(`Resolving the logout audience of session ${session.id} failed: ${
-                    e instanceof Error ? e.message : String(e)
+                    Error.isError(e) ? e.message : String(e)
                 }`);
             }
         }
@@ -159,14 +163,16 @@ export class SessionManager implements ISessionManager {
 
     async revokeMany(ids: string[]): Promise<string[]> {
         const failed : string[] = [];
+
         for (let i = 0; i < ids.length; i += SESSION_REVOKE_CONCURRENCY) {
             const batch = ids.slice(i, i + SESSION_REVOKE_CONCURRENCY);
             const results = await Promise.allSettled(batch.map((id) => this.revoke(id)));
+
             for (const [j, result] of results.entries()) {
                 if (result.status === 'rejected') {
                     failed.push(batch[j]);
                     this.logger?.warn(`Revoking session ${batch[j]} failed: ${
-                        result.reason instanceof Error ? result.reason.message : String(result.reason)
+                        Error.isError(result.reason) ? result.reason.message : String(result.reason)
                     }`);
                 }
             }
@@ -179,11 +185,14 @@ export class SessionManager implements ISessionManager {
 
     async verify(session: Session): Promise<void> {
         const ms = new Date(session.expiresAt).getTime();
-        if (Date.now() > ms) {
-            await this.repository.remove(session);
 
-            // todo: better error
-            throw JWTError.expired();
+        if (!(Date.now() > ms)) {
+            return;
         }
+
+        await this.repository.remove(session);
+
+        // todo: better error
+        throw JWTError.expired();
     }
 }

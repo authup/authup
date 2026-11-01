@@ -52,6 +52,7 @@ describe.skipIf(!rowLockable)('http/controllers/user (concurrency)', () => {
 
         const realmRepository = suite.dataSource.getRepository(RealmEntity);
         const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository);
+
         realm = await realmRepositoryAdapter.resolve('', true);
 
         userRepository = new UserRepositoryAdapter({
@@ -90,6 +91,7 @@ describe.skipIf(!rowLockable)('http/controllers/user (concurrency)', () => {
         ]);
 
         const row = await userRepository.findOneByWithEmail({ id: created.id });
+
         expect(row?.email).toBe(next);
         expect(row?.emailVerified).toBe(false);
         expect(row?.displayName).toBe('Concurrent Edit');
@@ -107,6 +109,7 @@ describe.skipIf(!rowLockable)('http/controllers/user (concurrency)', () => {
         ]);
 
         const row = await userRepository.findOneBy({ id: created.id });
+
         expect(row?.active).toBe(false);
         expect(row?.displayName).toBe('Concurrent Edit');
     });
@@ -128,6 +131,7 @@ describe.skipIf(!rowLockable)('http/controllers/user (concurrency)', () => {
         let switched = false;
         const spy = vi.spyOn(clientRepository, 'findOneWithSecret').mockImplementation(async (where) => {
             const row = await read(where);
+
             if (!switched) {
                 switched = true;
                 await clientService.update(created.id, { authMethod: 'none', tokenBindingMethod: 'none' }, actor);
@@ -143,6 +147,7 @@ describe.skipIf(!rowLockable)('http/controllers/user (concurrency)', () => {
         }
 
         const row = await clientRepository.findOneWithSecret({ id: created.id });
+
         expect(row?.authMethod).toBe('none');
         expect(row?.secret).toBeNull();
     });
@@ -159,6 +164,7 @@ describe.skipIf(!rowLockable)('http/controllers/user (concurrency)', () => {
         ]);
 
         const row = await clientRepository.findOneBy({ id: created.id });
+
         expect(row?.active).toBe(false);
         expect(row?.displayName).toBe('Concurrent Edit');
     });
@@ -178,6 +184,7 @@ describe.skipIf(!rowLockable)('http/controllers/user (concurrency)', () => {
         ]);
 
         const row = await userRepository.findOneBy({ id: created.id });
+
         expect(row?.active).toBe(false);
         expect(row?.displayName).toBe('Concurrent Edit');
     });
@@ -197,6 +204,7 @@ describe.skipIf(!rowLockable)('http/controllers/user (concurrency)', () => {
         ]);
 
         const row = await clientRepository.findOneWithSecret({ id: created.id });
+
         expect(row?.authMethod).toBe('secret');
         expect(row?.secret).toBeTruthy();
         expect(row?.displayName).toBe('Concurrent Edit');

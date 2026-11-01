@@ -31,7 +31,7 @@
 npm install @authup/specs
 ```
 
-ESM only. Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`, or a browser bundler. There are no peer dependencies.
+ESM only. Node.js `>=26.0.0`, or a browser bundler. There are no peer dependencies.
 
 ## Usage
 

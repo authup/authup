@@ -53,6 +53,7 @@ export class SortIndexesAndAccountUniqueness1786631686318 implements MigrationIn
             GROUP BY \`provider_id\`, \`provider_user_id\`
             HAVING COUNT(*) > 1
         `);
+
         if (duplicates.length > 0) {
             throw new Error(
                 `Identity-provider account uniqueness migration aborted: "auth_identity_provider_accounts" holds ${duplicates.length} ` +

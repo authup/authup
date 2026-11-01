@@ -7,11 +7,11 @@
 
 import { BearerTokenMalformedError } from '@authup/errors';
 import type { ITokenVerifier, TokenVerificationData } from '@authup/server-adapter-kit';
-import { 
-    describe, 
-    expect, 
-    it, 
-    vi, 
+import {
+    describe,
+    expect,
+    it,
+    vi,
 } from 'vitest';
 import { verifyRequest } from '../../src';
 
@@ -54,6 +54,7 @@ describe('verifyRequest', () => {
         const certificateThumbprintByRequest = vi.fn(async () => 'expected-thumbprint');
 
         const request = new Request('http://localhost/', { headers: { authorization: 'Bearer abc' } });
+
         await verifyRequest(request, {
             tokenVerifier: createVerifier(verify),
             certificateThumbprintByRequest,
@@ -63,16 +64,21 @@ describe('verifyRequest', () => {
 
         const [, options] = verify.mock.calls[0];
         const provider = options?.certificateThumbprint;
+
         expect(provider).toBeTypeOf('function');
-        if (typeof provider === 'function') {
-            await expect(provider()).resolves.toBe('expected-thumbprint');
-            expect(certificateThumbprintByRequest).toHaveBeenCalledWith(request);
+
+        if (!(typeof provider === 'function')) {
+            return;
         }
+
+        await expect(provider()).resolves.toBe('expected-thumbprint');
+        expect(certificateThumbprintByRequest).toHaveBeenCalledWith(request);
     });
 
     it('rejects with BearerTokenMalformedError for a malformed Authorization header', async () => {
         const verify = vi.fn();
         let caught: unknown;
+
         try {
             await verifyRequest(
                 new Request('http://localhost/', { headers: { authorization: 'Basic dXNlcjpwYXNz' } }),
@@ -93,6 +99,7 @@ describe('verifyRequest', () => {
         });
 
         let caught: unknown;
+
         try {
             await verifyRequest(
                 new Request('http://localhost/', { headers: { authorization: 'Bearer bad-token' } }),

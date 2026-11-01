@@ -85,10 +85,12 @@ describe('http/controllers/workflows/authorize (access policy, plan 052)', () =>
             tokenBindingMethod: 'none',
             accessPolicyId,
         }));
+
         await suite.client.clientScope.create({
             scopeId: scope.id,
             clientId: client.id,
         });
+
         return client;
     };
 
@@ -111,6 +113,7 @@ describe('http/controllers/workflows/authorize (access policy, plan 052)', () =>
         expect(response.url).toBeDefined();
 
         const url = new URL(response.url);
+
         expect(url.origin).toEqual('https://example.com');
         expect(url.searchParams.get('error')).toEqual(OAuth2ErrorCode.ACCESS_DENIED);
         expect(url.searchParams.get('state')).toEqual(state);
@@ -124,6 +127,7 @@ describe('http/controllers/workflows/authorize (access policy, plan 052)', () =>
         const response = await confirm(client.id, state);
 
         const url = new URL(response.url);
+
         expect(url.searchParams.get('error')).toBeNull();
         expect(url.searchParams.get('code')).toBeTruthy();
         expect(url.searchParams.get('state')).toEqual(state);
@@ -135,6 +139,7 @@ describe('http/controllers/workflows/authorize (access policy, plan 052)', () =>
         const response = await confirm(client.id, generateOAuth2CodeVerifier());
 
         const url = new URL(response.url);
+
         expect(url.searchParams.get('error')).toBeNull();
         expect(url.searchParams.get('code')).toBeTruthy();
     });
@@ -144,6 +149,7 @@ describe('http/controllers/workflows/authorize (access policy, plan 052)', () =>
 
         beforeAll(async () => {
             const { data: master } = await suite.client.realm.getOne('master');
+
             foreignPolicy = (await suite.client.policy.createBuiltIn({
                 name: 'authorize-access-allow-foreign',
                 type: BuiltInPolicyType.IDENTITY,
@@ -155,9 +161,11 @@ describe('http/controllers/workflows/authorize (access policy, plan 052)', () =>
         // a binding the API refuses, written the way an older release stored it
         const bindForeign = async () => {
             const client = await createGatedClient(null);
+
             await suite.dataSource
                 .getRepository(ClientEntity)
                 .save({ id: client.id, accessPolicyId: foreignPolicy.id });
+
             return client;
         };
 
@@ -167,6 +175,7 @@ describe('http/controllers/workflows/authorize (access policy, plan 052)', () =>
             const response = await confirm(client.id, generateOAuth2CodeVerifier());
 
             const url = new URL(response.url);
+
             expect(url.searchParams.get('error')).toEqual(OAuth2ErrorCode.ACCESS_DENIED);
             expect(url.searchParams.get('code')).toBeNull();
         });
@@ -189,6 +198,7 @@ describe('http/controllers/workflows/authorize (access policy, plan 052)', () =>
             );
 
             const client = await createGatedClient(null);
+
             await expectClientError(
                 () => suite.client.client.update(client.id, { accessPolicyId: foreignPolicy.id }),
                 { status: 400 },

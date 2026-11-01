@@ -44,7 +44,7 @@ function pemToBase64(value: string): string {
 }
 
 function omitRsaEncryptionNullParameter(spkiBase64: string): string {
-    const canonical = Buffer.from(spkiBase64, 'base64');
+    const canonical = Uint8Array.fromBase64(spkiBase64);
     const alternate = Buffer.from(canonical);
 
     // Fixture SPKI prefix:
@@ -58,7 +58,7 @@ function omitRsaEncryptionNullParameter(spkiBase64: string): string {
     return Buffer.concat([
         alternate.subarray(0, 17),
         alternate.subarray(19),
-    ]).toString('base64');
+    ]).toBase64();
 }
 
 // Generated once for this committed test fixture with:
@@ -70,6 +70,7 @@ describe('core/key/certificate', () => {
         expect(parseCertificateChain(CERTIFICATE)).toHaveLength(1);
 
         const chain = parseCertificateChain(`${CERTIFICATE}\n${SECONDARY_CERTIFICATE}`);
+
         expect(chain).toHaveLength(2);
         expect(chain[0].subject).toContain('Authup Stage B Test Certificate');
         expect(chain[1].subject).toContain('Authup Stage B Secondary Certificate');
@@ -82,13 +83,15 @@ describe('core/key/certificate', () => {
 
     it('accepts a matching SPKI and rejects a mismatched one', () => {
         const chain = parseCertificateChain(CERTIFICATE);
+
         expect(() => assertCertificateMatchesKey(chain, pemToBase64(PUBLIC_KEY))).not.toThrow();
 
         const mismatched = parseCertificateChain(SECONDARY_CERTIFICATE)[0]
             .publicKey
             .export({ type: 'spki', format: 'der' })
-            .toString('base64');
+            .toBase64();
         let failure : unknown;
+
         try {
             assertCertificateMatchesKey(chain, mismatched);
         } catch (e) {
@@ -119,13 +122,14 @@ describe('core/key/certificate', () => {
         const chain = parseCertificateChain(`${CERTIFICATE}\n${SECONDARY_CERTIFICATE}`);
 
         expect(buildX5c(chain)).toEqual([
-            chain[0].raw.toString('base64'),
-            chain[1].raw.toString('base64'),
+            chain[0].raw.toBase64(),
+            chain[1].raw.toBase64(),
         ]);
     });
 
     it('builds the precomputed base64url SHA-256 thumbprint of the leaf', async () => {
         const chain = parseCertificateChain(CERTIFICATE);
+
         await expect(buildX5tS256(chain))
             .resolves.toEqual('U5hnhJe3UHk2pj5m9ZMDfvC54yBQXwExs9P6Ha_xjbE');
     });

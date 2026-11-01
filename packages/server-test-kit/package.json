@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-test-kit",
     "type": "module",
-    "version": "1.0.0-beta.71",
+    "version": "1.0.0-beta.72",
     "description": "In-memory fakes for testing services built on @authup/server-kit, without a database or HTTP.",
     "license": "Apache-2.0",
     "exports": {
@@ -25,7 +25,7 @@
         "test:coverage": "cross-env NODE_ENV=test vitest run --coverage"
     },
     "engines": {
-        "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
+        "node": ">=26.0.0"
     },
     "keywords": [
         "auth",
@@ -50,10 +50,10 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/access": "^1.0.0-beta.71",
-        "@authup/core-kit": "^1.0.0-beta.71",
-        "@authup/kit": "^1.0.0-beta.71",
-        "@authup/server-kit": "^1.0.0-beta.71",
+        "@authup/access": "^1.0.0-beta.72",
+        "@authup/core-kit": "^1.0.0-beta.72",
+        "@authup/kit": "^1.0.0-beta.72",
+        "@authup/server-kit": "^1.0.0-beta.72",
         "@rapiq/core": "^2.4.0"
     },
     "devDependencies": {

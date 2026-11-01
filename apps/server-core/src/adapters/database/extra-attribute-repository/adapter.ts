@@ -41,15 +41,19 @@ export class ExtraAttributesRepositoryAdapter<
 
     protected extra : EARepositoryPropertiesModifyFn<T, A>;
 
+    protected entityProperties : ReadonlySet<string> | undefined;
+
     // ------------------------------------------------------------------------------
 
     constructor(ctx: EARepositoryAdapterOptions<T, A>) {
         let extra : EARepositoryPropertiesModifyFn<T, A>;
+
         if (ctx.attributeProperties) {
             extra = ctx.attributeProperties;
         } else {
             extra = (input) => input;
         }
+
         this.extra = extra;
 
         this.repository = ctx.repository;
@@ -66,6 +70,7 @@ export class ExtraAttributesRepositoryAdapter<
         extraOptions: EARepositoryFindOptions = {},
     ) : Promise<T | undefined> {
         const entity = await this.repository.findOne(options);
+
         if (!entity) {
             return undefined;
         }
@@ -99,6 +104,7 @@ export class ExtraAttributesRepositoryAdapter<
         options?: EARepositorySaveOptions<T>,
     ) : Promise<T & E> {
         const { manager } = this.repository;
+
         if (
             manager.queryRunner?.isTransactionActive ||
             !isDatabaseTypeRowLockable(manager.connection.options.type)
@@ -120,19 +126,23 @@ export class ExtraAttributesRepositoryAdapter<
         for (let i = 0; i < this.repository.metadata.columns.length; i++) {
             columns.push(this.repository.metadata.columns[i].propertyName);
         }
+
         for (let i = 0; i < this.repository.metadata.relations.length; i++) {
             columns.push(this.repository.metadata.relations[i].propertyName);
         }
 
         let extra : Record<string, any> = {};
+
         if (attributes) {
             extra = { ...attributes };
         }
 
         const keys = Object.keys(input) as (keyof T)[];
+
         for (const key_ of keys) {
             const key = key_ as string;
             const index = columns.indexOf(key);
+
             if (index === -1) {
                 extra[key] = input[key];
                 delete input[key];
@@ -149,6 +159,7 @@ export class ExtraAttributesRepositoryAdapter<
         );
 
         const extraKeys = Object.keys(extra);
+
         for (const extraKey of extraKeys) {
             input[extraKey as keyof T] = extra[extraKey];
         }
@@ -161,6 +172,7 @@ export class ExtraAttributesRepositoryAdapter<
         extraOptions: EARepositoryFindOptions = {},
     ) : Promise<E> {
         const attributesByPrimary = await this.findWithEAByPrimaryColumn([value], extraOptions);
+
         return (attributesByPrimary[value as string] || {}) as E;
     }
 
@@ -168,11 +180,9 @@ export class ExtraAttributesRepositoryAdapter<
         entity: T,
         extraOptions: EARepositoryFindOptions = {},
     ) : Promise<T & E> {
-        const attributes = await this.findOneWithEAByPrimaryColumn(entity[this.primaryColumn], extraOptions);
-        const attributeKeys = Object.keys(attributes);
-        for (const attributeKey of attributeKeys) {
-            entity[attributeKey as keyof T] = attributes[attributeKey] as T[keyof T];
-        }
+        const attributes = await this.findOneWithEAByPrimaryColumn<E>(entity[this.primaryColumn], extraOptions);
+
+        this.assignAttributes(entity, attributes);
 
         return entity as T & E;
     }
@@ -182,7 +192,9 @@ export class ExtraAttributesRepositoryAdapter<
         extraOptions: EARepositoryFindOptions = {},
     ) : Promise<Record<string, E>> {
         const where : FindOptionsWhere<A> = {};
+
         where[this.attributeForeignColumn as keyof FindOptionsWhere<A>] = In(value) as any;
+
         if (extraOptions.attributes) {
             where.name = In(extraOptions.attributes) as FindOptionsWhereProperty<A['name']>;
         }
@@ -217,17 +229,48 @@ export class ExtraAttributesRepositoryAdapter<
 
         for (const entity of entities) {
             const attributes = attributesByPrimaryKey[entity[this.primaryColumn] as string];
+
             if (!attributes) {
                 continue;
             }
 
-            const attributeKeys = Object.keys(attributes);
-            for (const attributeKey of attributeKeys) {
-                entity[attributeKey as keyof T] = attributes[attributeKey] as T[keyof T];
-            }
+            this.assignAttributes(entity, attributes);
         }
 
         return entities as (T & E)[];
+    }
+
+    /**
+     * An attribute never replaces a column or relation of its parent. The
+     * services refuse such a name on write, but a row written before they
+     * did (or past them) would otherwise shadow the column on every read
+     * that flattens the attributes, and the identity read serves the result
+     * as claims (`email`).
+     */
+    protected assignAttributes(entity: T, attributes: Record<string, any>): void {
+        const properties = this.getEntityProperties();
+        const attributeKeys = Object.keys(attributes);
+
+        for (const attributeKey of attributeKeys) {
+            if (properties.has(attributeKey)) {
+                continue;
+            }
+
+            entity[attributeKey as keyof T] = attributes[attributeKey] as T[keyof T];
+        }
+    }
+
+    protected getEntityProperties(): ReadonlySet<string> {
+        if (!this.entityProperties) {
+            const { metadata } = this.repository;
+
+            this.entityProperties = new Set([
+                ...metadata.columns.map((column) => column.propertyName),
+                ...metadata.relations.map((relation) => relation.propertyName),
+            ]);
+        }
+
+        return this.entityProperties;
     }
 
     // ------------------------------------------------------------------------------
@@ -242,6 +285,7 @@ export class ExtraAttributesRepositoryAdapter<
         const foreignColumnValue = parent[this.primaryColumn] as unknown as A[keyof A];
 
         const where : Partial<A> = {};
+
         where[foreignColumn] = foreignColumnValue;
 
         const attributeRepository = manager.getRepository(this.attributeRepository.target);
@@ -251,6 +295,7 @@ export class ExtraAttributesRepositoryAdapter<
         const itemsToUpdate : A[] = [];
 
         const keysProcessed : string[] = [];
+
         for (const item of items) {
             if (hasOwnProperty(input, item.name)) {
                 item.value = input[item.name];
@@ -279,6 +324,7 @@ export class ExtraAttributesRepositoryAdapter<
 
         for (const key of keys) {
             keyIndex = keysProcessed.indexOf(key);
+
             if (keyIndex === -1) {
                 itemsToAdd.push(this.extra({
                     name: key,

@@ -128,6 +128,7 @@ export default defineComponent({
 
             busy.value = true;
             error.value = null;
+
             try {
                 await apiClient.userAuthenticator.sendChallenge(
                     { kind: UserAuthenticatorKind.EMAIL },
@@ -149,6 +150,7 @@ export default defineComponent({
 
             busy.value = true;
             error.value = null;
+
             try {
                 const response = await apiClient.userAuthenticator.verifyChallenge(
                     {
@@ -157,6 +159,7 @@ export default defineComponent({
                     },
                     requestOptions.value,
                 );
+
                 emit('done', response);
             } catch (e) {
                 error.value = extractErrorContext(e).message ?? translations.mfaFailed;
@@ -172,12 +175,14 @@ export default defineComponent({
             // the browser API's option shape at this single boundary.
             const optionsJSON = (props.challenge?.webauthn ?? null) as
                 unknown as PublicKeyCredentialRequestOptionsJSON | null;
+
             if (!optionsJSON || busy.value) {
                 return;
             }
 
             busy.value = true;
             error.value = null;
+
             try {
                 const assertion = await startAuthentication({ optionsJSON });
                 const response = await apiClient.userAuthenticator.verifyChallenge(
@@ -187,6 +192,7 @@ export default defineComponent({
                     },
                     requestOptions.value,
                 );
+
                 emit('done', response);
             } catch (e) {
                 error.value = extractErrorContext(e).message ?? translations.mfaFailed;

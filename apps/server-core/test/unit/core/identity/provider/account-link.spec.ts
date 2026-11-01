@@ -51,6 +51,7 @@ describe('IdentityProviderAccountManager.link', () => {
         repository = new FakeIdentityProviderAccountRepository();
         userRepository = new FakeUserIdentityRepository();
         mapperExecute = vi.fn(async () => []);
+
         const mapper = { execute: mapperExecute } as unknown as IIdentityProviderMapper;
 
         manager = new IdentityProviderAccountManager({
@@ -104,12 +105,14 @@ describe('IdentityProviderAccountManager.link', () => {
 
     it('returns the row a concurrent link of the same user wrote', async () => {
         userRepository.seed({ id: userId, realmId });
+
         const raced = repository.seed({
-            providerId, 
-            providerUserId: 'external-user-1', 
-            userId, 
+            providerId,
+            providerUserId: 'external-user-1',
+            userId,
             userRealmId: realmId,
         });
+
         // the pre-check misses the row the other request is inserting; only
         // the unique index (the fake save) sees it
         vi.spyOn(repository, 'findOneByProviderIdentity').mockResolvedValueOnce(null);
@@ -123,9 +126,9 @@ describe('IdentityProviderAccountManager.link', () => {
     it('rejects a concurrent link of another user the pre-check missed', async () => {
         userRepository.seed({ id: userId, realmId });
         repository.seed({
-            providerId, 
-            providerUserId: 'external-user-1', 
-            userId: otherUserId, 
+            providerId,
+            providerUserId: 'external-user-1',
+            userId: otherUserId,
             userRealmId: realmId,
         });
         vi.spyOn(repository, 'findOneByProviderIdentity').mockResolvedValueOnce(null);
@@ -139,9 +142,9 @@ describe('IdentityProviderAccountManager.link', () => {
     it('rejects a second external identity for a user already linked at the provider', async () => {
         userRepository.seed({ id: userId, realmId });
         repository.seed({
-            providerId, 
-            providerUserId: 'external-user-2', 
-            userId, 
+            providerId,
+            providerUserId: 'external-user-2',
+            userId,
             userRealmId: realmId,
         });
 

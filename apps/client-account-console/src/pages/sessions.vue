@@ -115,6 +115,7 @@ export default defineComponent({
             }
 
             revoking.value = true;
+
             try {
                 const response = await httpClient.session.deleteMany();
 
@@ -162,9 +163,11 @@ export default defineComponent({
             if (row.revokedAt) {
                 return 'revoked';
             }
+
             if (row.consumedAt) {
                 return 'consumed';
             }
+
             if (row.expiresAt && Date.parse(row.expiresAt) < Date.now()) {
                 return 'expired';
             }

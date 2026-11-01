@@ -9,8 +9,8 @@ import type {
     Store as BaseStore,
     StoreDefinition as BaseStoreDefinition,
     Pinia,
-    _ExtractActionsFromSetupStore, 
-    _ExtractGettersFromSetupStore, 
+    _ExtractActionsFromSetupStore,
+    _ExtractGettersFromSetupStore,
     _ExtractStateFromSetupStore,
 } from 'pinia';
 import type { Realm, User } from '@authup/core-kit';

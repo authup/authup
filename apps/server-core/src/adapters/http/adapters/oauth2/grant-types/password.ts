@@ -72,6 +72,7 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
 
         const username = readStringField(body, 'username');
         const password = readStringField(body, 'password');
+
         if (!username || !password) {
             throw OAuth2RequestError.malformed('username and password must be provided.');
         }
@@ -115,6 +116,7 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
         const reservation = await this.loginThrottleService?.assertNotThrottled(throttle);
 
         let user : User;
+
         try {
             user = await this.authenticator.authenticate(username, password, realm.id);
         } catch (e) {
@@ -152,9 +154,9 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
 
         return this.runWith(
             {
-                user, 
-                client, 
-                mfaVerifiedAt, 
+                user,
+                client,
+                mfaVerifiedAt,
             },
             {
                 confirmation,
@@ -174,8 +176,8 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
         user: User,
         body: Record<string, any>,
         ctx: {
-            ipAddress?: string, 
-            userAgent?: string, 
+            ipAddress?: string,
+            userAgent?: string,
             clientId: string | null,
             confirmation?: OAuth2TokenConfirmation,
         },
@@ -186,11 +188,13 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
 
         // requirement flags + kinds only — no webauthn material on the token path.
         const status = await this.userAuthenticatorService.challenge(user.id, { issueMaterial: false });
+
         if (!status.required) {
             return undefined;
         }
 
         const otp = readStringField(body, 'otp');
+
         if (!otp) {
             // carry the challengeable kinds so a client (the hosted login form)
             // can tell whether a single-POST factor (totp/recovery) is on offer
@@ -225,6 +229,7 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
                 clientId: ctx.clientId,
             },
         );
+
         if (!verified) {
             throw new OAuth2MfaRequiredError({
                 message: 'The provided second factor is not valid.',
@@ -258,6 +263,7 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
 
         const interactive = kinds.includes(UserAuthenticatorKind.EMAIL) ||
             kinds.includes(UserAuthenticatorKind.WEBAUTHN);
+
         if (!interactive) {
             return null;
         }

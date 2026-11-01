@@ -23,7 +23,7 @@ const REALM_ID = randomUUID();
 const OPTIONS = { clientId: CLIENT_ID, realmId: REALM_ID };
 
 const buildRequest = (input: Partial<OAuth2DeviceCodeRequest> = {}) : OAuth2DeviceCodeRequest => ({
-    id: randomBytes(32).toString('hex'),
+    id: randomBytes(32).toHex(),
     user_code: 'BCDFGHJK',
     client_id: CLIENT_ID,
     realm_id: REALM_ID,
@@ -92,6 +92,7 @@ describe('OAuth2DeviceCodeVerifier', () => {
 
     it('should answer access_denied once for a denied code, then invalid_grant', async () => {
         const request = repository.seed(buildRequest());
+
         await repository.decide(request.id, { status: OAuth2DeviceCodeStatus.DENIED }, request.expires_at);
 
         await expect(verifier.verify(request.id, OPTIONS))
@@ -108,6 +109,7 @@ describe('OAuth2DeviceCodeVerifier', () => {
 
     it('should return an approved code once, then invalid_grant', async () => {
         const request = repository.seed(buildRequest());
+
         await repository.decide(request.id, {
             status: OAuth2DeviceCodeStatus.APPROVED,
             sub: randomUUID(),
@@ -118,6 +120,7 @@ describe('OAuth2DeviceCodeVerifier', () => {
         }, request.expires_at);
 
         const entity = await verifier.verify(request.id, OPTIONS);
+
         expect(entity.id).toEqual(request.id);
         expect(entity.status).toEqual(OAuth2DeviceCodeStatus.APPROVED);
         expect(entity.decision.status).toEqual(OAuth2DeviceCodeStatus.APPROVED);
@@ -131,7 +134,7 @@ describe('OAuth2DeviceCodeVerifier', () => {
     });
 
     it('should answer invalid_grant for an unknown device_code', async () => {
-        await expect(verifier.verify(randomBytes(32).toString('hex'), OPTIONS))
+        await expect(verifier.verify(randomBytes(32).toHex(), OPTIONS))
             .rejects.toThrow(expect.objectContaining({
                 code: ErrorCode.OAUTH_GRANT_INVALID,
                 message: OAuth2GrantError.invalid().message,

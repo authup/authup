@@ -49,6 +49,7 @@ function isRetiredConfigFileName(name: string) : boolean {
     }
 
     const extension = toExtension(name);
+
     if (extension === 'conf') {
         return true;
     }
@@ -81,11 +82,13 @@ const warnedAboutDirectories = new Set<string>();
  */
 function warnAboutRetiredConfigFiles(cwd?: string) {
     const directory = cwd || process.cwd();
+
     if (warnedAboutDirectories.has(directory)) {
         return;
     }
 
     let entries : string[];
+
     try {
         entries = fs.readdirSync(directory);
     } catch {
@@ -93,6 +96,7 @@ function warnAboutRetiredConfigFiles(cwd?: string) {
     }
 
     const retired = entries.filter(isRetiredConfigFileName);
+
     if (retired.length === 0) {
         return;
     }
@@ -114,6 +118,7 @@ function assertNoRetiredConfigFile(file: string | string[]) {
     const files = Array.isArray(file) ? file : [file];
 
     const retired = files.filter(isRetiredConfigFilePath);
+
     if (retired.length === 0) {
         return;
     }
@@ -135,6 +140,7 @@ export async function readConfigFileTree<T extends ObjectLiteral>(
     });
 
     let files : string[];
+
     if (options.file) {
         assertNoRetiredConfigFile(options.file);
         files = await store.loadFile(options.file);

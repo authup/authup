@@ -52,7 +52,7 @@ type Delivery = {
 };
 
 function decodeJwtSegment(token: string, index: number): Record<string, any> {
-    return JSON.parse(Buffer.from(token.split('.')[index]!, 'base64url').toString('utf8'));
+    return JSON.parse(new TextDecoder().decode(Uint8Array.fromBase64(token.split('.')[index]!, { alphabet: 'base64url' })));
 }
 
 describe('back-channel logout', () => {
@@ -73,9 +73,13 @@ describe('back-channel logout', () => {
     beforeAll(async () => {
         rpServer = createServer((req, res) => {
             const chunks: Buffer[] = [];
-            req.on('data', (chunk: Buffer) => { chunks.push(chunk); });
+
+            req.on('data', (chunk: Buffer) => {
+                chunks.push(chunk);
+            });
             req.on('end', () => {
                 const body = new URLSearchParams(Buffer.concat(chunks).toString('utf8'));
+
                 deliveries.push({
                     method: req.method,
                     path: req.url ?? '',
@@ -105,6 +109,7 @@ describe('back-channel logout', () => {
             secret: null,
             redirectUri: REDIRECT_PATTERN,
         };
+
         client = (await suite.client.client.create(createFakeClient({
             ...attributes,
             backchannelLogoutUri: `${rpURL}${BACKCHANNEL_PATH}`,
@@ -113,6 +118,7 @@ describe('back-channel logout', () => {
 
         for (const scopeName of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {
             const { data: scope } = await suite.client.scope.getOne(scopeName);
+
             await suite.client.clientScope.create({ scopeId: scope.id, clientId: client.id });
             await suite.client.clientScope.create({ scopeId: scope.id, clientId: clientWithoutUri.id });
         }
@@ -152,6 +158,7 @@ describe('back-channel logout', () => {
         });
 
         const userClient = new HTTPClient({ baseURL: suite.baseURL });
+
         userClient.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
 
         const codeVerifier = generateOAuth2CodeVerifier();
@@ -167,6 +174,7 @@ describe('back-channel logout', () => {
         });
 
         const code = new URL(authorized.url).searchParams.get('code')!;
+
         return suite.client.token.createWithAuthorizationCode({
             client_id: target.name,
             redirect_uri: REDIRECT_URI,
@@ -178,6 +186,7 @@ describe('back-channel logout', () => {
 
     const sessionIdOf = (tokens: OAuth2TokenGrantResponse): string => {
         const { sid } = decodeJwtSegment(tokens.id_token!, 1);
+
         expect(typeof sid).toEqual('string');
 
         return sid;
@@ -190,14 +199,15 @@ describe('back-channel logout', () => {
         const response = await fetch(`${suite.baseURL}/realms/${realm.id}/jwks`);
         const { keys } = await response.json() as { keys: Record<string, any>[] };
         const jwk = keys.find((key) => key.kid === header.kid);
+
         expect(jwk).toBeDefined();
 
         const key = await crypto.subtle.importKey(
             'jwk',
             {
-                kty: jwk!.kty, 
-                n: jwk!.n, 
-                e: jwk!.e, 
+                kty: jwk!.kty,
+                n: jwk!.n,
+                e: jwk!.e,
             },
             { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
             true,
@@ -210,9 +220,9 @@ describe('back-channel logout', () => {
     const expectLogoutToken = async (
         delivery: Delivery,
         expected: {
-            sessionId: string, 
-            sub: string, 
-            iss: string 
+            sessionId: string,
+            sub: string,
+            iss: string
         },
     ) => {
         expect(delivery.method).toEqual('POST');
@@ -256,6 +266,7 @@ describe('back-channel logout', () => {
 
         // the delivery left its audit row, correlated with the token the RP got
         const { data: events } = await suite.client.event.getMany({ filters: { name: EventName.BACKCHANNEL_LOGOUT, sessionId } });
+
         expect(events).toHaveLength(1);
         expect(events[0]).toMatchObject({
             refType: EventRefType.CLIENT,
@@ -278,8 +289,11 @@ describe('back-channel logout', () => {
             body: JSON.stringify({ id_token_hint: tokens.id_token }),
             headers: { 'Content-Type': 'application/json' },
         });
+
         expect(response.status).toEqual(200);
+
         const body = await response.json();
+
         expect(body.serverRevoked).toBe(true);
 
         expect(deliveries).toHaveLength(1);
@@ -296,10 +310,12 @@ describe('back-channel logout', () => {
         const second = await mintTokens(client, user, password);
 
         const userClient = new HTTPClient({ baseURL: suite.baseURL });
+
         userClient.setAuthorizationHeader({ type: 'Bearer', token: second.access_token });
 
         // self-service: every own session except the caller's current one
         const { count } = await userClient.session.deleteMany();
+
         expect(count).toEqual(1);
 
         expect(deliveries).toHaveLength(1);
@@ -323,9 +339,10 @@ describe('back-channel logout', () => {
         const { user, password } = await createUser();
         const tokens = await mintTokens(client, user, password);
         const sessionId = sessionIdOf(tokens);
+
         rpStatus = 500;
 
-        const response = await httpRequest(suite, 'DELETE', `/sessions/${sessionId}`, { headers: { Authorization: `Basic ${Buffer.from('admin:start123').toString('base64')}` } });
+        const response = await httpRequest(suite, 'DELETE', `/sessions/${sessionId}`, { headers: { Authorization: `Basic ${Buffer.from('admin:start123').toBase64()}` } });
 
         expect(response.status).toEqual(202);
         expect(deliveries).toHaveLength(1);
@@ -333,6 +350,7 @@ describe('back-channel logout', () => {
         await expect(suite.client.session.getOne(sessionId)).rejects.toBeDefined();
 
         const { data: events } = await suite.client.event.getMany({ filters: { name: EventName.BACKCHANNEL_LOGOUT_FAILED, sessionId } });
+
         expect(events).toHaveLength(1);
         expect(events[0]).toMatchObject({
             refId: client.id,

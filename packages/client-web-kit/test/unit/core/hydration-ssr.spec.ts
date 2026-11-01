@@ -9,6 +9,7 @@
 
 import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { PermissionName } from '@authup/core-kit';
+import type { PermissionEvaluationContext } from '@authup/access';
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h } from 'vue';
 import { useHydratedValue, usePermissionCheck, useTranslation } from '../../../src';
@@ -103,7 +104,26 @@ describe('hydration handoff (server render)', () => {
 
         await renderKitComponent(gated, {}, {}, { hydrationStore: hydration.store });
 
-        expect(hydration.entries).toEqual({ 'authup:permission:::user_update::': false });
+        expect(hydration.entries).toEqual({ '["authup:permission","","","user_update","",""]': false });
+    });
+
+    it('keeps colons in names distinct from owner fields in the hydration payload', async () => {
+        const hydration = createFakeHydrationStore();
+        const contexts: PermissionEvaluationContext[] = [
+            { name: 'run:read', realmId: 'realm-id' },
+            { name: 'run', realmId: 'read:realm-id' },
+        ];
+        const component = defineComponent({
+            setup() {
+                contexts.forEach((context) => usePermissionCheck(context));
+
+                return () => h('span');
+            },
+        });
+
+        await renderKitComponent(component, {}, {}, { hydrationStore: hydration.store });
+
+        expect(Object.keys(hydration.entries)).toHaveLength(2);
     });
 
     it('survives a resolve that rejects', async () => {

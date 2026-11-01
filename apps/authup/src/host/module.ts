@@ -16,12 +16,14 @@ export async function openHost(server: string | undefined, context: HostCommandC
     const host = resolveHostURL(server, document.current);
 
     const entry = document.hosts[host];
+
     if (!entry) {
         throw new Error(`Not signed in to ${host}. Run \`authup login --server ${host} --client <id|name>\`.`);
     }
 
     const storage = selectTokenStorage(entry.storage, store);
     const tokens = await storage.read(host);
+
     if (!tokens) {
         throw new Error(`The tokens for ${host} are gone. Run \`authup login\` again.`);
     }

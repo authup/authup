@@ -14,6 +14,7 @@ const sym = Symbol.for('AuthupHTTPClientAuthenticationHook');
 
 export function injectHTTPClientAuthenticationHook(app?: App) : ClientAuthenticationHook {
     const instance = inject<ClientAuthenticationHook>(sym, app);
+
     if (!instance) {
         throw new Error('The http client authentication hook has not been injected in the app context.');
     }

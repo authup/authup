@@ -22,6 +22,7 @@ export type DeviceVerificationThrottledErrorOptions = AuthupErrorOptions & {
 export class DeviceVerificationThrottledError extends AuthupError {
     constructor(input?: DeviceVerificationThrottledErrorOptions) {
         const { retryAfter, ...rest } = input ?? {};
+
         super({
             code: ErrorCode.OAUTH_DEVICE_VERIFICATION_THROTTLED,
             message: 'Too many verification attempts. Try again later.',

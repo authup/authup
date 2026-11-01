@@ -26,11 +26,15 @@ const component = defineComponent({
             translate(EntityType.USER, { name: 'admin', builtIn: true }),
             translate(EntityType.PERMISSION, { name: PermissionName.CLIENT_CREATE, builtIn: false }),
             translate(EntityType.PERMISSION, {
-                name: PermissionName.CLIENT_CREATE, 
-                displayName: 'Onboard apps', 
-                builtIn: true, 
+                name: PermissionName.CLIENT_CREATE,
+                displayName: 'Onboard apps',
+                builtIn: true,
             }),
-        ].map((text) => h('li', text)).concat(h('button', { onClick: () => { locale.value = 'de'; } })));
+        ].map((text) => h('li', text)).concat(h('button', {
+            onClick: () => {
+                locale.value = 'de';
+            },
+        })));
     },
 });
 

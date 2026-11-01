@@ -81,25 +81,25 @@ export class KeyEntity implements Key {
     certificate: string | null;
 
     @Column({
-        name: 'signature_algorithm', 
-        type: 'varchar', 
-        length: 64, 
-        default: null, 
+        name: 'signature_algorithm',
+        type: 'varchar',
+        length: 64,
+        default: null,
     })
     signatureAlgorithm: Key['signatureAlgorithm'];
 
     @Column({
-        name: 'decryption_key', 
-        type: 'text', 
-        default: null, 
-        select: false, 
+        name: 'decryption_key',
+        type: 'text',
+        default: null,
+        select: false,
     })
     decryptionKey: string | null;
 
     @Column({
-        name: 'encryption_key', 
-        type: 'text', 
-        default: null, 
+        name: 'encryption_key',
+        type: 'text',
+        default: null,
     })
     encryptionKey: string | null;
 
@@ -117,9 +117,9 @@ export class KeyEntity implements Key {
 
     @Index()
     @Column({
-        name: 'realm_id', 
-        nullable: true, 
-        default: null, 
+        name: 'realm_id',
+        nullable: true,
+        default: null,
     })
     realmId: Realm['id'];
 

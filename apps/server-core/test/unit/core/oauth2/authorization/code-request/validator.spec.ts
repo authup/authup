@@ -29,11 +29,13 @@ describe('OAuth2AuthorizationCodeRequestValidator', () => {
 
     it('should accept prompt=select_account', async () => {
         const output = await validator.run({ ...base, prompt: 'select_account' });
+
         expect(output.prompt).toEqual('select_account');
     });
 
     it('should ignore unknown prompt tokens', async () => {
         const output = await validator.run({ ...base, prompt: 'select_account unknown_value' });
+
         expect(output.prompt).toEqual('select_account unknown_value');
     });
 
@@ -45,11 +47,13 @@ describe('OAuth2AuthorizationCodeRequestValidator', () => {
 
     it('should coerce max_age to a number', async () => {
         const output = await validator.run({ ...base, max_age: '60' });
+
         expect(output.max_age).toEqual(60);
     });
 
     it('should honor an explicit max_age=0', async () => {
         const output = await validator.run({ ...base, max_age: '0' });
+
         expect(output.max_age).toEqual(0);
     });
 
@@ -57,16 +61,19 @@ describe('OAuth2AuthorizationCodeRequestValidator', () => {
         // z.coerce.number('') === 0 would silently force re-authentication; a
         // blank param must be ignored, not read as max_age=0.
         const output = await validator.run({ ...base, max_age: '' });
+
         expect(output.max_age).toBeUndefined();
     });
 
     it('should canonicalize login_hint (trim + lowercase)', async () => {
         const output = await validator.run({ ...base, login_hint: '  Alice@Corp  ' });
+
         expect(output.login_hint).toEqual('alice@corp');
     });
 
     it('should pass a request without any prompt fields', async () => {
         const output = await validator.run({ ...base });
+
         expect(output.prompt).toBeUndefined();
         expect(output.max_age).toBeUndefined();
         expect(output.login_hint).toBeUndefined();

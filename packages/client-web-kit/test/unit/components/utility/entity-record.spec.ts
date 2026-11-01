@@ -49,7 +49,9 @@ function buildRole(id: string, name: string) : Role {
 describe('defineEntityManager', () => {
     it('writes through the data bridge and clears it with undefined', async () => {
         let manager : EntityManager<Role> | undefined;
-        const { wrapper } = mountKitComponent(createRecord((value) => { manager = value; }));
+        const { wrapper } = mountKitComponent(createRecord((value) => {
+            manager = value; 
+        }));
 
         manager!.data.value = buildRole('role-1', 'admin');
         await flushPromises();
@@ -66,7 +68,9 @@ describe('defineEntityManager', () => {
 
     it('re-renders an in-place write to the held record', async () => {
         let manager : EntityManager<Role> | undefined;
-        const { wrapper } = mountKitComponent(createRecord((value) => { manager = value; }));
+        const { wrapper } = mountKitComponent(createRecord((value) => {
+            manager = value; 
+        }));
 
         manager!.data.value = buildRole('role-1', 'admin');
         await flushPromises();
@@ -83,11 +87,14 @@ describe('defineEntityManager', () => {
 
         let manager : EntityManager<Role> | undefined;
         const { wrapper, httpClient } = mountKitComponent(
-            createRecord((value) => { manager = value; }),
+            createRecord((value) => {
+                manager = value; 
+            }),
             {},
             {
                 'POST /roles': async (request: FakeRequest) => {
                     await gate;
+
                     return { data: { id: 'role-1', ...(request.body as Record<string, unknown>) }, meta: {} };
                 },
             },
@@ -103,6 +110,7 @@ describe('defineEntityManager', () => {
         await flushPromises();
 
         const creates = httpClient.requests.filter((request) => request.method === 'POST');
+
         expect(creates).toHaveLength(1);
         expect(manager!.busy.value).toBe(false);
         expect(manager!.data.value?.id).toEqual('role-1');
@@ -112,7 +120,9 @@ describe('defineEntityManager', () => {
     it('resolves by props.entityId before the resolve query', async () => {
         let manager : EntityManager<Role> | undefined;
         const { wrapper, httpClient } = mountKitComponent(
-            createRecord((value) => { manager = value; }),
+            createRecord((value) => {
+                manager = value; 
+            }),
             { entityId: 'role-1' },
             {
                 'GET /roles/:id': (request: FakeRequest) => ({ data: buildRole(request.params.id, 'by-id'), meta: {} }),
@@ -130,11 +140,16 @@ describe('defineEntityManager', () => {
 
     it('falls back to the query when the id read fails', async () => {
         let manager : EntityManager<Role> | undefined;
+
         mountKitComponent(
-            createRecord((value) => { manager = value; }),
+            createRecord((value) => {
+                manager = value; 
+            }),
             {},
             {
-                'GET /roles/:id': () => { throw new Error('not found'); },
+                'GET /roles/:id': () => {
+                    throw new Error('not found'); 
+                },
                 'GET /roles': () => ({ data: [buildRole('role-2', 'by-query')], meta: { total: 1 } }),
             },
         );
@@ -147,7 +162,9 @@ describe('defineEntityManager', () => {
     it('prefers props.entity and fetches nothing', async () => {
         let manager : EntityManager<Role> | undefined;
         const { wrapper, httpClient } = mountKitComponent(
-            createRecord((value) => { manager = value; }),
+            createRecord((value) => {
+                manager = value; 
+            }),
             { entity: buildRole('role-3', 'from-props'), entityId: 'role-1' },
         );
 
@@ -160,10 +177,17 @@ describe('defineEntityManager', () => {
 
     it('rejects resolveOrFail with the read error when nothing resolved', async () => {
         let manager : EntityManager<Role> | undefined;
+
         mountKitComponent(
-            createRecord((value) => { manager = value; }),
+            createRecord((value) => {
+                manager = value; 
+            }),
             {},
-            { 'GET /roles/:id': () => { throw new Error('not found'); } },
+            {
+                'GET /roles/:id': () => {
+                    throw new Error('not found'); 
+                }, 
+            },
         );
 
         await expect(manager!.resolveOrFail({ id: 'role-1' })).rejects.toBeInstanceOf(Error);
@@ -175,17 +199,21 @@ describe('defineEntityManager', () => {
 
         let manager : EntityManager<Role> | undefined;
         const { wrapper } = mountKitComponent(
-            createRecord((value) => { manager = value; }),
+            createRecord((value) => {
+                manager = value; 
+            }),
             {},
             {
                 'GET /roles/:id': async (request: FakeRequest) => {
                     await gate;
+
                     return { data: buildRole(request.params.id, 'loaded'), meta: {} };
                 },
             },
         );
 
         const loading = manager!.resolve({ id: 'role-1' });
+
         await flushPromises();
 
         // Both writes land while the read is in flight, so the source
@@ -196,6 +224,7 @@ describe('defineEntityManager', () => {
         manager!.updated({ name: 'renamed' } as Role);
 
         const emitted = wrapper.emitted('updated')!;
+
         expect(emitted[0][0]).toEqual({ id: 'role-1', name: 'renamed' });
         expect(manager!.data.value?.name).toEqual('renamed');
 
@@ -211,17 +240,23 @@ describe('defineEntityManager', () => {
         const name = ref('first');
 
         let manager : EntityManager<Role> | undefined;
+
         mountKitComponent(
-            createRecord((value) => { manager = value; }, name),
+            createRecord((value) => {
+                manager = value; 
+            }, name),
             {},
             {
                 'GET /roles': async (request: FakeRequest) => {
                     const url = new URL(request.url, 'http://fake.test');
                     const filter = url.searchParams.get('filter') ?? '';
+
                     if (filter.includes('second')) {
                         const { promise, resolve } = Promise.withResolvers<void>();
+
                         gates.push(resolve);
                         await promise;
+
                         return { data: [buildRole('role-2', 'second')], meta: { total: 1 } };
                     }
 
@@ -240,6 +275,7 @@ describe('defineEntityManager', () => {
         expect(manager!.data.value).toBeUndefined();
 
         const resolving = manager!.resolve();
+
         gates[0]();
         await resolving;
 

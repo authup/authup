@@ -98,9 +98,9 @@ function createHookedClient(handler: Handler) {
     hook.setAuthorizationHeader({ type: 'Bearer', token: 'at-0' });
 
     return {
-        client, 
-        hook, 
-        requests, 
+        client,
+        hook,
+        requests,
     };
 }
 
@@ -124,7 +124,9 @@ describe('src/hook (refresh on the hooked client)', () => {
         const { client, requests } = createHookedClient((request) => {
             if (isTokenRequest(request)) {
                 const [next, ...rest] = tokenAnswers;
+
                 tokenAnswers = rest;
+
                 return next!;
             }
 
@@ -139,6 +141,7 @@ describe('src/hook (refresh on the hooked client)', () => {
         expect(await settlesWithin(client.realm.getMany(), 1000)).toEqual('resolved');
 
         const replayed = requests[requests.length - 1]!;
+
         expect(isTokenRequest(replayed)).toBe(false);
         expect(readAuthorization(replayed)).toEqual('Bearer at-2');
     });
@@ -167,6 +170,7 @@ describe('src/hook (refresh on the hooked client)', () => {
         const { client, requests } = createHookedClient(async (request) => {
             if (isTokenRequest(request)) {
                 await tokenGate.promise;
+
                 return tokenGranted('at-1');
             }
 
@@ -186,6 +190,7 @@ describe('src/hook (refresh on the hooked client)', () => {
                 setTimeout(resolve, 1);
             });
         }
+
         tokenGate.resolve();
 
         expect(await settlesWithin(first, 1000)).toEqual('resolved');

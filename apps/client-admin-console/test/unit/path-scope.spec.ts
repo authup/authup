@@ -175,6 +175,7 @@ describe('src/composables/path-scope -> collectPathPages', () => {
             offsets: [] as number[],
             async load(offset: number) {
                 pages.offsets.push(offset);
+
                 return {
                     data: [],
                     meta: { total: 500 },
@@ -240,6 +241,7 @@ function createCollection(options: { busyRounds?: number } = {}) {
         get busy() {
             if (busyRounds > 0) {
                 busyRounds -= 1;
+
                 return true;
             }
 

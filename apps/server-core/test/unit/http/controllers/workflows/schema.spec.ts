@@ -17,7 +17,7 @@ import { computeSchemaRegistryHash, describeQuerySchemas } from '../../../../../
 import { createTestApplication } from '../../../../app';
 import { expectClientError, httpRequest } from '../../../../utils';
 
-const adminAuthorization = `Basic ${Buffer.from('admin:start123').toString('base64')}`;
+const adminAuthorization = `Basic ${Buffer.from('admin:start123').toBase64()}`;
 
 describe('src/http/controllers/workflows/schema/*.ts', () => {
     const suite = createTestApplication();
@@ -37,6 +37,7 @@ describe('src/http/controllers/workflows/schema/*.ts', () => {
         expect(response.meta.total).toEqual(response.data.length);
 
         const names = response.data.map((entry) => entry.name);
+
         expect(names).toContain(EntityType.ROLE);
 
         // ordered by name, so a client can diff two documents positionally

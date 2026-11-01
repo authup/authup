@@ -22,6 +22,7 @@ export type MfaThrottledErrorOptions = AuthupErrorOptions & {
 export class MfaThrottledError extends AuthupError {
     constructor(input?: MfaThrottledErrorOptions) {
         const { retryAfter, ...rest } = input ?? {};
+
         super({
             code: ErrorCode.MFA_ATTEMPT_THROTTLED,
             message: 'Too many failed verification attempts. Please try again later.',

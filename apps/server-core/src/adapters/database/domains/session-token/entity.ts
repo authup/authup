@@ -78,50 +78,50 @@ export class SessionTokenEntity implements SessionToken {
     parentId: string | null;
 
     @Column({
-        name: 'refresh_token_id', 
-        type: 'uuid', 
-        nullable: true, 
-        default: null, 
+        name: 'refresh_token_id',
+        type: 'uuid',
+        nullable: true,
+        default: null,
     })
     refreshTokenId: string | null;
 
     @Column({
-        name: 'ip_address', 
-        type: 'varchar', 
-        length: 45, 
+        name: 'ip_address',
+        type: 'varchar',
+        length: 45,
     })
     ipAddress: string;
 
     @Column({
-        name: 'user_agent', 
-        type: 'varchar', 
-        length: 512, 
+        name: 'user_agent',
+        type: 'varchar',
+        length: 512,
     })
     userAgent: string;
 
     @Column({
-        name: 'consumed_at', 
-        type: 'varchar', 
-        length: 28, 
-        nullable: true, 
-        default: null, 
+        name: 'consumed_at',
+        type: 'varchar',
+        length: 28,
+        nullable: true,
+        default: null,
     })
     consumedAt: string | null;
 
     @Column({
-        name: 'revoked_at', 
-        type: 'varchar', 
-        length: 28, 
-        nullable: true, 
-        default: null, 
+        name: 'revoked_at',
+        type: 'varchar',
+        length: 28,
+        nullable: true,
+        default: null,
     })
     revokedAt: string | null;
 
     @Index()
     @Column({
-        name: 'expires_at', 
-        type: 'varchar', 
-        length: 28, 
+        name: 'expires_at',
+        type: 'varchar',
+        length: 28,
     })
     expiresAt: string;
 

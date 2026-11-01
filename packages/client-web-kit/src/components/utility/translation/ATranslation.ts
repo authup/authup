@@ -1,8 +1,8 @@
-import { 
-    SlotName, 
-    hasNormalizedSlot, 
-    normalizeSlot, 
-    useTranslation,  
+import {
+    SlotName,
+    hasNormalizedSlot,
+    normalizeSlot,
+    useTranslation,
 } from '../../../core';
 import { defineComponent } from 'vue';
 

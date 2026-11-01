@@ -23,6 +23,7 @@ const CONFIG_KEYS = Object.keys(CONFIG_SCHEMA) as (keyof Config)[];
 
 function readEnv(key: keyof Config, raw: string) : unknown {
     const entry = CONFIG_SCHEMA[key];
+
     if (!isSchemaEntryInput(entry) || !entry.env || !entry.readEnv) {
         throw new Error(`The config key ${key} carries no env reader.`);
     }
@@ -34,8 +35,10 @@ describe('src/app/modules/config/constants.ts', () => {
     describe('registry', () => {
         it('should map every environment variable name onto exactly one key', () => {
             const envNames : string[] = [];
+
             for (const key of CONFIG_KEYS) {
                 const entry = CONFIG_SCHEMA[key];
+
                 if (isSchemaEntryInput(entry) && typeof entry.env !== 'undefined') {
                     envNames.push(entry.env);
                     expect(typeof entry.readEnv).toEqual('function');
@@ -51,6 +54,7 @@ describe('src/app/modules/config/constants.ts', () => {
             // superset: it also carries the keys only a console service
             // reads.
             const known = Object.values(EnvironmentVariable) as string[];
+
             for (const name of envNames) {
                 expect(known).toContain(name);
             }
@@ -139,6 +143,7 @@ describe('src/app/modules/config/constants.ts', () => {
 
         it('should accept boolean process role keys and reject non-boolean values', () => {
             const { worker } = CONFIG_SCHEMA;
+
             if (!('enabled' in worker)) {
                 throw new Error('worker is a nested section');
             }

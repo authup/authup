@@ -84,12 +84,18 @@ export default defineComponent({
         });
 
         const protocolEff = computed(() => {
-            if (manager.data.value) return manager.data.value.protocol;
+            if (manager.data.value) {
+                return manager.data.value.protocol;
+            }
+
             return props.protocol;
         });
 
         const presetEff = computed(() => {
-            if (manager.data.value) return manager.data.value.preset;
+            if (manager.data.value) {
+                return manager.data.value.preset;
+            }
+
             return props.preset;
         });
 
@@ -103,6 +109,7 @@ export default defineComponent({
             const client = v.$getResultsForChild('client');
             const endpoint = v.$getResultsForChild('endpoint');
             const enrollment = v.$getResultsForChild('enrollment');
+
             return !!basic?.$invalid.value ||
                 !!client?.$invalid.value ||
                 !!endpoint?.$invalid.value ||
@@ -113,22 +120,29 @@ export default defineComponent({
         // CALLBACK, the value the operator registers upstream; authorize-out
         // is what starts a login and needs a code request on top.
         const redirectUri = computed<string>(() => {
-            if (!manager.data.value) return '';
+            if (!manager.data.value) {
+                return '';
+            }
+
             const path = buildIdentityProviderAuthorizeCallbackPath(manager.data.value.id);
             const baseURL = (apiClient.getBaseURL() ?? '').replace(/\/+$/, '');
+
             return `${baseURL}/${path.replace(/^\/+/, '')}`;
         });
 
         const basicFieldsRef = ref<{ assign: (data: Record<string, unknown>) => void } | null>(null);
 
         onChange(presetEff, () => {
-            if (!basicFieldsRef.value) return;
+            if (!basicFieldsRef.value) {
+                return;
+            }
 
             if (presetEff.value) {
                 basicFieldsRef.value.assign({
                     name: presetEff.value,
                     slug: presetEff.value,
                 });
+
                 return;
             }
 
@@ -153,7 +167,9 @@ export default defineComponent({
         initForm();
 
         const submit = async () => {
-            if (isInvalid.value) return;
+            if (isInvalid.value) {
+                return;
+            }
 
             const data: Partial<IdentityProvider> = {
                 ...extractValidupResultsFromChild(v, 'basic'),

@@ -23,8 +23,8 @@ import type {
     EntityRecordResponse,
     EntityStatsResponse,
     RoleCreatePayload,
-    RoleSavePayload, 
-    RoleUpdatePayload, 
+    RoleSavePayload,
+    RoleUpdatePayload,
 } from '@authup/core-http-kit';
 import type { Role } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
@@ -32,8 +32,8 @@ import type { IEntityStatsService, IRoleService  } from '../../../../../core/ind
 import {
     RECORD_QUERY_PARAMETERS,
     STATS_QUERY_PARAMETERS,
-    describeQuerySchema, 
-    roleSchema, 
+    describeQuerySchema,
+    roleSchema,
 } from '../../../../../core/index.ts';
 import { DQuerySchema } from '../../../decorators/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -78,6 +78,7 @@ export class RoleController {
     async getMany(@DContext() event: IAppEvent): Promise<EntityCollectionResponse<Role>> {
         const actor = buildActorContext(event);
         const { data, meta } = await this.service.getMany(useRequestQuery(event), actor);
+
         return { data, meta: { ...meta, schema: describeQuerySchema(roleSchema) } };
     }
 
@@ -85,7 +86,9 @@ export class RoleController {
     async add(@DBody() data: RoleCreatePayload, @DContext() event: IAppEvent): Promise<EntityRecordResponse<Role>> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
+
         event.response.status = 201;
+
         return { data: entity, meta: {} };
     }
 
@@ -106,7 +109,9 @@ export class RoleController {
     ): Promise<EntityRecordResponse<Role>> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
+
         event.response.status = 202;
+
         return { data: entity, meta: {} };
     }
 
@@ -120,6 +125,7 @@ export class RoleController {
         const { entity, created } = await this.service.save(id || undefined, data, actor);
 
         event.response.status = created ? 201 : 202;
+
         return { data: entity, meta: {} };
     }
 
@@ -127,7 +133,9 @@ export class RoleController {
     async drop(@DPath('id') id: string, @DContext() event: IAppEvent): Promise<EntityRecordResponse<Role>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
+
         event.response.status = 202;
+
         return { data: entity, meta: {} };
     }
 }

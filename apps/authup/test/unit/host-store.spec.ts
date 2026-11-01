@@ -66,6 +66,7 @@ describe('host store', () => {
         expect(await store.read()).toEqual(document);
 
         const file = path.join(store.directory, 'hosts.json');
+
         expect((await fs.stat(file)).mode & 0o777).toBe(0o600);
         expect((await fs.stat(store.directory)).mode & 0o777).toBe(0o700);
         expect(await fs.readdir(store.directory)).toEqual(['hosts.json']);
@@ -73,6 +74,7 @@ describe('host store', () => {
 
     it('refuses a malformed document without echoing it', async () => {
         const store = createHostStore(resolveHostsDirectory());
+
         await fs.mkdir(store.directory, { recursive: true });
         await fs.writeFile(path.join(store.directory, 'hosts.json'), '{"hosts":{"https://a.test":{"storage":"vault","accessToken":"secret-token"}}}');
 
@@ -82,6 +84,7 @@ describe('host store', () => {
 
     it('refuses a file that is not JSON', async () => {
         const store = createHostStore(resolveHostsDirectory());
+
         await fs.mkdir(store.directory, { recursive: true });
         await fs.writeFile(path.join(store.directory, 'hosts.json'), 'nope');
 
@@ -91,7 +94,9 @@ describe('host store', () => {
     describe('file token storage', () => {
         it('keeps the tokens on the host entry and strips them on remove', async () => {
             const store = createHostStore(resolveHostsDirectory());
+
             await store.write({ hosts: { [host]: { clientId: 'cli', storage: 'file' } } });
+
             const storage = createFileTokenStorage(store);
 
             expect(await storage.read(host)).toBeUndefined();

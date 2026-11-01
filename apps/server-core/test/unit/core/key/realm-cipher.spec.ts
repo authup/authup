@@ -37,7 +37,7 @@ function buildEncKey(realmId: string, overrides: Partial<Key> = {}): Key {
         status: KeyStatus.ACTIVE,
         signatureAlgorithm: null,
         priority: 0,
-        decryptionKey: Buffer.alloc(32, 5).toString('base64'),
+        decryptionKey: Buffer.alloc(32, 5).toBase64(),
         encryptionKey: null,
         createdAt: TIMESTAMP,
         updatedAt: TIMESTAMP,
@@ -56,6 +56,7 @@ describe('core/key/realm-cipher', () => {
         const blob = await cipher.encrypt('seed-material', realmId);
 
         const parts = blob.split('.');
+
         expect(parts).toHaveLength(3);
         expect(parts[0]).toEqual(REALM_CIPHER_BLOB_VERSION);
         expect(parts[1]).toEqual(key.id);
@@ -83,6 +84,7 @@ describe('core/key/realm-cipher', () => {
         const cipher = new RealmCipher({ keyStore: repository });
 
         const blob = await cipher.encrypt('seed-material', realmId);
+
         expect(await cipher.decrypt(blob, realmId)).toEqual('seed-material');
 
         // only the imported MATERIAL is cached — status is read fresh, so a
@@ -103,6 +105,7 @@ describe('core/key/realm-cipher', () => {
         const cipher = new RealmCipher({ keyStore: new FakeKeyStore(null) });
 
         expect.assertions(1);
+
         try {
             await cipher.decrypt(blob, realmId);
         } catch (e) {
@@ -155,7 +158,8 @@ describe('core/key/realm-cipher', () => {
 
         // tampered payload — failed GCM authentication
         const [version, keyId] = blob.split('.');
-        const tampered = [version, keyId, Buffer.alloc(32, 9).toString('base64')].join('.');
+        const tampered = [version, keyId, Buffer.alloc(32, 9).toBase64()].join('.');
+
         try {
             await cipher.decrypt(tampered, realmId);
         } catch (e) {
@@ -164,6 +168,7 @@ describe('core/key/realm-cipher', () => {
 
         // unknown key reference
         const empty = new RealmCipher({ keyStore: new FakeKeyStore(null) });
+
         try {
             await empty.decrypt(blob, realmId);
         } catch (e) {

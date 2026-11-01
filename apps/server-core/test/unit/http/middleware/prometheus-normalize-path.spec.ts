@@ -17,6 +17,7 @@ function createRouter(): App {
     const router = new App();
 
     const users = new App();
+
     users.get('/', createHandler());
     users.get('/:id', createHandler());
     users.post('/', createHandler());

@@ -96,8 +96,10 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
                 realm: entity.realmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -121,6 +123,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         await actor.permissionEvaluator.preEvaluateOneOf({ name: PERMISSION_NAMES });
 
         const entity = await this.repository.findOneByIdOrName(idOrName, realm);
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -139,6 +142,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         actor: ActorContext,
     ): Promise<Policy> {
         const { entity } = await this.save(undefined, data, actor);
+
         return entity;
     }
 
@@ -148,6 +152,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         actor: ActorContext,
     ): Promise<Policy> {
         const { entity } = await this.save(idOrName, data, actor, { updateOnly: true });
+
         return entity;
     }
 
@@ -158,13 +163,15 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         options: { updateOnly?: boolean } = {},
     ): Promise<{
         entity: Policy,
-        created: boolean 
+        created: boolean
     }> {
         let group: string;
 
         let entity: Policy | null | undefined;
+
         if (idOrName) {
             const where: Record<string, any> = {};
+
             if (isUUID(idOrName)) {
                 where.id = idOrName;
             } else {
@@ -176,6 +183,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
                 // predicate would address a row of whichever realm holds the
                 // name.
                 const realm = await this.realmRepository.resolveOrFail(data.realmId);
+
                 entity = await this.repository.findOneBy({ ...where, realmId: realm.id });
             } else {
                 // No realm value means global on create, so a name key
@@ -187,6 +195,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
 
                 entity = await this.repository.findOneBy(where);
             }
+
             // Only a NAME key may upsert-create. A UUID addresses one specific
             // row, so a miss is a 404 (creating would write a different id).
             if (!entity && (options.updateOnly || where.id)) {
@@ -198,6 +207,11 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
 
         if (entity) {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_UPDATE });
+
+            if (entity.builtIn) {
+                throw new ValidationError('A built-in policy can not be updated.');
+            }
+
             group = ValidatorGroup.UPDATE;
         } else {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_CREATE });
@@ -208,6 +222,22 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
 
         await this.repository.validateJoinColumns(validated);
 
+        const parentId = validated.parentId ?? null;
+
+        if (entity) {
+            if (typeof validated.parentId !== 'undefined' && parentId !== (entity.parentId ?? null)) {
+                if (parentId) {
+                    await this.evaluateParent(actor, parentId, { loaded: validated.parent, attach: true });
+                }
+
+                if (entity.parentId) {
+                    await this.evaluateParent(actor, entity.parentId);
+                }
+            }
+        } else if (parentId) {
+            await this.evaluateParent(actor, parentId, { loaded: validated.parent, attach: true });
+        }
+
         if (
             validated.parent &&
             validated.parent.type !== BuiltInPolicyType.COMPOSITE
@@ -215,11 +245,9 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
             throw new ValidationError('The parent policy must be of type group.');
         }
 
-        if (entity) {
-            if (entity.builtIn) {
-                throw new ValidationError('A built-in policy can not be updated.');
-            }
+        await this.evaluateChildren(actor, validated.children);
 
+        if (entity) {
             await this.evaluateUpdate(
                 actor,
                 PermissionName.PERMISSION_UPDATE,
@@ -236,7 +264,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
 
             return {
                 entity,
-                created: false, 
+                created: false,
             };
         }
 
@@ -255,8 +283,65 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
 
         return {
             entity,
-            created: true, 
+            created: true,
         };
+    }
+
+    /**
+     * Attaching a child to a composite, detaching one or deleting one changes
+     * the composite's expression, so it needs authority over the parent. The
+     * authority is evaluated before the parent's type or built-in flag is
+     * answered, so a caller without it learns only that the parent exists.
+     * Only attaching is refused for a built-in parent: detaching a child from
+     * one stays possible, so it can be cleaned up.
+     */
+    private async evaluateParent(
+        actor: ActorContext,
+        id: string,
+        options: { loaded?: Policy | null, attach?: boolean } = {},
+    ): Promise<void> {
+        const parent = options.loaded ?? await this.repository.findOneBy({ id });
+
+        if (!parent) {
+            if (options.attach) {
+                throw new ValidationError('The parent policy does not exist.');
+            }
+
+            return;
+        }
+
+        await evaluateRecord(actor.permissionEvaluator, {
+            name: PermissionName.PERMISSION_UPDATE,
+            realm: parent.realmId ?? null,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: parent },
+        });
+
+        if (options.attach && parent.builtIn) {
+            throw new ValidationError('A child can not be attached to a built-in policy.');
+        }
+    }
+
+    private async evaluateChildren(
+        actor: ActorContext,
+        children?: Policy[],
+    ): Promise<void> {
+        if (!Array.isArray(children)) {
+            return;
+        }
+
+        for (const child of children) {
+            // a nested child's parent is the policy it is nested in
+            delete (child as Partial<Policy>).parentId;
+            child.realmId = child.realmId ?? null;
+
+            await evaluateRecord(actor.permissionEvaluator, {
+                name: PermissionName.PERMISSION_CREATE,
+                realm: child.realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: child },
+            });
+
+            await this.evaluateChildren(actor, child.children);
+        }
     }
 
     private async validate(
@@ -269,6 +354,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         // `type` is create-only, so an update reads its options by the stored type
         const resolvedType = type ?? data.type;
         const attributes = await this.attributesValidator.run({ ...data, type: resolvedType });
+
         extendObject(validated, attributes);
 
         // each child is a policy of its own: validated here, with its own type's validator
@@ -277,6 +363,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
                 const promises = data.children.map(
                     (child) => this.validate(child, group),
                 );
+
                 validated.children = await Promise.all(promises);
             }
         }
@@ -291,6 +378,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -304,6 +392,10 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
             realm: entity.realmId,
             data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
+
+        if (entity.parentId) {
+            await this.evaluateParent(actor, entity.parentId);
+        }
 
         const { id: entityId } = entity;
 

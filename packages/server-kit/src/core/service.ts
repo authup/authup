@@ -26,6 +26,7 @@ export abstract class AbstractEntityService {
         }
 
         const { data } = actor.identity;
+
         if (data.realmId) {
             return data.realmId;
         }

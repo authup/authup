@@ -8,8 +8,8 @@
 import { describe, expect, it } from 'vitest';
 import {
     AttributesPolicyEvaluator,
-    AttributesPolicyValidator, 
-    PolicyData, 
+    AttributesPolicyValidator,
+    PolicyData,
     definePolicyEvaluationContext,
 } from '../../../src';
 import type { AttributesPolicy } from '../../../src';
@@ -42,6 +42,7 @@ describe('src/policy/attributes', () => {
                 },
             }),
         }));
+
         expect(outcome.success).toBeTruthy();
     });
 
@@ -66,6 +67,7 @@ describe('src/policy/attributes', () => {
 
     it('should fail with missing context', async () => {
         const outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext());
+
         expect(outcome.success).toBeFalsy();
     });
 

@@ -43,6 +43,7 @@ export function createTimestampFiltersGate(keys: string[] = TIMESTAMP_FILTER_KEY
     return (input: IFilter) => {
         const segments = input.field.split('.');
         const name = segments[segments.length - 1];
+
         if (!keys.includes(name) || RANGE_OPERATORS.includes(input.operator)) {
             return input;
         }

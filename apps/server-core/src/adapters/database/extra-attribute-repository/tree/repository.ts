@@ -6,27 +6,27 @@
  */
 
 import type {
-    DataSource, 
-    DeepPartial, 
-    EntityManager, 
-    FindManyOptions, 
-    FindOneOptions, 
+    DataSource,
+    DeepPartial,
+    EntityManager,
+    FindManyOptions,
+    FindOneOptions,
     FindTreeOptions,
     SelectQueryBuilder,
 } from 'typeorm';
 import {
     FindOptionsUtils,
     InstanceChecker,
-    TreeRepository, 
+    TreeRepository,
     TreeRepositoryUtils,
 } from 'typeorm';
 import type { ObjectLiteral } from '@authup/kit';
 import type { ExtraAttributesRepositoryAdapter } from '../adapter.ts';
 import type {
-    EARepositoryEntityBase, 
-    EARepositoryFindOptions, 
-    EARepositoryOptions, 
-    EARepositorySaveOptions, 
+    EARepositoryEntityBase,
+    EARepositoryFindOptions,
+    EARepositoryOptions,
+    EARepositorySaveOptions,
     IEARepository,
 } from '../types.ts';
 import { ExtraAttributesTreeRepositoryAdapter } from './adapter.ts';
@@ -81,20 +81,25 @@ export class EATreeRepository<
         if (Array.isArray(entityLike)) {
             return super.create(entityLike).map((entity, i) => {
                 this.preserveExtraAttributes(entity, entityLike[i]);
+
                 return entity;
             });
         }
 
         const entity = super.create(entityLike);
+
         this.preserveExtraAttributes(entity, entityLike);
+
         return entity;
     }
 
     private preserveExtraAttributes(entity: T, source: DeepPartial<T>): void {
         const columns = new Set<string>();
+
         for (const col of this.metadata.columns) {
             columns.add(col.propertyName);
         }
+
         for (const rel of this.metadata.relations) {
             columns.add(rel.propertyName);
         }
@@ -178,6 +183,7 @@ export class EATreeRepository<
             'treeClosure',
             entity,
         );
+
         FindOptionsUtils.applyOptionsToTreeQueryBuilder(qb, options);
 
         const entities = await qb.getRawAndEntities();
@@ -232,6 +238,7 @@ export class EATreeRepository<
             'treeClosure',
             entity,
         );
+
         FindOptionsUtils.applyOptionsToTreeQueryBuilder(qb, options);
 
         const entities = await qb.getRawAndEntities();
@@ -250,6 +257,7 @@ export class EATreeRepository<
             entities.entities,
             relationMaps,
         );
+
         return entity;
     }
 
@@ -257,11 +265,13 @@ export class EATreeRepository<
 
     async updateClosureTable(entity: T, manager?: EntityManager) {
         const primaryKeyValue = this.metadata.primaryColumns[0].getEntityValue(entity);
+
         if (!primaryKeyValue) {
             return;
         }
 
         const closureTable = this.metadata.closureJunctionTable;
+
         if (!closureTable) {
             return;
         }
@@ -301,6 +311,7 @@ export class EATreeRepository<
         const parentId = this.metadata.treeParentRelation.joinColumns[0].getEntityValue(entity);
 
         let ancestorIds : string[];
+
         if (parentId) {
             ancestorIds = [
                 parentId,
@@ -350,6 +361,7 @@ export class EATreeRepository<
                     }
 
                     acc[curr[descendantColumn.databasePath]].push(curr[ancestorColumn.databasePath]);
+
                     return acc;
                 }, {} as Record<string, string[]>);
 
@@ -359,6 +371,7 @@ export class EATreeRepository<
 
                     for (const ancestorId of ancestorIds) {
                         const index = ancestorsOfDescendent.indexOf(ancestorId);
+
                         if (index === -1) {
                             await manager.query(
                                 `INSERT INTO ${tableName}

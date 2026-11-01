@@ -85,14 +85,17 @@ describe('src/cli/commands/config', () => {
             );
 
             const options : ConfigReadFsOptions<Config> = {};
+
             applyCLIConfigArgs(options, { configDirectory: directory });
 
             const module = createCLIConfigModule(options);
 
             const container = new Container();
+
             await module.setup(container);
 
             const config = container.resolve(ConfigInjectionKey);
+
             expect(config.port).toEqual(4010);
         });
 
@@ -108,9 +111,11 @@ describe('src/cli/commands/config', () => {
             applyCLIConfigArgs(options, { configDirectory: directory });
 
             const container = new Container();
+
             await module.setup(container);
 
             const config = container.resolve(ConfigInjectionKey);
+
             expect(config.port).toEqual(4030);
         });
 
@@ -125,9 +130,11 @@ describe('src/cli/commands/config', () => {
             const module = createCLIConfigModule({ cwd: directory });
 
             const container = new Container();
+
             await module.setup(container);
 
             const config = container.resolve(ConfigInjectionKey);
+
             expect(config.port).toEqual(5077);
         });
     });

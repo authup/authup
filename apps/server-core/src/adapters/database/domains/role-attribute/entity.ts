@@ -8,11 +8,11 @@
 import {
     Column,
     CreateDateColumn,
-    Entity, 
+    Entity,
     Index,
-    JoinColumn, 
+    JoinColumn,
     ManyToOne,
-    PrimaryGeneratedColumn, 
+    PrimaryGeneratedColumn,
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
@@ -33,7 +33,7 @@ export class RoleAttributeEntity implements RoleAttribute {
 
     @Column({
         type: 'varchar',
-        length: 255, 
+        length: 255,
     })
     name: string;
 
@@ -59,7 +59,7 @@ export class RoleAttributeEntity implements RoleAttribute {
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'realm_id' })
     realm: RealmEntity | null;

@@ -44,7 +44,7 @@ const DEVICE_CACHE_PREFIXES : string[] = [
     CacheOAuth2Prefix.DEVICE_LOOKUP_ATTEMPT,
 ];
 
-const encode = (input: Record<string, any>) => Buffer.from(JSON.stringify(input)).toString('base64url');
+const encode = (input: Record<string, any>) => Buffer.from(JSON.stringify(input)).toBase64({ alphabet: 'base64url', omitPadding: true });
 
 /**
  * A federated login the device verification page started (#3589): the state
@@ -79,6 +79,7 @@ describe('identity-provider login (device verification page)', () => {
             },
         }).then((response) => {
             jar.store(response);
+
             return response;
         });
     }
@@ -95,6 +96,7 @@ describe('identity-provider login (device verification page)', () => {
 
         for (const scopeName of [ScopeName.GLOBAL, ScopeName.OPEN_ID]) {
             const { data: scope } = await suite.client.scope.getOne(scopeName);
+
             await suite.client.clientScope.create({ scopeId: scope.id, clientId: client.id });
         }
 
@@ -117,6 +119,7 @@ describe('identity-provider login (device verification page)', () => {
             `identity-providers/${provider.id}/authorize-out?user_code=${encodeURIComponent(userCode)}`,
             { redirect: 'manual' },
         );
+
         expect(out.status).toEqual(302);
 
         return new URL(out.headers.get('location') as string).searchParams.get('state') as string;
@@ -157,6 +160,7 @@ describe('identity-provider login (device verification page)', () => {
                         token_type: 'Bearer',
                     }));
                 });
+
                 return;
             }
 
@@ -171,6 +175,7 @@ describe('identity-provider login (device verification page)', () => {
         await suite.setup();
 
         const config = suite.container.resolve(ConfigInjectionKey);
+
         publicUrl = config.publicUrl.replace(/\/+$/, '');
         authConsoleUrl = config.authConsole.url.replace(/\/+$/, '');
 
@@ -198,6 +203,7 @@ describe('identity-provider login (device verification page)', () => {
         const out = await request('GET', `identity-providers/${provider.id}/authorize-out?user_code=bcdf-ghjk`, { redirect: 'manual' });
 
         const location = readLocation(out);
+
         expect(`${location.origin}${location.pathname}`).toEqual(`${idpURL}/authorize`);
         expect(location.searchParams.get('state')).toBeTruthy();
 
@@ -212,6 +218,7 @@ describe('identity-provider login (device verification page)', () => {
         expect(jar.get(FEDERATED_LOGIN_COOKIE)).toBeUndefined();
 
         const body = await out.json();
+
         expect(body.error).toEqual(OAuth2ErrorCode.INVALID_REQUEST);
     });
 
@@ -261,6 +268,7 @@ describe('identity-provider login (device verification page)', () => {
         try {
             // minting one is what proves the watch sees the device keys at all
             const { userCode } = await issueDeviceCode(client);
+
             expect(deviceKeys().length).toBeGreaterThan(0);
 
             for (const spy of spies) {
@@ -310,6 +318,7 @@ describe('identity-provider login (device verification page)', () => {
         const back = await request('GET', `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code`, { redirect: 'manual' });
 
         const location = readLocation(back);
+
         expect(`${location.origin}${location.pathname}`).toEqual(`${publicUrl}/device`);
         expect(location.searchParams.keys().toArray()).toEqual(['user_code', 'provider']);
         expect(location.searchParams.get('user_code')).toEqual(UNKNOWN_USER_CODE_FORMATTED);
@@ -317,6 +326,7 @@ describe('identity-provider login (device verification page)', () => {
 
         // the nonce was swapped for the pending login, which never rides the URL
         const pendingLoginId = jar.get(FEDERATED_LOGIN_COOKIE);
+
         expect(pendingLoginId).toBeTruthy();
         expect(pendingLoginId).not.toEqual(nonce);
         expect(location.search).not.toContain(pendingLoginId as string);
@@ -338,6 +348,7 @@ describe('identity-provider login (device verification page)', () => {
         );
 
         const location = readLocation(back);
+
         expect(location.href).toEqual(`${publicUrl}/device?user_code=${UNKNOWN_USER_CODE_FORMATTED}`);
         expect(back.headers.get('set-cookie')).toBeNull();
         // refused before the provider's single-use code is spent
@@ -354,6 +365,7 @@ describe('identity-provider login (device verification page)', () => {
         );
 
         const location = readLocation(back);
+
         // nothing of the provider's answer is echoed
         expect(location.href).toEqual(`${publicUrl}/device?user_code=${UNKNOWN_USER_CODE_FORMATTED}`);
         expect(idpTokenCalls).toEqual(0);
@@ -379,6 +391,7 @@ describe('identity-provider login (device verification page)', () => {
         );
 
         let location = readLocation(issued);
+
         expect(`${location.origin}${location.pathname}`).toEqual(`${publicUrl}/device`);
         expect(location.searchParams.entries().toArray()).toEqual([
             ['user_code', UNKNOWN_USER_CODE_FORMATTED],
@@ -445,6 +458,7 @@ describe('identity-provider login (device verification page)', () => {
         );
 
         const location = readLocation(back);
+
         expect(`${location.origin}${location.pathname}`).toEqual(`${publicUrl}/authorize`);
         expect(location.searchParams.get('client_id')).toEqual(clientId);
         expect(location.searchParams.has('user_code')).toBe(false);
@@ -483,13 +497,16 @@ describe('identity-provider login (device verification page)', () => {
         const back = await request('GET', `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code`, { redirect: 'manual' });
 
         const location = readLocation(back);
+
         expect(location.searchParams.get('user_code')).toEqual(userCode);
         expect(location.searchParams.get('provider')).toEqual(provider.id);
 
         const completed = await request('POST', `identity-providers/${provider.id}/login-complete`, { headers: { 'sec-fetch-site': 'same-origin', origin: publicOrigin() } });
+
         expect(completed.status).toEqual(200);
 
         const grant = await completed.json();
+
         expect(grant.access_token).toBeTruthy();
 
         const decide = (path: 'lookup' | 'approve') => httpRequest(suite, 'POST', `/device_authorization/${path}`, {
@@ -501,10 +518,12 @@ describe('identity-provider login (device verification page)', () => {
         });
 
         const lookup = await decide('lookup');
+
         expect(lookup.status).toEqual(200);
         expect((await lookup.json()).client.id).toEqual(client.id);
 
         const approved = await decide('approve');
+
         expect(approved.status).toEqual(200);
         expect(await approved.json()).toEqual({ status: 'approved' });
 
@@ -515,9 +534,11 @@ describe('identity-provider login (device verification page)', () => {
                 client_id: client.id,
             },
         });
+
         expect(redeemed.status).toEqual(200);
 
         const tokens = await redeemed.json();
+
         expect(tokens.access_token).toBeTruthy();
         expect(tokens.refresh_token).toBeTruthy();
     });
@@ -542,11 +563,13 @@ describe('identity-provider login (device verification page)', () => {
         });
 
         const refusedStart = await httpRequest(suite, 'GET', `identity-providers/${disabled.id}/authorize-out?user_code=${UNKNOWN_USER_CODE}`, { redirect: 'manual' });
+
         expect(refusedStart.status).toEqual(400);
 
         const back = await request('GET', `identity-providers/${disabled.id}/authorize-in?state=${state}&code=external-code`, { redirect: 'manual' });
 
         const location = readLocation(back);
+
         expect(location.searchParams.entries().toArray()).toEqual([
             ['user_code', UNKNOWN_USER_CODE_FORMATTED],
             ['error', OAuth2ErrorCode.LOGIN_REQUIRED],
@@ -558,10 +581,13 @@ describe('identity-provider login (device verification page)', () => {
         // a first, successful login provisions the external user
         const firstState = await startLogin(UNKNOWN_USER_CODE);
         const first = await request('GET', `identity-providers/${provider.id}/authorize-in?state=${firstState}&code=external-code`, { redirect: 'manual' });
+
         expect(readLocation(first).searchParams.get('provider')).toEqual(provider.id);
 
         const { data: accounts } = await suite.client.identityProviderAccount.getMany({ filters: { providerId: provider.id } });
+
         expect(accounts).toHaveLength(1);
+
         const [{ userId }] = accounts;
 
         jar.clear();
@@ -575,6 +601,7 @@ describe('identity-provider login (device verification page)', () => {
             const back = await request('GET', `identity-providers/${provider.id}/authorize-in?state=${state}&code=external-code`, { redirect: 'manual' });
 
             const location = readLocation(back);
+
             expect(`${location.origin}${location.pathname}`).toEqual(`${publicUrl}/device`);
             expect(location.searchParams.entries().toArray()).toEqual([
                 ['user_code', UNKNOWN_USER_CODE_FORMATTED],
@@ -584,6 +611,7 @@ describe('identity-provider login (device verification page)', () => {
             // no pending login: the cookie still holds the nonce this login
             // started with, which completes nothing
             const completed = await request('POST', `identity-providers/${provider.id}/login-complete`, { headers: { 'sec-fetch-site': 'same-origin', origin: publicOrigin() } });
+
             expect(completed.status).toEqual(400);
 
             await expectDeviceHopCarries(location);

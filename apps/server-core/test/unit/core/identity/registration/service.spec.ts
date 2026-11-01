@@ -61,7 +61,7 @@ describe('core/identity/registration/service', () => {
             const service = new RegistrationService({
                 options: {
                     registrationEnabled: true,
-                    emailVerificationEnabled: false, 
+                    emailVerificationEnabled: false,
                 },
                 mailClient,
                 mailTemplateRenderer,
@@ -79,7 +79,7 @@ describe('core/identity/registration/service', () => {
             const service = new RegistrationService({
                 options: {
                     registrationEnabled: true,
-                    emailVerificationEnabled: true, 
+                    emailVerificationEnabled: true,
                 },
                 mailClient,
                 mailTemplateRenderer,
@@ -93,6 +93,7 @@ describe('core/identity/registration/service', () => {
             expect(result.active).toBe(false);
 
             const saved = await repository.findOneByName(data.name);
+
             expect(saved).not.toBeNull();
             expect(saved!.activateHash).toBeDefined();
             expect(saved!.activateHash).not.toBeNull();
@@ -130,9 +131,11 @@ describe('core/identity/registration/service', () => {
             });
 
             const data = createValidRegistrationData();
+
             await service.register(data);
 
             const saved = await repository.findOneByName(data.name);
+
             expect(saved).not.toBeNull();
             expect(saved!.password).not.toBe(data.password);
             expect(saved!.password).toMatch(/^\$2[aby]\$/);
@@ -151,9 +154,11 @@ describe('core/identity/registration/service', () => {
                 name: faker.internet.username().toLowerCase(),
                 email: faker.internet.email().toLowerCase(),
             };
+
             await service.register(data);
 
             const saved = await repository.findOneByName(data.name);
+
             expect(saved).not.toBeNull();
             expect(saved!.password).toBeDefined();
             expect(saved!.password).toMatch(/^\$2[aby]\$/);
@@ -169,9 +174,11 @@ describe('core/identity/registration/service', () => {
             });
 
             const data = createValidRegistrationData();
+
             await service.register(data);
 
             const saved = await repository.findOneByName(data.name);
+
             expect(saved).not.toBeNull();
             expect(saved!.email).toBe(data.email);
         });
@@ -189,6 +196,7 @@ describe('core/identity/registration/service', () => {
 
             const masterRealm = realmRepository.getMasterRealm();
             const users = await repository.findManyBy({ realmId: masterRealm.id });
+
             expect(users).toHaveLength(1);
         });
 
@@ -198,7 +206,7 @@ describe('core/identity/registration/service', () => {
             const service = new RegistrationService({
                 options: {
                     registrationEnabled: true,
-                    emailVerificationEnabled: true, 
+                    emailVerificationEnabled: true,
                 },
                 mailClient,
                 mailTemplateRenderer,
@@ -211,6 +219,7 @@ describe('core/identity/registration/service', () => {
             await expect(service.register(data)).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
 
             const saved = await repository.findOneByName(data.name);
+
             expect(saved).toBeNull();
         });
 
@@ -275,6 +284,7 @@ describe('core/identity/registration/service', () => {
                 email: faker.internet.email().toLowerCase(),
                 password: 'a'.repeat(12),
             });
+
             expect(result.active).toBe(true);
         });
     });
@@ -293,10 +303,12 @@ describe('core/identity/registration/service', () => {
             });
 
             const data = createValidRegistrationData();
+
             await service.register(data);
 
             const code = mailClient.sent[0].text!.match(/[0-9a-f]{64}/)![0];
             const saved = await repository.findOneByName(data.name);
+
             expect(saved!.activateHash).toEqual(createHash('sha256').update(code).digest('hex'));
 
             await expect(service.activate({ token: saved!.activateHash! }))
@@ -317,7 +329,7 @@ describe('core/identity/registration/service', () => {
             const service = new RegistrationService({
                 options: {
                     registrationEnabled: true,
-                    emailVerificationEnabled: true, 
+                    emailVerificationEnabled: true,
                 },
                 mailClient,
                 mailTemplateRenderer,
@@ -328,6 +340,7 @@ describe('core/identity/registration/service', () => {
             await service.activate({ token: activateHash });
 
             const user = await repository.findOneById(entity.id);
+
             expect(user!.active).toBe(true);
             expect(user!.activateHash).toBeNull();
             // Following the mailed code is the only proof of address control
@@ -339,7 +352,7 @@ describe('core/identity/registration/service', () => {
             const service = new RegistrationService({
                 options: {
                     registrationEnabled: true,
-                    emailVerificationEnabled: true, 
+                    emailVerificationEnabled: true,
                 },
                 mailClient,
                 mailTemplateRenderer,

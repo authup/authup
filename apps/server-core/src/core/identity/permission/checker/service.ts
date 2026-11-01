@@ -47,6 +47,7 @@ export class PermissionCheckerService implements IPermissionCheckerService {
 
         try {
             await this.evaluate(idOrName, input, realm);
+
             return { success: true, data: null };
         } catch (e) {
             return { success: false, error: normalizeError(e) };
@@ -59,6 +60,7 @@ export class PermissionCheckerService implements IPermissionCheckerService {
         realm: string | undefined,
     ): Promise<void> {
         let criteria: Record<string, any>;
+
         if (isUUID(idOrName)) {
             criteria = { id: idOrName };
         } else {
@@ -66,14 +68,17 @@ export class PermissionCheckerService implements IPermissionCheckerService {
 
             if (realm) {
                 const realmId = await this.ctx.realmRepository.resolveId(realm);
+
                 if (!realmId) {
                     throw new EntityNotFoundError();
                 }
+
                 criteria.realmId = realmId;
             }
         }
 
         const entity = await this.ctx.repository.findOneBy(criteria);
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -82,6 +87,7 @@ export class PermissionCheckerService implements IPermissionCheckerService {
         // Only when the body carries an ATTRIBUTES realm — so a realm-less check still rides
         // the preEvaluate path below and neutral-passes.
         const attributes = input[BuiltInPolicyType.ATTRIBUTES] as Record<string, any> | undefined;
+
         if (attributes && hasOwnProperty(attributes, 'realmId')) {
             input[BuiltInPolicyType.REALM_MATCH] = attributes.realmId ?? null;
         }

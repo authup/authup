@@ -177,6 +177,7 @@ export default defineComponent({
             }
 
             busy.value = true;
+
             try {
                 // the realm sentinel ('' = unset) widens realmId beyond the
                 // entity's own type, so narrow for the manager call.

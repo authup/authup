@@ -70,6 +70,7 @@ export class DeviceAuthorizationController {
         const query = useRequestQuery(event);
 
         const scope = readStringField(body, 'scope');
+
         if (scope && scope.length > SCOPE_MAX_LENGTH) {
             throw OAuth2RequestError.malformed(`scope must not exceed ${SCOPE_MAX_LENGTH} characters.`);
         }
@@ -92,6 +93,7 @@ export class DeviceAuthorizationController {
         const clientRealm = realm.id === client.realmId ?
             realm :
             await this.realmRepository.resolve(client.realmId);
+
         if (!clientRealm) {
             throw new OAuth2ServerError();
         }

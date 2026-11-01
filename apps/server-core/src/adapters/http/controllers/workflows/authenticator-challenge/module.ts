@@ -82,11 +82,13 @@ export class AuthenticatorChallengeController {
      */
     protected resolveActor(event: IAppEvent) : ChallengeActor {
         const identity = useRequestIdentity(event);
+
         if (identity) {
             return { identity, ticket: null };
         }
 
         const ticket = useRequestMfaLoginTicket(event);
+
         if (ticket) {
             return { identity: ticket.identity, ticket };
         }
@@ -99,6 +101,7 @@ export class AuthenticatorChallengeController {
         @DContext() event: IAppEvent,
     ): Promise<UserAuthenticatorChallengeResponse> {
         const { identity, ticket } = this.resolveActor(event);
+
         if (identity.type !== IdentityType.USER) {
             return {
                 required: false,
@@ -122,6 +125,7 @@ export class AuthenticatorChallengeController {
         // caller passes the `acr_values` it is being asked to satisfy, since
         // only it knows the authorization request.
         const session = ticket ? null : await this.resolveSession(event);
+
         if (session && session.authMethod === SessionAuthMethod.EXTERNAL) {
             const { acrValues } = useRequestQuery(event);
             const stepUpRequested = typeof acrValues === 'string' &&
@@ -144,6 +148,7 @@ export class AuthenticatorChallengeController {
 
     protected async resolveSession(event: IAppEvent) : Promise<Session | null> {
         const sessionId = useRequestSessionId(event);
+
         if (!sessionId) {
             return null;
         }
@@ -157,6 +162,7 @@ export class AuthenticatorChallengeController {
         @DContext() event: IAppEvent,
     ): Promise<{ success: true }> {
         const { identity } = this.resolveActor(event);
+
         if (identity.type !== IdentityType.USER) {
             throw new BadRequestError('Only user identities can request a challenge.');
         }
@@ -181,6 +187,7 @@ export class AuthenticatorChallengeController {
         @DContext() event: IAppEvent,
     ): Promise<UserAuthenticatorChallengeVerifyResponse> {
         const { identity, ticket } = this.resolveActor(event);
+
         if (identity.type !== IdentityType.USER) {
             throw new BadRequestError('Only user identities can complete a challenge.');
         }
@@ -231,6 +238,7 @@ export class AuthenticatorChallengeController {
                 } : {}),
             },
         );
+
         if (!verified) {
             throw new EntityCredentialsInvalidError();
         }

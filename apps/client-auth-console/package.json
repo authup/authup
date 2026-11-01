@@ -1,6 +1,6 @@
 {
     "name": "@authup/client-auth-console",
-    "version": "1.0.0-beta.71",
+    "version": "1.0.0-beta.72",
     "type": "module",
     "license": "AGPL-3.0-only",
     "description": "Authup's hosted login, consent, registration, password recovery and device pages, as a server-rendered Vue bundle.",
@@ -22,27 +22,27 @@
         "prepublishOnly": "npm run build"
     },
     "engines": {
-        "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
+        "node": ">=26.0.0"
     },
     "dependencies": {
-        "@authup/core-http-kit": "^1.0.0-beta.71"
+        "@authup/core-http-kit": "^1.0.0-beta.72"
     },
     "devDependencies": {
-        "@authup/client-web-kit": "^1.0.0-beta.71",
-        "@authup/client-web-kit-theme": "^1.0.0-beta.71",
-        "@authup/client-web-theme": "^1.0.0-beta.71",
-        "@authup/core-kit": "^1.0.0-beta.71",
-        "@authup/i18n": "^1.0.0-beta.71",
-        "@authup/kit": "^1.0.0-beta.71",
+        "@authup/client-web-kit": "^1.0.0-beta.72",
+        "@authup/client-web-kit-theme": "^1.0.0-beta.72",
+        "@authup/client-web-theme": "^1.0.0-beta.72",
+        "@authup/core-kit": "^1.0.0-beta.72",
+        "@authup/i18n": "^1.0.0-beta.72",
+        "@authup/kit": "^1.0.0-beta.72",
         "@fontsource/asap": "^5.3.0",
         "@fontsource/nunito": "^5.3.0",
         "@iconify-json/fa6-brands": "^1.2.0",
         "@iconify-json/fa6-solid": "^1.2.0",
         "@iconify/vue": "^5.0.4",
-        "@ilingo/validup": "^1.2.0",
+        "@ilingo/validup": "^1.2.1",
         "@ilingo/validup-vue": "^1.2.0",
         "@ilingo/vue": "^6.1.0",
-        "@nuxt/icon": "^2.5.1",
+        "@nuxt/icon": "^2.6.1",
         "@tailwindcss/vite": "^4.3.3",
         "@validup/vue": "^2.0.1",
         "@vitejs/plugin-vue": "^6.0.10",
@@ -54,7 +54,7 @@
         "@vuecs/elements": "^1.5.1",
         "@vuecs/forms": "^5.4.2",
         "@vuecs/icon": "^1.1.1",
-        "@vuecs/icons-font-awesome": "^1.3.1",
+        "@vuecs/icons-font-awesome": "^1.3.2",
         "@vuecs/link": "^2.1.2",
         "@vuecs/list": "^1.3.0",
         "@vuecs/locale": "^1.1.2",
@@ -66,10 +66,10 @@
         "@vuecs/theme-tailwind": "^6.5.0",
         "@vuecs/timeago": "^2.2.1",
         "cross-env": "^10.1.0",
-        "happy-dom": "^20.14.6",
+        "happy-dom": "^21.0.4",
         "pinia": "^4.1.0",
         "tailwindcss": "^4.3.1",
-        "vite": "^8.3.4",
+        "vite": "^8.3.5",
         "vitest": "^5.0.3",
         "vue": "^3.5.44",
         "vue-router": "^5.4.0",

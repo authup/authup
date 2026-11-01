@@ -122,6 +122,7 @@ describe('LoginThrottleService', () => {
 
     it('scopes the pair to the realm of the attempt', async () => {
         const otherRealmId = randomUUID();
+
         seedFailures(THRESHOLD, { realm: otherRealmId });
 
         await expect(buildService().assertNotThrottled({
@@ -139,6 +140,7 @@ describe('LoginThrottleService', () => {
 
     it('matches rows of an over-long identifier truncated at the write boundary', async () => {
         const identifier = 'a'.repeat(EVENT_ACTOR_NAME_MAX_LENGTH + 32);
+
         seedFailures(THRESHOLD, { identifier: identifier.slice(0, EVENT_ACTOR_NAME_MAX_LENGTH) });
 
         await expect(buildService().assertNotThrottled({
@@ -188,6 +190,7 @@ describe('LoginThrottleService', () => {
         seedFailures(THRESHOLD);
 
         let error: unknown;
+
         try {
             await buildService().assertNotThrottled({
                 identifier: IDENTIFIER,
@@ -199,6 +202,7 @@ describe('LoginThrottleService', () => {
         }
 
         expect(isLoginThrottledError(error)).toBe(true);
+
         if (isLoginThrottledError(error)) {
             expect(error.data?.retryAfter).toEqual(WINDOW_SECONDS);
         }
@@ -224,6 +228,7 @@ describe('LoginThrottleService', () => {
 
         const first = await service.assertNotThrottled(ctx);
         const second = await service.assertNotThrottled(ctx);
+
         await expect(service.assertNotThrottled(ctx)).rejects.toSatisfy((e) => isLoginThrottledError(e));
 
         await service.release(ctx, first!);
@@ -252,6 +257,7 @@ describe('LoginThrottleService', () => {
         }
 
         let error: unknown;
+
         try {
             await service.assertNotThrottled(ctx);
         } catch (e) {
@@ -259,16 +265,21 @@ describe('LoginThrottleService', () => {
         }
 
         expect(isLoginThrottledError(error)).toBe(true);
-        if (isLoginThrottledError(error)) {
-            expect(error.data?.retryAfter).toEqual(1);
-            expect(error.message).not.toMatch(/failed/i);
+
+        if (!isLoginThrottledError(error)) {
+            return;
         }
+
+        expect(error.data?.retryAfter).toEqual(1);
+        expect(error.message).not.toMatch(/failed/i);
     });
 
     it('lets slots that were never released lapse while the pair keeps retrying', async () => {
         vi.useFakeTimers({ toFake: ['Date'] });
+
         try {
             vi.setSystemTime(new Date('2026-10-14T10:00:00.000Z'));
+
             const service = new LoginThrottleService({
                 repository,
                 cache: new MemoryCache(),
@@ -304,8 +315,10 @@ describe('LoginThrottleService', () => {
 
     it('returns a slot to the bucket it was reserved in when the release crosses a minute', async () => {
         vi.useFakeTimers({ toFake: ['Date'] });
+
         try {
             vi.setSystemTime(new Date('2026-10-14T10:00:59.000Z'));
+
             const service = new LoginThrottleService({
                 repository,
                 cache: new MemoryCache(),
@@ -323,15 +336,18 @@ describe('LoginThrottleService', () => {
 
             // reserved just before the minute changes, released just after
             const reservation = await service.assertNotThrottled(ctx);
+
             vi.setSystemTime(new Date('2026-10-14T10:01:01.000Z'));
             await service.release(ctx, reservation!);
 
             // two buckets on, a fresh burst must still stop at the threshold:
             // a release booked onto the later bucket would have offset one
             vi.setSystemTime(new Date('2026-10-14T10:02:30.000Z'));
+
             for (let i = 0; i < THRESHOLD; i++) {
                 await expect(service.assertNotThrottled(ctx)).resolves.toBeDefined();
             }
+
             await expect(service.assertNotThrottled(ctx)).rejects.toSatisfy((e) => isLoginThrottledError(e));
         } finally {
             vi.useRealTimers();
@@ -356,6 +372,7 @@ describe('LoginThrottleService', () => {
         };
 
         const increment = cache.increment.bind(cache);
+
         cache.increment = async () => {
             throw new Error('cache unavailable');
         };
@@ -368,6 +385,7 @@ describe('LoginThrottleService', () => {
         // a refused reservation released nothing: the counter never went negative.
         cache.increment = increment;
         repository = new FakeEventRepository();
+
         const fresh = new LoginThrottleService({
             repository,
             cache,
@@ -377,9 +395,11 @@ describe('LoginThrottleService', () => {
                 windowSeconds: WINDOW_SECONDS,
             },
         });
+
         for (let i = 0; i < THRESHOLD; i++) {
             await expect(fresh.assertNotThrottled(ctx)).resolves.toBeDefined();
         }
+
         await expect(fresh.assertNotThrottled(ctx)).rejects.toSatisfy((e) => isLoginThrottledError(e));
     });
 
@@ -394,6 +414,7 @@ describe('LoginThrottleService', () => {
                 windowSeconds: WINDOW_SECONDS,
             },
         });
+
         cache.increment = async () => {
             throw new Error('cache unavailable');
         };

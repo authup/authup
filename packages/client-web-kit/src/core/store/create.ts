@@ -75,6 +75,7 @@ function createPromiseShareWrapperFn<F extends InputFn>(
                 promise = undefined;
             }, 0);
         };
+
         promise.then(clear, clear);
 
         return promise;
@@ -406,6 +407,7 @@ export function createStore(context: StoreCreateContext) {
         validated.value = false;
         resolutionStale.value = false;
         tokenGeneration.value += 1;
+
         const generation = tokenGeneration.value;
 
         if (options.revokeTokens === false) {
@@ -502,6 +504,7 @@ export function createStore(context: StoreCreateContext) {
             return { permissions: data, maxAge };
         } catch (e) {
             const { status } = extractErrorContext(e);
+
             if (status === 404) {
                 return { permissions: null };
             }
@@ -574,6 +577,7 @@ export function createStore(context: StoreCreateContext) {
         introspection: OAuth2TokenIntrospectionResponse,
     ) : string => {
         let verdicts : unknown = ['names', introspection.permissions ?? []];
+
         if (permissions) {
             try {
                 verdicts = permissions
@@ -663,11 +667,12 @@ export function createStore(context: StoreCreateContext) {
         const source = loadCheck(buildCheckKey(introspection, identity), token);
         const permissions = await source;
         const verdicts = buildVerdictsKey(identity, permissions, introspection);
+
         if (!permissions) {
             return {
-                evaluator: null, 
-                source, 
-                verdicts, 
+                evaluator: null,
+                source,
+                verdicts,
             };
         }
 
@@ -800,6 +805,7 @@ export function createStore(context: StoreCreateContext) {
         }
 
         let wait = delay;
+
         if (typeof wait === 'undefined') {
             if (typeof checkDeadline === 'undefined') {
                 return;
@@ -822,6 +828,7 @@ export function createStore(context: StoreCreateContext) {
      */
     const refreshCheck = async () : Promise<void> => {
         const introspection = committedIntrospection;
+
         if (!introspection) {
             return;
         }
@@ -831,12 +838,14 @@ export function createStore(context: StoreCreateContext) {
         // failed refetch dropped is the retry, and carries no deadline.
         if (checkPromise && !isCheckExpired()) {
             armCheckTimer();
+
             return;
         }
 
         const generation = tokenGeneration.value;
 
         let token : string | undefined;
+
         if (!context.cookieSession) {
             if (!accessToken.value) {
                 return;
@@ -856,10 +865,12 @@ export function createStore(context: StoreCreateContext) {
         };
 
         let authorization : StagedAuthorization;
+
         try {
             authorization = await buildAuthorization(introspection, token);
         } catch {
             retry();
+
             return;
         }
 
@@ -949,6 +960,7 @@ export function createStore(context: StoreCreateContext) {
         // predecessor kept it for the same reason: `isTokenSubject` skipped the
         // fetch on an id match.
         const subject = buildUser(ctx.introspection);
+
         if (!user.value || user.value.id !== subject?.id) {
             setUser(subject);
         }
@@ -1037,6 +1049,7 @@ export function createStore(context: StoreCreateContext) {
             const generation = tokenGeneration.value;
 
             let response : OAuth2TokenGrantResponse;
+
             try {
                 response = await client.token.createWithRefreshToken({ refresh_token: refreshToken.value });
             } catch (e) {
@@ -1074,6 +1087,7 @@ export function createStore(context: StoreCreateContext) {
     const revalidate = async () : Promise<void> => {
         const generation = tokenGeneration.value;
         const token = accessToken.value;
+
         if (!token) {
             return;
         }
@@ -1103,6 +1117,7 @@ export function createStore(context: StoreCreateContext) {
         const generation = tokenGeneration.value;
 
         let introspection : OAuth2TokenIntrospectionResponse;
+
         try {
             introspection = await client.account.getSession();
         } catch (e) {

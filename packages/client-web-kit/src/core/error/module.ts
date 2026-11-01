@@ -37,6 +37,7 @@ export function extractErrorContext(error: unknown): ErrorContext {
     // transport error's own `message` (e.g. hapic's "Request failed") is only
     // the last resort.
     let message: string | undefined;
+
     if (typeof body.message === 'string') {
         message = body.message;
     } else if (typeof self.message === 'string') {

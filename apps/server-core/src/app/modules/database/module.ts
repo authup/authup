@@ -126,6 +126,7 @@ export class DatabaseModule implements IModule {
 
     async teardown(container: IContainer): Promise<void> {
         const dataSource = container.tryResolve(DatabaseInjectionKey.DataSource);
+
         if (dataSource.success) {
             if (dataSource.data.isInitialized) {
                 await dataSource.data.destroy();
@@ -147,10 +148,12 @@ export class DatabaseModule implements IModule {
             this.eventPublisher = undefined;
         }
 
-        if (this.eventRedisClient) {
-            this.eventRedisClient.disconnect();
-            this.eventRedisClient = undefined;
+        if (!this.eventRedisClient) {
+            return;
         }
+
+        this.eventRedisClient.disconnect();
+        this.eventRedisClient = undefined;
     }
 
     // ----------------------------------------------------
@@ -160,15 +163,17 @@ export class DatabaseModule implements IModule {
 
         const check = await checkDatabase({ options });
 
-        if (!check.exists) {
-            logger.debug('Creating database...');
-            await createDatabase({
-                options,
-                synchronize: false,
-                ifNotExist: true, 
-            });
-            logger.debug('Created database');
+        if (check.exists) {
+            return;
         }
+
+        logger.debug('Creating database...');
+        await createDatabase({
+            options,
+            synchronize: false,
+            ifNotExist: true,
+        });
+        logger.debug('Created database');
     }
 
     protected async migrate(container: IContainer, dataSource: DataSource): Promise<void> {
@@ -177,6 +182,7 @@ export class DatabaseModule implements IModule {
 
         if (!config.migrationEnabled) {
             await verifySchemaOrSynchronize(logger, dataSource);
+
             return;
         }
 
@@ -184,7 +190,9 @@ export class DatabaseModule implements IModule {
         // and race on the same tables, so one of them does while the others
         // wait and then find nothing pending.
         logger.debug('Migrating database...');
+
         const queryRunner = dataSource.createQueryRunner();
+
         try {
             await withDatabaseLock(
                 queryRunner,
@@ -195,6 +203,7 @@ export class DatabaseModule implements IModule {
         } finally {
             await queryRunner.release();
         }
+
         logger.debug('Migrated database');
     }
 
@@ -209,6 +218,7 @@ export class DatabaseModule implements IModule {
         const config = container.resolve(ConfigInjectionKey);
 
         let options : DataSourceOptions | undefined;
+
         if (config.db) {
             // the configuration surface is deliberately untyped: `db` is
             // authup's own loose shape, and the supported-dialect assertion
@@ -227,6 +237,7 @@ export class DatabaseModule implements IModule {
         }
 
         const cacheResult = container.tryResolve(CacheInjectionKey);
+
         if (cacheResult.success) {
             Object.assign(options, {
                 cache: {
@@ -242,6 +253,7 @@ export class DatabaseModule implements IModule {
 
     protected registerRepositories(container: IContainer, dataSource: DataSource) : void {
         const entities = dataSource.options.entities || [];
+
         if (!Array.isArray(entities)) {
             return;
         }
@@ -262,11 +274,14 @@ export class DatabaseModule implements IModule {
         const logger = container.resolve(LoggerInjectionKey);
 
         const publisher = new DomainEventPublisher({ logger });
+
         this.eventPublisher = publisher;
+
         if (config.redis) {
             // the configuration surface is deliberately untyped: the object
             // arm of `redis` is opaque, and the client owns its real shape.
             const client = createRedisClient(config.redis);
+
             if (client !== config.redis) {
                 this.eventRedisClient = client;
             }
@@ -287,6 +302,7 @@ export class DatabaseModule implements IModule {
 
         for (let i = 0; i < dataSource.subscribers.length; i++) {
             const subscriber = dataSource.subscribers[i];
+
             if (subscriber instanceof EntitySubscriber) {
                 subscriber.setPublisher(publisher);
             }
@@ -300,6 +316,7 @@ export class DatabaseModule implements IModule {
         const repository = new EventRepositoryAdapter(
             dataSource.getRepository<Event>(EventEntity),
         );
+
         container.register(DatabaseInjectionKey.EventRepository, { useValue: repository });
 
         const service = new EventService({
@@ -310,6 +327,7 @@ export class DatabaseModule implements IModule {
             },
             logger,
         });
+
         container.register(DatabaseInjectionKey.EventService, { useValue: service });
     }
 }

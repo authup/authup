@@ -12,24 +12,24 @@ const NAME_COLLISION_CHECKS: CollisionCheck[] = [
     { table: 'auth_users', groupBy: ['LOWER(TRIM(name))', 'realm_id'] },
     { table: 'auth_realms', groupBy: ['LOWER(TRIM(name))'] },
     {
-        table: 'auth_roles', 
-        groupBy: ['LOWER(TRIM(name))', 'client_id', 'realm_id'], 
-        where: 'client_id IS NOT NULL AND realm_id IS NOT NULL', 
+        table: 'auth_roles',
+        groupBy: ['LOWER(TRIM(name))', 'client_id', 'realm_id'],
+        where: 'client_id IS NOT NULL AND realm_id IS NOT NULL',
     },
     {
-        table: 'auth_scopes', 
-        groupBy: ['LOWER(TRIM(name))', 'realm_id'], 
-        where: 'realm_id IS NOT NULL', 
+        table: 'auth_scopes',
+        groupBy: ['LOWER(TRIM(name))', 'realm_id'],
+        where: 'realm_id IS NOT NULL',
     },
     {
-        table: 'auth_permissions', 
-        groupBy: ['LOWER(TRIM(name))', 'client_id', 'realm_id'], 
-        where: 'client_id IS NOT NULL AND realm_id IS NOT NULL', 
+        table: 'auth_permissions',
+        groupBy: ['LOWER(TRIM(name))', 'client_id', 'realm_id'],
+        where: 'client_id IS NOT NULL AND realm_id IS NOT NULL',
     },
     {
-        table: 'auth_policies', 
-        groupBy: ['LOWER(TRIM(name))', 'realm_id'], 
-        where: 'realm_id IS NOT NULL', 
+        table: 'auth_policies',
+        groupBy: ['LOWER(TRIM(name))', 'realm_id'],
+        where: 'realm_id IS NOT NULL',
     },
     { table: 'auth_identity_providers', groupBy: ['LOWER(TRIM(name))', 'realm_id'] },
 ];
@@ -49,6 +49,7 @@ export class Default1779267068441 implements MigrationInterface {
                 GROUP BY ${groupBy}
                 HAVING COUNT(*) > 1
             `);
+
             if (rows.length > 0) {
                 throw new Error(
                     `Canonical-name migration aborted: "${check.table}" has ${rows.length} collision group(s) on ${groupBy}. ` +

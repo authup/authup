@@ -28,6 +28,7 @@ export class ClientAuthenticator extends BaseCredentialsAuthenticator<Client> {
 
     async authenticate(key: string, secret: string, realmId?: string): Promise<Client> {
         const identity = await this.identityResolver.resolve(IdentityType.CLIENT, key, realmId);
+
         if (!identity || identity.type !== IdentityType.CLIENT) {
             throw new EntityCredentialsInvalidError({ entity: 'client' });
         }
@@ -38,6 +39,7 @@ export class ClientAuthenticator extends BaseCredentialsAuthenticator<Client> {
 
         if (identity.data.authMethod === ClientAuthMethod.SECRET) {
             const verified = await this.credentialsService.verify(secret, identity.data);
+
             if (!verified) {
                 throw new EntityCredentialsInvalidError({ entity: 'client' });
             }

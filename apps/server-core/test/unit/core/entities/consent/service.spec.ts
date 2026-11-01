@@ -33,6 +33,7 @@ function withIdentity(actor: ActorContext, id: string = userId): ActorContext {
             realmId,
         } as User,
     };
+
     return actor;
 }
 
@@ -76,6 +77,7 @@ describe('ConsentService', () => {
             });
 
             const rows = repository.rows();
+
             expect(rows).toHaveLength(2);
             expect(rows.map((row) => row.scope).sort()).toEqual(['global', 'openid']);
             expect(rows.every((row) => row.clientId === clientId &&
@@ -86,41 +88,45 @@ describe('ConsentService', () => {
 
         it('is idempotent on an identical re-record (union/keep, no duplicates)', async () => {
             await service.record({
-                clientId, 
-                realmId, 
-                owner: owner(), 
+                clientId,
+                realmId,
+                owner: owner(),
                 scope: 'global openid',
             });
+
             const before = repository.rows().map((row) => row.id).sort();
 
             await service.record({
-                clientId, 
-                realmId, 
-                owner: owner(), 
+                clientId,
+                realmId,
+                owner: owner(),
                 scope: 'global openid',
             });
 
             const after = repository.rows().map((row) => row.id).sort();
+
             expect(after).toEqual(before);
         });
 
         it('inserts only the missing tokens when the scope widens (existing rows untouched)', async () => {
             await service.record({
-                clientId, 
-                realmId, 
-                owner: owner(), 
+                clientId,
+                realmId,
+                owner: owner(),
                 scope: 'global',
             });
+
             const [original] = repository.rows();
 
             await service.record({
-                clientId, 
-                realmId, 
-                owner: owner(), 
+                clientId,
+                realmId,
+                owner: owner(),
                 scope: 'global openid',
             });
 
             const rows = repository.rows();
+
             expect(rows).toHaveLength(2);
             // the pre-existing row survives by identity — never delete/recreate
             expect(rows.find((row) => row.scope === 'global')!.id).toEqual(original.id);
@@ -129,9 +135,9 @@ describe('ConsentService', () => {
 
         it('lowercases scope tokens before persistence', async () => {
             await service.record({
-                clientId, 
-                realmId, 
-                owner: owner(), 
+                clientId,
+                realmId,
+                owner: owner(),
                 scope: 'Global OpenID',
             });
 
@@ -140,9 +146,9 @@ describe('ConsentService', () => {
 
         it('deduplicates tokens within a single record call', async () => {
             await service.record({
-                clientId, 
-                realmId, 
-                owner: owner(), 
+                clientId,
+                realmId,
+                owner: owner(),
                 scope: 'global GLOBAL global',
             });
 
@@ -152,21 +158,21 @@ describe('ConsentService', () => {
 
         it('no-ops on an empty scope', async () => {
             await service.record({
-                clientId, 
-                realmId, 
-                owner: owner(), 
+                clientId,
+                realmId,
+                owner: owner(),
                 scope: null,
             });
             await service.record({
-                clientId, 
-                realmId, 
-                owner: owner(), 
+                clientId,
+                realmId,
+                owner: owner(),
                 scope: '',
             });
             await service.record({
-                clientId, 
-                realmId, 
-                owner: owner(), 
+                clientId,
+                realmId,
+                owner: owner(),
                 scope: [],
             });
 
@@ -176,6 +182,7 @@ describe('ConsentService', () => {
 
         it('drops a scope token that exceeds the column width, keeping its siblings', async () => {
             const overLong = 'x'.repeat(200);
+
             await service.record({
                 clientId,
                 realmId,
@@ -184,6 +191,7 @@ describe('ConsentService', () => {
             });
 
             const scopes = repository.rows().map((row) => row.scope).sort();
+
             expect(scopes).toEqual(['global', 'openid']);
             expect(scopes).not.toContain(overLong);
         });
@@ -191,51 +199,51 @@ describe('ConsentService', () => {
 
     describe('isCovering', () => {
         it('is true when every requested token has a row (exact match)', async () => {
-            seedOwn('global');
+            seedOwn();
             seedOwn('openid');
 
             await expect(service.isCovering({
-                clientId, 
-                owner: owner(), 
+                clientId,
+                owner: owner(),
                 scope: 'global openid',
             })).resolves.toBe(true);
         });
 
         it('is true when the persisted rows are a superset of the request', async () => {
-            seedOwn('global');
+            seedOwn();
             seedOwn('openid');
             seedOwn('email');
 
             await expect(service.isCovering({
-                clientId, 
-                owner: owner(), 
+                clientId,
+                owner: owner(),
                 scope: 'openid',
             })).resolves.toBe(true);
         });
 
         it('normalizes the requested tokens (mixed case covers lowercase rows)', async () => {
-            seedOwn('global');
+            seedOwn();
             seedOwn('openid');
 
             await expect(service.isCovering({
-                clientId, 
-                owner: owner(), 
+                clientId,
+                owner: owner(),
                 scope: 'Global OpenID',
             })).resolves.toBe(true);
         });
 
         it('is false when a requested token has no row', async () => {
-            seedOwn('global');
+            seedOwn();
 
             await expect(service.isCovering({
-                clientId, 
-                owner: owner(), 
+                clientId,
+                owner: owner(),
                 scope: 'global openid',
             })).resolves.toBe(false);
         });
 
         it('is false when the matching row is expired', async () => {
-            seedOwn('global');
+            seedOwn();
             repository.seed({
                 clientId,
                 realmId,
@@ -246,8 +254,8 @@ describe('ConsentService', () => {
             });
 
             await expect(service.isCovering({
-                clientId, 
-                owner: owner(), 
+                clientId,
+                owner: owner(),
                 scope: 'global openid',
             })).resolves.toBe(false);
         });
@@ -263,26 +271,26 @@ describe('ConsentService', () => {
             });
 
             await expect(service.isCovering({
-                clientId, 
-                owner: owner(), 
+                clientId,
+                owner: owner(),
                 scope: 'global',
             })).resolves.toBe(true);
         });
 
         it('is true (vacuous) on an empty requested scope', async () => {
             await expect(service.isCovering({
-                clientId, 
-                owner: owner(), 
+                clientId,
+                owner: owner(),
                 scope: null,
             })).resolves.toBe(true);
         });
 
         it("never covers via another subject's rows", async () => {
-            seedOther('global');
+            seedOther();
 
             await expect(service.isCovering({
-                clientId, 
-                owner: owner(), 
+                clientId,
+                owner: owner(),
                 scope: 'global',
             })).resolves.toBe(false);
         });
@@ -290,9 +298,9 @@ describe('ConsentService', () => {
 
     describe('getMany', () => {
         it('scopes a non-privileged actor to its own consents', async () => {
-            seedOwn('global');
+            seedOwn();
             seedOwn('openid');
-            seedOther('global');
+            seedOther();
 
             const actor = withIdentity(createDenyAllActor());
             const { data } = await service.getMany({}, actor);
@@ -302,17 +310,21 @@ describe('ConsentService', () => {
 
             // the owner constraint is mandatory — applied by the repository
             const [call] = repository.findManyCalls;
+
             expect(call.options.owner).toEqual({ sub: userId, subKind: IdentityType.USER });
         });
 
         it('rejects an anonymous (identity-less) actor without the read permission', async () => {
             const actor = createDenyAllActor();
+
             await expect(service.getMany({}, actor)).rejects.toBeDefined();
         });
 
         it('drops rows a privileged actor is not authorized for (realm reach)', async () => {
-            seedOwn('global');
-            const foreign = seedOther('global');
+            seedOwn();
+
+            const foreign = seedOther();
+
             repository.seed({
                 clientId,
                 realmId: randomUUID(),
@@ -324,17 +336,21 @@ describe('ConsentService', () => {
             // preEvaluate (gate) passes; the per-row evaluate denies whenever
             // the resource realm is outside the actor's own realm.
             const evaluator = new FakePermissionEvaluator();
+
             evaluator.setBehavior((call) => {
                 if (call.method !== 'evaluate') {
                     return;
                 }
+
                 const resourceRealm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
                     call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
                     undefined;
+
                 if (resourceRealm !== realmId) {
                     throw new PermissionError({ message: 'out of realm reach' });
                 }
             });
+
             const actor: ActorContext = {
                 permissionEvaluator: evaluator,
                 identity: { type: IdentityType.USER, data: { id: userId, realmId } as User },
@@ -355,6 +371,7 @@ describe('ConsentService', () => {
             const actor = withIdentity(createDenyAllActor());
 
             const result = await service.getOne(consent.id, actor);
+
             expect(result.id).toEqual(consent.id);
             expect((actor.permissionEvaluator as FakePermissionEvaluator).preEvaluateCalls).toHaveLength(0);
         });
@@ -371,11 +388,13 @@ describe('ConsentService', () => {
             const actor = withIdentity(createAllowAllActor());
 
             const result = await service.getOne(consent.id, actor);
+
             expect(result.id).toEqual(consent.id);
         });
 
         it('throws when the consent does not exist', async () => {
             const actor = withIdentity(createAllowAllActor());
+
             await expect(service.getOne(randomUUID(), actor)).rejects.toBeDefined();
         });
     });
@@ -407,6 +426,7 @@ describe('ConsentService', () => {
 
         it('throws when the consent does not exist', async () => {
             const actor = withIdentity(createAllowAllActor());
+
             await expect(service.delete(randomUUID(), actor)).rejects.toBeDefined();
             expect(repository.removeCalls).toHaveLength(0);
         });

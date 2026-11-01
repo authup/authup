@@ -23,7 +23,7 @@ import { createTestApplication } from '../../../../app/index.ts';
 
 describe('src/http/controllers/realm-scoped', () => {
     const suite = createTestApplication();
-    const basicAuth = `Basic ${Buffer.from('admin:start123').toString('base64')}`;
+    const basicAuth = `Basic ${Buffer.from('admin:start123').toBase64()}`;
 
     let masterRealm: Realm;
     let scopedRealm: Realm;
@@ -43,7 +43,9 @@ describe('src/http/controllers/realm-scoped', () => {
             const response = await httpRequest(suite, 'GET', '/realms/master/users', { headers: { Authorization: basicAuth } });
 
             expect(response.status).toEqual(200);
+
             const body = await response.json();
+
             expect(body.data).toBeDefined();
             expect(Array.isArray(body.data)).toBe(true);
         });
@@ -55,7 +57,7 @@ describe('src/http/controllers/realm-scoped', () => {
         });
 
         it('should resolve a mixed-case realm key and Basic username', async () => {
-            const mixedCaseAuth = `Basic ${Buffer.from('ADMIN:start123').toString('base64')}`;
+            const mixedCaseAuth = `Basic ${Buffer.from('ADMIN:start123').toBase64()}`;
             const response = await httpRequest(suite, 'GET', '/realms/MASTER/users', { headers: { Authorization: mixedCaseAuth } });
 
             expect(response.status).toEqual(200);
@@ -78,6 +80,7 @@ describe('src/http/controllers/realm-scoped', () => {
 
             // an unknown realm UUID is refused by the resolver middleware
             let response = await httpRequest(suite, 'GET', `/realms/${randomUUID()}/users/${user.name}`, { headers: { Authorization: basicAuth } });
+
             expect(response.status).toEqual(404);
 
             // known-but-different realm: same fail-closed outcome
@@ -102,7 +105,9 @@ describe('src/http/controllers/realm-scoped', () => {
             });
 
             expect(response.status).toEqual(201);
+
             const body = await response.json();
+
             expect(body.data.realmId).toEqual(masterRealm.id);
             expect(body.data.realmId).not.toEqual(scopedRealm.id);
         });

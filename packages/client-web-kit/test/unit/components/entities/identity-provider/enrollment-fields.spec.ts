@@ -84,6 +84,7 @@ type UpdatedPayload = {
 
 function lastUpdate(wrapper: ReturnType<typeof mountFields>['wrapper']) : UpdatedPayload {
     const emitted = wrapper.emitted<[UpdatedPayload]>('updated');
+
     expect(emitted).toBeDefined();
     expect(emitted!.length).toBeGreaterThan(0);
 
@@ -93,13 +94,16 @@ function lastUpdate(wrapper: ReturnType<typeof mountFields>['wrapper']) : Update
 describe('AIdentityProviderEnrollmentFields', () => {
     it('should default to an enabled enrollment with no policy when mounted without an entity', async () => {
         const { wrapper } = mountFields();
+
         await flushPromises();
 
         const toggle = wrapper.findComponent(VCFormSwitch);
+
         expect(toggle.exists()).toBe(true);
         expect(toggle.props('modelValue')).toBe(true);
 
         const picker = wrapper.findComponent({ name: 'APolicyPicker' });
+
         expect(picker.exists()).toBe(true);
         expect(picker.props('value')).toBeNull();
         // no realm known: only global policies are offered
@@ -109,17 +113,20 @@ describe('AIdentityProviderEnrollmentFields', () => {
         await flushPromises();
 
         const update = lastUpdate(wrapper);
+
         expect(update.valid).toBe(true);
         expect(update.data).toMatchObject({ enrollmentEnabled: true, enrollmentPolicyId: null });
     });
 
     it('should hydrate the switch and the picker from the entity, scoping the picker to its realm plus global', async () => {
         const { wrapper } = mountFields({ entity: createEntity({ enrollmentEnabled: false, enrollmentPolicyId: POLICY_ID }) });
+
         await flushPromises();
 
         expect(wrapper.findComponent(VCFormSwitch).props('modelValue')).toBe(false);
 
         const picker = wrapper.findComponent({ name: 'APolicyPicker' });
+
         expect(picker.props('value')).toEqual(POLICY_ID);
         expect(picker.props('query')).toEqual(defineQuery({ filters: { realmId: ['realm-1', null] } }));
     });
@@ -127,6 +134,7 @@ describe('AIdentityProviderEnrollmentFields', () => {
     it('should read a null or absent enrollmentEnabled as enabled', async () => {
         const nullCase = mountFields({ entity: createEntity({ enrollmentEnabled: null }) });
         const absentCase = mountFields({ entity: createEntity() });
+
         await flushPromises();
 
         expect(nullCase.wrapper.findComponent(VCFormSwitch).props('modelValue')).toBe(true);
@@ -137,6 +145,7 @@ describe('AIdentityProviderEnrollmentFields', () => {
         // assignFormProperties writes '' for a null, and the server refuses ''
         // as a uuid; only the API's own nullifier hid that on the wire
         const { wrapper } = mountFields({ entity: createEntity({ enrollmentPolicyId: null }) });
+
         await flushPromises();
 
         expect(wrapper.findComponent({ name: 'APolicyPicker' }).props('value')).toBeNull();
@@ -152,20 +161,24 @@ describe('AIdentityProviderEnrollmentFields', () => {
             entity: createEntity(),
             realmId: 'realm-2',
         });
+
         await flushPromises();
 
         const picker = wrapper.findComponent({ name: 'APolicyPicker' });
+
         expect(picker.props('query')).toEqual(defineQuery({ filters: { realmId: ['realm-2', null] } }));
     });
 
     it('should emit updated with enrollmentEnabled false when the switch is turned off', async () => {
         const { wrapper } = mountFields({ entity: createEntity() });
+
         await flushPromises();
 
         wrapper.findComponent(VCFormSwitch).vm.$emit('update:modelValue', false);
         await flushPromises();
 
         const update = lastUpdate(wrapper);
+
         expect(update.data).toMatchObject({ enrollmentEnabled: false });
         expect(update.valid).toBe(true);
         expect(wrapper.findComponent(VCFormSwitch).props('modelValue')).toBe(false);
@@ -173,6 +186,7 @@ describe('AIdentityProviderEnrollmentFields', () => {
 
     it('should write the single picked policy id and clear it to null', async () => {
         const { wrapper } = mountFields({ entity: createEntity() });
+
         await flushPromises();
 
         const picker = wrapper.findComponent({ name: 'APolicyPicker' });
@@ -191,6 +205,7 @@ describe('AIdentityProviderEnrollmentFields', () => {
     it('should keep an unsaved toggle across an entity refresh that says nothing about it', async () => {
         const entity = createEntity({ enrollmentEnabled: null });
         const { wrapper } = mountFields({ entity });
+
         await flushPromises();
 
         wrapper.findComponent(VCFormSwitch).vm.$emit('update:modelValue', false);

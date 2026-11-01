@@ -19,6 +19,7 @@ export const AIdentityProviderPreset = defineComponent({
     },
     setup(props, setup) {
         const preset = getIdentityProviderPresetElement(props.id as IdentityProviderPreset);
+
         if (preset) {
             if (hasNormalizedSlot('default', setup.slots)) {
                 return () => normalizeSlot('default', preset, setup.slots);

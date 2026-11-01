@@ -24,9 +24,9 @@ import { storeToRefs } from 'pinia';
 import { VCButton } from '@vuecs/button';
 import { useAlertDialog, useToast } from '@vuecs/overlays';
 import {
-    computed, 
-    defineComponent, 
-    onMounted, 
+    computed,
+    defineComponent,
+    onMounted,
     ref,
 } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -69,7 +69,9 @@ export default defineComponent({
 
         const accountByProvider = computed(() => {
             const map = new Map<string, IdentityProviderAccount>();
+
             accounts.value.forEach((account) => map.set(account.providerId, account));
+
             return map;
         });
 
@@ -131,6 +133,7 @@ export default defineComponent({
             const providerId = typeof route.query.provider === 'string' && isUUID(route.query.provider) ?
                 route.query.provider :
                 undefined;
+
             if (!handle && !linkError) {
                 return;
             }
@@ -161,6 +164,7 @@ export default defineComponent({
             }
 
             const query = { ...route.query };
+
             delete query.linkHandle;
             delete query.linkError;
             delete query.provider;
@@ -178,8 +182,10 @@ export default defineComponent({
             }
 
             busy.value = true;
+
             try {
                 const { url } = await httpClient.identityProvider.createLinkRequest(provider.id);
+
                 window.location.href = url;
             } catch (e) {
                 busy.value = false;
@@ -199,11 +205,13 @@ export default defineComponent({
                 cancelLabel: translations.abort,
                 tone: 'error',
             });
+
             if (!confirmed) {
                 return;
             }
 
             busy.value = true;
+
             try {
                 await httpClient.identityProviderAccount.delete(account.id);
                 await load();

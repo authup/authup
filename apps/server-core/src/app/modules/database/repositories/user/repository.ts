@@ -67,10 +67,12 @@ export class UserRepositoryAdapter extends EntityRepositoryAdapter<User, UserRep
     // not load.
     async findOneByWithEmail(where: Record<string, any>): Promise<User | null> {
         const qb = this.repository.createQueryBuilder('user');
+
         qb.addSelect('user.email');
         qb.addSelect(['user.resetHash', 'user.resetExpires']);
 
         const translated = translateWhereConditions(where);
+
         qb.where(translated);
 
         return qb.getOne();
@@ -78,6 +80,7 @@ export class UserRepositoryAdapter extends EntityRepositoryAdapter<User, UserRep
 
     async transaction<R>(fn: (repository: IUserRepository) => Promise<R>): Promise<R> {
         const dataSource = this.repository.manager.connection;
+
         if (!isDatabaseTypeRowLockable(dataSource.options.type)) {
             // better-sqlite3: no FOR UPDATE, and the driver shares ONE query
             // runner, so a transaction here would nest as a savepoint inside
@@ -116,6 +119,7 @@ export class UserRepositoryAdapter extends EntityRepositoryAdapter<User, UserRep
 
     async getBoundPermissions(entity: string | User): Promise<PermissionPolicyBinding[]> {
         const id = typeof entity === 'string' ? entity : entity.id;
+
         return loadBoundPermissions({
             manager: this.repository.manager,
             junctionTarget: UserPermissionEntity,

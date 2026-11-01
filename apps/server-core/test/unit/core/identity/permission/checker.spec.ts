@@ -59,6 +59,7 @@ describe('core/identity/permission/checker', () => {
      */
     function requestActor(identity: Identity, scopes: string[] = [ScopeName.GLOBAL]) : ActorContext {
         const event = { store: {} } as unknown as IAppEvent;
+
         setRequestIdentity(event, identity);
         setRequestScopes(event, scopes);
         setRequestGrantsResolver(event, (subject) => identityPermissionProvider.getFor(subject));
@@ -77,6 +78,7 @@ describe('core/identity/permission/checker', () => {
         await suite.setup();
 
         const userRepository = new UserRepository(suite.dataSource);
+
         adminUser = await userRepository.findOneByOrFail({ name: 'admin' }) as unknown as UserEntity;
 
         const realmEntityRepository = suite.dataSource.getRepository(RealmEntity);
@@ -85,6 +87,7 @@ describe('core/identity/permission/checker', () => {
             repository: suite.dataSource.getRepository(PermissionEntity),
             realmRepository: realmEntityRepository,
         });
+
         identityPermissionProvider = suite.container.resolve<IIdentityPermissionProvider>(
             IdentityInjectionKey.PermissionProvider,
         );
@@ -135,12 +138,14 @@ describe('core/identity/permission/checker', () => {
         }));
 
         const permissionPolicyRepository = suite.dataSource.getRepository(PermissionPolicyEntity);
+
         await permissionPolicyRepository.save(permissionPolicyRepository.create({
             permissionId: permission.id,
             policyId: policy.id,
         }));
 
         const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);
+
         await userPermissionRepository.save(userPermissionRepository.create({
             userId: adminUser.id,
             userRealmId: adminUser.realmId,
@@ -170,12 +175,14 @@ describe('core/identity/permission/checker', () => {
         }));
 
         const permissionPolicyRepository = suite.dataSource.getRepository(PermissionPolicyEntity);
+
         await permissionPolicyRepository.save(permissionPolicyRepository.create({
             permissionId: permission.id,
             policyId: policy.id,
         }));
 
         const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);
+
         await userPermissionRepository.save(userPermissionRepository.create({
             userId: adminUser.id,
             userRealmId: adminUser.realmId,
@@ -213,6 +220,7 @@ describe('core/identity/permission/checker', () => {
         const permission = await permissionRepository.save(permissionRepository.create({ name: createNanoID() }));
 
         const permissionPolicyRepository = suite.dataSource.getRepository(PermissionPolicyEntity);
+
         await permissionPolicyRepository.save(permissionPolicyRepository.create({
             permissionId: permission.id,
             policyId: policy.id,
@@ -252,12 +260,14 @@ describe('core/identity/permission/checker', () => {
         }));
 
         const permissionPolicyRepository = suite.dataSource.getRepository(PermissionPolicyEntity);
+
         await permissionPolicyRepository.save(permissionPolicyRepository.create({
             permissionId: permission.id,
             policyId: policy.id,
         }));
 
         const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);
+
         await userPermissionRepository.save(userPermissionRepository.create({
             userId: user.id,
             userRealmId: user.realmId,
@@ -288,7 +298,9 @@ describe('core/identity/permission/checker', () => {
 
     it('safeCheck wraps failures into Result<null>', async () => {
         const result = await service.safeCheck(createNanoID(), {}, createAllowAllActor());
+
         expect(result.success).toBe(false);
+
         if (!result.success) {
             expect(result.error).toBeInstanceOf(EntityNotFoundError);
         }

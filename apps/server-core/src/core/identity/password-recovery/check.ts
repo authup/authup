@@ -11,19 +11,37 @@ import { EMAIL_VERIFICATION_REQUIRED_ERROR_INSTANCE, type EmailVerificationRequi
 import { RESET_TOKEN_EXPIRED_ERROR_INSTANCE, type ResetTokenExpiredError } from './token-expired.ts';
 
 export function isPasswordRecoveryDisabledError(input: unknown): input is PasswordRecoveryDisabledError {
-    if (matchesInstanceof(input, PASSWORD_RECOVERY_DISABLED_ERROR_INSTANCE)) return true;
-    if (!isAuthupError(input)) return false;
+    if (matchesInstanceof(input, PASSWORD_RECOVERY_DISABLED_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
     return input.code === ErrorCode.PASSWORD_RECOVERY_DISABLED;
 }
 
 export function isEmailVerificationRequiredError(input: unknown): input is EmailVerificationRequiredError {
-    if (matchesInstanceof(input, EMAIL_VERIFICATION_REQUIRED_ERROR_INSTANCE)) return true;
-    if (!isAuthupError(input)) return false;
+    if (matchesInstanceof(input, EMAIL_VERIFICATION_REQUIRED_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
     return input.code === ErrorCode.EMAIL_VERIFICATION_REQUIRED;
 }
 
 export function isResetTokenExpiredError(input: unknown): input is ResetTokenExpiredError {
-    if (matchesInstanceof(input, RESET_TOKEN_EXPIRED_ERROR_INSTANCE)) return true;
-    if (!isAuthupError(input)) return false;
+    if (matchesInstanceof(input, RESET_TOKEN_EXPIRED_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
     return input.code === ErrorCode.RESET_TOKEN_EXPIRED;
 }

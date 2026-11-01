@@ -12,6 +12,7 @@ const sym = Symbol('RequestPermissionEvaluator');
 
 export function useRequestPermissionEvaluator(event: IAppEvent) : RequestPermissionEvaluator {
     const instance = event.store[sym];
+
     if (!instance) {
         throw new Error('The request permission evaluator is not initialised.');
     }

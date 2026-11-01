@@ -18,6 +18,7 @@ export function extendObject<T extends Record<string, any>>(
     source: Partial<T>,
 ) : T {
     const keys = Object.keys(source);
+
     for (const key of keys) {
         target[key as keyof T] = source[key] as T[keyof T];
     }
@@ -29,11 +30,14 @@ export function flattenObject(input: Record<string, any>) : Record<string, any> 
     const output : Record<string, any> = {};
 
     const keys = Object.keys(input);
+
     for (const key of keys) {
         const value = input[key];
+
         if (isObject(value)) {
             const childAttributes = flattenObject(value);
             const childAttributeKeys = Object.keys(childAttributes);
+
             for (const childAttributeKey of childAttributeKeys) {
                 output[`${key}.${childAttributeKey}`] = childAttributes[childAttributeKey];
             }

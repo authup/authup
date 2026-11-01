@@ -141,10 +141,12 @@ export default defineComponent({
             // client this click would otherwise be an open redirect.
             if (!props.redirectUriVerified) {
                 aborted.value = true;
+
                 return;
             }
 
             const url = new URL(String(props.codeRequest.redirect_uri));
+
             url.searchParams.set('error', OAuth2ErrorCode.ACCESS_DENIED);
             url.searchParams.set(
                 'error_description',
@@ -197,11 +199,13 @@ export default defineComponent({
                 // In silent (prompt=none) mode the parent's handleLoginRequired
                 // turns this into a login_required OIDC redirect, never UI.
                 const { status, data } = extractErrorContext(e);
+
                 if (
                     status === 401 ||
                     data?.error === OAuth2ErrorCode.LOGIN_REQUIRED
                 ) {
                     emit('loginRequired');
+
                     return;
                 }
 
@@ -209,11 +213,13 @@ export default defineComponent({
                 // the parent redirects an OIDC error (interaction_required).
                 if (props.silent) {
                     emit('failed');
+
                     return;
                 }
 
                 if (data?.error === OAuth2ErrorCode.ACCESS_DENIED) {
                     accessDenied.value = true;
+
                     return;
                 }
 
@@ -238,6 +244,7 @@ export default defineComponent({
             const prompts = props.codeRequest.prompt ?
                 props.codeRequest.prompt.split(' ') :
                 [];
+
             return !prompts.includes(OAuth2AuthorizationPrompt.CONSENT);
         });
 

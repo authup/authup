@@ -67,6 +67,7 @@ export async function resolveConfig(
     input: Partial<ConfigInput>,
 ) : Promise<Config> {
     const validator = new Container<ConfigInput>();
+
     mountSchema(validator, CONFIG_SCHEMA);
 
     const parsed = await validator.run(input);

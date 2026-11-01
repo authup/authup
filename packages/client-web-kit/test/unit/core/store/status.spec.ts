@@ -112,10 +112,12 @@ describe('core/store/status', () => {
         const { store } = buildStore({
             'POST /token': () => {
                 observed.push(store.status.value);
+
                 return { ...GRANT_RESPONSE };
             },
             'POST /token/introspect': () => {
                 observed.push(store.status.value);
+
                 return { ...INTROSPECTION_RESPONSE };
             },
         });
@@ -240,6 +242,7 @@ describe('core/store/status', () => {
         const { store } = buildStore({
             'POST /token': () => {
                 observed.push(store.status.value);
+
                 return { ...GRANT_RESPONSE };
             },
         });

@@ -15,7 +15,13 @@ export function isJWTErrorCode(code: unknown) {
 }
 
 export function isJWTError(input: unknown): input is JWTError {
-    if (matchesInstanceof(input, JWT_ERROR_INSTANCE)) return true;
-    if (!isAuthupError(input)) return false;
+    if (matchesInstanceof(input, JWT_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
     return isJWTErrorCode(input.code);
 }

@@ -18,9 +18,9 @@ const localizeName = (entity: RecordNamed) => (entity.name === 'client_create' &
 describe('buildRecordHeading', () => {
     it('should lead with the localized name and push the raw name into the sub title', () => {
         expect(buildRecordHeading({
-            id: ID, 
-            name: 'client_create', 
-            builtIn: true, 
+            id: ID,
+            name: 'client_create',
+            builtIn: true,
         }, localizeName)).toEqual({
             label: 'Create clients',
             subTitle: 'client_create',

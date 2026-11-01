@@ -54,16 +54,20 @@ describe('app/modules/database/repositories/permission-provider (definitions)', 
 
         const global = await permissions.save(permissions.create({ name: 'plan109_read' }));
         const scoped = await permissions.save(permissions.create({ name: 'plan109_read', realmId: realm.id }));
+
         await junctions.save(junctions.create({ permissionId: global.id, policyId: binding.id }));
         await junctions.save(junctions.create({ permissionId: global.id, policyId: identity.id }));
 
         const definitions = await provider.findDefinitions();
 
         expect(definitions.length).toBeGreaterThanOrEqual(Object.values(PermissionName).length + 2);
+
         const keys = definitions.map(([permission]) => buildPermissionKey(permission));
+
         expect(new Set(keys).size).toEqual(keys.length);
 
         const globalDefinition = definitions.find(([permission]) => permission.name === global.name && permission.realmId === null);
+
         expect(globalDefinition?.[0]).toEqual({
             name: 'plan109_read',
             realmId: null,
@@ -75,12 +79,14 @@ describe('app/modules/database/repositories/permission-provider (definitions)', 
         expect(globalDefinition?.[1].every((policy) => typeof policy.type === 'string')).toBe(true);
 
         const scopedDefinition = definitions.find(([permission]) => permission.name === scoped.name && permission.realmId === realm.id);
+
         expect(scopedDefinition?.[0].clientId).toBeNull();
         expect(scopedDefinition?.[1]).toEqual([]);
 
         // a provisioned permission carries the system default tree, loaded
         // with its children rather than as the bare junction row
         const userRead = definitions.find(([permission]) => permission.name === PermissionName.USER_READ && permission.realmId === null);
+
         expect(userRead?.[1]).toHaveLength(1);
         expect(userRead?.[1][0]).toMatchObject({
             type: BuiltInPolicyType.COMPOSITE,
@@ -103,20 +109,25 @@ describe('app/modules/database/repositories/permission-provider (definitions)', 
         const permission = await permissions.save(permissions.create({ name: 'plan109_grant' }));
 
         const rolePermissions = suite.dataSource.getRepository(RolePermissionEntity);
+
         await rolePermissions.save(rolePermissions.create({
             roleId: role.id,
             roleRealmId: role.realmId,
             permissionId: permission.id,
             policyId: shared.id,
         }));
+
         const userPermissions = suite.dataSource.getRepository(UserPermissionEntity);
+
         await userPermissions.save(userPermissions.create({
             userId: admin.id,
             userRealmId: admin.realmId,
             permissionId: permission.id,
             policyId: shared.id,
         }));
+
         const clientPermissions = suite.dataSource.getRepository(ClientPermissionEntity);
+
         await clientPermissions.save(clientPermissions.create({
             clientId: client.id,
             clientRealmId: client.realmId,
@@ -131,9 +142,11 @@ describe('app/modules/database/repositories/permission-provider (definitions)', 
         expect(ids.filter((id) => id === clientOnly.id)).toHaveLength(1);
         expect(ids).not.toContain(unbound.id);
         expect(new Set(ids).size).toEqual(ids.length);
+
         for (const tree of trees) {
             expect(typeof tree.type).toBe('string');
         }
+
         expect(trees.find((tree) => (tree as { id: string }).id === shared.id)).toMatchObject({
             type: BuiltInPolicyType.TIME,
             start: '08:00:00',
@@ -151,6 +164,7 @@ describe('app/modules/database/repositories/permission-provider (definitions)', 
 
         const { data: policy } = await suite.client.policy.create(createFakeTimePolicy());
         const permission = await permissions.save(permissions.create({ name: 'plan109_unloadable' }));
+
         await junctions.save(junctions.create({ permissionId: permission.id, policyId: policy.id }));
 
         const original = PolicyRepository.prototype.findDescendantsTreeById;
@@ -161,6 +175,7 @@ describe('app/modules/database/repositories/permission-provider (definitions)', 
 
         try {
             const read = provider.findDefinitions();
+
             await expect(read).rejects.toThrow(InternalError);
             await expect(read).rejects.toThrow(policy.id);
             await expect(read).rejects.toThrow(permission.name);

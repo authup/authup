@@ -105,21 +105,21 @@ export default defineComponent({
         const translationsDefault = useTranslations(
             [
                 {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.NAME, 
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.NAME,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.DISPLAY_NAME, 
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.DISPLAY_NAME,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.DESCRIPTION, 
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.DESCRIPTION,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.ENTITY, 
-                    key: TranslatorTranslationEntityKey.REALM, 
-                    count: 1, 
+                    namespace: TranslatorTranslationNamespace.ENTITY,
+                    key: TranslatorTranslationEntityKey.REALM,
+                    count: 1,
                 },
             ],
         );

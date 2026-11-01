@@ -44,6 +44,7 @@ export async function extractClientCredentialsFromRequest(event: IAppEvent): Pro
         if (!bodyClientId) {
             throw OAuth2RequestError.malformed('client_secret was provided without client_id.');
         }
+
         return { clientId: bodyClientId, clientSecret: bodyClientSecret };
     }
 
@@ -56,16 +57,19 @@ export async function extractClientCredentialsFromRequest(event: IAppEvent): Pro
 
 export function readStringField(body: Record<string, any> | undefined, key: string): string | undefined {
     const value = body?.[key];
+
     return typeof value === 'string' && value.length > 0 ? value : undefined;
 }
 
 function parseBasicCredentials(event: IAppEvent): ExtractedClientCredentials | undefined {
     const headerValue = event.headers.get('authorization');
+
     if (!headerValue) {
         return undefined;
     }
 
     let header;
+
     try {
         header = parseAuthorizationHeader(headerValue);
     } catch {

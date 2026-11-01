@@ -68,6 +68,7 @@ export function createRenderPage(distPath?: string) : RenderPage {
 
     return async (event, config, ctx) => {
         const resolved = (cachedDistPath ??= resolveDistPath(distPath));
+
         if (!resolved) {
             throw new InternalError(
                 'The auth console bundle (@authup/client-auth-console) is not built or installed.',
@@ -135,6 +136,7 @@ export function createRenderPage(distPath?: string) : RenderPage {
 
         let appHtml : string;
         let preloadLinks : string;
+
         try {
             [appHtml, preloadLinks] = await render({
                 url: ctx.url,
@@ -153,6 +155,7 @@ export function createRenderPage(distPath?: string) : RenderPage {
         }
 
         let body = replaceTemplateMarker(html, '<!--preload-links-->', preloadLinks);
+
         body = replaceTemplateMarker(body, '<!--app-html-->', appHtml);
 
         body = stampHtmlAttributes(body, preferences);

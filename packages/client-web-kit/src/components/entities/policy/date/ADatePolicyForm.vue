@@ -12,9 +12,9 @@ import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
     components: {
-        VCFormInput, 
-        VCFormGroup, 
-        IFieldValidation, 
+        VCFormInput,
+        VCFormGroup,
+        IFieldValidation,
     },
     props: { entity: { type: Object as PropType<Partial<Policy>> } },
     emits: ['updated'],
@@ -32,12 +32,12 @@ export default defineComponent({
 
         const translationsDefault = useTranslations([
             {
-                namespace: TranslatorTranslationNamespace.FIELD, 
-                key: TranslatorTranslationFieldKey.START, 
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.START,
             },
             {
-                namespace: TranslatorTranslationNamespace.FIELD, 
-                key: TranslatorTranslationFieldKey.END, 
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.END,
             },
         ]);
 
@@ -48,6 +48,7 @@ export default defineComponent({
         setup.expose({ assign });
 
         const updatedAt = useUpdatedAt(() => props.entity as Policy);
+
         onChange(updatedAt, () => assign(props.entity));
 
         assign(props.entity);

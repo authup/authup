@@ -44,6 +44,7 @@ export class AuthenticationModule implements IModule {
             useFactory: (c) => {
                 const cache = c.resolve(CacheInjectionKey);
                 const repository = c.resolve<Repository<Session>>(SessionEntity);
+
                 return new SessionRepository({
                     cache,
                     repository,
@@ -55,6 +56,7 @@ export class AuthenticationModule implements IModule {
             useFactory: (c) => {
                 const config = c.resolve(ConfigInjectionKey);
                 const repository = c.resolve(AuthenticationInjectionKey.SessionRepository);
+
                 return new SessionManager({
                     repository,
                     options: { maxAge: config.tokenRefreshMaxAge + 3_600 },

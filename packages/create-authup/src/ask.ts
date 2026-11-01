@@ -35,6 +35,7 @@ export function createReadlineAsk(ctx: ReadlineAskContext = {}): ReadlineAskResu
             if (!muted) {
                 target.write(chunk);
             }
+
             callback();
         },
     });
@@ -54,8 +55,10 @@ export function createReadlineAsk(ctx: ReadlineAskContext = {}): ReadlineAskResu
     rl.on('line', (line) => {
         if (pending) {
             const { resolve } = pending;
+
             pending = undefined;
             resolve(line);
+
             return;
         }
 
@@ -64,11 +67,15 @@ export function createReadlineAsk(ctx: ReadlineAskContext = {}): ReadlineAskResu
 
     rl.on('close', () => {
         closed = true;
-        if (pending) {
-            const { reject } = pending;
-            pending = undefined;
-            reject(new Error(CLOSED_MESSAGE));
+
+        if (!pending) {
+            return;
         }
+
+        const { reject } = pending;
+
+        pending = undefined;
+        reject(new Error(CLOSED_MESSAGE));
     });
 
     // Ctrl+C on a TTY reaches readline rather than the process; without this it closes the interface and reads as EOF.
@@ -76,6 +83,7 @@ export function createReadlineAsk(ctx: ReadlineAskContext = {}): ReadlineAskResu
 
     function readLine(): Promise<{ line: string, buffered: boolean }> {
         const buffered = lines.shift();
+
         if (buffered !== undefined) {
             return Promise.resolve({ line: buffered, buffered: true });
         }
@@ -94,10 +102,14 @@ export function createReadlineAsk(ctx: ReadlineAskContext = {}): ReadlineAskResu
         ask: async (question, fallback, options) => {
             rl.setPrompt(fallback === undefined ? `${question}: ` : `${question} [${fallback}]: `);
             rl.prompt();
+
             const secret = terminal && Boolean(options?.secret);
+
             muted = secret;
+
             try {
                 const { line, buffered } = await readLine();
+
                 if (buffered && terminal && !secret) {
                     // a type-ahead answer never echoed after this prompt, so the next prompt would overwrite the line
                     target.write(`${line}\n`);

@@ -109,6 +109,7 @@ describe('src/config/*.ts', () => {
 
         it('should accept a bounded passwordMinLength and reject out-of-bounds values', async () => {
             const config = await parseConfig({ passwordMinLength: 12 });
+
             expect(config.passwordMinLength).toEqual(12);
 
             await expect(parseConfig({ passwordMinLength: 0 })).rejects.toThrow();
@@ -239,6 +240,7 @@ describe('src/config/*.ts', () => {
 
         it('should default trustProxy to true and accept every non-function trust form', async () => {
             const config = await normalizeConfig();
+
             expect(config.trustProxy).toEqual(true);
 
             expect((await normalizeConfig({ trustProxy: false })).trustProxy).toEqual(false);
@@ -291,7 +293,9 @@ describe('src/config/*.ts', () => {
 
         it('should read TRUST_PROXY from the environment as the raw string form', () => {
             const previous = process.env.TRUST_PROXY;
+
             process.env.TRUST_PROXY = '1';
+
             try {
                 expect(readConfigRawFromEnv<Config>(CONFIG_SCHEMA).trustProxy).toEqual('1');
             } finally {
@@ -392,14 +396,14 @@ describe('src/config/*.ts', () => {
 
         it('should reject a secretsEncryptionKey that does not decode to 32 bytes', async () => {
             // valid base64, wrong length
-            await expect(normalizeConfig({ secretsEncryptionKey: Buffer.alloc(16, 1).toString('base64') })).rejects.toThrow(/32 bytes/);
+            await expect(normalizeConfig({ secretsEncryptionKey: Buffer.alloc(16, 1).toBase64() })).rejects.toThrow(/32 bytes/);
 
             // not base64 at all
             await expect(normalizeConfig({ secretsEncryptionKey: ' '.repeat(3) })).rejects.toThrow(/secretsEncryptionKey/);
         });
 
         it('should accept a valid 32-byte secretsEncryptionKey', async () => {
-            const config = await normalizeConfig({ secretsEncryptionKey: Buffer.alloc(32, 7).toString('base64') });
+            const config = await normalizeConfig({ secretsEncryptionKey: Buffer.alloc(32, 7).toBase64() });
 
             expect(config.secretsEncryptionKey).not.toEqual('');
         });
@@ -478,6 +482,7 @@ describe('src/config/*.ts', () => {
             envBackup = Object.fromEntries(
                 Object.entries(process.env).filter(([name]) => isManagedEnv(name)),
             );
+
             for (const name of Object.keys(envBackup)) {
                 delete process.env[name];
             }
@@ -493,6 +498,7 @@ describe('src/config/*.ts', () => {
                     delete process.env[name];
                 }
             }
+
             for (const [name, value] of Object.entries(envBackup)) {
                 process.env[name] = value;
             }
@@ -650,6 +656,7 @@ describe('src/config/*.ts', () => {
 
             // and it is reported when it is merely left lying around
             const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
             try {
                 expect((await readConfigRawFromFS<Config>(CONFIG_SCHEMA, { cwd: directory })).port).toBeUndefined();
                 expect(warn.mock.calls[0]?.[0]).toContain('authup.server.core.yml');

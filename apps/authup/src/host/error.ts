@@ -34,11 +34,13 @@ function describeIssues(issues: unknown) : string[] {
 export function describeHostError(error: unknown) : string {
     if (isClientError(error)) {
         const body : unknown = error.response?.data;
+
         if (isAuthupError(body)) {
             return [`${body.code}: ${body.message}`, ...describeIssues(body.issues)].join('\n');
         }
 
         const request = `${(error.request.method ?? 'GET').toUpperCase()} ${error.request.url}`;
+
         if (!error.response) {
             return `${error.message} (${request})`;
         }
@@ -51,7 +53,7 @@ export function describeHostError(error: unknown) : string {
             `${status} (${request})`;
     }
 
-    return error instanceof Error ? error.message : String(error);
+    return Error.isError(error) ? error.message : String(error);
 }
 
 const INSPECT_CUSTOM = Symbol.for('nodejs.util.inspect.custom');

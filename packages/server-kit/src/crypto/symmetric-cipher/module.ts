@@ -29,6 +29,7 @@ export class SymmetricCipher implements ISymmetricCipher {
         // encrypt/decrypt. Only the subtle import (over already-validated
         // 32-byte material) stays async, and it does not reject in practice.
         const raw = base64ToArrayBuffer(key.trim());
+
         if (raw.byteLength !== KEY_BYTE_LENGTH) {
             throw new Error(`The cipher key must decode to ${KEY_BYTE_LENGTH} bytes (got ${raw.byteLength}).`);
         }
@@ -53,6 +54,7 @@ export class SymmetricCipher implements ISymmetricCipher {
         );
 
         const blob = new Uint8Array(iv.byteLength + sealed.byteLength);
+
         blob.set(iv, 0);
         blob.set(new Uint8Array(sealed), iv.byteLength);
 
@@ -63,6 +65,7 @@ export class SymmetricCipher implements ISymmetricCipher {
         const key = await this.key;
 
         const raw = new Uint8Array(base64ToArrayBuffer(blob));
+
         if (raw.byteLength <= IV_BYTE_LENGTH) {
             throw new Error('The cipher blob is malformed.');
         }

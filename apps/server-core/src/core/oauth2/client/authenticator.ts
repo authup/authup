@@ -43,6 +43,7 @@ export class OAuth2ClientAuthenticator {
 
     constructor(ctx: IIdentityResolver | OAuth2ClientAuthenticatorContext) {
         let cipher : IRealmCipher | undefined;
+
         if ('identityResolver' in ctx) {
             this.identityResolver = ctx.identityResolver;
             this.certificateValidator = ctx.certificateValidator;
@@ -52,6 +53,7 @@ export class OAuth2ClientAuthenticator {
             // unit tests. Production wiring always supplies the validator.
             this.identityResolver = ctx;
         }
+
         this.credentialsService = new ClientCredentialsService({ cipher });
     }
 
@@ -72,6 +74,7 @@ export class OAuth2ClientAuthenticator {
                 if (typeof clientSecret === 'string') {
                     throw OAuth2ClientError.invalid();
                 }
+
                 break;
             case ClientAuthMethod.SECRET: {
                 if (!clientSecret) {
@@ -79,9 +82,11 @@ export class OAuth2ClientAuthenticator {
                 }
 
                 const verified = await this.credentialsService.verify(clientSecret, client);
+
                 if (!verified) {
                     throw OAuth2ClientError.invalid();
                 }
+
                 break;
             }
             case ClientAuthMethod.TLS:
@@ -104,8 +109,10 @@ export class OAuth2ClientAuthenticator {
                     if (isValidationError(e)) {
                         throw OAuth2ClientError.invalid();
                     }
+
                     throw e;
                 }
+
                 break;
             default:
                 throw OAuth2ClientError.invalid();
@@ -116,6 +123,7 @@ export class OAuth2ClientAuthenticator {
 
     async resolve(clientId: string, realmId?: string): Promise<Client> {
         const identity = await this.identityResolver.resolve(IdentityType.CLIENT, clientId, realmId);
+
         if (!identity || identity.type !== IdentityType.CLIENT) {
             throw OAuth2ClientError.invalid();
         }

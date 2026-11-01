@@ -52,8 +52,14 @@ export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRep
 
     async findOneByName(name: string, realm?: string): Promise<T | null> {
         return this.store.find((e) => {
-            if (e.name !== name) return false;
-            if (realm !== undefined && e.realmId !== realm) return false;
+            if (e.name !== name) {
+                return false;
+            }
+
+            if (realm !== undefined && e.realmId !== realm) {
+                return false;
+            }
+
             return true;
         }) ?? null;
     }
@@ -62,6 +68,7 @@ export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRep
         if (isUUID(idOrName)) {
             return this.findOneById(idOrName);
         }
+
         return this.findOneByName(idOrName, realm);
     }
 
@@ -82,21 +89,25 @@ export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRep
 
     merge(entity: T, data: Partial<T>): T {
         Object.assign(entity, data);
+
         return entity;
     }
 
     async save(entity: T): Promise<T> {
         const idx = this.store.findIndex((e) => e.id === entity.id);
+
         if (idx >= 0) {
             this.store[idx] = entity;
         } else {
             this.store.push(entity);
         }
+
         return entity;
     }
 
     async remove(entity: T): Promise<void> {
         const idx = this.store.findIndex((e) => e.id === entity.id);
+
         if (idx >= 0) {
             this.store.splice(idx, 1);
         }
@@ -132,12 +143,16 @@ export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRep
     seed(input: Partial<T> | Partial<T>[]): T | T[] {
         if (Array.isArray(input)) {
             const created = input.map((entity) => this.create({ ...this.defaults, ...entity }));
+
             this.store.push(...created);
+
             return created;
         }
 
         const created = this.create({ ...this.defaults, ...input });
+
         this.store.push(created);
+
         return created;
     }
 

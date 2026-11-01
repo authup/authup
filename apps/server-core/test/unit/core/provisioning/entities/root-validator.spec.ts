@@ -39,6 +39,7 @@ describe('core/provisioning/entities/root-validator', () => {
         })).rejects.toSatisfy((e: unknown) => {
             expect(isValidupError(e)).toBe(true);
             expect(JSON.stringify((e as ValidupError).issues)).toMatch(/"paths"/);
+
             return true;
         });
     });
@@ -150,6 +151,7 @@ describe('core/provisioning/entities/root-validator', () => {
         });
 
         const { relations } = output.roles![0];
+
         expect(relations!.globalPermissionsExclude).toEqual(['realm_create']);
         expect(relations!.globalPermissionsRealmScope).toEqual(RealmScope.OWN);
         expect(relations!.globalPermissionsRealmScopeOverrides).toEqual({ [RealmScope.OWN_OR_NULL]: ['realm_read'] });
@@ -180,6 +182,7 @@ describe('core/provisioning/entities/root-validator', () => {
         });
 
         const [policy] = output.policies!;
+
         expect(policy.attributes.name).toEqual('my-policy');
         expect(policy.attributes.builtIn).toBe(true);
         expect(policy.extraAttributes).toEqual({ decisionStrategy: 'unanimous' });

@@ -48,7 +48,7 @@ export type TokenControllerContext = {
     eventService?: IEventService,
     metrics?: IAuthFlowMetrics,
     loginThrottleService?: ILoginThrottleService,
-    userAuthenticatorService?: IUserAuthenticatorService,
+    userAuthenticatorService: IUserAuthenticatorService,
     mfaLoginService?: IOAuth2MfaLoginService,
     accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
 

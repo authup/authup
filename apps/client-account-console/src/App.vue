@@ -24,9 +24,9 @@ import { injectAccountConsoleConfig } from './di';
 
 export default defineComponent({
     components: {
-        AAuthApp, 
-        VCAlertDialogProvider, 
-        VCIcon, 
+        AAuthApp,
+        VCAlertDialogProvider,
+        VCIcon,
     },
     setup() {
         const config = injectAccountConsoleConfig();

@@ -135,6 +135,7 @@ describe('core/store/preferences', () => {
         await vi.advanceTimersByTimeAsync(WRITE_DELAY);
 
         const requests = attributeRequests(httpClient);
+
         expect(requests).toHaveLength(2);
         expect(requests[0].method).toEqual('GET');
         expect(decodeURIComponent(requests[0].url)).toContain("eq(name,'locale')");
@@ -191,6 +192,7 @@ describe('core/store/preferences', () => {
         await vi.advanceTimersByTimeAsync(WRITE_DELAY);
 
         let requests = attributeRequests(httpClient);
+
         expect(requests).toHaveLength(2);
         expect(requests[0].method).toEqual('GET');
         expect(requests[1].method).toEqual('POST');
@@ -249,6 +251,7 @@ describe('core/store/preferences', () => {
         await vi.advanceTimersByTimeAsync(WRITE_DELAY);
 
         const requests = attributeRequests(httpClient);
+
         expect(requests).toHaveLength(2);
         expect(requests[1].body).toEqual({
             userId: 'user-1',
@@ -359,6 +362,7 @@ describe('core/store/preferences', () => {
         await vi.advanceTimersByTimeAsync(WRITE_DELAY);
 
         const requests = attributeRequests(httpClient);
+
         expect(requests).toHaveLength(2);
         expect(requests[0].method).toEqual('GET');
         expect(requests[1].method).toEqual('DELETE');
@@ -383,9 +387,9 @@ describe('core/store/preferences', () => {
         let sub = 'user-1';
         let claims : Record<string, string> = { color_mode: 'light' };
         const {
-            store, 
-            httpClient, 
-            colorMode, 
+            store,
+            httpClient,
+            colorMode,
         } = buildStore({
             handlers: {
                 'POST /token/introspect': () => ({
@@ -431,6 +435,7 @@ describe('core/store/preferences', () => {
         await vi.advanceTimersByTimeAsync(WRITE_DELAY);
 
         const requests = attributeRequests(httpClient);
+
         expect(requests).toHaveLength(2);
         expect(decodeURIComponent(requests[0].url)).toContain("eq(userId,'user-2')");
         expect(requests[1].body).toEqual({
@@ -444,9 +449,9 @@ describe('core/store/preferences', () => {
         let sub = 'user-1';
         let release : () => void = () => undefined;
         const {
-            store, 
-            httpClient, 
-            locale, 
+            store,
+            httpClient,
+            locale,
         } = buildStore({
             handlers: {
                 'POST /token/introspect': () => ({
@@ -498,6 +503,7 @@ describe('core/store/preferences', () => {
         await vi.advanceTimersByTimeAsync(WRITE_DELAY);
 
         const requests = attributeRequests(httpClient).slice(2);
+
         expect(requests).toHaveLength(2);
         expect(decodeURIComponent(requests[0].url)).toContain("eq(userId,'user-2')");
     });

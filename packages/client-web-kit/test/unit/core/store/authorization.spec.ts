@@ -95,6 +95,7 @@ describe('core/store (authorization)', () => {
         await store.login({ name: 'admin', password: 'start123' });
 
         const requests = findRequests(httpClient, '/authorization/check');
+
         expect(requests).toHaveLength(1);
         expect(requests[0].headers.authorization).toEqual('Bearer xyz');
         expect(requests[0].body).toEqual(CHECK_BODY);
@@ -162,6 +163,7 @@ describe('core/store (authorization)', () => {
 
         // it asks about the identity's own realm plus the global rows
         const [request] = findRequests(httpClient, '/authorization/check');
+
         expect(request?.body).toEqual(CHECK_BODY);
     });
 
@@ -260,6 +262,7 @@ describe('core/store (authorization)', () => {
         const { store, httpClient } = buildStore({
             'POST /authorization/check': () => {
                 calls += 1;
+
                 if (calls === 1) {
                     throw createResponseError(503, 'Service unavailable.');
                 }
@@ -302,7 +305,9 @@ describe('core/store (authorization)', () => {
         await store.resolve();
 
         expect(store.status.value).toEqual(StoreAuthStatus.AUTHENTICATED);
+
         const requests = findRequests(httpClient, '/authorization/check');
+
         expect(requests).toHaveLength(1);
         // no bearer exists in cookie mode: the session cookie carries it
         expect(requests[0].headers.authorization).toBeUndefined();

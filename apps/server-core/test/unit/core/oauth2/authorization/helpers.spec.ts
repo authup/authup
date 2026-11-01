@@ -27,7 +27,7 @@ const expectedHash = (value: string, digest: string, halfLength: number) => crea
     .update(value)
     .digest()
     .subarray(0, halfLength)
-    .toString('base64url');
+    .toBase64({ alphabet: 'base64url', omitPadding: true });
 
 describe('buildOAuth2TokenHash', () => {
     it('should produce the SHA-256 left half for a *S256 alg (22 base64url chars)', async () => {

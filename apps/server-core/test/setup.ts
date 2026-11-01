@@ -90,7 +90,7 @@ function isReachable(host: string, port: number, timeoutMs = 2000): Promise<bool
     return new Promise((resolve) => {
         const socket = createConnection({
             host,
-            port, 
+            port,
         });
         const timer = setTimeout(() => {
             socket.destroy();
@@ -128,6 +128,7 @@ async function setupLdap(project: TestProject) {
     if (await isReachable(host, LDAP_CONTAINER.port)) {
         project.provide('OPENLDAP_CONTAINER_HOST', host);
         project.provide('OPENLDAP_CONTAINER_PORT', LDAP_CONTAINER.port);
+
         return;
     }
 
@@ -163,14 +164,18 @@ function applyDatabaseConnectionConfig(connection: DatabaseConnectionConfig) {
 
 async function setupDatabase(project: TestProject) {
     const dbType = process.env.DB_TYPE;
+
     if (!dbType || dbType === 'better-sqlite3' || dbType === 'sqlite') {
         project.provide('DATABASE_CONNECTION', null);
+
         return;
     }
 
     const config = DATABASE_CONTAINERS[dbType];
+
     if (!config) {
         project.provide('DATABASE_CONNECTION', null);
+
         return;
     }
 
@@ -180,7 +185,9 @@ async function setupDatabase(project: TestProject) {
             process.env.DB_PORT || String(config.port),
             config,
         );
+
         project.provide('DATABASE_CONNECTION', connection);
+
         return;
     }
 

@@ -88,14 +88,12 @@ export class ExtraAttributesTreeRepositoryAdapter<
 
         this.traverse(entities, (entity) => {
             const value = attributesByPrimaryKey[entity[this.primaryColumn] as string];
+
             if (!value) {
                 return entity;
             }
 
-            const keys = Object.keys(value);
-            for (const key of keys) {
-                entity[key as keyof T] = value[key] as T[keyof T];
-            }
+            this.assignAttributes(entity, value);
 
             return entity;
         });
@@ -121,6 +119,7 @@ export class ExtraAttributesTreeRepositoryAdapter<
         const data : T[] = Array.isArray(entities) ? entities : [entities];
 
         const childColumnName = this.repository.metadata.treeChildrenRelation?.propertyName;
+
         for (const datum of data) {
             fn(datum);
 

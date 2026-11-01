@@ -19,6 +19,7 @@ export async function captureEvent(requestPath = '/') : Promise<IAppEvent> {
     let captured : IAppEvent | undefined;
 
     const app = new App();
+
     app.use(basic({ cookie: true, query: true }));
 
     const handler = (event: IAppEvent) => {
@@ -39,6 +40,7 @@ export async function captureEvent(requestPath = '/') : Promise<IAppEvent> {
     }));
 
     const server = serve(app, { port: 0, silent: true });
+
     await server.ready();
 
     try {

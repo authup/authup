@@ -54,6 +54,7 @@ export const OAUTH2_ISSUANCE_PATHS : string[] = [
  */
 export function normalizeRequestPath(input: string) : string {
     const value = input.toLowerCase().replace(/\/+/g, '/');
+
     if (value.length > 1 && value.endsWith('/')) {
         return value.replace(/\/+$/, '') || '/';
     }

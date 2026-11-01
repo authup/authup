@@ -8,8 +8,8 @@
 import type {
     OAuth2AuthorizationCodeRequest,
     OAuth2IdentityProvider,
-    OpenIDIdentityProvider, 
-    User, 
+    OpenIDIdentityProvider,
+    User,
 } from '@authup/core-kit';
 import type { OAuth2ErrorCode, OAuth2TokenGrantResponse } from '@authup/specs';
 import type { Logger } from '@authup/server-kit';
@@ -209,9 +209,9 @@ export type OAuth2FederatedLoginServiceOptions = {
 export type OAuth2FederatedLoginAuthenticatorFactory = (
     provider: OAuth2IdentityProvider | OpenIDIdentityProvider,
     options: {
-        baseURL: string, 
-        clientId?: string, 
-        logger?: Logger 
+        baseURL: string,
+        clientId?: string,
+        logger?: Logger
     },
 ) => IOAuth2Authenticator<User>;
 

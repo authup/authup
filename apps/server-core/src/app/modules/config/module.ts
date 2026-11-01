@@ -29,6 +29,7 @@ export class ConfigModule implements IModule {
 
     async setup(container: IContainer): Promise<void> {
         let instance : Config;
+
         if (typeof this.instance === 'function') {
             instance = await this.instance();
         } else if (this.instance) {

@@ -36,7 +36,9 @@ export default defineComponent({
 
         onMounted(() => {
             const url = new URL(props.redirectUri);
+
             url.searchParams.set('error', props.error);
+
             if (props.state) {
                 url.searchParams.set('state', props.state);
             }

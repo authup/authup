@@ -721,6 +721,7 @@ export class HTTPControllerModule {
             requestContext: useRequestEventContext,
             sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
         });
+
         return new ClientController({
             service,
             repository,
@@ -811,6 +812,7 @@ export class HTTPControllerModule {
             repository,
             realmRepository,
         });
+
         return new RoleController({
             service,
             statsService: this.createStatsService(container, RoleEntity, {
@@ -832,6 +834,7 @@ export class HTTPControllerModule {
             permissionRepository,
             identityPermissionProvider,
         });
+
         return new ClientPermissionController({ service });
     }
 
@@ -841,6 +844,7 @@ export class HTTPControllerModule {
         );
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const service = new ClientRoleService({ repository, identityPermissionProvider });
+
         return new ClientRoleController({ service });
     }
 
@@ -849,6 +853,7 @@ export class HTTPControllerModule {
             container.resolve<Repository<ClientScope>>(ClientScopeEntity),
         );
         const service = new ClientScopeService({ repository });
+
         return new ClientScopeController({ service });
     }
 
@@ -858,9 +863,13 @@ export class HTTPControllerModule {
             container.resolve<Repository<RoleAttribute>>(RoleAttributeEntity),
         );
         const reservedNames = new Set(
-            dataSource.getMetadata(RoleEntity).columns.map((c) => c.propertyName),
+            [
+                ...dataSource.getMetadata(RoleEntity).columns.map((c) => c.propertyName),
+                ...dataSource.getMetadata(RoleEntity).relations.map((r) => r.propertyName),
+            ],
         );
         const service = new RoleAttributeService({ repository, reservedNames });
+
         return new RoleAttributeController({ service });
     }
 
@@ -875,6 +884,7 @@ export class HTTPControllerModule {
             permissionRepository,
             identityPermissionProvider,
         });
+
         return new RolePermissionController({ service });
     }
 
@@ -883,6 +893,7 @@ export class HTTPControllerModule {
             container.resolve<Repository<PermissionPolicy>>(PermissionPolicyEntity),
         );
         const service = new PermissionPolicyService({ repository });
+
         return new PermissionPolicyController({ service });
     }
 
@@ -898,6 +909,7 @@ export class HTTPControllerModule {
             repository,
             realmRepository,
         });
+
         return new ScopeController({
             service,
             statsService: this.createStatsService(container, ScopeEntity, {
@@ -920,6 +932,7 @@ export class HTTPControllerModule {
             repository,
             realmRepository,
         });
+
         return new PathController({
             service,
             statsService: this.createStatsService(container, PathEntity, {
@@ -939,6 +952,7 @@ export class HTTPControllerModule {
             eventService: container.resolve(DatabaseInjectionKey.EventService),
             requestContext: useRequestEventContext,
         });
+
         return new KeyController({
             service,
             statsService: this.createStatsService(container, KeyEntity, {
@@ -958,6 +972,7 @@ export class HTTPControllerModule {
             eventService: container.resolve(DatabaseInjectionKey.EventService),
             requestContext: useRequestEventContext,
         });
+
         return new TrustAnchorController({
             service,
             statsService: this.createStatsService(container, TrustAnchorEntity, {
@@ -972,6 +987,7 @@ export class HTTPControllerModule {
         const repository = container.resolve(OAuth2InjectionToken.SessionTokenRepository);
         const tokenRepository = container.resolve(OAuth2InjectionToken.TokenRepository);
         const service = new SessionTokenService({ repository, tokenRepository });
+
         return new SessionTokenController({ service });
     }
 
@@ -1003,6 +1019,7 @@ export class HTTPControllerModule {
 
     protected createConsentService(container: IContainer) : ConsentService {
         const repository = container.resolve(OAuth2InjectionToken.ConsentRepository);
+
         return new ConsentService({ repository });
     }
 
@@ -1022,6 +1039,7 @@ export class HTTPControllerModule {
             eventService: container.resolve(DatabaseInjectionKey.EventService),
             requestContext: useRequestEventContext,
         });
+
         return new IdentityProviderAccountController({ service });
     }
 
@@ -1076,8 +1094,10 @@ export class HTTPControllerModule {
             rpName: string,
             origin: string
         } | undefined;
+
         try {
             const url = new URL(config.publicUrl);
+
             issuer = url.hostname;
             webauthn = {
                 rpId: url.hostname,
@@ -1096,6 +1116,8 @@ export class HTTPControllerModule {
             cipher: container.resolve(OAuth2InjectionToken.RealmCipher),
             eventService: container.resolve(DatabaseInjectionKey.EventService),
             requestContext: useRequestEventContext,
+            sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
+            logger: container.resolve(LoggerInjectionKey),
             mailClient: container.resolve(MailInjectionKey),
             mailTemplateRenderer: container.resolve(MailTemplateRendererInjectionKey),
             options: {
@@ -1170,6 +1192,7 @@ export class HTTPControllerModule {
         const config = container.resolve(ConfigInjectionKey);
         const service = container.resolve(DatabaseInjectionKey.EventService);
         const aggregates = new EventAggregateRepositoryAdapter(container.resolve(DatabaseInjectionKey.DataSource));
+
         return new EventController({
             service,
             statsService: this.createStatsService<EventStatsGroups, EventStatsMetaExtra>(container, EventEntity, {
@@ -1214,6 +1237,7 @@ export class HTTPControllerModule {
             realmRepository,
         });
         const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository);
+
         return new UserService({
             repository,
             realmRepository: realmRepositoryAdapter,
@@ -1257,9 +1281,13 @@ export class HTTPControllerModule {
             container.resolve<Repository<UserAttribute>>(UserAttributeEntity),
         );
         const reservedNames = new Set(
-            dataSource.getMetadata(UserEntity).columns.map((c) => c.propertyName),
+            [
+                ...dataSource.getMetadata(UserEntity).columns.map((c) => c.propertyName),
+                ...dataSource.getMetadata(UserEntity).relations.map((r) => r.propertyName),
+            ],
         );
         const service = new UserAttributeService({ repository, reservedNames });
+
         return new UserAttributeController({ service });
     }
 
@@ -1274,6 +1302,7 @@ export class HTTPControllerModule {
             permissionRepository,
             identityPermissionProvider,
         });
+
         return new UserPermissionController({ service });
     }
 
@@ -1283,6 +1312,7 @@ export class HTTPControllerModule {
         );
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const service = new UserRoleService({ repository, identityPermissionProvider });
+
         return new UserRoleController({ service });
     }
 
@@ -1328,12 +1358,14 @@ export class HTTPControllerModule {
             roleRepository,
             identityPermissionProvider,
         });
+
         return new IdentityProviderRoleMappingController({ service });
     }
 
     createJwkController(container: IContainer) {
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const repository = dataSource.getRepository(KeyEntity);
+
         return new JwkController({ repository });
     }
 

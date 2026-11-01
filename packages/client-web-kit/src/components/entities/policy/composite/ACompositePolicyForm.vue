@@ -51,6 +51,7 @@ export default defineComponent({
             if (!props.entity) {
                 return undefined;
             }
+
             return props.entity.id;
         });
 
@@ -58,6 +59,7 @@ export default defineComponent({
 
         const query = computed(() => {
             const filters: QueryFiltersInput<Policy & { parentId?: string | null }> = {};
+
             if (props.entity) {
                 // todo: maybe respect manual realmId component prop
                 if (props.entity.realmId) {
@@ -66,6 +68,7 @@ export default defineComponent({
 
                 const excluded = [props.entity.id, props.entity.parentId]
                     .filter((value): value is string => typeof value === 'string');
+
                 if (excluded.length === 1) {
                     filters.id = { $ne: excluded[0] };
                 } else if (excluded.length > 1) {
@@ -93,6 +96,7 @@ export default defineComponent({
             }
 
             const record = data as Record<string, unknown>;
+
             if (typeof record.decisionStrategy === 'string') {
                 form.decisionStrategy = record.decisionStrategy;
             } else {
@@ -103,6 +107,7 @@ export default defineComponent({
         setup.expose({ assign });
 
         const updatedAt = useUpdatedAt(() => props.entity as Policy);
+
         onChange(updatedAt, () => assign(props.entity));
 
         assign(props.entity);

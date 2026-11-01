@@ -70,6 +70,7 @@ export class DomainEventPublisher implements IDomainEventPublisher {
         // later ones (the entity audit mirror) from running.
         let error : unknown;
         let failed = false;
+
         for (const handler of this.handlers) {
             try {
                 await handler.handle(ctx);

@@ -47,11 +47,7 @@ export function isError(input: unknown): input is Error {
  * to recognise a chain-less legacy payload as specifically an AuthupError.
  */
 export function isAuthupError(input: unknown): input is AuthupError {
-    if (!isObject(input)) {
-        return false;
-    }
-
-    if (!Array.isArray(input[INSTANCEOF_PROPERTY])) {
+    if (!isObject(input) || !Array.isArray(input[INSTANCEOF_PROPERTY])) {
         return false;
     }
 

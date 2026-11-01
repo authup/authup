@@ -21,9 +21,9 @@ function buildStore() {
                 refresh_token: 'abc',
             }),
             'POST /token/introspect': () => ({
-                active: true, 
-                sub: AUTHORIZATION_SUBJECT, 
-                sub_kind: 'user', 
+                active: true,
+                sub: AUTHORIZATION_SUBJECT,
+                sub_kind: 'user',
             }),
             'GET /authorization': () => buildAuthorizationCatalog(),
         },
@@ -57,6 +57,7 @@ describe('core/store/login', () => {
         });
 
         const request = findTokenRequest(httpClient);
+
         expect(request).toBeDefined();
         expect(request!.body).toMatchObject({
             grant_type: 'password',
@@ -75,9 +76,11 @@ describe('core/store/login', () => {
         });
 
         const request = findTokenRequest(httpClient);
+
         expect(request).toBeDefined();
 
         const body = request!.body as Record<string, string>;
+
         expect(body.grant_type).toEqual('password');
         expect('realm_id' in body).toBe(false);
     });
@@ -92,6 +95,7 @@ describe('core/store/login', () => {
         });
 
         const request = findTokenRequest(httpClient);
+
         expect(request).toBeDefined();
         expect('realm_id' in (request!.body as Record<string, string>)).toBe(false);
     });
@@ -106,6 +110,7 @@ describe('core/store/login', () => {
         });
 
         const request = findTokenRequest(httpClient);
+
         expect(request).toBeDefined();
         expect(request!.body).toMatchObject({
             grant_type: 'password',
@@ -124,6 +129,7 @@ describe('core/store/login', () => {
         });
 
         const request = findTokenRequest(httpClient);
+
         expect(request).toBeDefined();
         expect('otp' in (request!.body as Record<string, string>)).toBe(false);
     });
@@ -147,6 +153,7 @@ describe('core/store/login', () => {
 
         // no password grant was fired — the tokens came from the challenge
         const request = findTokenRequest(httpClient);
+
         expect(request).toBeUndefined();
     });
 });

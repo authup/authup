@@ -50,11 +50,10 @@ rather than with the user's.
 The grants and the identity come from the introspection you already run:
 `POST /token/introspect` for a bearer, `GET /sessions/@me/introspect` for a
 console session. `permissions` is the grant list; `sub`, `sub_kind`, `realm_id`
-and `realm_name` are the identity. The grant list is NOT narrowed by the
-token's `scope`: an active token reports the identity's full grant set, while
-the server withholds the identity policy data from a bearer that holds no
-`global` scope and denies it every `system.default`-bound permission. A
-resource server that honours scopes applies that check itself.
+and `realm_name` are the identity. The grant list is what a request made with
+the token evaluates, so a token whose `scope` lacks `global` reports an empty
+list: the server evaluates such a token with no grants, and an evaluator built
+from the introspection reaches the same verdict without knowing the scope rule.
 
 ```typescript
 import {

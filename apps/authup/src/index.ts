@@ -18,8 +18,7 @@ dotenv.config({
     quiet: true,
 });
 
-Promise.resolve()
-    .then(() => createCLIEntryPointCommand())
+Promise.try(() => createCLIEntryPointCommand())
     .then((command) => runMain(command))
     .catch((err) => {
         console.log(err); // eslint-disable-line no-console

@@ -25,6 +25,7 @@ describe('useAccountConsoleURL', () => {
                 return () => h('div');
             },
         });
+
         provideAdminConsoleConfig(config, app);
 
         app.mount(document.createElement('div'));

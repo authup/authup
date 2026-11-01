@@ -154,24 +154,24 @@ describe('src/components/dashboard/stats', () => {
                 row('2026-09-21T00:00:00.000Z', EventName.CREATED, 9, EventScope.ENTITY),
             ])).toEqual([
                 {
-                    scope: EventScope.ENTITY, 
-                    name: EventName.CREATED, 
-                    count: 9, 
+                    scope: EventScope.ENTITY,
+                    name: EventName.CREATED,
+                    count: 9,
                 },
                 {
-                    scope: EventScope.OAUTH2, 
-                    name: EventName.LOGIN, 
-                    count: 7, 
+                    scope: EventScope.OAUTH2,
+                    name: EventName.LOGIN,
+                    count: 7,
                 },
                 {
-                    scope: EventScope.OAUTH2, 
-                    name: EventName.AUTHORIZE, 
-                    count: 2, 
+                    scope: EventScope.OAUTH2,
+                    name: EventName.AUTHORIZE,
+                    count: 2,
                 },
                 {
-                    scope: EventScope.OAUTH2, 
-                    name: EventName.LOGIN_FAILED, 
-                    count: 2, 
+                    scope: EventScope.OAUTH2,
+                    name: EventName.LOGIN_FAILED,
+                    count: 2,
                 },
             ]);
         });

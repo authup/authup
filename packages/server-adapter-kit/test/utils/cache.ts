@@ -17,6 +17,7 @@ export async function readCachedClaims(
     token: string,
     namespace: string,
 ) : Promise<Record<string, any> | undefined> {
-    const entry = await cache.get(await hashToken(`${namespace}\u0000${token}`));
+    const entry = await cache.get(await hashToken(`${namespace}\0${token}`));
+
     return entry?.claims;
 }

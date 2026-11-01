@@ -20,6 +20,7 @@ describe('generateSecret', () => {
 
     it('is practically unique across calls', () => {
         const secrets = new Set(Array.from({ length: 200 }, () => generateSecret()));
+
         expect(secrets.size).toBe(200);
     });
 });

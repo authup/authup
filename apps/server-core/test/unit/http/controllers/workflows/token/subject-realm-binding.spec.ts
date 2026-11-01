@@ -50,19 +50,23 @@ describe('token verification: subject realm binding', () => {
         await suite.setup();
 
         const pair = generateKeyPairSync('rsa', { modulusLength: 2048 });
-        privateKey = pair.privateKey.export({ type: 'pkcs8', format: 'der' }).toString('base64');
-        publicKey = pair.publicKey.export({ type: 'spki', format: 'der' }).toString('base64');
+
+        privateKey = pair.privateKey.export({ type: 'pkcs8', format: 'der' }).toBase64();
+        publicKey = pair.publicKey.export({ type: 'spki', format: 'der' }).toBase64();
 
         const adminGrant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
+
         adminAccessToken = adminGrant.access_token;
         admin = await suite.client.token.introspect({ token: adminGrant.access_token }, { authorizationHeaderInherit: true });
 
         const { data: realm } = await suite.client.realm.create(createFakeRealm());
+
         realmId = realm.id;
 
         const password = 'subject-realm-binding-pw';
         const { data: user } = await suite.client.user.create(createFakeUser({ realmId, password }));
         const { data: role } = await suite.client.role.getOne(ROLE_REALM_ADMIN_NAME);
+
         await suite.client.userRole.create({ userId: user.id, roleId: role.id });
 
         const memberGrant = await suite.client.token.createWithPassword({
@@ -70,6 +74,7 @@ describe('token verification: subject realm binding', () => {
             password,
             realm_id: realmId,
         });
+
         member = await suite.client.token.introspect({ token: memberGrant.access_token }, { authorizationHeaderInherit: true });
         memberRefresh = await suite.client.token.introspect({ token: memberGrant.refresh_token! }, { authorizationHeaderInherit: true });
 
@@ -88,6 +93,7 @@ describe('token verification: subject realm binding', () => {
             name: `binding-${Date.now()}`,
             realmId,
         });
+
         realmKeyId = realmKey.id;
 
         const { data: masterKey } = await suite.client.key.create({
@@ -95,6 +101,7 @@ describe('token verification: subject realm binding', () => {
             name: `binding-m-${Date.now()}`,
             realmId: admin.realm_id,
         });
+
         masterKeyId = masterKey.id;
     });
 
@@ -193,10 +200,12 @@ describe('token verification: subject realm binding', () => {
                     refresh_token: token,
                 },
             });
+
             expect(refreshed.status).toEqual(400);
         }
 
         const revoked = await httpRequest(suite, 'POST', '/token/revoke', { form: { token } });
+
         expect(revoked.status).toEqual(200);
 
         const response = await httpRequest(suite, 'POST', '/token', {
@@ -205,6 +214,7 @@ describe('token verification: subject realm binding', () => {
                 refresh_token: victim.refresh_token!,
             },
         });
+
         expect(response.status).toEqual(200);
     });
 
@@ -226,6 +236,7 @@ describe('token verification: subject realm binding', () => {
             realmId,
             status: KeyStatus.PASSIVE,
         });
+
         expect(generated.realmId).toEqual(realmId);
     });
 
@@ -240,11 +251,15 @@ describe('token verification: subject realm binding', () => {
             body: JSON.stringify({ id_token_hint: hint }),
             headers: { 'Content-Type': 'application/json' },
         });
+
         expect(response.status).toEqual(200);
+
         const body = await response.json();
+
         expect(body.serverRevoked).toBeFalsy();
 
         const me = await httpRequest(suite, 'GET', '/users/@me', { headers: { Authorization: `Bearer ${adminAccessToken}` } });
+
         expect(me.status).toEqual(200);
     });
 });

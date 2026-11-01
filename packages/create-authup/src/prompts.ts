@@ -34,6 +34,7 @@ async function askUntil<T>(
 
     for (;;) {
         const parsed = parse(await ask(prefix + question, fallback, options));
+
         if ('value' in parsed) {
             return parsed.value;
         }
@@ -47,11 +48,13 @@ function askChoice<T extends string>(ask: Ask, question: string, options: readon
 
     return askUntil<T>(ask, `${question} (${listed})`, fallback, (answer) => {
         const normalized = answer.trim().toLowerCase();
+
         if ((options as readonly string[]).includes(normalized)) {
             return { value: normalized as T };
         }
 
         const numbered = options[Number(normalized) - 1];
+
         if (numbered !== undefined) {
             return { value: numbered };
         }
@@ -63,9 +66,11 @@ function askChoice<T extends string>(ask: Ask, question: string, options: readon
 function askYesNo(ask: Ask, question: string, fallback: boolean): Promise<boolean> {
     return askUntil<boolean>(ask, `${question} (y/n)`, fallback ? 'y' : 'n', (answer) => {
         const normalized = answer.trim().toLowerCase();
+
         if (normalized === 'y' || normalized === 'yes') {
             return { value: true };
         }
+
         if (normalized === 'n' || normalized === 'no') {
             return { value: false };
         }
@@ -77,9 +82,11 @@ function askYesNo(ask: Ask, question: string, fallback: boolean): Promise<boolea
 function askUrl(ask: Ask, question: string, protocols: readonly string[] = ['http:', 'https:'], fallback?: string): Promise<string> {
     return askUntil<string>(ask, question, fallback, (answer) => {
         const trimmed = answer.trim();
+
         try {
             // a non-special scheme parses `smtp:mail` with an empty host, which would land in the file as written
             const url = new URL(trimmed);
+
             if (protocols.includes(url.protocol) && url.hostname !== '') {
                 return { value: trimmed };
             }
@@ -95,6 +102,7 @@ function askUrl(ask: Ask, question: string, protocols: readonly string[] = ['htt
 function askText(ask: Ask, question: string, fallback?: string): Promise<string> {
     return askUntil<string>(ask, question, fallback, (answer) => {
         const trimmed = answer.trim();
+
         if (trimmed === '') {
             return { error: 'A value is required.' };
         }
@@ -114,6 +122,7 @@ function askPublicUrl(ask: Ask, target: Target): Promise<string> {
         (answer) => {
             const trimmed = answer.trim();
             let url: URL;
+
             try {
                 url = new URL(trimmed);
             } catch {
@@ -123,9 +132,11 @@ function askPublicUrl(ask: Ask, target: Target): Promise<string> {
             if (url.protocol !== 'http:' && url.protocol !== 'https:') {
                 return { error: 'Enter an absolute URL using http:// or https://.' };
             }
+
             if (url.username || url.password || url.search || url.hash) {
                 return { error: 'The public URL is the OIDC issuer: no credentials, query or fragment.' };
             }
+
             if (target === 'helm' && url.pathname !== '/') {
                 return { error: 'The helm chart publishes authup at the origin root: enter the URL without a path.' };
             }
@@ -138,6 +149,7 @@ function askPublicUrl(ask: Ask, target: Target): Promise<string> {
 function askPort(ask: Ask, question: string, fallback: number): Promise<number> {
     return askUntil<number>(ask, question, String(fallback), (answer) => {
         const port = Number(answer.trim());
+
         if (Number.isSafeInteger(port) && port >= 1 && port <= 65535) {
             return { value: port };
         }
@@ -151,13 +163,16 @@ function askSecret(ask: Ask, question: string): Promise<string> {
         if (answer.trim() === '') {
             return { error: 'A value is required.' };
         }
+
         if (answer === 'start123') {
             return { error: 'start123 is the provisioning default the wizard refuses to emit. Choose another value.' };
         }
+
         // the bounds the config registry declares for userAdminPassword
         if (answer.length < 3 || answer.length > 256) {
             return { error: 'Use between 3 and 256 characters.' };
         }
+
         if (!isEnvRepresentable(answer)) {
             return { error: UNREPRESENTABLE };
         }
@@ -171,12 +186,14 @@ async function askDatabase(ask: Ask, target: Target): Promise<Database> {
         ['postgres', 'mysql', 'sqlite'] :
         ['postgres', 'mysql'];
     const type = await askChoice(ask, 'Database', options, 'postgres');
+
     if (type === 'sqlite') {
         return { type: 'better-sqlite3' };
     }
 
     const bundled = (target === 'compose' || target === 'helm') &&
         await askYesNo(ask, 'Run the database alongside authup?', true);
+
     if (bundled) {
         return {
             type,
@@ -228,6 +245,7 @@ export async function collectAnswers(ask: Ask): Promise<{ answers: Answers, note
 
     const notes: string[] = [];
     let redis: Answers['redis'] = false;
+
     if (workerSplit || consoleSplit) {
         redis = { url: BUNDLED_REDIS_URL };
         notes.push(REDIS_NOTE);

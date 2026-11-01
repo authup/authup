@@ -79,6 +79,7 @@ export default defineComponent({
 
             rows.forEach((row) => {
                 let group = groups.get(row.clientId);
+
                 if (!group) {
                     const baseUrl = row.client?.baseUrl;
 
@@ -157,11 +158,13 @@ export default defineComponent({
             // force-scoped server-side, that turns a personal revoke into one
             // that reaches every user of the application.
             const subject = userId.value;
+
             if (!subject) {
                 return;
             }
 
             revoking.value = true;
+
             try {
                 // Revoke every consent for this client, not only the rows on
                 // the current page — with per-scope rows a client can span
@@ -211,6 +214,7 @@ export default defineComponent({
                 // loop converges. Sessions survive this operation, so it would
                 // never terminate. The iteration bound is a defensive backstop.
                 const limit = 50;
+
                 for (let i = 0; i < 100; i++) {
                     const { data: sessions } = await httpClient.session.getMany({
                         filters: { userId: subject },

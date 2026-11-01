@@ -101,6 +101,7 @@ function block(key: string, lines: string[]): string[] {
 
 export function renderCompose(answers: Answers, version: string): Rendered {
     const { db } = answers;
+
     if (db.type === 'better-sqlite3') {
         throw new Error('The compose target needs a server database (postgres or mysql): the image runs in production mode and refuses sqlite.');
     }
@@ -118,18 +119,22 @@ export function renderCompose(answers: Answers, version: string): Rendered {
         ref('DB_PASSWORD', 'DB_PASSWORD'),
         env('DB_DATABASE', db.database),
     ];
+
     if (answers.redis) {
         dbEnv.push(env('REDIS', 'redis://redis:6379'));
     }
 
     const dependsOn: string[] = [];
+
     if (db.bundled) {
         // The one-off `migration run` and the services would otherwise race an engine still initializing its volume.
         dependsOn.push(`${db.type}:`, '  condition: service_healthy');
     }
+
     if (answers.redis) {
         dependsOn.push('redis:', '  condition: service_started');
     }
+
     const dependsOnBlock = dependsOn.length > 0 ? block('depends_on', dependsOn) : [];
 
     const authupEnv = [
@@ -139,24 +144,30 @@ export function renderCompose(answers: Answers, version: string): Rendered {
         ...dbEnv,
         ref('USER_ADMIN_PASSWORD', 'USER_ADMIN_PASSWORD'),
     ];
+
     if (answers.smtp) {
         authupEnv.push(ref('SMTP', 'SMTP'));
     }
+
     if (answers.registrationEnabled) {
         authupEnv.push(env('REGISTRATION_ENABLED', 'true'));
     }
+
     if (answers.passwordRecoveryEnabled) {
         authupEnv.push(env('PASSWORD_RECOVERY_ENABLED', 'true'));
     }
+
     if (answers.emailVerificationEnabled) {
         authupEnv.push(env('EMAIL_VERIFICATION_ENABLED', 'true'));
     }
+
     authupEnv.push(
         '# every downstream application origin, comma-separated; each may obtain a full-permission token',
         '# - "TRUSTED_ORIGINS=https://app.example.com"',
         '# wraps the realm key store at rest (base64, 32 bytes); write-once, back it up',
         '# - "SECRETS_ENCRYPTION_KEY=<base64 32 bytes>"',
     );
+
     // A console-only split keeps one API process, which sweeps and migrates itself like a plain `start` does.
     if (answers.workerSplit) {
         authupEnv.push(
@@ -269,9 +280,11 @@ export function renderCompose(answers: Answers, version: string): Rendered {
         `# Written by npm create authup. Secrets live in .env next to this file: ${DOCS_URL}/docker-compose`,
         '',
     ];
+
     if (db.bundled) {
         compose.push(...block('volumes', [`${db.type}_data:`]), '');
     }
+
     compose.push(...block('services', services));
 
     const dotenv = [
@@ -279,9 +292,11 @@ export function renderCompose(answers: Answers, version: string): Rendered {
         `DB_PASSWORD=${quoteComposeEnv(db.password)}`,
         `USER_ADMIN_PASSWORD=${quoteComposeEnv(answers.adminPassword)}`,
     ];
+
     if (answers.smtp) {
         dotenv.push(`SMTP=${quoteComposeEnv(answers.smtp.url)}`);
     }
+
     dotenv.push(
         '# Wraps the realm key store at rest (base64, 32 bytes). Write-once: back it up.',
         '# SECRETS_ENCRYPTION_KEY=',

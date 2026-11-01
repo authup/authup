@@ -39,11 +39,13 @@ describe('core/provisioning/synchronizer/path', () => {
         });
 
         const parent = await repository.findOneBy({ realmId, path: 'sales' });
+
         expect(parent).not.toBeNull();
         expect(parent!.name).toEqual('sales');
         expect(parent!.parentId).toBeNull();
 
         const leaf = await repository.findOneBy({ realmId, path: 'sales/berlin' });
+
         expect(leaf).not.toBeNull();
         expect(leaf!.name).toEqual('berlin');
         expect(leaf!.parentId).toEqual(parent!.id);
@@ -69,6 +71,7 @@ describe('core/provisioning/synchronizer/path', () => {
         });
 
         const entity = await repository.findOneBy({ realmId, path: 'sales' });
+
         expect(entity!.displayName).toEqual('Kept');
     });
 
@@ -92,6 +95,7 @@ describe('core/provisioning/synchronizer/path', () => {
         });
 
         const entity = await repository.findOneBy({ realmId, path: 'sales' });
+
         expect(entity!.displayName).toEqual('Merged');
     });
 

@@ -12,9 +12,9 @@ import { BaseKey } from '../base';
 import { CryptoAsymmetricAlgorithm } from './constants';
 import type { AsymmetricKeyImportContext } from './types';
 import {
-    decodePemToPKCS8, 
-    decodePemToSpki, 
-    encodePKCS8ToPEM, 
+    decodePemToPKCS8,
+    decodePemToSpki,
+    encodePKCS8ToPEM,
     encodeSPKIToPem,
 } from './helpers';
 import { getKeyUsagesForAsymmetricAlgorithm } from './key-usages';
@@ -41,12 +41,13 @@ export class AsymmetricKey extends BaseKey {
         if (ctx.format === 'pkcs8') {
             return AsymmetricKey.fromBase64({
                 ...ctx,
-                key: decodePemToPKCS8(ctx.key), 
+                key: decodePemToPKCS8(ctx.key),
             });
         }
+
         return AsymmetricKey.fromBase64({
             ...ctx,
-            key: decodePemToSpki(ctx.key), 
+            key: decodePemToSpki(ctx.key),
         });
     }
 

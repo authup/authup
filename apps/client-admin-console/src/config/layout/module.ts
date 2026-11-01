@@ -68,6 +68,7 @@ export class Navigation {
         if (item.meta) {
             const authenticated = this.store.status === StoreAuthStatus.AUTHENTICATED;
             let identity: IdentityPolicyData | undefined;
+
             if (this.store.userId) {
                 identity = {
                     type: 'user',

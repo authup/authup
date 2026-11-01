@@ -36,6 +36,7 @@ const DOCUMENT = {
 function createRecordingLogger() {
     const warnings : string[] = [];
     const logger = createNoopLogger();
+
     logger.warn = ((message: unknown) => {
         warnings.push(String(message));
 
@@ -160,6 +161,7 @@ describe('swagger middleware', () => {
     describe('gate', () => {
         async function mount(middlewareSwagger: boolean) : Promise<App> {
             const container = new Container();
+
             container.register(ConfigInjectionKey, {
                 useValue: {
                     middlewareSwagger,
@@ -169,6 +171,7 @@ describe('swagger middleware', () => {
             container.register(LoggerInjectionKey, { useValue: createNoopLogger() });
 
             const app = new App();
+
             await new HTTPMiddlewareModule().mountSwagger(app, container);
 
             return app;

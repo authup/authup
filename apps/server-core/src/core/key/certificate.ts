@@ -19,6 +19,7 @@ const CERTIFICATE_BLOCK_PATTERN = /-----BEGIN CERTIFICATE-----[\s\S]*?-----END C
 
 export function parseCertificateChain(pem: string): X509Certificate[] {
     const blocks = pem.match(CERTIFICATE_BLOCK_PATTERN);
+
     if (!blocks || blocks.length === 0) {
         throw new ValidationError('The certificate chain could not be parsed.');
     }
@@ -35,6 +36,7 @@ export function assertCertificateMatchesKey(
     spkiBase64: string,
 ): void {
     const certificate = chain[0];
+
     if (!certificate) {
         throw new KeyCertificateError('The certificate chain is empty.');
     }
@@ -45,8 +47,10 @@ export function assertCertificateMatchesKey(
     });
 
     let importedKey : Buffer;
+
     try {
         importedKey = createPublicKey({
+            // eslint-disable-next-line unicorn/prefer-uint8array-base64 -- Preserve Node's permissive SPKI decoding before OpenSSL validates the key.
             key: Buffer.from(spkiBase64, 'base64'),
             type: 'spki',
             format: 'der',
@@ -64,11 +68,12 @@ export function assertCertificateMatchesKey(
 }
 
 export function buildX5c(chain: X509Certificate[]): string[] {
-    return chain.map((certificate) => certificate.raw.toString('base64'));
+    return chain.map((certificate) => certificate.raw.toBase64());
 }
 
 export async function buildX5tS256(chain: X509Certificate[]): Promise<string> {
     const certificate = chain[0];
+
     if (!certificate) {
         throw new KeyCertificateError('The certificate chain is empty.');
     }
@@ -96,6 +101,7 @@ export async function buildCertificateJwkFields(
 
     try {
         const chain = parseCertificateChain(certificate);
+
         return {
             x5c: buildX5c(chain),
             'x5t#S256': await buildX5tS256(chain),

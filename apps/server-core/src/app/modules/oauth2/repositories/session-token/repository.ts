@@ -125,6 +125,7 @@ export class SessionTokenRepositoryAdapter implements ISessionTokenRepository {
             id: row.id,
             expiresAt: row.expiresAt,
         }));
+
         if (refs.length > 0) {
             await this.repository.createQueryBuilder()
                 .update(SessionTokenEntity)
@@ -147,7 +148,9 @@ export class SessionTokenRepositoryAdapter implements ISessionTokenRepository {
      * once could on the entity repositories (plan 039).
      */
     protected joinSessionForGate(qb: SelectQueryBuilder<SessionTokenEntity>) {
-        if (qb.expressionMap.joinAttributes.every((join) => join.alias.name !== 'session')) {
+        const needsSessionJoin = qb.expressionMap.joinAttributes.every((join) => join.alias.name !== 'session');
+
+        if (needsSessionJoin) {
             qb.leftJoin('sessionToken.session', 'session');
         }
 

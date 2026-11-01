@@ -20,18 +20,20 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
                 type: OAuth2SubKind.CLIENT,
                 data: client,
             });
+
             expect(result.name).toBe('test-client');
         });
 
         it('should dispatch to fromUser for USER type', () => {
             const user = {
                 name: 'test-user',
-                email: 'test@example.com', 
+                email: 'test@example.com',
             } as User;
             const result = builder.fromIdentity({
                 type: OAuth2SubKind.USER,
                 data: user,
             });
+
             expect(result.name).toBe('test-user');
             expect(result.email).toBe('test@example.com');
         });
@@ -65,6 +67,7 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
         it('should map name to name, nickname, and preferred_username', () => {
             const client = { name: 'my-client' } as Client;
             const result = builder.fromClient(client);
+
             expect(result.name).toBe('my-client');
             expect(result.nickname).toBe('my-client');
             expect(result.preferred_username).toBe('my-client');
@@ -77,12 +80,14 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
                 updatedAt: dateStr,
             } as Client;
             const result = builder.fromClient(client);
+
             expect(result.updated_at).toBe(Math.floor(new Date(dateStr).getTime() / 1000));
         });
 
         it('should skip missing attributes', () => {
             const client = {} as Client;
             const result = builder.fromClient(client);
+
             expect(result).not.toHaveProperty('name');
             expect(result).not.toHaveProperty('updated_at');
         });
@@ -90,6 +95,7 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
         it('should not have email or family_name', () => {
             const client = { name: 'c' } as Client;
             const result = builder.fromClient(client);
+
             expect(result).not.toHaveProperty('email');
             expect(result).not.toHaveProperty('family_name');
             expect(result).not.toHaveProperty('given_name');
@@ -109,6 +115,7 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
             } as User;
 
             const result = builder.fromUser(user);
+
             expect(result.name).toBe('jdoe');
             expect(result.given_name).toBe('John');
             expect(result.family_name).toBe('Doe');
@@ -131,6 +138,7 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
             } as User;
 
             const result = builder.fromUser(user);
+
             expect(result.email_verified).toBe(false);
         });
 
@@ -148,6 +156,7 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
             } as unknown as User;
 
             const result = builder.fromUser(user);
+
             expect(result).not.toHaveProperty('given_name');
             expect(result).not.toHaveProperty('family_name');
             expect(result).not.toHaveProperty('nickname');
@@ -163,21 +172,24 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
                 updatedAt: dateStr,
             } as User;
             const result = builder.fromUser(user);
+
             expect(result.updated_at).toBe(Math.floor(new Date(dateStr).getTime() / 1000));
         });
 
         it('should pass through non-string updated_at', () => {
             const user = {
                 name: 'u',
-                updatedAt: 1234567890, 
+                updatedAt: 1234567890,
             } as unknown as User;
             const result = builder.fromUser(user);
+
             expect(result.updated_at).toBe(1234567890);
         });
 
         it('should skip missing attributes', () => {
             const user = { name: 'u' } as User;
             const result = builder.fromUser(user);
+
             expect(result.name).toBe('u');
             expect(result).not.toHaveProperty('email');
             expect(result).not.toHaveProperty('family_name');

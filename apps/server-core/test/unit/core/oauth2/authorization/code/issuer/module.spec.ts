@@ -33,6 +33,7 @@ class FakeAuthorizationCodeRepository implements IOAuth2AuthorizationCodeReposit
 
     async save(input: OAuth2AuthorizationCodeInput): Promise<OAuth2AuthorizationCode> {
         this.saveCalls.push(input);
+
         return { ...input, id: input.id ?? randomUUID() };
     }
 }
@@ -101,6 +102,7 @@ describe('OAuth2AuthorizationCodeIssuer', () => {
         const issuer = new OAuth2AuthorizationCodeIssuer(repository);
 
         const identity = buildIdentity();
+
         Reflect.deleteProperty(identity.data, 'realm');
 
         await expect(

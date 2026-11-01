@@ -109,6 +109,7 @@ describe('app/modules/database/repositories/event', () => {
         // the window by the UTC offset and the throttle never tripped on
         // postgres/mysql.
         const actorName = `throttle-probe-${randomUUID()}`;
+
         await record(actorName);
         await record(actorName);
 
@@ -124,6 +125,7 @@ describe('app/modules/database/repositories/event', () => {
 
     it('excludes rows older than the window start', async () => {
         const actorName = `throttle-probe-${randomUUID()}`;
+
         await record(actorName);
 
         const count = await repository.countRecent({
@@ -156,6 +158,7 @@ describe('app/modules/database/repositories/event', () => {
             // silently leave a permanent backlog behind.
             const refId = `sweep-batch-${randomUUID()}`;
             const past = new Date(Date.now() - 60_000).toISOString();
+
             for (let i = 0; i < 5; i++) {
                 await recordExpiring(refId, past);
             }
@@ -172,6 +175,7 @@ describe('app/modules/database/repositories/event', () => {
         it('bounds each statement to the batch size', async () => {
             const refId = `sweep-bound-${randomUUID()}`;
             const past = new Date(Date.now() - 60_000).toISOString();
+
             for (let i = 0; i < 5; i++) {
                 await recordExpiring(refId, past);
             }
@@ -189,6 +193,7 @@ describe('app/modules/database/repositories/event', () => {
             expect(deleteSpy).toHaveBeenCalledTimes(3);
             // asserted so the bound check below can never pass vacuously
             expect(findSpy).toHaveBeenCalledTimes(3);
+
             for (const [options] of findSpy.mock.calls) {
                 expect(options?.take).toEqual(2);
             }
@@ -206,6 +211,7 @@ describe('app/modules/database/repositories/event', () => {
                 // would reach the driver as invalid SQL. Neither is reachable
                 // today, but the option sits on a port, so pin the fallback.
                 const refId = `sweep-guard-${randomUUID()}`;
+
                 await recordExpiring(refId, new Date(Date.now() - 60_000).toISOString());
 
                 const ormRepository = suite.dataSource.getRepository<Event>(EventEntity);
@@ -215,6 +221,7 @@ describe('app/modules/database/repositories/event', () => {
                 await adapter.deleteExpired(new Date().toISOString(), { batchSize });
 
                 expect(findSpy).toHaveBeenCalled();
+
                 for (const [options] of findSpy.mock.calls) {
                     expect(options?.take).toEqual(EVENT_RETENTION_SWEEP_BATCH_SIZE);
                 }

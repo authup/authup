@@ -12,6 +12,7 @@ import { extractBearerToken } from '../../src';
 describe('extractBearerToken', () => {
     it('should return the token for a well-formed Bearer header', () => {
         const token = extractBearerToken('Bearer abc.def.ghi');
+
         expect(token).toBe('abc.def.ghi');
     });
 
@@ -25,6 +26,7 @@ describe('extractBearerToken', () => {
 
     it('should throw when the header has no space separator', () => {
         let caught: unknown;
+
         try {
             extractBearerToken('BearerNoSpace');
         } catch (e) {
@@ -39,6 +41,7 @@ describe('extractBearerToken', () => {
 
     it('should throw when the scheme is not Bearer', () => {
         let caught: unknown;
+
         try {
             extractBearerToken('Basic dXNlcjpwYXNz');
         } catch (e) {
@@ -50,6 +53,7 @@ describe('extractBearerToken', () => {
 
     it('should throw when the token value is empty', () => {
         let caught: unknown;
+
         try {
             extractBearerToken('Bearer ');
         } catch (e) {

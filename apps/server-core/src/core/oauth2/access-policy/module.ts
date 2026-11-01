@@ -54,6 +54,7 @@ export class OAuth2AccessPolicyEvaluator implements IOAuth2AccessPolicyEvaluator
             tree = await this.policyProvider.findDescendantsTreeById(policyId);
         } catch (e) {
             this.logger?.warn(`Loading the access policy ${policyId} failed.`, { error: e });
+
             return false;
         }
 
@@ -63,6 +64,7 @@ export class OAuth2AccessPolicyEvaluator implements IOAuth2AccessPolicyEvaluator
 
         if (typeof options.realmId !== 'undefined' && !isRealmReachable(tree.realmId, options.realmId)) {
             this.logger?.warn(`The access policy ${policyId} belongs to another realm than the one it is evaluated for.`);
+
             return false;
         }
 

@@ -12,6 +12,7 @@ import { createReadlineAsk } from '../../src/ask.ts';
 // A terminal readline will drive: it echoes what it reads back through the output, which is what muting suppresses.
 function createTerminal() {
     const input = new PassThrough() as PassThrough & { isTTY?: boolean };
+
     input.isTTY = true;
 
     const written: string[] = [];
@@ -21,6 +22,7 @@ function createTerminal() {
             callback();
         },
     }) as Writable & { isTTY?: boolean };
+
     output.isTTY = true;
 
     return {
@@ -36,12 +38,14 @@ describe('createReadlineAsk', () => {
         const { ask, close } = createReadlineAsk(terminal);
 
         const secret = ask('Admin password', undefined, { secret: true });
+
         terminal.input.write('hunter2\n');
         expect(await secret).toEqual('hunter2');
         expect(terminal.seen()).toContain('Admin password: ');
         expect(terminal.seen()).not.toContain('hunter2');
 
         const plain = ask('Database name', 'authup');
+
         terminal.input.write('inventory\n');
         expect(await plain).toEqual('inventory');
         expect(terminal.seen()).toContain('inventory');
@@ -79,6 +83,7 @@ describe('createReadlineAsk', () => {
         const { ask } = createReadlineAsk(terminal);
 
         const pending = ask('Public URL');
+
         terminal.input.end();
 
         await expect(pending).rejects.toThrow('Input ended before every question was answered.');

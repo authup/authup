@@ -15,6 +15,7 @@ export function createAuthorizationMiddleware(ctx: HTTPAuthorizationMiddlewareCo
 
     return defineCoreHandler(async (event) => {
         await middleware.run(event);
+
         return event.next();
     });
 }

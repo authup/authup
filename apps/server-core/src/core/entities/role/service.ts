@@ -83,8 +83,10 @@ export class RoleService extends AbstractEntityService implements IRoleService {
                 realm: entity.realmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -107,6 +109,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         await actor.permissionEvaluator.preEvaluateOneOf({ name: PERMISSION_NAMES });
 
         const entity = await this.repository.findOneByIdOrName(idOrName);
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -125,6 +128,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         actor: ActorContext,
     ): Promise<Role> {
         const { entity } = await this.save(undefined, data, actor);
+
         return entity;
     }
 
@@ -134,6 +138,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         actor: ActorContext,
     ): Promise<Role> {
         const { entity } = await this.save(idOrName, data, actor, { updateOnly: true });
+
         return entity;
     }
 
@@ -144,11 +149,12 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         options: { updateOnly?: boolean } = {},
     ): Promise<{
         entity: Role,
-        created: boolean 
+        created: boolean
     }> {
         let group: string;
 
         let entity: Role | null | undefined;
+
         if (idOrName) {
             entity = await findClientOwnedRowForSave(idOrName, data, {
                 repository: this.repository,
@@ -159,6 +165,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
                     PermissionName.ROLE_UPDATE,
                 ],
             });
+
             // Only a NAME key may upsert-create. A UUID addresses one specific
             // row, so a miss is a 404 (creating would write a different id).
             if (!entity && (options.updateOnly || isUUID(idOrName))) {
@@ -198,7 +205,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
 
             return {
                 entity,
-                created: false, 
+                created: false,
             };
         }
 
@@ -225,7 +232,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
 
         return {
             entity,
-            created: true, 
+            created: true,
         };
     }
 
@@ -236,6 +243,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -251,6 +259,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         });
 
         const { id: entityId } = entity;
+
         await this.repository.remove(entity);
         entity.id = entityId;
 

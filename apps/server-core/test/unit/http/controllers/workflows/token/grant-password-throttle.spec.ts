@@ -54,13 +54,16 @@ describe('src/http/controllers/token (login throttle)', () => {
     it('throttles the (identifier, ip) pair after the threshold of failed attempts', async () => {
         for (let i = 0; i < THRESHOLD; i++) {
             const response = await passwordAttempt(user.name, 'definitely-wrong-password');
+
             expect(response.status).toEqual(400);
         }
 
         const throttled = await passwordAttempt(user.name, 'definitely-wrong-password');
+
         expect(throttled.status).toEqual(429);
 
         const body = await throttled.json();
+
         expect(body.code).toEqual(ErrorCode.LOGIN_ATTEMPT_THROTTLED);
         // AuthupError.toJSON() flattens `data` into the top-level payload
         expect(body.retryAfter).toEqual(WINDOW_SECONDS);
@@ -68,25 +71,31 @@ describe('src/http/controllers/token (login throttle)', () => {
 
     it('locks out even the correct password within the window', async () => {
         const response = await passwordAttempt(user.name, user.password!);
+
         expect(response.status).toEqual(429);
 
         const body = await response.json();
+
         expect(body.code).toEqual(ErrorCode.LOGIN_ATTEMPT_THROTTLED);
     });
 
     it('does not throttle a different identifier from the same IP', async () => {
         const other = createFakeUser();
+
         await suite.client.user.create(other);
 
         const response = await passwordAttempt(other.name, other.password!);
+
         expect(response.status).toEqual(200);
 
         const body = await response.json();
+
         expect(body.access_token).toBeDefined();
     });
 
     it('counts concurrent attempts against the threshold', async () => {
         const target = createFakeUser();
+
         await suite.client.user.create(target);
 
         const responses = await Promise.all(
@@ -95,10 +104,12 @@ describe('src/http/controllers/token (login throttle)', () => {
 
         const checked = responses.filter((response) => response.status === 400);
         const throttled = responses.filter((response) => response.status === 429);
+
         expect(checked.length).toBeLessThanOrEqual(THRESHOLD);
         expect(checked.length + throttled.length).toEqual(responses.length);
 
         const after = await passwordAttempt(target.name, target.password!);
+
         expect(after.status).toEqual(429);
     });
 
@@ -108,10 +119,12 @@ describe('src/http/controllers/token (login throttle)', () => {
 
         for (let i = 0; i < THRESHOLD; i++) {
             const response = await passwordAttempt(target.id, 'definitely-wrong-password');
+
             expect(response.status).toEqual(400);
         }
 
         const throttled = await passwordAttempt(target.id, 'definitely-wrong-password', realm.id);
+
         expect(throttled.status).toEqual(429);
     });
 });

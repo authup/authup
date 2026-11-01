@@ -65,6 +65,7 @@ describe('src/core/console', () => {
             cookieSession: true,
             origin,
         });
+
         expect(served.cookieSession).toBe(true);
         expect(served.cookiePath).toEqual('/auth');
     });

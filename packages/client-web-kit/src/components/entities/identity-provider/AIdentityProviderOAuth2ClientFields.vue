@@ -40,7 +40,7 @@ export default defineComponent({
     emits: ['updated'],
     setup(props) {
         const form = reactive({
-            clientId: '', 
+            clientId: '',
             clientSecret: '',
             scope: '',
             requiredAmr: '',
@@ -78,6 +78,7 @@ export default defineComponent({
         }
 
         const updatedAt = useUpdatedAt(() => props.entity as IdentityProvider);
+
         onChange(updatedAt, () => assign());
         assign();
 

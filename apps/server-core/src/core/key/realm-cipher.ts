@@ -45,6 +45,7 @@ export class RealmCipher implements IRealmCipher {
 
     async encrypt(plain: string, realmId: string) : Promise<string> {
         const key = await this.keyStore.resolveOrCreate(realmId, JWKUse.ENCRYPTION);
+
         if (!key.decryptionKey) {
             throw new AuthupError(`An encryption key could not be resolved for realm ${realmId}.`);
         }
@@ -60,6 +61,7 @@ export class RealmCipher implements IRealmCipher {
 
     async decrypt(blob: string, realmId: string) : Promise<string> {
         const parts = blob.split('.');
+
         if (parts.length !== 3 || parts[0] !== REALM_CIPHER_BLOB_VERSION) {
             throw new RealmCipherBlobError('The cipher blob is malformed.');
         }
@@ -67,6 +69,7 @@ export class RealmCipher implements IRealmCipher {
         const [, keyId, payload] = parts;
 
         const key = await this.keyStore.resolveById(keyId);
+
         if (
             !key ||
             key.use !== JWKUse.ENCRYPTION ||
@@ -99,6 +102,7 @@ export class RealmCipher implements IRealmCipher {
         material: string,
     ) : ISymmetricCipher {
         let cipher = this.ciphers.get(keyId);
+
         if (!cipher) {
             cipher = new SymmetricCipher(material);
             this.ciphers.set(keyId, cipher);

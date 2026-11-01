@@ -35,6 +35,7 @@ export class DatabaseQueryResultCache implements QueryResultCache {
 
     async getFromCache(options: QueryResultCacheOptions): Promise<QueryResultCacheOptions | undefined> {
         let output : QueryResultCacheOptions | undefined | null;
+
         if (options.identifier) {
             output = await this.instance.get(this.buildKey(options.identifier));
         } else if (typeof options.query !== 'undefined') {
@@ -58,6 +59,7 @@ export class DatabaseQueryResultCache implements QueryResultCache {
 
     async remove(identifiers: string[]): Promise<void> {
         const keys = identifiers.map((identifier) => this.buildKey(identifier));
+
         await this.instance.dropMany(keys);
     }
 

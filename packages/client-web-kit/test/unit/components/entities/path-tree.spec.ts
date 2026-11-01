@@ -117,6 +117,7 @@ describe('components/entities/path/APathTree', () => {
         // pane has to grow with them rather than freeze on the empty list it
         // was created with.
         const wrapper = await mountTree({ paths: [] });
+
         expect(readRows(wrapper)).toEqual([]);
 
         await wrapper.setProps({ paths: PATHS });

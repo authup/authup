@@ -41,6 +41,7 @@ export function createKeychainTokenStorage() : IHostTokenStorage {
             const raw = await entry.getPassword().catch(() => {
                 throw keychainUnavailable();
             });
+
             if (!raw) {
                 return undefined;
             }
@@ -49,12 +50,14 @@ export function createKeychainTokenStorage() : IHostTokenStorage {
         },
         async write(host, tokens) {
             const entry = await openEntry(host);
+
             await entry.setPassword(JSON.stringify(tokens)).catch(() => {
                 throw keychainUnavailable();
             });
         },
         async remove(host) {
             const entry = await openEntry(host);
+
             await entry.deleteCredential().catch(() => {
                 throw keychainUnavailable();
             });

@@ -58,6 +58,7 @@ describe('identity-provider-account', () => {
         provider = (await suite.client.identityProvider.create(createFakeOAuth2IdentityProvider({ realmId: realm.id }))).data;
 
         const password = generateOAuth2CodeVerifier();
+
         user = (await suite.client.user.create(createFakeUser({
             realmId: realm.id,
             password,
@@ -80,9 +81,11 @@ describe('identity-provider-account', () => {
         );
 
         const ownSubject = await createRealmUser(realm.id);
+
         ({ id: ownAccountId } = await seedAccount({ userId: ownSubject.id, userRealmId: realm.id }));
 
         const foreignSubject = await createRealmUser(realmB.id);
+
         ({ id: foreignAccountId } = await seedAccount({
             userId: foreignSubject.id,
             userRealmId: realmB.id,
@@ -106,6 +109,7 @@ describe('identity-provider-account', () => {
             const { data: permission } = await suite.client.permission.getOne(
                 PermissionName.IDENTITY_PROVIDER_ACCOUNT_READ,
             );
+
             await suite.client.clientPermission.create({
                 clientId: client.id,
                 permissionId: permission.id,
@@ -119,7 +123,9 @@ describe('identity-provider-account', () => {
             });
 
             const http = new HTTPClient({ baseURL: suite.baseURL });
+
             http.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
+
             return http;
         };
 
@@ -134,6 +140,7 @@ describe('identity-provider-account', () => {
             invert: true,
             names: ['aFieldNoEntityCarries'],
         } as any);
+
         postReader = await createReader(postReaderSecret, postPolicy.id);
     });
 
@@ -148,6 +155,7 @@ describe('identity-provider-account', () => {
         providerUserId?: string,
     }) {
         const repository = suite.dataSource.getRepository(IdentityProviderAccountEntity);
+
         return repository.save(repository.create({
             providerId: input.providerId || provider.id,
             providerRealmId: input.userRealmId,
@@ -180,23 +188,28 @@ describe('identity-provider-account', () => {
         const account = await seedAccount({ userId: subject.id, userRealmId: realm.id });
 
         const collection = await suite.client.get(`identity-provider-accounts?filter[userId]=${subject.id}`);
+
         expect(collection.data.data).toHaveLength(1);
         expect(collection.data.data[0].id).toEqual(account.id);
         expect(collection.data.data[0].providerUserName).toEqual('external-name');
 
         const record = await suite.client.get(`identity-provider-accounts/${account.id}`);
+
         expect(record.data.data.id).toEqual(account.id);
 
         const removed = await suite.client.delete(`identity-provider-accounts/${account.id}`);
+
         expect(removed.status).toEqual(202);
 
         const after = await suite.client.get(`identity-provider-accounts?filter[userId]=${subject.id}`);
+
         expect(after.data.data).toHaveLength(0);
     });
 
     it('should force-scope a permission-less user to its own rows and never ship tokens', async () => {
         const own = await seedAccount({ userId: user.id, userRealmId: realm.id });
         const foreignSubject = await createRealmUser(realm.id);
+
         await seedAccount({ userId: foreignSubject.id, userRealmId: realm.id });
 
         const response = await userClient.get('identity-provider-accounts');
@@ -228,7 +241,9 @@ describe('identity-provider-account', () => {
         for (const path of explicit) {
             const response = await suite.client.get(path);
             const rows = response.data.data;
+
             expect(rows.length).toBeGreaterThanOrEqual(1);
+
             for (const row of rows) {
                 expect(row).not.toHaveProperty('accessToken');
                 expect(row).not.toHaveProperty('refreshToken');
@@ -237,6 +252,7 @@ describe('identity-provider-account', () => {
 
         // and the single-record read path
         const record = await suite.client.get(`identity-provider-accounts/${account.id}?fields=accessToken,refreshToken`);
+
         expect(record.data.data).not.toHaveProperty('accessToken');
         expect(record.data.data).not.toHaveProperty('refreshToken');
 
@@ -247,6 +263,7 @@ describe('identity-provider-account', () => {
         const account = await seedAccount({ userId: user.id, userRealmId: realm.id });
 
         const response = await userClient.delete(`identity-provider-accounts/${account.id}`);
+
         expect(response.status).toEqual(202);
     });
 
@@ -260,6 +277,7 @@ describe('identity-provider-account', () => {
         );
 
         const after = await suite.client.get(`identity-provider-accounts?filter[userId]=${subject.id}`);
+
         expect(after.data.data).toHaveLength(1);
     });
 
@@ -270,16 +288,19 @@ describe('identity-provider-account', () => {
 
         const subject = await createRealmUser(realm.id, null);
         const first = await seedAccount({ userId: subject.id, userRealmId: realm.id });
+
         await seedAccount({
-            userId: subject.id, 
-            userRealmId: realm.id, 
-            providerId: secondProvider.id, 
+            userId: subject.id,
+            userRealmId: realm.id,
+            providerId: secondProvider.id,
         });
 
         const response = await suite.client.delete(`identity-provider-accounts/${first.id}`);
+
         expect(response.status).toEqual(202);
 
         const after = await suite.client.get(`identity-provider-accounts?filter[userId]=${subject.id}`);
+
         expect(after.data.data).toHaveLength(1);
 
         // and now it is the last one — the guard blocks removing it
@@ -300,10 +321,12 @@ describe('identity-provider-account', () => {
         });
 
         const subject = await createRealmUser(realm.id);
+
         await seedAccount({ userId: subject.id, userRealmId: realm.id });
 
         const collection = await suite.client.get(`realms/${realm.id}/identity-provider-accounts`);
         const realmIds = collection.data.data.map((row: { userRealmId: string }) => row.userRealmId);
+
         expect(realmIds.length).toBeGreaterThanOrEqual(1);
         expect(realmIds.every((id: string) => id === realm.id)).toBe(true);
 
@@ -343,9 +366,11 @@ describe('identity-provider-account', () => {
         // gate reads; without it the realm-match key is `null`, which an
         // `ownOrNull` reader reaches — i.e. it fails OPEN
         const own = await postReader.get(`identity-provider-accounts?filter[id]=${ownAccountId}&fields=id`);
+
         expect(own.data.data.some((row: { id: string }) => row.id === ownAccountId)).toBe(true);
 
         const foreign = await postReader.get(`identity-provider-accounts?filter[id]=${foreignAccountId}&fields=id`);
+
         expect(foreign.data.data).toHaveLength(0);
         expect(foreign.data.meta.total).toEqual(0);
     });
@@ -364,6 +389,7 @@ describe('identity-provider-account', () => {
         const { data: permission } = await suite.client.permission.getOne(
             PermissionName.IDENTITY_PROVIDER_ACCOUNT_READ,
         );
+
         await suite.client.userPermission.create({
             userId: subject.id,
             permissionId: permission.id,
@@ -378,6 +404,7 @@ describe('identity-provider-account', () => {
             realm_id: realm.id,
         });
         const http = new HTTPClient({ baseURL: suite.baseURL });
+
         http.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
 
         const response = await http.get('identity-provider-accounts');

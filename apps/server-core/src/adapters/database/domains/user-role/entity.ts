@@ -17,9 +17,9 @@ import {
 } from 'typeorm';
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type {
-    Realm, 
-    Role, 
-    User, 
+    Realm,
+    Role,
+    User,
     UserRole,
 } from '@authup/core-kit';
 import { RoleEntity } from '../role/index.ts';
@@ -47,7 +47,7 @@ export class UserRoleEntity implements UserRole {
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'role_realm_id' })
     roleRealm: Realm | null;
@@ -66,7 +66,7 @@ export class UserRoleEntity implements UserRole {
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'user_realm_id' })
     userRealm: Realm | null;

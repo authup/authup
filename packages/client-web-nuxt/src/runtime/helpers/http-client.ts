@@ -20,12 +20,14 @@ function readPublicApiURL(runtimeConfig: RuntimeConfig) : string {
     const options = runtimeConfig.public.authup as RuntimeOptions;
 
     let url: string | undefined;
+
     if (options.apiURL) {
         url = options.apiURL;
     }
 
     if (options.apiURLRuntimeKey) {
         const pathValue = getPathValue(runtimeConfig.public, options.apiURLRuntimeKey);
+
         if (typeof pathValue === 'string') {
             url = pathValue;
         }
@@ -38,14 +40,17 @@ function readServerApiURL(runtimeConfig: RuntimeConfig) : string | undefined {
     const options = runtimeConfig.public.authup as RuntimeOptions;
 
     let url: string | undefined;
+
     if (options.apiURLRuntimeKey) {
         const pathValue = getPathValue(runtimeConfig, options.apiURLRuntimeKey);
+
         if (typeof pathValue === 'string') {
             url = pathValue;
         }
     }
 
     const serverOptions = runtimeConfig.authup as Pick<RuntimeOptions, 'serverApiURL'> | undefined;
+
     if (serverOptions?.serverApiURL) {
         url = serverOptions.serverApiURL;
     }
@@ -66,11 +71,13 @@ export function buildHTTPClientOptions(
     isServer: boolean,
 ) : HTTPClientOptions {
     const baseURL = readPublicApiURL(runtimeConfig);
+
     if (!isServer) {
         return { baseURL };
     }
 
     const serverURL = readServerApiURL(runtimeConfig);
+
     if (!serverURL || serverURL === baseURL) {
         return { baseURL };
     }

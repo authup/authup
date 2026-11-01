@@ -22,8 +22,8 @@ import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
     components: {
-        VCFormGroup, 
-        VCFormInput, 
+        VCFormGroup,
+        VCFormInput,
         VCFormSwitch,
 
         IFieldValidation,
@@ -47,11 +47,15 @@ export default defineComponent({
         const v = useValidup(new Container<typeof form>(), form, { name: 'connection' });
 
         function init() {
-            if (!props.entity) return;
+            if (!props.entity) {
+                return;
+            }
+
             assignFormProperties(form, props.entity as Partial<LdapIdentityProvider>, { fields: v.fields });
         }
 
         const updated = useUpdatedAt(() => props.entity as IdentityProvider);
+
         onChange(updated, () => init());
 
         init();
@@ -59,9 +63,12 @@ export default defineComponent({
         const onTimeoutChange = (input: string) => {
             if (input.trim() === '') {
                 v.fields.timeout.$model.value = 0;
+
                 return;
             }
+
             const intValue = Number.parseInt(input, 10);
+
             v.fields.timeout.$model.value = Number.isNaN(intValue) ? 0 : intValue;
         };
 

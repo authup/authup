@@ -10,7 +10,7 @@ import { OAuth2SubKind } from '@authup/specs';
 import type { Client } from '@authup/core-kit';
 import {
     IdentityType,
-    ScopeName, 
+    ScopeName,
     SessionAuthMethod,
 } from '@authup/core-kit';
 import { OAuth2BaseGrant } from './base.ts';

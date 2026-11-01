@@ -23,6 +23,7 @@ export class FakeKeyStore implements IKeyStore {
 
     async resolveOrCreate(realmId: string, use: `${JWKUse}`): Promise<Key> {
         this.resolveOrCreateCalls.push({ realmId, use });
+
         if (!this.key) {
             throw new AuthupError(`No active ${use} key is available for realm ${realmId}.`);
         }
@@ -32,6 +33,7 @@ export class FakeKeyStore implements IKeyStore {
 
     async resolveById(id: string): Promise<Key | null> {
         this.resolveByIdCalls.push(id);
+
         return this.key;
     }
 }

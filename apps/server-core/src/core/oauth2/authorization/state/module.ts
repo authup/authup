@@ -28,6 +28,7 @@ export class OAuth2AuthorizationStateManager implements IOAuth2AuthorizationStat
         // callback presents it first, whether or not it then passes the
         // binding checks below.
         const payload = await this.repository.popOneById(state);
+
         if (!payload) {
             throw OAuth2RequestError.stateInvalid();
         }

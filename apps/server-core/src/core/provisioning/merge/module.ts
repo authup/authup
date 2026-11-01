@@ -16,7 +16,11 @@ export function buildProvisioningEntityKey(
     // pushed as a separate entry: a wildcard `absent` next to an explicit
     // create would then delete and recreate that subtree on every boot
     const identifier = attributes.name || attributes.path;
-    if (!identifier) return undefined;
+
+    if (!identifier) {
+        return undefined;
+    }
+
     return `${identifier}:${attributes.realmId || ''}:${attributes.clientId || ''}`;
 }
 
@@ -25,24 +29,34 @@ export function mergeProvisioningEntities<T extends MergeableProvisioningEntity>
     source: T[] | undefined,
     options: MergeProvisioningOptions = {},
 ): T[] | undefined {
-    if (!source) return target;
-    if (!target) return [...source];
+    if (!source) {
+        return target;
+    }
+
+    if (!target) {
+        return [...source];
+    }
 
     const result = [...target];
+
     source.forEach((item) => {
         const key = buildProvisioningEntityKey(item.attributes);
+
         if (!key) {
             result.push(item);
+
             return;
         }
 
         const idx = result.findIndex((r) => buildProvisioningEntityKey(r.attributes) === key);
+
         if (idx !== -1) {
             result[idx] = mergeProvisioningEntity(result[idx], item, options) as T;
         } else {
             result.push(item);
         }
     });
+
     return result;
 }
 
@@ -69,6 +83,7 @@ export function mergeProvisioningEntity(
     output.attributes = { ...target.attributes, ...source.attributes };
 
     const inheritStrategy = options.inheritStrategy ?? true;
+
     if (target.strategy && !source.strategy) {
         if (inheritStrategy) {
             output.strategy = target.strategy;
@@ -104,11 +119,13 @@ function mergeProvisioningRecord(
     options: MergeProvisioningOptions = {},
 ): Record<string, unknown> {
     const output : Record<string, unknown> = { ...target };
+
     for (const [key, value] of Object.entries(source)) {
         output[key] = key in target ?
             mergeProvisioningValue(target[key], value, options) :
             value;
     }
+
     return output;
 }
 
@@ -117,8 +134,13 @@ function mergeProvisioningValue(
     source: unknown,
     options: MergeProvisioningOptions = {},
 ): unknown {
-    if (typeof target === 'undefined') return source;
-    if (typeof source === 'undefined') return target;
+    if (typeof target === 'undefined') {
+        return source;
+    }
+
+    if (typeof source === 'undefined') {
+        return target;
+    }
 
     if (Array.isArray(target) && Array.isArray(source)) {
         if (isProvisioningEntityArray(target) || isProvisioningEntityArray(source)) {
@@ -128,6 +150,7 @@ function mergeProvisioningValue(
                 options,
             );
         }
+
         return [...new Set([...target, ...source])];
     }
 

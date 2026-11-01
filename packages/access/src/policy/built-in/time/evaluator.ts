@@ -16,6 +16,7 @@ const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/;
 
 function normalizeDate(input: Date, dateRef?: Date) {
     const date = dateRef ? new Date(dateRef) : new Date();
+
     date.setHours(input.getHours(), input.getMinutes());
 
     return date;
@@ -39,6 +40,7 @@ function toDate(
                 Number.isFinite(startSeconds)
             ) {
                 const date = dateRef ? new Date(dateRef) : new Date();
+
                 date.setHours(startHours, startMinutes, startSeconds, 0);
 
                 return date;
@@ -96,6 +98,7 @@ function nextTimeTransition(policy: TimePolicy, now: Date) : Date | undefined {
     }
 
     let next : Date | undefined;
+
     for (const candidate of candidates) {
         if (
             candidate.getTime() > now.getTime() &&
@@ -137,6 +140,7 @@ export class TimePolicyEvaluator implements IPolicyEvaluator {
             // Only a verdict read off the real clock expires; a supplied time is fixed.
             if (ctx.transitions) {
                 const next = nextTimeTransition(policy, now);
+
                 if (next) {
                     ctx.transitions.report(next);
                 }
@@ -145,6 +149,7 @@ export class TimePolicyEvaluator implements IPolicyEvaluator {
 
         if (policy.start) {
             const start = normalizeDate(toDate(policy.start, now), now);
+
             if (now < start) {
                 return { success: maybeInvertPolicyOutcome(false, policy.invert) };
             }
@@ -152,6 +157,7 @@ export class TimePolicyEvaluator implements IPolicyEvaluator {
 
         if (policy.end) {
             const end = normalizeDate(toDate(policy.end, now), now);
+
             if (now > end) {
                 return { success: maybeInvertPolicyOutcome(false, policy.invert) };
             }
@@ -160,7 +166,7 @@ export class TimePolicyEvaluator implements IPolicyEvaluator {
         if (policy.interval) {
             if (
                 isIntervalForDayOfWeek(policy.interval) &&
-                policy.dayOfWeek
+                typeof policy.dayOfWeek === 'number'
             ) {
                 if (now.getDay() !== policy.dayOfWeek) {
                     return { success: maybeInvertPolicyOutcome(false, policy.invert) };

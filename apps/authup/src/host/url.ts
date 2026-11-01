@@ -9,6 +9,7 @@ import { LOOPBACK_HOSTNAMES } from './constants.ts';
 
 export function normalizeHostURL(input: string) : string {
     let url : URL;
+
     try {
         url = new URL(input);
     } catch {
@@ -20,6 +21,7 @@ export function normalizeHostURL(input: string) : string {
     }
 
     const loopback = url.protocol === 'http:' && LOOPBACK_HOSTNAMES.includes(url.hostname);
+
     if (!loopback && url.protocol !== 'https:') {
         throw new Error(`Use https for ${url.host}: the CLI sends its tokens to this address, and plain http is accepted for loopback only.`);
     }

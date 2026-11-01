@@ -43,6 +43,7 @@ describe('deactivation ends existing access', () => {
             username: user.name,
             password,
         });
+
         expect((await bearer(token.access_token, '/users/@me')).status).toEqual(200);
 
         await suite.client.user.update(user.id, { active: false });
@@ -53,6 +54,7 @@ describe('deactivation ends existing access', () => {
                 refresh_token: token.refresh_token!,
             },
         });
+
         expect(refreshed.status).toEqual(400);
         expect((await refreshed.json()).error).toEqual(OAuth2ErrorCode.INVALID_GRANT);
 
@@ -77,6 +79,7 @@ describe('deactivation ends existing access', () => {
             client_id: client.id,
             client_secret: secret,
         });
+
         expect((await bearer(token.access_token, '/clients/@me')).status).toEqual(200);
 
         await suite.client.client.update(client.id, { active: false });

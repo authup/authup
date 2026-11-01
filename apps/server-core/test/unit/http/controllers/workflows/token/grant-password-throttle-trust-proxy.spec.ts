@@ -58,6 +58,7 @@ describe('src/http/controllers/token (trustProxy off)', () => {
                     password: 'definitely-wrong-password',
                 },
             });
+
             expect(response.status).toEqual(400);
         }
 
@@ -69,9 +70,11 @@ describe('src/http/controllers/token (trustProxy off)', () => {
                 password: 'definitely-wrong-password',
             },
         });
+
         expect(throttled.status).toEqual(429);
 
         const body = await throttled.json();
+
         expect(body.code).toEqual(ErrorCode.LOGIN_ATTEMPT_THROTTLED);
     });
 
@@ -79,6 +82,7 @@ describe('src/http/controllers/token (trustProxy off)', () => {
         const { data } = await suite.client.event.getMany({ filters: { name: EventName.LOGIN_FAILED, actorName: user.name } });
 
         expect(data.length).toBeGreaterThanOrEqual(1);
+
         for (const row of data) {
             expect(row.requestIpAddress).not.toMatch(/^198\.51\.100\./);
         }
@@ -113,6 +117,7 @@ describe('src/http/controllers/token (trustProxy hop count)', () => {
                 password: 'definitely-wrong-password',
             },
         });
+
         expect(response.status).toEqual(400);
 
         const { data } = await suite.client.event.getMany({ filters: { name: EventName.LOGIN_FAILED, actorName: user.name } });

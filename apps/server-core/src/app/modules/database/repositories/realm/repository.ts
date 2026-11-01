@@ -33,6 +33,7 @@ export class RealmRepositoryAdapter implements IRealmRepository {
         }
 
         const qb = this.repository.createQueryBuilder('realm');
+
         qb.where('realm.id = :id', { id });
         qb.cache(
             buildRedisKeyPath({
@@ -47,6 +48,7 @@ export class RealmRepositoryAdapter implements IRealmRepository {
 
     findOneByName(name: string): Promise<Realm | null> {
         const qb = this.repository.createQueryBuilder('realm');
+
         qb.where('realm.name = :name', { name: name.trim().toLowerCase() });
 
         return qb.getOne();
@@ -54,6 +56,7 @@ export class RealmRepositoryAdapter implements IRealmRepository {
 
     async findMany(query: IQuery): Promise<EntityRepositoryFindManyResult<Realm>> {
         const qb = this.repository.createQueryBuilder('realm');
+
         qb.groupBy('realm.id');
 
         const { pagination } = applyQuery(qb, query);
@@ -121,6 +124,7 @@ export class RealmRepositoryAdapter implements IRealmRepository {
         }
 
         const entity = await this.findOneByName(key);
+
         return entity ? entity.id : null;
     }
 
@@ -137,6 +141,7 @@ export class RealmRepositoryAdapter implements IRealmRepository {
 
         if (!entity && withFallback) {
             entity = await this.findOneBy({ name: REALM_MASTER_NAME });
+
             if (!entity) {
                 throw new InternalError('The master realm could not be resolved.');
             }
@@ -147,6 +152,7 @@ export class RealmRepositoryAdapter implements IRealmRepository {
 
     async resolveOrFail(key: string): Promise<Realm> {
         const entity = await this.resolve(key);
+
         if (!entity) {
             throw new ValidationError(`The realmId '${key}' does not reference an existing realm.`);
         }

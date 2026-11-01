@@ -44,11 +44,13 @@ export default defineComponent({
 
             try {
                 const params : Record<string, string> = {};
+
                 new URL(window.location.href).searchParams.forEach((value, key) => {
                     params[key] = value;
                 });
 
                 const response = await client.post('logout', params);
+
                 result.value = response.data;
             } catch {
                 // A failed call must not strand the visitor: the form still

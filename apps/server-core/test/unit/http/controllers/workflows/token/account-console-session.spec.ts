@@ -33,7 +33,8 @@ type SystemClient = {
 
 function decodeJwtPayload(token: string): OAuth2TokenPayload {
     const [, payload] = token.split('.');
-    return JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8'));
+
+    return JSON.parse(new TextDecoder().decode(Uint8Array.fromBase64(payload, { alphabet: 'base64url' })));
 }
 
 describe('account-console session continuity (plan 080 work item 0)', () => {
@@ -55,11 +56,13 @@ describe('account-console session continuity (plan 080 work item 0)', () => {
                 realmId: realm.id,
             },
         });
+
         expect(clients).toHaveLength(1);
 
         // one of the provisioned `<origin>/**` patterns → a matching
         // redirect target on that origin.
         const pattern = (clients[0].redirectUri || '').split(',')[0];
+
         expect(pattern.endsWith('/**')).toBeTruthy();
 
         return {
@@ -107,11 +110,13 @@ describe('account-console session continuity (plan 080 work item 0)', () => {
 
     async function readTokenRow(token: string): Promise<SessionTokenEntity> {
         const { jti } = decodeJwtPayload(token);
+
         expect(jti).toBeDefined();
 
         const row = await suite.dataSource
             .getRepository(SessionTokenEntity)
             .findOne({ where: { id: jti! } });
+
         expect(row).not.toBeNull();
 
         return row!;
@@ -119,6 +124,7 @@ describe('account-console session continuity (plan 080 work item 0)', () => {
 
     function bearerFor(token: string): HTTPClient {
         const client = new HTTPClient({ baseURL: suite.baseURL });
+
         client.setAuthorizationHeader({ type: 'Bearer', token });
 
         return client;
@@ -141,6 +147,7 @@ describe('account-console session continuity (plan 080 work item 0)', () => {
         const loginIntrospect = await userClient.token.introspect({ token: login.access_token }, { authorizationHeaderInherit: true });
         const userId = loginIntrospect.sub!;
         const loginSessionId = loginIntrospect.session_id!;
+
         expect(loginSessionId).toBeDefined();
 
         // 2) the account surface's kick: auth-code + PKCE against the
@@ -159,6 +166,7 @@ describe('account-console session continuity (plan 080 work item 0)', () => {
         // ... exactly ONE session row exists for the user ...
         const sessions = await suite.client.session.getMany({ filters: { sub: userId } });
         const own = sessions.data.filter((s) => s.sub === userId);
+
         expect(own).toHaveLength(1);
         expect(own[0].id).toEqual(loginSessionId);
 
@@ -193,6 +201,7 @@ describe('account-console session continuity (plan 080 work item 0)', () => {
             adminConsole,
             '/login/callback',
         );
+
         expect(decodeJwtPayload(adminGrant.access_token).session_id).toEqual(sessionId);
 
         // 2) opening /console/account: the session's client is not `account-console`,
@@ -206,11 +215,13 @@ describe('account-console session continuity (plan 080 work item 0)', () => {
             '/console/account',
             OAuth2AuthorizationPrompt.NONE,
         );
+
         expect(decodeJwtPayload(accountGrant.access_token).session_id).toEqual(sessionId);
 
         // the forced flow adds NO session row: it re-mints on the existing one
         const sessions = await suite.client.session.getMany({ filters: { sub: user.id } });
         const own = sessions.data.filter((s) => s.sub === user.id);
+
         expect(own).toHaveLength(1);
         expect(own[0].id).toEqual(sessionId);
 

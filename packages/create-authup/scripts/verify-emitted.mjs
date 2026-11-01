@@ -49,15 +49,17 @@ if (!fs.existsSync(bin)) {
 
 function record(name, status, detail = '') {
     results.push({
-        name, 
-        status, 
-        detail, 
+        name,
+        status,
+        detail,
     });
+
     const mark = {
-        pass: 'PASS', 
-        fail: 'FAIL', 
-        skip: 'SKIP', 
+        pass: 'PASS',
+        fail: 'FAIL',
+        skip: 'SKIP',
     }[status];
+
     console.log(`${mark}  ${name}${detail ? `\n      ${detail.replace(/\n/g, '\n      ')}` : ''}`);
 }
 
@@ -90,21 +92,25 @@ function missing(name, tool) {
 /** Drive the built bin with a scripted answer list, and fail loudly when it writes nothing. */
 function renderTarget(name, answers) {
     const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'create-authup-verify-'));
+
     temporaries.push(cwd);
+
     const result = run(process.execPath, [bin], { cwd, input: `${answers.join('\n')}\n` });
+
     if (!result.ok) {
         throw new Error(`the wizard exited ${result.status} for ${name}:\n${result.stdout}\n${result.stderr}`);
     }
 
     const written = fs.readdirSync(cwd);
+
     if (written.length === 0) {
         throw new Error(`the wizard wrote nothing for ${name}:\n${result.stdout}`);
     }
 
     return {
-        cwd, 
-        written, 
-        stdout: result.stdout, 
+        cwd,
+        written,
+        stdout: result.stdout,
     };
 }
 
@@ -143,19 +149,24 @@ const SCENARIOS = {
 };
 
 const rendered = {};
+
 for (const [name, scenario] of Object.entries(SCENARIOS)) {
     try {
         const output = renderTarget(name, scenario.answers);
+
         rendered[name] = output;
 
         const wrong = [];
+
         for (const [file, needles] of Object.entries(scenario.expect)) {
             if (!output.written.includes(file)) {
                 wrong.push(`${file} was not written (got: ${output.written.join(', ')})`);
+
                 continue;
             }
 
             const content = fs.readFileSync(path.join(output.cwd, file), 'utf8');
+
             for (const needle of needles) {
                 if (!content.includes(needle)) {
                     wrong.push(`${file} does not carry ${JSON.stringify(needle)}`);
@@ -166,12 +177,13 @@ for (const [name, scenario] of Object.entries(SCENARIOS)) {
         if (wrong.length > 0) {
             // the answers no longer mean what the scenario says, which is a prompt-order change
             record(`render ${name}`, 'fail', wrong.join('\n'));
+
             continue;
         }
 
         record(`render ${name}`, 'pass', output.written.join(', '));
     } catch (error) {
-        record(`render ${name}`, 'fail', error instanceof Error ? error.message : String(error));
+        record(`render ${name}`, 'fail', Error.isError(error) ? error.message : String(error));
     }
 }
 
@@ -182,32 +194,36 @@ if (!has('docker')) {
 } else {
     for (const name of ['compose', 'compose-split']) {
         const output = rendered[name];
+
         if (!output) {
             continue;
         }
 
         const result = run('docker', ['compose', '--project-directory', output.cwd, '-f', path.join(output.cwd, 'docker-compose.yml'), 'config', '-q']);
+
         record(`docker compose config (${name})`, result.ok ? 'pass' : 'fail', result.ok ? '' : result.stderr.trim());
     }
 
     const split = rendered['compose-split'];
+
     if (split) {
         // nginx reads the config the console split emits; a syntax error there is a deployment that never serves.
         // `nginx -t` resolves every upstream host, and these two exist only on the compose network, so they are
         // pointed at the loopback for the test: the config is what is under test here, not DNS.
         const result = run('docker', [
-            'run', 
+            'run',
             '--rm',
-            '--add-host', 
+            '--add-host',
             'authup:127.0.0.1',
-            '--add-host', 
+            '--add-host',
             'authup-console:127.0.0.1',
-            '-v', 
+            '-v',
             `${path.join(split.cwd, 'nginx.conf')}:/etc/nginx/conf.d/default.conf:ro`,
-            'nginx:1.31-alpine', 
-            'nginx', 
+            'nginx:1.31-alpine',
+            'nginx',
             '-t',
         ]);
+
         record('nginx -t (compose-split)', result.ok ? 'pass' : 'fail', result.ok ? '' : `${result.stdout}${result.stderr}`.trim());
     }
 }
@@ -220,14 +236,17 @@ function resolveChart() {
     }
 
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'create-authup-chart-'));
+
     temporaries.push(directory);
 
     // Every step here is a network call, and a blip would read as a drifted fixture, which is the one verdict this
     // script must not report wrongly.
     const attempt = (label, commandArgs) => {
         let last;
+
         for (let index = 0; index < 3; index++) {
             last = run('helm', commandArgs);
+
             if (last.ok) {
                 return;
             }
@@ -247,21 +266,24 @@ if (!has('helm')) {
     missing('helm template', 'helm');
 } else {
     let chart;
+
     try {
         chart = resolveChart();
         record('resolve chart', 'pass', chart.origin);
     } catch (error) {
-        record('resolve chart', 'fail', error instanceof Error ? error.message : String(error));
+        record('resolve chart', 'fail', Error.isError(error) ? error.message : String(error));
     }
 
     if (chart) {
         for (const name of ['helm', 'helm-plain']) {
             const output = rendered[name];
+
             if (!output) {
                 continue;
             }
 
             const result = run('helm', ['template', 'authup', chart.path, '-f', path.join(output.cwd, 'values.yaml')]);
+
             record(`helm template (${name})`, result.ok ? 'pass' : 'fail', result.ok ? '' : result.stderr.trim());
         }
 
@@ -271,6 +293,7 @@ if (!has('helm')) {
             const vendored = path.join(packageDirectory, 'test', 'fixtures', `helm-${file}`);
             const live = path.join(chart.path, file);
             const same = fs.existsSync(live) && fs.readFileSync(vendored, 'utf8') === fs.readFileSync(live, 'utf8');
+
             record(
                 `fixture matches ${file}`,
                 same ? 'pass' : 'fail',
@@ -283,11 +306,13 @@ if (!has('helm')) {
 // ---------------------------------------------------------------- bare metal
 
 const bareMetal = rendered['bare-metal'];
+
 if (bareMetal) {
     if (!fs.existsSync(cli)) {
         missing('authup config validate', 'the built authup CLI (npm run build -w apps/authup)');
     } else {
         const result = run(process.execPath, [cli, 'config', 'validate'], { cwd: bareMetal.cwd });
+
         record('authup config validate', result.ok ? 'pass' : 'fail', result.ok ? '' : `${result.stdout}${result.stderr}`.trim());
     }
 }
@@ -296,6 +321,7 @@ if (bareMetal) {
 
 // Kept on a failure: the emitted documents are the evidence for whatever went wrong.
 const failed = results.filter((result) => result.status === 'fail');
+
 if (failed.length === 0) {
     for (const directory of temporaries) {
         fs.rmSync(directory, { recursive: true, force: true });
@@ -303,6 +329,7 @@ if (failed.length === 0) {
 }
 
 const skipped = results.filter((result) => result.status === 'skip');
+
 console.log(`\n${results.length - failed.length - skipped.length} passed, ${failed.length} failed, ${skipped.length} skipped`);
 
 if (failed.length > 0) {

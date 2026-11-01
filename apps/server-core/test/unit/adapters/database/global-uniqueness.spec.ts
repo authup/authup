@@ -62,9 +62,9 @@ const TARGETS: Target[] = [
         table: 'auth_permissions',
         index: 'IDX_auth_permissions_global_name',
         row: (name, realmId) => ({
-            name, 
-            realmId, 
-            clientId: null, 
+            name,
+            realmId,
+            clientId: null,
         }),
     },
     {
@@ -72,9 +72,9 @@ const TARGETS: Target[] = [
         table: 'auth_roles',
         index: 'IDX_auth_roles_global_name',
         row: (name, realmId) => ({
-            name, 
-            realmId, 
-            clientId: null, 
+            name,
+            realmId,
+            clientId: null,
         }),
     },
     {
@@ -88,9 +88,9 @@ const TARGETS: Target[] = [
         table: 'auth_policies',
         index: 'IDX_auth_policies_global_name',
         row: (name, realmId) => ({
-            name, 
-            realmId, 
-            type: 'identity', 
+            name,
+            realmId,
+            type: 'identity',
         }),
     },
 ];
@@ -100,12 +100,14 @@ async function loadMigration(): Promise<MigrationInterface> {
         const { WidenClientSecretAndGlobalUniqueness1788782400000 } = await import(
             '../../../../src/adapters/database/migrations/mysql/1788782400000-WidenClientSecretAndGlobalUniqueness.ts',
         );
+
         return new WidenClientSecretAndGlobalUniqueness1788782400000();
     }
 
     const { WidenClientSecretAndGlobalUniqueness1788782400000 } = await import(
         '../../../../src/adapters/database/migrations/postgres/1788782400000-WidenClientSecretAndGlobalUniqueness.ts',
     );
+
     return new WidenClientSecretAndGlobalUniqueness1788782400000();
 }
 
@@ -136,6 +138,7 @@ describe.skipIf(!migrated)('adapters/database (global entity uniqueness)', () =>
 
     async function withRunner<T>(fn: (runner: QueryRunner) => Promise<T>): Promise<T> {
         const runner = dataSource.createQueryRunner();
+
         try {
             return await fn(runner);
         } finally {
@@ -145,11 +148,13 @@ describe.skipIf(!migrated)('adapters/database (global entity uniqueness)', () =>
 
     async function schemaDrift(): Promise<string[]> {
         const { upQueries } = await dataSource.driver.createSchemaBuilder().log();
+
         return upQueries.map((query) => query.query);
     }
 
     async function insert(target: Target, name: string, realmId: string | null) {
         const repository = dataSource.getRepository(target.entity);
+
         return repository.save(repository.create(target.row(name, realmId)));
     }
 
@@ -220,6 +225,7 @@ describe.skipIf(!migrated)('adapters/database (global entity uniqueness)', () =>
 
         // The abort runs before any DDL, so nothing is half-applied.
         const table = await withRunner((runner) => runner.getTable(permission.table));
+
         expect(table?.indices.find((candidate) => candidate.name === permission.index)).toBeUndefined();
 
         await dataSource.getRepository(permission.entity).delete({ id: duplicates[0].id });

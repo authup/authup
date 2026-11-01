@@ -12,6 +12,7 @@ export function createMiddleware(context: MiddlewareOptions) {
     return async (socket: Socket, next: Next) => {
         try {
             const data = await verifySocket(socket, context);
+
             if (data) {
                 await context.tokenVerifierHandler(socket, data);
             }

@@ -69,9 +69,11 @@ describe('core/provisioning/synchronizer/user', () => {
         });
 
         const folder = await pathRepository.findOneBy({ realmId, path: 'sales/berlin' });
+
         expect(folder).not.toBeNull();
 
         const user = await userRepository.findOneBy({ name: 'alice', realmId });
+
         expect(user!.pathId).toEqual(folder!.id);
     });
     // A selective merge picks only the listed attributes, and `pathId` is
@@ -79,23 +81,24 @@ describe('core/provisioning/synchronizer/user', () => {
     // so it rides the merge anyway (#3632).
     it('should refile an existing user under a selective merge', async () => {
         const existing = userRepository.seed({
-            name: 'alice', 
-            realmId, 
-            displayName: 'Alice', 
+            name: 'alice',
+            realmId,
+            displayName: 'Alice',
         });
 
         await synchronizer.synchronize({
             strategy: { type: ProvisioningEntityStrategyType.MERGE, attributes: ['displayName'] },
             attributes: {
-                name: 'alice', 
-                realmId, 
-                displayName: 'Alice B.', 
+                name: 'alice',
+                realmId,
+                displayName: 'Alice B.',
             },
             relations: { path: 'sales' },
         });
 
         const folder = await pathRepository.findOneBy({ realmId, path: 'sales' });
         const user = await userRepository.findOneBy({ id: existing.id });
+
         expect(user!.displayName).toEqual('Alice B.');
         expect(user!.pathId).toEqual(folder!.id);
     });
@@ -111,6 +114,7 @@ describe('core/provisioning/synchronizer/user', () => {
         expect(pathRepository.getAll()).toHaveLength(0);
 
         const user = await userRepository.findOneBy({ id: existing.id });
+
         expect(user!.pathId ?? null).toBeNull();
     });
 
@@ -143,6 +147,7 @@ describe('core/provisioning/synchronizer/user', () => {
         });
 
         const user = await userRepository.findOneBy({ name: 'realm-admin', realmId });
+
         expect(userRoleRepository.getAll()).toEqual([
             expect.objectContaining({ userId: user!.id, roleId: role.id }),
         ]);

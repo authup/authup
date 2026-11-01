@@ -101,6 +101,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             if (attributes) {
                 await this.clientRepository.remove(attributes);
             }
+
             return {
                 ...input,
                 attributes: attributes || input.attributes,
@@ -108,6 +109,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
         }
 
         let created = false;
+
         if (attributes) {
             switch (strategy.type) {
                 case ProvisioningEntityStrategyType.MERGE: {
@@ -127,12 +129,14 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
                             input.attributes,
                     );
                     attributes = await this.clientRepository.save(attributes);
+
                     break;
                 }
                 case ProvisioningEntityStrategyType.REPLACE:
                     await this.resolvePath(input);
                     input.attributes.id = attributes.id;
                     attributes = await this.clientRepository.save(this.clientRepository.create(input.attributes));
+
                     break;
             }
         } else {
@@ -223,6 +227,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             const children = input.relations.permissions.map((child) => {
                 child.attributes.clientId = attributes.id;
                 child.attributes.client = attributes;
+
                 return child;
             });
 
@@ -233,6 +238,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             const children = input.relations.roles.map((child) => {
                 child.attributes.clientId = attributes.id;
                 child.attributes.client = attributes;
+
                 return child;
             });
 
@@ -285,12 +291,12 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             isBCryptHash(attributes.secret) :
             attributes.secretEncrypted && isRealmCipherBlob(attributes.secret);
 
-        if (
-            !isProtected &&
-            (attributes.secretHashed || attributes.secretEncrypted)
-        ) {
-            const credentialsService = new ClientCredentialsService({ cipher: this.cipher });
-            attributes.secret = await credentialsService.protect(attributes.secret, attributes);
+        if (isProtected || !(attributes.secretHashed || attributes.secretEncrypted)) {
+            return;
         }
+
+        const credentialsService = new ClientCredentialsService({ cipher: this.cipher });
+
+        attributes.secret = await credentialsService.protect(attributes.secret, attributes);
     }
 }

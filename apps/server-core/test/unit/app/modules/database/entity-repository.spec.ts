@@ -53,6 +53,7 @@ describe('app/modules/database/repositories/entity', () => {
         await suite.setup();
 
         const { dataSource } = suite;
+
         realm = (await dataSource.getRepository(RealmEntity).findOneBy({ name: 'master' }))!;
 
         roles = new RoleRepositoryAdapter({
@@ -81,18 +82,22 @@ describe('app/modules/database/repositories/entity', () => {
 
     async function createRole() {
         const role = await roles.save(roles.create({ name: `role-${randomUUID()}`, realmId: realm.id }));
+
         created.push({ target: RoleEntity, id: role.id });
+
         return role;
     }
 
     async function createUser() {
         const name = `user-${randomUUID()}`;
         const user = await users.save(users.create({
-            name, 
-            email: `${name}@example.com`, 
-            realmId: realm.id, 
+            name,
+            email: `${name}@example.com`,
+            realmId: realm.id,
         }));
+
         created.push({ target: UserEntity, id: user.id });
+
         return user;
     }
 
@@ -127,6 +132,7 @@ describe('app/modules/database/repositories/entity', () => {
                 roleId: role.id,
                 roleRealmId: realm.id,
             }));
+
             created.push({ target: UserRoleEntity, id: userRole.id });
 
             await expect(userRoles.findOneByName('anything')).resolves.toBeNull();
@@ -157,18 +163,21 @@ describe('app/modules/database/repositories/entity', () => {
                 roleId: role.id,
                 roleRealmId: realm.id,
             }));
+
             created.push({ target: UserRoleEntity, id: userRole.id });
 
             const junction = await userRoles.findMany(await decodeQuery(
                 { fields: ['roleId'], filter: { id: userRole.id } },
                 { schema: EntityType.USER_ROLE },
             ));
+
             expect(junction.data[0].userRealmId).toEqual(realm.id);
 
             const self = await users.findMany(await decodeQuery(
                 { fields: ['name'], filter: { id: user.id } },
                 { schema: EntityType.USER },
             ));
+
             expect(self.data[0].id).toEqual(user.id);
             expect(self.data[0].realmId).toEqual(realm.id);
         });
@@ -183,6 +192,7 @@ describe('app/modules/database/repositories/entity', () => {
                 userId: user.id,
                 realmId: realm.id,
             }));
+
             created.push({ target: UserAttributeEntity, id: attribute.id });
 
             const byId = await users.findOneById(user.id) as Record<string, any>;
@@ -197,6 +207,7 @@ describe('app/modules/database/repositories/entity', () => {
             expect((list.data[0] as Record<string, any>).favoriteColor).toEqual('green');
 
             const forWrite = await users.findOneBy({ id: user.id }) as Record<string, any>;
+
             expect(forWrite.favoriteColor).toBeUndefined();
         });
     });
@@ -224,6 +235,7 @@ describe('app/modules/database/repositories/entity', () => {
                 type: 'time',
                 realmId: realm.id,
             }), { start: '08:00', end: '16:00' });
+
             created.push({ target: PolicyEntity, id: policy.id });
 
             const error = await policies.saveWithEA(policies.create({
@@ -241,6 +253,7 @@ describe('app/modules/database/repositories/entity', () => {
 
             const error = await roles.checkUniqueness({ name: role.name, realmId: realm.id })
                 .then(() => undefined, (e) => e);
+
             expect(isEntityConflictError(error)).toBeTruthy();
             expect(error.message).toEqual('The role already exists.');
             await expect(roles.checkUniqueness({ name: role.name, realmId: realm.id }, role))

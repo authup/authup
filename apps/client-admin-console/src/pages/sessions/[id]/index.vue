@@ -113,16 +113,20 @@ export default defineComponent({
         // A record that cannot be loaded sends the visitor back to the
         // collection; the template renders nothing until then (`v-if`).
         let resolved : Ref<{ session: Session, subjectName: string | null } | null> = ref(null);
+
         try {
             const response = await httpClient.session.getOne(route.params.id as string);
 
             let subjectName: string | null = null;
+
             try {
                 if (response.data.userId) {
                     const userResponse = await httpClient.user.getOne(response.data.userId);
+
                     subjectName = userResponse.data.name;
                 } else if (response.data.clientId) {
                     const clientResponse = await httpClient.client.getOne(response.data.clientId);
+
                     subjectName = clientResponse.data.name;
                 }
             } catch {
@@ -151,9 +155,11 @@ export default defineComponent({
             if (row.revokedAt) {
                 return translationsApp.sessionTokenStatusRevoked;
             }
+
             if (row.consumedAt) {
                 return translationsApp.sessionTokenStatusConsumed;
             }
+
             if (row.expiresAt && Date.parse(row.expiresAt) < Date.now()) {
                 return translationsApp.sessionTokenStatusExpired;
             }

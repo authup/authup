@@ -48,7 +48,7 @@ export interface IUserService extends IReadScoper {
         options?: { updateOnly?: boolean },
     ): Promise<{
         entity: User,
-        created: boolean 
+        created: boolean
     }>;
     delete(id: string, actor: ActorContext): Promise<User>;
 }

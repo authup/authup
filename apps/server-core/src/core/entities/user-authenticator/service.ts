@@ -10,12 +10,12 @@ import { BuiltInPolicyType, evaluateRecord, reachesRecord } from '@authup/access
 import { ValidatorGroup } from '@authup/kit';
 import { eq, inArray, or } from '@rapiq/core';
 import {
-    EventName, 
-    EventRefType, 
-    EventScope, 
-    IdentityType, 
-    PermissionName, 
-    UserAuthenticatorKind, 
+    EventName,
+    EventRefType,
+    EventScope,
+    IdentityType,
+    PermissionName,
+    UserAuthenticatorKind,
     UserAuthenticatorValidator,
 } from '@authup/core-kit';
 import type { User, UserAuthenticator } from '@authup/core-kit';
@@ -28,20 +28,23 @@ import {
     ValidationError,
     isMfaThrottledError,
 } from '@authup/errors';
-import { 
-    AbstractEntityService, 
-    buildCacheKey, 
-    compare, 
-    hash, 
+import {
+    AbstractEntityService,
+    buildCacheKey,
+    compare,
+    hash,
 } from '@authup/server-kit';
 import type {
     ActorContext,
     EntityRepositoryFindManyResult,
     ICache,
+    Logger,
 } from '@authup/server-kit';
 import { Secret, TOTP } from 'otpauth';
 import QRCode from 'qrcode';
 import type { AuthenticationResponseJSON, RegistrationResponseJSON } from '@simplewebauthn/server';
+import type { ISessionManager } from '../../authentication/session/types.ts';
+import { describeError } from '../../../utils/index.ts';
 import { isRealmCipherBlobError } from '../../key/index.ts';
 import type { IRealmCipher } from '../../key/index.ts';
 import type { EventRequestContext, IEventService } from '../event/index.ts';
@@ -130,6 +133,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
     protected requestContext?: () => EventRequestContext | undefined;
 
+    protected sessionManager?: ISessionManager;
+
+    protected logger?: Logger;
+
     protected mailClient?: IMailClient;
 
     protected mailTemplateRenderer?: IMailTemplateRenderer;
@@ -147,6 +154,8 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         this.cipher = ctx.cipher;
         this.eventService = ctx.eventService;
         this.requestContext = ctx.requestContext;
+        this.sessionManager = ctx.sessionManager;
+        this.logger = ctx.logger;
         this.mailClient = ctx.mailClient;
         this.mailTemplateRenderer = ctx.mailTemplateRenderer;
         this.options = ctx.options ?? {};
@@ -198,12 +207,14 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         const compiled = isSelf ?
             { verdict: 'allow' as const } :
             await actor.permissionEvaluator.compile({ name: PermissionName.USER_AUTHENTICATOR_READ });
+
         if (compiled.verdict !== 'post') {
             const ownership = actor.identity && actor.identity.type === IdentityType.USER ?
                 eq('userId', actor.identity.data.id) :
                 null;
 
             let scoped = parsed;
+
             if (compiled.verdict === 'deny') {
                 scoped = appendQueryConditions(parsed, ownership ?? inArray('id', []));
             } else if (compiled.verdict === 'conditional') {
@@ -232,6 +243,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         for (const entity of entities) {
             if (this.isOwnedBy(entity, actor)) {
                 data.push(this.sanitize(entity));
+
                 continue;
             }
 
@@ -240,8 +252,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
                 realm: entity.realmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -278,6 +292,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
     protected async resolveOne(id: string, userId?: string): Promise<UserAuthenticator> {
         const entity = await this.repository.findOneById(id);
+
         // a device of another user is a 404 on the nested route — never
         // an existence oracle across users.
         if (!entity || (userId && entity.userId !== userId)) {
@@ -308,6 +323,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         const isSelfEnrollment = !!actor.identity &&
             actor.identity.type === IdentityType.USER &&
             actor.identity.data.id === user.id;
+
         if (!isSelfEnrollment && validated.kind !== UserAuthenticatorKind.EMAIL) {
             throw new ValidationError(
                 `A ${validated.kind} authenticator can only be enrolled by the account owner.`,
@@ -319,10 +335,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
                 return this.enrollTotp(user, validated.name ?? null);
             }
             case UserAuthenticatorKind.RECOVERY: {
-                return this.enrollRecovery(user, validated.name ?? null);
+                return this.enrollRecovery(user, validated.name ?? null, actor);
             }
             case UserAuthenticatorKind.EMAIL: {
-                return this.enrollEmail(user, validated.name ?? null);
+                return this.enrollEmail(user, validated.name ?? null, actor);
             }
             case UserAuthenticatorKind.WEBAUTHN: {
                 return this.enrollWebauthn(user, validated.name ?? null);
@@ -359,6 +375,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             userId: user.id,
             realmId: user.realmId,
         });
+
         entity = await this.repository.save(entity);
 
         // Key the challenge by the newly created (unconfirmed) row id, NOT the
@@ -380,7 +397,11 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         };
     }
 
-    protected async enrollEmail(user: User, name: string | null): Promise<UserAuthenticatorEnrollResult> {
+    protected async enrollEmail(
+        user: User,
+        name: string | null,
+        actor: ActorContext,
+    ): Promise<UserAuthenticatorEnrollResult> {
         this.assertMail();
 
         // The actor identity may not carry `email` (the User entity's email
@@ -388,6 +409,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         // exists. The email is presumed verified (activation); the row marks
         // the mailbox as an enrolled factor, codes are transient (cache).
         const email = user.email ?? (await this.userRepository.findOneByWithEmail({ id: user.id }))?.email;
+
         if (!email) {
             throw new ValidationError('The user has no email address to receive codes.');
         }
@@ -395,15 +417,19 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         // one email factor per user — update the existing marker row in place
         // rather than remove-then-create, so a failed save never leaves the user
         // with no email factor (the row is a pure marker: no secret/codes).
+        const firstFactor = !await this.repository.hasConfirmedByUser(user.id);
         const existing = (await this.repository.findAllByUser(user.id))
             .filter((device) => device.kind === UserAuthenticatorKind.EMAIL);
 
         let entity: UserAuthenticator;
+
         if (existing.length > 0) {
             const [primary, ...duplicates] = existing;
+
             primary.name = name;
             primary.confirmed = true;
             entity = await this.repository.save(primary);
+
             // best-effort cleanup of any stray duplicates (invariant anomaly);
             // a failure here still leaves the primary factor intact.
             for (const duplicate of duplicates) {
@@ -421,6 +447,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
 
         await this.recordEvent(EventName.MFA_ENROLLED, entity);
+
+        if (firstFactor) {
+            await this.revokePreFactorSessions(user.id, actor);
+        }
 
         return { data: this.sanitize(entity), meta: {} };
     }
@@ -443,6 +473,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
 
         const target = await this.userRepository.findOneById(userId);
+
         if (!target) {
             throw new EntityNotFoundError();
         }
@@ -484,6 +515,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             userId: user.id,
             realmId: user.realmId,
         });
+
         entity = await this.repository.save(entity);
 
         return {
@@ -496,11 +528,17 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         };
     }
 
-    protected async enrollRecovery(user: User, name: string | null): Promise<UserAuthenticatorEnrollResult> {
+    protected async enrollRecovery(
+        user: User,
+        name: string | null,
+        actor: ActorContext,
+    ): Promise<UserAuthenticatorEnrollResult> {
         const codes : string[] = [];
         const stored : UserAuthenticatorRecoveryCode[] = [];
+
         for (let i = 0; i < USER_AUTHENTICATOR_RECOVERY_CODE_COUNT; i++) {
             const code = generateRecoveryCode();
+
             codes.push(code);
             stored.push({ hash: await hash(code), used_at: null });
         }
@@ -508,9 +546,11 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         // regenerate semantics: a user holds ONE recovery-code set. Reuse the
         // existing row via a single atomic save instead of delete-then-insert,
         // so a mid-operation failure can never leave the user with no codes.
+        const firstFactor = !await this.repository.hasConfirmedByUser(user.id);
         const [existing] = await this.repository.findAllWithSecretsByUser(user.id, { kind: UserAuthenticatorKind.RECOVERY });
 
         let entity : UserAuthenticator;
+
         if (existing) {
             existing.name = name;
             existing.codes = JSON.stringify(stored);
@@ -529,6 +569,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
 
         await this.recordEvent(EventName.MFA_ENROLLED, entity);
+
+        if (firstFactor) {
+            await this.revokePreFactorSessions(user.id, actor);
+        }
 
         return {
             data: this.sanitize(entity),
@@ -560,7 +604,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
 
         if (entity.kind === UserAuthenticatorKind.WEBAUTHN) {
-            return this.confirmWebauthn(entity, code);
+            return this.confirmWebauthn(entity, code, actor);
         }
 
         if (entity.kind !== UserAuthenticatorKind.TOTP) {
@@ -570,18 +614,23 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         await this.assertNotThrottledOrRetry(entity.userId);
 
         const withSecrets = await this.repository.findOneWithSecretsById(entity.id);
+
         if (!withSecrets) {
             throw new EntityNotFoundError();
         }
 
         if (!await this.verifyTotp(withSecrets, code)) {
             await this.bumpAttempts(entity.userId);
+
             throw new EntityCredentialsInvalidError();
         }
 
         await this.resetAttempts(entity.userId);
 
+        const firstFactor = !await this.repository.hasConfirmedByUser(entity.userId);
+
         entity.confirmed = true;
+
         // The consumed step is tracked only on the login-verify path (below),
         // NOT here — so a legitimate first login in the same window as the
         // confirmation is still accepted; only a repeat of an already-used
@@ -590,10 +639,18 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         await this.recordEvent(EventName.MFA_ENROLLED, output);
 
+        if (firstFactor) {
+            await this.revokePreFactorSessions(output.userId, actor);
+        }
+
         return this.sanitize(output);
     }
 
-    protected async confirmWebauthn(entity: UserAuthenticator, response: string): Promise<UserAuthenticator> {
+    protected async confirmWebauthn(
+        entity: UserAuthenticator,
+        response: string,
+        actor: ActorContext,
+    ): Promise<UserAuthenticator> {
         const ctx = this.assertWebauthn();
 
         // brute-force throttle, same lifecycle as the TOTP confirm branch — the
@@ -606,12 +663,15 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         const cacheKey = this.buildWebauthnCacheKey(USER_AUTHENTICATOR_WEBAUTHN_REG_CACHE_PREFIX, entity.id);
 
         const state = await this.cache.get<WebauthnChallengeState>(cacheKey);
+
         if (!state || state.expiresAt < Date.now()) {
             await this.bumpAttempts(entity.userId);
+
             throw new EntityCredentialsInvalidError();
         }
 
         let parsed : RegistrationResponseJSON;
+
         try {
             parsed = JSON.parse(response) as RegistrationResponseJSON;
         } catch {
@@ -619,21 +679,59 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
 
         const credential = await verifyWebauthnRegistration(ctx, parsed, state.challenge);
+
         if (!credential) {
             await this.bumpAttempts(entity.userId);
+
             throw new EntityCredentialsInvalidError();
         }
+
+        const firstFactor = !await this.repository.hasConfirmedByUser(entity.userId);
 
         await this.resetAttempts(entity.userId);
         await this.cache.drop(cacheKey);
 
         entity.parameters = JSON.stringify(credential);
         entity.confirmed = true;
+
         const output = await this.repository.save(entity);
 
         await this.recordEvent(EventName.MFA_ENROLLED, output);
 
+        if (firstFactor) {
+            await this.revokePreFactorSessions(output.userId, actor);
+        }
+
         return this.sanitize(output);
+    }
+
+    /**
+     * A session issued before the user's first confirmed factor never proved
+     * one and would outlive it. The user keeps the session it enrolled from;
+     * an enrollment by another actor keeps none. A failure is logged, never
+     * raised: the factor is already stored, so failing the request would
+     * withhold shown-once recovery codes and a retry would revoke nothing.
+     */
+    protected async revokePreFactorSessions(userId: string, actor: ActorContext): Promise<void> {
+        if (!this.sessionManager) {
+            return;
+        }
+
+        const self = !!actor.identity &&
+            actor.identity.type === IdentityType.USER &&
+            actor.identity.data.id === userId;
+
+        try {
+            await this.sessionManager.revokeByOwner(
+                { sub: userId, subKind: IdentityType.USER },
+                self ? this.requestContext?.()?.sessionId ?? undefined : undefined,
+            );
+        } catch (e) {
+            this.logger?.warn(describeError(
+                e,
+                `The sessions of user ${userId} predating its first factor could not be revoked.`,
+            ));
+        }
     }
 
     async delete(
@@ -653,6 +751,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
 
         const { id: entityId } = entity;
+
         await this.repository.remove(entity);
         entity.id = entityId;
 
@@ -685,6 +784,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         // risk a double-consume; that request owns the outcome.
         const lockKey = this.buildVerifyLockCacheKey(userId);
         const lock = await this.acquireVerifyLock(lockKey);
+
         if (lock.status !== 'acquired') {
             return false;
         }
@@ -720,12 +820,15 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
                 if (input.kind === UserAuthenticatorKind.WEBAUTHN) {
                     const newCounter = await this.verifyWebauthnDevice(userId, device, input.response);
+
                     if (newCounter !== null) {
                         // persist the signature counter (replay defense)
                         const parameters = this.parseWebauthnParameters(device);
+
                         if (parameters) {
                             device.parameters = JSON.stringify({ ...parameters, counter: newCounter });
                         }
+
                         matched = device;
                     }
                 }
@@ -738,6 +841,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             if (!matched) {
                 await this.bumpAttempts(userId);
                 await this.recordChallengeEvent(EventName.MFA_CHALLENGE_FAILED, userId, input.kind, ctx);
+
                 return false;
             }
 
@@ -768,6 +872,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             if (input.kind === UserAuthenticatorKind.EMAIL) {
                 await this.cache.drop(this.buildEmailCodeCacheKey(userId));
             }
+
             if (input.kind === UserAuthenticatorKind.WEBAUTHN) {
                 await this.cache.drop(
                     this.buildWebauthnCacheKey(USER_AUTHENTICATOR_WEBAUTHN_AUTH_CACHE_PREFIX, userId),
@@ -777,6 +882,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             await this.resetAttempts(userId);
 
             await this.recordChallengeEvent(EventName.MFA_VERIFIED, userId, input.kind, ctx, matched);
+
             return true;
         } finally {
             await lease.stop();
@@ -790,6 +896,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
 
         let seed : string;
+
         try {
             // key-id-addressed blob; one referencing an unknown or foreign
             // key fails closed as a verification failure, never a 500.
@@ -810,6 +917,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             digits: USER_AUTHENTICATOR_TOTP_DIGITS,
             period: USER_AUTHENTICATOR_TOTP_PERIOD,
         };
+
         if (device.parameters) {
             parameters = { ...parameters, ...JSON.parse(device.parameters) };
         }
@@ -822,6 +930,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         });
 
         const delta = totp.validate({ token: token.trim(), window: 1 });
+
         if (delta === null) {
             return false;
         }
@@ -831,12 +940,14 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         // within its ±1 validation window. The per-user verify lock makes the
         // concurrent case (two verifies advancing the same step) safe.
         const step = Math.floor(Date.now() / 1000 / parameters.period) + delta;
+
         if (typeof parameters.counter === 'number' && step <= parameters.counter) {
             return false;
         }
 
         // persist the consumed step onto the device — the caller saves the row.
         device.parameters = JSON.stringify({ ...parameters, counter: step });
+
         return true;
     }
 
@@ -856,6 +967,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             if (await compare(normalized, entry.hash)) {
                 entry.used_at = new Date().toISOString();
                 device.codes = JSON.stringify(entries);
+
                 return true;
             }
         }
@@ -867,6 +979,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         if (!device.parameters) {
             return null;
         }
+
         try {
             return JSON.parse(device.parameters) as UserAuthenticatorWebauthnParameters;
         } catch {
@@ -882,11 +995,13 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         const ctx = this.assertWebauthn();
 
         const parameters = this.parseWebauthnParameters(device);
+
         if (!parameters) {
             return null;
         }
 
         let parsed : AuthenticationResponseJSON;
+
         try {
             parsed = JSON.parse(response) as AuthenticationResponseJSON;
         } catch {
@@ -901,12 +1016,14 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         const state = await this.cache.get<WebauthnChallengeState>(
             this.buildWebauthnCacheKey(USER_AUTHENTICATOR_WEBAUTHN_AUTH_CACHE_PREFIX, userId),
         );
+
         if (!state || state.expiresAt < Date.now()) {
             return null;
         }
 
         try {
             const result = await verifyWebauthnAuthentication(ctx, parsed, state.challenge, parameters);
+
             return result.verified ? result.newCounter : null;
         } catch {
             return null;
@@ -916,6 +1033,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
     protected async verifyEmail(userId: string, response: string): Promise<boolean> {
         const key = this.buildEmailCodeCacheKey(userId);
         const state = await this.cache.get<EmailCodeState>(key);
+
         if (!state || state.expiresAt < Date.now()) {
             return false;
         }
@@ -948,12 +1066,14 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             kind: UserAuthenticatorKind.EMAIL,
             confirmed: true,
         });
+
         if (devices.length === 0) {
             return;
         }
 
         // email column is select:false — force-load it for the recipient.
         const user = await this.userRepository.findOneByWithEmail({ id: userId });
+
         if (!user || !user.email) {
             return;
         }
@@ -964,6 +1084,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         // Fails open on a cache error (a transient outage must not block a
         // legitimate code).
         let withinCooldown: boolean;
+
         try {
             withinCooldown = !(await this.cache.add(
                 this.buildEmailSendCacheKey(userId),
@@ -973,11 +1094,13 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         } catch {
             withinCooldown = false;
         }
+
         if (withinCooldown) {
             throw new MfaThrottledError({ retryAfter: USER_AUTHENTICATOR_EMAIL_SEND_COOLDOWN });
         }
 
         const codeValue = generateNumericCode(USER_AUTHENTICATOR_EMAIL_CODE_LENGTH);
+
         await this.cache.set(
             this.buildEmailCodeCacheKey(userId),
             {
@@ -1037,6 +1160,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         // false): the enforcement chokepoints must not rotate an in-flight
         // ceremony's nonce nor run this extra query on every request.
         const issueMaterial = options.issueMaterial ?? true;
+
         if (issueMaterial && kinds.includes(UserAuthenticatorKind.WEBAUTHN) && this.options.webauthn) {
             const credentials = (await this.repository.findAllWithSecretsByUser(userId, {
                 kind: UserAuthenticatorKind.WEBAUTHN,
@@ -1176,6 +1300,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         return {
             renew: async () => {
                 await queueRenewal();
+
                 return owned;
             },
             stop: async () => {
@@ -1195,6 +1320,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
     protected async assertNotThrottled(userId: string): Promise<void> {
         const lockedUntil = await this.cache.get<number>(this.buildThrottleCacheKey(userId));
+
         if (typeof lockedUntil === 'number' && lockedUntil > Date.now()) {
             throw new MfaThrottledError({ retryAfter: Math.ceil((lockedUntil - Date.now()) / 1_000) });
         }
@@ -1223,6 +1349,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         // Atomic increment — concurrent failures (verify OR confirm) each get
         // a distinct count, so the exponential backoff never under-counts.
         let count : number;
+
         try {
             count = await this.cache.increment(key, 1, { ttl: USER_AUTHENTICATOR_ATTEMPT_WINDOW * 1_000 });
         } catch {

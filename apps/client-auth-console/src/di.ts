@@ -14,6 +14,7 @@ const HYDRATION_PAYLOAD = Symbol.for('HYDRATION_PAYLOAD');
 export function providePayload<T extends Record<string, any>>(payload: HydrationPayload<T>, app?: App) {
     if (app) {
         app.provide(HYDRATION_PAYLOAD, payload);
+
         return;
     }
 
@@ -22,6 +23,7 @@ export function providePayload<T extends Record<string, any>>(payload: Hydration
 
 export function injectPayload<T extends Record<string, any>>() : HydrationPayload<T> {
     const payload = inject<HydrationPayload<T>>(HYDRATION_PAYLOAD);
+
     if (!payload) {
         throw new Error('The hydration payload has not been provided.');
     }

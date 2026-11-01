@@ -44,6 +44,7 @@ describe('app/modules/authentication/repositories/session', () => {
                 builtIn: true,
             }),
         );
+
         realmId = realm.id;
     });
 
@@ -81,6 +82,7 @@ describe('app/modules/authentication/repositories/session', () => {
             // statement without the drain loop would leave a permanent
             // backlog behind on a table that only grows.
             const past = new Date(Date.now() - 60_000).toISOString();
+
             for (let i = 0; i < 5; i++) {
                 await seed(past);
             }
@@ -96,6 +98,7 @@ describe('app/modules/authentication/repositories/session', () => {
 
         it('bounds each statement to the batch size', async () => {
             const past = new Date(Date.now() - 60_000).toISOString();
+
             for (let i = 0; i < 5; i++) {
                 await seed(past);
             }
@@ -108,12 +111,14 @@ describe('app/modules/authentication/repositories/session', () => {
                 repository: ormRepository,
                 cache: new MemoryCache(),
             });
+
             await repository.deleteExpired(new Date().toISOString(), { batchSize: 2 });
 
             // 5 rows at 2 per batch: three bounded DELETEs rather than one
             // sweeping statement, each fed by a select bounded to the size.
             expect(deleteSpy).toHaveBeenCalledTimes(3);
             expect(findSpy).toHaveBeenCalledTimes(3);
+
             for (const [options] of findSpy.mock.calls) {
                 expect(options?.take).toEqual(2);
             }
@@ -135,9 +140,11 @@ describe('app/modules/authentication/repositories/session', () => {
                 repository: ormRepository,
                 cache: new MemoryCache(),
             });
+
             await repository.deleteExpired(new Date().toISOString(), { batchSize: 0 });
 
             expect(findSpy).toHaveBeenCalled();
+
             for (const [options] of findSpy.mock.calls) {
                 expect(options?.take).toEqual(SESSION_EXPIRY_SWEEP_BATCH_SIZE);
             }
@@ -160,12 +167,14 @@ describe('app/modules/authentication/repositories/session', () => {
             // them would spin: the select still matches, the delete still
             // reports zero.
             const past = new Date(Date.now() - 60_000).toISOString();
+
             for (let i = 0; i < 4; i++) {
                 await seed(past);
             }
 
             const ormRepository = dataSource.getRepository<Session>(SessionEntity);
             const findSpy = vi.spyOn(ormRepository, 'find');
+
             vi.spyOn(ormRepository, 'delete').mockResolvedValue({
                 raw: [],
                 affected: 0,
@@ -208,6 +217,7 @@ describe('app/modules/authentication/repositories/session', () => {
 
             // The copy an in-flight request read before the revoke.
             const stale = { ...(await repository.findOneById(created.id)) as Session };
+
             stale.seenAt = new Date(Date.now() - 10_000).toISOString();
 
             await manager.revoke(created.id);
@@ -232,12 +242,14 @@ describe('app/modules/authentication/repositories/session', () => {
             });
 
             const stale = { ...(await repository.findOneById(created.id)) as Session };
+
             stale.seenAt = new Date(Date.now() - 60_000).toISOString();
 
             // the revoke lands inside the write's own cache step
             const { cache } = (repository as unknown as { cache: MemoryCache });
             const set = cache.set.bind(cache);
             let once = true;
+
             cache.set = async (...args: Parameters<MemoryCache['set']>) => {
                 if (once) {
                     once = false;
@@ -268,6 +280,7 @@ describe('app/modules/authentication/repositories/session', () => {
 
             // a copy an earlier request read, about to ping
             const stale = { ...(await repository.findOneById(created.id)) as Session };
+
             stale.seenAt = new Date(Date.now() - 60_000).toISOString();
 
             const current = { ...(await repository.findOneById(created.id)) as Session };
@@ -277,10 +290,12 @@ describe('app/modules/authentication/repositories/session', () => {
             await manager.ping(stale);
 
             const row = await dataSource.getRepository(SessionEntity).findOneBy({ id: created.id });
+
             expect(row?.mfaAt).toEqual(verified.mfaAt);
             expect(row?.expiresAt).toEqual(refreshed.expiresAt);
 
             const cached = await repository.findOneById(created.id);
+
             expect(cached?.mfaAt).toEqual(verified.mfaAt);
             expect(cached?.expiresAt).toEqual(refreshed.expiresAt);
         });
@@ -299,9 +314,11 @@ describe('app/modules/authentication/repositories/session', () => {
             });
 
             const refreshed = await manager.markMfaVerified({ ...created });
+
             expect(refreshed.mfaAt).toBeTruthy();
 
             const row = await dataSource.getRepository(SessionEntity).findOneBy({ id: created.id });
+
             expect(row?.mfaAt).toEqual(refreshed.mfaAt);
             expect((await repository.findOneById(created.id))?.mfaAt).toEqual(refreshed.mfaAt);
         });

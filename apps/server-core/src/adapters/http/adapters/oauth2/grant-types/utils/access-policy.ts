@@ -56,6 +56,7 @@ export async function assertAccessPolicyBackstop(input: AccessPolicyBackstopInpu
             { realmId: input.client.realmId ?? null },
         ) :
         false;
+
     if (allowed) {
         return;
     }

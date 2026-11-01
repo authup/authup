@@ -23,12 +23,15 @@ export class RealmProvisioningValidator extends Container<RealmProvisioningEntit
         super.initialize();
 
         const strategyValidator = new ProvisioningStrategyValidator();
+
         this.mount('strategy', { optional: true }, strategyValidator);
 
         const attributesValidator = new RealmValidator();
+
         this.mount('attributes', attributesValidator);
 
         const relationsValidator = new RealmProvisioningRelationsValidator();
+
         this.mount('relations', { optional: true }, relationsValidator);
     }
 

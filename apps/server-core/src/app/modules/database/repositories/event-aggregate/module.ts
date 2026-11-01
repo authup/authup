@@ -45,6 +45,7 @@ export class EventAggregateRepositoryAdapter implements IEventAggregateRepositor
      */
     recompute(day: string): Promise<void> {
         const run = this.queue.then(() => this.recomputeLocked(day));
+
         this.queue = run.catch(() => undefined);
 
         return run;
@@ -52,9 +53,11 @@ export class EventAggregateRepositoryAdapter implements IEventAggregateRepositor
 
     protected async recomputeLocked(day: string): Promise<void> {
         const queryRunner = this.dataSource.createQueryRunner();
+
         try {
             await withDatabaseLock(queryRunner, EVENT_AGGREGATE_DATABASE_LOCK, async () => {
                 const next = new Date(`${day}T00:00:00.000Z`);
+
                 next.setUTCDate(next.getUTCDate() + 1);
 
                 const qb = this.dataSource.getRepository(EventEntity).createQueryBuilder('event');
@@ -73,6 +76,7 @@ export class EventAggregateRepositoryAdapter implements IEventAggregateRepositor
                 // the rows about the realm itself, which are the deployment's
                 // history of realms and are kept as global
                 const realmIds = [...new Set(rows.map((row) => row.realmId).filter(Boolean))] as string[];
+
                 if (realmIds.length > 0) {
                     const realms = await this.dataSource.getRepository(RealmEntity).find({
                         select: { id: true },
@@ -87,7 +91,7 @@ export class EventAggregateRepositoryAdapter implements IEventAggregateRepositor
                             return [row];
                         }
 
-                        return row.refType === EntityType.REALM ? [{ ...row, realmId: null }] : [];
+                        return row.refType === EntityType.REALM ? { ...row, realmId: null } : [];
                     });
                 }
 
@@ -148,6 +152,7 @@ export class EventAggregateRepositoryAdapter implements IEventAggregateRepositor
             }))
             .filter((row) => {
                 const end = new Date(`${row.day}T00:00:00.000Z`);
+
                 end.setUTCDate(end.getUTCDate() + 1);
 
                 return new Date(row.createdAt).getTime() >= end.getTime();
@@ -169,14 +174,14 @@ export class EventAggregateRepositoryAdapter implements IEventAggregateRepositor
         const repository = this.dataSource.getRepository(EventAggregateEntity);
         const [other, entity] = await Promise.all([
             repository.findOne({
-                select: { id: true, date: true }, 
-                where: { scope: Not(EventScope.ENTITY) }, 
-                order: { date: 'ASC' }, 
+                select: { id: true, date: true },
+                where: { scope: Not(EventScope.ENTITY) },
+                order: { date: 'ASC' },
             }),
             repository.findOne({
-                select: { id: true, date: true }, 
-                where: { scope: EventScope.ENTITY }, 
-                order: { date: 'ASC' }, 
+                select: { id: true, date: true },
+                where: { scope: EventScope.ENTITY },
+                order: { date: 'ASC' },
             }),
         ]);
 

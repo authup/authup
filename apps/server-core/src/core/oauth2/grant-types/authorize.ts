@@ -37,6 +37,7 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
         super({
             accessTokenIssuer: ctx.accessTokenIssuer,
             sessionManager: ctx.sessionManager,
+            mfaChallengeProvider: ctx.mfaChallengeProvider,
         });
 
         this.refreshTokenIssuer = ctx.refreshTokenIssuer;
@@ -54,6 +55,7 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
         const identity = authorizationCode.sub && authorizationCode.sub_kind ?
             await this.identityResolver.resolve(authorizationCode.sub_kind, authorizationCode.sub) :
             null;
+
         if (!isTokenSubjectActive(identity, authorizationCode)) {
             throw OAuth2GrantError.invalid();
         }
@@ -142,6 +144,7 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
     ) : Promise<Session> {
         if (authorizationCode.session_id) {
             const existing = await this.sessionManager.findOneById(authorizationCode.session_id);
+
             if (!existing || !isTokenSession(existing, authorizationCode)) {
                 throw OAuth2GrantError.invalid('the session has been revoked');
             }
@@ -172,7 +175,7 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
             }
         }
 
-        return this.sessionManager.create({
+        const session = await this.sessionManager.create({
             userAgent: options.userAgent,
             ipAddress: options.ipAddress,
             realmId: authorizationCode.realm_id,
@@ -180,5 +183,11 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
             sub: authorizationCode.sub,
             authMethod: authorizationCode.auth_method ?? null,
         });
+
+        if (await this.revokeIfSecondFactorOwed(session)) {
+            throw OAuth2GrantError.invalid('a second factor is required');
+        }
+
+        return session;
     }
 }

@@ -6,111 +6,76 @@
 |------------------|---------------------------------------------------|
 | NX               | Monorepo task runner (dependency-ordered builds)   |
 | tsdown           | Package JS bundling (rolldown-based)               |
-| Vite             | every console BUNDLE: the auth console's SSR build (`apps/client-auth-console/`) and the two SPA builds (`apps/client-account-console/`, `apps/client-admin-console/`). The console SERVICES that serve them are tsdown like every other server package |
+| Vite             | Every console BUNDLE: the auth console's SSR build and the two SPA builds. The console SERVICES are tsdown like every other server package |
 | Nuxt             | `packages/client-web-nuxt` only (the integration downstream apps such as hub use). No authup app is a Nuxt app |
-| trapi            | OpenAPI document generation off the routup decorators (`build:swagger` in `apps/server-core`). The query surface is contributed by a preset handler during the generate, so nothing rewrites the document afterwards: see architecture.md → *Query vocabulary discovery* |
+| trapi            | OpenAPI generation off the routup decorators (`build:swagger` in `apps/server-core`). The query surface is contributed by a preset handler during the generate; nothing rewrites the document afterwards (architecture.md → *Query vocabulary discovery*) |
 | Vitest + SWC     | Test runner with fast compilation                  |
-| ESLint           | Linting (`@tada5hi/eslint-config-vue-typescript`) |
+| ESLint           | Linting (`@tada5hi/eslint-config`, root flat config `eslint.config.js`) |
 | Husky            | Pre-commit hooks via lint-staged                   |
 | commitlint       | Commit message convention enforcement              |
 
+The ESLint config keeps authup's domain-local type files, public interface names and compatibility re-exports through explicit overrides; component test harnesses may define multiple components per file.
+
+## Commit Convention
+
+Commits follow [Conventional Commits](https://www.conventionalcommits.org/) via `@tada5hi/commitlint-config` (`commitlint.config.js`). Type and scope drive release-please version bumps. No AI-attribution trailers or lines (see AGENTS.md).
+
 ## Validation & Error Handling
 
-- **Validation**: `validup` framework with `@validup/adapter-zod` for Zod schema integration
-- **Errors**: `@authup/errors` provides `AuthupError` (extends `BaseError` from `@ebec/core`) plus dedicated subclasses (`ValidationError`, `EntityNotFoundError`, `EntityConflictError`, `EntityCredentialsInvalidError`, `EntityInactiveError`, `InternalError`, `BadRequestError`, `UnauthorizedError`, etc.) with `Symbol.for(...)`-keyed duck-type guards in sibling `check.ts` files (`isError`, `isAuthupError`, `isValidationError`, `isOAuth2Error`, `isJWTError`, etc.). HTTP-status concern is decoupled: `ERROR_CODE_TO_STATUS` / `httpStatusFromCode(code)` map semantic codes to HTTP statuses in the adapter. **`core/**` must NOT throw HTTP-status-named error classes (`BadRequestError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`, …); those names belong to the HTTP layer.** Core throws transport-agnostic domain errors: the generic `ValidationError` (business-rule / bad-input violation, maps to 400), the semantic `Entity*Error` family, or a purpose-built domain error (e.g. `KeyCertificateError`); the HTTP error middleware maps their `code` to a status via `httpStatusFromCode`. `@ebec/http` classes stay in the HTTP middleware for foreign-error translation. Domain-specific identity workflow errors (e.g. `RegistrationDisabledError`, `PasswordRecoveryDisabledError`) live in their respective `core/identity/<workflow>/` folders and extend `ValidationError`.
-- **A dead bearer is 401 on a resource route, `invalid_grant` (400) on the token endpoint.** The three `JWT_*` codes (`expired_token`, `inactive_token`, `invalid_token`) map to **401** in `ERROR_CODE_TO_STATUS`, per RFC 6750 §3.1. They were unlisted and therefore took the 400 fallback, so a dead bearer answered 400 while a MISSING one answered 401 (`identity_unauthorized`), and no client could tell "your credential died" from "your request was malformed" by status alone. The token endpoint is the exception RFC 6749 §5.2 carves out, and it is honoured at the call site rather than in the map: `HTTPOAuth2RefreshTokenGrant` catches a verification failure (`isJWTError`) and re-throws `OAuth2GrantError.invalid()`, so every unacceptable refresh token answers one shape (400 `invalid_grant`) instead of splitting by what was wrong with it. **A new token-endpoint path that verifies a JWT must do the same**: the global map cannot know which surface it is on. The account console reads the 401 (`usePageError`), and the kit's auth hook already keyed on both the status and the JWT codes, which is why this had gone unnoticed.
-- **`POST /token/introspect` REPORTS, it does not raise.** RFC 7662 §2.2: a token that "is not active, does not exist on this server, or the protected resource is not allowed to introspect" MUST be answered with `active: false`. That covers a token authup cannot read at all (malformed, bad signature, a `kid` naming no key), which must not answer `401` or `404`, and a token of any kind but `access_token` or `refresh_token` (an id_token, the MFA login ticket, a back-channel logout token), which verifies but is no bearer credential; reporting them uniformly also stops the endpoint telling a caller whether a string was signed by a key we hold. Those reports are BARE (`{active: false}` and nothing else), per the §2.2 / §4 SHOULD NOT. **The expired token is the deliberate exception**: the verify passes `ignoreExpiry`, so it still yields its payload and the subject's claims, and the answer is `200 {active: false, ...payload, ...claims}`: a relying party can say "your session ended, \<name\>" instead of only "no". That is a knowing departure from the same SHOULD NOT, taken only for a token this server did issue and can still read. **`permissions` is withheld from any inactive report**, expired included (RFC 7662 §2.2 / §4): naming the subject is the point of reading an expired token, handing over their authorization set is not. `active` is therefore derived BEFORE the permission read, so a dead token never pays to resolve one either. Two cases still raise and are NOT reports about a token: a verifying token with no `sub`, and a subject that no longer resolves (`identity_invalid`). **`active` is derived in the CONTROLLER, never from the verify**: `OAuth2TokenVerifier`'s signature-keyed cache returns a hit without re-checking `exp`, so under `ignoreExpiry` the verify alone would report an expired token as live. It is `jti` not blocklisted AND `exp` in the future AND the session still present and bound to the token's subject and realm AND the subject active, fail-closed on either claim missing; a subject of another realm than the token names is no report about anyone and is answered bare. The verifier's own rule (never `saveWithSignature` on an `ignoreExpiry` path) is what keeps an expired payload out of that cache in the first place; do not relax it. Note the coupling with `@authup/client-web-kit`: the store's `revalidate()` relied on introspection *throwing* to reach its refresh fallback, so the store now checks `active` on the response (see architecture.md → *What the kit store persists*); the two must not be separated.
-- **`POST /token/revoke` answers `200` for a token it cannot read**, which is the one place an RFC names invalid tokens outright: RFC 7009 §2.2, "invalid tokens do not cause an error response since the client cannot handle such an error in a reasonable way". Expiry was already bypassed via `ignoreExpiry`; the `if (isJWTError(e))` branch covers malformed and unverifiable, the `HTTPOAuth2RefreshTokenGrant` call-site shape. The status is `200` because §2.2 names it; it was `202` until then, which sat in the same 2xx class but was not the spec's answer. What the RFC actually asks for is that an invalid token be indistinguishable from a revoked one, so both paths must keep returning the SAME status: changing one without the other reintroduces the oracle. A missing `token` **parameter** is a malformed request and stays `400 invalid_request` here and on introspection alike. Both endpoints read the parameter from the form BODY only (RFC 7662 §2.1, RFC 7009 §2.1) and answer `400` when the query string carries one, rather than reading it or silently falling back to the request's own bearer: a url is kept by access logs, proxies and history. The `GET /token/introspect` form therefore only ever introspects the request's own bearer.
-- **`POST /token/introspect` (and its `GET` form, which delegates to the same handler) requires an INDEPENDENT credential; `POST /token/revoke` deliberately does not (#3489).** RFC 7662 §2.1 makes authorization a MUST ("To prevent token scanning attacks, the endpoint MUST also require some form of authorization"), and `TokenController.assertIntrospectionAuthorized` accepts exactly two forms: a request identity the global authorization middleware already resolved (a LIVE bearer, or Basic), or confidential client credentials read the way the grants read them (`extractClientCredentialsFromRequest` + `OAuth2ClientAuthenticator`, `secret`/`tls`; a resolved `authMethod: none` client is refused with `invalid_client`, as the client-credentials grant refuses it, because a bare public `client_id` identifies and proves nothing). Nothing at all answers `401 identity_unauthorized` with the bare `WWW-Authenticate: Bearer` challenge. The credential has to be independent of the token being introspected: possession of that string is exactly what a finder of it has, so the issue's "self-introspection exemption for an expired bearer" would have been anonymous introspection under another name (and could not exist anyway, since the middleware answers 401 to an expired bearer before any route runs). That is also why the gate is what makes the expired report above safe to give: it now reaches only a caller that proved who it is. **Authentication is layer one; WHOSE tokens the caller may introspect is layer two** (`TokenController.isIntrospectionAllowed`): the token's own subject, the client the token was issued for (`payload.client_id`), or an actor granted `TOKEN_INTROSPECT`, whose realm reach is matched against the token's `realm_id` (`admin` reaches everything at `any`; a default grant's `own` covers same-realm tokens). A caller failing all three is answered with the bare `{active: false}` RFC 7662 §2.2 prescribes for a resource "not allowed to introspect" (indistinguishable from a dead token, no oracle), plus a server-side log line, since the caller gets nothing to diagnose with. Consequence for integrators: a resource server verifying FOREIGN tokens through the server adapters' remote mode needs the `TOKEN_INTROSPECT` grant on its client (one client-permission row); a downstream RP introspecting tokens issued to its own client needs nothing. The gate's credential-authenticated client is promoted to the request identity (`setRequestIdentity`, the `clientAuthBasic` shape) so the permission layer sees its grants. Every caller in the repo already had one: the kit introspects its own LIVE access token as the bearer and throws on `active: false`, so it never read the expired report, and its expired call already 401'd into `refreshSession()`; the server adapters' remote mode introspects with the resource server's own client-credentials bearer, minted lazily by `ClientAuthenticationHook` on the first 401 and replayed under `authorizationHeaderInherit` (pinned in `introspect.spec.ts` in that exact shape); the test suite's `suite.client` carries admin Basic, but hapic STRIPS the client-level header on every token-API call, so a spec must pass `{ authorizationHeaderInherit: true }` (or an explicit `authorizationHeader`) on `client.token.introspect` or it goes out anonymous. Cohort (from memory, see the introspection rows in `.agents/references/{keycloak,authentik}.md`): Keycloak is client-auth only and refuses public clients outright, Authentik is `client_id` + secret only and answers a bare `active: false` otherwise; neither accepts a bearer, which authup does because RFC 7662 names it and the secret-less consoles have nothing else. **Revocation stays open as a deliberate authup choice, not an RFC 7009 requirement:** §2.1 asks the client to send its credentials (a bare `client_id` for a public client) and the server to verify the token was issued to that client; authup knowingly skips both, because a public `client_id` proves nothing (an ownership check built on it would be advisory), the consoles are public clients whose kit revokes anonymously during logout teardown (the header is unset before the six best-effort revokes go out, and a refresh token cannot be its own bearer), possession of a token makes revoking it the benign action, and the uniform `200` leaves a scanner nothing to learn. Do not add an anonymous read to introspection, and do not gate revocation without changing the kit's teardown order.
-- **A `kid` that resolves to no usable verification key is a `JWTError`, not a `JWKError`.** `JWK_NOT_FOUND` maps to 404, which is right at `GET /jwks/:id` and wrong for a token whose header names an unknown, `enc`-use or disabled key: that made a dead bearer 404 on every resource route, escape the refresh grant's `isJWTError` catch as a 404 from `/token`, and drive the kit's http hook into its terminal branch instead of a refresh, so a key rotation ended every live browser session instead of renewing it. `OAuth2TokenVerifier` raises `JWTError.headerPropertyInvalid('kid')` (`invalid_token`) for an unknown or `enc` key, which also stops echoing the supplied `kid` back, and `JWTError.keyNotActive()` (`inactive_token`) for a key that was disabled or deleted (the inactive-key mark): such a token was issued rather than guessed, so the failed-authentication rate limit must not count it. Both are JWT codes, so the kit refreshes on either. `JWKError.decryptionKeyMissing()` stays: a key row with no material is a server misconfiguration, not a property of the token.
-- **A 401 from a protected resource carries `WWW-Authenticate`** (RFC 6750 §3), stamped by the error middleware: `Bearer error="invalid_token", error_description="..."` when the request presented a bearer, a bare `Bearer` when it presented nothing and the code is `identity_unauthorized`. The gate on the request's own `Authorization` header is what keeps the header off the token endpoint's `invalid_client` 401 (RFC 6749 §5.2), which is not a bearer failure. The description is a quoted-string and `message` can carry a third-party string, so `"` and `\` are stripped.
-- **Error helpers**: `normalizeError(unknown): Error` coerces an arbitrary thrown value into a real `Error` for downstream inspection. `serializeError(Error): Record<string, any>` calls `toJSON()` when available (preserving every AuthupError attribute) and otherwise spreads enumerable own properties: use it at any JSON serialization boundary (HTTP error middleware, embedded-error response bodies). Both live in `@authup/errors`.
-- **Outbound failures are `UPSTREAM_ERROR` (502), never the upstream's own status**: `sanitizeError` (`apps/server-core/src/utils/error.ts`) matches hapic's `isClientError` in a branch that MUST stay above the `isHTTPError` one. `isHTTPError` duck-matches any `BaseError` carrying a 4xx/5xx `status`, and hapic's `HttpResponseError` carries the upstream's, so without that ordering an upstream 400 becomes authup's own 400 `bad_request`. That reads as "your request was malformed" when the caller's request was fine and a dependency failed. The branch also drops hapic's message, which embeds the outbound method and URL (`400 Bad Request (POST https://idp.example.com/token)`) and would otherwise be served to the caller.
-- **Log the error as raised, never the sanitized copy**: `describeError(input, headline?)` (same file) is the log-side counterpart of `serializeError`. It renders the upstream status, the decoded upstream body, the `cause` chain down to the syscall reason (`ECONNREFUSED`, `ENOTFOUND`, ...) and the stack as one indented block. The response payload stays sanitized; this is for the server's own log only. **Do not thread `cause` onto the sanitized `AuthupError` instead**: `BaseError.toJSON()` serializes `cause`, and the response body is `serializeError(next)`, so that would publish upstream internals to the caller. A `catch` that swallows a failure into a redirect or a marker (e.g. the identity-provider link callback) must call `describeError` before swallowing, since that is the only surface the reason can reach.
-- **`check` / `safeCheck` pair on services**: When a service exposes a single verification that has two equally-valid call sites (one that wants exceptions (composition, business logic) and one that wants a value (HTTP boundary embedding denial in a response body), split into two methods: `check(...)` throws on any failure, `safeCheck(...)` wraps `check` and returns `Result<null>` from `@authup/kit`. A refusal of the request's own input (the subject a checker's `identity` names: malformed, not permitted, unknown) still throws from `safeCheck`, since it answers the request rather than the check. The HTTP controller calls `safeCheck` and maps `Result` → wire shape via `serializeError`. See `apps/server-core/src/core/identity/{permission,policy}/checker/` for the canonical example.
-- **Validation location**: Validators from `@authup/core-kit` (e.g., `RoleValidator`, `UserValidator`) run inside core services, not in controllers. Services receive raw `Record<string, any>` data and call `validator.run(data, { group: ValidatorGroup.CREATE })` internally. Controllers use `useRequestBody(req)` to pass the raw body to the service.
-- **Canonical identifier form**: `name` (every entity) and `user.email` are stored as `LOWER(TRIM(value))`. New `name`-style columns must chain `.trim().toLowerCase()` in their validator before the format check, and use `=` (not `LIKE`) in repository lookups. See `.agents/architecture.md#canonical-identifier-form` for the full rationale.
-- **Property naming**: new entity/domain properties and management-API payload/response fields must be **camelCase**. On the TypeORM entity, pin the snake_case column explicitly: `@Column({ name: 'snake_col' })` on every camelCase property, `@JoinColumn({ name })` on every relation (there is no naming strategy; a forgotten `name` yields a camelCase column that diverges from the frozen migration, so always add it). The OAuth2/OIDC protocol surface and JWT claims stay snake_case. See `.agents/architecture.md#naming-split-plan-073`.
-- **Relation targets**: when copying a `@ManyToOne` + `@JoinColumn` block (the usual way a new relation is written), re-check the target class against the join column: `@ManyToOne(() => RealmEntity)` left on a `client_id` column emits an FK to `auth_realms`, so the column can never hold a real client id. This has slipped through twice (`auth_permissions.client_id`, fixed in migration `1766830857009`; `auth_roles.client_id`, fixed in `1784970000000`) because TypeORM derives the FK name from the table + column only, so the name looks right either way and nothing fails until a row is written. Verify a migrated schema against the entity metadata with `dataSource.driver.createSchemaBuilder().log()`: an FK drop/add pair for the table means the two disagree.
+- **Validation**: `validup` with `@validup/adapter-zod`. Validators from `@authup/core-kit` (`RoleValidator`, `UserValidator`, ...) run inside core services, never in controllers. Services take raw `Record<string, any>` and call `validator.run(data, { group: ValidatorGroup.CREATE })`; controllers pass the body through (`@DBody()`).
+- **Errors**: `@authup/errors` provides `AuthupError` (extends `@ebec/core` `BaseError`), subclasses (`ValidationError`, `EntityNotFoundError`, `EntityConflictError`, `EntityCredentialsInvalidError`, `EntityInactiveError`, `InternalError`, `BadRequestError`, `UnauthorizedError`, ...) and `Symbol.for(...)` duck guards in sibling `check.ts` files. `ERROR_CODE_TO_STATUS` / `httpStatusFromCode(code)` map codes to HTTP statuses in the adapter.
+- **`core/**` must NOT throw HTTP-status-named errors** (`BadRequestError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`, ...). Core throws `ValidationError` (400), the `Entity*Error` family, or a purpose-built domain error (`KeyCertificateError`); the error middleware maps the `code`. `@ebec/http` classes stay in the HTTP middleware for foreign-error translation. Workflow errors (`RegistrationDisabledError`, `PasswordRecoveryDisabledError`) live in their `core/identity/<workflow>/` folder and extend `ValidationError`.
+- **A dead bearer is 401 on a resource route, `invalid_grant` (400) on the token endpoint.** The `JWT_*` codes (`expired_token`, `inactive_token`, `invalid_token`) map to 401 (RFC 6750 §3.1). The token endpoint exception (RFC 6749 §5.2) is applied at the call site: `HTTPOAuth2RefreshTokenGrant` catches `isJWTError` and rethrows `OAuth2GrantError.invalid()`. **A new token-endpoint path that verifies a JWT must do the same**; the global map cannot know which surface it is on.
+- **`POST /token/introspect` REPORTS, it does not raise** (RFC 7662 §2.2). An unreadable token (malformed, bad signature, unknown `kid`) and any kind other than `access_token` / `refresh_token` answer a bare `{active: false}`, which also hides whether we hold the signing key.
+  - **Exception: an expired token this server issued** answers `200 {active: false, ...payload, ...claims}` (verify with `ignoreExpiry`), so an RP can name the user. Deliberate departure from the §2.2 / §4 SHOULD NOT.
+  - **`permissions` is withheld from every inactive report**, expired included. `active` is derived before the permission read.
+  - Still raised: a verifying token with no `sub`, and a subject that does not resolve (`identity_invalid`).
+  - **`active` is derived in the controller, never from the verify**: `jti` not blocklisted AND `exp` in the future AND session present and bound to the token's subject and realm AND subject active, fail-closed on missing claims. The verifier's signature-keyed cache does not re-check `exp`, and it must never `saveWithSignature` on an `ignoreExpiry` path; do not relax that. A subject of another realm than the token names is answered bare.
+  - Coupled with `@authup/client-web-kit`: the store checks `active` on the response (topics/ui.md → *What the kit store persists*). Do not separate the two.
+- **Introspection requires an INDEPENDENT credential; revocation deliberately does not (#3489).**
+  - `TokenController.assertIntrospectionAuthorized` accepts a request identity the authorization middleware resolved (live bearer or Basic), or confidential client credentials (`extractClientCredentialsFromRequest` + `OAuth2ClientAuthenticator`, `secret`/`tls`; an `authMethod: none` client is refused `invalid_client`). Nothing answers `401 identity_unauthorized` with a bare `WWW-Authenticate: Bearer`. The authenticated client is promoted via `setRequestIdentity`.
+  - Rejected: a self-introspection exemption for the token's own string. Possession is exactly what a finder has.
+  - Layer two, `TokenController.isIntrospectionAllowed`: the token's own subject, the client it was issued for (`payload.client_id`), or an actor holding `TOKEN_INTROSPECT` whose realm reach covers the token's `realm_id`. Anyone else gets a bare `{active: false}` plus a server log line. A resource server introspecting FOREIGN tokens (adapter remote mode) needs `TOKEN_INTROSPECT` on its client.
+  - Specs: hapic STRIPS the client-level header on token-API calls, so pass `{ authorizationHeaderInherit: true }` (or an explicit `authorizationHeader`) on `client.token.introspect`.
+  - Revocation stays open: a public `client_id` proves nothing, the consoles' kit revokes anonymously during logout teardown, and revoking a held token is benign. Do not add an anonymous read to introspection, and do not gate revocation without changing the kit's teardown order.
+- **`POST /token/revoke` answers `200` for a token it cannot read** (RFC 7009 §2.2): `ignoreExpiry` plus an `isJWTError` branch. An invalid token and a revoked one must keep the SAME status, or the oracle returns.
+- **The `token` parameter is read from the form BODY only** (RFC 7662 / 7009 §2.1). A missing one is `400 invalid_request`; one in the query string is `400`, never read and never replaced by the request's own bearer. `GET /token/introspect` only introspects the request's own bearer.
+- **A `kid` resolving to no usable key is a `JWTError`, not a `JWKError`.** `JWK_NOT_FOUND` (404) is right at `GET /jwks/:id` only. `OAuth2TokenVerifier` raises `JWTError.headerPropertyInvalid('kid')` for an unknown or `enc` key (no echo of the `kid`) and `JWTError.keyNotActive()` for a disabled or deleted key (issued, not guessed, so the failed-auth rate limit must not count it). The kit refreshes on either. `JWKError.decryptionKeyMissing()` stays for a key row without material.
+- **A 401 from a protected resource carries `WWW-Authenticate`** (RFC 6750 §3), stamped by the error middleware: `Bearer error="invalid_token", error_description="..."` when a bearer was presented, bare `Bearer` for `identity_unauthorized` with none. Gated on the request's own `Authorization` header, so the token endpoint's `invalid_client` 401 does not get it. `"` and `\` are stripped from the description.
+- **Error helpers** (`@authup/errors`): `normalizeError(unknown)` coerces a thrown value into an `Error`; `serializeError(Error)` calls `toJSON()` when present, else spreads own properties. Use it at every JSON serialization boundary.
+- **Outbound failures are `UPSTREAM_ERROR` (502), never the upstream's status.** In `sanitizeError` (`apps/server-core/src/utils/error.ts`) the hapic `isClientError` branch MUST stay above `isHTTPError`, which duck-matches any `BaseError` with a status. The branch also drops hapic's message, which embeds the outbound method and URL.
+- **Log the error as raised, never the sanitized copy.** `describeError(input, headline?)` (same file) renders upstream status, decoded body, `cause` chain and stack for the server log. **Do not thread `cause` onto the sanitized `AuthupError`**: `toJSON()` serializes `cause` into the response. A `catch` that swallows a failure into a redirect or marker must `describeError` first.
+- **`check` / `safeCheck` pair**: `check(...)` throws; `safeCheck(...)` wraps it and returns `Result<null>` from `@authup/kit`. A refusal of the request's own input (the subject `identity` names) still throws from `safeCheck`. Controllers call `safeCheck` and map via `serializeError`. Canonical: `apps/server-core/src/core/identity/{permission,policy}/checker/`.
+- **Canonical identifier form**: `name` (every entity) and `user.email` are stored as `LOWER(TRIM(value))`. New `name`-style columns chain `.trim().toLowerCase()` before the format check and use `=` (never `LIKE`) in lookups. See architecture.md → *Canonical Identifier Form*.
+- **Property naming**: entity and management-API fields are camelCase. On the TypeORM entity pin the snake_case column with `@Column({ name })` and `@JoinColumn({ name })` on every relation; there is no naming strategy. OAuth2/OIDC protocol fields and JWT claims stay snake_case (architecture.md → *Naming split*).
+- **Relation targets**: when copying a `@ManyToOne` + `@JoinColumn` block, re-check the target class against the join column. TypeORM derives the FK name from table + column only, so a wrong target looks right until a row is written (the bug behind `1766830857009` and `1784970000000`). Verify with `dataSource.driver.createSchemaBuilder().log()`: an FK drop/add pair means the two disagree.
 
 ## Workflow
 
-- After making changes, **always build** the affected app/package and **run ESLint** on all changed files.
-- Build: `npm run build -w <workspace>` (from repo root, e.g. `-w apps/server-core`, `-w packages/kit`)
-- Lint: `npx eslint --fix path/to/changed/file1.ts path/to/changed/file2.ts`
-- Fix any build or lint errors before considering a task complete.
-- Every workspace splits `build` into `build:types` + `build:js`: packages emit
-  declarations (`tsc`/`vue-tsc --emitDeclarationOnly`), the console BUNDLES
-  run a pure type check (`vue-tsc --noEmit`) before bundling, and the console
-  SERVICES emit declarations like any other server package. The Vite console
-  bundles' tsconfigs deliberately
-  declare **no local `paths`**: they inherit the root `tsconfig.json` map
-  (`@authup/* → packages/*/src`), so the type check runs against package
-  SOURCE, matching the vite/nuxt `@authup/* → src` aliases the bundles are
-  built from. Do not re-add app-local relative `paths` entries: `paths`
-  resolve against the inherited root `baseUrl`, so `../../packages/...`
-  silently resolves outside the repo, never matches, and the check degrades to
-  the last-built dist declarations (where vue-tsc-emitted component prop
-  unions can differ from source). The corollary is that each Vite console
-  app's `resolve.alias` map must list **every** `@authup/*` package it pulls
-  in, transitive ones included: an unaliased package is bundled from its
-  built dist while `vue-tsc` checks the source, so the two silently disagree
-  until a rebuild.
-- **`check:types` (`tsc -p tsconfig.test.json`, `vue-tsc` in the Vue
-  workspaces) is the only thing that type-checks `test/**`.** `build:types`
-  compiles `src` alone, and vitest transpiles through SWC, which strips types
-  without checking them. So a type error in a spec (or in `src`, exercised
-  only by a spec) otherwise ships green and surfaces as a RUNTIME assertion
-  failure, which reads as a different class of bug and gets diagnosed as one.
-  That happened in #3517. Every workspace declares the script, so CI's
-  `npm run check:types --workspaces --if-present` is a real gate rather than
-  a hand-kept list; adding a workspace means adding its `tsconfig.test.json`
-  too. The three client console BUNDLES are the exception and carry none:
-  their `build:types` is already `vue-tsc --noEmit -p tsconfig.json` and that
-  config's `include` lists `test/**/*.ts`, so their tests are gated by the
-  build job instead, and a second script there would run vue-tsc twice for no
-  coverage. `packages/client-web-nuxt` is the one config that deviates, in
-  three ways: its script is prefixed with `nuxt-module-build prepare` because
-  its tsconfig extends the generated, gitignored `.nuxt/tsconfig.json` (on a
-  warm nx cache the lint job's build step is skipped and `.nuxt` never
-  exists); it runs `vue-tsc` because Nuxt's generated config aliases
-  `@authup/client-web-kit` to source, which imports `.vue`; and it omits
-  `"ignoreDeprecations": "6.0"`, because that chain never reaches the repo
-  root, whose deprecated `baseUrl` is the whole reason the other configs
-  carry it. That generated config is also STRICTER than the root (it sets
-  `noUncheckedIndexedAccess`), which is why two genuine `src` errors surfaced
-  there and nowhere else. The gate stops at the include globs
-  (`src/**/*.ts` + `test/**/*.ts`), so root-level build files
-  (`tsdown.config.ts`, `vite.config.ts`, `test/vitest.config.ts`) stay
-  unchecked.
-- The auth console emits both halves of its SSR output from one
-  `vite build`, declared as `environments: { client, ssr }` plus
-  `builder: {}` rather than two invocations with CLI flags. The output
-  paths are load-bearing (server-core reads `dist/client/index.html`,
-  `dist/client/.vite/ssr-manifest.json` and `dist/server/server.js`), so
-  the SSR `entryFileNames` is pinned instead of derived from the entry
-  name. Leave `builder.sharedPlugins` at its default (off): plugin
-  instances hold `configResolved`-scoped state, and the environments
-  resolve differently enough (`consumer`, `build.ssr`, outDir) that
-  sharing one instance across both is not something the plugin set is
-  written for.
+- After changes, build the affected workspace (`npm run build -w <workspace>`) and lint changed files (`npx eslint --fix <files>`). Fix errors before calling a task done.
+- Every workspace splits `build` into `build:types` + `build:js`. Packages and console services emit declarations; console bundles run `vue-tsc --noEmit` before bundling.
+- **Vite console bundles declare no local `paths`.** They inherit the root map (`@authup/* → packages/*/src`), so the type check runs against source like the vite aliases. App-local `../../packages/...` entries resolve against the root `baseUrl`, never match, and silently fall back to built dist declarations. Corollary: each console's `resolve.alias` must list every `@authup/*` package it pulls in, transitive ones included, or the bundle uses dist while `vue-tsc` checks source.
+- **`check:types` is the only thing that type-checks `test/**`.** `build:types` compiles `src` only and vitest's SWC strips types without checking, so a type error otherwise surfaces as a runtime assertion failure (#3517). Every workspace declares the script, so CI's `npm run check:types --workspaces --if-present` is a real gate; a new workspace needs its `tsconfig.test.json`.
+  - Exception: the three client console bundles carry none; their `build:types` config already includes `test/**/*.ts`.
+  - `packages/client-web-nuxt` runs `nuxt-module-build prepare && vue-tsc -p tsconfig.test.json`: its tsconfig extends the generated, gitignored `.nuxt/tsconfig.json` (absent on a warm nx cache), Nuxt aliases the kit to source (`.vue`), and it omits `"ignoreDeprecations": "6.0"` because it never reaches the root `baseUrl`. That config is stricter (`noUncheckedIndexedAccess`).
+  - Root-level build files (`tsdown.config.ts`, `vite.config.ts`, `test/vitest.config.ts`) stay unchecked.
+- The auth console emits both SSR halves from one `vite build` (`environments: { client, ssr }` plus `builder: {}`). The output paths are load-bearing (`dist/client/index.html`, `dist/client/.vite/ssr-manifest.json`, `dist/server/server.js`), so the SSR `entryFileNames` is pinned. Leave `builder.sharedPlugins` off: plugin instances hold `configResolved` state the two environments resolve differently.
 
 ## Testing
 
-- **Service-level tests** isolate domain logic with in-memory fakes. Generic fakes (`FakeEntityRepository`, `FakePermissionEvaluator`, `createAllowAllActor()` etc.) come from `@authup/server-test-kit`; domain fakes (`FakeRealmRepository`, `FakeRoleRepository`, `FakeUserRepository`, ...) live alongside their entity at `test/unit/core/entities/<entity>/fake-repository.ts`. No HTTP, no Docker.
-- **HTTP-level tests** spin up the real server on a random port. Use `suite.client` (typed `@authup/core-http-kit` Client) for API calls; `suite.baseURL` for raw `fetch()` (e.g., asserting HTML response bodies).
-- **UI/SSR tests** stub the rendered Vue app's outbound HTTP via a fake client: register `{ useFactory: () => createFakeClient(handlers) }` (from `@authup/core-http-kit/testing`) with `{ lifetime: 'transient' }` under `HTTPInjectionKey.UIHttpClient` before `suite.setup()` (see `.agents/testing.md`). Transient lifetime (never a singleton instance) because the client carries per-user Authorization state. Production code never imports from `@authup/core-http-kit/testing`.
+- **Service-level tests** use in-memory fakes. Generic fakes (`FakeEntityRepository`, `FakePermissionEvaluator`, `createAllowAllActor()`, ...) come from `@authup/server-test-kit`; domain fakes live at `test/unit/core/entities/<entity>/fake-repository.ts`. No HTTP, no Docker.
+- **HTTP-level tests** boot the real server on a random port: `suite.client` (typed client), `suite.baseURL` (raw `fetch()`).
+- **server-core's loopback client** is faked under `HTTPInjectionKey.InternalHttpClient` (transient lifetime, registered before `suite.setup()`): see testing.md → *The internal HTTP client seam (server-core)*. Production code never imports `@authup/core-http-kit/testing`.
 
 ## Database Migrations
 
-Migrations live in `apps/server-core/src/adapters/database/migrations/{mysql,postgres}/` (sqlite never runs them: the options builder wires `migrations: []` for `better-sqlite3`, so boot falls back to `dataSource.synchronize()` from the entity classes; the test suite does the same).
+Migrations live in `apps/server-core/src/adapters/database/migrations/{mysql,postgres}/`. sqlite never runs them (`migrations: []` for `better-sqlite3`; boot and tests `synchronize()`).
 
-**MySQL and PostgreSQL are the supported servers, and MariaDB is not one of them.** There is no `migrations/mariadb/` directory and the config validator only accepts `mysql` / `postgres` / `better-sqlite3`, so typeorm's MariaDB-specific behaviour (native `uuid` columns from 10.7, `RETURNING`) never activates either: it is gated on `options.type === 'mariadb'`. Pointing `type: 'mysql'` at a MariaDB server mostly works but is unsupported, and two things diverge concretely: MariaDB refuses to change a column an existing foreign key references even with `FOREIGN_KEY_CHECKS` off (`ER_FK_COLUMN_CANNOT_CHANGE`), which aborts `1785871780234-AlignSchemaWithEntityMetadata`; and MariaDB 11.4+ defaults to the `utf8mb4_uca1400_ai_ci` collation where MySQL 9 uses `utf8mb4_0900_ai_ci`, so every string column reads as drift. Do not reshape a migration to accommodate it.
-
-- **One named migration per feature; released migrations are immutable.** Each feature/PR adds its own migration with a descriptive class/file name (e.g. `1784289540000-CamelCaseAttributes.ts`, `1784460916000-RemoveRobots.ts`; both dialects, doc-comment header explaining the change). A migration may still be amended while it lives only on its own unmerged branch; once it ships in a **release** it is immutable: before touching an existing migration, verify against the release tags / last release-PR merge that it has not shipped (folding into an already-released file is the failure mode this rule exists to prevent).
-- Consolidation happens at release time, not at merge time: the window's migrations MAY be squashed into one file per dialect as a deliberate last step before the release PR merges (keeping the earliest timestamp so ordering against the released chain holds), but this is optional; shipping several named migrations in one release is fine. Anyone who executed the pre-squash files must drop their dev DB (the CLI re-creates it) or fix its `migrations` table by hand. The beta.65 window was folded this way: `1788782400000-WidenClientSecretAndGlobalUniqueness` carries the client-secret widening and the global uniqueness index under the earlier timestamp, with the uniqueness pre-check placed first so it still aborts before any DDL runs, and every reference to the two pre-fold names (the spec's import, the entity comments, upgrading.md, these docs) was moved with it.
-- After adding or amending a migration, verify with the migration round-trip (`migration run` → `revert` × N → `run`, see [testing.md](testing.md#migration-tests)). A migration that touches columns, constraints or rows additionally needs the populated round-trip (`npm run test:migration-latest`): the CI round-trip runs on an empty schema and cannot surface anything that only fails with rows present.
-- **Never hand-write DDL. Generate it with the CLI.** Schema changes (tables, columns, indexes, constraints, types) are produced by `migration generate` and committed as emitted: never typed by hand, and never edited afterwards in any way that changes the resulting schema:
+- **MySQL and PostgreSQL are supported; MariaDB is not.** There is no `mariadb/` directory and the config validator accepts only `mysql` / `postgres` / `better-sqlite3`. A MariaDB server behind `type: 'mysql'` diverges (it refuses to change an FK-referenced column, which aborts `1785871780234-AlignSchemaWithEntityMetadata`; its 11.4+ default collation reads as drift). Do not reshape a migration for it.
+- **One named migration per feature; released migrations are immutable.** Descriptive class and file name (`1784289540000-CamelCaseAttributes.ts`), both dialects, doc-comment header. A migration may be amended only while on its own unmerged branch; before touching one, verify against release tags that it has not shipped.
+- **Consolidation is optional and happens at release time**: a window's migrations may be squashed into one file per dialect, keeping the earliest timestamp, before the release PR merges. Anyone who ran the pre-squash files drops their dev DB. Move every reference to the old names with it (precedent: `1788782400000-WidenClientSecretAndGlobalUniqueness`).
+- Verify with the migration round-trip (`migration run` → `revert` × N → `run`, testing.md → *Migration Tests*). A migration touching columns, constraints or rows also needs `npm run test:migration-latest`; the CI round-trip runs on an empty schema.
+- **Never hand-write DDL. Generate it:**
 
   ```bash
   docker compose up -d mysql postgres            # the generator connects to both
@@ -118,410 +83,121 @@ Migrations live in `apps/server-core/src/adapters/database/migrations/{mysql,pos
   npm run cli --workspace=apps/server-core -- migration generate
   ```
 
-  The command drops and recreates a local `migrations` database per dialect, replays the existing chain, diffs it against the entity metadata and writes **both** dialect files under one shared timestamp. Rename the emitted `<timestamp>-Default.ts` file **and** its class to the descriptive name the rule above asks for, add the doc-comment header, and leave the DDL untouched.
-
-  Hand-authored statements are confined to what the generator cannot express: data migrations (`UPDATE` / `INSERT` / backfills), guarded or idempotent wrappers, comments, and an index over an expression, which the entity declares as an unsynced `@Index` (the one hand-named constraint, below). They may sit alongside generated DDL in the same file; they may not replace it. If a change seems to need hand-written DDL, the entity is the thing to fix, then regenerate.
-
-  This is not a style preference. Every schema defect found so far came from hand-authored DDL diverging from the entity model: two foreign keys pointing at the wrong table (`auth_permissions.client_id` in `1766830857009`, `auth_roles.client_id` in `1784970000000`), and the naming + column-type split that `1783325495597` / `1783769340000` introduced and `1785264000000-AlignSchemaWithEntityMetadata` had to repair across 28 constraints and 15 columns. Two traps in particular are invisible while hand-writing and unmissable when generating: constraint names are typeorm's table+column hash (`IDX_<hash>` / `FK_<hash>`, never a readable `IDX_auth_events_actor_name`), and a plain `@Column({ type: 'uuid' })` is `varchar(255)` on MySQL, not `varchar(36)`: pinning `length: 36` is no escape, Postgres rejects a length on `uuid` at `DataSource.initialize()`. The `test:schema-drift` gate in the `tests-migrations` job fails the build on any divergence; see [testing.md](testing.md#schema-drift-gate-npm-run-testschema-drift).
-- Planned for `v1.0.0` final: squash the entire beta chain into a single baseline migration with a stepping-stone upgrade path (upgrade to the last beta first).
-- **Never hand-write a constraint name.** `migration generate` diffs the live schema against the entity metadata, so a hand-authored `CREATE INDEX IDX_auth_events_actor_id` that the model does not declare reads as drift: the next generated migration renames it to typeorm's `IDX_<hash>`, burying whatever real change was being generated. Index, unique and foreign key names come from typeorm, and the entities pin none of them (`@Index()`, `@Unique([...])`, `@JoinColumn({ name })`). The 32 readable names the hand-authored beta.52/beta.53 migrations introduced were renamed onto the derived ones by `1785871780234-AlignSchemaWithEntityMetadata`. Primary keys are the one exception that needs no thought either way: the schema builder never compares their constraint names, so the 5 readable `PK_auth_*` are left as they are.
-- **The one hand-named constraint is an index the entity metadata cannot describe.** `1788782400000-WidenClientSecretAndGlobalUniqueness` (issue #3559) needs a unique index over `COALESCE(...)` expressions, which no decorator can express. The entity declares it anyway, as `@Index('IDX_auth_permissions_global_name', { synchronize: false })`: the schema builder matches an index by NAME and `shouldDropIndices` returns false for `synchronize === false`, so neither the drift gate nor `migration generate` ever touches it, and the DDL is hand-written in the migration under that name. The name MUST be given rather than derived, for two reasons found by trying the derived one first: `IndexMetadata.build` returns early for an unsynced index with `name = givenName`, so a name-less declaration matches nothing and the builder drops the live index as unknown; and on mysql the derived `IDX_<hash>` over the same column list is already the `@Unique`'s own index, which that dialect stores as a unique index under exactly that name (`1740991051622-Default`). The unsynced overload takes the name and nothing else (`Index(name, { synchronize: false })` is its own signature), so the columns, the expression and the uniqueness live in the migration alone. `test/unit/adapters/database/global-uniqueness.spec.ts` pins the entity name against the migration's, the zero-drift property and the constraint itself on both server dialects; sqlite, which only ever synchronizes, never gets such an index and is documented as carrying the nullable unique alone.
-- **uuid columns are `varchar(255)` on mysql, not `varchar(36)`.** MySQL has no uuid type and `MysqlDriver.getColumnLength` only shortens to 36 for values typeorm generates itself, so a plain `@Column({ type: 'uuid' })` derives the generic varchar default. The same two migrations declared 15 of them as `varchar(36)`, which `1785871780234` widens. Do not try to close such a gap from the entity side with `length: 36`: postgres rejects a length on a `uuid` column at `DataSource.initialize()`, and a dialect-conditional column type is not expressible because `migration generate` builds both dialects in one process off the same entity classes.
-- **An index added on a MySQL foreign-key column breaks the generated `down()`.** MySQL keeps an implicit index per FK (named after the constraint) and silently DROPS it the moment another index that can serve the constraint is created, so the new index becomes the FK's only server, and the generated `down()`'s plain `DROP INDEX` fails with "needed in a foreign key constraint" (worse: MySQL DDL is non-transactional, so a failed revert leaves a partial state). The generator has no awareness of this. Fix by WRAPPING the generated mysql `down()` (never editing the generated statements): a hand-authored phase dropping the affected FK constraints first, and a closing phase re-adding them (`ADD CONSTRAINT` recreates each implicit index under the constraint's own name, restoring the exact pre-migration state). See `1786436332251-QueryIndexes.ts` for the pattern and the affected-set query (information_schema: FK columns whose ONLY leading index is one the migration created). Postgres is unaffected (FKs there require no index).
+  It replays the chain into a local `migrations` database per dialect and writes both files under one timestamp. Rename `<timestamp>-Default.ts` and its class, add the header, leave the DDL untouched. Hand-authored statements are limited to data migrations (`UPDATE` / `INSERT` / backfills), guarded or idempotent wrappers, comments, and an expression index (below). If a change seems to need hand-written DDL, fix the entity and regenerate. Every schema defect so far came from hand-authored DDL; `test:schema-drift` in the `tests-migrations` job fails on any divergence (testing.md → *Schema-drift gate*).
+- Planned for `v1.0.0` final: squash the beta chain into one baseline with a stepping-stone upgrade path.
+- **Never hand-write a constraint name.** Index, unique and FK names are typeorm's table+column hash (`IDX_<hash>`, `FK_<hash>`); entities pin none (`@Index()`, `@Unique([...])`, `@JoinColumn({ name })`). A readable name reads as drift and gets renamed by the next generated migration. Primary keys are exempt (never compared); the existing readable `PK_auth_*` stay.
+- **The one hand-named constraint is an expression index** (#3559, `1788782400000`): a unique index over `COALESCE(...)`, declared on the entity as `@Index('IDX_auth_permissions_global_name', { synchronize: false })` with DDL hand-written under that name. The name must be given: an unsynced name-less index matches nothing and the builder drops the live one, and on mysql the derived hash collides with the `@Unique`'s own index. sqlite never gets it.
+- **uuid columns are `varchar(255)` on mysql, not `varchar(36)`.** A plain `@Column({ type: 'uuid' })` derives the generic varchar default. Do not "fix" it with `length: 36`: postgres rejects a length on `uuid` at `DataSource.initialize()`, and both dialects are generated off the same entities.
+- **An index added on a MySQL FK column breaks the generated `down()`.** MySQL drops its implicit FK index once another index can serve the constraint, so the generated `DROP INDEX` fails ("needed in a foreign key constraint") and leaves a partial state (MySQL DDL is non-transactional). Wrap the generated mysql `down()` (never edit its statements): drop the affected FKs first, re-add them last. Pattern and affected-set query: `1786436332251-QueryIndexes.ts`. Postgres is unaffected.
 
 ## File Organization
 
-- Exported **types** (interfaces, type aliases) must live in a `types.ts` file in the same directory, not inline in the implementation module. Implementation files import from `types.ts`.
+- Exported types (interfaces, type aliases) live in a `types.ts` next to the implementation, never inline. Implementation files import from it.
 - Barrel `index.ts` files re-export from `types.ts` and implementation modules.
 
 ## Workspace Naming (apps & packages)
 
-The workspace name grammar, shared with PrivateAIM/hub (whose tree is the reference
-implementation: apps `client-ui`, `server-core`, `server-core-worker`; packages
-`client-vue`, `server-kit`, `core-kit`):
+Shared grammar with PrivateAIM/hub (apps `client-ui`, `server-core`; packages `client-vue`, `server-kit`, `core-kit`).
 
-- **The prefix marks the side of the client-server relationship** that the
-  application sits on (apps) or is built for (packages): `server-` for server
-  applications, including third-party resource servers embedding the
-  `server-adapter-*` packages; `client-` for client applications. An unprefixed
-  workspace serves both sides: `kit`, `errors`, `specs`, `access`, `i18n`,
-  `core-*`. The prefix does NOT mark where code executes: a client app's code
-  may run server-side (the SSR auth console), and a server package may call
-  the API (the adapters fetch JWKS). A future API-driving CLI is a client
-  application and would be role-named `client-admin-cli`, next to
-  `client-admin-console` (Keycloak's `admin-cli` precedent).
-- **`core-*` names the core service's domain surface** (domain types, HTTP and
-  realtime clients for `server-core`'s API). Consumed on both sides, hence unprefixed.
-- **Apps are role-named** after the prefix: `server-core` (the IdP),
-  `client-admin-console` / `client-account-console` / `client-auth-console`
-  (the three console BUNDLES), `server-admin-console` /
-  `server-account-console` / `server-auth-console` (the three console
-  SERVICES that serve them), and the planned
-  `server-core-worker` (optional background processor). The `authup`
-  operator CLI is the eponymous exception. The admin app carries the full
-  `admin-console` role (not bare `console`) because the UI surfaces are
-  peers: admin console, account console and auth console.
-  Console apps normally match their per-realm OAuth2 client rows
-  (`admin-console`, `account-console`); **`client-auth-console` is the
-  deliberate exception**. The auth pages ARE the IdP surface (they issue
-  tokens rather than obtain them), so no client row exists for them. The
-  name keeps the console-family symmetry anyway (settled 2026-08-02 with
-  the maintainer).
-- **A console's bundle and its service share a role and differ only in the
-  prefix**, which is the grammar working as intended rather than a
-  collision: the bundle is built FOR a browser (`client-`) and the service
-  runs on a server (`server-`), and the pair is exactly the client-server
-  split the prefix marks. Keep them in step, one to one. A second service
-  serving one bundle, or one service serving two, is the shape to argue
-  about before it is named. Note the prefix still does not mark where code
-  EXECUTES: `client-auth-console`'s code runs server-side, inside
-  `server-auth-console`'s render.
-- **Packages are surface- or platform-named** after the prefix: `client-web-kit` /
-  `client-web-nuxt` / `client-web-theme` serve ANY web client (RP) embedding authup,
-  not just the console; `server-kit` / `server-adapter-*` serve any server-side
-  consumer.
-- **The second slot answers a different question per species, by design.** Apps
-  are deployed by identity, so they carry a role (`client-admin-console`,
-  `server-core`); packages are picked up by kind, so they carry a platform or
-  surface (`client-web-kit`, `server-adapter-node`). Do not pad app names with
-  platform tokens for symmetry (`client-web-account-console`): the shape
-  difference is what keeps applications and libraries distinguishable in the
-  flat `@authup/*` npm scope, and console app names must keep matching their
-  per-realm OAuth2 client rows. App and package names deliberately do NOT
-  mirror each other (hub precedent: app `client-ui`, library `client-vue`), so
-  renaming an app never implies renaming a published package family.
-- **Operator-facing vocabulary is a separate, shorter layer**: the binaries
-  (`authup`, the one an ordinary deployment runs, plus a per-service
-  `authup-<name>-console` escape hatch), the CLI ROLES (one listener verb,
-  `start`, whose positional is the role: `start core`, `start worker`,
-  `start console [admin|account|auth]`), the configuration sections
-  (`core`, `<name>Console`), the container command (the CLI's own argument
-  list; the docker entrypoint's former `server/core` selector never mirrored
-  a configuration section and is deprecated, accepted with a notice on
-  stderr through the 1.0.0-beta line and removed in v1.0.0), and helm
-  values keys. The grammar above governs
-  workspace directory and npm package identity only, which is why a role is
-  the bare console name (`authup start console admin`) while the workspace
-  behind it is `server-admin-console`.
-
-- **An export does not repeat its package's name.** The package IS the
-  namespace, so `@authup/server-account-console` exports `createApplication`,
-  `createHandler`, `createServer`, `resolveConfig`, `readConfigFromEnv` and
-  `CONFIG_SCHEMA`, not `createAccountConsoleApplication` and its siblings.
-  Identical names across sibling packages are the intended outcome, not a
-  collision (`server-adapter-node` and `server-adapter-socket-io` have both
-  exported `createMiddleware` since long before the consoles existed): the two
-  only ever meet in a consumer that imports several, and there an alias at the
-  import site says which is which. `apps/authup` is that consumer for the three
-  consoles. This applies to the SERVICE packages only. The client BUNDLES keep
-  a qualified `resolveAccountConsoleConfig`, because that is a module-internal
-  function rather than a package export, and `@authup/server-config` keeps its
-  `ACCOUNT_CONSOLE_BASE_PATH` constants, because it declares all three sections
-  and the console name is what tells them apart.
-
-The `client-web-*` packages keep their names on purpose.
-A `web-` platform-prefix grammar (`web-kit`, `web-admin-console`) was evaluated
-and rejected 2026-08-03: "web" already means Web-standard APIs in
-`server-adapter-web`, the kit's real constraint is Vue rather than "web", and
-aligning app names to package shapes would blur the app/library distinction in
-the npm scope.
+- **The prefix marks the side of the client-server relationship** the app sits on or a package is built for: `server-` for server applications (third-party resource servers embedding `server-adapter-*` included), `client-` for client applications. Unprefixed means both sides: `kit`, `errors`, `specs`, `access`, `i18n`, `core-*`. It does NOT mark where code executes (the SSR auth console runs client code server-side). A future API-driving CLI would be `client-admin-cli`.
+- **`core-*` names the core service's domain surface** (domain types, HTTP and realtime clients), consumed on both sides.
+- **Apps are role-named**: `server-core`, `client-{admin,account,auth}-console` (bundles), `server-{admin,account,auth}-console` (services). The `authup` CLI is the eponymous exception. The admin app carries the full `admin-console` role because the three consoles are peers. Console apps match their per-realm OAuth2 client rows; `client-auth-console` is the deliberate exception (it IS the IdP surface, so no client row exists).
+- **A console's bundle and service share a role and differ only in prefix**, one to one. A second service for one bundle, or one service for two, needs discussion before naming.
+- **Packages are surface- or platform-named**: `client-web-kit` / `client-web-nuxt` / `client-web-theme` serve any web RP; `server-kit` / `server-adapter-*` any server-side consumer.
+- **The second slot differs by species, by design**: apps carry a role, packages a platform or surface. Do not pad app names with platform tokens (`client-web-account-console`); the shape difference keeps apps and libraries apart in the flat `@authup/*` scope. App and package names deliberately do not mirror each other.
+- **Operator vocabulary is a separate, shorter layer**: binaries (`authup`, plus per-service `authup-<name>-console`), CLI roles (`start`, `start core`, `start worker`, `start console [admin|account|auth]`), config sections (`core`, `<name>Console`), the container command (the CLI's own argument list; the entrypoint's `server/core` selector is deprecated, accepted with a stderr notice through the 1.0.0-beta line, removed in v1.0.0) and helm keys. The grammar governs workspace and npm identity only.
+- **An export does not repeat its package's name.** `@authup/server-account-console` exports `createApplication`, `createHandler`, `createServer`, `resolveConfig`, `readConfigFromEnv`, `CONFIG_SCHEMA`. Sibling packages sharing names is intended; the importing consumer (`apps/authup`) aliases. Applies to service package exports only: bundles keep module-internal qualified names (`resolveAccountConsoleConfig`), and `@authup/server-config` keeps `ACCOUNT_CONSOLE_BASE_PATH` etc. because it declares all three sections.
+- Rejected (2026-08-03): a `web-` platform-prefix grammar (`web-kit`, `web-admin-console`). "web" already means Web-standard APIs in `server-adapter-web`, the kit's real constraint is Vue, and it would blur apps and libraries in the npm scope.
 
 ## Dependency Classification (published packages)
 
-Sort each runtime dependency of a **published** package by one question: **would a second copy in the consumer's tree be a bug?**
+Sort each runtime dependency of a published package by one question: **would a second copy in the consumer's tree be a bug?**
 
-- **`peerDependencies` (+ a devDependency mirror)**: only for **singletons**: something a *second instance* would break, or that the consuming app *owns and configures*. Framework runtimes (`vue`, `pinia`), a plugin/theme manager registered via `app.use()` (`@vuecs/core` and the `@vuecs/*` components bound to it, peer even when the kit's own import is `import type`, because the runtime singleton flows through the components), and `provide`/`inject` clusters keyed by a module-local `Symbol()` (`validup`/`@validup/vue`, `ilingo`/`@ilingo/vue`/`@ilingo/validup-vue`, and `vue-router`, whose `useRoute()` is `inject(routeLocationKey)` against a module-local `Symbol` provided by the host's `app.use(router)` / Nuxt, so a nested second copy resolves to `undefined`). Here `dependencies` would be *wrong*, not just wasteful: a private nested copy silently splits the singleton. The dev mirror lets the package build/test in isolation; keep peer range and dev pin aligned (peer = caret on the dev pin).
-- **`dependencies`**: runtime-required **stateless leaves** with no singleton semantics: pure functions/enums/classes the package instantiates internally and never shares by identity (`smob`, `rapiq`, `@posva/event-emitter`, `@validup/zod`, `@ilingo/validup`, and the internal `@authup/*` building blocks; the package constructs its own `PermissionEvaluator`/`Client`/`ClientManager`, so there is no host-owned instance to dedupe). One version is still guaranteed by lockstep release + resolver dedup; `dependencies` just spares the consumer a manual install. This matches the `@authup/core-kit` / `@authup/client-web-nuxt` precedent (internal `@authup/*` as plain `dependencies`, never peers). **"Needed at runtime" does NOT imply peer.** A phantom runtime need (a package used only transitively, e.g. `universal-cookie` via `@vueuse/integrations/useCookies`) is still declared here.
-- **`peerDependenciesMeta` `optional: true`**: a singleton needed only on an opt-in path that degrades gracefully (`@vuecs/locale`: `tryUseLocaleManager()` falls back to the ilingo locale).
-- **`devDependencies` only**: build/test tooling (`@types/node`, `@vitejs/plugin-vue`, `vue-tsc`, `cross-env`), plus packages referenced **only** in `test/` or internal build code that never surface in the emitted `.d.ts`.
-
-**`import type` is NOT automatically `devDependencies`.** A type-only import erases from the emitted JS, but if the type is **re-exposed in the package's public `.d.ts`** (as the return / parameter / field type of a public export, a re-exported type, or a `declare module '<pkg>'` augmentation), then a *consumer* compiling against that `.d.ts` must resolve the package, so it belongs in `dependencies` (stateless leaf: `rapiq`'s `PaginationParseOutput` re-exposed by `server-kit`, `@authup/server-kit`'s `ActorContext` / `IEntityRepository` re-exposed by `server-test-kit`'s fakes) or `peerDependencies` (a singleton, or an augmentation of the consumer's own copy: `validup` in `i18n`, whose `declare module 'validup'` block augments the consumer's validup; optional, since it only matters when that feature is used). Only a type used **purely internally** (never in the emitted `.d.ts`) may be `devDependencies`-only. The monorepo build does **not** catch this: the demoted package is still hoisted for the workspace; verify per package with `rg '<pkg>' dist/**/*.d.ts` after building. `@authup/client-web-kit` re-exposed `vue-router`'s `LocationQuery` in `dist/components/workflows/authorize/helpers.d.ts` while declaring the package in no field at all; the omission only surfaced when a component started calling `useRoute()` at runtime.
-
-**An exported config registry is an ordinary value, and it drags `zod` with it.** Each service package exports its config registry for the CLI to compose, and every entry holds a live zod type, so `zod` and `@authup/server-config-kit` are plain `dependencies` there rather than devDependencies or peers: the CLI evaluates the object at runtime and never owns an instance of anything in it. This is also the reason a shared key is declared in each registry instead of imported from one: the import would be the dependency, and the whole point of the boundary is that neither side takes on the other's tree (see architecture.md → *Four registries, one document*).
-
-**An undeclared internal import is invisible until it breaks a build nondeterministically.** npm workspaces symlink every `@authup/*` package into the root `node_modules`, so an import that no `package.json` declares still RESOLVES at runtime, and tsdown externalizes only DECLARED dependencies; an undeclared one is silently inlined into the dist, so the published artifact works too. What breaks is nx: its project graph is built from `package.json`, so a missing declaration is a missing `dependsOn` edge, and `nx run-many -t build` is then free to schedule the importer BEFORE the package it imports. Since every build script starts with `rimraf ./dist`, that build fails *after* wiping its own output, the run aborts, and whatever was still queued is left with no `dist` at all. The symptom lands far away, in `npm run dev`: `authup dev` runs server-core from TypeScript but every `@authup/*` package it imports still resolves to a built `dist/`, so the crash is `Cannot find module '.../<pkg>/dist/index.mjs' imported from <some unrelated source file>`, a stack trace that names neither the unbuilt package as the cause nor the failed build that left it that way. Three of these existed at once (`apps/authup` → `server-config`, `packages/client-web-kit` → `errors`, `packages/server-config-kit` → `kit`) and each was reproducible by deleting the target's `dist` and building the importer alone. Audit with a diff of imported-vs-declared specifiers per workspace (grep `@authup/` under each `src/`, compare against that package's four dependency fields); every hit is a missing declaration: **declare it, never copy the symbol over**, since a copy leaves the same edge missing from the graph while adding an implementation that can drift.
-
-`@authup/server-config-kit` is the case that tested the rule. Its rule was stated as "no `@authup/*` dependency at all", so its `@authup/kit` import looked like something to delete rather than declare. But that rule was stricter than its own rationale, which is that a console service must not inherit server-core's or server-kit's TAIL (native `@node-rs/bcrypt` and `jsonwebtoken`, `winston`, `redis`, the socket.io emitter, `@rapiq/core`). `@authup/kit` is a foundation package carrying `destr` and `nanoid`; every consumer of `server-config-kit` already declares it, and so does the sibling portable package `@authup/server-console-kit`, so the edge is free in every tree that exists. The general lesson is worth more than the instance: **a dependency rule stated as a category ("no `@authup/*`") rather than as its reason ("nothing carrying the native/logger/cache tail") will eventually forbid something harmless, and the import gets made anyway, undeclared, where nothing can see it.**
-
-Do **not** use `peerDependencies` as a blanket "dedup enforcer" on leaves: dedup is free and applies to `dependencies` too; peer's only unique power (forbid a private nested copy, fail loud on conflict) matters solely for singletons. Before deleting or demoting an entry, verify actual usage (`rg "from '<pkg>'" src`, check `dist`, and check whether a *lower* package peers it; e.g. `socket.io-client` is a peer of `@authup/core-realtime-kit` and is statically imported by its `ClientManager`, so `@authup/client-web-kit` must keep declaring it even though its own `src` never imports it).
+- **`peerDependencies` (+ a devDependency mirror)**: singletons only, where a second instance breaks or the app owns and configures it. Framework runtimes (`vue`, `pinia`), a manager registered via `app.use()` (`@vuecs/core` and the `@vuecs/*` components bound to it, even when imported as type only), and `provide`/`inject` clusters keyed by a module-local `Symbol()` (`validup`/`@validup/vue`, `ilingo`/`@ilingo/vue`/`@ilingo/validup-vue`, `vue-router`). A nested copy silently splits the singleton. Peer range = caret on the dev pin.
+- **`dependencies`**: runtime-required stateless leaves the package instantiates itself and never shares by identity (`smob`, `rapiq`, `@posva/event-emitter`, `@validup/zod`, `@ilingo/validup`, internal `@authup/*` building blocks; internal `@authup/*` are never peers). "Needed at runtime" does NOT imply peer. A phantom runtime need (`universal-cookie` via `@vueuse/integrations/useCookies`) is declared here.
+- **`peerDependenciesMeta` `optional: true`**: a singleton needed only on an opt-in path that degrades gracefully (`@vuecs/locale`).
+- **`devDependencies` only**: build/test tooling, plus packages referenced only in `test/` or internal code that never surfaces in the emitted `.d.ts`.
+- **`import type` is NOT automatically `devDependencies`.** A type re-exposed in the public `.d.ts` (return/parameter/field type, re-export, or `declare module '<pkg>'` augmentation) must resolve for consumers: `dependencies` for a leaf, `peerDependencies` for a singleton or an augmentation (`validup` in `i18n`, optional). The monorepo build hides this (hoisting); verify with `rg '<pkg>' dist/**/*.d.ts`.
+- **An exported config registry is a runtime value**: entries hold live zod types, so `zod` and `@authup/server-config-kit` are plain `dependencies` of each service package.
+- **Declare every internal import; never copy the symbol over.** Workspaces symlink every `@authup/*` package, so an undeclared import resolves and tsdown inlines it, but nx builds its graph from `package.json`, so the missing edge lets a build run before its dependency, `rimraf ./dist` wipes output, and `authup dev` later fails with `Cannot find module '.../<pkg>/dist/index.mjs'` from an unrelated file. Audit by diffing imported vs declared `@authup/` specifiers per workspace. A copy leaves the edge missing and adds drift.
+- **State a dependency rule as its reason, not a category.** `@authup/server-config-kit` depends on `@authup/kit` legitimately: the rule is "no server-core / server-kit tail (native bcrypt and jsonwebtoken, winston, redis, socket.io emitter, `@rapiq/core`)", not "no `@authup/*`". A category rule forbids harmless edges and the import gets made undeclared anyway.
+- Do not use peers as a blanket dedup enforcer on leaves. Before deleting or demoting an entry, verify usage (`rg "from '<pkg>'" src`, `dist`, and whether a lower package peers it: `socket.io-client` is a peer of `@authup/core-realtime-kit`, so `@authup/client-web-kit` keeps declaring it).
 
 ## The root `package.json` carries NO `overrides`, and an exact pin there is what CAUSED the duplicate copies
 
-**Do not re-add an `overrides` block.** An exact pin there is what CAUSES the
-nested copies it looks like it prevents, and realigning it on every bump is
-fighting the pin rather than fixing anything (#3573: a pin left at
-`typeorm@1.1.0` while the workspace moved to `1.1.1` nested the old copy under
-`apps/server-core` and broke `build:types` with 33 errors over two
-incompatible `DataSource` types).
-
-**Mechanism, so the treadmill is recognised if someone proposes it again.**
-An exact override rewrites every edge onto one literal, which npm dedupes
-into one node, but that node can never be REPLACED: arborist hoists a newer
-version by replacing the root node when the new version satisfies every
-edge into it, and the pin forbids exactly that. So when the workspaces move
-past the pinned patch, npm nests a fresh copy under each workspace that
-asked: both the "downward" and the "upward" duplication stories are this one
-refusal. Measured: with no override at all, a resolution from scratch yields
-ONE copy of every package a pin would have covered, and caret pins on
-`@ilingo/validup`, `@ilingo/validup-vue` and `@validup/vue` are not even
-effective (with them the lock carries three nested copies of each; without
-them, one).
-
-**Two packages nest for a reason unrelated to overrides, and only lock
-inertia decides where they land.** `pinia@4` has a REQUIRED peer on
-`@vue/devtools-api@^8`, while `vitepress` (the `docs` workspace) depends on
-`@vue/devtools-api@^7`. Whichever the placer puts at the root first wins and
-the other side nests: with `7.x` at the root, `pinia` lands under every
-workspace that declares it, and `vue-router@5`, which optionally peers on
-`pinia`, follows it there. The correct shape is `@vue/devtools-api@8` at the
-root, `7.x` nested under `vitepress`, and `pinia` plus `vue-router` hoisted,
-which is what a fresh resolution produces. A second, weaker pressure sits on
-`vue-router` alone: it optionally peers on `vite`, the root `vite@8`
-optionally peers on `esbuild ^0.27 || ^0.28`, and `packages/client-web-nuxt`
-carries a nested `esbuild@0.25` for `@nuxt/module-builder` through
-`unbuild@3.6.1` (both at their latest release). Without `--force`, placing
-`vue-router` for that workspace answers ERESOLVE over that chain, which is
-why every install in this repo still needs `npm install --force`.
-
-**When a bump leaves nested copies behind, splice; never dedupe or
-regenerate.** `npm dedupe` was tried and added a sixth `vue-router` under
-`nuxt` while rewriting 2,900 lock lines; deleting the lock produces a
-correct tree but re-resolves every transitive version, which is not
-reviewable inside a dependency PR. The targeted procedure: delete every
-lock entry of the nested package AND of its blocker (for `vue-router` and
-`pinia` that is `@vue/devtools-api` as well), root and nested, children
-included, i.e. every key matching `(^|/)node_modules/<name>(/|$)`; then
-`npm install --package-lock-only --force`; then `npm install --force`. The
-lock diff then only removes the nested subtrees and moves the blocker.
-
-**Verify the lock, not the working tree, and expect exactly four
-complaints:** `npm ls --all --package-lock-only 2>&1 | grep invalid` reports
-`cac`, `commander`, `unplugin` and `universal-cookie`, all inside nuxt's
-and vitepress's own trees and all older than any of this, and nothing else.
-One trap to know about while splicing: **under `--force`, arborist accepts
-an invalid non-peer edge rather than re-placing it.** Splicing typeorm's
-nested `yargs@18` subtree by mistake left typeorm's `yargs ^18` edge
-resolving to the root `yargs@17`, and `--package-lock-only --force`
-reported nothing. An entry spliced by mistake is put back by hand, copied
-from the previous lock, never re-resolved.
-
+- **Do not re-add an `overrides` block** (#3573). An exact override forces one node that arborist can never replace with a newer version, so when workspaces move past the pinned patch npm nests a fresh copy under each workspace instead. Without overrides a fresh resolution yields one copy of everything a pin would have covered.
+- **Two packages nest for an unrelated reason.** `pinia@4` requires `@vue/devtools-api@^8` while `vitepress` (docs) needs `^7`. The correct shape is `@vue/devtools-api@8` at the root, `7.x` nested under `vitepress`, `pinia` and `vue-router` hoisted. `vue-router`'s optional `vite` peer, the root `vite@8`'s `esbuild` peer and the nested `esbuild@0.25` under `packages/client-web-nuxt` (via `@nuxt/module-builder`) produce ERESOLVE, which is why every install needs `npm install --force`.
+- **When a bump leaves nested copies, splice; never `npm dedupe` or regenerate the lock** (dedupe adds copies and rewrites thousands of lines; regenerating re-resolves every transitive version). Procedure: delete every lock entry of the nested package AND its blocker (for `vue-router` / `pinia` that includes `@vue/devtools-api`), root and nested, children included (keys matching `(^|/)node_modules/<name>(/|$)`); then `npm install --package-lock-only --force`; then `npm install --force`.
+- **Verify the lock, not the working tree**: `npm ls --all --package-lock-only 2>&1 | grep invalid` should report only `cac`, `commander`, `unplugin` and `universal-cookie` (pre-existing, inside nuxt's and vitepress's trees).
+- **Trap**: under `--force` arborist accepts an invalid non-peer edge instead of re-placing it, silently. Restore a mistakenly spliced entry by hand from the previous lock, never by re-resolving.
 
 ## Response Versioning
 
-**A response never carries a CONTRACT version of its own shape.** Versioning the
-API is an all-or-nothing decision taken once for the whole surface, as a path
-prefix (`/v1/...`), never per endpoint: a version on one response says nothing
-about the endpoint next door, and one that is always `1` is a promise nobody is
-keeping. If the API is ever versioned, every route moves together.
-
-Deployment metadata is a different thing that happens to share the name, so
-`GET /` and `GET /schemas` are not precedents. Both report the DEPLOYMENT's own
-release, read once from server-core's `package.json` by two byte-identical
-`resolveVersion` methods, so a cached document can be attributed to the
-software that produced it. That is a property of the answering process, not a
-contract version of the response shape.
+- **A response never carries a contract version of its own shape.** API versioning is all-or-nothing for the whole surface, as a path prefix (`/v1/...`), never per endpoint.
+- `GET /` and `GET /schemas` are not precedents: they report the deployment's release (read from server-core's `package.json` by `resolveVersion`) so a cached document can be attributed. That is deployment metadata, not a shape version.
 
 ## Interfaces & Types
 
-- **Every interface is prefixed with `I`**: `IEntityAPI`, `IClient`, `IRealmAPI`, `IEntityRepository`, `IDomainEventHandler`.
-- **`interface` is reserved for contracts a class `implements`.** Anything not class-implemented (object shapes, options bags, payloads, structural contracts satisfied only implicitly, e.g. a third-party class matching a transport surface) is a `type` alias.
-- **Contract-first, never implementation-inferred**: define the interface explicitly and have the class `implements` it. Do not derive public types from classes (no `typeof Client` / mapped-over-class "public interface" tricks): the only sanctioned exception is at a third-party boundary where authup cannot make the dependency's class implement an authup interface.
-- Interfaces must state **precise payload types** (e.g. `create(data: RealmCreatePayload)`), not weakened supertypes like `Partial<T>` that implementations silently narrow.
+- **Every interface is `I`-prefixed**: `IEntityAPI`, `IClient`, `IEntityRepository`, `IDomainEventHandler`.
+- **`interface` is reserved for contracts a class `implements`.** Everything else (object shapes, options, payloads, structurally satisfied contracts) is a `type`.
+- **Contract-first**: define the interface and have the class implement it. No types derived from classes (`typeof Client`, mapped-over-class tricks), except at a third-party boundary authup cannot make implement an interface.
+- Interfaces state **precise payload types** (`create(data: RealmCreatePayload)`), never weakened supertypes like `Partial<T>`.
 
 ## Configuration Naming
 
-- Boolean feature toggles use the `Enabled` suffix: `registrationEnabled`, `passwordRecoveryEnabled`, `emailVerificationEnabled`
-- Config keys in `app/modules/config/types.ts` match the service option names
-- Environment variable names use `SCREAMING_SNAKE_CASE` with `_ENABLED` suffix: `REGISTRATION_ENABLED`, `PASSWORD_RECOVERY_ENABLED`, `EMAIL_VERIFICATION_ENABLED`
-- Config file keys (`authup.yml`) use `camelCase` matching the TypeScript property name
-- **Every configuration key is declared once, in `@authup/server-config`**,
-  in the document section it belongs to; a service SELECTS the sections and
-  keys it reads rather than declaring them. A service that names key names
-  cannot mis-spell a path, an environment variable or a reader. Having each
-  package declare what it reads, with a composition step asserting that
-  overlapping declarations agree, covers path, environment variable, default
-  and reader but not the zod type or the description, and cannot see a key a
-  registry never declared at all.
-- **The configuration document's types are authup's own**, never borrowed
-  from the library that eventually consumes the value. `db`, `redis`, `smtp`
-  and the seven `middleware*` keys would otherwise drag typeorm,
-  `@authup/server-kit` and six `@routup/*` packages into a leaf that a
-  static file server imports. Their zod types are loose either way, so the
-  published JSON Schema is unchanged; server-core casts at the boundary
-  where it hands the value to the library.
-- **Every path key is resolved against `rootPath` after the `...parsed` spread**
-  in `normalizeConfig`, so consumers receive an absolute path and none of them
-  has to know what the process cwd was. server-core's own are
-  `logDirectoryPath` and `provisioningDirectoryPath`; the console-side path keys
-  (`theme.directoryPath`, `<name>Console.path`) live in the console
-  registries now and are resolved for them by the CLI (`resolvePaths` in
-  `apps/authup/src/console/config.ts`), against server-core's `rootPath`, so one
-  document means the same directory to every service it configures. A new
-  server-core path key joins that block; computing it *before* the spread
-  reads a default `rootPath` rather than the configured one (the
-  `writableDirectoryPath` bug, fixed after v1.0.0-beta.62 on the key these two
-  replaced; it silently ignored `rootPath` and stayed relative).
-- **Logs are written, provisioning is read, so they never share a directory.**
-  `logDirectoryPath` (`LOG_DIRECTORY_PATH`, default `logs`) is the ONE
-  directory the process writes to; `provisioningDirectoryPath`
-  (`PROVISIONING_DIRECTORY_PATH`, default `provisioning`) is operator-authored
-  input a running process must never be able to rewrite, and it names the
-  directory itself rather than a `provisioning` subdirectory of it. Same rule
-  the theme directory already follows (architecture.md → *Console Theming*):
-  a process-writable directory must not hold what the process serves or reads
-  as configuration, so one key must never cover both. A configured provisioning
-  directory that does not exist is reported
-  once at boot as an `info` line naming the resolved path and is never
-  refused: provisioning is optional, and the Docker image sets
-  `PROVISIONING_DIRECTORY_PATH` to `/etc/authup/provisioning` without
-  creating it, so a `warn` would land in `error.log` on every ordinary
-  container boot.
-- **`logDirectoryPath` does not hold the database.** It holds the production
-  log files; that is the whole of it. The sqlite file comes from
-  `db.database` / `DB_DATABASE`, which typeorm-extension resolves against the
-  process cwd (`resolveSQLiteDatabasePath`), so pointing `LOG_DIRECTORY_PATH`
-  at a volume does NOT move the database onto it. The Docker image defaults
-  the two keys to `/var/log/authup` and `/etc/authup/provisioning`; everything
-  else defaults to `<rootPath>/logs` and `<rootPath>/provisioning`, which is
-  what keeps an unprivileged `npx` start working (any absolute system path
-  needs root or a pre-chowned directory).
-- **With no database configured at all, the boot path falls back to sqlite,
-  outside production.** `db` carries no default and
-  `readDataSourceOptionsFromEnv()` returns nothing unless the driver type is
-  set (typeorm-extension's `hasEnvDataSourceOptions()` is `!!useEnv('type')`,
-  which reads `DB_TYPE` or `TYPEORM_CONNECTION`, else the scheme of `DB_URL` or
-  `TYPEORM_URL`), so `DatabaseModule.buildDataSourceOptions` calls
-  `DataSourceOptionsBuilder.buildWithEnvOrDefault`, which supplies
-  `better-sqlite3` plus the same `db.sqlite` name typeorm-extension derives for
-  that driver, resolved against the process cwd like any other sqlite path.
-  The gate is the TYPE alone, so the fallback is guarded rather than
-  unconditional: a WRONG value still fails the read, and an environment that
-  names a CONNECTION without a type (`DB_HOST`, `DB_DATABASE`, `DB_URL` or a
-  `TYPEORM_*` alias) is refused with the same error `buildWithEnv` raises,
-  never answered with sqlite. `hasDatabaseConnectionEnv` reads those keys
-  through typeorm-extension's own `useEnv()` rather than a local list, so it
-  cannot drift from what the reader accepts, and it excludes the list-valued
-  keys, which default to `[]` and would report every environment as
-  configured. The default therefore answers "nothing is configured" and
-  nothing else: without the guard a forgotten `DB_TYPE` would have redirected
-  every write to a local file, silently outside production, since production
-  refuses the driver anyway.
-  Production is the exception, because `isDatabaseTypeSupportedForEnvironment`
-  refuses `better-sqlite3` there. That is why the Docker image
-  (`NODE_ENV=production`) still requires postgres or mysql, and why that
-  refusal carries the actionable message naming the `DB_*` variables: with the
-  fallback in place it is the only error an operator with no database
-  configuration ever sees. **`buildWithEnv` stays strict and the two methods
-  must not be collapsed into one.** It is what the `migration` CLI command and
-  the two `scripts/` CI runners call, none of which applies the environment
-  check, so an unconfigured `migration run` would create a sqlite file, read
-  sqlite's empty migrations array, report "No migrations are pending" and exit
-  `0`. That is the same silent success the round-trip's `dist` pre-flight
-  exists to catch (testing.md → *Migration Tests*). The fallback exists because
-  it was already documented while nothing implemented it (the `db` entry's own
-  description, published as the JSON Schema, its `types.ts` doc comment, and
-  the database guide's opening line), so no surface booted unconfigured,
-  `npx authup start` included.
+- Boolean toggles use the `Enabled` suffix (`registrationEnabled`); env vars are `SCREAMING_SNAKE_CASE` with `_ENABLED` (`REGISTRATION_ENABLED`); `authup.yml` keys are camelCase matching the TypeScript property.
+- Config keys in `apps/server-core/src/app/modules/config/types.ts` match the service option names.
+- **Every key is declared once, in `@authup/server-config`**, in the section it belongs to. Services SELECT keys rather than declare them, so they cannot mis-spell a path, env var or reader. Rejected: per-package declarations plus an agreement check; it misses zod type and description drift and cannot see an omitted key.
+- **The document's types are authup's own**, never borrowed from the consuming library. `db`, `redis`, `smtp` and the `middleware*` keys would otherwise drag typeorm, `@authup/server-kit` and `@routup/*` into a leaf a static file server imports. server-core casts at the boundary.
+- **Every path key resolves against `rootPath` through its own `resolve`** (`resolveRootRelativePath`, `packages/server-config/src/helpers/path.ts`), so every service receives an absolute path and one document means one directory to all of them. A new path key does the same.
+- **Logs are written, provisioning is read, so they never share a directory.** `logDirectoryPath` (`LOG_DIRECTORY_PATH`, default `logs`) is the only directory the process writes; `provisioningDirectoryPath` (`PROVISIONING_DIRECTORY_PATH`, default `provisioning`) is operator input the process must never rewrite. Same rule as the theme directory (topics/consoles.md → *Console Theming*): a process-writable directory must not hold what the process serves or reads as configuration. A missing provisioning directory is logged once at `info` with its resolved path and never refused (provisioning is optional; the Docker image sets `/etc/authup/provisioning` without creating it, so `warn` would hit `error.log` every boot).
+- **`logDirectoryPath` does not hold the database.** The sqlite file comes from `db.database` / `DB_DATABASE`, resolved against the process cwd. The Docker image defaults the two keys to `/var/log/authup` and `/etc/authup/provisioning`; elsewhere they default under `rootPath` so an unprivileged `npx` start works.
+- **With no database configured, the boot path falls back to sqlite outside production.** `DatabaseModule.buildDataSourceOptions` calls `DataSourceOptionsBuilder.buildWithEnvOrDefault` (`apps/server-core/src/adapters/database/data-source/options/module.ts`), which supplies `better-sqlite3` with `db.sqlite` only when no driver type is set. A connection named without a type (`DB_HOST`, `DB_DATABASE`, `DB_URL`, a `TYPEORM_*` alias) is refused, never answered with sqlite; `hasDatabaseConnectionEnv` reads those through typeorm-extension's `useEnv()` and excludes list-valued keys. Production refuses sqlite via `isDatabaseTypeSupportedForEnvironment`, whose message names the `DB_*` variables.
+- **`buildWithEnv` stays strict; do not collapse it into the defaulting method.** The `migration` CLI and the `scripts/` CI runners call it, and a sqlite fallback there would report "No migrations are pending" and exit `0`.
 
 ## Upstream (Own) Libraries
 
-Most non-framework dependencies are maintained by the same author (tada5hi) and can be
-changed easily: `rapiq` (`@rapiq/*`), `vuecs` (`@vuecs/*`), `validup` (`@validup/*`),
-`ilingo` (`@ilingo/*`), `routup` (`@routup/*`), `hapic` (`@hapic/*`), `ebec` (`@ebec/*`),
-`typeorm-extension`, `smob`, `locter`: each lives at `github.com/tada5hi/<name>`.
+Most non-framework dependencies are tada5hi's (`github.com/tada5hi/<name>`): `rapiq`, `vuecs`, `validup`, `ilingo`, `routup`, `hapic`, `ebec`, `typeorm-extension`, `smob`, `locter`.
 
-- **When authup work reveals a gap, bug, or awkward API in one of these, open an issue in
-  the upstream repo** (`gh issue create --repo tada5hi/<name>`) describing the authup use
-  case: do NOT silently build an authup-side workaround. Workarounds calcify; upstream
-  changes are cheap here. Precedents: tada5hi/rapiq#790 (TS2590), #800
-  (`assertSchemaMatchesEntity`), #806 (context RFC), #811 (public-IR negation);
-  tada5hi/vuecs#1591 (theme-manager merge), #1601 (generic `VCTable`), #1689 (Reka
-  trigger-label snapshot).
-- **rapiq is experimental**: big breaking changes are still expected and welcome; authup
-  is the driving consumer, so gaps found during authup work should shape rapiq's design
-  now while breakage is cheap.
-- A deliberate authup-side fallback while an upstream issue is open is fine (e.g. keeping
-  `invert: true` policies as post-checks until rapiq#811), but the issue must exist so
-  the fallback has a removal trigger.
-- When upstream code is consulted, also update the corresponding mapping file under
-  `.agents/references/` (see below).
+- **When authup work reveals a gap, bug or awkward API in one of these, open an upstream issue** (`gh issue create --repo tada5hi/<name>`) with the authup use case. Do not silently build an authup-side workaround. Precedents: tada5hi/rapiq#790, #800, #806, #811; tada5hi/vuecs#1591, #1601, #1689.
+- **rapiq is experimental**: breaking changes are expected and welcome; authup is its driving consumer.
+- A deliberate authup-side fallback while an upstream issue is open is fine, but the issue must exist so the fallback has a removal trigger.
+- When upstream code is consulted, update the matching file under `.agents/references/`.
 
 ## References
 
-External project references live in `.agents/references/`: one Markdown file per external project
-this codebase cross-references, building a **cumulative code mapping** so future work can find
-corresponding code without re-searching. When looking up source code or docs in a referenced
-project, update the corresponding reference file with:
+`.agents/references/` holds one file per external project this codebase cross-references, a cumulative code mapping. When looking up an external project's source or docs, record: the external file path / function (or doc anchor), the corresponding authup file / function, and behavioral differences pinned to a release version.
 
-- The source file path / function name (or doc/release anchor) in the external project
-- The corresponding file path / function name in this project
-- Any behavioral differences between the implementations (pin claims to a release version)
-
-Current references:
-
-- [authentik.md](references/authentik.md): Authentik (goauthentik.io): the concept→authup mapping
-  behind the competitive-parity roadmap (`.agents/plans/048-authentik-parity-overview.md`),
-  release-verified through Authentik 2026.5.
-- [keycloak.md](references/keycloak.md): Keycloak: posture comparisons (key storage at rest,
-  hosted login/consent, RP-initiated logout).
-- [privateaim-hub.md](references/privateaim-hub.md): PrivateAIM/hub: the sibling codebase authup
-  borrows server-kit layout, the domain-event publisher and the telemetry `Event` shape from.
-- [routup.md](references/routup.md): routup: dispatch walk, decorator flattening, `event.store`
-  contract, `trustProxy` resolution.
-- [locter.md](references/locter.md): locter: the runtime-environment probes behind typeorm-extension's `CodeTransformation` gate (the ts-node loader-thread gap, tsx ruled out), `locateUpSync` and `read` call sites.
-- [typeorm.md](references/typeorm.md): typeorm + typeorm-extension: uuid column widths per dialect,
-  the postgres `createFullType` length quirk, `synchronizeDatabaseSchema` boot behaviour, and the
-  `migration generate` / schema-drift tooling.
+- [authentik.md](references/authentik.md): concept → authup mapping behind the parity roadmap, verified through Authentik 2026.5.
+- [keycloak.md](references/keycloak.md): posture comparisons (key storage, hosted login/consent, RP-initiated logout).
+- [privateaim-hub.md](references/privateaim-hub.md): source of the server-kit layout, domain-event publisher and telemetry `Event` shape.
+- [routup.md](references/routup.md): dispatch walk, decorator flattening, `event.store`, `trustProxy`.
+- [locter.md](references/locter.md): runtime-environment probes behind typeorm-extension's `CodeTransformation` gate, `locateUpSync` and `read`.
+- [typeorm.md](references/typeorm.md): uuid widths per dialect, postgres `createFullType` quirk, `synchronizeDatabaseSchema`, `migration generate` / schema drift.
 
 ## Writing Style
 
-Applies to everything written in this repo: code comments, doc-comments, the
-`.agents/**` docs, commit messages, issue and pull-request text, and above all
-user-facing copy such as the `@authup/i18n` catalogs.
+Applies to code comments, `.agents/**`, commit messages, issue and PR text, and above all user-facing copy (the `@authup/i18n` catalogs).
 
-- **Avoid the em dash (`—`).** Use a full stop, a colon, a semicolon, or
-  parentheses instead. Two short sentences almost always beat one sentence
-  spliced with a dash. `An RP-initiated logout may redirect back to this URI.
-  Leave empty to end on the confirmation page.` reads better than the same text
-  joined by a dash.
-- Prefer plain ASCII punctuation in general. Non-ASCII characters are fine when
-  they carry meaning (accented words in the de / fr / es catalogs, arrows in
-  tables), not as decoration.
-- Keep i18n copy short and declarative. A hint should say what the field does
-  and what an empty value means, in as few clauses as possible.
+- **Avoid the em dash.** Use a full stop, colon, semicolon or parentheses. Two short sentences beat one spliced sentence.
+- Prefer plain ASCII punctuation. Non-ASCII is fine when it carries meaning (accented words in de / fr / es, arrows in tables).
+- Keep i18n copy short and declarative: what the field does, and what an empty value means.
 
 ## Consolidating shallow modules
 
-A refactor that gathers several one-purpose modules behind one object relocates
-logic rather than deepening it. It was tried here once and reverted (2026-07-04): `apps/server-core/src/adapters/http/request/helpers/`, eleven files
-answering "what do we know about this request", became a single `RequestContext`
-under one `event.store` symbol, and then went back.
+Gathering several one-purpose modules behind one object relocates logic rather than deepening it. Tried once and reverted (2026-07-04): the `apps/server-core/src/adapters/http/request/helpers/` files became one `RequestContext`, then went back.
 
-Three things went wrong, and all three generalize:
+- The goal was not reached: a lazily created blank context let every reader degrade to `undefined` exactly as before.
+- Discoverability got worse: `grep getRequestRealmID` landing in a 30-line file beats a method on a 180-line class.
+- Avoiding churn needed a facade, so both surfaces existed.
 
-- **The headline goal was not reached.** "Build order enforced by construction"
-  failed because the getter lazily created a blank context, so every reader
-  still degraded to `undefined` / `[]` exactly as the free functions did. The
-  coupling was centralized, not enforced.
-- **The diagnosis was weak.** `grep getRequestRealmID` landing in a 30-line file
-  is more discoverable than a method on a 180-line class.
-- **It grew the call surface.** Avoiding churn across ~115 call sites required a
-  facade, so `ctx.realmId` and `getRequestRealmID` both ended up existing.
-
-The value in the attempt was the boundary tests written to make the move safe
-(`test/unit/adapters/http/request/`), and those needed no restructure at all.
-So when a consolidation is proposed, offer the tests and the restructure as
-separate pieces of work. Do not re-attempt this one without a concrete need for
-a single request-scoped state object, and then commit fully instead of keeping
-both surfaces.
+The value was the boundary tests (`apps/server-core/test/unit/adapters/http/request/`), which needed no restructure. Offer tests and restructure as separate work. Do not re-attempt this one without a concrete need for a single request-scoped state object, and then commit fully instead of keeping both surfaces.
 
 ## Best Practices
 
-- Use **ESM** and modern TypeScript/JavaScript.
-- Prefer **Web APIs** over Node.js-specific APIs where possible.
-- Use hexagonal architecture if possible.
-- Maintain consistency with existing naming and architectural conventions.
-- Before adding new code, always study surrounding patterns, naming conventions, and architectural decisions.
+- Use ESM and modern TypeScript.
+- Prefer Web APIs over Node.js-specific APIs where possible.
+- Use hexagonal architecture where possible; study surrounding patterns and naming before adding code.
 - Respect separation of concerns: domain logic → core-kit, API clients → core-http-kit, UI components → client-web-kit.
-- No explanatory comments unless explicitly requested. Agents should rely on existing patterns and structure.
-- Use domain interfaces (from core-kit) in ports, TypeORM entity classes only in adapters.
+- Domain interfaces (core-kit) in ports; TypeORM entity classes only in adapters.
+- No explanatory comments unless requested.

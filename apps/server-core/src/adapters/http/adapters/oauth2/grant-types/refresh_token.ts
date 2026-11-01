@@ -51,6 +51,7 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
     async runWithRequest(event: IAppEvent): Promise<OAuth2TokenGrantResponse> {
         const body = await readRequestBody(event);
         const refreshToken = body?.refresh_token;
+
         if (typeof refreshToken !== 'string' || refreshToken.length === 0) {
             throw OAuth2RequestError.malformed();
         }
@@ -68,6 +69,7 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
         // token must reach runWith() to trigger family revocation instead of
         // being rejected here with JWT_INACTIVE.
         let payload : Awaited<ReturnType<typeof this.refreshTokenVerifier.verify>>;
+
         try {
             payload = await this.refreshTokenVerifier.verify(refreshToken, { skipActiveCheck: true });
         } catch (e) {
@@ -127,8 +129,10 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
         }
 
         let confirmation: OAuth2TokenConfirmation | undefined;
+
         if (payload.cnf) {
             const expectedThumbprint = payload.cnf['x5t#S256'];
+
             if (typeof expectedThumbprint !== 'string' || expectedThumbprint.length === 0) {
                 throw OAuth2GrantError.invalid();
             }
@@ -136,6 +140,7 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
             confirmation = this.clientAuthenticator.validateCertificateEvidenceForBinding(
                 certificateEvidence,
             );
+
             if (confirmation['x5t#S256'] !== expectedThumbprint) {
                 throw OAuth2GrantError.invalid();
             }

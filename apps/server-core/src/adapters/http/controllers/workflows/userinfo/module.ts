@@ -47,6 +47,7 @@ export class UserInfoController {
         const actor = buildActorContext(event);
 
         let id = '@me';
+
         if (
             actor.identity &&
             actor.identity.type === 'user'

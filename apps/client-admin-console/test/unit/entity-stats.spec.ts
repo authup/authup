@@ -71,6 +71,7 @@ function realmOf(query: EntityStatsQuery) : string | null {
  */
 function forbidden(): Error {
     const error = new Error('forbidden') as Error & { response: { status: number } };
+
     error.response = { status: 403 };
 
     return error;
@@ -179,10 +180,13 @@ describe('src/composables/entity-stats', () => {
 
     it('loads the window as a grouped query, scoped by the filters', async () => {
         const { stats, queries } = mountStats((query) => answer(query, 3, 12));
+
         await flushPromises();
 
         expect(queries).toHaveLength(1);
+
         const encoded = encode(queries[0]);
+
         expect(encoded).toContain(`in(realmId,'${REALM_ID}',null)`);
         expect(encoded).toContain('gte(createdAt,\'2026-09-16T00:00:00.000Z\')');
         expect(encoded).toContain('group=bucket(createdAt,day)');
@@ -197,6 +201,7 @@ describe('src/composables/entity-stats', () => {
 
     it('loads the window alone for empty filters', async () => {
         const queries : EntityStatsQuery[] = [];
+
         mount(defineComponent({
             setup() {
                 useEntityStats({
@@ -220,6 +225,7 @@ describe('src/composables/entity-stats', () => {
 
     it('takes a caller\'s own fixed window', async () => {
         const { queries } = mountStats((query) => answer(query, 3), { days: 30, unit: 'day' });
+
         await flushPromises();
 
         expect(encode(queries[0])).toContain('gte(createdAt,\'2026-08-24T00:00:00.000Z\')');
@@ -227,6 +233,7 @@ describe('src/composables/entity-stats', () => {
 
     it('groups by the caller\'s keys after the bucket', async () => {
         const { queries } = mountStats((query) => answer(query, 1), ENTITY_STATS_WINDOWS['7d'], ['scope', 'name']);
+
         await flushPromises();
 
         expect(encode(queries[0])).toContain('group=bucket(createdAt,day),scope,name');
@@ -234,6 +241,7 @@ describe('src/composables/entity-stats', () => {
 
     it('loads once for the same window within one hour and again in the next', async () => {
         const { tick, queries } = mountStats((query) => answer(query, 3), ENTITY_STATS_WINDOWS['24h']);
+
         await flushPromises();
 
         vi.setSystemTime(new Date('2026-09-22T10:40:00.000Z'));
@@ -250,6 +258,7 @@ describe('src/composables/entity-stats', () => {
 
     it('reloads when the window changes', async () => {
         const { window, queries } = mountStats((query) => answer(query, 3));
+
         await flushPromises();
 
         window.value = ENTITY_STATS_WINDOWS['24h'];
@@ -261,6 +270,7 @@ describe('src/composables/entity-stats', () => {
 
     it('reloads when the filters change', async () => {
         const { realmId, queries } = mountStats((query) => answer(query, 3));
+
         await flushPromises();
 
         realmId.value = OTHER_REALM_ID;
@@ -273,17 +283,19 @@ describe('src/composables/entity-stats', () => {
     it('clears the previous scope\'s answer when the reload for a new scope fails', async () => {
         let calls = 0;
         const {
-            stats, 
-            errors, 
-            realmId, 
+            stats,
+            errors,
+            realmId,
         } = mountStats((query) => {
             calls += 1;
+
             if (calls > 1) {
                 throw new Error('down');
             }
 
             return answer(query, 3);
         });
+
         await flushPromises();
         expect(stats.response.value?.data[0].count).toEqual(3);
 
@@ -299,12 +311,14 @@ describe('src/composables/entity-stats', () => {
         let calls = 0;
         const { stats, errors } = mountStats((query) => {
             calls += 1;
+
             if (calls > 1) {
                 throw new Error('down');
             }
 
             return answer(query, 3);
         });
+
         await flushPromises();
 
         await stats.load();
@@ -319,6 +333,7 @@ describe('src/composables/entity-stats', () => {
         const { stats, window } = mountStats((query) => new Promise<EntityStatsResponseLike>((resolve) => {
             pending.push((response) => resolve({ ...response, meta: { ...response.meta, bucket: encode(query).includes('hour') ? 'hour' : 'day' } }));
         }));
+
         await flushPromises();
 
         window.value = ENTITY_STATS_WINDOWS['24h'];
@@ -339,6 +354,7 @@ describe('src/composables/entity-stats', () => {
         const { stats, errors } = mountStats(() => {
             throw forbidden();
         });
+
         await flushPromises();
 
         expect(stats.forbidden.value).toBe(true);
@@ -351,12 +367,14 @@ describe('src/composables/entity-stats', () => {
         let calls = 0;
         const { stats, realmId } = mountStats((query) => {
             calls += 1;
+
             if (calls > 1) {
                 throw forbidden();
             }
 
             return answer(query, 3);
         });
+
         await flushPromises();
         expect(stats.response.value?.data[0].count).toEqual(3);
 
@@ -371,12 +389,14 @@ describe('src/composables/entity-stats', () => {
         let calls = 0;
         const { stats, realmId } = mountStats((query) => {
             calls += 1;
+
             if (calls === 1) {
                 throw forbidden();
             }
 
             return answer(query, 5);
         });
+
         await flushPromises();
         expect(stats.forbidden.value).toBe(true);
 
@@ -389,6 +409,7 @@ describe('src/composables/entity-stats', () => {
 
     it('does not reload for an equal filter recomputed as a new object', async () => {
         const { tick, queries } = mountStats((query) => answer(query, 3));
+
         await flushPromises();
 
         tick.value += 1;
@@ -399,11 +420,12 @@ describe('src/composables/entity-stats', () => {
 
     it('waits while paused and loads the settled scope once resumed', async () => {
         const {
-            stats, 
-            realmId, 
-            paused, 
-            queries, 
+            stats,
+            realmId,
+            paused,
+            queries,
         } = mountStats((query) => answer(query, 3));
+
         await flushPromises();
 
         paused.value = true;
@@ -433,6 +455,7 @@ describe('src/composables/entity-stats', () => {
 
             return answer(query, 3);
         });
+
         await flushPromises();
 
         realmId.value = OTHER_REALM_ID;

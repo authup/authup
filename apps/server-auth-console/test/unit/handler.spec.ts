@@ -31,11 +31,14 @@ const roots : string[] = [];
  */
 async function writeBundle(files: Record<string, string>) : Promise<string> {
     const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'authup-auth-console-'));
+
     roots.push(root);
 
     await fs.promises.writeFile(path.join(root, 'package.json'), '{"type":"module"}');
+
     for (const [name, content] of Object.entries(files)) {
         const file = path.join(root, 'dist', name);
+
         await fs.promises.mkdir(path.dirname(file), { recursive: true });
         await fs.promises.writeFile(file, content);
     }
@@ -153,6 +156,7 @@ describe('createHandler', () => {
         const body = await (await fetch(`${baseURL}/logout`)).text();
 
         const match = body.match(/src="([^"]*\/assets\/[^"]+\.js)"/);
+
         expect(match).toBeTruthy();
 
         // the href is public-path shaped; the proxy strips the service's own
@@ -181,6 +185,7 @@ describe('createHandler', () => {
             await createHandler(await resolveConfig({ publicUrl: 'https://example.com', path: root })),
             { port: 0, silent: true },
         );
+
         await second.ready();
 
         try {
@@ -207,6 +212,7 @@ describe('createHandler', () => {
         );
 
         const local = serve(substituted, { port: 0, silent: true });
+
         await local.ready();
 
         try {
@@ -258,6 +264,7 @@ describe('createHandler bundle contract', () => {
             await createHandler(await resolveConfig({ publicUrl: 'https://example.com', path: root })),
             { port: 0, silent: true },
         );
+
         await local.ready();
 
         try {
@@ -287,6 +294,7 @@ describe('createHandler server-side fetch', () => {
 
     beforeAll(async () => {
         const app = new App();
+
         app.use(defineCoreHandler({
             method: 'get',
             path: '/',
@@ -355,6 +363,7 @@ describe('createHandler server-side fetch', () => {
             ...await resolveConfig({ publicUrl: 'https://example.com', path: root }),
             apiInternalUrl: apiURL,
         }), { port: 0, silent: true });
+
         await local.ready();
 
         try {
@@ -382,6 +391,7 @@ describe('createHandler server-side fetch', () => {
         };
 
         const local = serve(await createHandler(config), { port: 0, silent: true });
+
         await local.ready();
 
         try {
@@ -422,6 +432,7 @@ describe('createHandler server-side fetch', () => {
         };
 
         const local = serve(await createHandler(config), { port: 0, silent: true });
+
         await local.ready();
 
         try {
@@ -429,10 +440,12 @@ describe('createHandler server-side fetch', () => {
 
             for (const page of ['/authorize', '/password-forgot']) {
                 const response = await fetch(`${url}${page}`);
+
                 expect(response.status).toEqual(500);
 
 
                 const body = await response.text();
+
                 expect(body).not.toContain(internal);
                 expect(body).not.toContain('127.0.0.1:1');
             }
@@ -456,10 +469,12 @@ describe('createHandler server-side fetch', () => {
         });
 
         seen.length = 0;
+
         const local = serve(await createHandler({
             ...await resolveConfig({ publicUrl: 'https://idp.example.com/auth', path: root }),
             apiInternalUrl: apiURL,
         }), { port: 0, silent: true });
+
         await local.ready();
 
         try {
@@ -494,6 +509,7 @@ describe('createHandler server-side fetch', () => {
             ...await resolveConfig({ publicUrl: 'https://idp.example.com', path: root }),
             apiInternalUrl: internal,
         }), { port: 0, silent: true });
+
         await local.ready();
 
         try {
@@ -520,6 +536,7 @@ describe('createHandler server-side fetch', () => {
         const requested : string[] = [];
 
         const app = new App();
+
         app.use(defineCoreHandler({
             method: 'get',
             path: '/authorize/info',
@@ -540,9 +557,9 @@ describe('createHandler server-side fetch', () => {
                     createdAt: '2026-01-01T00:00:00.000Z',
                 },
                 realm: {
-                    id: realmId, 
-                    name: 'master', 
-                    displayName: null, 
+                    id: realmId,
+                    name: 'master',
+                    displayName: null,
                 },
                 scopes: [],
                 redirectUriVerified: true,
@@ -582,7 +599,9 @@ describe('createHandler server-side fetch', () => {
         }));
 
         const stub = serve(app, { port: 0, silent: true });
+
         await stub.ready();
+
         const stubURL = (stub.url ?? '').replace(/\/+$/, '');
 
         const local = serve(await createHandler({
@@ -591,6 +610,7 @@ describe('createHandler server-side fetch', () => {
             ...await resolveConfig({ publicUrl: 'https://idp.example.com/auth' }),
             apiInternalUrl: stubURL,
         }), { port: 0, silent: true });
+
         await local.ready();
 
         try {
@@ -620,6 +640,7 @@ describe('createHandler server-side fetch', () => {
         };
 
         const local = serve(await createHandler(config), { port: 0, silent: true });
+
         await local.ready();
 
         try {
@@ -650,6 +671,7 @@ describe('createHandler server-side fetch', () => {
         };
 
         const local = serve(await createHandler(config), { port: 0, silent: true });
+
         await local.ready();
 
         try {
@@ -678,6 +700,7 @@ describe('createHandler server-side fetch', () => {
         };
 
         const local = serve(await createHandler(config), { port: 0, silent: true });
+
         await local.ready();
 
         try {
@@ -710,6 +733,7 @@ describe('createHandler server-side fetch', () => {
         };
 
         const local = serve(await createHandler(config), { port: 0, silent: true });
+
         await local.ready();
 
         try {

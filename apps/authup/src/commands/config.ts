@@ -31,6 +31,7 @@ import { Container } from 'validup';
  */
 async function validateDocument(input: Partial<AuthupConfig>) : Promise<void> {
     const container = new Container<AuthupConfig>();
+
     mountSchema(container, SCHEMA);
 
     await container.run(input);
@@ -86,6 +87,7 @@ export function defineCLIConfigCommand(
                         // ones only a console service reads. The read above
                         // covers server-core's selection alone.
                         const { tree } = await readConfigFileTree({ ...configFs });
+
                         await validateDocument(mergeSchemaData<AuthupConfig>(
                             SCHEMA,
                             readSchemaFromFileTree<AuthupConfig>(tree, SCHEMA),

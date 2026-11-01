@@ -35,9 +35,10 @@ export class ScopeProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             if (attributes) {
                 await this.repository.remove(attributes);
             }
+
             return {
                 ...input,
-                attributes: attributes || input.attributes, 
+                attributes: attributes || input.attributes,
             };
         }
 
@@ -52,10 +53,12 @@ export class ScopeProvisioningSynchronizer extends BaseProvisioningSynchronizer<
                     );
 
                     attributes = await this.repository.save(attributes);
+
                     break;
                 case ProvisioningEntityStrategyType.REPLACE:
                     input.attributes.id = attributes.id;
                     attributes = await this.repository.save(this.repository.create(input.attributes));
+
                     break;
             }
         } else {

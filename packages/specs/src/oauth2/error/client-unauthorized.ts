@@ -15,6 +15,7 @@ export const OAUTH2_CLIENT_UNAUTHORIZED_ERROR_INSTANCE = Symbol.for('@authup/spe
 export class OAuth2ClientUnauthorizedError extends OAuth2Error {
     constructor(input?: AuthupErrorInput) {
         const options = normalizeOAuth2ErrorInput(input);
+
         super({
             code: ErrorCode.OAUTH_CLIENT_UNAUTHORIZED,
             message: 'The client is not authorized to use this authorization grant type',

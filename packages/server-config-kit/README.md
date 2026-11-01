@@ -44,7 +44,7 @@ npm install @authup/server-config-kit zod validup
 
 `zod` is what your entries are typed with and `validup` provides the `Container` that `mountSchema` attaches validators to. Both are dependencies of this package as well; install them so your code imports the same copy.
 
-The package is ESM only and needs Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`.
+The package is ESM only and needs Node.js `>=26.0.0`.
 
 ## Usage
 

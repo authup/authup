@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
-import { OAuth2SubKind, OAuth2TokenGrant } from '@authup/specs';
+import { OAuth2MfaRequiredError, OAuth2SubKind, OAuth2TokenGrant } from '@authup/specs';
 import type { Client, User } from '@authup/core-kit';
 import {
     EventName,
@@ -45,6 +45,7 @@ export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput>
         super({
             accessTokenIssuer: ctx.accessTokenIssuer,
             sessionManager: ctx.sessionManager,
+            mfaChallengeProvider: ctx.mfaChallengeProvider,
         });
 
         this.refreshTokenIssuer = ctx.refreshTokenIssuer;
@@ -68,6 +69,15 @@ export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput>
             mfaAt: input.mfaVerifiedAt ?? null,
             authMethod: SessionAuthMethod.PASSWORD,
         });
+
+        const owed = await this.revokeIfSecondFactorOwed(session);
+
+        if (owed) {
+            throw new OAuth2MfaRequiredError({
+                message: 'Complete a second-factor challenge to continue.',
+                data: { kinds: owed.kinds },
+            });
+        }
 
         // amr/acr derive from the session's authMethod + mfaAt — deliberately
         // on every token kind, so a direct password grant's tokens advertise the

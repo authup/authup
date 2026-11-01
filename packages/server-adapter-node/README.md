@@ -38,7 +38,7 @@ Every route of an API behind Authup needs the same first step: take the `Authori
 npm install @authup/server-adapter-node @authup/server-adapter-kit
 ```
 
-`TokenVerifier` comes from `@authup/server-adapter-kit`, which you import directly. The package is ESM-only, has no peer dependencies and needs Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`.
+`TokenVerifier` comes from `@authup/server-adapter-kit`, which you import directly. The package is ESM-only, has no peer dependencies and needs Node.js `>=26.0.0`.
 
 ## Usage
 

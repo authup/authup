@@ -83,9 +83,9 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 parent: [
                     { permission: { name: 'user_read' }, realmScope: RealmScope.OWN },
                     {
-                        permission: { name: 'user_read' }, 
-                        policies: [policy], 
-                        realmScope: RealmScope.ANY, 
+                        permission: { name: 'user_read' },
+                        policies: [policy],
+                        realmScope: RealmScope.ANY,
                     },
                 ],
                 child: [
@@ -94,6 +94,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             });
 
             const result = await isRoleSuperset(provider);
+
             expect(result).toBe(false);
         });
 
@@ -102,9 +103,9 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 parent: [
                     { permission: { name: 'user_read' }, realmScope: RealmScope.OWN },
                     {
-                        permission: { name: 'user_read' }, 
-                        policies: [policy], 
-                        realmScope: RealmScope.ANY, 
+                        permission: { name: 'user_read' },
+                        policies: [policy],
+                        realmScope: RealmScope.ANY,
                     },
                 ],
                 child: [
@@ -113,6 +114,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             });
 
             const result = await isRoleSuperset(provider);
+
             expect(result).toBe(true);
         });
 
@@ -123,6 +125,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             });
 
             const result = await isRoleSuperset(provider);
+
             expect(result).toBe(false);
         });
 
@@ -133,6 +136,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             });
 
             const result = await isRoleSuperset(provider);
+
             expect(result).toBe(false);
         });
 
@@ -144,6 +148,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             });
 
             const result = await isRoleSuperset(provider);
+
             expect(result).toBe(false);
         });
 
@@ -154,6 +159,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             });
 
             const result = await isRoleSuperset(provider);
+
             expect(result).toBe(true);
         });
 
@@ -163,22 +169,23 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 parent: [{
                     permission: { name: 'user_update' },
                     policies: [{
-                        id: 'row-1', 
-                        type: BuiltInPolicyType.IDENTITY, 
-                        types: ['user'], 
-                    } as any], 
+                        id: 'row-1',
+                        type: BuiltInPolicyType.IDENTITY,
+                        types: ['user'],
+                    } as any],
                 }],
                 child: [{
                     permission: { name: 'user_update' },
                     policies: [{
-                        id: 'row-2', 
-                        type: BuiltInPolicyType.IDENTITY, 
-                        types: ['user'], 
-                    } as any], 
+                        id: 'row-2',
+                        type: BuiltInPolicyType.IDENTITY,
+                        types: ['user'],
+                    } as any],
                 }],
             });
 
             const result = await isRoleSuperset(provider);
+
             expect(result).toBe(true);
         });
     });
@@ -203,6 +210,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 await mixedActor().getFor({ type: 'role', id: 'actor' }),
                 { name: 'user_read', realmScope: RealmScope.OWN },
             );
+
             expect(result.realmScope).toBe(RealmScope.OWN);
             expect(result.policy).toBeUndefined();
         });
@@ -213,6 +221,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 await mixedActor().getFor({ type: 'role', id: 'actor' }),
                 { name: 'user_read', realmScope: RealmScope.ANY },
             );
+
             expect(result.realmScope).toBe(RealmScope.ANY);
             expect(result.policy?.id).toBe('policy-1');
         });
@@ -222,6 +231,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 await mixedActor().getFor({ type: 'role', id: 'actor' }),
                 { name: 'user_read' },
             );
+
             expect(result.realmScope).toBe(RealmScope.OWN);
             expect(result.policy).toBeUndefined();
         });
@@ -242,6 +252,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 await provider.getFor({ type: 'role', id: 'actor' }),
                 { name: 'user_read', realmScope: RealmScope.ANY },
             );
+
             expect(result.realmScope).toBe(RealmScope.ANY);
             expect(result.policy).toBeUndefined();
         });
@@ -250,6 +261,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             const provider = createProvider({ actor: [] });
 
             const result = await provider.resolveJunctionGrant(await provider.getFor({ type: 'role', id: 'actor' }), { name: 'user_read' });
+
             expect(result.realmScope).toBe(RealmScope.OWN);
             expect(result.policy).toBeUndefined();
         });
@@ -271,6 +283,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 await provider.getFor({ type: 'role', id: 'actor' }),
                 { name: 'user_read', realmScope: RealmScope.ANY },
             );
+
             expect(result.realmScope).toBe(RealmScope.NONE);
             expect(result.policy).toBeUndefined();
         });
@@ -281,28 +294,28 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             const forward = createProvider({
                 actor: [
                     {
-                        permission: { name: 'user_read' }, 
-                        policies: [policy], 
-                        realmScope: RealmScope.ANY, 
+                        permission: { name: 'user_read' },
+                        policies: [policy],
+                        realmScope: RealmScope.ANY,
                     },
                     {
-                        permission: { name: 'user_read' }, 
-                        policies: [policyOther], 
-                        realmScope: RealmScope.ANY, 
+                        permission: { name: 'user_read' },
+                        policies: [policyOther],
+                        realmScope: RealmScope.ANY,
                     },
                 ],
             });
             const reverse = createProvider({
                 actor: [
                     {
-                        permission: { name: 'user_read' }, 
-                        policies: [policyOther], 
-                        realmScope: RealmScope.ANY, 
+                        permission: { name: 'user_read' },
+                        policies: [policyOther],
+                        realmScope: RealmScope.ANY,
                     },
                     {
-                        permission: { name: 'user_read' }, 
-                        policies: [policy], 
-                        realmScope: RealmScope.ANY, 
+                        permission: { name: 'user_read' },
+                        policies: [policy],
+                        realmScope: RealmScope.ANY,
                     },
                 ],
             });
@@ -338,6 +351,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 await provider.getFor({ type: 'role', id: 'actor' }),
                 { name: 'user_read', realmScope: RealmScope.OWN },
             );
+
             expect(result.realmScope).toBe(RealmScope.OWN);
             expect(result.policy).toBeUndefined();
         });
@@ -403,9 +417,9 @@ describe('core/identity/permission — the grants a token carries (#3597)', () =
 
     it('keeps unowned grants plus the token client\'s, direct and role-derived', async () => {
         const result = await createUserProvider().getForToken({
-            sub: 'u', 
-            sub_kind: 'user', 
-            client_id: X, 
+            sub: 'u',
+            sub_kind: 'user',
+            client_id: X,
         });
 
         // `g` and `q` surviving pins the equality regression: a client on the
@@ -415,9 +429,9 @@ describe('core/identity/permission — the grants a token carries (#3597)', () =
 
     it('keeps a role owned by the token client, with the global permissions it carries', async () => {
         const result = await createUserProvider().getForToken({
-            sub: 'u', 
-            sub_kind: 'user', 
-            client_id: Z, 
+            sub: 'u',
+            sub_kind: 'user',
+            client_id: Z,
         });
 
         expect(names(result)).toEqual(['g', 'p_z', 'q', 'q_z', 'r']);
@@ -443,9 +457,9 @@ describe('core/identity/permission — the grants a token carries (#3597)', () =
         });
 
         const result = await provider.getForToken({
-            sub: 'c1', 
-            sub_kind: 'client', 
-            client_id: X, 
+            sub: 'c1',
+            sub_kind: 'client',
+            client_id: X,
         });
 
         expect(names(result)).toEqual(['c', 'c_z']);
@@ -461,15 +475,15 @@ describe('core/identity/permission — the grants a token carries (#3597)', () =
         const child = { type: 'role', id: 'child' };
 
         await expect(provider.isSuperset(await provider.getForToken({
-            sub: 'u', 
-            sub_kind: 'user', 
-            client_id: X, 
+            sub: 'u',
+            sub_kind: 'user',
+            client_id: X,
         }), await provider.getFor(child)))
             .resolves.toBe(false);
         await expect(provider.isSuperset(await provider.getForToken({
-            sub: 'u', 
-            sub_kind: 'user', 
-            client_id: Z, 
+            sub: 'u',
+            sub_kind: 'user',
+            client_id: Z,
         }), await provider.getFor(child)))
             .resolves.toBe(true);
     });

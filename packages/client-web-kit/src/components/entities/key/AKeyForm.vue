@@ -195,6 +195,7 @@ export default defineComponent({
             }
 
             busy.value = true;
+
             try {
                 // string-enum form sentinels ('' = unset) widen the fields beyond
                 // the entity's literal unions — narrow for the manager call.

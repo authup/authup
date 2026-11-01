@@ -19,6 +19,7 @@ type RequestIDParamOptions = {
 
 export function useRequestParamID(event: IAppEvent, options: RequestIDParamOptions = {}) : string {
     const id = getRequestParamID(event, options);
+
     if (typeof id === 'undefined') {
         throw new ValidupError([
             defineIssueItem({
@@ -33,11 +34,13 @@ export function useRequestParamID(event: IAppEvent, options: RequestIDParamOptio
 
 export function getRequestParamID(event: IAppEvent, options: RequestIDParamOptions = {}) : string | undefined {
     const id = getRequestStringParam(event, 'id');
+
     if (!id) {
         return undefined;
     }
 
     options.isUUID = options.isUUID ?? true;
+
     if (options.isUUID && !isUUID(id)) {
         return undefined;
     }
@@ -47,6 +50,7 @@ export function getRequestParamID(event: IAppEvent, options: RequestIDParamOptio
 
 export function getRequestStringParam(event: IAppEvent, key: string) : string | undefined {
     const value = event.params[key];
+
     if (typeof value !== 'string' || value.length === 0) {
         return undefined;
     }
@@ -56,6 +60,7 @@ export function getRequestStringParam(event: IAppEvent, key: string) : string | 
 
 export function getRequestStringParamOrFail(event: IAppEvent, key: string) : string | undefined {
     const value = getRequestStringParam(event, key);
+
     if (typeof value === 'undefined') {
         throw new ValidupError([
             defineIssueItem({

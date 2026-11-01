@@ -10,7 +10,7 @@ import type { OAuth2TokenConfirmation, OAuth2TokenGrantResponse } from '@authup/
 import type { Logger } from '@authup/server-kit';
 import type { ISessionManager } from '../../authentication/index.ts';
 import type { IIdentityResolver } from '../../identity/resolver/types.ts';
-import type { IEventService } from '../../entities/index.ts';
+import type { IEventService, IUserAuthenticatorChallengeProvider } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 import type { IKeyStore } from '../../key/index.ts';
 import type { ISessionTokenRepository } from '../session-token/index.ts';
@@ -23,10 +23,17 @@ import type {
 
 export type BaseGrantContext = {
     accessTokenIssuer: IOAuth2TokenIssuer,
-    sessionManager: ISessionManager
+    sessionManager: ISessionManager,
+    /**
+     * Re-checks a just-created user session for a second factor stored
+     * concurrently with the login (absent = no re-check). Required by the
+     * grants that create interactive user sessions.
+     */
+    mfaChallengeProvider?: IUserAuthenticatorChallengeProvider,
 };
 
 export type OAuth2AuthorizeGrantContext = BaseGrantContext & {
+    mfaChallengeProvider: IUserAuthenticatorChallengeProvider,
     refreshTokenIssuer: IOAuth2TokenIssuer,
     openIdTokenIssuer: IOAuth2OpenIDTokenIssuer,
     /**
@@ -42,6 +49,7 @@ export type OAuth2IdentityGrantContext = BaseGrantContext & {
 };
 
 export type OAuth2PasswordGrantContext = BaseGrantContext & {
+    mfaChallengeProvider: IUserAuthenticatorChallengeProvider,
     refreshTokenIssuer: IOAuth2TokenIssuer,
     eventService?: IEventService,
     metrics?: IAuthFlowMetrics,

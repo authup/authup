@@ -102,6 +102,8 @@ On create, a missing `realmId` and `realmId: null` mean the same thing, and the 
 
 A policy created with a `parentId` and no `realmId` is global, like any other policy created without a realm. Its realm is not checked against the parent's: a global policy may serve as a building block under a realm's composite policy.
 
+A child changes what its parent decides, so attaching a policy to a parent, moving it to another one, detaching it and deleting it each need the update permission on the parent, in the parent's realm. Through the API, a child can never be attached to a built-in policy; provisioning maintains the children a built-in policy declares. Detaching or deleting a child found under one needs the update permission in the built-in policy's realm.
+
 A custom permission created without a realm and without a `clientId` is global. The built-in `realm_admin` role is not granted it on create, but picks it up at `ownOrNull` reach on the next start, when provisioning grants it every global permission that no client owns (realm create, update and delete excepted). From then on every realm admin can use it inside its own realm. A permission with a realm, which includes every client-owned one, is not granted to the built-in `realm_admin`.
 
 ### Realm reach (`realmScope`)

@@ -113,6 +113,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         // selectGrantForRequest, the selection never depends on grant/repository order.
         const grants = aggregatePermissionPolicyBindings(matching)
             .flatMap((item) => item.grants);
+
         if (grants.length === 0) {
             return { realmScope: RealmScope.OWN };
         }
@@ -128,6 +129,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         const selected = selectGrantForRequest(grants, requested);
 
         let policy: Policy | undefined;
+
         if (selected.policy) {
             // The selected grant is policy-restricted but its policy is not a propagatable
             // Policy (e.g. a composite with no id). Fail CLOSED: a `none` reach blocks
@@ -173,6 +175,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         }
 
         const identity : IdentityPermissionSubject = { type: token.sub_kind, id: token.sub };
+
         if (identity.type !== 'user' || !token.client_id) {
             return this.getFor(identity);
         }
@@ -218,6 +221,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             this.roleProvider.getRolesFor({ type: identity.type, id: identity.id }),
         ]);
         const roleBindings = await this.roleRepository.getBoundPermissionsForMany(roles.filter(keepRole));
+
         if (roleBindings.length === 0) {
             return bindings;
         }
@@ -262,6 +266,7 @@ function isGrantPreferred(
         minRealmScope([candidate.realmScope, requested]),
         minRealmScope([incumbent.realmScope, requested]),
     );
+
     if (byCapped !== 0) {
         return byCapped > 0;
     }
@@ -273,6 +278,7 @@ function isGrantPreferred(
 
     // Deterministic tie-break for two policy-bound grants on equal capped reach.
     const byUncapped = compareRealmScope(candidate.realmScope, incumbent.realmScope);
+
     if (byUncapped !== 0) {
         return byUncapped > 0;
     }
@@ -280,13 +286,16 @@ function isGrantPreferred(
     // Prefer a propagatable policy (has an id) over an id-less composite that would fail closed.
     const candidateId = candidate.policy && isPolicy(candidate.policy) ? candidate.policy.id : undefined;
     const incumbentId = incumbent.policy && isPolicy(incumbent.policy) ? incumbent.policy.id : undefined;
+
     if (candidateId !== incumbentId) {
         if (typeof candidateId === 'undefined') {
             return false;
         }
+
         if (typeof incumbentId === 'undefined') {
             return true;
         }
+
         return candidateId < incumbentId;
     }
 

@@ -12,6 +12,7 @@ import { createFakeEvent } from './fake-event';
 describe('readFromLocations', () => {
     it('should read from a single location', async () => {
         const event = createFakeEvent({ body: { a: 1 } });
+
         await expect(readFromLocations(event, ['body'])).resolves.toEqual({ a: 1 });
     });
 
@@ -22,6 +23,7 @@ describe('readFromLocations', () => {
             params: { c: '3' },
             cookies: { d: '4' },
         });
+
         await expect(
             readFromLocations(event, ['body', 'query', 'params', 'cookies']),
         ).resolves.toEqual({
@@ -37,6 +39,7 @@ describe('readFromLocations', () => {
             body: { realm_id: 'from-body' },
             query: { realm_id: 'from-query' },
         });
+
         await expect(readFromLocations(event, ['body', 'query'])).resolves.toEqual({ realm_id: 'from-query' });
         await expect(readFromLocations(event, ['query', 'body'])).resolves.toEqual({ realm_id: 'from-body' });
     });

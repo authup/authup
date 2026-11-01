@@ -130,12 +130,14 @@ export default defineComponent({
             }
 
             busy.value = true;
+
             try {
                 if (isEditing.value) {
                     await manager.createOrUpdate({
                         name: form.name,
                         enabled: form.enabled,
                     });
+
                     return;
                 }
 

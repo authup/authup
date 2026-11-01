@@ -58,6 +58,7 @@ describe('http/middleware/metrics (auth-flow counters)', () => {
                 password: user.password!,
             },
         });
+
         expect(success.status).toEqual(200);
 
         const failure = await httpRequest(suite, 'POST', '/token', {
@@ -67,12 +68,15 @@ describe('http/middleware/metrics (auth-flow counters)', () => {
                 password: 'definitely-wrong-password',
             },
         });
+
         expect(failure.status).toEqual(400);
 
         const response = await httpRequest(suite, 'GET', '/metrics');
+
         expect(response.status).toEqual(200);
 
         const body = await response.text();
+
         expect(readCounterSample(body, 'authup_login_total', 'result="success"')).toBeGreaterThanOrEqual(1);
         expect(readCounterSample(body, 'authup_login_total', 'result="failure"')).toBeGreaterThanOrEqual(1);
         expect(readCounterSample(body, 'authup_token_grant_total', 'grant_type="password"')).toBeGreaterThanOrEqual(1);

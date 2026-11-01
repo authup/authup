@@ -36,9 +36,11 @@ describe('app/modules/database/repositories/realm', () => {
 
     it('should resolve a realm by name and by id', async () => {
         const byName = await realms.resolveOrFail(REALM_MASTER_NAME);
+
         expect(byName.name).toEqual(REALM_MASTER_NAME);
 
         const byId = await realms.resolveOrFail(byName.id);
+
         expect(byId.id).toEqual(byName.id);
     });
 

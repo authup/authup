@@ -8,10 +8,10 @@
 import type { Client } from '@authup/core-kit';
 import type { ClientCreatePayload } from '@authup/core-http-kit';
 import {
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { ClientCredentialsService } from '../../../../../src/core';
@@ -197,10 +197,12 @@ describe('http/controllers/client', () => {
         expect(created.accessPolicyId).toEqual(policy.id);
 
         let { data: read } = await suite.client.client.getOne(created.id);
+
         expect(read.accessPolicyId).toEqual(policy.id);
 
         let { data: updated } = await suite.client
             .client.update(created.id, { accessPolicyId: nextPolicy.id });
+
         expect(updated.accessPolicyId).toEqual(nextPolicy.id);
 
         // clearing detaches the policy (null = default allow)
@@ -224,6 +226,7 @@ describe('http/controllers/client', () => {
         );
 
         const { data: created } = await suite.client.client.create(createFakeClient({ accessPolicyId: global.id }));
+
         expect(created.accessPolicyId).toEqual(global.id);
 
         await expectClientError(
@@ -232,6 +235,7 @@ describe('http/controllers/client', () => {
         );
 
         const { data: read } = await suite.client.client.getOne(created.id);
+
         expect(read.accessPolicyId).toEqual(global.id);
     });
 
@@ -241,7 +245,7 @@ describe('http/controllers/client', () => {
     it('should ignore the retired scope and rootUrl keys and round-trip baseUrl', async () => {
         const response = await httpRequest(suite, 'POST', '/clients', {
             headers: {
-                Authorization: `Basic ${Buffer.from('admin:start123').toString('base64')}`,
+                Authorization: `Basic ${Buffer.from('admin:start123').toBase64()}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -255,11 +259,13 @@ describe('http/controllers/client', () => {
         expect(response.status).toEqual(201);
 
         const { data: created } = await response.json();
+
         expect(created.baseUrl).toEqual('https://app.example.com');
         expect(created).not.toHaveProperty('scope');
         expect(created).not.toHaveProperty('rootUrl');
 
         const { data: read } = await suite.client.client.getOne(created.id);
+
         expect(read.baseUrl).toEqual('https://app.example.com');
         expect(read).not.toHaveProperty('scope');
         expect(read).not.toHaveProperty('rootUrl');

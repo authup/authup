@@ -39,11 +39,13 @@ function buildSecondaryDatabasePath(name: string): string {
 
 function buildSecondaryDatabaseName(name: string, database: unknown): string {
     const base = typeof database === 'string' && database.length > 0 ? database : 'app';
+
     return `${base}_${name}_${process.env.VITEST_POOL_ID || '0'}`;
 }
 
 function applyDatabaseConnectionEnv() {
     const connection = inject('DATABASE_CONNECTION');
+
     if (!connection) {
         return;
     }
@@ -64,6 +66,7 @@ async function resolveDataSourceOptions(container: IContainer, database: string)
     }
 
     const options = readDataSourceOptionsFromEnv();
+
     if (options) {
         // the configuration surface is deliberately untyped: `db` is authup's
         // own loose shape and carries only the three supported dialects.
@@ -87,6 +90,7 @@ export function createTestDatabaseModuleForSetup(): DatabaseModule {
                 fs.mkdirSync(path.dirname(options.database), { recursive: true });
 
                 const entries = fs.readdirSync(DATABASE_DIRECTORY_PATH);
+
                 for (const entry of entries) {
                     if (WORKER_DATABASE_REGEX.test(entry)) {
                         fs.rmSync(path.join(DATABASE_DIRECTORY_PATH, entry), { force: true });
@@ -125,11 +129,13 @@ export function createTestDatabaseModuleForSecondaryInstance(name: string): Data
             applyDatabaseConnectionEnv();
 
             const config = container.resolve(ConfigInjectionKey);
+
             if (config.env !== EnvironmentName.TEST) {
                 throw new Error('Test database module can only run with EnvironmentName.TEST');
             }
 
             const options = readDataSourceOptionsFromEnv();
+
             if (options) {
                 config.db = {
                     ...options,
@@ -175,11 +181,7 @@ export function createTestDatabaseModuleForSuite(): DatabaseModule {
             await resolveDataSourceOptions(container, buildWorkerDatabasePath());
         },
         async setup(_container, options) {
-            if (options.type !== 'better-sqlite3' || typeof options.database !== 'string') {
-                return;
-            }
-
-            if (fs.existsSync(options.database)) {
+            if (options.type !== 'better-sqlite3' || typeof options.database !== 'string' || fs.existsSync(options.database)) {
                 return;
             }
 

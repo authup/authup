@@ -16,9 +16,9 @@ import type {
     SortsBuildInput,
 } from '@rapiq/core';
 import {
-    defineQuery, 
-    isFilter, 
-    isFilters, 
+    defineQuery,
+    isFilter,
+    isFilters,
     isQuery,
 } from '@rapiq/core';
 

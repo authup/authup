@@ -134,6 +134,7 @@ describe('junction entities (realm isolation)', () => {
 
         const { data: ownRole } = await suite.client.role.create(createFakeRole({ realmId: master.id }));
         const { data: foreignRole } = await suite.client.role.create(createFakeRole({ realmId: realmB.id }));
+
         foreignRoleId = foreignRole.id;
 
         const { data: ownUser } = await suite.client.user.create(createFakeUser());
@@ -247,18 +248,22 @@ describe('junction entities (realm isolation)', () => {
             secretHashed: false,
             secretEncrypted: false,
         });
+
         for (const name of READ_GRANTS) {
             const { data: permission } = await suite.client.permission.getOne(name);
+
             await suite.client.clientPermission.create({
                 clientId: readerClient.id,
                 permissionId: permission.id,
                 realmScope: RealmScope.OWN_OR_NULL,
             });
         }
+
         const token = await suite.client.token.createWithClientCredentials({
             client_id: readerClient.id,
             client_secret: readerSecret,
         });
+
         reader = new HTTPClient({ baseURL: suite.baseURL });
         reader.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
 
@@ -281,8 +286,10 @@ describe('junction entities (realm isolation)', () => {
             secretHashed: false,
             secretEncrypted: false,
         });
+
         for (const name of READ_GRANTS) {
             const { data: permission } = await suite.client.permission.getOne(name);
+
             await suite.client.clientPermission.create({
                 clientId: postReaderClient.id,
                 permissionId: permission.id,
@@ -290,10 +297,12 @@ describe('junction entities (realm isolation)', () => {
                 policyId: postPolicy.id,
             });
         }
+
         const postToken = await suite.client.token.createWithClientCredentials({
             client_id: postReaderClient.id,
             client_secret: postReaderSecret,
         });
+
         postReader = new HTTPClient({ baseURL: suite.baseURL });
         postReader.setAuthorizationHeader({ type: 'Bearer', token: postToken.access_token });
 
@@ -323,8 +332,10 @@ describe('junction entities (realm isolation)', () => {
                 secretHashed: false,
                 secretEncrypted: false,
             });
+
             for (const name of READ_GRANTS) {
                 const { data: permission } = await suite.client.permission.getOne(name);
+
                 await suite.client.clientPermission.create({
                     clientId: client.id,
                     permissionId: permission.id,
@@ -332,11 +343,13 @@ describe('junction entities (realm isolation)', () => {
                     policyId,
                 });
             }
+
             const token = await suite.client.token.createWithClientCredentials({
                 client_id: client.id,
                 client_secret: secret,
             });
             const http = new HTTPClient({ baseURL: suite.baseURL });
+
             http.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
 
             return http;
@@ -366,6 +379,7 @@ describe('junction entities (realm isolation)', () => {
         // gate that denies everything
         for (const [name, api, ownId] of collections()) {
             const response = await api.getMany({ filters: { id: ownId } });
+
             expect(response.data.some((entity: any) => entity.id === ownId), name).toBe(true);
         }
     });
@@ -373,6 +387,7 @@ describe('junction entities (realm isolation)', () => {
     it('never lists a foreign-realm junction row', async () => {
         for (const [name, api, , foreignId] of collections()) {
             const response = await api.getMany({ filters: { id: foreignId } });
+
             expect(response.data.some((entity: any) => entity.id === foreignId), name).toBe(false);
             expect(response.meta.total, name).toEqual(0);
         }
@@ -385,6 +400,7 @@ describe('junction entities (realm isolation)', () => {
             filters: { id: foreignUserRoleId },
             relations: ['role'],
         });
+
         expect(response.data).toHaveLength(0);
 
         // the join really does happen for a row the reader may see, or this pins
@@ -393,6 +409,7 @@ describe('junction entities (realm isolation)', () => {
             filters: { id: ownUserRoleId },
             relations: ['role'],
         });
+
         expect(own.data).toHaveLength(1);
         expect(own.data[0].role).toBeDefined();
 
@@ -401,6 +418,7 @@ describe('junction entities (realm isolation)', () => {
             filters: { id: foreignRolePermissionId },
             relations: ['permission'],
         });
+
         expect(rolePermission.data).toHaveLength(0);
     });
 
@@ -417,6 +435,7 @@ describe('junction entities (realm isolation)', () => {
     it('still reads an own-realm junction row one at a time', async () => {
         for (const [name, api, ownId] of collections()) {
             const { data } = await api.getOne(ownId);
+
             expect(data.id, name).toEqual(ownId);
         }
     });
@@ -440,9 +459,11 @@ describe('junction entities (realm isolation)', () => {
         for (const [name, api, ownId, foreignId] of cases) {
             // control: this reader can see its own-realm rows at all
             const own = await api.getMany({ filters: { id: ownId }, fields: ['id'] });
+
             expect(own.data.some((entity: any) => entity.id === ownId), name).toBe(true);
 
             const foreign = await api.getMany({ filters: { id: foreignId }, fields: ['id'] });
+
             expect(foreign.data, name).toHaveLength(0);
             // the drop loop decrements the total it reports
             expect(foreign.meta.total, name).toEqual(0);
@@ -457,6 +478,7 @@ describe('junction entities (realm isolation)', () => {
             filters: { id: ownRolePermissionId },
             relations: ['permission'],
         });
+
         expect(response.data).toHaveLength(1);
         expect(response.data[0].permission).toBeDefined();
         expect(response.data[0].permission!.realmId).toBeNull();
@@ -488,6 +510,7 @@ describe('junction entities (realm isolation)', () => {
             await entityApi.getMany({ filters: { id: ownId } });
 
             const foreign = await entityApi.getMany({ filters: { id: foreignId } });
+
             expect(foreign.data, name).toHaveLength(0);
         }
     });
@@ -496,6 +519,7 @@ describe('junction entities (realm isolation)', () => {
         // the control for the pair above: the scope-mode policy admits the reader's own
         // realm, so an empty result there would mean the gate denies everything
         const own = await scopePolicyReader.rolePermission.getMany({ filters: { id: ownRolePermissionId } });
+
         expect(own.data.some((entity: any) => entity.id === ownRolePermissionId)).toBe(true);
     });
 

@@ -8,11 +8,11 @@
 import { ErrorCode } from '@authup/errors';
 import { JWTError, OAuth2TokenKind } from '@authup/specs';
 import {
-    beforeAll, 
+    beforeAll,
     beforeEach,
-    describe, 
-    expect, 
-    it, 
+    describe,
+    expect,
+    it,
     vitest,
 } from 'vitest';
 import { Client } from '@authup/core-http-kit';
@@ -35,6 +35,7 @@ describe('verifier', () => {
     let mfaToken : string;
     let boundToken : string;
     let getJwk : ReturnType<typeof vitest.spyOn>;
+
     beforeAll(async () => {
         faker = new Faker();
 
@@ -57,9 +58,11 @@ describe('verifier', () => {
         });
 
         const output = await tokenVerifier.verify(token);
+
         expect(output).toBeDefined();
 
         const outputCached = await readCachedClaims(cache, token, LOCAL_NAMESPACE);
+
         expect(output).toEqual(outputCached);
     });
 
@@ -76,6 +79,7 @@ describe('verifier', () => {
 
     it('should resolve the key of the realm the token names', async () => {
         getJwk.mockClear();
+
         const tokenVerifier = new TokenVerifier({ baseURL: 'http://localhost:3001' });
 
         await tokenVerifier.verify(token);
@@ -85,8 +89,10 @@ describe('verifier', () => {
 
     it('should not verify a token naming no realm local', async () => {
         getJwk.mockClear();
+
         const tokenVerifier = new TokenVerifier({ baseURL: 'http://localhost:3001' });
         const payload = { ...TokenPayload };
+
         delete payload.realm_id;
 
         await expect(tokenVerifier.verify(await faker.sign(payload)))
@@ -96,6 +102,7 @@ describe('verifier', () => {
 
     it('should not fetch a key for a kid that is no uuid', async () => {
         getJwk.mockClear();
+
         const tokenVerifier = new TokenVerifier({ baseURL: 'http://localhost:3001' });
 
         await expect(tokenVerifier.verify(await faker.sign(TokenPayload, '../users')))
@@ -142,9 +149,11 @@ describe('verifier', () => {
         });
 
         const output = await tokenVerifier.verify(token);
+
         expect(output).toBeDefined();
 
         const outputCached = await readCachedClaims(cache, token, REMOTE_NAMESPACE);
+
         expect(output).toEqual(outputCached);
     });
 
@@ -188,6 +197,7 @@ describe('verifier', () => {
             const tokenVerifier = new TokenVerifier({ baseURL: 'http://localhost:3001' });
 
             const output = await tokenVerifier.verify(boundToken, { certificateThumbprint: TokenCertificateThumbprint });
+
             expect(output.cnf).toEqual({ 'x5t#S256': TokenCertificateThumbprint });
         });
 
@@ -222,9 +232,11 @@ describe('verifier', () => {
             });
 
             const output = await tokenVerifier.verify(boundToken, { certificateThumbprint: TokenCertificateThumbprint });
+
             delete output.cnf;
 
             const cached = await readCachedClaims(cache, boundToken, LOCAL_NAMESPACE);
+
             expect(cached?.cnf).toEqual({ 'x5t#S256': TokenCertificateThumbprint });
 
             await expect(tokenVerifier.verify(boundToken))
@@ -241,6 +253,7 @@ describe('verifier', () => {
             });
 
             const output = await tokenVerifier.verify(boundToken, { certificateThumbprint: TokenCertificateThumbprint });
+
             expect(output).toEqual(await readCachedClaims(cache, boundToken, LOCAL_NAMESPACE));
 
             await expect(tokenVerifier.verify(boundToken))
@@ -261,6 +274,7 @@ describe('verifier', () => {
                 .rejects.toBeInstanceOf(JWTError);
 
             const output = await tokenVerifier.verify(BoundTokenID, { certificateThumbprint: TokenCertificateThumbprint });
+
             expect(output.cnf).toEqual({ 'x5t#S256': TokenCertificateThumbprint });
         });
     });
@@ -344,6 +358,7 @@ describe('verifier', () => {
             await verifier.verify(token);
 
             const forged = await new Faker().sign(TokenPayload);
+
             await expect(verifier.verify(forged)).rejects.toBeInstanceOf(JWTError);
             await expect(verifier.verify(forged)).rejects.toBeInstanceOf(JWTError);
 

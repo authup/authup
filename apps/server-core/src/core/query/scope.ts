@@ -83,9 +83,9 @@ export async function scopeReadQuery(
 
     if (options.compile === false) {
         return {
-            query, 
-            post: false, 
-            ownership, 
+            query,
+            post: false,
+            ownership,
         };
     }
 
@@ -97,9 +97,9 @@ export async function scopeReadQuery(
     switch (compiled.verdict) {
         case 'allow':
             return {
-                query, 
-                post: false, 
-                ownership, 
+                query,
+                post: false,
+                ownership,
             };
         case 'conditional':
             return {
@@ -119,9 +119,9 @@ export async function scopeReadQuery(
             };
         default:
             return {
-                query, 
-                post: true, 
-                ownership, 
+                query,
+                post: true,
+                ownership,
             };
     }
 }

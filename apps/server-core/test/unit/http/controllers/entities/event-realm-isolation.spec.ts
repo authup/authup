@@ -40,6 +40,7 @@ describe('event (realm isolation)', () => {
         // a LOGIN audit row in the foreign realm (B)
         const userB = createFakeUser({ realmId: realmB.id });
         const { data: createdB } = await suite.client.user.create(userB);
+
         await suite.client.token.createWithPassword({
             username: userB.name,
             password: userB.password!,
@@ -49,16 +50,19 @@ describe('event (realm isolation)', () => {
         // a LOGIN audit row in the actor's own realm (master)
         const userM = createFakeUser();
         const { data: createdM } = await suite.client.user.create(userM);
+
         await suite.client.token.createWithPassword({
             username: userM.name,
             password: userM.password!,
         });
 
         const foreignRows = await suite.client.event.getMany({ filters: { name: EventName.LOGIN, actorId: createdB.id } });
+
         expect(foreignRows.data.length).toBeGreaterThanOrEqual(1);
         foreignRowId = foreignRows.data[0].id;
 
         const ownRows = await suite.client.event.getMany({ filters: { name: EventName.LOGIN, actorId: createdM.id } });
+
         expect(ownRows.data.length).toBeGreaterThanOrEqual(1);
         ownRowId = ownRows.data[0].id;
 
@@ -72,6 +76,7 @@ describe('event (realm isolation)', () => {
             secretEncrypted: false,
         });
         const { data: permission } = await suite.client.permission.getOne(PermissionName.EVENT_READ);
+
         await suite.client.clientPermission.create({
             clientId: actorClient.id,
             permissionId: permission.id,
@@ -81,6 +86,7 @@ describe('event (realm isolation)', () => {
             client_id: actorClient.id,
             client_secret: actorSecret,
         });
+
         actor = new HTTPClient({ baseURL: suite.baseURL });
         actor.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
     });
@@ -95,6 +101,7 @@ describe('event (realm isolation)', () => {
             filters: { id: ownRowId },
             fields: ['id', 'name'],
         });
+
         expect(own.data.some((row) => row.id === ownRowId)).toBe(true);
 
         // the foreign-realm row must NOT appear despite fields=id,name omitting realm_id
@@ -102,6 +109,7 @@ describe('event (realm isolation)', () => {
             filters: { id: foreignRowId },
             fields: ['id', 'name'],
         });
+
         expect(foreign.data.some((row) => row.id === foreignRowId)).toBe(false);
     });
 });

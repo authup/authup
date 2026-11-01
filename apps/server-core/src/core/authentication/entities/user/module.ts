@@ -26,13 +26,16 @@ export class UserAuthenticator extends BaseCredentialsAuthenticator<User> {
 
     async authenticate(key: string, secret: string, realmId?: string): Promise<User> {
         const identity = await this.identityResolver.resolve(IdentityType.USER, key, realmId);
+
         if (!identity || identity.type !== IdentityType.USER) {
             // an unknown name costs the same as a wrong password
             await this.credentialsService.verify(secret, {} as User);
+
             throw new EntityCredentialsInvalidError({ entity: 'user' });
         }
 
         const verified = await this.credentialsService.verify(secret, identity.data);
+
         if (!verified) {
             throw new EntityCredentialsInvalidError({ entity: 'user' });
         }

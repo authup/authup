@@ -114,6 +114,7 @@ export async function parseAuthorizationEvaluatorInput(
 ) : Promise<AuthorizationEvaluatorInputParsed> {
     const identityGiven = typeof input.identity !== 'undefined';
     const grantsGiven = typeof input.grants !== 'undefined';
+
     if (!identityGiven && grantsGiven) {
         throw new ValidupError([defineIssueItem({
             message: 'Grants require the identity they belong to.',
@@ -135,9 +136,9 @@ export async function parseAuthorizationEvaluatorInput(
     // whose wire members are `unknown` by design, while what a run returns is
     // what the mounted schemas accepted (the `parseThemeManifest` idiom).
     const {
-        catalog, 
-        grants, 
-        identity, 
+        catalog,
+        grants,
+        identity,
     } = await validator.run(
         structuredClone(input) as Record<string, any>,
     ) as {

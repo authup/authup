@@ -34,11 +34,13 @@ const BUDGETS = {
 function registerIdentityStandIn(app: App) {
     app.use(defineCoreHandler((event) => {
         const user = event.request.headers.get('x-user');
+
         if (user) {
             setRequestIdentity(event, { type: 'user', data: { id: user, name: user } } as any);
         }
 
         const client = event.request.headers.get('x-client');
+
         if (client) {
             setRequestIdentity(event, { type: 'client', data: { id: client, name: client } } as any);
         }
@@ -116,6 +118,7 @@ describe('registerRateLimitMiddleware', () => {
 
         for (let i = 0; i < 3; i++) {
             const response = await app.fetch(createRequest('203.0.113.7', { 'x-forwarded-for': forwarded }));
+
             statuses.push(response.status);
         }
 
@@ -128,6 +131,7 @@ describe('registerRateLimitMiddleware', () => {
 
         for (const forwarded of ['198.51.100.1:5001', '198.51.100.2:6002', '[2001:db8::3]:443']) {
             const response = await app.fetch(createRequest('10.0.0.5', { 'x-forwarded-for': forwarded }));
+
             statuses.push(response.status);
         }
 
@@ -143,6 +147,7 @@ describe('registerRateLimitMiddleware', () => {
 
         for (const value of forwarded) {
             const response = await app.fetch(createRequest('10.0.0.5', { 'x-forwarded-for': value }));
+
             statuses.push(response.status);
         }
 
@@ -155,6 +160,7 @@ describe('registerRateLimitMiddleware', () => {
 
         for (const user of ['alice', 'alice', 'bob', 'bob', 'carol']) {
             const response = await app.fetch(createRequest('198.51.100.9', { 'x-user': user }));
+
             statuses.push(response.status);
         }
 
@@ -174,8 +180,11 @@ describe('registerRateLimitMiddleware', () => {
         registerRateLimitMiddleware(app);
         app.get('/authorize/info', defineCoreHandler(async (event) => {
             const fail = event.request.headers.get('x-fail');
+
             if (fail) {
-                await new Promise((resolve) => { setTimeout(resolve, 1); });
+                await new Promise((resolve) => {
+                    setTimeout(resolve, 1);
+                });
             }
 
             switch (fail) {
@@ -207,6 +216,7 @@ describe('registerRateLimitMiddleware', () => {
 
         for (let i = 0; i < RATE_LIMIT_FAILED_AUTHENTICATION_MAX; i++) {
             const response = await app.fetch(createRequest('203.0.113.10', FORGED));
+
             expect(response.status).toEqual(401);
         }
 
@@ -271,6 +281,7 @@ describe('registerIdentityRateLimitMiddleware', () => {
 
     async function count(app: App, headers: Record<string, string>, total: number) {
         let passed = 0;
+
         for (let i = 0; i < total; i++) {
             if ((await app.fetch(createRequest('198.51.100.9', headers))).status === 200) {
                 passed++;
@@ -282,9 +293,9 @@ describe('registerIdentityRateLimitMiddleware', () => {
 
     it('should give anonymous requests, users and clients their own budget', async () => {
         const app = createBudgetApp({
-            anonymous: 2, 
-            user: 3, 
-            client: 4, 
+            anonymous: 2,
+            user: 3,
+            client: 4,
         });
 
         expect(await count(app, {}, 6)).toEqual(2);
@@ -294,9 +305,9 @@ describe('registerIdentityRateLimitMiddleware', () => {
 
     it('should raise the anonymous budget alone', async () => {
         const app = createBudgetApp({
-            anonymous: 5, 
-            user: 1, 
-            client: 1, 
+            anonymous: 5,
+            user: 1,
+            client: 1,
         });
 
         // the users behind one address keep a budget of their own

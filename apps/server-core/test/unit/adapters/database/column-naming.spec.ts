@@ -31,6 +31,7 @@ describe('adapters/database (column naming)', () => {
             type: 'better-sqlite3',
             database: ':memory:',
         });
+
         // initialize builds entity metadata without touching a real database
         dataSource = new DataSource({ ...options, migrations: [] });
         await dataSource.initialize();

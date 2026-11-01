@@ -57,19 +57,23 @@ function toRegistry(): Record<string, Record<string, Translations>> {
 
     for (const locale of CATALOGS.data) {
         const namespaces: Record<string, Translations> = {};
+
         for (const child of locale.data) {
             if (child.type !== 'namespace') {
                 continue;
             }
 
             const data: Translations = {};
+
             for (const grandChild of child.data) {
                 if (grandChild.type === 'translations') {
                     Object.assign(data, grandChild.data);
                 }
             }
+
             namespaces[child.name] = data;
         }
+
         registry[locale.name] = namespaces;
     }
 
@@ -114,6 +118,7 @@ describe('locale parity', () => {
                 it(`namespace "${namespace}" has non-empty values`, () => {
                     for (const key of expectedKeys) {
                         const value = translations[key];
+
                         // A value is either a plain string or an ilingo plural
                         // node (`{ type: 'plural', data: { one, other, ... } }`).
                         // Assert non-emptiness without assuming it is a string.
@@ -124,10 +129,13 @@ describe('locale parity', () => {
                             expect(value).not.toBeNull();
 
                             const node = value as { type?: string, data?: Record<string, unknown> };
+
                             expect(node.type).toBe('plural');
 
                             const buckets = Object.values(node.data ?? {});
+
                             expect(buckets.length).toBeGreaterThan(0);
+
                             for (const bucket of buckets) {
                                 expect(typeof bucket).toBe('string');
                                 expect((bucket as string).trim().length).toBeGreaterThan(0);

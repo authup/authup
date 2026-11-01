@@ -39,6 +39,7 @@ export class FakeKeyRepository extends FakeEntityRepository<Key> implements IKey
 
     async countBlobReferences(keyId: string): Promise<number> {
         this.countBlobReferencesCalls.push(keyId);
+
         return this.blobReferences;
     }
 

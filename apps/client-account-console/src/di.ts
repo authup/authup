@@ -14,6 +14,7 @@ const sym = Symbol.for('AccountConsoleConfig');
 export function provideAccountConsoleConfig(config: AccountConsoleConfig, app?: App) {
     if (app) {
         app.provide(sym, config);
+
         return;
     }
 
@@ -22,6 +23,7 @@ export function provideAccountConsoleConfig(config: AccountConsoleConfig, app?: 
 
 export function injectAccountConsoleConfig() : AccountConsoleConfig {
     const config = inject<AccountConsoleConfig>(sym);
+
     if (!config) {
         throw new Error('The account console config has not been provided.');
     }

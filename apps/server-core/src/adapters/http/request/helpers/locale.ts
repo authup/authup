@@ -28,16 +28,20 @@ export { LOCALE_COOKIE };
  */
 export function useRequestLocale(event: IAppEvent): LocaleCode | undefined {
     const cookie = useRequestCookie(event, LOCALE_COOKIE);
+
     if (typeof cookie === 'string') {
         const matched = matchLocale(cookie);
+
         if (matched) {
             return matched;
         }
     }
 
     const languages = getRequestAcceptableLanguages(event);
+
     for (const language of languages) {
         const matched = matchLocale(language);
+
         if (matched) {
             return matched;
         }

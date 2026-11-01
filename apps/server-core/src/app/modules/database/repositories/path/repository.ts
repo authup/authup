@@ -79,6 +79,7 @@ export class PathRepositoryAdapter extends EntityRepositoryAdapter<Path> impleme
                     { lock: { mode: 'pessimistic_write' } } :
                     {}),
             });
+
             if (!current) {
                 return;
             }
@@ -94,6 +95,7 @@ export class PathRepositoryAdapter extends EntityRepositoryAdapter<Path> impleme
 
     async transaction<R>(fn: (repository: IPathRepository) => Promise<R>): Promise<R> {
         const { type } = this.repository.manager.connection.options;
+
         if (!isDatabaseTypeRowLockable(type)) {
             // better-sqlite3: plain unlocked passthrough (the removeGuarded rule)
             return fn(this);

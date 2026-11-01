@@ -21,7 +21,9 @@ export function getKeyUsagesForAsymmetricAlgorithm(
     ) {
         if (format === 'spki') {
             return ['verify'];
-        } if (format === 'pkcs8') {
+        }
+
+        if (format === 'pkcs8') {
             return ['sign'];
         }
 
@@ -42,7 +44,9 @@ export function getKeyUsagesForAsymmetricAlgorithm(
     if (name === CryptoAsymmetricAlgorithm.RSA_OAEP) {
         if (format === 'spki') {
             return ['encrypt'];
-        } if (format === 'pkcs8') {
+        }
+
+        if (format === 'pkcs8') {
             return ['decrypt'];
         }
 

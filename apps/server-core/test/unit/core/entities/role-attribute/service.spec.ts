@@ -19,6 +19,7 @@ import {
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
+import { ValidupError } from 'validup';
 import { RoleAttributeService } from '../../../../../src/core/entities/role-attribute/service.ts';
 import { FakeEntityRepository, createAllowAllActor, createDenyAllActor } from '@authup/server-test-kit';
 import { createFakeRoleAttribute } from '../../../../utils/domains/index.ts';
@@ -31,7 +32,9 @@ describe('core/entities/role-attribute/service', () => {
 
     const createRole = (realmId: string | null) => {
         const id = randomUUID();
+
         roles.set(id, { id, realmId });
+
         return id;
     };
 
@@ -51,7 +54,9 @@ describe('core/entities/role-attribute/service', () => {
             repository.seed([
                 createFakeRoleAttribute({ roleId: randomUUID() }),
             ]);
+
             const result = await service.getMany({}, createAllowAllActor());
+
             expect(result.data).toHaveLength(1);
         });
 
@@ -68,18 +73,21 @@ describe('core/entities/role-attribute/service', () => {
             ]);
 
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (!(call.method === 'evaluateOneOf' && call.ctx.data)) {
                     return;
                 }
 
                 const entity = call.ctx.data.get('attributes') as RoleAttribute;
+
                 if (entity && entity.id === denied.id) {
                     throw PermissionError.denied('test');
                 }
             });
 
             const result = await service.getMany({}, actor);
+
             expect(result.data).toHaveLength(1);
             expect(result.data[0].name).toBe('allowed');
             expect(result.meta.total).toBe(1);
@@ -104,18 +112,21 @@ describe('core/entities/role-attribute/service', () => {
             ]);
 
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setCompileResult({
                 verdict: 'conditional',
                 condition: eq('realmId', realmId),
             });
 
             const spy = vi.spyOn(repository, 'findMany');
+
             await service.getMany({}, actor);
 
             // the fake repository does not apply filters — replay the query the
             // service built over the seeded rows instead
             const query = spy.mock.calls[0]![0];
             const applied = applyQuery(query, [inRealm, outOfRealm]);
+
             expect(applied.data.map((row) => row.id)).toEqual([inRealm.id]);
 
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
@@ -125,13 +136,16 @@ describe('core/entities/role-attribute/service', () => {
             const seeded = repository.seed([createFakeRoleAttribute({ realmId: randomUUID() })]);
 
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setCompileResult({ verdict: 'deny' });
 
             const spy = vi.spyOn(repository, 'findMany');
+
             await service.getMany({}, actor);
 
             const query = spy.mock.calls[0]![0];
             const applied = applyQuery(query, seeded);
+
             expect(applied.data).toHaveLength(0);
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
@@ -141,6 +155,7 @@ describe('core/entities/role-attribute/service', () => {
         it('should return entity by id', async () => {
             const entity = repository.seed(createFakeRoleAttribute());
             const result = await service.getOne(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
         });
 
@@ -159,12 +174,38 @@ describe('core/entities/role-attribute/service', () => {
             };
 
             const result = await service.create(data, createAllowAllActor());
+
             expect(result.id).toBeDefined();
             expect(result.realmId).toBe(roleRealmId);
         });
 
+        it('should never take the id or timestamps from the body on create', async () => {
+            const foreign = repository.seed(createFakeRoleAttribute({
+                name: 'foreign',
+                value: 'kept',
+                roleId: createRole(null),
+            }));
+            const snapshot = { ...foreign };
+            const createdAt = '2000-01-01T00:00:00.000Z';
+
+            const result = await service.create({
+                id: foreign.id,
+                name: 'own',
+                value: 'v',
+                roleId: createRole(randomUUID()),
+                createdAt,
+                updatedAt: createdAt,
+            }, createAllowAllActor());
+
+            expect(result.id).not.toBe(foreign.id);
+            expect(result.createdAt).not.toBe(createdAt);
+            expect(result.updatedAt).not.toBe(createdAt);
+            expect(await repository.findOneBy({ id: foreign.id })).toEqual(snapshot);
+        });
+
         it('should use ROLE_UPDATE permission (not a separate attribute permission)', async () => {
             const actor = createAllowAllActor();
+
             await service.create({
                 name: 'attr',
                 value: 'val',
@@ -188,6 +229,7 @@ describe('core/entities/role-attribute/service', () => {
             // resource realm (realmMatch) is a different realm. Before the realm context was
             // wired into create, realmMatch was absent and this neutral-passed (cross-realm leak).
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (!(call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE)) {
                     return;
@@ -196,6 +238,7 @@ describe('core/entities/role-attribute/service', () => {
                 const realm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
                     call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
                     undefined;
+
                 if (typeof realm !== 'undefined' && realm !== 'realm-a') {
                     throw PermissionError.denied('realm');
                 }
@@ -261,7 +304,39 @@ describe('core/entities/role-attribute/service', () => {
             }));
 
             const result = await service.update(entity.id, { value: 'new-val' }, createAllowAllActor());
+
             expect(result.value).toBe('new-val');
+        });
+
+        it('should keep the route row id and owner when the body names another', async () => {
+            const roleId = createRole('realm-a');
+            const entity = repository.seed(createFakeRoleAttribute({
+                name: 'own',
+                value: 'v',
+                roleId,
+                realmId: 'realm-a',
+            } as Partial<RoleAttribute>));
+            const foreign = repository.seed(createFakeRoleAttribute({
+                name: 'foreign',
+                value: 'kept',
+                roleId: createRole(null),
+            }));
+            const snapshot = { ...foreign };
+            const createdAt = '2000-01-01T00:00:00.000Z';
+
+            const { id } = entity;
+            const result = await service.update(id, {
+                id: foreign.id,
+                value: 'new',
+                createdAt,
+            }, createAllowAllActor());
+
+            expect(result.id).toBe(id);
+            expect(result.roleId).toBe(roleId);
+            expect(result.realmId).toBe('realm-a');
+            expect(result.value).toBe('new');
+            expect(result.createdAt).not.toBe(createdAt);
+            expect(await repository.findOneBy({ id: foreign.id })).toEqual(snapshot);
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
@@ -273,6 +348,7 @@ describe('core/entities/role-attribute/service', () => {
         it('evaluates ROLE_UPDATE against the attribute realm (denies a foreign-realm attribute)', async () => {
             const entity = repository.seed(createFakeRoleAttribute({ realmId: 'realm-b' } as Partial<RoleAttribute>));
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (!(call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE)) {
                     return;
@@ -281,6 +357,7 @@ describe('core/entities/role-attribute/service', () => {
                 const realm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
                     call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
                     undefined;
+
                 if (typeof realm !== 'undefined' && realm !== 'realm-a') {
                     throw PermissionError.denied('realm');
                 }
@@ -294,6 +371,7 @@ describe('core/entities/role-attribute/service', () => {
         it('ignores a caller-supplied realmId (realm stays role-derived, no gate bypass)', async () => {
             const entity = repository.seed(createFakeRoleAttribute({ realmId: 'realm-b' } as Partial<RoleAttribute>));
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (!(call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE)) {
                     return;
@@ -302,6 +380,7 @@ describe('core/entities/role-attribute/service', () => {
                 const realm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
                     call.ctx.data.get(BuiltInPolicyType.REALM_MATCH) :
                     undefined;
+
                 if (typeof realm !== 'undefined' && realm !== 'realm-a') {
                     throw PermissionError.denied('realm');
                 }
@@ -321,6 +400,7 @@ describe('core/entities/role-attribute/service', () => {
             } as Partial<RoleAttribute>));
             const actor = createAllowAllActor();
             let gatedRealm: unknown;
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE) {
                     gatedRealm = call.ctx.data?.has(BuiltInPolicyType.REALM_MATCH) ?
@@ -340,22 +420,107 @@ describe('core/entities/role-attribute/service', () => {
                 },
                 actor,
             );
+
             expect(gatedRealm).toBe('realm-a');
             expect(result.realmId).toBe('realm-a');
             expect(result.roleId).toBe('role-original');
         });
     });
 
+    describe('name and value shape', () => {
+        const reserved = () => new RoleAttributeService({
+            repository,
+            reservedNames: new Set(['name', 'description']),
+        });
+
+        it.each([
+            ['an array', ['name']],
+            ['a number', 1],
+            ['an object', { name: 'name' }],
+            ['null', null],
+            ['an empty string', ' '.repeat(3)],
+            ['an overlong string', 'a'.repeat(256)],
+        ])('should refuse %s as the name on create', async (_label, name) => {
+            await expect(reserved().create({
+                name,
+                value: 'v',
+                roleId: createRole(null),
+            }, createAllowAllActor())).rejects.toBeInstanceOf(ValidupError);
+
+            expect(repository.getAll()).toHaveLength(0);
+        });
+
+        it('should refuse a missing name on create', async () => {
+            await expect(service.create({ value: 'v', roleId: createRole(null) }, createAllowAllActor()))
+                .rejects.toBeInstanceOf(ValidupError);
+        });
+
+        it('should check a padded name against the reserved names after trimming it', async () => {
+            await expect(reserved().create({
+                name: ' name ',
+                value: 'v',
+                roleId: createRole(null),
+            }, createAllowAllActor())).rejects.toThrow(/collides with a Role entity column/);
+        });
+
+        it('should store the trimmed name', async () => {
+            const result = await service.create({
+                name: '  label ',
+                value: 'v',
+                roleId: createRole(null),
+            }, createAllowAllActor());
+
+            expect(result.name).toBe('label');
+        });
+
+        it.each([
+            ['an array', ['name']],
+            ['null', null],
+            ['a number', 1],
+        ])('should refuse %s as the name on update', async (_label, name) => {
+            const entity = repository.seed(createFakeRoleAttribute({ name: 'own', value: 'v' }));
+            const snapshot = { ...entity };
+
+            await expect(reserved().update(entity.id, { name }, createAllowAllActor()))
+                .rejects.toBeInstanceOf(ValidupError);
+
+            expect(await repository.findOneBy({ id: entity.id })).toEqual(snapshot);
+        });
+
+        it.each([
+            ['a string', 'v'],
+            ['a number', 1],
+            ['a boolean', false],
+            ['null', null],
+            ['an array', ['a', 'b']],
+            ['an object', { a: 1 }],
+        ])('should keep accepting %s as the value', async (_label, value) => {
+            const result = await service.create({
+                name: 'attr',
+                value,
+                roleId: createRole(null),
+            }, createAllowAllActor());
+
+            expect(result.value).toEqual(value);
+
+            await expect(service.update(result.id, { value }, createAllowAllActor()))
+                .resolves.toMatchObject({ value });
+        });
+    });
+
     describe('update reach (#3654)', () => {
         const restrict = () => {
             const actor = createAllowAllActor();
+
             actor.permissionEvaluator.setBehavior((call) => {
                 if (!(call.method === 'evaluate' && call.ctx.name === PermissionName.ROLE_UPDATE)) {
                     return;
                 }
 
                 const attributes = call.ctx.data?.get(BuiltInPolicyType.ATTRIBUTES) ?? {};
-                if (Object.keys(attributes).some((key) => !key.startsWith('team-'))) {
+                const hasForeignAttribute = Object.keys(attributes).some((key) => !key.startsWith('team-'));
+
+                if (hasForeignAttribute) {
                     throw PermissionError.denied('reach');
                 }
             });
@@ -375,6 +540,7 @@ describe('core/entities/role-attribute/service', () => {
             const entity = repository.seed(createFakeRoleAttribute({ name: 'team-attr' }));
 
             const result = await service.update(entity.id, { value: 'x' }, restrict());
+
             expect(result.value).toBe('x');
         });
 
@@ -392,6 +558,7 @@ describe('core/entities/role-attribute/service', () => {
             const entity = repository.seed(createFakeRoleAttribute());
 
             const result = await service.delete(entity.id, createAllowAllActor());
+
             expect(result.id).toBe(entity.id);
         });
 
@@ -399,6 +566,7 @@ describe('core/entities/role-attribute/service', () => {
             const entity = repository.seed(createFakeRoleAttribute());
 
             const actor = createAllowAllActor();
+
             await service.delete(entity.id, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROLE_UPDATE });
         });

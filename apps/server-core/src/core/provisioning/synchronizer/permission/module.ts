@@ -44,6 +44,7 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
             if (attributes) {
                 await this.repository.remove(attributes);
             }
+
             return {
                 ...input,
                 attributes: attributes || input.attributes,
@@ -61,10 +62,12 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
                     );
 
                     attributes = await this.repository.save(attributes);
+
                     break;
                 case ProvisioningEntityStrategyType.REPLACE:
                     input.attributes.id = attributes.id;
                     attributes = await this.repository.save(this.repository.create(input.attributes));
+
                     break;
             }
         } else {
@@ -90,6 +93,7 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
 
         for (const policyName of policyNames) {
             const policy = await this.policyRepository.findOneByName(policyName.trim().toLowerCase());
+
             if (!policy) {
                 throw new Error(
                     `Provisioning: policy '${policyName}' not found for permission '${permission.name}'.`,
@@ -100,6 +104,7 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
                 permissionId: permission.id,
                 policyId: policy.id,
             });
+
             if (existing) {
                 continue;
             }
@@ -110,6 +115,7 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
                 policyId: policy.id,
                 policyRealmId: policy.realmId,
             });
+
             await this.permissionPolicyRepository.save(entry);
         }
     }

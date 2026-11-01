@@ -1,7 +1,7 @@
 {
     "name": "create-authup",
     "type": "module",
-    "version": "1.0.0-beta.71",
+    "version": "1.0.0-beta.72",
     "description": "Answer a few questions and get the deployment files for Authup: docker run, compose, Helm or bare metal.",
     "license": "Apache-2.0",
     "bin": {
@@ -18,7 +18,7 @@
         "test:artifacts": "node scripts/verify-emitted.mjs"
     },
     "engines": {
-        "node": "^22.13.0 || ^23.5.0 || >=24.0.0"
+        "node": ">=26.0.0"
     },
     "keywords": [
         "auth",
@@ -47,12 +47,12 @@
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {},
     "devDependencies": {
-        "@authup/server-config": "^1.0.0-beta.71",
-        "@authup/server-config-kit": "^1.0.0-beta.71",
+        "@authup/server-config": "^1.0.0-beta.72",
+        "@authup/server-config-kit": "^1.0.0-beta.72",
         "@types/node": "^26.6.5",
         "ajv": "^8.20.0",
         "cross-env": "^10.1.0",
-        "dotenv": "^18.0.8",
+        "dotenv": "^18.0.9",
         "vitest": "^5.0.3",
         "yaml": "^2.9.1"
     },

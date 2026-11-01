@@ -35,7 +35,7 @@ on:
             - '.github/workflows/docs.yml'
 
 env:
-    NODE_VERSION: 24
+    NODE_VERSION: 26
 
 jobs:
     build:

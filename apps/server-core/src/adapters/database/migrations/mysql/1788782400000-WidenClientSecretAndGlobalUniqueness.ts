@@ -77,6 +77,7 @@ export class WidenClientSecretAndGlobalUniqueness1788782400000 implements Migrat
         ];
 
         const affected: string[] = [];
+
         for (const [table, columns] of targets) {
             const list = columns.map((column) => `\`${column}\``).join(', ');
             const duplicates = await queryRunner.query(`
@@ -85,10 +86,12 @@ export class WidenClientSecretAndGlobalUniqueness1788782400000 implements Migrat
                 GROUP BY ${list}
                 HAVING COUNT(*) > 1
             `);
+
             if (duplicates.length > 0) {
                 affected.push(`"${table}" (${duplicates.length} duplicate (${columns.join(', ')}) group(s))`);
             }
         }
+
         if (affected.length > 0) {
             throw new Error(
                 `Global entity uniqueness migration aborted: ${affected.join('; ')}. ` +

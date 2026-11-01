@@ -22,6 +22,7 @@ function buildURLSearchParams(parameters: OAuth2DeviceAuthorizationParameters) :
     const output = new URLSearchParams();
 
     const entries = Object.entries(parameters);
+
     for (const [key, value] of entries) {
         if (typeof value === 'string') {
             if (value) {
@@ -29,6 +30,7 @@ function buildURLSearchParams(parameters: OAuth2DeviceAuthorizationParameters) :
             }
         } else if (Array.isArray(value)) {
             const str = value.filter((el) => el).join(' ');
+
             if (str) {
                 output.append(key, str);
             }

@@ -30,6 +30,7 @@ export async function extractClientCertificateEvidence(
     }
 
     let result: Omit<ClientCertificateEvidence, 'thumbprint'> | undefined;
+
     if (source === 'standard') {
         result = extractStandardEvidence(event);
     } else if (source === 'forwarded') {
@@ -37,6 +38,7 @@ export async function extractClientCertificateEvidence(
     } else {
         throw new BadRequestError('The client certificate source is not configured correctly.');
     }
+
     if (!result) {
         return undefined;
     }
@@ -57,10 +59,12 @@ function extractStandardEvidence(
         if (chainHeader) {
             throw certificateHeaderError();
         }
+
         return undefined;
     }
 
     assertHeaderLength(leafHeader);
+
     const certificate = parseStructuredCertificate(leafHeader);
     const chain = chainHeader ? parseStructuredCertificateList(chainHeader) : [];
 
@@ -71,6 +75,7 @@ function extractForwardedEvidence(
     event: IAppEvent,
 ): Omit<ClientCertificateEvidence, 'thumbprint'> | undefined {
     const value = event.headers.get('x-forwarded-tls-client-cert');
+
     if (!value) {
         return undefined;
     }
@@ -78,6 +83,7 @@ function extractForwardedEvidence(
     assertHeaderLength(value);
 
     let pem: string;
+
     try {
         // Native raw PEM is useful in tests and a few proxy integrations. The
         // NGINX/Traefik contract is escaped PEM: query-style `+` represents a
@@ -90,6 +96,7 @@ function extractForwardedEvidence(
     }
 
     let certificates: X509Certificate[];
+
     try {
         certificates = parseClientCertificateChain(pem);
     } catch {
@@ -108,8 +115,12 @@ function extractForwardedEvidence(
 
 function parseStructuredCertificateList(value: string): X509Certificate[] {
     assertHeaderLength(value);
+
     const items = value.split(',').map((item) => item.trim());
-    if (items.length > MAX_CERTIFICATE_CHAIN_LENGTH || items.some((item) => item.length === 0)) {
+    const hasInvalidChain = items.length > MAX_CERTIFICATE_CHAIN_LENGTH ||
+        items.some((item) => item.length === 0);
+
+    if (hasInvalidChain) {
         throw certificateHeaderError();
     }
 
@@ -118,17 +129,20 @@ function parseStructuredCertificateList(value: string): X509Certificate[] {
 
 function parseStructuredCertificate(value: string): X509Certificate {
     const match = STRUCTURED_BINARY_PATTERN.exec(value.trim());
+
     if (!match?.[1]) {
         throw certificateHeaderError();
     }
 
     try {
         const raw = base64ToArrayBuffer(match[1]);
+
         if (raw.byteLength === 0) {
             throw certificateHeaderError();
         }
 
         const certificate = new X509Certificate(raw);
+
         if (
             certificate.toString('base64').replace(/=+$/, '') !==
             match[1].replace(/=+$/, '')

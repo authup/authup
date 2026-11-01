@@ -34,13 +34,17 @@ export function compareRealmScope(
 export function maxRealmScope(values: Array<`${RealmScope}` | null | undefined>): `${RealmScope}` {
     let max: `${RealmScope}` = RealmScope.NONE;
     let seen = false;
+
     for (const value of values) {
         seen = true;
+
         const scope = normalizeRealmScope(value);
+
         if (REALM_SCOPE_ORDER[scope] > REALM_SCOPE_ORDER[max]) {
             max = scope;
         }
     }
+
     // Empty input is fail-closed `own` (not `none`).
     return seen ? max : RealmScope.OWN;
 }
@@ -49,13 +53,17 @@ export function maxRealmScope(values: Array<`${RealmScope}` | null | undefined>)
 export function minRealmScope(values: Array<`${RealmScope}` | null | undefined>): `${RealmScope}` {
     let min: `${RealmScope}` = RealmScope.ANY;
     let seen = false;
+
     for (const value of values) {
         seen = true;
+
         const scope = normalizeRealmScope(value);
+
         if (REALM_SCOPE_ORDER[scope] < REALM_SCOPE_ORDER[min]) {
             min = scope;
         }
     }
+
     return seen ? min : RealmScope.OWN;
 }
 
@@ -78,6 +86,7 @@ function matchesSingle(
     if (resourceRealmId === null) {
         return normalized === RealmScope.OWN_OR_NULL;
     }
+
     return resourceRealmId === identityRealmId || resourceRealmId === identityRealmName;
 }
 
@@ -94,15 +103,18 @@ export function realmScopeMatches(
     identityRealmName?: string | null,
 ): boolean {
     const normalized = normalizeRealmScope(scope);
+
     if (normalized === RealmScope.ANY) {
         return true;
     }
+
     if (normalized === RealmScope.NONE) {
         return false;
     }
 
     const realmId = identityRealmId ?? null;
     const realmName = identityRealmName ?? null;
+
     if (realmId === null && realmName === null) {
         return false;
     }
@@ -113,6 +125,7 @@ export function realmScopeMatches(
         if (resourceRealmId.length === 0) {
             return false;
         }
+
         return resourceRealmId.every((id) => matchesSingle(normalized, id ?? null, realmId, realmName));
     }
 

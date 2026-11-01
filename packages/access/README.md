@@ -39,7 +39,7 @@ In Authup a grant is more than a permission name. Each grant carries a realm rea
 npm install @authup/access
 ```
 
-ESM only. Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`. No peer dependencies; the policy engine runs in a browser as well.
+ESM only. Node.js `>=26.0.0`. No peer dependencies; the policy engine runs in a browser as well.
 
 ## Usage
 

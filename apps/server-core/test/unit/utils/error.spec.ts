@@ -24,6 +24,7 @@ const request: RequestOptions = { method: 'POST', url: UPSTREAM_URL };
  */
 function createUpstreamResponseError(body: unknown, status = 400) {
     const response = new Response(null, { status, statusText: 'Bad Request' }) as HapicResponse;
+
     Object.defineProperty(response, 'data', { get: () => body });
 
     return createClientError({ request, response });
@@ -128,6 +129,7 @@ describe('src/utils/error', () => {
         it('should terminate on a cyclic cause chain', () => {
             const first = new Error('first');
             const second = new Error('second', { cause: first });
+
             first.cause = second;
 
             const output = describeError(first);

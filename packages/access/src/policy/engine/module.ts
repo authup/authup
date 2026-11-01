@@ -31,6 +31,7 @@ function errorMessage(value: unknown): string {
     ) {
         return (value as { message: string }).message;
     }
+
     return String(value);
 }
 
@@ -61,6 +62,7 @@ export class PolicyEngine implements IPolicyEngine {
 
     public registerEvaluators(evaluators: PolicyEvaluators) {
         const keys = Object.keys(evaluators);
+
         for (const key of keys) {
             this.registerEvaluator(key, evaluators[key]!);
         }
@@ -87,6 +89,7 @@ export class PolicyEngine implements IPolicyEngine {
                 ],
             };
         }
+
         // When a policy is filtered out via include/exclude, treat it as a
         // neutral pass — do NOT apply `invert`. Inversion only makes sense
         // for an actual evaluation outcome; skipping a policy because it's
@@ -110,6 +113,7 @@ export class PolicyEngine implements IPolicyEngine {
         const issues : PolicyIssue[] = [];
 
         const evaluator = this.evaluators[policy.type];
+
         if (!evaluator) {
             issues.push(defineIssueItem({
                 path: [policy.type],
@@ -153,6 +157,7 @@ export class PolicyEngine implements IPolicyEngine {
                     if (ctx.withConditions && evaluator.toCondition) {
                         try {
                             const condition = await evaluator.toCondition(policy, ctx);
+
                             if (condition) {
                                 result.condition = condition;
                             }
@@ -191,6 +196,7 @@ export class PolicyEngine implements IPolicyEngine {
 
         try {
             const outcome = await this.evaluate(policy, ctx);
+
             if (outcome.success) {
                 return;
             }

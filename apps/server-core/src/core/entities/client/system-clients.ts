@@ -161,6 +161,7 @@ export class SystemClientProvisioner implements ISystemClientProvisioner {
             // redundant UPDATE (bumping updatedAt) per client and realm.
             const isDirty = (Object.keys(attributes) as (keyof Client)[])
                 .some((key) => existing[key] !== attributes[key]);
+
             if (!isDirty) {
                 return existing;
             }
@@ -200,6 +201,7 @@ export class SystemClientProvisioner implements ISystemClientProvisioner {
             ...attributes,
             displayName: definition.displayName,
         });
+
         return this.clientRepository.save(entity);
     }
 
@@ -224,6 +226,7 @@ export class SystemClientProvisioner implements ISystemClientProvisioner {
                         `Skipping scope '${name}' for the ${definition.name} client of realm ${client.realmId}: the scope is not provisioned.`,
                     );
                 }
+
                 continue;
             }
 

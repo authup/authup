@@ -29,8 +29,8 @@ import { buildEntityDiff } from '../event/index.ts';
 import type { EventRequestContext, IEventService } from '../event/index.ts';
 import { parseCertificateChain } from '../../key/index.ts';
 import type {
-    ITrustAnchorRepository, 
-    ITrustAnchorService, 
+    ITrustAnchorRepository,
+    ITrustAnchorService,
     TrustAnchorServiceReadOptions,
 } from './types.ts';
 import { appendQueryConditions, decodeQuery, scopeReadQuery } from '../../query/index.ts';
@@ -76,6 +76,7 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
         options: TrustAnchorServiceReadOptions = {},
     ): Promise<EntityRepositoryFindManyResult<TrustAnchor>> {
         let parsed = await decodeQuery(query, { schema: trustAnchorSchema, actor });
+
         if (options.realmId) {
             parsed = appendQueryConditions(parsed, eq('realmId', options.realmId));
         }
@@ -99,8 +100,10 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
                 realm: entity.realmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
+
             if (!reached) {
                 total -= 1;
+
                 continue;
             }
 
@@ -124,6 +127,7 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
         await actor.permissionEvaluator.preEvaluateOneOf({ name: PERMISSION_NAMES });
 
         const entity = await this.repository.findOneByIdOrName(idOrName, realmId);
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -147,6 +151,7 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
 
         if (!validated.realmId && actor.identity) {
             const actorRealmId = this.getActorRealmId(actor);
+
             if (actorRealmId) {
                 validated.realmId = actorRealmId;
             }
@@ -167,6 +172,7 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
         await this.repository.checkUniqueness(validated);
 
         const chain = parseCertificateChain(validated.certificate as string);
+
         if (!chain[0] || !chain[0].ca) {
             throw new ValidationError('A trust anchor must contain a CA certificate.');
         }
@@ -176,6 +182,7 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
         }
 
         let entity = this.repository.create(validated);
+
         entity = await this.repository.save(entity);
 
         await this.recordEvent(EventName.CREATED, entity, actor);
@@ -192,6 +199,7 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.KEY_UPDATE });
 
         let entity = await this.repository.findOneByIdOrName(idOrName, realmId);
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -219,6 +227,7 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
         entity = await this.repository.save(entity);
 
         const diff = buildEntityDiff(this.pickAuditFields(entity), previous);
+
         await this.recordEvent(EventName.UPDATED, entity, actor, { ...(Object.keys(diff).length > 0 ? { diff } : {}) });
 
         return entity;
@@ -231,6 +240,7 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.KEY_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
+
         if (!entity) {
             throw new EntityNotFoundError();
         }
@@ -242,6 +252,7 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
         });
 
         const { id: entityId } = entity;
+
         await this.repository.remove(entity);
         entity.id = entityId;
 

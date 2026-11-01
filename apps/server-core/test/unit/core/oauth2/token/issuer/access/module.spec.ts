@@ -120,6 +120,7 @@ describe('OAuth2AccessTokenIssuer', () => {
             });
 
             const insertCall = repository.insertCalls[0];
+
             expect(insertCall.realm_access).toBeUndefined();
             expect(insertCall.global_access).toBeUndefined();
         });
@@ -131,6 +132,7 @@ describe('OAuth2AccessTokenIssuer', () => {
             await issuer.issue({ realm_id: realmId });
 
             const insertCall = repository.insertCalls[0];
+
             expect(insertCall.realm_access).toBeUndefined();
             expect(insertCall.global_access).toBeUndefined();
             expect(provider.getRolesForCalls).toHaveLength(0);
@@ -164,6 +166,7 @@ describe('OAuth2AccessTokenIssuer', () => {
             });
 
             const insertCall = repository.insertCalls[0];
+
             expect(insertCall.realm_access).toEqual({ roles: ['editor', 'viewer'] });
             expect(insertCall.global_access).toEqual({ roles: ['admin'] });
         });
@@ -181,6 +184,7 @@ describe('OAuth2AccessTokenIssuer', () => {
             });
 
             const insertCall = repository.insertCalls[0];
+
             expect(insertCall.global_access).toEqual({ roles: ['system'] });
             expect(insertCall.realm_access).toEqual({ roles: [] });
         });
@@ -214,6 +218,7 @@ describe('OAuth2AccessTokenIssuer', () => {
             });
 
             const insertCall = repository.insertCalls[0];
+
             expect(insertCall.realm_access).toEqual({ roles: ['editor'] });
             expect(insertCall.global_access).toEqual({ roles: ['admin'] });
         });
@@ -240,6 +245,7 @@ describe('OAuth2AccessTokenIssuer', () => {
             });
 
             const insertCall = repository.insertCalls[0];
+
             expect(insertCall.realm_access).toEqual({ roles: [] });
             expect(insertCall.global_access).toEqual({ roles: ['admin'] });
         });
@@ -255,6 +261,7 @@ describe('OAuth2AccessTokenIssuer', () => {
             });
 
             const insertCall = repository.insertCalls[0];
+
             expect(insertCall.realm_access).toEqual({ roles: [] });
             expect(insertCall.global_access).toEqual({ roles: [] });
         });

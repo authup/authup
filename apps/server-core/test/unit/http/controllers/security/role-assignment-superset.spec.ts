@@ -41,14 +41,18 @@ describe('http/controllers/security (role assignment superset #3607)', () => {
             const { data: client } = await suite.client.client.create(createFakeClient());
             const { data: role } = await suite.client.role.create(createFakeRole({ clientId: owned ? client.id : null }));
             const { data: userDelete } = await suite.client.permission.getOne(PermissionName.USER_DELETE);
+
             await suite.client.rolePermission.create({ roleId: role.id, permissionId: userDelete.id });
 
             const { data: permission } = await suite.client.permission.getOne(assignmentPermission);
+
             await suite.client.userPermission.create({ userId: user.id, permissionId: permission.id });
+
             const token = await suite.client.token.createWithPassword({ username: user.name, password });
 
             let path: string;
             let body: Record<string, string>;
+
             if (operation === 'user-role create') {
                 path = '/user-roles';
                 body = { userId: user.id, roleId: role.id };
@@ -57,13 +61,16 @@ describe('http/controllers/security (role assignment superset #3607)', () => {
                 body = { clientId: client.id, roleId: role.id };
             } else {
                 const { data: provider } = await suite.client.identityProvider.create(createFakeOAuth2IdentityProvider());
+
                 path = '/identity-provider-role-mappings';
                 body = { providerId: provider.id, roleId: role.id };
+
                 if (operation === 'provider-role update') {
                     const { data: mapping } = await suite.client.identityProviderRoleMapping.create({
                         providerId: provider.id,
                         roleId: role.id,
                     });
+
                     path += `/${mapping.id}`;
                     body = { name: 'updated' };
                 }
@@ -78,11 +85,14 @@ describe('http/controllers/security (role assignment superset #3607)', () => {
             });
 
             const denied = await assign();
+
             expect(denied.status).toBe(403);
             expect(await denied.json()).toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
 
             await suite.client.userPermission.create({ userId: user.id, permissionId: userDelete.id });
+
             const allowed = await assign();
+
             expect(allowed.status).toBe(operation === 'provider-role update' ? 202 : 201);
             expect((await allowed.json()).data).toMatchObject(body);
         });

@@ -81,6 +81,7 @@ export default defineComponent({
         // A record that cannot be loaded sends the visitor back to the
         // collection; the template renders nothing until then (`v-if`).
         let entity : Ref<Permission | null> = ref(null);
+
         try {
             entity = ref(await httpClient
                 .permission

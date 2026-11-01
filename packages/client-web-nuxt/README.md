@@ -39,7 +39,7 @@
 npm install @authup/client-web-nuxt @pinia/nuxt pinia
 ```
 
-`@pinia/nuxt` and `pinia` are peer dependencies (the module registers `@pinia/nuxt` itself). Install the kit's own peers too, the Vue, `vue-router`, `ilingo`, `validup` and `@vuecs/*` packages listed in [its README](https://github.com/authup/authup/tree/master/packages/client-web-kit#installation), plus a theme ([`@authup/client-web-kit-theme`](https://github.com/authup/authup/tree/master/packages/client-web-kit-theme) or [`@authup/client-web-theme`](https://github.com/authup/authup/tree/master/packages/client-web-theme)). The module is built for Nuxt 4, is ESM-only and needs Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`.
+`@pinia/nuxt` and `pinia` are peer dependencies (the module registers `@pinia/nuxt` itself). Install the kit's own peers too, the Vue, `vue-router`, `ilingo`, `validup` and `@vuecs/*` packages listed in [its README](https://github.com/authup/authup/tree/master/packages/client-web-kit#installation), plus a theme ([`@authup/client-web-kit-theme`](https://github.com/authup/authup/tree/master/packages/client-web-kit-theme) or [`@authup/client-web-theme`](https://github.com/authup/authup/tree/master/packages/client-web-theme)). The module is built for Nuxt 4, is ESM-only and needs Node.js `>=26.0.0`.
 
 ## Usage
 

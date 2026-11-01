@@ -39,6 +39,7 @@ export class OAuth2AuthorizationCodeRequestValidator extends Container<OAuth2Aut
 
                         if (invalid) {
                             const error = OAuth2ResponseTypeError.unsupported();
+
                             ctx.issues.push({
                                 input: ctx.value,
                                 code: 'custom',
@@ -102,6 +103,7 @@ export class OAuth2AuthorizationCodeRequestValidator extends Container<OAuth2Aut
                         // Unknown tokens are ignored (forward-compat). Only the
                         // OIDC §3.1.2.1 rule "none must not be combined" is enforced.
                         const values = ctx.value.split(' ').filter(Boolean);
+
                         if (
                             values.includes(OAuth2AuthorizationPrompt.NONE) &&
                             values.length > 1
@@ -109,6 +111,7 @@ export class OAuth2AuthorizationCodeRequestValidator extends Container<OAuth2Aut
                             const error = OAuth2RequestError.malformed(
                                 'prompt=none must not be combined with other prompt values.',
                             );
+
                             ctx.issues.push({
                                 input: ctx.value,
                                 code: 'custom',

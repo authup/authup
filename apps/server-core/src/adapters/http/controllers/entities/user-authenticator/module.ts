@@ -57,6 +57,7 @@ export class UserAuthenticatorController {
     protected resolveUserId(id: string, event: IAppEvent): string {
         if (isSelfToken(id)) {
             const identity = useRequestIdentity(event);
+
             if (identity && identity.type === IdentityType.USER) {
                 return identity.id;
             }
@@ -103,6 +104,7 @@ export class UserAuthenticatorController {
         const result = await this.service.enroll({ ...data, userId }, actor);
 
         event.response.status = 201;
+
         return result;
     }
 
@@ -152,6 +154,7 @@ export class UserAuthenticatorController {
         const entity = await this.service.delete(deviceId, actor, { userId });
 
         event.response.status = 202;
+
         return { data: entity, meta: {} };
     }
 }

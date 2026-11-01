@@ -114,6 +114,7 @@ export function defineCLIStartCommand(configFs: ConfigReadFsOptions = {}) {
 
             if (role === 'console') {
                 await startConsoles(configFs, name);
+
                 return;
             }
 
@@ -121,8 +122,10 @@ export function defineCLIStartCommand(configFs: ConfigReadFsOptions = {}) {
 
             if (role === 'worker') {
                 const worker = createWorkerApplication({ config: new ConfigModule(config) });
+
                 await worker.setup();
                 registerShutdownHandlers(worker);
+
                 return;
             }
 
@@ -230,6 +233,7 @@ async function startConsoles(configFs: ConfigReadFsOptions, selected?: ConsoleNa
     }
 
     const applications : Application[] = [];
+
     try {
         for (const service of wanted) {
             const application = service.create();

@@ -87,6 +87,7 @@ export class IdentityProviderAccountController {
         const entity = await this.service.delete(id, actor, { realmId: getRequestRealmID(event) });
 
         event.response.status = 202;
+
         return { data: entity, meta: {} };
     }
 }

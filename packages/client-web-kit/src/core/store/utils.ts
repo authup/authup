@@ -7,9 +7,9 @@
 
 import type { StoreGeneric, storeToRefs as _storeToRefs } from 'pinia';
 import {
-    isReactive, 
-    isRef, 
-    toRaw, 
+    isReactive,
+    isRef,
+    toRaw,
     toRef,
 } from 'vue';
 
@@ -22,8 +22,10 @@ export function storeToRefs<SS extends StoreGeneric>(
 
     const refs = {} as StoreToRefs<SS>;
     const keys = Object.keys(store);
+
     for (const key of keys) {
         const value = store[key];
+
         if (isRef(value) || isReactive(value)) {
             refs[key as (keyof StoreToRefs<SS>)] = toRef(store, key) as any;
         }

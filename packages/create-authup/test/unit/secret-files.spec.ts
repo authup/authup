@@ -53,12 +53,12 @@ const MATRIX: Record<string, Partial<Answers>> = {
     'compose, external database': {
         target: 'compose',
         db: {
-            type: 'mysql', 
-            bundled: false, 
-            host: 'db.internal', 
-            port: 3306, 
-            username: 'authup', 
-            password: DB_PASSWORD, 
+            type: 'mysql',
+            bundled: false,
+            host: 'db.internal',
+            port: 3306,
+            username: 'authup',
+            password: DB_PASSWORD,
             database: 'authup',
         },
     },
@@ -66,24 +66,24 @@ const MATRIX: Record<string, Partial<Answers>> = {
     'docker run': {
         target: 'docker',
         db: {
-            type: 'postgres', 
-            bundled: false, 
-            host: 'db.internal', 
-            port: 5432, 
-            username: 'authup', 
-            password: DB_PASSWORD, 
+            type: 'postgres',
+            bundled: false,
+            host: 'db.internal',
+            port: 5432,
+            username: 'authup',
+            password: DB_PASSWORD,
             database: 'authup',
         },
     },
     'bare metal': {
         target: 'bare-metal',
         db: {
-            type: 'postgres', 
-            bundled: false, 
-            host: 'db.internal', 
-            port: 5432, 
-            username: 'authup', 
-            password: DB_PASSWORD, 
+            type: 'postgres',
+            bundled: false,
+            host: 'db.internal',
+            port: 5432,
+            username: 'authup',
+            password: DB_PASSWORD,
             database: 'authup',
         },
     },
@@ -106,8 +106,10 @@ describe('the files a secret may land in', () => {
 
     it('should name only files a target actually writes', () => {
         const written = new Set<string>();
+
         for (const overrides of Object.values(MATRIX)) {
             const answers = buildAnswers(overrides);
+
             for (const file of Object.keys(RENDERERS[answers.target as Target](answers, '1.0.0-beta.64'))) {
                 written.add(file);
             }

@@ -20,6 +20,7 @@ export class FakeIdentityRoleProvider implements IIdentityRoleProvider {
 
     async getRolesFor(identity: IdentityPolicyData): Promise<Role[]> {
         this.getRolesForCalls.push(identity);
+
         return this.roles;
     }
 }

@@ -13,6 +13,7 @@ import { BuiltInPolicyType, RealmScope, aggregatePermissionPolicyBindings } from
 describe('src/permission/helpers/aggregate', () => {
     it('emits one grant for a single binding, coercing a missing scope to own', () => {
         const result = aggregatePermissionPolicyBindings([{ permission: { name: 'user_read' } }]);
+
         expect(result).toHaveLength(1);
         expect(result[0].grants).toHaveLength(1);
         expect(result[0].grants[0].realmScope).toBe(RealmScope.OWN);
@@ -28,6 +29,7 @@ describe('src/permission/helpers/aggregate', () => {
                 realmScope: RealmScope.ANY,
             },
         ]);
+
         expect(result[0].grants[0].policy).toBe(policy);
         expect((result[0].grants[0].policy as any).id).toBe('p1');
         expect(result[0].grants[0].realmScope).toBe(RealmScope.ANY);
@@ -41,6 +43,7 @@ describe('src/permission/helpers/aggregate', () => {
             },
         ]);
         const policy = result[0].grants[0].policy as any;
+
         expect(policy.type).toBe(BuiltInPolicyType.COMPOSITE);
         expect(policy.decisionStrategy).toBe(DecisionStrategy.AFFIRMATIVE);
         expect(policy.children).toHaveLength(2);
@@ -57,11 +60,13 @@ describe('src/permission/helpers/aggregate', () => {
         ];
 
         const result = aggregatePermissionPolicyBindings(items);
+
         expect(result).toHaveLength(1);
         expect(result[0].grants).toHaveLength(2);
 
         const own = result[0].grants.find((g) => g.realmScope === RealmScope.OWN)!;
         const any = result[0].grants.find((g) => g.realmScope === RealmScope.ANY)!;
+
         expect(own.policy).toBeUndefined();
         expect(any.policy!.type).toBe(BuiltInPolicyType.IDENTITY);
     });
@@ -72,6 +77,7 @@ describe('src/permission/helpers/aggregate', () => {
             { permission: { name: 'user_read', realmId: 'b' } },
             { permission: { name: 'user_write' } },
         ]);
+
         expect(result).toHaveLength(3);
     });
 });

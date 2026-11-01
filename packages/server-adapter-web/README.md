@@ -38,7 +38,7 @@ Frameworks built on the Web `Request` API each have their own middleware signatu
 npm install @authup/server-adapter-web @authup/server-adapter-kit
 ```
 
-`TokenVerifier` comes from `@authup/server-adapter-kit`, which you import directly. The package is ESM-only and has no peer dependencies. Its `engines` field asks for Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`; the verifier package imports `node:crypto`, so another runtime must resolve Node built-ins.
+`TokenVerifier` comes from `@authup/server-adapter-kit`, which you import directly. The package is ESM-only and has no peer dependencies. Its `engines` field asks for Node.js `>=26.0.0`; the verifier package imports `node:crypto`, so another runtime must resolve Node built-ins.
 
 ## Usage
 

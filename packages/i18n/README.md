@@ -38,7 +38,7 @@ An application that embeds Authup's UI components, renders Authup's error codes 
 npm install @authup/i18n ilingo
 ```
 
-ESM only. Node.js `^22.13.0 || ^23.5.0 || >=24.0.0`. `ilingo` is a dependency of this package; install it yourself as well when your code builds the `Ilingo` instance. `@ebec/core` and `validup` are optional peers: they matter only for the typed `IssueDataByCode` augmentation this package declares.
+ESM only. Node.js `>=26.0.0`. `ilingo` is a dependency of this package; install it yourself as well when your code builds the `Ilingo` instance. `@ebec/core` and `validup` are optional peers: they matter only for the typed `IssueDataByCode` augmentation this package declares.
 
 ## Usage
 

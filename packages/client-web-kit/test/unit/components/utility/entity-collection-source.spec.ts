@@ -37,6 +37,7 @@ function createCollection(
                 setup,
                 loadAll: options.loadAll,
             });
+
             capture(manager);
 
             return () => manager.render();
@@ -60,6 +61,7 @@ function servePages(pages: (offset: number) => Partial<Role>[], total: number, o
         const url = new URL(req.url, 'http://fake.test');
         const limit = Number(url.searchParams.get('page[limit]') ?? 10);
         const offset = Number(url.searchParams.get('page[offset]') ?? 0);
+
         offsets.push(offset);
 
         return {
@@ -75,6 +77,7 @@ function servePages(pages: (offset: number) => Partial<Role>[], total: number, o
 
 function rangeOfRoles(from: number, to: number) : Partial<Role>[] {
     const rows : Partial<Role>[] = [];
+
     for (let i = from; i < to; i++) {
         rows.push({ id: `role-${i}`, name: `role-${i}` });
     }
@@ -86,14 +89,18 @@ describe('defineEntityCollectionManager (data source)', () => {
     it('renders in-place edits to a loaded row', async () => {
         let manager : EntityCollectionManager<Role> | undefined;
         const { wrapper } = mountKitComponent(
-            createCollection((value) => { manager = value; }),
+            createCollection((value) => {
+                manager = value; 
+            }),
             {},
             { 'GET /roles': () => respond([{ id: 'role-1', name: 'original' }]) },
         );
+
         await flushPromises();
         expect(wrapper.text()).toContain('original');
 
         const row = manager!.data.value[0];
+
         row.name = 'edited';
         await flushPromises();
 
@@ -104,11 +111,15 @@ describe('defineEntityCollectionManager (data source)', () => {
     it('updates a row already held by a consumer', async () => {
         let manager : EntityCollectionManager<Role> | undefined;
         const { wrapper } = mountKitComponent(
-            createCollection((value) => { manager = value; }),
+            createCollection((value) => {
+                manager = value; 
+            }),
             {},
             { 'GET /roles': () => respond([{ id: 'role-1', name: 'original' }]) },
         );
+
         await flushPromises();
+
         const row = manager!.data.value[0];
 
         manager!.handleUpdated({ ...row, name: 'updated' });
@@ -124,7 +135,9 @@ describe('defineEntityCollectionManager (data source)', () => {
         const offsets : number[] = [];
 
         const { wrapper } = mountKitComponent(
-            createCollection((value) => { manager = value; }, { loadAll: true }),
+            createCollection((value) => {
+                manager = value; 
+            }, { loadAll: true }),
             { loadOnSetup: false },
             {
                 'GET /roles': servePages(
@@ -153,7 +166,9 @@ describe('defineEntityCollectionManager (data source)', () => {
         const offsets : number[] = [];
 
         const { wrapper } = mountKitComponent(
-            createCollection((value) => { manager = value; }, { loadAll: true }),
+            createCollection((value) => {
+                manager = value; 
+            }, { loadAll: true }),
             { loadOnSetup: false },
             {
                 // A row inserted between the two requests shifts the second
@@ -184,7 +199,9 @@ describe('defineEntityCollectionManager (data source)', () => {
             {
                 'GET /roles': async (req: FakeRequest) => {
                     const url = new URL(req.url, 'http://fake.test');
+
                     filters.push(url.searchParams.get('filter'));
+
                     if (filters.length === 1) {
                         await blocked;
                     }
@@ -195,8 +212,11 @@ describe('defineEntityCollectionManager (data source)', () => {
         );
 
         const search = (wrapper.vm as any).load({ filters: { name: 'needle' } });
+
         await flushPromises();
+
         const sort = (wrapper.vm as any).load({ sorts: { name: 'ASC' } });
+
         await flushPromises();
 
         release();
@@ -212,13 +232,17 @@ describe('defineEntityCollectionManager (data source)', () => {
         const { promise: blocked, resolve: release } = Promise.withResolvers<void>();
 
         const { wrapper } = mountKitComponent(
-            createCollection((value) => { manager = value; }),
+            createCollection((value) => {
+                manager = value; 
+            }),
             { loadOnSetup: false },
             {
                 'GET /roles': async (req: FakeRequest) => {
                     const url = new URL(req.url, 'http://fake.test');
+
                     if (url.searchParams.get('page[offset]') === '20') {
                         await blocked;
+
                         return respond([{ id: 'stale', name: 'stale' }]);
                     }
 
@@ -228,8 +252,11 @@ describe('defineEntityCollectionManager (data source)', () => {
         );
 
         const first = (wrapper.vm as any).load({ pagination: { offset: 20 } });
+
         await flushPromises();
+
         const second = (wrapper.vm as any).load({ pagination: { offset: 0 } });
+
         await flushPromises();
 
         expect(manager?.busy.value).toBe(true);
@@ -255,7 +282,9 @@ describe('defineEntityCollectionManager (data source)', () => {
             off: () => undefined,
         };
 
-        const Collection = createCollection((value) => { manager = value; });
+        const Collection = createCollection((value) => {
+            manager = value; 
+        });
         const Host = defineComponent({
             setup() {
                 provide(SocketClientSymbol, { connect: async () => socket });
@@ -270,6 +299,7 @@ describe('defineEntityCollectionManager (data source)', () => {
         expect(manager?.total.value).toEqual(1);
 
         const created = listeners[buildEventFullName('role', EntityDefaultEventName.CREATED)];
+
         expect(created).toBeDefined();
 
         const event = {

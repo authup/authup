@@ -180,6 +180,7 @@ export default defineComponent({
         // lowered query and a millisecond instant would never hit it twice.
         const activeSessionFilters = () : EntityStatsQuery['filters'] => {
             const now = new Date();
+
             now.setUTCSeconds(0, 0);
 
             return and(

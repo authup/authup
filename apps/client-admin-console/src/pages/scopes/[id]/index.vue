@@ -18,8 +18,8 @@ export default defineComponent({
     setup(props, { emit }) {
         const translationsDefault = useTranslations([
             {
-                namespace: TranslatorTranslationNamespace.COMMON, 
-                key: TranslatorTranslationCommonKey.GENERAL, 
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.GENERAL,
             },
         ]);
 

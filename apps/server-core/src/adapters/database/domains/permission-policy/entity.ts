@@ -17,9 +17,9 @@ import {
 } from 'typeorm';
 import { dateToISOStringTransformer } from '../../helpers/index.ts';
 import type {
-    Permission, 
-    PermissionPolicy, 
-    Policy, 
+    Permission,
+    PermissionPolicy,
+    Policy,
     Realm,
 } from '@authup/core-kit';
 import { PermissionEntity } from '../permission/index.ts';
@@ -55,7 +55,7 @@ export class PermissionPolicyEntity implements PermissionPolicy {
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'permission_realm_id' })
     permissionRealm: Realm | null;
@@ -76,7 +76,7 @@ export class PermissionPolicyEntity implements PermissionPolicy {
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true, 
+        nullable: true,
     })
     @JoinColumn({ name: 'policy_realm_id' })
     policyRealm: Realm | null;

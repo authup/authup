@@ -34,6 +34,7 @@ class RecordingRealmSynchronizer implements IProvisioningSynchronizer<RealmProvi
         // Mirror the real synchronizer's mutation behavior: realmId
         // stamping onto child attributes, resolved-row id write-back.
         const realmId = randomUUID();
+
         for (const client of input.relations?.clients ?? []) {
             client.attributes.realmId = realmId;
             client.attributes.id = randomUUID();
@@ -44,9 +45,11 @@ class RecordingRealmSynchronizer implements IProvisioningSynchronizer<RealmProvi
 
     async synchronizeMany(input: RealmProvisioningEntity[]): Promise<RealmProvisioningEntity[]> {
         const output = [];
+
         for (const item of input) {
             output.push(await this.synchronize(item));
         }
+
         return output;
     }
 }
@@ -155,9 +158,11 @@ describe('core/provisioning/wildcard', () => {
             const variants = expandWildcardRealmEntry(wildcard, data);
 
             const [merged] = data.realms!;
+
             expect(merged.attributes).toMatchObject({ name: 'foo', displayName: 'Foo' });
 
             const clients = merged.relations?.clients ?? [];
+
             expect(clients).toHaveLength(1);
             expect(clients[0].attributes.displayName).toBe('Explicit Portal');
             expect(clients[0].strategy).toEqual({ type: 'merge' });
@@ -194,6 +199,7 @@ describe('core/provisioning/wildcard', () => {
             expandWildcardRealmEntry(entry, data);
 
             const paths = data.realms![0].relations?.paths ?? [];
+
             expect(paths).toHaveLength(1);
             expect(paths[0].attributes.description).toBe('Explicit');
             expect(paths[0].attributes.displayName).toBe('Sales');
@@ -297,12 +303,14 @@ describe('core/provisioning/wildcard', () => {
 
             // the graph sync mutates the expanded entries in place
             const [merged] = data.realms!;
+
             for (const client of merged.relations?.clients ?? []) {
                 client.attributes.realmId = randomUUID();
                 client.attributes.id = randomUUID();
             }
 
             const variant = variants.get('foo')!;
+
             for (const client of variant.clients ?? []) {
                 expect(client.attributes.realmId).toBeUndefined();
                 expect(client.attributes.id).toBeUndefined();
@@ -315,6 +323,7 @@ describe('core/provisioning/wildcard', () => {
             expandWildcardRealmEntry(wildcard, data);
 
             const [merged] = data.realms!;
+
             for (const client of merged.relations?.clients ?? []) {
                 client.attributes.realmId = randomUUID();
             }
@@ -349,6 +358,7 @@ describe('core/provisioning/wildcard', () => {
             await provisioner.ensureForRealm(buildRealm('bar'));
 
             const [first, second] = synchronizer.inputs;
+
             expect(first.relations?.clients![0].attributes.realmId).toBeDefined();
             expect(second.relations?.clients![0].attributes.realmId).toBeDefined();
             expect(first.relations?.clients![0].attributes.id)
@@ -394,6 +404,7 @@ describe('core/provisioning/wildcard', () => {
             await expect(promise).rejects.toSatisfy((e: unknown) => {
                 expect(isValidupError(e)).toBe(true);
                 expect(JSON.stringify((e as ValidupError).issues)).toMatch(pattern);
+
                 return true;
             });
         };

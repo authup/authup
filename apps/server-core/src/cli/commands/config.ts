@@ -93,7 +93,7 @@ export function describeConfigError(error: unknown) : string {
         return `The configuration is invalid.\n${issues}`;
     }
 
-    const message = error instanceof Error ? error.message : String(error);
+    const message = Error.isError(error) ? error.message : String(error);
 
     const causes = describeCauseChain(error);
 

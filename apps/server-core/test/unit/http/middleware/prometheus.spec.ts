@@ -42,9 +42,11 @@ describe('http/middleware/prometheus', () => {
         await httpRequest(suite, 'GET', '/authorize', { redirect: 'manual' });
 
         const response = await httpRequest(suite, 'GET', '/metrics');
+
         expect(response.status).toEqual(200);
 
         const body = await response.text();
+
         expect(body).toContain('path="/token"');
         expect(body).toContain('path="/authorize"');
     });
@@ -58,9 +60,11 @@ describe('http/middleware/prometheus', () => {
         await httpRequest(suite, 'GET', `/realms/master/users/${idOne}`);
 
         const response = await httpRequest(suite, 'GET', '/metrics');
+
         expect(response.status).toEqual(200);
 
         const body = await response.text();
+
         expect(body).toContain('path="/users/:id"');
         expect(body).toContain('path="/realms/:realmId/users/:id"');
         expect(body).not.toContain(idOne);
@@ -72,6 +76,7 @@ describe('http/middleware/prometheus', () => {
 
         const response = await httpRequest(suite, 'GET', '/metrics');
         const body = await response.text();
+
         expect(body).toContain('path="/{unmatched}"');
         expect(body).not.toContain('no-such-route');
     });
@@ -82,6 +87,7 @@ describe('http/middleware/prometheus', () => {
 
         const response = await httpRequest(suite, 'GET', '/metrics');
         const body = await response.text();
+
         expect(body).not.toContain('path="/metrics"');
         expect(body).not.toContain('path="/"');
     });

@@ -101,6 +101,7 @@ describe('createFeaturesReader', () => {
             status: {
                 get: async () => {
                     attempts += 1;
+
                     if (attempts === 1) {
                         throw new Error('fetch failed');
                     }
@@ -125,6 +126,7 @@ describe('createFeaturesReader', () => {
 describe('readRenderCookies', () => {
     async function read(cookie?: string) {
         const app = new App();
+
         app.use(basic({ cookie: true }));
         app.use(defineCoreHandler({
             method: 'get',

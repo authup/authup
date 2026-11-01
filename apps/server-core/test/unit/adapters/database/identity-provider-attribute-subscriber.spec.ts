@@ -66,6 +66,7 @@ describe('IdentityProviderAttributeSubscriber', () => {
         const { calls, publisher } = createPublisherSpy();
 
         const subscriber = new IdentityProviderAttributeSubscriber();
+
         subscriber.setPublisher(publisher);
 
         await subscriber.afterUpdate(buildUpdateEvent(
@@ -76,6 +77,7 @@ describe('IdentityProviderAttributeSubscriber', () => {
         expect(calls).toHaveLength(1);
 
         const [ctx] = calls;
+
         expect(ctx.content.data.value).toBeNull();
         expect(ctx.dataPrevious?.value).toBeNull();
         expect(JSON.stringify(ctx)).not.toContain('next-secret');
@@ -90,6 +92,7 @@ describe('IdentityProviderAttributeSubscriber', () => {
         const { calls, publisher } = createPublisherSpy();
 
         const subscriber = new IdentityProviderAttributeSubscriber();
+
         subscriber.setPublisher(publisher);
 
         await subscriber.afterInsert(buildInsertEvent(buildAttribute('fresh-secret')));

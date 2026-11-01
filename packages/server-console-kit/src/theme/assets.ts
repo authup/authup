@@ -39,6 +39,7 @@ const REQUEST_PATH_PATTERN = /^[a-z0-9][a-z0-9._/-]*$/i;
 export function createThemeAssetsHandler(provider: IThemeProvider) : Handler {
     return defineCoreHandler(async (event) => {
         const assetsPath = await provider.getAssetsPath();
+
         if (!assetsPath) {
             event.response.status = 404;
 
@@ -47,6 +48,7 @@ export function createThemeAssetsHandler(provider: IThemeProvider) : Handler {
 
         let requestPath = event.path;
         const { mountPath } = event;
+
         if (requestPath.startsWith(mountPath)) {
             requestPath = requestPath.substring(mountPath.length);
         }
@@ -92,6 +94,7 @@ export function createThemeAssetsHandler(provider: IThemeProvider) : Handler {
         let root : string;
         let filePath : string;
         let stats : fs.Stats;
+
         try {
             root = await fs.promises.realpath(assetsPath);
             filePath = await fs.promises.realpath(path.join(assetsPath, requestPath));
@@ -112,6 +115,7 @@ export function createThemeAssetsHandler(provider: IThemeProvider) : Handler {
         }
 
         const etag = `W/"${stats.size}-${stats.mtime.getTime()}"`;
+
         event.response.headers.set(HeaderName.CACHE_CONTROL, 'public, max-age=0, must-revalidate');
 
         if (event.headers.get(HeaderName.IF_NONE_MATCH) === etag) {

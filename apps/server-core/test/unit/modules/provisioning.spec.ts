@@ -29,13 +29,13 @@ import type { DataSource, Repository } from 'typeorm';
 import { IsNull } from 'typeorm';
 import {
     afterAll,
-    beforeAll, 
-    describe, 
-    expect, 
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import {
-    CacheModule, 
+    CacheModule,
     ClientEntity,
     ClientScopeEntity,
     ConfigInjectionKey,
@@ -46,7 +46,7 @@ import {
     PermissionEntity,
     PermissionPolicyEntity,
     ProvisionerModule,
-    RealmEntity, 
+    RealmEntity,
     RoleEntity,
 } from '../../../src/index.ts';
 import { Container } from 'eldin';
@@ -86,6 +86,7 @@ describe('app/modules/provisioning', () => {
         await database.setup(di);
 
         dataSource = di.resolve(DatabaseInjectionKey.DataSource);
+
         const realmRepository = di.resolve<Repository<Realm>>(RealmEntity);
 
         policyRepositoryAdapter = new PolicyRepositoryAdapter({
@@ -160,26 +161,32 @@ describe('app/modules/provisioning', () => {
         const provisioning = new ProvisionerModule([
             new FileProvisioningSource({ cwd: 'test/data/sources' }),
         ]);
+
         await provisioning.setup(di);
 
         const realmRepository = di.resolve<Repository<Realm>>(RealmEntity);
         const roleRepository = di.resolve<Repository<Role>>(RoleEntity);
 
         const realm = await realmRepository.findOneBy({ name: 'foo' });
+
         expect(realm).toBeDefined();
 
         const roles = await roleRepository.findBy({ name: 'foo' });
+
         expect(roles).toHaveLength(2);
 
         const builtInRole = await roleRepository.findOneBy({ name: 'bar', realmId: IsNull() });
+
         expect(builtInRole?.builtIn).toBe(true);
 
         const filePolicy = await policyRepositoryAdapter.findOneByName('file-policy');
+
         expect(filePolicy).toBeDefined();
         expect(filePolicy?.builtIn).toBe(true);
 
         const permissionRepository = di.resolve<Repository<Permission>>(PermissionEntity);
         const permission = await permissionRepository.findOneBy({ name: 'foo', realmId: IsNull() });
+
         expect(permission).toBeDefined();
 
         const permissionPolicyRepository = di.resolve<Repository<PermissionPolicy>>(PermissionPolicyEntity);
@@ -187,6 +194,7 @@ describe('app/modules/provisioning', () => {
             permissionId: permission!.id,
             policyId: filePolicy!.id,
         });
+
         expect(junction).toBeDefined();
 
         // The junction is the only source /authorize resolves client scopes
@@ -239,10 +247,12 @@ describe('app/modules/provisioning', () => {
                 clientSystemEnabled,
             });
             const provisioning = new ProvisionerModule([{ load: async () => ({ realms }) }]);
+
             await provisioning.setup(di);
 
             const realm = await realmRepository.findOneByOrFail({ name: REALM_MASTER_NAME });
             const client = await clientRepository.findOneByOrFail({ name: 'system', realmId: realm.id });
+
             return client.active;
         };
 
@@ -277,6 +287,7 @@ describe('app/modules/provisioning', () => {
         const freshRealm = await realmRepository.save(
             realmRepository.create({ name: `fresh-${randomUUID().slice(0, 8)}` }),
         );
+
         await clientRepository.save(clientRepository.create({
             name: CLIENT_ADMIN_CONSOLE_NAME,
             realmId: legacyRealm.id,
@@ -299,6 +310,7 @@ describe('app/modules/provisioning', () => {
         const provisioning = new ProvisionerModule([
             new DefaultProvisioningSource(),
         ]);
+
         await provisioning.setup(di);
 
         const readScopeNames = async (clientId: string) => {
@@ -324,6 +336,7 @@ describe('app/modules/provisioning', () => {
             name: 'web',
             realmId: legacyRealm.id,
         });
+
         expect(legacyWebClient!.builtIn).toBe(true);
         expect(legacyWebClient!.redirectUri).toBe('http://legacy-web.example.com/**');
         expect(await readScopeNames(legacyWebClient!.id)).toEqual([]);
@@ -428,6 +441,7 @@ describe('app/modules/provisioning', () => {
             new DefaultProvisioningSource(),
             wildcardSource,
         ]);
+
         await provisioning.setup(di);
 
         const masterRealm = await realmRepository.findOneBy({ name: REALM_MASTER_NAME });
@@ -437,10 +451,12 @@ describe('app/modules/provisioning', () => {
         // source) block, the pre-existing realm rides the backfill loop
         for (const realm of [masterRealm!, preExisting]) {
             const portal = await clientRepository.findOneBy({ name: 'portal', realmId: realm.id });
+
             expect(portal, `portal in ${realm.name}`).not.toBeNull();
             expect(portal!.displayName).toBe('Portal');
 
             const role = await roleRepository.findOneBy({ name: 'template-role', realmId: realm.id });
+
             expect(role, `template-role in ${realm.name}`).not.toBeNull();
         }
 
@@ -449,6 +465,7 @@ describe('app/modules/provisioning', () => {
             name: 'portal',
             realmId: declaredRealm!.id,
         });
+
         expect(declaredPortal!.displayName).toBe('Explicit Portal');
         expect(await roleRepository.findOneBy({
             name: 'template-role',
@@ -461,6 +478,7 @@ describe('app/modules/provisioning', () => {
             realmRepository.create({ name: runtimeName }),
         );
         const wildcardProvisioner = di.resolve(ProvisioningInjectionKey.WildcardRealmProvisioner);
+
         await wildcardProvisioner.ensureForRealm(runtimeRealm);
 
         expect(await clientRepository.findOneBy({
@@ -496,8 +514,10 @@ describe('app/modules/provisioning', () => {
                 },
             },
         ]).setup(di);
+
         for (const realm of [masterRealm!, preExisting, runtimeRealm]) {
             const portal = await clientRepository.findOneBy({ name: 'portal', realmId: realm.id });
+
             expect(portal!.displayName, `portal in ${realm.name}`).toBe('Reasserted');
         }
 
@@ -520,6 +540,7 @@ describe('app/modules/provisioning', () => {
                 },
             },
         ]).setup(di);
+
         for (const realm of [masterRealm!, preExisting, declaredRealm!, runtimeRealm]) {
             expect(
                 await clientRepository.findOneBy({ name: 'portal', realmId: realm.id }),
@@ -540,6 +561,7 @@ describe('app/modules/provisioning', () => {
 
         it('should assign default policy to permissions without it via junction table', async () => {
             const defaultPolicy = await policyRepositoryAdapter.findOneByName(SystemPolicyName.DEFAULT);
+
             expect(defaultPolicy).toBeDefined();
 
             const permissionRepo = dataSource.getRepository(PermissionEntity);
@@ -551,11 +573,13 @@ describe('app/modules/provisioning', () => {
                 builtIn: false,
                 realmId: realm.id,
             }));
+
             expect(await junctionRepo.countBy({ permissionId: unbound.id })).toBe(0);
 
             await assignDefaultPolicy();
 
             const junctions = await junctionRepo.findBy({ permissionId: unbound.id });
+
             expect(junctions).toHaveLength(1);
             expect(junctions[0].policyId).toBe(defaultPolicy!.id);
             expect(junctions[0].permissionRealmId).toBe(realm.id);
@@ -567,7 +591,9 @@ describe('app/modules/provisioning', () => {
             const permission = await dataSource.getRepository(PermissionEntity).findOneByOrFail({ name: 'user_create' });
 
             const existing = await junctionRepo.findBy({ permissionId: permission.id });
+
             expect(existing.length).toBeGreaterThan(0);
+
             const countBefore = await junctionRepo.count();
 
             await assignDefaultPolicy();
@@ -583,12 +609,14 @@ describe('app/modules/provisioning', () => {
 
         it('should create all leaf policies with correct type and builtIn', async () => {
             const identity = await policyRepositoryAdapter.findOneByName(SystemPolicyName.IDENTITY);
+
             expect(identity).toBeDefined();
             expect(identity!.type).toBe(BuiltInPolicyType.IDENTITY);
             expect(identity!.builtIn).toBe(true);
             expect(identity!.realmId).toBeNull();
 
             const permBinding = await policyRepositoryAdapter.findOneByName(SystemPolicyName.PERMISSION_BINDING);
+
             expect(permBinding).toBeDefined();
             expect(permBinding!.type).toBe(BuiltInPolicyType.PERMISSION_BINDING);
             expect(permBinding!.builtIn).toBe(true);
@@ -602,17 +630,22 @@ describe('app/modules/provisioning', () => {
 
         it('should create system.default composite with correct children and decisionStrategy', async () => {
             const defaultPolicy = await policyRepositoryAdapter.findOneByName(SystemPolicyName.DEFAULT);
+
             expect(defaultPolicy).toBeDefined();
             expect(defaultPolicy!.type).toBe(BuiltInPolicyType.COMPOSITE);
             expect(defaultPolicy!.builtIn).toBe(true);
             expect(defaultPolicy!.realmId).toBeNull();
+
             const defaultPolicyEA: Partial<CompositePolicy> = defaultPolicy!;
+
             expect(defaultPolicyEA.decisionStrategy).toBe(DecisionStrategy.UNANIMOUS);
 
             const children = await policyRepositoryAdapter.findManyBy({ parentId: defaultPolicy!.id });
+
             expect(children).toHaveLength(2);
 
             const childNames = children.map((c) => c.name).sort();
+
             expect(childNames).toEqual([
                 SystemPolicyName.IDENTITY,
                 SystemPolicyName.PERMISSION_BINDING,
@@ -629,9 +662,11 @@ describe('app/modules/provisioning', () => {
             });
 
             await synchronizer.synchronize(new DefaultProvisioningSource().buildPolicies()[0]);
+
             const countBefore = (await policyRepositoryAdapter.findManyBy({})).length;
 
             await synchronizer.synchronize(new DefaultProvisioningSource().buildPolicies()[0]);
+
             const countAfter = (await policyRepositoryAdapter.findManyBy({})).length;
 
             expect(countAfter).toBe(countBefore);
@@ -642,8 +677,10 @@ describe('app/modules/provisioning', () => {
                 SystemPolicyName.IDENTITY,
                 SystemPolicyName.PERMISSION_BINDING,
             ];
+
             systemNames.forEach((name) => {
                 const matches = allPolicies.filter((p) => p.name === name);
+
                 expect(matches).toHaveLength(1);
             });
         });
@@ -676,6 +713,7 @@ describe('app/modules/provisioning', () => {
             await synchronizer.synchronize(inputWithExtra);
 
             let staleChild = await policyRepositoryAdapter.findOneByName('system.stale-child');
+
             expect(staleChild).toBeDefined();
 
             await synchronizer.synchronize(new DefaultProvisioningSource().buildPolicies()[0]);
@@ -712,6 +750,7 @@ describe('app/modules/provisioning', () => {
             await synchronizer.synchronize(inputWithExtra);
 
             const referencedChild = await policyRepositoryAdapter.findOneByName('system.referenced-child');
+
             expect(referencedChild).toBeDefined();
 
             const permissionRepo = di.resolve<Repository<Permission>>(PermissionEntity);
@@ -723,6 +762,7 @@ describe('app/modules/provisioning', () => {
             );
 
             const junctionRepo = di.resolve<Repository<PermissionPolicy>>(PermissionPolicyEntity);
+
             await junctionRepo.save(
                 junctionRepo.create({
                     permissionId: testPermission.id,
@@ -733,6 +773,7 @@ describe('app/modules/provisioning', () => {
             await synchronizer.synchronize(new DefaultProvisioningSource().buildPolicies()[0]);
 
             const detached = await policyRepositoryAdapter.findOneByName('system.referenced-child');
+
             expect(detached).toBeDefined();
             expect(detached!.parentId).toBeNull();
             expect(detached!.builtIn).toBe(false);
@@ -744,28 +785,33 @@ describe('app/modules/provisioning', () => {
 
         it('should create permission-policy junction for system.default after provisioning', async () => {
             const defaultPolicy = await policyRepositoryAdapter.findOneByName(SystemPolicyName.DEFAULT);
+
             expect(defaultPolicy).toBeDefined();
 
             const permissionRepo = di.resolve<Repository<Permission>>(PermissionEntity);
             const junctionRepo = di.resolve<Repository<PermissionPolicy>>(PermissionPolicyEntity);
 
             const permission = await permissionRepo.findOneBy({ name: 'user_create' });
+
             expect(permission).toBeDefined();
 
             const junction = await junctionRepo.findOneBy({
                 permissionId: permission!.id,
                 policyId: defaultPolicy!.id,
             });
+
             expect(junction).toBeDefined();
         });
 
         it('should not duplicate junction when default policy already assigned', async () => {
             const defaultPolicy = await policyRepositoryAdapter.findOneByName(SystemPolicyName.DEFAULT);
+
             expect(defaultPolicy).toBeDefined();
 
             const junctionRepo = dataSource.getRepository(PermissionPolicyEntity);
             const permission = await dataSource.getRepository(PermissionEntity).findOneByOrFail({ name: 'user_create' });
             const where = { permissionId: permission.id, policyId: defaultPolicy!.id };
+
             expect(await junctionRepo.countBy(where)).toBe(1);
 
             await assignDefaultPolicy();

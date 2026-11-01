@@ -43,6 +43,7 @@ export const ENTITY_STATS_WINDOWS : Record<EntityStatsWindow, EntityStatsWindowE
  */
 export function buildStatsWindowStart(entry: EntityStatsWindowEntry, now: Date): string {
     const date = new Date(now);
+
     if (entry.unit === 'hour') {
         date.setUTCHours(date.getUTCHours() - ((entry.days * 24) - 1), 0, 0, 0);
     } else {
@@ -190,9 +191,11 @@ export function useEntityStats<R extends EntityStatsResponseLike = EntityStatsRe
 
     const load = async () => {
         generation += 1;
+
         const current = generation;
         const query = buildQuery();
         const scope = buildQueryString(query);
+
         requested = scope;
         busy.value = true;
 
@@ -217,6 +220,7 @@ export function useEntityStats<R extends EntityStatsResponseLike = EntityStatsRe
 
             if (extractErrorContext(e).status === 403) {
                 forbidden.value = true;
+
                 return;
             }
 

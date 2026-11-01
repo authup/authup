@@ -27,6 +27,7 @@ export function assertPathBounds(path: string) : void {
     }
 
     const segments = splitPath(path);
+
     if (segments.length > PATH_MAX_DEPTH) {
         throw new ValidationError(`The path must not be nested deeper than ${PATH_MAX_DEPTH} levels.`);
     }
@@ -106,10 +107,11 @@ export async function ensurePath(
     const path = input.trim().toLowerCase();
 
     let valid: boolean;
+
     try {
         valid = isPathValid(path, { throwOnFailure: true });
     } catch (e) {
-        throw new ValidationError(e instanceof Error ? e.message : 'The path is not valid.');
+        throw new ValidationError(Error.isError(e) ? e.message : 'The path is not valid.');
     }
 
     // the throwing form reports every rejection it knows about, but the

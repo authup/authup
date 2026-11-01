@@ -36,17 +36,26 @@ const keyring = vi.hoisted(() => {
         }
 
         async getPassword() : Promise<string | undefined> {
-            if (failing) throw new Error('keychain locked, secret leaked in message');
+            if (failing) {
+                throw new Error('keychain locked, secret leaked in message');
+            }
+
             return entries.get(this.account);
         }
 
         async setPassword(value: string) : Promise<void> {
-            if (failing) throw new Error('keychain locked, secret leaked in message');
+            if (failing) {
+                throw new Error('keychain locked, secret leaked in message');
+            }
+
             entries.set(this.account, value);
         }
 
         async deleteCredential() : Promise<boolean> {
-            if (failing) throw new Error('keychain locked, secret leaked in message');
+            if (failing) {
+                throw new Error('keychain locked, secret leaked in message');
+            }
+
             return entries.delete(this.account);
         }
     }
@@ -55,7 +64,9 @@ const keyring = vi.hoisted(() => {
         entries,
         constructed,
         AsyncEntry,
-        fail: (value: boolean) => { failing = value; },
+        fail: (value: boolean) => {
+            failing = value;
+        },
     };
 });
 
@@ -104,6 +115,7 @@ describe('keychain token storage', () => {
 
     it('turns a keychain failure into one message naming the opt-out, without the native text', async () => {
         const storage = createKeychainTokenStorage();
+
         keyring.fail(true);
 
         await expect(storage.read(host)).rejects.toThrow(/--insecure-storage/);
@@ -114,6 +126,7 @@ describe('keychain token storage', () => {
 
     it('refuses an entry it cannot read as tokens', async () => {
         const storage = createKeychainTokenStorage();
+
         keyring.entries.set(host, '{"accessToken":""}');
 
         await expect(storage.read(host)).rejects.toThrow(/not readable/);
