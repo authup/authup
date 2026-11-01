@@ -216,7 +216,19 @@ export interface IUserAuthenticatorChallengeProvider {
     challenge(userId: string, options?: UserAuthenticatorChallengeOptions): Promise<UserAuthenticatorChallengeStatus>;
 }
 
-export interface IUserAuthenticatorService extends IUserAuthenticatorChallengeProvider {
+/**
+ * The challenge seam plus a cheap requirement check, for a hot path that
+ * needs the kinds only when a challenge is owed (the login re-check).
+ */
+export interface IUserAuthenticatorRequirementProvider extends IUserAuthenticatorChallengeProvider {
+    /**
+     * Whether challenge() would answer `required`, without loading the
+     * devices: false while MFA is disabled, otherwise an existence check.
+     */
+    isChallengeRequired(userId: string): Promise<boolean>;
+}
+
+export interface IUserAuthenticatorService extends IUserAuthenticatorRequirementProvider {
     getMany(
         query: Record<string, any>,
         actor: ActorContext,

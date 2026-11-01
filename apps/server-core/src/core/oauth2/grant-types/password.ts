@@ -15,9 +15,12 @@ import {
     IdentityType,
     ScopeName,
     SessionAuthMethod,
+    UserAuthenticatorKind,
 } from '@authup/core-kit';
+import type { Logger } from '@authup/server-kit';
 import type { IEventService } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
+import type { IOAuth2MfaLoginService, OAuth2MfaLoginTicket, OAuth2MfaLoginTicketIssueInput } from '../mfa-login/types.ts';
 import { deriveAmrAcr } from '../authorization/helpers.ts';
 import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
 import type { IOAuth2TokenIssuer } from '../token/index.ts';
@@ -41,6 +44,10 @@ export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput>
 
     protected metrics? : IAuthFlowMetrics;
 
+    protected mfaLoginService? : IOAuth2MfaLoginService;
+
+    protected logger? : Logger;
+
     constructor(ctx: OAuth2PasswordGrantContext) {
         super({
             accessTokenIssuer: ctx.accessTokenIssuer,
@@ -51,6 +58,8 @@ export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput>
         this.refreshTokenIssuer = ctx.refreshTokenIssuer;
         this.eventService = ctx.eventService;
         this.metrics = ctx.metrics;
+        this.mfaLoginService = ctx.mfaLoginService;
+        this.logger = ctx.logger;
     }
 
     async runWith(input: OAuth2PasswordGrantInput, options: OAuth2GrantRunWIthOptions = {}) : Promise<OAuth2TokenGrantResponse> {
@@ -73,9 +82,28 @@ export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput>
         const owed = await this.revokeIfSecondFactorOwed(session);
 
         if (owed) {
+            // No failed-login event: the password was right, and the ordinary
+            // mfa_required answer records none either, so the login throttle
+            // must not count this one.
+            const ticket = await this.issueMfaTicket(
+                {
+                    user,
+                    clientId: clientId ?? null,
+                    confirmation: options.confirmation,
+                },
+                owed.kinds,
+                options,
+            );
+
             throw new OAuth2MfaRequiredError({
                 message: 'Complete a second-factor challenge to continue.',
-                data: { kinds: owed.kinds },
+                data: {
+                    kinds: owed.kinds,
+                    ...(ticket ? {
+                        mfa_token: ticket.token,
+                        mfa_token_expires_in: ticket.expiresIn,
+                    } : {}),
+                },
             });
         }
 
@@ -124,5 +152,45 @@ export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput>
             refreshToken,
             refreshTokenPayload,
         });
+    }
+
+    /**
+     * Issue the MFA-pending ticket for factor kinds that cannot complete
+     * inside the single grant POST (email needs a server-sent code,
+     * WebAuthn an interactive ceremony). TOTP/recovery-only users keep
+     * the inline `otp` fast-path and get no ticket: a pending session
+     * per plain code entry would be pure churn.
+     */
+    protected async issueMfaTicket(
+        input: OAuth2MfaLoginTicketIssueInput,
+        kinds: `${UserAuthenticatorKind}`[],
+        options: OAuth2GrantRunWIthOptions = {},
+    ) : Promise<OAuth2MfaLoginTicket | null> {
+        if (!this.mfaLoginService) {
+            return null;
+        }
+
+        const interactive = kinds.includes(UserAuthenticatorKind.EMAIL) ||
+            kinds.includes(UserAuthenticatorKind.WEBAUTHN);
+
+        if (!interactive) {
+            return null;
+        }
+
+        try {
+            return await this.mfaLoginService.issueTicket(input, {
+                ipAddress: options.ipAddress,
+                userAgent: options.userAgent,
+            });
+        } catch (e) {
+            // degrade to a ticket-less mfa_required rather than letting a
+            // transient issuance failure (pending-session write, cache,
+            // signer) escape as a raw 500 from a controlled response path:
+            // an otp-capable device can still complete, and the credential
+            // retry re-attempts the ticket.
+            this.logger?.warn('Issuing the MFA-pending login ticket failed.', { error: e });
+
+            return null;
+        }
     }
 }

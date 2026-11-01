@@ -105,6 +105,7 @@ describe('OAuth2AuthorizeGrant', () => {
             identityResolver,
             sessionManager,
             mfaChallengeProvider: {
+                isChallengeRequired: async () => false,
                 challenge: async () => ({
                     required: false, 
                     enrollmentRequired: false, 
@@ -570,13 +571,18 @@ describe('OAuth2AuthorizeGrant', () => {
             expect(lookups).not.toHaveBeenCalled();
         });
 
-        it('should issue tokens when the user still holds no factor', async () => {
-            const { grant: guarded, lookups } = build();
+        it('should issue tokens without loading factors when the user still holds none', async () => {
+            const {
+                grant: guarded, 
+                lookups, 
+                existenceChecks, 
+            } = build();
 
             const result = await guarded.runWith(buildCode({ auth_method: 'pwd' }));
 
             expect(result).toHaveProperty('access_token');
-            expect(lookups).toHaveBeenCalledTimes(1);
+            expect(existenceChecks).toHaveBeenCalledTimes(1);
+            expect(lookups).not.toHaveBeenCalled();
             expect(sessionManager.revokeCalls).toHaveLength(0);
         });
     });

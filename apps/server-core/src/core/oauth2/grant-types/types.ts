@@ -10,9 +10,10 @@ import type { OAuth2TokenConfirmation, OAuth2TokenGrantResponse } from '@authup/
 import type { Logger } from '@authup/server-kit';
 import type { ISessionManager } from '../../authentication/index.ts';
 import type { IIdentityResolver } from '../../identity/resolver/types.ts';
-import type { IEventService, IUserAuthenticatorChallengeProvider } from '../../entities/index.ts';
+import type { IEventService, IUserAuthenticatorRequirementProvider } from '../../entities/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 import type { IKeyStore } from '../../key/index.ts';
+import type { IOAuth2MfaLoginService } from '../mfa-login/types.ts';
 import type { ISessionTokenRepository } from '../session-token/index.ts';
 import type {
     IOAuth2OpenIDTokenIssuer,
@@ -29,11 +30,11 @@ export type BaseGrantContext = {
      * concurrently with the login (absent = no re-check). Required by the
      * grants that create interactive user sessions.
      */
-    mfaChallengeProvider?: IUserAuthenticatorChallengeProvider,
+    mfaChallengeProvider?: IUserAuthenticatorRequirementProvider,
 };
 
 export type OAuth2AuthorizeGrantContext = BaseGrantContext & {
-    mfaChallengeProvider: IUserAuthenticatorChallengeProvider,
+    mfaChallengeProvider: IUserAuthenticatorRequirementProvider,
     refreshTokenIssuer: IOAuth2TokenIssuer,
     openIdTokenIssuer: IOAuth2OpenIDTokenIssuer,
     /**
@@ -49,10 +50,16 @@ export type OAuth2IdentityGrantContext = BaseGrantContext & {
 };
 
 export type OAuth2PasswordGrantContext = BaseGrantContext & {
-    mfaChallengeProvider: IUserAuthenticatorChallengeProvider,
+    mfaChallengeProvider: IUserAuthenticatorRequirementProvider,
     refreshTokenIssuer: IOAuth2TokenIssuer,
     eventService?: IEventService,
     metrics?: IAuthFlowMetrics,
+    /**
+     * Issues the MFA-pending ticket an mfa_required answer carries for the
+     * interactive kinds (absent = no ticket).
+     */
+    mfaLoginService?: IOAuth2MfaLoginService,
+    logger?: Logger,
 };
 
 export type OAuth2RefreshTokenGrantOptions = {

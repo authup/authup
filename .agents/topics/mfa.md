@@ -55,7 +55,9 @@ factor revokes the user's other sessions, federated ones too, as none proved
 one (the enrolling one is kept; another actor's enrollment keeps none).
 A session that revocation's listing misses (inserted by a password grant or
 a session-less code redemption that decided before the factor was stored) is
-re-checked after its insert (`revokeIfSecondFactorOwed`) and refused.
+re-checked after its insert (`revokeIfSecondFactorOwed`, an existence check
+first) and refused; the password grant answers the ordinary `mfa_required`,
+ticket included, and like it records no `LOGIN_FAILED`.
 
 **Enrolling FOR another user is email only, for every actor** (`ValidationError`
 otherwise). Every other kind would let the enroller hold the factor: TOTP and

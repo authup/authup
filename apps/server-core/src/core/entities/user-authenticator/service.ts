@@ -1291,6 +1291,14 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         return this.repository.hasConfirmedByUser(userId);
     }
 
+    async isChallengeRequired(userId: string): Promise<boolean> {
+        if (!this.options.enabled) {
+            return false;
+        }
+
+        return this.repository.hasConfirmedByUser(userId);
+    }
+
     async challenge(
         userId: string,
         options: { issueMaterial?: boolean } = {},
