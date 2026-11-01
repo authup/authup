@@ -5,7 +5,7 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
-## Next release
+## v1.0.0-beta.73 (was: next release after v1.0.0-beta.72)
 
 ### Node.js 26 minimum
 
@@ -82,7 +82,7 @@ A filter or sort key through such a relation (`filter[role.name]`, `sort=user.na
 ignored for a restricted reader, and refused with 400 on a bulk delete
 (`DELETE /sessions`). Filter on the reference column (`roleId`, `userId`) instead.
 
-## Next release (after v1.0.0-beta.71)
+## v1.0.0-beta.72 (was: next release after v1.0.0-beta.71)
 
 ### `POST /authorization/check` answers realm- and client-owned permissions
 
