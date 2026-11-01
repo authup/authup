@@ -70,6 +70,15 @@ export interface IUserAuthenticatorRepository {
     remove(entity: UserAuthenticator): Promise<void>;
 
     removeAllByUser(userId: string, kind: `${UserAuthenticatorKind}`): Promise<void>;
+
+    /**
+     * Run fn while holding the owning user's row, so every change to a
+     * user's factor set (and every read deciding on it) is serialized,
+     * whether or not the user holds an authenticator row yet. The callback's
+     * repository is bound to the transaction; it must not read through any
+     * other connection.
+     */
+    withUserLock<R>(userId: string, fn: (repository: IUserAuthenticatorRepository) => Promise<R>): Promise<R>;
 }
 
 /**
@@ -282,7 +291,9 @@ export type UserAuthenticatorServiceContext = {
     eventService?: IEventService,
     requestContext?: () => EventRequestContext | undefined,
     /**
-     * Ends the sessions a user held before its first confirmed factor.
+     * Ends the sessions a user held before its first confirmed factor, and
+     * reads the request's session for the factor-management gate (absent =
+     * a user holding a factor cannot manage its own factors).
      */
     sessionManager?: ISessionManager,
     logger?: Logger,

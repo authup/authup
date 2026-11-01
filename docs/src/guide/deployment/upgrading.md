@@ -45,6 +45,16 @@ otherwise. Review the detached policies after the upgrade.
 - An email factor an administrator enrolls for a user ends all of that user's sessions.
 - Adding a further factor ends nothing.
 
+### Managing your own factors needs a session that passed one
+
+Once a user holds a confirmed second factor, its own requests to enroll another factor,
+confirm a pending device, regenerate the recovery codes or delete a device are refused
+with `400 mfa_required` unless the session they come from passed a second-factor
+challenge. This includes the session the first factor was enrolled from: it completes a
+challenge (`POST /authenticators/challenge`) or signs in again with the factor.
+Sessions of a federated sign-in, administrators managing another user's factors and
+deployments with `MFA_ENABLED=false` are not affected.
+
 ### A user, client or folder update can answer 409 under concurrent writes
 
 An update of a user, a client or a folder is authorized against the row it read. When

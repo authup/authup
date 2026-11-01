@@ -43,8 +43,13 @@ has no subscriber (not cached, not realtime).
 
 **Enrollment** is two-step except recovery: enroll creates an unconfirmed row
 plus provisioning material, `POST .../:deviceId/confirm` with a valid code
-confirms it. Only confirmed devices satisfy challenges. Own devices are
-ungated; others' need `USER_AUTHENTICATOR_*` with per-row record checks. A
+confirms it. Only confirmed devices satisfy challenges. Own enroll, confirm
+and delete need no permission, but once the user holds a confirmed factor
+(while `mfaEnabled`) they need the request's session to have `mfaAt` or
+`authMethod: ext`, else `mfa_required`; no session is refused too (a user
+Basic credential is already anonymous then). The enrolling session is not
+stamped: it proves the new factor through the challenge routes. Others'
+need `USER_AUTHENTICATOR_*` with per-row record checks. A
 foreign device id under another user's route is 404. The first confirmed
 factor revokes the user's other sessions, federated ones too, as none proved
 one (the enrolling one is kept; another actor's enrollment keeps none).

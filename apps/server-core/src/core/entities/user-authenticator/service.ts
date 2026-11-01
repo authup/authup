@@ -15,10 +15,11 @@ import {
     EventScope,
     IdentityType,
     PermissionName,
+    SessionAuthMethod,
     UserAuthenticatorKind,
     UserAuthenticatorValidator,
 } from '@authup/core-kit';
-import type { User, UserAuthenticator } from '@authup/core-kit';
+import type { Session, User, UserAuthenticator } from '@authup/core-kit';
 import {
     AuthupError,
     EntityCredentialsInvalidError,
@@ -40,6 +41,7 @@ import type {
     ICache,
     Logger,
 } from '@authup/server-kit';
+import { OAuth2MfaRequiredError } from '@authup/specs';
 import { Secret, TOTP } from 'otpauth';
 import QRCode from 'qrcode';
 import type { AuthenticationResponseJSON, RegistrationResponseJSON } from '@simplewebauthn/server';
@@ -335,9 +337,13 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             );
         }
 
+        if (isSelfEnrollment) {
+            await this.assertSessionProvedFactor(user.id);
+        }
+
         switch (validated.kind) {
             case UserAuthenticatorKind.TOTP: {
-                return this.enrollTotp(user, validated.name ?? null);
+                return this.enrollTotp(user, validated.name ?? null, actor);
             }
             case UserAuthenticatorKind.RECOVERY: {
                 return this.enrollRecovery(user, validated.name ?? null, actor);
@@ -346,7 +352,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
                 return this.enrollEmail(user, validated.name ?? null, actor);
             }
             case UserAuthenticatorKind.WEBAUTHN: {
-                return this.enrollWebauthn(user, validated.name ?? null);
+                return this.enrollWebauthn(user, validated.name ?? null, actor);
             }
             default: {
                 throw new ValidationError(`The authenticator kind ${validated.kind} can not be enrolled yet.`);
@@ -354,7 +360,11 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
     }
 
-    protected async enrollWebauthn(user: User, name: string | null): Promise<UserAuthenticatorEnrollResult> {
+    protected async enrollWebauthn(
+        user: User,
+        name: string | null,
+        actor: ActorContext,
+    ): Promise<UserAuthenticatorEnrollResult> {
         const ctx = this.assertWebauthn();
 
         // exclude already-registered credentials from a fresh ceremony
@@ -373,15 +383,13 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             excludeCredentials,
         );
 
-        let entity = this.repository.create({
+        const entity = await this.withFactorLock(user.id, actor, ({ repository }) => repository.save(repository.create({
             kind: UserAuthenticatorKind.WEBAUTHN,
             name,
             confirmed: false,
             userId: user.id,
             realmId: user.realmId,
-        });
-
-        entity = await this.repository.save(entity);
+        })));
 
         // Key the challenge by the newly created (unconfirmed) row id, NOT the
         // user id — overlapping enrollment ceremonies (a second tab, a retry
@@ -422,34 +430,37 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         // one email factor per user — update the existing marker row in place
         // rather than remove-then-create, so a failed save never leaves the user
         // with no email factor (the row is a pure marker: no secret/codes).
-        const firstFactor = !await this.repository.hasConfirmedByUser(user.id);
-        const existing = (await this.repository.findAllByUser(user.id))
-            .filter((device) => device.kind === UserAuthenticatorKind.EMAIL);
+        const { entity, firstFactor } = await this.withFactorLock(user.id, actor, async ({ repository, firstFactor }) => {
+            const existing = (await repository.findAllByUser(user.id))
+                .filter((device) => device.kind === UserAuthenticatorKind.EMAIL);
 
-        let entity: UserAuthenticator;
+            if (existing.length > 0) {
+                const [primary, ...duplicates] = existing;
 
-        if (existing.length > 0) {
-            const [primary, ...duplicates] = existing;
+                primary.name = name;
+                primary.confirmed = true;
 
-            primary.name = name;
-            primary.confirmed = true;
-            entity = await this.repository.save(primary);
+                const saved = await repository.save(primary);
 
-            // best-effort cleanup of any stray duplicates (invariant anomaly);
-            // a failure here still leaves the primary factor intact.
-            for (const duplicate of duplicates) {
-                await this.repository.remove(duplicate);
+                // cleanup of any stray duplicates (invariant anomaly)
+                for (const duplicate of duplicates) {
+                    await repository.remove(duplicate);
+                }
+
+                return { entity: saved, firstFactor };
             }
-        } else {
-            entity = this.repository.create({
-                kind: UserAuthenticatorKind.EMAIL,
-                name,
-                confirmed: true,
-                userId: user.id,
-                realmId: user.realmId,
-            });
-            entity = await this.repository.save(entity);
-        }
+
+            return {
+                entity: await repository.save(repository.create({
+                    kind: UserAuthenticatorKind.EMAIL,
+                    name,
+                    confirmed: true,
+                    userId: user.id,
+                    realmId: user.realmId,
+                })),
+                firstFactor,
+            };
+        });
 
         await this.recordEvent(EventName.MFA_ENROLLED, entity);
 
@@ -493,7 +504,11 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         return target;
     }
 
-    protected async enrollTotp(user: User, name: string | null): Promise<UserAuthenticatorEnrollResult> {
+    protected async enrollTotp(
+        user: User,
+        name: string | null,
+        actor: ActorContext,
+    ): Promise<UserAuthenticatorEnrollResult> {
         const secret = new Secret({ size: 20 });
         const parameters : UserAuthenticatorTotpParameters = {
             algorithm: USER_AUTHENTICATOR_TOTP_ALGORITHM,
@@ -511,17 +526,17 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         });
         const uri = totp.toString();
 
-        let entity = this.repository.create({
+        const encrypted = await this.cipher.encrypt(secret.base32, user.realmId);
+
+        const entity = await this.withFactorLock(user.id, actor, ({ repository }) => repository.save(repository.create({
             kind: UserAuthenticatorKind.TOTP,
             name,
-            secret: await this.cipher.encrypt(secret.base32, user.realmId),
+            secret: encrypted,
             parameters: JSON.stringify(parameters),
             confirmed: false,
             userId: user.id,
             realmId: user.realmId,
-        });
-
-        entity = await this.repository.save(entity);
+        })));
 
         return {
             data: this.sanitize(entity),
@@ -551,27 +566,30 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         // regenerate semantics: a user holds ONE recovery-code set. Reuse the
         // existing row via a single atomic save instead of delete-then-insert,
         // so a mid-operation failure can never leave the user with no codes.
-        const firstFactor = !await this.repository.hasConfirmedByUser(user.id);
-        const [existing] = await this.repository.findAllWithSecretsByUser(user.id, { kind: UserAuthenticatorKind.RECOVERY });
+        // The codes are hashed above, outside the lock.
+        const { entity, firstFactor } = await this.withFactorLock(user.id, actor, async ({ repository, firstFactor }) => {
+            const [existing] = await repository.findAllWithSecretsByUser(user.id, { kind: UserAuthenticatorKind.RECOVERY });
 
-        let entity : UserAuthenticator;
+            if (existing) {
+                existing.name = name;
+                existing.codes = JSON.stringify(stored);
+                existing.confirmed = true;
 
-        if (existing) {
-            existing.name = name;
-            existing.codes = JSON.stringify(stored);
-            existing.confirmed = true;
-            entity = await this.repository.save(existing);
-        } else {
-            entity = this.repository.create({
-                kind: UserAuthenticatorKind.RECOVERY,
-                name,
-                codes: JSON.stringify(stored),
-                confirmed: true,
-                userId: user.id,
-                realmId: user.realmId,
-            });
-            entity = await this.repository.save(entity);
-        }
+                return { entity: await repository.save(existing), firstFactor };
+            }
+
+            return {
+                entity: await repository.save(repository.create({
+                    kind: UserAuthenticatorKind.RECOVERY,
+                    name,
+                    codes: JSON.stringify(stored),
+                    confirmed: true,
+                    userId: user.id,
+                    realmId: user.realmId,
+                })),
+                firstFactor,
+            };
+        });
 
         await this.recordEvent(EventName.MFA_ENROLLED, entity);
 
@@ -602,6 +620,8 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
                 realm: entity.realmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
+        } else {
+            await this.assertSessionProvedFactor(entity.userId);
         }
 
         if (entity.confirmed) {
@@ -632,15 +652,21 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         await this.resetAttempts(entity.userId);
 
-        const firstFactor = !await this.repository.hasConfirmedByUser(entity.userId);
-
-        entity.confirmed = true;
-
         // The consumed step is tracked only on the login-verify path (below),
         // NOT here — so a legitimate first login in the same window as the
         // confirmation is still accepted; only a repeat of an already-used
         // LOGIN code is rejected.
-        const output = await this.repository.save(entity);
+        const {
+            output, 
+            firstFactor, 
+            changed, 
+        } = await this.confirmLocked(entity, actor, (current) => {
+            current.confirmed = true;
+        });
+
+        if (!changed) {
+            return this.sanitize(output);
+        }
 
         await this.recordEvent(EventName.MFA_ENROLLED, output);
 
@@ -691,15 +717,21 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             throw new EntityCredentialsInvalidError();
         }
 
-        const firstFactor = !await this.repository.hasConfirmedByUser(entity.userId);
+        const {
+            output, 
+            firstFactor, 
+            changed, 
+        } = await this.confirmLocked(entity, actor, (current) => {
+            current.parameters = JSON.stringify(credential);
+            current.confirmed = true;
+        });
 
         await this.resetAttempts(entity.userId);
         await this.cache.drop(cacheKey);
 
-        entity.parameters = JSON.stringify(credential);
-        entity.confirmed = true;
-
-        const output = await this.repository.save(entity);
+        if (!changed) {
+            return this.sanitize(output);
+        }
 
         await this.recordEvent(EventName.MFA_ENROLLED, output);
 
@@ -739,6 +771,118 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
     }
 
+    /**
+     * Once a user holds a confirmed factor, its own factor management must come
+     * from a session that proved one, or a session that outlived the first
+     * factor could replace it. A federated session owes no local factor. A
+     * request without a session is refused: a user Basic credential is
+     * already left anonymous once a factor exists, and every bearer names
+     * its session.
+     */
+    protected async assertSessionProvedFactor(userId: string): Promise<void> {
+        if (!this.options.enabled || !await this.repository.hasConfirmedByUser(userId)) {
+            return;
+        }
+
+        if (!await this.hasRequestSessionProvedFactor(userId)) {
+            throw this.buildFactorRequiredError();
+        }
+    }
+
+    protected buildFactorRequiredError(): OAuth2MfaRequiredError {
+        return new OAuth2MfaRequiredError({ message: 'Complete a second-factor challenge to manage your authenticators.' });
+    }
+
+    protected async hasRequestSessionProvedFactor(userId: string): Promise<boolean> {
+        const session = await this.findRequestSession(userId);
+
+        return !!session && (!!session.mfaAt || session.authMethod === SessionAuthMethod.EXTERNAL);
+    }
+
+    /**
+     * Run a change to the user's factor set under the user's row lock. The
+     * factor read deciding the session guard and the first-factor flag runs
+     * inside it, so a factor confirmed by a concurrent request is seen
+     * before anything is written. The session is read beforehand: it is not
+     * part of the factor state, and no pooled read may run inside the
+     * transaction.
+     */
+    protected async withFactorLock<R>(
+        userId: string,
+        actor: ActorContext,
+        fn: (ctx: { repository: IUserAuthenticatorRepository, firstFactor: boolean }) => Promise<R>,
+    ): Promise<R> {
+        const own = !!actor.identity &&
+            actor.identity.type === IdentityType.USER &&
+            actor.identity.data.id === userId;
+        const guarded = own && !!this.options.enabled;
+        const proved = guarded ? await this.hasRequestSessionProvedFactor(userId) : true;
+
+        return this.repository.withUserLock(userId, async (repository) => {
+            const confirmed = await repository.hasConfirmedByUser(userId);
+
+            if (guarded && confirmed && !proved) {
+                throw this.buildFactorRequiredError();
+            }
+
+            return fn({ repository, firstFactor: !confirmed });
+        });
+    }
+
+    protected async confirmLocked(
+        entity: UserAuthenticator,
+        actor: ActorContext,
+        apply: (current: UserAuthenticator) => void,
+    ): Promise<{
+        output: UserAuthenticator, 
+        firstFactor: boolean, 
+        changed: boolean 
+    }> {
+        return this.withFactorLock(entity.userId, actor, async ({ repository, firstFactor }) => {
+            const current = await repository.findOneById(entity.id);
+
+            if (!current) {
+                throw new EntityNotFoundError();
+            }
+
+            if (current.confirmed) {
+                return {
+                    output: current, 
+                    firstFactor: false, 
+                    changed: false, 
+                };
+            }
+
+            apply(current);
+
+            return {
+                output: await repository.save(current), 
+                firstFactor, 
+                changed: true, 
+            };
+        });
+    }
+
+    protected async findRequestSession(userId: string): Promise<Session | null> {
+        const sessionId = this.requestContext?.()?.sessionId;
+
+        if (!sessionId || !this.sessionManager) {
+            return null;
+        }
+
+        const session = await this.sessionManager.findOneById(sessionId);
+
+        if (
+            !session ||
+            session.subKind !== IdentityType.USER ||
+            session.sub !== userId
+        ) {
+            return null;
+        }
+
+        return session;
+    }
+
     async delete(
         id: string,
         actor: ActorContext,
@@ -753,11 +897,22 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
                 realm: entity.realmId,
                 data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
             });
+        } else {
+            await this.assertSessionProvedFactor(entity.userId);
         }
 
         const { id: entityId } = entity;
 
-        await this.repository.remove(entity);
+        await this.withFactorLock(entity.userId, actor, async ({ repository }) => {
+            const current = await repository.findOneById(entityId);
+
+            if (!current) {
+                throw new EntityNotFoundError();
+            }
+
+            await repository.remove(current);
+        });
+
         entity.id = entityId;
 
         await this.recordEvent(EventName.MFA_REMOVED, entity);

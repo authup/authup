@@ -13,9 +13,10 @@ import {
 } from 'vitest';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import { UserAuthenticatorKind } from '@authup/core-kit';
+import { ErrorCode } from '@authup/errors';
 import { MailInjectionKey } from '../../../../../src/app';
 import { FakeMailClient } from '../../../core/helpers/index.ts';
-import { createFakeUser } from '../../../../utils';
+import { createFakeUser, expectClientError } from '../../../../utils';
 import { createTestApplication } from '../../../../app';
 
 describe('src/http/controllers/user-authenticator (email otp)', () => {
@@ -74,5 +75,48 @@ describe('src/http/controllers/user-authenticator (email otp)', () => {
         });
 
         expect(verified.verified).toBeTruthy();
+    });
+
+    it('requires a session that proved a factor to manage the factors once one is held', async () => {
+        const password = 'email-step-up-user';
+        const { data: user } = await suite.client.user.create(createFakeUser({ password }));
+
+        const login = await suite.client.token.createWithPassword({
+            username: user.name,
+            password,
+        });
+        const bearer = new HTTPClient({ baseURL: suite.baseURL });
+
+        bearer.setAuthorizationHeader({ type: 'Bearer', token: login.access_token });
+
+        const email = await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.EMAIL });
+
+        await expectClientError(
+            () => bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.RECOVERY }),
+            { status: 400, code: ErrorCode.OAUTH_MFA_REQUIRED },
+        );
+        await expectClientError(
+            () => bearer.userAuthenticator.delete('@me', email.data.id),
+            { status: 400, code: ErrorCode.OAUTH_MFA_REQUIRED },
+        );
+
+        mailClient.clear();
+        await bearer.userAuthenticator.sendChallenge({ kind: UserAuthenticatorKind.EMAIL });
+
+        const code = /(\d{6})/.exec(mailClient.sent[0].text ?? '')![1];
+        const verified = await bearer.userAuthenticator.verifyChallenge({
+            kind: UserAuthenticatorKind.EMAIL,
+            response: code,
+        });
+
+        expect(verified.verified).toBeTruthy();
+
+        const recovery = await bearer.userAuthenticator.enroll('@me', { kind: UserAuthenticatorKind.RECOVERY });
+
+        expect(recovery.meta.codes).toHaveLength(10);
+
+        const { data: deleted } = await bearer.userAuthenticator.delete('@me', email.data.id);
+
+        expect(deleted.id).toEqual(email.data.id);
     });
 });
