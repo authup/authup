@@ -44,6 +44,7 @@ function createAuthenticator(
 
     const authenticator = new IdentityProviderLdapAuthenticator({
         provider: {
+            enabled: true,
             protocol: IdentityProviderProtocol.LDAP,
             url: 'ldap://localhost',
             baseDn: 'dc=example,dc=com',

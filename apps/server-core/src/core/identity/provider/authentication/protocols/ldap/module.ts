@@ -86,6 +86,10 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
     }
 
     async authenticate(name: string, password: string) : Promise<User> {
+        if (!this.provider.enabled) {
+            throw new EntityCredentialsInvalidError({ entity: 'user' });
+        }
+
         let bind = await this.safeBind();
 
         if (!bind.success) {
