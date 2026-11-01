@@ -71,3 +71,16 @@ export const AUTHORIZATION_CACHE_KEYS = [
     AUTHORIZATION_DEFINITIONS_CACHE_KEY,
     AUTHORIZATION_GRANT_POLICIES_CACHE_KEY,
 ];
+
+const PRINCIPAL_CACHE_KEY_PREFIXES = [
+    buildCacheKey({ prefix: CachePrefix.CLIENT, key: '' }),
+    buildCacheKey({ prefix: CachePrefix.USER, key: '' }),
+];
+
+/**
+ * The by-id principal reads authentication trusts for `active`, so a fill
+ * that straddles a deactivation must never be served (generation fence).
+ */
+export function isPrincipalCacheKey(identifier: string) : boolean {
+    return PRINCIPAL_CACHE_KEY_PREFIXES.some((prefix) => identifier.startsWith(prefix));
+}
