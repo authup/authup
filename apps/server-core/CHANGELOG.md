@@ -1,5 +1,45 @@
 # Change Log
 
+## [1.0.0-beta.73](https://github.com/authup/authup/compare/v1.0.0-beta.72...v1.0.0-beta.73) (2026-11-01)
+
+
+### ⚠ BREAKING CHANGES
+
+* All Authup packages now require Node.js >=26.0.0.
+
+### Bug Fixes
+
+* **deps:** bump @peculiar/x509 ([#3782](https://github.com/authup/authup/issues/3782)) ([1317de3](https://github.com/authup/authup/commit/1317de3f50aa2f6080daf8df89aa9a9d608c88ec))
+* **deps:** bump the minorandpatch group across 1 directory with 8 updates ([#3776](https://github.com/authup/authup/issues/3776)) ([f527380](https://github.com/authup/authup/commit/f527380156bcc4934b415a77a5f860799de7694e))
+* harden record reach, concurrent updates and factor management ([#3793](https://github.com/authup/authup/issues/3793)) ([a3886da](https://github.com/authup/authup/commit/a3886da794c9ffc93027d6968f341fa30ed02241))
+* **server-core:** harden attribute, policy, stats and MFA authorization ([#3792](https://github.com/authup/authup/issues/3792)) ([3e93fe7](https://github.com/authup/authup/commit/3e93fe76c277b0e7ae107a8c0caad33c2cdfcd3e))
+* **server-core:** reject disabled LDAP identity providers ([#3788](https://github.com/authup/authup/issues/3788)) ([3814878](https://github.com/authup/authup/commit/38148782bb8615eeb255a907bc1a4a936a5ebcef))
+* **server-core:** reject expired sessions during token introspection ([#3789](https://github.com/authup/authup/issues/3789)) ([4eb1136](https://github.com/authup/authup/commit/4eb1136ef3f17676dafe26264df9f9aa2338c2db))
+
+
+### Build System
+
+* require Node.js 26 and upgrade eslint config ([af74365](https://github.com/authup/authup/commit/af74365e779dfac0bdda276bfb77b822f47730fa))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.72 to ^1.0.0-beta.73
+    * @authup/core-http-kit bumped from ^1.0.0-beta.72 to ^1.0.0-beta.73
+    * @authup/core-kit bumped from ^1.0.0-beta.72 to ^1.0.0-beta.73
+    * @authup/errors bumped from ^1.0.0-beta.72 to ^1.0.0-beta.73
+    * @authup/i18n bumped from ^1.0.0-beta.72 to ^1.0.0-beta.73
+    * @authup/kit bumped from ^1.0.0-beta.72 to ^1.0.0-beta.73
+    * @authup/server-config bumped from ^1.0.0-beta.72 to ^1.0.0-beta.73
+    * @authup/server-config-kit bumped from ^1.0.0-beta.72 to ^1.0.0-beta.73
+    * @authup/server-console-kit bumped from ^1.0.0-beta.72 to ^1.0.0-beta.73
+    * @authup/server-kit bumped from ^1.0.0-beta.72 to ^1.0.0-beta.73
+    * @authup/specs bumped from ^1.0.0-beta.72 to ^1.0.0-beta.73
+  * devDependencies
+    * @authup/server-test-kit bumped from ^1.0.0-beta.72 to ^1.0.0-beta.73
+
 ## [1.0.0-beta.72](https://github.com/authup/authup/compare/v1.0.0-beta.71...v1.0.0-beta.72) (2026-10-27)
 
 
