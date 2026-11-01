@@ -686,10 +686,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             throw new EntityCredentialsInvalidError();
         }
 
+        const firstFactor = !await this.repository.hasConfirmedByUser(entity.userId);
+
         await this.resetAttempts(entity.userId);
         await this.cache.drop(cacheKey);
-
-        const firstFactor = !await this.repository.hasConfirmedByUser(entity.userId);
 
         entity.parameters = JSON.stringify(credential);
         entity.confirmed = true;

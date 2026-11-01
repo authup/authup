@@ -34,7 +34,9 @@ otherwise. Review the detached policies after the upgrade.
 - A user's first confirmed second factor (a confirmed TOTP or WebAuthn device, a first
   recovery-code set, an email factor) ends every other session of that user, federated
   sign-ins included, with their refresh tokens and back-channel logout. The session the
-  user enrolled from is kept.
+  user enrolled from is kept. The revocation runs after the factor is saved: if it fails,
+  the failure is logged, the enrollment still succeeds and the other sessions stay valid,
+  so end them through the session API.
 - An email factor an administrator enrolls for a user ends all of that user's sessions.
 - Adding a further factor ends nothing.
 
