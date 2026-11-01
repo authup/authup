@@ -65,6 +65,7 @@
         "test": "npx nx run-many -t test",
         "lint": "eslint --ext .ts ./packages ./apps",
         "lint:fix": "npm run lint -- --fix",
+        "lint:agent-docs": "node scripts/lint-agent-docs.mjs",
         "prepare": "husky"
     },
     "engines": {
