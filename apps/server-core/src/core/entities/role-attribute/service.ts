@@ -12,7 +12,7 @@ import {
     reachesRecordOneOf,
 } from '@authup/access';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
-import { isObject } from '@authup/kit';
+import { ValidatorGroup, isObject } from '@authup/kit';
 import { inArray } from '@rapiq/core';
 import { PermissionName } from '@authup/core-kit';
 import type { RoleAttribute } from '@authup/core-kit';
@@ -22,6 +22,7 @@ import { buildErrorMessageForAttribute } from 'validup';
 import type { IRoleAttributeRepository, IRoleAttributeService } from './types.ts';
 import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
 import { roleAttributeSchema } from './schema.ts';
+import { EntityAttributeValidator } from '../attribute/index.ts';
 
 export type RoleAttributeServiceContext = {
     repository: IRoleAttributeRepository;
@@ -33,9 +34,12 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
     protected reservedNames: ReadonlySet<string>;
 
+    protected validator: EntityAttributeValidator;
+
     constructor(ctx: RoleAttributeServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.validator = new EntityAttributeValidator();
         this.reservedNames = ctx.reservedNames ?? new Set();
     }
 
@@ -162,6 +166,8 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             throw new ValidationError(buildErrorMessageForAttribute('roleId'));
         }
 
+        Object.assign(data, await this.validator.run(data, { group: ValidatorGroup.CREATE }));
+
         await this.repository.validateJoinColumns(data);
 
         if (typeof data.name === 'string' && this.reservedNames.has(data.name)) {
@@ -174,7 +180,12 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         data.realmId = data.role.realmId;
 
-        const entity = this.repository.create(data);
+        const entity = this.repository.create({
+            name: data.name,
+            value: data.value,
+            roleId: data.roleId,
+            realmId: data.realmId,
+        });
 
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.ROLE_UPDATE,
@@ -194,6 +205,8 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
     ): Promise<RoleAttribute> {
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_UPDATE });
 
+        Object.assign(data, await this.validator.run(data, { group: ValidatorGroup.UPDATE }));
+
         await this.repository.validateJoinColumns(data);
 
         if (typeof data.name === 'string' && this.reservedNames.has(data.name)) {
@@ -206,18 +219,25 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             throw new EntityNotFoundError();
         }
 
-        // An attribute belongs to a fixed role; its owner (and the role-derived realmId) is
-        // IMMUTABLE on update — strip both from the body. This blocks reassigning the attribute
-        // to another role (which would otherwise be authorized against the new realm, not the
-        // one the attribute currently lives in) and blocks a caller-supplied realmId that would
-        // gate ROLE_UPDATE against a realm of their choosing. To move an attribute, delete + recreate.
-        delete data.roleId;
-        delete data.role;
-        delete data.realmId;
-
+        // Only the name and value are writable: the id, the owner and the
+        // role-derived realmId are IMMUTABLE on update. A new owner would be
+        // authorized against its realm instead of the stored one, a body
+        // realmId would pick the realm ROLE_UPDATE is gated against, and a
+        // body id would retarget the save onto another row. To move an
+        // attribute, delete + recreate.
         const current = { [entity.name]: entity.value };
 
-        entity = this.repository.merge(entity, data);
+        const patch: Partial<RoleAttribute> = {};
+
+        if (typeof data.name !== 'undefined') {
+            patch.name = data.name;
+        }
+
+        if (typeof data.value !== 'undefined') {
+            patch.value = data.value;
+        }
+
+        entity = this.repository.merge(entity, patch);
 
         const realmId = entity.realmId ?? null;
 

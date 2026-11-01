@@ -45,7 +45,12 @@ has no subscriber (not cached, not realtime).
 plus provisioning material, `POST .../:deviceId/confirm` with a valid code
 confirms it. Only confirmed devices satisfy challenges. Own devices are
 ungated; others' need `USER_AUTHENTICATOR_*` with per-row record checks. A
-foreign device id under another user's route is 404.
+foreign device id under another user's route is 404. The first confirmed
+factor revokes the user's other sessions, federated ones too, as none proved
+one (the enrolling one is kept; another actor's enrollment keeps none).
+A session that revocation's listing misses (inserted by a password grant or
+a session-less code redemption that decided before the factor was stored) is
+re-checked after its insert (`revokeIfSecondFactorOwed`) and refused.
 
 **Enrolling FOR another user is email only, for every actor** (`ValidationError`
 otherwise). Every other kind would let the enroller hold the factor: TOTP and

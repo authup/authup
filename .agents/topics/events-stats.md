@@ -44,9 +44,9 @@ Cross-entity statistics would get a root `GET /stats/<name>`; none exists.
   the caller's `lt`/`lte` or the read instant. A route realm
   (`/realms/:realmId/...`) is appended as a condition, which makes some
   statistics narrower than their list (accepted: narrower cannot disclose).
-- **`meta.total`** drops only the TOP-LEVEL range conjuncts on the date column
-  (`stripWindowConditions`); a range nested in an `or` stays. It is cached
-  under that stripped query alone, so switching window or unit reuses it.
+- **`meta.total`** drops the caller's window (its TOP-LEVEL date-column
+  ranges; one nested in an `or` stays) BEFORE the gate, so a gate's range
+  stays. Cached under that query alone, so a new window or unit reuses it.
   "Active sessions" is the session total under `filter[expiresAt]=>now`.
 - **Cache.** `STATS_CACHE_TTL` (60s), keyed by statistic, actor, rollup
   routing and the encoded LOWERED query, taken BEFORE an open window's upper

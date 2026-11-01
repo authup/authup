@@ -863,7 +863,10 @@ export class HTTPControllerModule {
             container.resolve<Repository<RoleAttribute>>(RoleAttributeEntity),
         );
         const reservedNames = new Set(
-            dataSource.getMetadata(RoleEntity).columns.map((c) => c.propertyName),
+            [
+                ...dataSource.getMetadata(RoleEntity).columns.map((c) => c.propertyName),
+                ...dataSource.getMetadata(RoleEntity).relations.map((r) => r.propertyName),
+            ],
         );
         const service = new RoleAttributeService({ repository, reservedNames });
 
@@ -1113,6 +1116,8 @@ export class HTTPControllerModule {
             cipher: container.resolve(OAuth2InjectionToken.RealmCipher),
             eventService: container.resolve(DatabaseInjectionKey.EventService),
             requestContext: useRequestEventContext,
+            sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
+            logger: container.resolve(LoggerInjectionKey),
             mailClient: container.resolve(MailInjectionKey),
             mailTemplateRenderer: container.resolve(MailTemplateRendererInjectionKey),
             options: {
@@ -1276,7 +1281,10 @@ export class HTTPControllerModule {
             container.resolve<Repository<UserAttribute>>(UserAttributeEntity),
         );
         const reservedNames = new Set(
-            dataSource.getMetadata(UserEntity).columns.map((c) => c.propertyName),
+            [
+                ...dataSource.getMetadata(UserEntity).columns.map((c) => c.propertyName),
+                ...dataSource.getMetadata(UserEntity).relations.map((r) => r.propertyName),
+            ],
         );
         const service = new UserAttributeService({ repository, reservedNames });
 

@@ -160,24 +160,40 @@ export function isPastRawHorizon(window: StatsWindow, horizonDays: number | unde
     return new Date(window.from) < snap(new Date(now.getTime() - (horizonDays * DAY_IN_MS)), unit);
 }
 
-/**
- * The record query behind a grouped one, without its top-level range
- * conditions on the date column (the window). A range nested in an `or`
- * stays, so it keeps narrowing. Groups and aggregates are dropped: what is
- * left counts rows.
- */
-export function stripWindowConditions(query: IQuery, dateColumn: string): Query {
-    const conjuncts = readConjuncts(query.filters).filter(
-        (condition) => !isRangeCondition(
-            condition,
-            dateColumn,
-            [...LOWER_BOUND_OPERATORS, ...UPPER_BOUND_OPERATORS],
-        ),
-    );
+function isWindowCondition(condition: ICondition, dateColumn: string): boolean {
+    return isRangeCondition(condition, dateColumn, [...LOWER_BOUND_OPERATORS, ...UPPER_BOUND_OPERATORS]);
+}
 
+/**
+ * A grouped query split into its window (the top-level range conditions on
+ * the date column) and the query without it, groups and aggregates kept. A
+ * range nested in an `or` is not part of the window.
+ */
+export function splitWindowConditions(query: IQuery, dateColumn: string): { query: Query, window: ICondition[] } {
+    const conjuncts = readConjuncts(query.filters);
+
+    return {
+        query: new Query({
+            fields: query.fields,
+            filters: new Filters('and', conjuncts.filter((condition) => !isWindowCondition(condition, dateColumn))),
+            relations: query.relations,
+            pagination: query.pagination,
+            sorts: query.sorts,
+            groups: query.groups,
+            aggregates: query.aggregates,
+        }),
+        window: conjuncts.filter((condition) => isWindowCondition(condition, dateColumn)),
+    };
+}
+
+/**
+ * The record query behind a grouped one: groups and aggregates dropped,
+ * what is left counts rows.
+ */
+export function readRecordQuery(query: IQuery): Query {
     return new Query({
         fields: query.fields,
-        filters: new Filters('and', conjuncts),
+        filters: query.filters,
         relations: query.relations,
         pagination: query.pagination,
         sorts: query.sorts,
