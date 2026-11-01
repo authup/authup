@@ -107,6 +107,22 @@ describe('src/http/controllers/policy (parent authority)', () => {
         await repository.save(child);
     }
 
+    async function unplant(childId: string) {
+        const dataSource = suite.container.resolve(DatabaseInjectionKey.DataSource);
+        const repository = dataSource.getTreeRepository(PolicyEntity);
+
+        const child = await repository.findOneBy({ id: childId });
+
+        if (!(child && child.parentId)) {
+            return;
+        }
+
+        child.parent = null;
+        child.parentId = null;
+
+        await repository.save(child);
+    }
+
     it('should refuse attaching a child to a built-in parent without authority over it', async () => {
         await expectClientError(
             () => realmAdmin.policy.create(createFakeTimePolicy({
@@ -151,25 +167,32 @@ describe('src/http/controllers/policy (parent authority)', () => {
     });
 
     it('should let the root admin detach a planted child from a built-in parent', async () => {
-        const { data: child } = await suite.client.policy.create(createFakeTimePolicy({
+        // a time policy without a window restricts nothing, so planting it
+        // under system.default leaves every other evaluation untouched
+        const { data: child } = await suite.client.policy.create({
             name: `parent-authority-planted-${RUN}`,
+            type: BuiltInPolicyType.TIME,
             realmId: realmBId,
-        }));
+        });
 
         await plant(child.id, systemDefaultId);
 
-        await expectClientError(
-            () => realmAdmin.policy.update(child.id, { parentId: null }),
-            { status: 403 },
-        );
+        try {
+            await expectClientError(
+                () => realmAdmin.policy.update(child.id, { parentId: null }),
+                { status: 403 },
+            );
 
-        const { data: updated } = await suite.client.policy.update(child.id, { parentId: null });
+            const { data: updated } = await suite.client.policy.update(child.id, { parentId: null });
 
-        expect(updated.parentId).toBeNull();
+            expect(updated.parentId).toBeNull();
 
-        const { data: systemDefault } = await suite.client.policy.getOne(systemDefaultId);
+            const { data: systemDefault } = await suite.client.policy.getOne(systemDefaultId);
 
-        expect(systemDefault.builtIn).toBe(true);
+            expect(systemDefault.builtIn).toBe(true);
+        } finally {
+            await unplant(child.id);
+        }
     });
 
     it('should refuse deleting an own policy placed under a global composite', async () => {
