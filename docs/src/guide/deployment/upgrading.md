@@ -53,6 +53,20 @@ A password-reset link mailed before the user's password or email address changed
 works. Changing the password through the API or a console, or changing the address (an
 identity provider's attribute sync included), clears the pending reset code. Request a new link if one is still needed.
 
+### An included relation follows the reader's reach of that entity
+
+A related row joined onto a response (`include=role`, `include=accessPolicy`, or a
+`fields[relation]` projection) is now checked against the reader's own read access to that
+entity, as if it were read on its own route. When the reader may list the parent row but
+not that related row, for example a role of another realm or a global row under an `own`
+grant, the relation is left out and the parent row is returned with its reference column (`roleId`) only.
+Readers with unrestricted access see no change. A sparse `fields[relation]` list is checked
+against the whole related row and still answers with the requested columns only.
+
+A filter or sort key through such a relation (`filter[role.name]`, `sort=user.name`) is
+ignored for a restricted reader, and refused with 400 on a bulk delete
+(`DELETE /sessions`). Filter on the reference column (`roleId`, `userId`) instead.
+
 ## Next release (after v1.0.0-beta.71)
 
 ### `POST /authorization/check` answers realm- and client-owned permissions

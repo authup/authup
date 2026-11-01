@@ -95,7 +95,7 @@ import type {
     UserAuthenticatorWebauthnParameters,
 } from './types.ts';
 import type { WebauthnContext } from './webauthn.ts';
-import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery, redactUnreachedRelations } from '../../query/index.ts';
 import { userAuthenticatorSchema } from './schema.ts';
 
 type EmailCodeState = {
@@ -227,7 +227,12 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             const { data, meta } = await this.repository.findMany(scoped, findManyOptions);
 
             return {
-                data: data.map((entity) => this.sanitize(entity)),
+                data: await redactUnreachedRelations(
+                    data.map((entity) => this.sanitize(entity)),
+                    scoped,
+                    userAuthenticatorSchema,
+                    actor,
+                ),
                 meta,
             };
         }
@@ -263,7 +268,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
 
         return {
-            data,
+            data: await redactUnreachedRelations(data, parsed, userAuthenticatorSchema, actor),
             meta: {
                 ...meta,
                 total,

@@ -25,7 +25,7 @@ import { applyJunctionCreateGrant, buildJunctionUpdateData } from '../../identit
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
 import type { IRolePermissionRepository, IRolePermissionService } from './types.ts';
-import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery, redactUnreachedRelations } from '../../query/index.ts';
 import { rolePermissionSchema } from './schema.ts';
 
 const READ_PERMISSION_NAMES = [
@@ -82,7 +82,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
         const { data: entities, meta } = await this.repository.findMany(parsed);
 
         if (compiled.verdict !== 'post') {
-            return { data: entities, meta };
+            return { data: await redactUnreachedRelations(entities, parsed, rolePermissionSchema, actor), meta };
         }
 
         const data: RolePermission[] = [];
@@ -104,7 +104,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
             data.push(entity);
         }
 
-        return { data, meta: { ...meta, total } };
+        return { data: await redactUnreachedRelations(data, parsed, rolePermissionSchema, actor), meta: { ...meta, total } };
     }
 
     async getOne(

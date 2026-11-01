@@ -36,7 +36,7 @@ import { isRealmCipherBlob, isRealmCipherBlobError } from '../../key/index.ts';
 import type { IRealmCipher } from '../../key/index.ts';
 import type { ClientSecretRotateResult, IClientRepository, IClientService } from './types.ts';
 import { CLIENT_READ_PERMISSIONS } from './constants.ts';
-import { decodeQuery, scopeReadQuery } from '../../query/index.ts';
+import { decodeQuery, redactUnreachedRelations, scopeReadQuery } from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { clientSchema } from './schema.ts';
 import { assertRowUnchanged, retryOnStaleRow } from '../stale-row/index.ts';
@@ -140,6 +140,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
             }
         }
 
+        await redactUnreachedRelations(data, scope.query, clientSchema, actor);
         await Promise.all(data.map((entity) => this.revealSecret(entity)));
 
         return { data, meta: { ...meta, total } };
@@ -162,15 +163,12 @@ export class ClientService extends AbstractEntityService implements IClientServi
             await actor.permissionEvaluator.preEvaluateOneOf({ name: CLIENT_READ_PERMISSIONS });
         }
 
-        const entity = await this.repository.findOne(
-            idOrName,
-            await decodeQuery(query, {
-                schema: clientSchema,
-                parameters: ['fields', 'relations'],
-                actor,
-            }),
-            realmId,
-        );
+        const parsed = await decodeQuery(query, {
+            schema: clientSchema,
+            parameters: ['fields', 'relations'],
+            actor,
+        });
+        const entity = await this.repository.findOne(idOrName, parsed, realmId);
 
         if (!entity) {
             throw new EntityNotFoundError();
@@ -191,6 +189,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
             });
         }
 
+        await redactUnreachedRelations([entity], parsed, clientSchema, actor);
         await this.revealSecret(entity);
 
         return entity;

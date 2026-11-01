@@ -20,7 +20,7 @@ import { buildErrorMessageForAttribute } from 'validup';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { IUserAttributeRepository, IUserAttributeService } from './types.ts';
-import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery, redactUnreachedRelations } from '../../query/index.ts';
 import { assertPreferenceValue } from './preferences.ts';
 import { userAttributeSchema } from './schema.ts';
 import { EntityAttributeValidator } from '../attribute/index.ts';
@@ -81,7 +81,9 @@ export class UserAttributeService extends AbstractEntityService implements IUser
                 );
             }
 
-            return this.repository.findMany(scoped);
+            const result = await this.repository.findMany(scoped);
+
+            return { ...result, data: await redactUnreachedRelations(result.data, scoped, userAttributeSchema, actor) };
         }
 
         const {
@@ -103,7 +105,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         }
 
         return {
-            data,
+            data: await redactUnreachedRelations(data, parsed, userAttributeSchema, actor),
             meta: {
                 ...meta,
                 total,

@@ -19,7 +19,7 @@ import type { ClientScope } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
 import type { IClientScopeRepository, IClientScopeService } from './types.ts';
-import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery, redactUnreachedRelations } from '../../query/index.ts';
 import { clientScopeSchema } from './schema.ts';
 
 const READ_PERMISSION_NAMES = [
@@ -70,7 +70,7 @@ export class ClientScopeService extends JunctionEntityService implements IClient
         const { data: entities, meta } = await this.repository.findMany(parsed);
 
         if (compiled.verdict !== 'post') {
-            return { data: entities, meta };
+            return { data: await redactUnreachedRelations(entities, parsed, clientScopeSchema, actor), meta };
         }
 
         const data: ClientScope[] = [];
@@ -92,7 +92,7 @@ export class ClientScopeService extends JunctionEntityService implements IClient
             data.push(entity);
         }
 
-        return { data, meta: { ...meta, total } };
+        return { data: await redactUnreachedRelations(data, parsed, clientScopeSchema, actor), meta: { ...meta, total } };
     }
 
     async getOne(

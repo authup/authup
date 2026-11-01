@@ -21,7 +21,7 @@ import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/serv
 import { JunctionEntityService } from '@authup/server-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { IClientRoleRepository, IClientRoleService } from './types.ts';
-import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery, redactUnreachedRelations } from '../../query/index.ts';
 import { clientRoleSchema } from './schema.ts';
 
 const READ_PERMISSION_NAMES = [
@@ -75,7 +75,7 @@ export class ClientRoleService extends JunctionEntityService implements IClientR
         const { data: entities, meta } = await this.repository.findMany(parsed);
 
         if (compiled.verdict !== 'post') {
-            return { data: entities, meta };
+            return { data: await redactUnreachedRelations(entities, parsed, clientRoleSchema, actor), meta };
         }
 
         const data: ClientRole[] = [];
@@ -97,7 +97,7 @@ export class ClientRoleService extends JunctionEntityService implements IClientR
             data.push(entity);
         }
 
-        return { data, meta: { ...meta, total } };
+        return { data: await redactUnreachedRelations(data, parsed, clientRoleSchema, actor), meta: { ...meta, total } };
     }
 
     async getOne(

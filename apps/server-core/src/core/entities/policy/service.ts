@@ -30,7 +30,7 @@ import type { IRealmRepository } from '../realm/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import { PolicyAttributesValidator } from './attributes-validator.ts';
 import type { IPolicyRepository, IPolicyService } from './types.ts';
-import { decodeQuery, scopeReadQuery } from '../../query/index.ts';
+import { decodeQuery, redactUnreachedRelations, scopeReadQuery } from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { policySchema } from './schema.ts';
 
@@ -84,7 +84,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         const { data: entities, meta } = await this.repository.findMany(scope.query);
 
         if (!scope.post) {
-            return { data: entities, meta };
+            return { data: await redactUnreachedRelations(entities, parsed, policySchema, actor), meta };
         }
 
         const data: Policy[] = [];
@@ -107,7 +107,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         }
 
         return {
-            data,
+            data: await redactUnreachedRelations(data, parsed, policySchema, actor),
             meta: {
                 ...meta,
                 total,

@@ -19,7 +19,7 @@ import type { PermissionPolicy } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
 import type { IPermissionPolicyRepository, IPermissionPolicyService } from './types.ts';
-import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
+import { appendQueryConditions, decodeQuery, redactUnreachedRelations } from '../../query/index.ts';
 import { permissionPolicySchema } from './schema.ts';
 import { isRealmReachable } from '../realm/helpers.ts';
 
@@ -69,7 +69,7 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
         const { data: entities, meta } = await this.repository.findMany(parsed);
 
         if (compiled.verdict !== 'post') {
-            return { data: entities, meta };
+            return { data: await redactUnreachedRelations(entities, parsed, permissionPolicySchema, actor), meta };
         }
 
         const data: PermissionPolicy[] = [];
@@ -91,7 +91,7 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
             data.push(entity);
         }
 
-        return { data, meta: { ...meta, total } };
+        return { data: await redactUnreachedRelations(data, parsed, permissionPolicySchema, actor), meta: { ...meta, total } };
     }
 
     async getOne(

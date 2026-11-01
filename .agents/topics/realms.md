@@ -41,11 +41,9 @@ per-row drop loop on `post`. `getOne` runs `evaluateRecordOneOf` with the row's
 - `own` excludes null, and every built-in row is global, so a role holding
   `<E>_READ` at the junction default `own` sees no global rows. That is why
   `realm_admin` holds these reads at `ownOrNull`.
-- The member side of junctions stays ungated: a realm-scoped member bound onto
-  a GLOBAL owner (`role-permission.roleRealmId` or
-  `permission-policy.permissionRealmId` null) still surfaces through
-  `include=` for an `ownOrNull` reader. Only an `any` actor can create that
-  binding; closing it needs a reach-aware include gate.
+- The member side of a junction is gated per joined row by
+  `redactUnreachedRelations` (topics/query.md -> *Include authorization*), not
+  by the owner key.
 - The shape is repeated per service on purpose: core services cannot import
   the repository helpers, and several OR an ownership term in.
 
