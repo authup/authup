@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.0.0-beta.73](https://github.com/authup/authup/compare/v1.0.0-beta.72...v1.0.0-beta.73) (2026-11-01)
+
+
+### ⚠ BREAKING CHANGES
+
+* All Authup packages now require Node.js >=26.0.0.
+
+### Bug Fixes
+
+* **deps:** bump @nuxt/nitro-server and nuxt ([#3786](https://github.com/authup/authup/issues/3786)) ([2015c31](https://github.com/authup/authup/commit/2015c31daaacf1217311be8a817aeff8072ef696))
+* **deps:** bump the minorandpatch group with 4 updates ([#3783](https://github.com/authup/authup/issues/3783)) ([3194b6d](https://github.com/authup/authup/commit/3194b6da88b8552c9d4b66eec8c782197021f832))
+
+
+### Build System
+
+* require Node.js 26 and upgrade eslint config ([af74365](https://github.com/authup/authup/commit/af74365e779dfac0bdda276bfb77b822f47730fa))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.72 to ^1.0.0-beta.73
+    * @authup/client-web-kit bumped from ^1.0.0-beta.72 to ^1.0.0-beta.73
+    * @authup/core-http-kit bumped from ^1.0.0-beta.72 to ^1.0.0-beta.73
+    * @authup/kit bumped from ^1.0.0-beta.72 to ^1.0.0-beta.73
+
 ## [1.0.0-beta.72](https://github.com/authup/authup/compare/v1.0.0-beta.71...v1.0.0-beta.72) (2026-10-27)
 
 

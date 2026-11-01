@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-adapter-node",
     "type": "module",
-    "version": "1.0.0-beta.72",
+    "version": "1.0.0-beta.73",
     "description": "Authenticate Node http and Express requests with Authup access tokens.",
     "exports": {
         "./package.json": "./package.json",
@@ -53,10 +53,10 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/server-adapter-kit": "^1.0.0-beta.72"
+        "@authup/server-adapter-kit": "^1.0.0-beta.73"
     },
     "devDependencies": {
-        "@authup/errors": "^1.0.0-beta.72",
+        "@authup/errors": "^1.0.0-beta.73",
         "vitest": "^5.0.3"
     },
     "publishConfig": {
