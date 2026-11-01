@@ -326,18 +326,11 @@ there are no render-function builders (`buildForm*`, `buildList`) (#3139).
   wrapper, so both keys are routinely PRESENT and `undefined`, which an
   `in` test would read as supplied and use to wipe the retained sorts.
   Supplying both with values throws `KEY_AMBIGUOUS` at desugaring, before
-  either check runs. Pinned by *a load carrying %s replaces the retained
-  sorts* (parameterized over the two spellings) and *a load carrying only
-  undefined sort spellings keeps the retained sorts* in
-  `entity-collection.spec.ts`. Since rapiq **beta.19** (tada5hi/rapiq#890)
+  either check runs. Since rapiq **beta.19** (tada5hi/rapiq#890)
   filter merging is conjunctive, so the plain `mergeQueries` result guarantees
   that a scope cannot be displaced by a search or sort load and that compound
   trees (`or(...)`) survive as conjuncts. Filters therefore need no carve-out
-  and no hand-rolled AND injection. Pinned by *search input cannot displace the
-  injected scope* and *composes context query and props query, both
-  non-displaceable* in `entity-collection.spec.ts`. The latter still
-  asserts the pre-refactor filter string; the former's search term is now
-  the multi-field OR below, and its AND composition is unchanged. The
+  and no hand-rolled AND injection. The
   `queryFilters` context hook may return an `ICondition`
   (`or(contains('name', q), contains('displayName', q))`) or a legacy
   filters record. **`ASearch` passes the raw search text as a bare
@@ -357,7 +350,7 @@ there are no render-function builders (`buildForm*`, `buildList`) (#3139).
   answers an unknown one with `keyNotAllowed` (400) rather than pruning
   it, so an entry a schema does not allow turns search into a failed
   request instead of a narrower one. The server half of that contract is
-  pinned by `test/unit/core/query/console-search-surface.spec.ts`, which
+  guarded by `test/unit/core/query/console-search-surface.spec.ts`, which
   states the eight entities and their fields outright and fails when one
   stops being filterable. The sibling `indexed-invariant.spec.ts` cannot
   serve that role: it DERIVES its search shape from the allow-list
@@ -385,8 +378,6 @@ there are no render-function builders (`buildForm*`, `buildList`) (#3139).
   property of the manager rather than caller discipline, because a per-caller
   reset is the thing that gets forgotten. Neither `ASearch` nor a page passes
   `pagination: { offset: 0 }`.
-  Pinned by
-  `test/unit/components/utility/entity-collection.spec.ts`.
   **Initial load & the SSR handoff (issue #2773):** see
   *SSR data handoff* below.
 - **Pagination**: `<APagination>`
@@ -470,8 +461,7 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   layer the kit's server path is **write-only**: `useHydratedValue` returns
   before its read, and the collection manager's server branch never adopts (it
   is the producer), so a mis-wired host store can waste a write but cannot leak
-  across users. Pinned by *never adopts an existing entry while rendering on
-  the server* in `entity-collection-hydration.spec.ts`. The payload is exactly
+  across users. The payload is exactly
   as sensitive as the HTML it travels in, so an authenticated page must never
   be served from a shared cache (no `swr` / `isr` route rules).
 - **The admin console does not participate.** It is a

@@ -63,7 +63,7 @@ breakage. **They are not a changelog, a design record or a test index.**
 | A cross-cutting rule or an easy-to-break invariant, its reason, and the rejected alternative | One line in a core file, with the issue number |
 | A subsystem's invariants and rejected alternatives | Its topic file |
 | Mechanism the code already shows | Nowhere, or a code comment |
-| How a defect happened, before/after, "pinned by spec X" | The PR description or commit message |
+| How a defect happened, before/after, `pinned by spec X` | The PR description or commit message |
 | What changed for operators | CHANGELOG or `docs/src/guide/deployment/upgrading.md` |
 
 The test for a paragraph: would removing it let a reasonable change break
@@ -74,16 +74,15 @@ something silently? If not, leave it out.
   the existing line; never add a section for a single fix.
 - **Never cite a plan** (`plan 078`, `D2-3`, `Stage B`): `.agents/plans/` is
   gitignored. Cite the issue or PR number.
-- **Describe what the code does now.** No "used to", "no longer", "before #N".
+- **Describe what the code does now.** No `used to`, `no longer`, `before #N`.
   The one exception is a rejected alternative: keep the verdict and its
   one-line reason.
-- **`npm run lint:agent-docs` enforces it.** Every file has a byte budget and a
-  history-phrase budget in `.agents/budget.json` (CI fails above either).
-  Budgets only go down: run `node scripts/lint-agent-docs.mjs --update` after
-  shortening a file (it keeps about 5% headroom), and never raise one to make
-  room. On a pull request CI compares the budgets with the base branch and
-  fails on any rise. A new topic file needs a budget entry of at most
-  `newTopicBytes`.
+- **`npm run lint` enforces it** through the `agentDocs` checks of
+  `@tada5hi/eslint-config`: a size limit per agent doc, a limit on everything
+  `CLAUDE.md` loads through its imports, and no history phrase outside code
+  (`used to`, `no longer`, `before #N`, `pinned by`, `plan NNN`). The limits
+  live in `eslint.config.js`: lower them as the docs shrink, and treat raising
+  one as a policy change, not a fix. `.agents/plans/` is not linted.
 
 ## Commits, Issues & Pull Requests
 
