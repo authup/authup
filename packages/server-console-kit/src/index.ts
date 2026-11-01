@@ -6,6 +6,7 @@
  */
 
 export * from './application/index';
+export * from './assets';
 export * from './constants';
 export * from './html';
 export * from './static-console';

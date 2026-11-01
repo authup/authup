@@ -9,6 +9,7 @@ import { getURLBasePath } from '@authup/kit';
 import type { IThemeProvider } from '@authup/server-console-kit';
 import {
     THEME_ASSET_MOUNT_PATH,
+    createAssetPathGuard,
     createThemeAssetsHandler,
     createThemeProvider,
     defineStaticConsole,
@@ -122,8 +123,11 @@ export async function createHandler(
     const distPath = staticConsole.resolveDistPath();
 
     if (distPath) {
+        const assetsPath = path.posix.join(distPath, 'assets');
+
+        app.use(ASSETS_PATH, createAssetPathGuard(assetsPath));
         app.use(ASSETS_PATH, createAssetsHandler(
-            path.posix.join(distPath, 'assets'),
+            assetsPath,
             {
                 fallthrough: false,
                 scan: false,

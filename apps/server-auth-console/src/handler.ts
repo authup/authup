@@ -8,6 +8,7 @@
 import type { IThemeProvider } from '@authup/server-console-kit';
 import {
     THEME_ASSET_MOUNT_PATH,
+    createAssetPathGuard,
     createThemeAssetsHandler,
     createThemeProvider,
 } from '@authup/server-console-kit';
@@ -162,8 +163,11 @@ export async function createHandler(
         }
 
         // Every name carries a content hash, so a new build means new names.
+        const assetsPath = path.posix.join(distPath, 'client', 'assets');
+
+        app.use(ASSETS_PATH, createAssetPathGuard(assetsPath));
         app.use(ASSETS_PATH, createAssetsHandler(
-            path.posix.join(distPath, 'client', 'assets'),
+            assetsPath,
             {
                 fallthrough: false,
                 scan: false,
