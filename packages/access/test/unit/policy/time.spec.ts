@@ -44,6 +44,44 @@ describe('src/policy/time', () => {
             .toBeFalsy();
     });
 
+    it.each(['weekly', 'monthly', 'yearly'] as const)('should enforce Sunday for %s intervals', async (interval) => {
+        const evaluator = new TimePolicyEvaluator();
+
+        for (let day = 0; day < 7; day++) {
+            const time = new Date(2024, 3, 21 + day, 12);
+
+            for (const invert of [false, true]) {
+                const outcome = await evaluator.evaluate(
+                    {
+                        interval,
+                        dayOfWeek: 0,
+                        invert,
+                    },
+                    definePolicyEvaluationContext({ data: new PolicyData({ [BuiltInPolicyType.TIME]: time }) }),
+                );
+
+                expect(outcome.success).toBe(invert ? day !== 0 : day === 0);
+            }
+        }
+    });
+
+    it.each(['{"interval":"weekly","dayOfWeek":null}', '{"interval":"weekly"}'])(
+        'should leave weekday unrestricted for %s',
+        async (input) => {
+            const evaluator = new TimePolicyEvaluator();
+
+            for (const invert of [false, true]) {
+                const policy = await new TimePolicyValidator().run({ ...JSON.parse(input), invert });
+                const outcome = await evaluator.evaluate(
+                    policy,
+                    definePolicyEvaluationContext({ data: new PolicyData({ [BuiltInPolicyType.TIME]: new Date(2024, 3, 22, 12) }) }),
+                );
+
+                expect(outcome.success).toBe(!invert);
+            }
+        },
+    );
+
     it('should parse options', async () => {
         const validator = new TimePolicyValidator();
         const output = await validator.run({

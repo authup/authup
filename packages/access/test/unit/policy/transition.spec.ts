@@ -226,6 +226,42 @@ describe('src/policy (clock transitions)', () => {
         expect(collector.next).toEqual(at(8));
     });
 
+    it.each([false, true])('should enforce Sunday across midnight with invert=%s', async (invert) => {
+        const evaluator = new PermissionEvaluator({
+            provider: new PermissionMemoryProvider([
+                {
+                    permission: { name: 'sunday_only' },
+                    policies: [definePolicyWithType(BuiltInPolicyType.TIME, {
+                        interval: 'weekly',
+                        dayOfWeek: 0,
+                        invert,
+                    })],
+                },
+            ]),
+            policyEngine: new PolicyEngine(PolicyDefaultEvaluators),
+        });
+
+        for (const day of [20, 21, 22]) {
+            vi.setSystemTime(new Date(2024, 3, day));
+
+            for (const method of ['evaluate', 'preEvaluate'] as const) {
+                const collector = createPolicyTransitionCollector();
+                const result = evaluator[method]({
+                    name: 'sunday_only',
+                    options: { transitions: collector },
+                });
+
+                if (invert ? day !== 21 : day === 21) {
+                    await expect(result).resolves.toBeUndefined();
+                } else {
+                    await expect(result).rejects.toThrow();
+                }
+
+                expect(collector.next).toEqual(new Date(2024, 3, day + 1));
+            }
+        }
+    });
+
     it('should reach a clock policy through the permission evaluator', async () => {
         vi.setSystemTime(at(6));
 
