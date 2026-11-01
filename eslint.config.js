@@ -20,7 +20,6 @@ export default eslintConfig(
         },
     },
     {
-        files: ['**/*.{js,mjs,cjs,ts,mts,cts,tsx,vue}'],
         rules: {
             '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
             '@typescript-eslint/no-use-before-define': 'off',
