@@ -10,8 +10,9 @@ either requires operator action or deliberately changes behavior.
 ### `@authup/client-web-kit` normalizes `cookiePath` and skips the shadow cleanup for host cookie functions
 
 The store writes and clears its cookies on `cookiePath` with a leading `/` and without a
-trailing `/`: a `cookiePath` of `/ui/` is written as `/ui`. On install, the copies left on the
-raw `/ui/` are cleared once.
+trailing `/`: a `cookiePath` of `/ui/` is written as `/ui`. When the kit writes the cookies
+itself, the session left on the raw `/ui/` is cleared on the first load after the upgrade, so
+each browser signs in once more.
 
 The install-time cleanup of store cookies on other paths (the copies written before the path
 was pinned) now runs only when the kit writes the cookies itself. A host passing `cookieSet` or
