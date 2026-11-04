@@ -15,7 +15,8 @@ import type {
     CookieSetFn,
     CookieUnsetFn,
 } from '../../types';
-import { COOKIE_PATH, STORE_ID } from './constants';
+import { STORE_ID } from './constants';
+import { buildShadowingCookiePaths, normalizeCookiePath } from './cookie-path';
 import { createStore } from './create';
 import { StoreDispatcherEventName, createStoreDispatcher, provideStoreDispatcher } from './dispatcher';
 import { hasStoreFactory, provideStoreFactory } from './singleton';
@@ -81,7 +82,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
     // account console at `/console/account` and the hosted auth pages at `/` are one
     // origin sharing one session under one set of cookie names, so the
     // implicit paths gave them two shadowing sets that expire independently.
-    const cookiePath = options.cookiePath || COOKIE_PATH;
+    const cookiePath = normalizeCookiePath(options.cookiePath);
 
     // The stored values are bearer credentials, so an https document never
     // lets them ride a plaintext request to the same host. A server render has
@@ -112,10 +113,23 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
      * prefix of the current path PLUS that path itself. The last part is not
      * redundant: `/console/account` serves the console too, and a copy written
      * from `/console/account/password` sits on exactly `/console/account`,
-     * matching it. Only the store's own names are touched, and never on the
-     * pinned path.
+     * matching it. A `cookiePath` given with a trailing slash is cleared in
+     * that raw form too, since its copies are longer than the normalized path
+     * and win the read below it. Only the store's own names are touched, and
+     * never on the pinned path.
+     *
+     * Only the kit's own writer ever left such copies, so a host supplying
+     * `cookieSet` or `cookieUnset` skips this unless it opts in: its store may
+     * keep no paths at all, and then any of these unsets deletes the session.
      */
     const dropShadowingCookies = () => {
+        const enabled = options.cookieShadowCleanup ??
+            (!options.cookieSet && !options.cookieUnset);
+
+        if (!enabled) {
+            return;
+        }
+
         const pathname = typeof window === 'undefined' ?
             undefined :
             window.location?.pathname;
@@ -124,19 +138,15 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
             return;
         }
 
-        let path = '';
+        const paths = buildShadowingCookiePaths(pathname, cookiePath);
 
-        for (const segment of pathname.split('/')) {
-            if (!segment) {
-                continue;
-            }
+        const raw = options.cookiePath?.trim();
 
-            path += `/${segment}`;
+        if (raw && raw !== cookiePath && raw.startsWith('/')) {
+            paths.push(raw);
+        }
 
-            if (path === cookiePath) {
-                continue;
-            }
-
+        for (const path of paths) {
             for (const key of Object.values(CookieName)) {
                 cookieUnset(key, { path });
             }

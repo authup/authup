@@ -105,8 +105,24 @@ export type StoreInstallOptions = {
      * independently and can pair a `user` from one login with a token from
      * another. Note the path is hygiene, not isolation: same-origin code
      * reads any path through an iframe.
+     *
+     * Normalized to a leading `/` and no trailing `/` (`/ui/` is written as
+     * `/ui`), and every write and unset carries the NORMALIZED form, so a
+     * host store comparing paths compares against that.
      */
     cookiePath?: string,
+    /**
+     * Clear the store cookies on the other paths that reach the document
+     * before reading them, the copies written before `cookiePath` existed.
+     * Defaults to whether the kit writes the cookies itself, i.e. neither
+     * `cookieSet` nor `cookieUnset` is given.
+     *
+     * Each clear is a `cookieUnset` naming a path other than the normalized
+     * `cookiePath` (the raw `cookiePath` included, when it had a trailing
+     * slash). A host store that keeps no paths must leave this off, or every
+     * install deletes the session it is about to read.
+     */
+    cookieShadowCleanup?: boolean,
     /**
      * Mark the store cookies `Secure`. Defaults to whether the document is
      * served over https, which a server render cannot tell, so a host that
