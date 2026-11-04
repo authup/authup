@@ -86,6 +86,10 @@ export type CookieSetFn = (
     options: CookieOptions,
 ) => void;
 
+/**
+ * Remove a cookie on `options.path`, which is not always the store's
+ * `cookiePath` (see `cookieShadowCleanup`).
+ */
 export type CookieUnsetFn = (
     key: string,
     options: CookieOptions,
@@ -123,6 +127,11 @@ export type Options = {
      * See the store install option of the same name.
      */
     cookiePath?: string,
+    /**
+     * Clear store cookies left on other paths at install. See the store
+     * install option of the same name.
+     */
+    cookieShadowCleanup?: boolean,
     /**
      * Mark the store cookies `Secure`. See the store install option of the
      * same name.

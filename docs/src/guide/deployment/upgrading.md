@@ -5,6 +5,25 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
+## Next release
+
+### `@authup/client-web-kit` normalizes `cookiePath` and skips the shadow cleanup for host cookie functions
+
+The store writes and clears its cookies on `cookiePath` with a leading `/` and without a
+trailing `/`: a `cookiePath` of `/ui/` is written as `/ui`. On install, the copies left on the
+raw `/ui/` are cleared once.
+
+The install-time cleanup of store cookies on other paths (the copies written before the path
+was pinned) now runs only when the kit writes the cookies itself. A host passing `cookieSet` or
+`cookieUnset` no longer receives those unsets, unless it sets `cookieShadowCleanup: true`. A
+store that keeps no cookie paths (for example over `sessionStorage`) therefore keeps its session
+across a reload.
+
+**Action required:** A host whose own `cookieUnset` compares `options.path` against a
+`cookiePath` with a trailing slash must compare against the normalized form, or drop the check.
+Otherwise it ignores the store's own unsets and a sign-out leaves the tokens in place. The
+consoles, `@authup/client-web-nuxt` and a host passing no `cookiePath` need no change.
+
 ## v1.0.0-beta.73 (was: next release after v1.0.0-beta.72)
 
 ### Node.js 26 minimum

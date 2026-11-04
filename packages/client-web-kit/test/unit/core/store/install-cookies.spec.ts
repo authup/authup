@@ -13,11 +13,25 @@ import {
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import { createApp, h } from 'vue';
 import type { CookieOptions } from '../../../../src/types';
 import { StoreAuthStatus, injectStore, installStore } from '../../../../src/core/store';
+import { install } from '../../../../src/module';
 import { buildAuthorizationCatalog } from '../../../utils/authorization';
+
+const defaultCookies = vi.hoisted(() => ({ removeCalls: [] as { key: string, options: Record<string, any> }[] }));
+
+vi.mock('@vueuse/integrations/useCookies', () => ({
+    useCookies: () => ({
+        get: () => undefined,
+        set: () => undefined,
+        remove: (key: string, options: Record<string, any>) => {
+            defaultCookies.removeCalls.push({ key, options });
+        },
+    }),
+}));
 
 const GRANT_RESPONSE = {
     access_token: 'at-1',
@@ -54,7 +68,20 @@ type CookieUnsetCall = {
     options: CookieOptions
 };
 
-function buildApp(seed: Record<string, unknown> = {}, cookiePath?: string, cookieSecure?: boolean) {
+type BuildAppOptions = {
+    seed?: Record<string, unknown>,
+    cookiePath?: string,
+    cookieSecure?: boolean,
+    cookieShadowCleanup?: boolean,
+};
+
+function buildApp(options: BuildAppOptions = {}) {
+    const {
+        seed = {},
+        cookiePath,
+        cookieSecure,
+        cookieShadowCleanup,
+    } = options;
     const jar = new Map<string, unknown>(Object.entries(seed));
     const setCalls : CookieSetCall[] = [];
     const unsetCalls : CookieUnsetCall[] = [];
@@ -77,6 +104,7 @@ function buildApp(seed: Record<string, unknown> = {}, cookiePath?: string, cooki
     installStore(app, {
         cookiePath,
         cookieSecure,
+        cookieShadowCleanup,
         httpClient,
         pinia,
         cookieGet: (key) => jar.get(key),
@@ -112,12 +140,14 @@ describe('core/store/install-cookies', () => {
             setCalls,
             unsetCalls,
         } = buildApp({
-            [CookieName.ACCESS_TOKEN]: 'cookie-at',
-            [CookieName.ACCESS_TOKEN_EXPIRE_DATE]: expireDate,
-            [CookieName.REFRESH_TOKEN]: 'cookie-rt',
-            [CookieName.ID_TOKEN]: 'cookie-idt',
-            [CookieName.REALM]: { id: 'realm-1', name: 'master' },
-            [CookieName.REALM_MANAGEMENT]: { id: 'realm-2', name: 'other' },
+            seed: {
+                [CookieName.ACCESS_TOKEN]: 'cookie-at',
+                [CookieName.ACCESS_TOKEN_EXPIRE_DATE]: expireDate,
+                [CookieName.REFRESH_TOKEN]: 'cookie-rt',
+                [CookieName.ID_TOKEN]: 'cookie-idt',
+                [CookieName.REALM]: { id: 'realm-1', name: 'master' },
+                [CookieName.REALM_MANAGEMENT]: { id: 'realm-2', name: 'other' },
+            },
         });
 
         expect(store.cookiesRead).toBe(true);
@@ -277,7 +307,7 @@ describe('core/store/install-cookies path', () => {
     it('clears the pre-pinning copies that can reach the document', () => {
         setPathname('/console/account/password');
 
-        const { unsetCalls } = buildApp();
+        const { unsetCalls } = buildApp({ cookieShadowCleanup: true });
 
         const paths = new Set(unsetCalls.map((call) => call.options.path));
 
@@ -299,7 +329,7 @@ describe('core/store/install-cookies path', () => {
     it('clears the mount path itself on a trailing-slash-less route', () => {
         setPathname('/console/account');
 
-        const { unsetCalls } = buildApp();
+        const { unsetCalls } = buildApp({ cookieShadowCleanup: true });
 
         const paths = new Set(unsetCalls.map((call) => call.options.path));
 
@@ -309,7 +339,7 @@ describe('core/store/install-cookies path', () => {
     it('clears nothing when the document sits on the cookie path', () => {
         setPathname('/');
 
-        const { unsetCalls } = buildApp();
+        const { unsetCalls } = buildApp({ cookieShadowCleanup: true });
 
         expect(unsetCalls).toHaveLength(0);
     });
@@ -321,7 +351,7 @@ describe('core/store/install-cookies path', () => {
             store,
             setCalls,
             unsetCalls,
-        } = buildApp({}, '/auth');
+        } = buildApp({ cookiePath: '/auth' });
 
         // ignore the install-time migration drops
         setCalls.length = 0;
@@ -339,6 +369,147 @@ describe('core/store/install-cookies path', () => {
 
         for (const call of [...setCalls, ...unsetCalls]) {
             expect(call.options.path).toEqual('/auth');
+        }
+    });
+});
+
+describe('core/store/install-cookies shadow cleanup (#3798)', () => {
+    const setPathname = (pathname: string) => {
+        Object.defineProperty(window, 'location', {
+            configurable: true,
+            writable: true,
+            value: { pathname },
+        });
+    };
+
+    const SEED = {
+        [CookieName.ACCESS_TOKEN]: 'cookie-at',
+        [CookieName.ACCESS_TOKEN_EXPIRE_DATE]: '2099-01-01T00:00:00.000Z',
+        [CookieName.REFRESH_TOKEN]: 'cookie-rt',
+        [CookieName.ID_TOKEN]: 'cookie-idt',
+    };
+
+    const unsetPaths = (calls: CookieUnsetCall[]) => new Set(calls.map((call) => call.options.path));
+
+    afterEach(() => {
+        setPathname('/');
+        defaultCookies.removeCalls.length = 0;
+    });
+
+    // The harness jar ignores `path`, like a host store over sessionStorage:
+    // any install-time unset would delete the session it is about to read.
+    it.each([
+        ['/console/account/password', undefined],
+        ['/ui/', '/ui/'],
+        ['/ui/runs', '/ui/'],
+        ['/ui/runs', '/ui'],
+    ])('keeps the session of host-supplied cookie functions on %s (cookiePath %s)', (pathname, cookiePath) => {
+        setPathname(pathname);
+
+        const { store, unsetCalls } = buildApp({ seed: SEED, cookiePath });
+
+        expect(unsetCalls).toHaveLength(0);
+        expect(store.accessToken).toEqual('cookie-at');
+        expect(store.refreshToken).toEqual('cookie-rt');
+    });
+
+    it('cleans up through the default writer when the host supplies only cookieGet', () => {
+        setPathname('/console/account/password');
+
+        installStore(createApp({ render: () => h('div') }), {
+            pinia: createPinia(),
+            cookieGet: () => undefined,
+        });
+
+        expect(new Set(defaultCookies.removeCalls.map((call) => call.options.path)))
+            .toEqual(new Set(['/console', '/console/account', '/console/account/password']));
+    });
+
+    it('cleans up nothing through the default writer when the host opts out', () => {
+        setPathname('/console/account/password');
+
+        installStore(createApp({ render: () => h('div') }), {
+            pinia: createPinia(),
+            cookieGet: () => undefined,
+            cookieShadowCleanup: false,
+        });
+
+        expect(defaultCookies.removeCalls).toHaveLength(0);
+    });
+
+    it('passes the opt-in through the kit install', () => {
+        setPathname('/console/account/password');
+
+        const unsetCalls : CookieUnsetCall[] = [];
+        const pinia = createPinia();
+        const app = createApp({ render: () => h('div') });
+
+        app.use(pinia);
+
+        install(app, {
+            pinia,
+            baseURL: 'http://localhost:3001',
+            httpClient: createFakeClient(),
+            components: false,
+            isServer: true,
+            cookieGet: () => undefined,
+            cookieSet: () => undefined,
+            cookieUnset: (key, options) => {
+                unsetCalls.push({ key, options });
+            },
+            cookieShadowCleanup: true,
+        });
+
+        expect(unsetPaths(unsetCalls))
+            .toEqual(new Set(['/console', '/console/account', '/console/account/password']));
+    });
+
+    // A copy on the `/ui` default-path is a stale shadow: it is the only one
+    // a document at exactly `/ui` sees. So the trailing slash is dropped from
+    // the pinned path instead of exempting `/ui` from the cleanup.
+    it('writes on a cookie path without its trailing slash', async () => {
+        const {
+            store, 
+            setCalls, 
+            unsetCalls, 
+        } = buildApp({ cookiePath: '/ui/' });
+
+        await store.login({ name: 'admin', password: 'start123' });
+        await store.logout();
+
+        expect(setCalls).not.toHaveLength(0);
+        expect(unsetCalls).not.toHaveLength(0);
+
+        for (const call of [...setCalls, ...unsetCalls]) {
+            expect(call.options.path).toEqual('/ui');
+        }
+    });
+
+    it('clears the copies a trailing-slash cookie path left behind', () => {
+        setPathname('/ui/runs');
+
+        const { unsetCalls } = buildApp({ cookiePath: '/ui/', cookieShadowCleanup: true });
+
+        expect(unsetPaths(unsetCalls)).toEqual(new Set(['/ui/runs', '/ui/']));
+    });
+
+    // An unset on a relative path would land on the document's default-path,
+    // which is where the normalized session now lives.
+    it('writes a relative cookie path from the root and never clears it raw', async () => {
+        setPathname('/ui/runs');
+
+        const {
+            store, 
+            setCalls, 
+            unsetCalls, 
+        } = buildApp({ cookiePath: 'ui', cookieShadowCleanup: true });
+
+        expect(unsetPaths(unsetCalls)).toEqual(new Set(['/ui/runs']));
+
+        await store.login({ name: 'admin', password: 'start123' });
+
+        for (const call of setCalls) {
+            expect(call.options.path).toEqual('/ui');
         }
     });
 });
@@ -374,7 +545,7 @@ describe('core/store/install-cookies attributes', () => {
     it('marks every stored cookie secure when the host says the request is https', async () => {
         setLocation('http:');
 
-        const { store, setCalls } = buildApp({}, undefined, true);
+        const { store, setCalls } = buildApp({ cookieSecure: true });
 
         await store.login({ name: 'admin', password: 'start123' });
 
