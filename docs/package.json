@@ -24,7 +24,7 @@
         "node": ">=26.0.0"
     },
     "dependencies": {
-        "@tailwindcss/vite": "^4.3.3",
+        "@tailwindcss/vite": "^4.3.4",
         "tailwindcss": "^4.3.3",
         "vitepress": "^1.6.3",
         "vue": "^3.5.44"
