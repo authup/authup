@@ -34,8 +34,8 @@
     "dependencies": {
         "@authup/access": "^1.0.0-beta.73",
         "@authup/client-web-kit": "^1.0.0-beta.73",
-        "@authup/core-http-kit": "^1.0.0-beta.73",
-        "@authup/kit": "^1.0.0-beta.73",
+        "@authup/core-http-kit": "^1.0.1-beta.73",
+        "@authup/kit": "^1.0.1-beta.73",
         "@nuxt/kit": "^4.6.4",
         "pathtrace": "^2.2.0",
         "smob": "^1.6.1"

@@ -1,5 +1,16 @@
 # Change Log
 
+## [1.0.1-beta.73](https://github.com/authup/authup/compare/v1.0.0-beta.73...v1.0.1-beta.73) (2026-11-05)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.73 to ^1.0.1-beta.73
+    * @authup/kit bumped from ^1.0.0-beta.73 to ^1.0.1-beta.73
+    * @authup/specs bumped from ^1.0.0-beta.73 to ^1.0.1-beta.73
+
 ## [1.0.0-beta.73](https://github.com/authup/authup/compare/v1.0.0-beta.72...v1.0.0-beta.73) (2026-11-01)
 
 

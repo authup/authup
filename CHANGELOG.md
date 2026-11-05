@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.73](https://github.com/authup/authup/compare/v1.0.0-beta.73...v1.0.0-beta.73) (2026-11-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* **client-web-kit:** cookiePath is written and cleared in normalized form ('/ui/' becomes '/ui'), and host-supplied cookie functions no longer receive the install-time shadow unsets unless cookieShadowCleanup is set.
+
+### Bug Fixes
+
+* **client-web-kit:** keep host cookie stores intact on install ([#3799](https://github.com/authup/authup/issues/3799)) ([7ffe960](https://github.com/authup/authup/commit/7ffe960afe05912e3aeca43b973987ca5638e814))
+* **deps:** bump tada5hi/monoship from 2.2.0 to 2.2.1 ([#3795](https://github.com/authup/authup/issues/3795)) ([c1b79fd](https://github.com/authup/authup/commit/c1b79fd59f6c49bf2916b68a4ad867f68cf35bb8))
+* **deps:** bump the minorandpatch group with 4 updates ([#3796](https://github.com/authup/authup/issues/3796)) ([6ec1932](https://github.com/authup/authup/commit/6ec19323d78af57cec99ade21a6c959d5176190c))
+* **deps:** bump the minorandpatch group with 4 updates ([#3800](https://github.com/authup/authup/issues/3800)) ([de6f7d8](https://github.com/authup/authup/commit/de6f7d84cdb9bcb03cb809866a206de98fb92254))
+
 ## [1.0.0-beta.73](https://github.com/authup/authup/compare/v1.0.0-beta.72...v1.0.0-beta.73) (2026-11-01)
 
 

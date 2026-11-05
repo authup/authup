@@ -1,5 +1,7 @@
 # Changelog
 
+## [1.0.1-beta.73](https://github.com/authup/authup/compare/v1.0.0-beta.73...v1.0.1-beta.73) (2026-11-05)
+
 ## [1.0.0-beta.73](https://github.com/authup/authup/compare/v1.0.0-beta.72...v1.0.0-beta.73) (2026-11-01)
 
 

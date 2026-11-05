@@ -1,5 +1,29 @@
 # Change Log
 
+## [1.0.0-beta.73](https://github.com/authup/authup/compare/v1.0.0-beta.73...v1.0.0-beta.73) (2026-11-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* **client-web-kit:** cookiePath is written and cleared in normalized form ('/ui/' becomes '/ui'), and host-supplied cookie functions no longer receive the install-time shadow unsets unless cookieShadowCleanup is set.
+
+### Bug Fixes
+
+* **client-web-kit:** keep host cookie stores intact on install ([#3799](https://github.com/authup/authup/issues/3799)) ([7ffe960](https://github.com/authup/authup/commit/7ffe960afe05912e3aeca43b973987ca5638e814))
+* **deps:** bump the minorandpatch group with 4 updates ([#3796](https://github.com/authup/authup/issues/3796)) ([6ec1932](https://github.com/authup/authup/commit/6ec19323d78af57cec99ade21a6c959d5176190c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-http-kit bumped from ^1.0.0-beta.73 to ^1.0.1-beta.73
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.73 to ^1.0.1-beta.73
+    * @authup/errors bumped from ^1.0.0-beta.73 to ^1.0.1-beta.73
+    * @authup/i18n bumped from ^1.0.0-beta.73 to ^1.0.1-beta.73
+    * @authup/kit bumped from ^1.0.0-beta.73 to ^1.0.1-beta.73
+    * @authup/specs bumped from ^1.0.0-beta.73 to ^1.0.1-beta.73
+
 ## [1.0.0-beta.73](https://github.com/authup/authup/compare/v1.0.0-beta.72...v1.0.0-beta.73) (2026-11-01)
 
 
