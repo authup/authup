@@ -39,7 +39,7 @@
         "@iconify/vue": "^5.0.4",
         "@nuxt/icon": "^2.6.1",
         "@rapiq/core": "^2.4.0",
-        "@tailwindcss/vite": "^4.3.3",
+        "@tailwindcss/vite": "^4.3.4",
         "@vitejs/plugin-vue": "^6.0.10",
         "@vuecs/button": "^1.4.2",
         "@vuecs/core": "^3.6.0",
