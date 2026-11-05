@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.0-beta.73](https://github.com/authup/authup/compare/v1.0.0-beta.73...v1.0.0-beta.73) (2026-11-05)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group with 4 updates ([#3796](https://github.com/authup/authup/issues/3796)) ([6ec1932](https://github.com/authup/authup/commit/6ec19323d78af57cec99ade21a6c959d5176190c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.73 to ^1.0.1-beta.73
+    * @authup/kit bumped from ^1.0.0-beta.73 to ^1.0.1-beta.73
+
 ## [1.0.0-beta.73](https://github.com/authup/authup/compare/v1.0.0-beta.72...v1.0.0-beta.73) (2026-11-01)
 
 
