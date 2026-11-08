@@ -10,4 +10,5 @@ export * from './client-credentials.ts';
 export * from './identity.ts';
 export * from './password.ts';
 export * from './refresh-token.ts';
+export * from './token-exchange.ts';
 export * from './types.ts';

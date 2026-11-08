@@ -104,6 +104,7 @@ describe('EntityEventHandler', () => {
         [EntityType.CLIENT_PERMISSION, 'clientRealmId'],
         [EntityType.CLIENT_ROLE, 'clientRealmId'],
         [EntityType.CLIENT_SCOPE, 'clientRealmId'],
+        [EntityType.CLIENT_TOKEN_EXCHANGE_POLICY, 'realmId'],
         [EntityType.IDENTITY_PROVIDER_ACCOUNT, 'userRealmId'],
         [EntityType.IDENTITY_PROVIDER_ATTRIBUTE_MAPPING, 'providerRealmId'],
         [EntityType.IDENTITY_PROVIDER_PERMISSION_MAPPING, 'providerRealmId'],

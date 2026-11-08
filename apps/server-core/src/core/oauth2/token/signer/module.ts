@@ -9,7 +9,7 @@ import { type TokenECAlgorithm, type TokenRSAAlgorithm, signToken } from '@authu
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { JWKError, JWKType, JWKUse } from '@authup/specs';
 import type { IKeyStore } from '../../../key/index.ts';
-import type { IOAuth2TokenSigner } from './types.ts';
+import type { IOAuth2TokenSigner, OAuth2TokenSignOptions } from './types.ts';
 
 export class OAuth2TokenSigner implements IOAuth2TokenSigner {
     protected keyStore : IKeyStore;
@@ -18,7 +18,7 @@ export class OAuth2TokenSigner implements IOAuth2TokenSigner {
         this.keyStore = keyStore;
     }
 
-    async sign<T extends OAuth2TokenPayload>(payload: T) : Promise<string> {
+    async sign<T extends OAuth2TokenPayload>(payload: T, options: OAuth2TokenSignOptions = {}) : Promise<string> {
         if (!payload.realm_id) {
             throw JWKError.invalidRealm();
         }
@@ -26,6 +26,8 @@ export class OAuth2TokenSigner implements IOAuth2TokenSigner {
         // highest-priority ACTIVE key — passive keys only verify, and an
         // all-disabled realm fails loud inside the store.
         const key = await this.keyStore.resolveOrCreate(payload.realm_id, JWKUse.SIGNATURE);
+
+        options.assertKey?.(key);
 
         if (!key.decryptionKey) {
             throw JWKError.decryptionKeyMissing();

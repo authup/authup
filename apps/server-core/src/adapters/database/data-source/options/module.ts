@@ -24,6 +24,8 @@ import {
     ClientScopeEntity,
     ClientScopeSubscriber,
     ClientSubscriber,
+    ClientTokenExchangePolicyEntity,
+    ClientTokenExchangePolicySubscriber,
     ConsentEntity,
     ConsentEntitySubscriber,
     EventAggregateEntity,
@@ -165,6 +167,7 @@ export class DataSourceOptionsBuilder {
                 ClientPermissionEntity,
                 ClientRoleEntity,
                 ClientScopeEntity,
+                ClientTokenExchangePolicyEntity,
 
                 ConsentEntity,
 
@@ -206,6 +209,7 @@ export class DataSourceOptionsBuilder {
                 ClientPermissionSubscriber,
                 ClientRoleSubscriber,
                 ClientScopeSubscriber,
+                ClientTokenExchangePolicySubscriber,
 
                 ConsentEntitySubscriber,
 

@@ -8,6 +8,7 @@
 import type { Store } from '@authup/client-web-kit';
 import { StoreAuthStatus, saveAuthorizationRequest  } from '@authup/client-web-kit';
 import type { RouteLocationNormalized } from 'vue-router';
+import { createMemoryHistory, createRouter } from 'vue-router';
 import { ref } from 'vue';
 import {
     beforeEach,
@@ -19,6 +20,7 @@ import {
 import { LayoutKey } from '../../src/config/layout';
 import { createRoutingGuard } from '../../src/guard';
 import { LOGIN_REDIRECT_STORAGE_KEY, saveLoginRedirect } from '../../src/redirect';
+import { routes } from '../../src/router';
 
 type StoreStub = {
     status: ReturnType<typeof ref<StoreAuthStatus>>,
@@ -362,6 +364,47 @@ describe('src/guard', () => {
             );
 
             expect(result).toMatchObject({ path: '/' });
+        });
+    });
+
+    // The real guard over the real route meta, so a gate that narrows to READ
+    // or stops being one-of fails here.
+    describe('the token exchange policy route', () => {
+        const route = createRouter({ history: createMemoryHistory(), routes })
+            .resolve('/clients/client-1/token-exchange-policies') as unknown as RouteLocationNormalized;
+
+        function createHolderGuard(held: string[]) {
+            return createGuard({
+                permissionEvaluator: {
+                    preEvaluateOneOf: vi.fn(async ({ name }: { name: string | string[] }) => {
+                        const names = Array.isArray(name) ? name : [name];
+
+                        const denied = names.every((entry) => !held.includes(entry));
+
+                        if (denied) {
+                            throw new Error('denied');
+                        }
+                    }),
+                },
+            });
+        }
+
+        it('should let a holder of the update permission alone in', async () => {
+            const { guard } = createHolderGuard(['client_update', 'client_token_exchange_policy_update']);
+
+            await expect(guard(route, createRoute({ path: '/clients' }))).resolves.toBeUndefined();
+        });
+
+        it('should refuse a holder of none of the permissions', async () => {
+            const { guard } = createHolderGuard(['client_update']);
+
+            await expect(guard(route, createRoute({ path: '/clients' }))).resolves.toMatchObject({ path: '/clients' });
+        });
+
+        it('should refuse a holder without the update permission of the parent route', async () => {
+            const { guard } = createHolderGuard(['client_token_exchange_policy_read']);
+
+            await expect(guard(route, createRoute({ path: '/clients' }))).resolves.toMatchObject({ path: '/clients' });
         });
     });
 });

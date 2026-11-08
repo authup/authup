@@ -18,3 +18,4 @@ export * from './request';
 export * from './response-type';
 export * from './scope';
 export * from './server';
+export * from './target';

@@ -70,6 +70,41 @@ describe('OAuth2TokenSigner', () => {
         await expect(signer.sign(createPayload())).rejects.toThrow(JWKError);
     });
 
+    it('should hand assertKey the resolved key before signing', async () => {
+        const key = {
+            id: randomUUID(), 
+            type: JWKType.RSA, 
+            decryptionKey: 'private', 
+        } as Key;
+        const keyStore = new FakeKeyStore(key);
+        const signer = new OAuth2TokenSigner(keyStore);
+        const assertKey = vi.fn();
+
+        await signer.sign(createPayload(), { assertKey });
+
+        expect(assertKey).toHaveBeenCalledTimes(1);
+        expect(assertKey).toHaveBeenCalledWith(key);
+        expect(assertKey.mock.invocationCallOrder[0]).toBeLessThan(signToken.mock.invocationCallOrder[0]);
+        expect(keyStore.resolveOrCreateCalls).toHaveLength(1);
+    });
+
+    it('should sign nothing when assertKey refuses the key', async () => {
+        const signer = new OAuth2TokenSigner(new FakeKeyStore({
+            id: randomUUID(), 
+            type: JWKType.OCT, 
+            decryptionKey: 'secret', 
+        } as Key));
+        const refusal = new Error('refused');
+
+        await expect(signer.sign(createPayload(), {
+            assertKey: () => {
+                throw refusal;
+            },
+        })).rejects.toBe(refusal);
+
+        expect(signToken).not.toHaveBeenCalled();
+    });
+
     it('should sign with OCT key type', async () => {
         const key = {
             id: randomUUID(),

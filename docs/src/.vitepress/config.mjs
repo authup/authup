@@ -187,6 +187,10 @@ export default defineConfig({
                             text: 'OAuth Client Certificates',
                             link: '/guide/user/client-certificates',
                         },
+                        {
+                            text: 'Token Exchange',
+                            link: '/guide/user/token-exchange',
+                        },
                     ],
                 },
                 /*

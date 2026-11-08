@@ -17,6 +17,7 @@ import { clientSchema } from '../entities/client/schema.ts';
 import { clientPermissionSchema } from '../entities/client-permission/schema.ts';
 import { clientRoleSchema } from '../entities/client-role/schema.ts';
 import { clientScopeSchema } from '../entities/client-scope/schema.ts';
+import { clientTokenExchangePolicySchema } from '../entities/client-token-exchange-policy/schema.ts';
 import { consentSchema } from '../entities/consent/schema.ts';
 import { eventSchema } from '../entities/event/schema.ts';
 import { identityProviderSchema } from '../entities/identity-provider/schema.ts';
@@ -73,6 +74,7 @@ export const schemas : Schema<any>[] = [
     clientPermissionSchema,
     clientRoleSchema,
     clientScopeSchema,
+    clientTokenExchangePolicySchema,
     consentSchema,
     eventSchema,
     identityProviderSchema,

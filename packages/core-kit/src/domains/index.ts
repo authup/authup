@@ -13,6 +13,7 @@ export * from './client';
 export * from './client-role';
 export * from './client-permission';
 export * from './client-scope';
+export * from './client-token-exchange-policy';
 export * from './consent';
 export * from './event';
 export * from './event-aggregate';

@@ -92,6 +92,10 @@ export class TokenVerifier implements ITokenVerifier {
     protected verifier: Verifier;
 
     constructor(ctx: TokenVerifierContext) {
+        if (ctx.capability && (ctx.creator || !ctx.capability.audience)) {
+            throw new Error('A capability token verifier requires an audience and local verification.');
+        }
+
         this.client = new Client({ baseURL: ctx.baseURL });
 
         const remote = !!ctx.creator;
@@ -102,7 +106,10 @@ export class TokenVerifier implements ITokenVerifier {
         let cacheNamespace : string | undefined;
 
         if (ctx.cache) {
-            cacheNamespace = ctx.cacheNamespace ?? `authup:${remote ? 'remote' : 'local'}:${ctx.baseURL}`;
+            const mode = remote ? 'remote' : 'local';
+
+            cacheNamespace = ctx.cacheNamespace ??
+                `authup:${ctx.capability ? `capability:${ctx.capability.audience}` : mode}:${ctx.baseURL}`;
         }
 
         this.verifier = createVerifier({
@@ -110,6 +117,7 @@ export class TokenVerifier implements ITokenVerifier {
                 createAuthupIssuer({
                     client: this.client,
                     jwkCache: ctx.jwkCache,
+                    capability: ctx.capability,
                     ...(ctx.creator ?
                         {
                             remote: {

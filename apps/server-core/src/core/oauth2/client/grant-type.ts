@@ -16,6 +16,7 @@ import { OAuth2ClientUnauthorizedError, OAuth2TokenGrant } from '@authup/specs';
  */
 export const OPT_IN_GRANT_TYPES : ReadonlySet<string> = new Set<`${OAuth2TokenGrant}`>([
     OAuth2TokenGrant.DEVICE_CODE,
+    OAuth2TokenGrant.TOKEN_EXCHANGE,
 ]);
 
 /**

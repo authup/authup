@@ -16,6 +16,7 @@ export enum EventName {
     AUTHORIZE = 'authorize',
     AUTHORIZE_FAILED = 'authorizeFailed',
     REFRESH_REPLAY_DETECTED = 'refreshReplayDetected',
+    TOKEN_EXCHANGED = 'tokenExchanged',
     REGISTER = 'register',
     ACCOUNT_ACTIVATED = 'accountActivated',
     PASSWORD_RESET_REQUESTED = 'passwordResetRequested',

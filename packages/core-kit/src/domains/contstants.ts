@@ -10,6 +10,7 @@ export enum EntityType {
     CLIENT_PERMISSION = 'clientPermission',
     CLIENT_ROLE = 'clientRole',
     CLIENT_SCOPE = 'clientScope',
+    CLIENT_TOKEN_EXCHANGE_POLICY = 'clientTokenExchangePolicy',
     CONSENT = 'consent',
     EVENT = 'event',
     IDENTITY_PROVIDER = 'identityProvider',

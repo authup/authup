@@ -40,6 +40,11 @@ export enum PermissionName {
     CLIENT_SCOPE_DELETE = 'client_scope_delete',
     CLIENT_SCOPE_READ = 'client_scope_read',
 
+    CLIENT_TOKEN_EXCHANGE_POLICY_CREATE = 'client_token_exchange_policy_create',
+    CLIENT_TOKEN_EXCHANGE_POLICY_DELETE = 'client_token_exchange_policy_delete',
+    CLIENT_TOKEN_EXCHANGE_POLICY_READ = 'client_token_exchange_policy_read',
+    CLIENT_TOKEN_EXCHANGE_POLICY_UPDATE = 'client_token_exchange_policy_update',
+
     CONSENT_READ = 'consent_read',
     CONSENT_DELETE = 'consent_delete',
 

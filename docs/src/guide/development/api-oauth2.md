@@ -338,7 +338,7 @@ opens in.
 
 Each realm exposes an OpenID Provider metadata document at `GET /realms/<realm>/.well-known/openid-configuration`, advertising the `authorization_endpoint`, `token_endpoint`, `revocation_endpoint` (`/token/revoke`), `end_session_endpoint` (`/logout`), `device_authorization_endpoint` (`/device_authorization`, see [Device Authorization Grant](#_8-device-authorization-grant-rfc-8628)), `jwks_uri`, `prompt_values_supported`, `ui_locales_supported`, `ui_color_modes_supported`, `grant_types_supported`, and the two back-channel logout flags `backchannel_logout_supported` and `backchannel_logout_session_supported` (both `true`, see [Back-Channel Logout](#_7-back-channel-logout)).
 
-`grant_types_supported` lists the five grants Authup implements: `authorization_code`, `client_credentials`, `password`, `refresh_token` and `urn:ietf:params:oauth:grant-type:device_code`. It describes the server, not a client: each client's own `grantTypes` allowlist decides what that client may use. With `mtlsPublicUrl` set, `mtls_endpoint_aliases` carries `device_authorization_endpoint` next to the token endpoint alias, because a `tls` client authenticates at the device endpoint exactly as it does at `/token`.
+`grant_types_supported` lists the six grants Authup implements: `authorization_code`, `client_credentials`, `password`, `refresh_token`, `urn:ietf:params:oauth:grant-type:device_code` and `urn:ietf:params:oauth:grant-type:token-exchange`. It describes the server, not a client: each client's own `grantTypes` allowlist decides what that client may use. With `mtlsPublicUrl` set, `mtls_endpoint_aliases` carries `device_authorization_endpoint` next to the token endpoint alias, because a `tls` client authenticates at the device endpoint exactly as it does at `/token`.
 
 The management read of a realm, `GET /realms/:id`, carries the three values an integrator copies out of that document under `meta.endpoints`: `issuer`, `openidConfiguration` and `jwks`. They are derived from the deployment's public url and the realm name, so a renamed realm answers with a new issuer. The realm collection, `GET /realms`, does not carry them: derive them from `<publicUrl>/realms/<name>` (the issuer; the discovery document and the JWKS sit under it) or read the record. The admin console shows them on the realm's page.
 
@@ -656,3 +656,12 @@ flight; the poll then answers `invalid_grant` and the device starts over.
 Every approval and denial is recorded in the security event log (`authorize`
 with `data.reason: device`, `authorizeFailed` with `reason: denied`); the codes
 themselves never appear in an event.
+
+### 9. Token Exchange (RFC 8693)
+
+`grant_type=urn:ietf:params:oauth:grant-type:token-exchange` turns a subject's
+access token into a short-lived capability token for one audience, requested by
+a confidential client acting as the delegate. The grant is opt-in per client and
+also needs a policy for the audience. The token is verified locally by the
+resource server and is never accepted as an Authup access token. Its parameters,
+claims, setup and errors are described in [Token Exchange](../user/token-exchange.md).

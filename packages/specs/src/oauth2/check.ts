@@ -20,6 +20,7 @@ import {
     OAUTH2_RESPONSE_TYPE_ERROR_INSTANCE,
     OAUTH2_SCOPE_ERROR_INSTANCE,
     OAUTH2_SERVER_ERROR_INSTANCE,
+    OAUTH2_TARGET_ERROR_INSTANCE,
     type OAuth2AccessDeniedError,
     type OAuth2ClientError,
     type OAuth2ClientUnauthorizedError,
@@ -32,6 +33,7 @@ import {
     type OAuth2ResponseTypeError,
     type OAuth2ScopeError,
     type OAuth2ServerError,
+    type OAuth2TargetError,
 } from './error/index.ts';
 import { OAuth2ErrorCode } from './constants.ts';
 
@@ -160,6 +162,18 @@ export function isOAuth2ScopeError(input: unknown): input is OAuth2ScopeError {
 
     return input.code === ErrorCode.OAUTH_SCOPE_INVALID ||
         input.code === ErrorCode.OAUTH_SCOPE_INSUFFICIENT;
+}
+
+export function isOAuth2TargetError(input: unknown): input is OAuth2TargetError {
+    if (matchesInstanceof(input, OAUTH2_TARGET_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isOAuth2Error(input)) {
+        return false;
+    }
+
+    return input.code === ErrorCode.OAUTH_TARGET_INVALID;
 }
 
 export function isOAuth2GrantTypeError(input: unknown): input is OAuth2GrantTypeError {

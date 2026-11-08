@@ -29,6 +29,11 @@ export const TranslatorTranslationPermissionFrench : NamespaceTranslations<`${Pe
     [PermissionName.CLIENT_SCOPE_DELETE]: 'Retirer des portées de client',
     [PermissionName.CLIENT_SCOPE_READ]: 'Lire les portées de client',
 
+    [PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_CREATE]: 'Créer des politiques d\'échange de jetons de client',
+    [PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_DELETE]: 'Supprimer des politiques d\'échange de jetons de client',
+    [PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_READ]: 'Lire les politiques d\'échange de jetons de client',
+    [PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_UPDATE]: 'Modifier des politiques d\'échange de jetons de client',
+
     [PermissionName.CONSENT_READ]: 'Lire les consentements',
     [PermissionName.CONSENT_DELETE]: 'Supprimer les consentements',
 

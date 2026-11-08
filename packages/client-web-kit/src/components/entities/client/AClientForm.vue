@@ -269,6 +269,8 @@ export default defineComponent({
                 { key: TranslatorTranslationClientKey.HASH_SECRET },
                 { key: TranslatorTranslationClientKey.SECRET_HASHED_HINT },
                 { key: TranslatorTranslationClientKey.GRANT_TYPES_HINT },
+                { key: TranslatorTranslationClientKey.GRANT_TYPE_DEVICE_CODE },
+                { key: TranslatorTranslationClientKey.GRANT_TYPE_TOKEN_EXCHANGE },
                 { key: TranslatorTranslationClientKey.CLIENT_ACCESS_POLICY_HINT },
             ],
         );
@@ -364,6 +366,12 @@ export default defineComponent({
             ]),
         ]);
 
+        // The value stays the URN; only the two URN grants need a label.
+        const grantTypeLabels = computed<Record<string, string>>(() => ({
+            [OAuth2TokenGrant.DEVICE_CODE]: translationsClient.grantTypeDeviceCode,
+            [OAuth2TokenGrant.TOKEN_EXCHANGE]: translationsClient.grantTypeTokenExchange,
+        }));
+
         const setGrantTypes = (input: unknown[]) => {
             const values = (input as string[]).filter(Boolean);
 
@@ -420,6 +428,7 @@ export default defineComponent({
             postLogoutRedirectUris,
             grantTypeSelection,
             grantTypeOptions,
+            grantTypeLabels,
             setGrantTypes,
             pathQuery,
             policyQuery,
@@ -702,7 +711,7 @@ export default defineComponent({
                             :key="grantType"
                             :value="grantType"
                             :label="true"
-                            :label-content="grantType"
+                            :label-content="grantTypeLabels[grantType] ?? grantType"
                         />
                     </VCFormCheckboxGroup>
                     <template #hint>

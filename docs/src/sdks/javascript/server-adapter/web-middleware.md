@@ -95,6 +95,30 @@ Remote verification introspects with the token `creator` mints and keeps it unti
 `401`; it then mints a new one and asks once more. An inactive token is rejected with
 `inactive_token`, a failed introspection with `invalid_token` naming the status authup answered.
 
+## Capability tokens
+
+A `TokenVerifier` denies every [capability token](../../../guide/user/token-exchange.md) unless it
+is built to verify them. The `capability` option turns a verifier into one that accepts only
+`kind=capability_token` tokens naming the given audience, and nothing else, access tokens included:
+
+```typescript
+const capabilityVerifier = new TokenVerifier({
+    baseURL: 'http://localhost:3000/',
+    capability: { audience: 'storage' },
+});
+
+const data = await capabilityVerifier.verify(token);
+// data.cap, data.act, data.sub
+```
+
+| Option | Value |
+|---|---|
+| `capability.audience` | The audience this resource server accepts tokens for. Required. |
+
+It verifies locally only: introspection reports a capability token as inactive, so the constructor
+throws when `capability` is combined with `creator`. Use one verifier per audience, separate from
+the one that verifies access tokens.
+
 ## Certificate-bound tokens
 
 If verification returns a token with `cnf.x5t#S256`, `verifyRequest` fails

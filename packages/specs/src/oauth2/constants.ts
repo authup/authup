@@ -14,6 +14,18 @@ export enum OAuth2TokenGrant {
     DEVICE_CODE = 'urn:ietf:params:oauth:grant-type:device_code',
     PASSWORD = 'password',
     REFRESH_TOKEN = 'refresh_token',
+    /**
+     * RFC 8693 token exchange, restricted to delegated capability tokens.
+     */
+    TOKEN_EXCHANGE = 'urn:ietf:params:oauth:grant-type:token-exchange',
+}
+
+/**
+ * RFC 8693 §3 token type identifiers.
+ */
+export enum OAuth2TokenTypeIdentifier {
+    ACCESS_TOKEN = 'urn:ietf:params:oauth:token-type:access_token',
+    JWT = 'urn:ietf:params:oauth:token-type:jwt',
 }
 
 export enum OAuth2TokenKind {
@@ -34,6 +46,13 @@ export enum OAuth2TokenKind {
      * like every non-access kind.
      */
     LOGOUT = 'logout_token',
+    /**
+     * Delegated, audience-bound capability token issued by the RFC 8693
+     * grant. Verified locally by the resource server it names, never a
+     * bearer for authup or any other audience, so the authorization
+     * middleware and the adapters deny it like every non-access kind.
+     */
+    CAPABILITY = 'capability_token',
 }
 
 export enum OAuth2SubKind {
@@ -149,6 +168,12 @@ export enum OAuth2ErrorCode {
      * RFC 8628 §3.5: the device code has expired.
      */
     EXPIRED_TOKEN = 'expired_token',
+
+    /**
+     * RFC 8693 §2.2.2: the requested audience or capability is not allowed
+     * for the client.
+     */
+    INVALID_TARGET = 'invalid_target',
 }
 
 /**

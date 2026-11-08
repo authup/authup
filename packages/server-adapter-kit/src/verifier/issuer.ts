@@ -21,6 +21,7 @@ import type { TokenVerifierContext } from './types';
 type AuthupIssuerContext = {
     client: Client,
     jwkCache?: TokenVerifierContext['jwkCache'],
+    capability?: TokenVerifierContext['capability'],
     /**
      * Introspect every token at authup instead of verifying it locally.
      */
@@ -128,6 +129,11 @@ export function createAuthupIssuer(ctx: AuthupIssuerContext) : Issuer {
         // payloads pass (foreign or legacy tokens).
         claims: (claims) => typeof claims.kind === 'undefined' || claims.kind === OAuth2TokenKind.ACCESS,
     };
+
+    if (ctx.capability) {
+        issuer.audience = ctx.capability.audience;
+        issuer.claims = (claims) => claims.kind === OAuth2TokenKind.CAPABILITY;
+    }
 
     if (ctx.remote) {
         // authup decides about every token it is asked about, whatever the

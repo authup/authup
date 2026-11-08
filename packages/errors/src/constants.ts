@@ -72,6 +72,7 @@ export enum ErrorCode {
     OAUTH_RESPONSE_TYPE_UNSUPPORTED = 'unsupported_response_type',
     OAUTH_SCOPE_INVALID = 'invalid_scope',
     OAUTH_SCOPE_INSUFFICIENT = 'insufficient_scope',
+    OAUTH_TARGET_INVALID = 'invalid_target',
     OAUTH_AUTHORIZATION_PENDING = 'authorization_pending',
     OAUTH_SLOW_DOWN = 'slow_down',
     OAUTH_DEVICE_CODE_EXPIRED = 'device_code_expired',

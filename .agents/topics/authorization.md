@@ -345,6 +345,8 @@ Types in `packages/access/src/permission/types.ts`:
 
 ## Security: Permission Assignment
 
+**`realm_admin` never holds `client_token_exchange_policy_*`** (`REALM_ADMIN_EXCLUDED_PERMISSIONS`), and those permissions are separate from `client_update`, which it does hold: a policy lets its client mint tokens resource servers trust for any opaque capability id, so writing one is a root of trust over every resource server, not a realm-local act. A grant writing a policy of `subjectRealmScope: any` must also reach every realm (`hasUnboundedReach`, so a policy-narrowed grant is refused), since that policy acts on subjects outside its own realm.
+
 ### Superset Check
 
 Role assignment (user-role, client-role, identity-provider-role-mapping) calls
