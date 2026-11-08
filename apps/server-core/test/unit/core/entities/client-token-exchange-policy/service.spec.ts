@@ -238,6 +238,49 @@ describe('core/entities/client-token-exchange-policy/service', () => {
                 .rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
+        it('should write once in one transaction when nothing changed', async () => {
+            const entity = seed();
+
+            await service.update(entity.id, { maxLifetime: 60 }, createAllowAllActor());
+
+            expect(repository.transactionCalls).toBe(1);
+        });
+
+        it('should keep a change committed between authorization and write', async () => {
+            const entity = seed();
+            const actor = createAllowAllActor();
+
+            repository.beforeTransaction = async () => {
+                repository.beforeTransaction = undefined;
+
+                await repository.commit(entity.id, { subjectRealmScope: 'own', capabilityTypes: 'bucket-file' });
+            };
+
+            const result = await service.update(entity.id, { maxLifetime: 60 }, actor);
+
+            expect(result.maxLifetime).toEqual(60);
+            expect(result.capabilityTypes).toEqual('bucket-file');
+            expect(result.subjectRealmScope).toEqual('own');
+            expect(repository.transactionCalls).toBe(2);
+            expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_UPDATE))
+                .toHaveLength(4);
+        });
+
+        it('should not write back an echoed field a concurrent update changed', async () => {
+            const entity = seed({ maxLifetime: 3600 });
+
+            repository.beforeTransaction = async () => {
+                repository.beforeTransaction = undefined;
+
+                await repository.commit(entity.id, { maxLifetime: 60 });
+            };
+
+            const result = await service.update(entity.id, { maxLifetime: 3600, capabilityTypes: 'bucket-file' }, createAllowAllActor());
+
+            expect(result.maxLifetime).toEqual(60);
+            expect(result.capabilityTypes).toEqual('bucket-file');
+        });
+
         it('should leave the client and the realm as stored', async () => {
             const entity = seed();
             const { clientId } = entity;

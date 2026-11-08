@@ -19,12 +19,14 @@ import {
 import {
     ClientEntity,
     ClientRepositoryAdapter,
+    ClientTokenExchangePolicyEntity,
+    ClientTokenExchangePolicyRepositoryAdapter,
     RealmEntity,
     RealmRepositoryAdapter,
     UserRepository,
     UserRepositoryAdapter,
 } from '../../../../../src';
-import { ClientService, UserService } from '../../../../../src/core';
+import { ClientService, ClientTokenExchangePolicyService, UserService } from '../../../../../src/core';
 import { createTestApplication } from '../../../../app';
 import { createFakeClient, createFakeUser } from '../../../../utils';
 
@@ -95,6 +97,34 @@ describe.skipIf(!rowLockable)('http/controllers/user (concurrency)', () => {
         expect(row?.email).toBe(next);
         expect(row?.emailVerified).toBe(false);
         expect(row?.displayName).toBe('Concurrent Edit');
+    });
+
+    it('should keep both of two concurrent token exchange policy updates', async () => {
+        const client = await clientService.create({
+            ...createFakeClient(),
+            realmId: realm.id,
+        }, actor);
+        const policyService = new ClientTokenExchangePolicyService({
+            repository: new ClientTokenExchangePolicyRepositoryAdapter(
+                suite.dataSource.getRepository(ClientTokenExchangePolicyEntity),
+            ),
+        });
+        const policy = await policyService.create({
+            clientId: client.id,
+            audience: 'storage',
+            capabilityTypes: 'bucket',
+            maxLifetime: 3600,
+        }, actor);
+
+        await Promise.all([
+            policyService.update(policy.id, { maxLifetime: 60 }, actor),
+            policyService.update(policy.id, { capabilityTypes: 'bucket-file' }, actor),
+        ]);
+
+        const row = await policyService.getOne(policy.id, actor);
+
+        expect(row.maxLifetime).toBe(60);
+        expect(row.capabilityTypes).toBe('bucket-file');
     });
 
     it('should keep a concurrent user deactivation', async () => {

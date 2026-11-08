@@ -25,6 +25,7 @@ import { inArray } from '@rapiq/core';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
 import { AbstractEntityService } from '@authup/server-kit';
 import { appendQueryConditions, decodeQuery, redactUnreachedRelations } from '../../query/index.ts';
+import { assertRowUnchanged, retryOnStaleRow } from '../stale-row/index.ts';
 import { clientTokenExchangePolicySchema } from './schema.ts';
 import type { IClientTokenExchangePolicyRepository, IClientTokenExchangePolicyService } from './types.ts';
 
@@ -162,29 +163,57 @@ export class ClientTokenExchangePolicyService extends AbstractEntityService impl
 
         const validated = await this.validator.run(data, { group: ValidatorGroup.UPDATE });
 
-        let entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({ id });
 
         if (!entity) {
             throw new EntityNotFoundError();
         }
 
-        const current = { ...entity };
+        // A field echoed back with the value this request read is no intent
+        // to change it (the console posts its whole form).
+        const patch : Partial<ClientTokenExchangePolicy> = { ...validated };
 
-        entity = this.repository.merge(entity, validated);
+        for (const key of Object.keys(patch) as (keyof ClientTokenExchangePolicy)[]) {
+            if (patch[key] === entity[key]) {
+                delete patch[key];
+            }
+        }
 
-        await this.evaluateUpdate(
-            actor,
-            PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_UPDATE,
-            current,
-            { ...entity },
-            { realm: (row) => row.realmId },
-        );
+        // Only the write runs inside the transaction, since the evaluator and
+        // uniqueness reads each take a pooled connection of their own (#3526).
+        // A locked row that differs from the one authorized aborts the write,
+        // so a narrowing a concurrent update committed is never written back.
+        return retryOnStaleRow({
+            row: entity,
+            reread: () => this.repository.findOneBy({ id }),
+        }, async (stored) => {
+            const before = { ...stored };
+            const next = this.repository.merge(stored, patch);
 
-        await this.assertSubjectRealmReach(actor, PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_UPDATE, entity);
+            await this.evaluateUpdate(
+                actor,
+                PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_UPDATE,
+                before,
+                { ...next },
+                { realm: (row) => row.realmId },
+            );
 
-        await this.repository.checkUniqueness(validated, current);
+            await this.assertSubjectRealmReach(actor, PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_UPDATE, next);
 
-        return this.repository.save(entity);
+            await this.repository.checkUniqueness(patch, before);
+
+            return this.repository.transaction(async (repository) => {
+                const current = await repository.findOneBy({ id });
+
+                if (!current) {
+                    throw new EntityNotFoundError();
+                }
+
+                assertRowUnchanged(before, current);
+
+                return repository.save(repository.merge(current, patch));
+            });
+        });
     }
 
     async delete(

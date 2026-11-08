@@ -10,6 +10,7 @@ import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } 
 
 export interface IClientTokenExchangePolicyRepository extends IEntityRepository<ClientTokenExchangePolicy> {
     checkUniqueness(data: Partial<ClientTokenExchangePolicy>, existing?: ClientTokenExchangePolicy): Promise<void>;
+    transaction<R>(fn: (repository: IClientTokenExchangePolicyRepository) => Promise<R>): Promise<R>;
 }
 
 export interface IClientTokenExchangePolicyService {
