@@ -154,6 +154,10 @@ triggers RFC 6819 §5.2.2.3 family revocation. Access-token TTL defaults to
 - `/token/revoke` verifies with `{ ignoreExpiry: true, skipActiveCheck: true }`
   (RFC 7009 §2.2): revoking an expired token must succeed, or a client's
   revoke-then-clear logout aborts and leaves the row live.
+- The body `token` of `/token/introspect` and `/token/revoke` is bounded by
+  `TOKEN_REQUEST_TOKEN_MAX_LENGTH` (16384, node's default `maxHeaderSize`, #3801).
+  A bound below that refuses a valid token as invalid and answers success
+  without revoking, since access tokens carry every role name.
 
 ### Grant flow (`core/oauth2/grant-types/refresh-token.ts`)
 

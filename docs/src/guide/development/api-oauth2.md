@@ -665,3 +665,14 @@ a confidential client acting as the delegate. The grant is opt-in per client and
 also needs a token exchange capability for the audience. The token is verified locally by the
 resource server and is never accepted as an Authup access token. Its parameters,
 claims, setup and errors are described in [Token Exchange](../user/token-exchange.md).
+
+## Token Size
+
+An access token carries the role names of its subject, so its length grows with
+the number of roles. `POST /token/introspect` and `POST /token/revoke`, on the
+root and the `/realms/<realm>` routes, accept a `token` parameter of up to
+16,384 characters, which is Node's default limit for HTTP headers. A token
+longer than that cannot be sent as a bearer, so it counts as invalid:
+introspection answers `{ "active": false }` and revocation answers `200` without
+revoking anything. A reverse proxy can lower the usable size for a bearer (nginx
+allows 8 KB per header line by default).
