@@ -46,7 +46,7 @@ describe('session', () => {
         const adminId = introspect.sub!;
         const currentId = introspect.session_id!;
 
-        const list = await client.session.getMany({ filters: { userId: adminId } });
+        const list = await client.session.getMany({ filters: { userId: adminId }, sorts: ['-createdAt'] });
 
         expect(list.data.length).toBeGreaterThanOrEqual(2);
         expect(list.data.every((s) => s.sub === adminId)).toBe(true);
@@ -57,7 +57,7 @@ describe('session', () => {
         expect(other).toBeDefined();
         await client.session.delete(other!.id);
 
-        const after = await client.session.getMany({ filters: { userId: adminId } });
+        const after = await client.session.getMany({ filters: { userId: adminId }, sorts: ['-createdAt'] });
 
         expect(after.data.some((s) => s.id === other!.id)).toBe(false);
         // the current session is untouched
@@ -79,7 +79,7 @@ describe('session', () => {
         await client.session.deleteMany();
 
         // only the current admin session remains
-        const after = await client.session.getMany({ filters: { userId: adminId } });
+        const after = await client.session.getMany({ filters: { userId: adminId }, sorts: ['-createdAt'] });
         const own = after.data.filter((s) => s.sub === adminId);
 
         expect(own).toHaveLength(1);
