@@ -31,6 +31,7 @@ export async function verifyToken(
 
     // Signature, nbf and issuer/kind checks always apply; only exp is skipped
     // when explicitly requested (e.g. an id_token_hint on RP-initiated logout).
+    // `leeway: 0` overrides the library's implicit 60 seconds: `exp` is exact.
     const validateExp = !options.ignoreExpiry;
 
     try {
@@ -73,6 +74,7 @@ export async function verifyToken(
                     algorithms,
                     validateNbf: true,
                     validateExp,
+                    leeway: 0,
                 });
 
                 break;
@@ -100,6 +102,7 @@ export async function verifyToken(
                     algorithms,
                     validateNbf: true,
                     validateExp,
+                    leeway: 0,
                 });
             }
         }

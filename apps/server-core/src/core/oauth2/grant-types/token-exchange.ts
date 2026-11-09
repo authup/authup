@@ -202,9 +202,6 @@ export class OAuth2TokenExchangeGrant {
         try {
             const payload = await this.tokenVerifier.verify(token);
 
-            // Checked here too: the verifier's leeway accepts a token just past
-            // `exp`, and its signature cache then serves that payload without
-            // re-checking it.
             if (
                 payload.kind !== OAuth2TokenKind.ACCESS ||
                 typeof payload.exp !== 'number' ||
