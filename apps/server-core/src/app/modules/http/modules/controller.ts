@@ -12,6 +12,7 @@ import type {
     ClientPermission,
     ClientRole,
     ClientScope,
+    ClientTokenExchangeCapability,
     Path,
     Permission,
     PermissionPolicy,
@@ -32,6 +33,7 @@ import {
     ClientPermissionEntity,
     ClientRoleEntity,
     ClientScopeEntity,
+    ClientTokenExchangeCapabilityEntity,
     EventAggregateEntity,
     EventEntity,
     IdentityProviderEntity,
@@ -61,6 +63,7 @@ import {
     ClientRepositoryAdapter,
     ClientRoleRepositoryAdapter,
     ClientScopeRepositoryAdapter,
+    ClientTokenExchangeCapabilityRepositoryAdapter,
     DatabaseInjectionKey,
     EntityStatsRepositoryAdapter,
     EventAggregateRepositoryAdapter,
@@ -88,6 +91,7 @@ import {
     ClientPermissionController,
     ClientRoleController,
     ClientScopeController,
+    ClientTokenExchangeCapabilityController,
     ConsentController,
     EventController,
     IdentityProviderAccountController,
@@ -140,6 +144,7 @@ import {
     ClientRoleService,
     ClientScopeService,
     ClientService,
+    ClientTokenExchangeCapabilityService,
     ConsentService,
     CredentialsAuthenticator,
     EVENT_AGGREGATE_COLUMNS,
@@ -223,6 +228,7 @@ export class HTTPControllerModule {
         const clientPermissionController = this.createClientPermissionController(container);
         const clientRoleController = this.createClientRoleController(container);
         const clientScopeController = this.createClientScopeController(container);
+        const clientTokenExchangeCapabilityController = this.createClientTokenExchangeCapabilityController(container);
         const roleAttributeController = this.createRoleAttributeController(container);
         const rolePermissionController = this.createRolePermissionController(container);
         const scopeController = this.createScopeController(container);
@@ -267,6 +273,7 @@ export class HTTPControllerModule {
                 clientPermissionController,
                 clientRoleController,
                 clientScopeController,
+                clientTokenExchangeCapabilityController,
                 consentController,
                 eventController,
                 identityProviderAccountController,
@@ -344,6 +351,7 @@ export class HTTPControllerModule {
         const accessTokenIssuer = container.resolve(OAuth2InjectionToken.AccessTokenIssuer);
         const refreshTokenIssuer = container.resolve(OAuth2InjectionToken.RefreshTokenIssuer);
         const openIdTokenIssuer = container.resolve(OAuth2InjectionToken.OpenIDTokenIssuer);
+        const capabilityTokenIssuer = container.resolve(OAuth2InjectionToken.CapabilityTokenIssuer);
         const keyStore = container.resolve(OAuth2InjectionToken.KeyStore);
 
         const tokenRevoker = container.resolve(OAuth2InjectionToken.TokenRevoker);
@@ -384,12 +392,16 @@ export class HTTPControllerModule {
             accessTokenIssuer,
             refreshTokenIssuer,
             openIdTokenIssuer,
+            capabilityTokenIssuer,
             keyStore,
 
             tokenVerifier,
             tokenRevoker,
             tokenRepository,
             sessionTokenRepository,
+            clientTokenExchangeCapabilityRepository: new ClientTokenExchangeCapabilityRepositoryAdapter(
+                container.resolve<Repository<ClientTokenExchangeCapability>>(ClientTokenExchangeCapabilityEntity),
+            ),
 
             eventService,
             metrics,
@@ -855,6 +867,15 @@ export class HTTPControllerModule {
         const service = new ClientScopeService({ repository });
 
         return new ClientScopeController({ service });
+    }
+
+    createClientTokenExchangeCapabilityController(container: IContainer) {
+        const repository = new ClientTokenExchangeCapabilityRepositoryAdapter(
+            container.resolve<Repository<ClientTokenExchangeCapability>>(ClientTokenExchangeCapabilityEntity),
+        );
+        const service = new ClientTokenExchangeCapabilityService({ repository });
+
+        return new ClientTokenExchangeCapabilityController({ service });
     }
 
     createRoleAttributeController(container: IContainer) {

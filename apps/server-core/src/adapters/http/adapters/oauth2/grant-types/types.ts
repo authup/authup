@@ -23,6 +23,7 @@ import type {
     OAuth2ClientAuthenticator,
     OAuth2PasswordGrantContext,
     OAuth2RefreshTokenGrantContext,
+    OAuth2TokenExchangeGrantContext,
 } from '../../../../../core/index.ts';
 import type { CertificateSource } from '../../../request/index.ts';
 
@@ -47,6 +48,14 @@ export type HTTPOAuth2DeviceCodeGrantContext = OAuth2AuthorizeGrantContext & {
     realmRepository: IRealmRepository,
     accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
     eventService?: IEventService,
+    metrics?: IAuthFlowMetrics,
+    certificateSource: CertificateSource,
+};
+
+export type HTTPOAuth2TokenExchangeGrantContext = OAuth2TokenExchangeGrantContext & {
+    clientAuthenticator: OAuth2ClientAuthenticator,
+    realmRepository: IRealmRepository,
+    accessPolicyEvaluator?: IOAuth2AccessPolicyEvaluator,
     metrics?: IAuthFlowMetrics,
     certificateSource: CertificateSource,
 };

@@ -5,12 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Client } from '@authup/core-kit';
 import type { ObjectLiteral } from '@authup/kit';
-import type { OAuth2TokenConfirmation, OAuth2TokenGrantResponse } from '@authup/specs';
+import type { OAuth2TokenConfirmation, OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
 import type { Logger } from '@authup/server-kit';
 import type { ISessionManager } from '../../authentication/index.ts';
 import type { IIdentityResolver } from '../../identity/resolver/types.ts';
-import type { IEventService, IUserAuthenticatorRequirementProvider } from '../../entities/index.ts';
+import type {
+    IClientTokenExchangeCapabilityRepository,
+    IEventService,
+    IUserAuthenticatorRequirementProvider,
+} from '../../entities/index.ts';
+import type { OAuth2Capability } from '../capability/index.ts';
 import type { IAuthFlowMetrics } from '../../metrics/index.ts';
 import type { IKeyStore } from '../../key/index.ts';
 import type { IOAuth2MfaLoginService } from '../mfa-login/types.ts';
@@ -81,6 +87,38 @@ export type OAuth2RefreshTokenGrantContext = BaseGrantContext & {
     metrics?: IAuthFlowMetrics,
     logger?: Logger,
     options?: OAuth2RefreshTokenGrantOptions,
+};
+
+export type OAuth2TokenExchangeGrantContext = {
+    capabilityTokenIssuer: IOAuth2TokenIssuer,
+    capabilityRepository: Pick<IClientTokenExchangeCapabilityRepository, 'findOneBy'>,
+    tokenVerifier: IOAuth2TokenVerifier,
+    sessionManager: ISessionManager,
+    identityResolver: IIdentityResolver,
+    eventService?: IEventService,
+};
+
+export type OAuth2TokenExchangeInput = {
+    client: Client,
+    subjectToken: string,
+    audience: string,
+    capabilities: OAuth2Capability[],
+    expiresIn?: number,
+};
+
+export type OAuth2TokenExchangeSubject = OAuth2TokenPayload & {
+    sub: string,
+    sub_kind: string,
+    realm_id: string,
+    session_id: string,
+};
+
+export type OAuth2TokenExchangeDecision = {
+    client: Client,
+    audience: string,
+    capabilities: string[],
+    lifetime: number,
+    subject: OAuth2TokenExchangeSubject,
 };
 
 export type OAuth2GrantRunWIthOptions = {

@@ -11,15 +11,33 @@ import {
     OAuth2DeviceAuthorizationError,
     OAuth2ErrorCode,
     OAuth2GrantError,
+    OAuth2TargetError,
     isOAuth2DeviceAuthorizationError,
     isOAuth2Error,
     isOAuth2GrantError,
+    isOAuth2TargetError,
     isOAuth2TokenErrorCode,
 } from '../../../src';
 
 const roundtrip = (input: unknown) => JSON.parse(JSON.stringify(input));
 
 describe('src/oauth2/check', () => {
+    describe('isOAuth2TargetError', () => {
+        it.each([
+            ['audience', OAuth2TargetError.audience()],
+            ['capability', OAuth2TargetError.capability('bucket:read')],
+        ])('should match a %s refusal, also rehydrated', (_label, error) => {
+            expect(error.code).toEqual(ErrorCode.OAUTH_TARGET_INVALID);
+            expect(error.data).toMatchObject({ error: OAuth2ErrorCode.INVALID_TARGET });
+            expect(isOAuth2TargetError(error)).toBe(true);
+            expect(isOAuth2TargetError(roundtrip(error))).toBe(true);
+        });
+
+        it('should not match another OAuth2 error', () => {
+            expect(isOAuth2TargetError(OAuth2GrantError.invalid())).toBe(false);
+        });
+    });
+
     describe('isOAuth2TokenErrorCode', () => {
         it.each([
             OAuth2ErrorCode.INVALID_REQUEST,

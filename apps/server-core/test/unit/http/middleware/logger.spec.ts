@@ -33,6 +33,16 @@ describe('redactSensitiveURLParams', () => {
         expect(redacted).not.toContain('BCDF-GHJK');
     });
 
+    it('should redact the token exchange tokens of a refused request', () => {
+        const redacted = redactSensitiveURLParams('/token?subject_token=eyJzdWIi.sig&actor_token=eyJhY3Qi.sig&audience=storage');
+
+        expect(redacted).toContain('subject_token=***');
+        expect(redacted).toContain('actor_token=***');
+        expect(redacted).toContain('audience=storage');
+        expect(redacted).not.toContain('eyJzdWIi');
+        expect(redacted).not.toContain('eyJhY3Qi');
+    });
+
     it('should redact a login hint and an account link handle', () => {
         const redacted = redactSensitiveURLParams('/authorize?login_hint=a%40b.c&linkHandle=x1y2');
 

@@ -20,6 +20,11 @@ export type OAuth2TokenGrantResponse = {
 
     token_type: string,
 
+    /**
+     * RFC 8693 §2.2.1: the type of the token in `access_token`.
+     */
+    issued_token_type?: string,
+
     id_token?: string,
 
     mac_key?: string,
@@ -127,7 +132,23 @@ export type OAuth2TokenPayload = JWTClaims & {
      * Access tokens: jti of the refresh token this access token was issued
      * alongside (drives chain-aware access-token revocation).
      */
-    refresh_token_id?: string
+    refresh_token_id?: string,
+
+    /**
+     * Capability tokens: the delegated capability entries. Opaque to authup
+     * beyond the type segment.
+     */
+    cap?: string[],
+
+    /**
+     * RFC 8693 §4.1: the party acting on behalf of `sub`.
+     */
+    act?: OAuth2TokenActor
+};
+
+export type OAuth2TokenActor = {
+    sub: string,
+    sub_kind?: string,
 };
 
 export type OAuth2TokenConfirmation = {

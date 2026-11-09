@@ -43,7 +43,7 @@ export type TokenVerifierContext = {
     /**
      * Separates the entries of verifiers sharing a cache passed in. Only
      * verifiers with the same configuration may share one namespace.
-     * Default: `authup:<local|remote>:<baseURL>`.
+     * Default: `authup:<local|remote|capability:<audience>>:<baseURL>`.
      */
     cacheNamespace?: string,
     /**
@@ -67,6 +67,16 @@ export type TokenVerifierContext = {
          */
         timeout?: number,
     } | false,
+    /**
+     * Turns this verifier into a verifier of delegated capability tokens for
+     * one audience: it accepts `kind=capability_token` tokens naming that
+     * audience, and nothing else. Without it every capability token is
+     * denied. Local verification only: introspection reports a capability
+     * token as inactive, so it cannot be combined with `creator`.
+     */
+    capability?: {
+        audience: string,
+    },
 };
 
 export type TokenVerificationData = OAuth2TokenPayload & {

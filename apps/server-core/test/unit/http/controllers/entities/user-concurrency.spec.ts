@@ -19,12 +19,14 @@ import {
 import {
     ClientEntity,
     ClientRepositoryAdapter,
+    ClientTokenExchangeCapabilityEntity,
+    ClientTokenExchangeCapabilityRepositoryAdapter,
     RealmEntity,
     RealmRepositoryAdapter,
     UserRepository,
     UserRepositoryAdapter,
 } from '../../../../../src';
-import { ClientService, UserService } from '../../../../../src/core';
+import { ClientService, ClientTokenExchangeCapabilityService, UserService } from '../../../../../src/core';
 import { createTestApplication } from '../../../../app';
 import { createFakeClient, createFakeUser } from '../../../../utils';
 
@@ -95,6 +97,34 @@ describe.skipIf(!rowLockable)('http/controllers/user (concurrency)', () => {
         expect(row?.email).toBe(next);
         expect(row?.emailVerified).toBe(false);
         expect(row?.displayName).toBe('Concurrent Edit');
+    });
+
+    it('should keep both of two concurrent token exchange capability updates', async () => {
+        const client = await clientService.create({
+            ...createFakeClient(),
+            realmId: realm.id,
+        }, actor);
+        const capabilityService = new ClientTokenExchangeCapabilityService({
+            repository: new ClientTokenExchangeCapabilityRepositoryAdapter(
+                suite.dataSource.getRepository(ClientTokenExchangeCapabilityEntity),
+            ),
+        });
+        const capability = await capabilityService.create({
+            clientId: client.id,
+            audience: 'storage',
+            value: 'bucket',
+            maxAge: 3600,
+        }, actor);
+
+        await Promise.all([
+            capabilityService.update(capability.id, { maxAge: 60 }, actor),
+            capabilityService.update(capability.id, { value: 'bucket-file' }, actor),
+        ]);
+
+        const row = await capabilityService.getOne(capability.id, actor);
+
+        expect(row.maxAge).toBe(60);
+        expect(row.value).toBe('bucket-file');
     });
 
     it('should keep a concurrent user deactivation', async () => {

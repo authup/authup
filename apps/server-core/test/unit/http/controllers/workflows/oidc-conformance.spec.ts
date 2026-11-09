@@ -110,6 +110,7 @@ describe('OIDC conformance smoke', () => {
             'urn:ietf:params:oauth:grant-type:device_code',
             'password',
             'refresh_token',
+            'urn:ietf:params:oauth:grant-type:token-exchange',
         ]);
 
         // endpoints share the issuer origin

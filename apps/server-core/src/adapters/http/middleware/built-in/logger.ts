@@ -28,6 +28,8 @@ const SENSITIVE_QUERY_PARAMS = [
     'token',
     'code',
     'device_code',
+    'subject_token',
+    'actor_token',
     'user_code',
     'client_secret',
     'login_hint',

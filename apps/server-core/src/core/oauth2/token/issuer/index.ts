@@ -6,6 +6,7 @@
  */
 
 export * from './access/index.ts';
+export * from './capability/index.ts';
 export * from './mfa/index.ts';
 export * from './open-id/index.ts';
 export * from './refresh/index.ts';

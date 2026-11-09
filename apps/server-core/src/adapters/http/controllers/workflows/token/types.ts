@@ -9,6 +9,7 @@ import type { User } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import type {
     IAuthFlowMetrics,
+    IClientTokenExchangeCapabilityRepository,
     ICredentialsAuthenticator,
     IEventService,
     IIdentityPermissionProvider,
@@ -39,11 +40,13 @@ export type TokenControllerContext = {
     accessTokenIssuer: IOAuth2TokenIssuer,
     refreshTokenIssuer: IOAuth2TokenIssuer,
     openIdTokenIssuer: IOAuth2OpenIDTokenIssuer,
+    capabilityTokenIssuer: IOAuth2TokenIssuer,
     keyStore: IKeyStore,
     tokenVerifier: IOAuth2TokenVerifier,
     tokenRevoker: IOAuth2TokenRevoker,
     tokenRepository: IOAuth2TokenRepository,
     sessionTokenRepository: ISessionTokenRepository,
+    clientTokenExchangeCapabilityRepository: IClientTokenExchangeCapabilityRepository,
 
     eventService?: IEventService,
     metrics?: IAuthFlowMetrics,

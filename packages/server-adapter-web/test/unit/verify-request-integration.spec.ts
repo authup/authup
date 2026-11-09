@@ -80,6 +80,18 @@ describe('verifyRequest with a TokenVerifier', () => {
             .rejects.toBeInstanceOf(JWTError);
     });
 
+    it('rejects a capability token', async () => {
+        const capability = await signer.sign({
+            ...payload,
+            kind: OAuth2TokenKind.CAPABILITY,
+            aud: 'storage',
+            cap: ['bucket:b:read'],
+        });
+
+        await expect(verifyRequest(req(capability), { tokenVerifier }))
+            .rejects.toBeInstanceOf(JWTError);
+    });
+
     it('rejects a malformed token', async () => {
         await expect(verifyRequest(req('not-a-jwt'), { tokenVerifier }))
             .rejects.toBeInstanceOf(JWTError);

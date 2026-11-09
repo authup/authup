@@ -58,6 +58,7 @@ export const TranslatorTranslationErrorSpanish : NamespaceTranslations<`${ErrorC
     [ErrorCode.OAUTH_RESPONSE_TYPE_UNSUPPORTED]: 'El tipo de respuesta no es compatible.',
     [ErrorCode.OAUTH_SCOPE_INVALID]: 'El ámbito solicitado no es válido.',
     [ErrorCode.OAUTH_SCOPE_INSUFFICIENT]: 'El ámbito concedido es insuficiente para esta acción.',
+    [ErrorCode.OAUTH_TARGET_INVALID]: 'La audiencia o la capacidad solicitada no está permitida.',
     [ErrorCode.OAUTH_AUTHORIZATION_PENDING]: 'El dispositivo aún no ha sido aprobado.',
     [ErrorCode.OAUTH_SLOW_DOWN]: 'El dispositivo consulta con demasiada frecuencia.',
     [ErrorCode.OAUTH_DEVICE_CODE_EXPIRED]: 'El código del dispositivo ha caducado. Vuelva a empezar en su dispositivo.',

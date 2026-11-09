@@ -6,6 +6,7 @@
  */
 
 import { isObject } from '@authup/kit';
+import { OAUTH2_CAPABILITY_MAX_BYTES } from '../../oauth2/capability/constants.ts';
 import { EVENT_DIFF_SECRET_KEY_REGEX } from './diff.ts';
 
 /**
@@ -22,6 +23,9 @@ import { EVENT_DIFF_SECRET_KEY_REGEX } from './diff.ts';
  * never material. kind is the MFA authenticator kind (totp/email/...).
  * providerId / providerName identify the identity provider on account link &
  * unlink events (plan 091): metadata only, never external tokens.
+ * subjectId / subjectKind / audience / capabilities / lifetime describe a
+ * token exchange (RFC 8693). The capability entries are the audit trail of
+ * what was delegated, so they keep the whole wire form of the `cap` parameter.
  *
  * The single structured exception is `diff` (entity-CRUD bridge): it survives
  * only as a one-level object of `{ next, previous }` scalar pairs, keys
@@ -47,9 +51,16 @@ const DATA_KEY_ALLOW_LIST = [
     'kind',
     'providerId',
     'providerName',
+    'subjectId',
+    'subjectKind',
+    'audience',
+    'capabilities',
+    'lifetime',
 ] as const;
 
 const DATA_VALUE_MAX_LENGTH = 512;
+
+const DATA_VALUE_MAX_LENGTHS : Partial<Record<(typeof DATA_KEY_ALLOW_LIST)[number], number>> = { capabilities: OAUTH2_CAPABILITY_MAX_BYTES };
 
 function isDiffScalar(value: unknown): value is string | number | boolean | null {
     return value === null ||
@@ -112,8 +123,10 @@ export function sanitizeEventData(
         const value = input[key];
 
         if (typeof value === 'string') {
-            output[key] = value.length > DATA_VALUE_MAX_LENGTH ?
-                value.substring(0, DATA_VALUE_MAX_LENGTH) :
+            const maxLength = DATA_VALUE_MAX_LENGTHS[key] ?? DATA_VALUE_MAX_LENGTH;
+
+            output[key] = value.length > maxLength ?
+                value.substring(0, maxLength) :
                 value;
         } else if (typeof value === 'number' || typeof value === 'boolean') {
             output[key] = value;

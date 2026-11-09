@@ -8,6 +8,7 @@ import {
 } from '@authup/i18n';
 import {
     injectHTTPClient,
+    usePermissionCheck,
     useTranslations,
     useTranslator,
 } from '@authup/client-web-kit';
@@ -19,6 +20,7 @@ import type { Ref } from 'vue';
 import { computed, defineComponent, ref } from 'vue';
 import { buildRecordHeading } from '../../composables/record';
 import { LayoutSection } from '../../config/layout';
+import { TOKEN_EXCHANGE_CAPABILITY_ACCESS_PERMISSIONS } from '../../config/permissions';
 import { useRoute, useRouter } from 'vue-router';
 import { buildEntityBreadcrumb, buildPathAncestors, useSectionBreadcrumb } from '../../composables/breadcrumb';
 import { useErrorToast } from '../../composables/error';
@@ -37,11 +39,18 @@ export default defineComponent({
         // below is awaited.
         const breadcrumbBase = useSectionBreadcrumb(LayoutSection.CLIENTS);
 
+        const hasTokenExchangeCapabilityAccess = usePermissionCheck({ name: TOKEN_EXCHANGE_CAPABILITY_ACCESS_PERMISSIONS });
+
         const translationsDefault = useTranslations(
             [
                 {
                     namespace: TranslatorTranslationNamespace.COMMON,
                     key: TranslatorTranslationCommonKey.GENERAL,
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY,
+                    key: TranslatorTranslationEntityKey.CLIENT_TOKEN_EXCHANGE_CAPABILITY,
+                    count: 2,
                 },
                 {
                     namespace: TranslatorTranslationNamespace.ENTITY,
@@ -119,6 +128,11 @@ export default defineComponent({
                 icon: 'fa6-solid:user-group',
                 url: `/clients/${entity.value.id}/roles`,
             },
+            ...(hasTokenExchangeCapabilityAccess.value ? [{
+                name: translationsDefault.clientTokenExchangeCapability,
+                icon: 'fa6-solid:right-left',
+                url: `/clients/${entity.value.id}/token-exchange-capabilities`,
+            }] : []),
         ] : []));
 
         const heading = computed(() => buildRecordHeading(entity.value ?? {}));

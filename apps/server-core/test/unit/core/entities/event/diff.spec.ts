@@ -9,6 +9,25 @@ import { describe, expect, it } from 'vitest';
 import { buildEntityDiff } from '../../../../../src/core/entities/event/diff.ts';
 
 describe('buildEntityDiff', () => {
+    it('records every field that decides what a token exchange capability allows', () => {
+        const diff = buildEntityDiff(
+            {
+                audience: 'storage', 
+                value: 'bucket', 
+                maxAge: 86400, 
+                realmScope: 'any',
+            },
+            {
+                audience: 'files', 
+                value: 'bucket:read', 
+                maxAge: 60, 
+                realmScope: 'own',
+            },
+        );
+
+        expect(Object.keys(diff).sort()).toEqual(['audience', 'maxAge', 'realmScope', 'value']);
+    });
+
     it('includes a changed scalar with next/previous', () => {
         const diff = buildEntityDiff(
             { description: 'after', name: 'same' },

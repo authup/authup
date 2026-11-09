@@ -62,6 +62,7 @@ export const OAuth2InjectionToken = {
     RealmCipher: new TypedToken<IRealmCipher>('RealmCipher'),
 
     AccessTokenIssuer: new TypedToken<IOAuth2TokenIssuer>('AccessTokenIssuer'),
+    CapabilityTokenIssuer: new TypedToken<IOAuth2TokenIssuer>('CapabilityTokenIssuer'),
     MfaTokenIssuer: new TypedToken<IOAuth2TokenIssuer>('MfaTokenIssuer'),
     OpenIDTokenIssuer: new TypedToken<IOAuth2OpenIDTokenIssuer>('OpenIDTokenIssuer'),
     RefreshTokenIssuer: new TypedToken<IOAuth2TokenIssuer>('RefreshTokenIssuer'),

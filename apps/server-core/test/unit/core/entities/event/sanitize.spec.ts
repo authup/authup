@@ -28,8 +28,20 @@ describe('sanitizeEventData', () => {
         ['kind', 'totp'],
         ['providerId', 'b0e8b3d2-2222-2222-2222-222222222222'],
         ['providerName', 'keycloak'],
+        ['subjectId', 'b0e8b3d2-3333-3333-3333-333333333333'],
+        ['subjectKind', 'user'],
+        ['audience', 'storage'],
+        ['capabilities', 'bucket:b:read'],
+        ['lifetime', '3600'],
     ])('keeps the allowlisted scalar key %s', (key, value) => {
         expect(sanitizeEventData({ [key]: value })).toEqual({ [key]: value });
+    });
+
+    it('keeps the capability entries up to the size of the cap parameter', () => {
+        const capabilities = 'a'.repeat(4096);
+
+        expect(sanitizeEventData({ capabilities })).toEqual({ capabilities });
+        expect(sanitizeEventData({ capabilities: `${capabilities}a` })).toEqual({ capabilities });
     });
 
     it('keeps number and boolean values on allowlisted keys', () => {

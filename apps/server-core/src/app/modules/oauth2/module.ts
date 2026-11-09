@@ -32,6 +32,7 @@ import {
     OAuth2AuthorizationCodeRequestVerifier,
     OAuth2AuthorizationCodeVerifier,
     OAuth2AuthorizationStateManager,
+    OAuth2CapabilityTokenIssuer,
     OAuth2MfaTokenIssuer,
     OAuth2OpenIDTokenIssuer,
     OAuth2RefreshTokenIssuer,
@@ -257,6 +258,15 @@ export class OAuth2Module implements IModule {
                     sessionTokenRepository,
                 );
             },
+        });
+
+        // capability token issuer (RFC 8693)
+        container.register(OAuth2InjectionToken.CapabilityTokenIssuer, {
+            useFactory: (c) => new OAuth2CapabilityTokenIssuer(
+                c.resolve(OAuth2InjectionToken.TokenSigner),
+                { issuer: config.publicUrl },
+                c.resolve(LoggerInjectionKey),
+            ),
         });
 
         // mfa login-ticket issuer

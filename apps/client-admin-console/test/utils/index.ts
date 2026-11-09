@@ -11,6 +11,7 @@ import type { FakeHandlerMap } from '@authup/core-http-kit/testing';
 import vuecs from '@vuecs/core';
 import installNavigation from '@vuecs/navigation';
 import installOverlays from '@vuecs/overlays';
+import installTable from '@vuecs/table';
 import { flushPromises, mount } from '@vue/test-utils';
 import { createPinia } from 'pinia';
 import { Suspense, defineComponent, h } from 'vue';
@@ -49,6 +50,9 @@ export async function mountPage(
                 [vuecs, {}],
                 installOverlays,
                 installNavigation,
+                // `VCTable` is generic, so a page renders it through the
+                // global registration.
+                installTable,
                 [{ install }, {
                     baseURL: 'http://fake.test',
                     httpClient,

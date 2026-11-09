@@ -431,7 +431,22 @@ describe('AClientForm grant types', () => {
             'urn:ietf:params:oauth:grant-type:device_code',
             'password',
             'refresh_token',
+            'urn:ietf:params:oauth:grant-type:token-exchange',
         ]);
+    });
+
+    it('labels the URN grant types instead of rendering the URN', async () => {
+        const { wrapper } = mountForm(createEntity());
+
+        await flushPromises();
+
+        const labels = wrapper
+            .findAllComponents({ name: 'VCFormCheckbox' })
+            .map((checkbox) => checkbox.props('labelContent'));
+
+        expect(labels).toContain('Device authorization');
+        expect(labels).toContain('Token exchange');
+        expect(labels.filter((label) => String(label).startsWith('urn:'))).toEqual([]);
     });
 
     it('hydrates the selection from the delimited column', async () => {

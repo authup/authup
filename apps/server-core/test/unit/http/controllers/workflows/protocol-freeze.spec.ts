@@ -94,6 +94,7 @@ describe('protocol-surface freeze (plan 073)', () => {
             'urn:ietf:params:oauth:grant-type:device_code',
             'password',
             'refresh_token',
+            'urn:ietf:params:oauth:grant-type:token-exchange',
         ]);
 
         expect(discovery).not.toHaveProperty('authorizationEndpoint');

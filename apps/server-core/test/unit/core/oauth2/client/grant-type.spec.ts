@@ -42,6 +42,11 @@ describe('assertClientGrantAllowed', () => {
         }
     });
 
+    it('should keep the token exchange grant opt-in', () => {
+        expect(OPT_IN_GRANT_TYPES.has(OAuth2TokenGrant.TOKEN_EXCHANGE)).toBe(true);
+        expect(OAuth2TokenGrant.TOKEN_EXCHANGE).toEqual('urn:ietf:params:oauth:grant-type:token-exchange');
+    });
+
     it('should keep the device grant opt-in', () => {
         expect(OPT_IN_GRANT_TYPES.has(OAuth2TokenGrant.DEVICE_CODE)).toBe(true);
         expect(OAuth2TokenGrant.DEVICE_CODE).toEqual('urn:ietf:params:oauth:grant-type:device_code');
