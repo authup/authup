@@ -11,11 +11,11 @@ import type { IEntityAPI } from '../../types-base';
 import type { ClientTokenExchangeCapability } from '@authup/core-kit';
 
 // Mirrors `ClientTokenExchangeCapabilityValidator` mounts in @authup/core-kit.
-export type ClientTokenExchangeCapabilityCreatePayload = Pick<ClientTokenExchangeCapability, 'clientId' | 'audience' | 'value' | 'tokenMaxAge'> &
+export type ClientTokenExchangeCapabilityCreatePayload = Pick<ClientTokenExchangeCapability, 'clientId' | 'audience' | 'value' | 'maxAge'> &
     Partial<Pick<ClientTokenExchangeCapability, 'realmScope'>>;
 export type ClientTokenExchangeCapabilityUpdatePayload = Partial<Pick<
     ClientTokenExchangeCapability,
-    'audience' | 'value' | 'tokenMaxAge' | 'realmScope'
+    'audience' | 'value' | 'maxAge' | 'realmScope'
 >>;
 
 export interface IClientTokenExchangeCapabilityAPI extends IEntityAPI<

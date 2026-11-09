@@ -104,26 +104,26 @@ describe.skipIf(!rowLockable)('http/controllers/user (concurrency)', () => {
             ...createFakeClient(),
             realmId: realm.id,
         }, actor);
-        const policyService = new ClientTokenExchangeCapabilityService({
+        const capabilityService = new ClientTokenExchangeCapabilityService({
             repository: new ClientTokenExchangeCapabilityRepositoryAdapter(
                 suite.dataSource.getRepository(ClientTokenExchangeCapabilityEntity),
             ),
         });
-        const policy = await policyService.create({
+        const capability = await capabilityService.create({
             clientId: client.id,
             audience: 'storage',
             value: 'bucket',
-            tokenMaxAge: 3600,
+            maxAge: 3600,
         }, actor);
 
         await Promise.all([
-            policyService.update(policy.id, { tokenMaxAge: 60 }, actor),
-            policyService.update(policy.id, { value: 'bucket-file' }, actor),
+            capabilityService.update(capability.id, { maxAge: 60 }, actor),
+            capabilityService.update(capability.id, { value: 'bucket-file' }, actor),
         ]);
 
-        const row = await policyService.getOne(policy.id, actor);
+        const row = await capabilityService.getOne(capability.id, actor);
 
-        expect(row.tokenMaxAge).toBe(60);
+        expect(row.maxAge).toBe(60);
         expect(row.value).toBe('bucket-file');
     });
 

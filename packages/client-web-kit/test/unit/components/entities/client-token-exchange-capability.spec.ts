@@ -26,7 +26,7 @@ function createCapability(input: Partial<ClientTokenExchangeCapability> = {}) : 
         id: CAPABILITY_ID,
         audience: 'storage',
         value: 'bucket',
-        tokenMaxAge: 600,
+        maxAge: 600,
         realmScope: 'own',
         clientId: CLIENT_ID,
         realmId: '5cb2b3fa-6a3a-4f1e-9a4f-2d1f6a1b0c11',
@@ -119,7 +119,7 @@ describe('AClientTokenExchangeCapabilityForm', () => {
             clientId: CLIENT_ID,
             audience: 'storage',
             value: 'bucket bucket-file',
-            tokenMaxAge: 3600,
+            maxAge: 3600,
             realmScope: 'own',
         });
 
@@ -134,13 +134,13 @@ describe('AClientTokenExchangeCapabilityForm', () => {
 
         await flushPromises();
 
-        const [audience, value, tokenMaxAge] = findInputs(wrapper);
+        const [audience, value, maxAge] = findInputs(wrapper);
 
         expect((audience!.element as HTMLInputElement).value).toEqual('storage');
         expect((value!.element as HTMLInputElement).value).toEqual('bucket');
-        expect((tokenMaxAge!.element as HTMLInputElement).value).toEqual('600');
+        expect((maxAge!.element as HTMLInputElement).value).toEqual('600');
 
-        await tokenMaxAge!.setValue('60');
+        await maxAge!.setValue('60');
         await flushPromises();
 
         wrapper.findComponent(AFormSubmit).vm.$emit('submit');
@@ -152,7 +152,7 @@ describe('AClientTokenExchangeCapabilityForm', () => {
         expect(request!.body).toEqual({
             audience: 'storage',
             value: 'bucket',
-            tokenMaxAge: 60,
+            maxAge: 60,
             realmScope: 'any',
         });
 
@@ -186,9 +186,9 @@ describe('AClientTokenExchangeCapabilityForm', () => {
 
         await flushPromises();
 
-        const [, , tokenMaxAge] = findInputs(wrapper);
+        const [, , maxAge] = findInputs(wrapper);
 
-        await tokenMaxAge!.setValue(value);
+        await maxAge!.setValue(value);
         await flushPromises();
 
         expect(wrapper.findComponent(AFormSubmit).props('isInvalid')).toBe(true);

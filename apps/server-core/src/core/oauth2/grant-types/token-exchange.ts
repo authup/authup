@@ -100,7 +100,7 @@ export class OAuth2TokenExchangeGrant {
             client: input.client,
             audience: input.audience,
             capabilities: input.capabilities.map((capability) => capability.value),
-            lifetime: Math.min(input.expiresIn ?? entry.tokenMaxAge, entry.tokenMaxAge),
+            lifetime: Math.min(input.expiresIn ?? entry.maxAge, entry.maxAge),
             subject,
         };
     }

@@ -29,7 +29,7 @@ export const clientTokenExchangeCapabilitySchema = defineSchema<ClientTokenExcha
             'id',
             'audience',
             'value',
-            'tokenMaxAge',
+            'maxAge',
             'realmScope',
             'clientId',
             'realmId',

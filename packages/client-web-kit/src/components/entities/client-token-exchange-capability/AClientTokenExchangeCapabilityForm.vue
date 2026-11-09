@@ -6,7 +6,7 @@
   -->
 <script lang="ts">
 import {
-    CLIENT_TOKEN_EXCHANGE_TOKEN_MAX_AGE,
+    CLIENT_TOKEN_EXCHANGE_MAX_AGE,
     ClientTokenExchangeCapabilityValidator,
     ClientTokenExchangeRealmScope,
     EntityType,
@@ -54,7 +54,7 @@ export default defineComponent({
         const form = reactive({
             audience: '',
             value: '',
-            tokenMaxAge: LIFETIME_DEFAULT,
+            maxAge: LIFETIME_DEFAULT,
             realmScope: ClientTokenExchangeRealmScope.OWN as `${ClientTokenExchangeRealmScope}`,
         });
 
@@ -70,7 +70,7 @@ export default defineComponent({
         // create: under the UPDATE group a cleared field passes here and is
         // refused by the server.
         const v = useValidup(
-            new ClientTokenExchangeCapabilityValidator({ pathsToInclude: ['audience', 'value', 'tokenMaxAge', 'realmScope'] }),
+            new ClientTokenExchangeCapabilityValidator({ pathsToInclude: ['audience', 'value', 'maxAge', 'realmScope'] }),
             form,
             { group: ValidatorGroup.CREATE },
         );
@@ -110,10 +110,10 @@ export default defineComponent({
                 { key: TranslatorTranslationClientKey.TOKEN_EXCHANGE_AUDIENCE_HINT },
                 { key: TranslatorTranslationClientKey.TOKEN_EXCHANGE_CAPABILITY_VALUE },
                 { key: TranslatorTranslationClientKey.TOKEN_EXCHANGE_CAPABILITY_VALUE_HINT },
-                { key: TranslatorTranslationClientKey.TOKEN_EXCHANGE_TOKEN_MAX_AGE },
+                { key: TranslatorTranslationClientKey.TOKEN_EXCHANGE_MAX_AGE },
                 {
-                    key: TranslatorTranslationClientKey.TOKEN_EXCHANGE_TOKEN_MAX_AGE_HINT,
-                    data: { max: CLIENT_TOKEN_EXCHANGE_TOKEN_MAX_AGE },
+                    key: TranslatorTranslationClientKey.TOKEN_EXCHANGE_MAX_AGE_HINT,
+                    data: { max: CLIENT_TOKEN_EXCHANGE_MAX_AGE },
                 },
                 { key: TranslatorTranslationClientKey.TOKEN_EXCHANGE_REALM_SCOPE },
                 { key: TranslatorTranslationClientKey.TOKEN_EXCHANGE_REALM_SCOPE_HINT },
@@ -173,19 +173,19 @@ export default defineComponent({
 
         <IFieldValidation
             v-slot="{ value }"
-            :field="v.fields.tokenMaxAge"
+            :field="v.fields.maxAge"
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    {{ translations.tokenExchangeTokenMaxAge }}
+                    {{ translations.tokenExchangeMaxAge }}
                 </template>
                 <VCFormInput
                     type="number"
-                    :model-value="`${v.fields.tokenMaxAge.$model.value ?? 0}`"
-                    @update:model-value="(next: string) => { v.fields.tokenMaxAge.$model.value = Number(next); }"
+                    :model-value="`${v.fields.maxAge.$model.value ?? 0}`"
+                    @update:model-value="(next: string) => { v.fields.maxAge.$model.value = Number(next); }"
                 />
                 <template #hint>
-                    {{ translations.tokenExchangeTokenMaxAgeHint }}
+                    {{ translations.tokenExchangeMaxAgeHint }}
                 </template>
             </VCFormGroup>
         </IFieldValidation>

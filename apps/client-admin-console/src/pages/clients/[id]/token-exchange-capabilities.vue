@@ -90,7 +90,7 @@ export default defineComponent({
             },
             {
                 namespace: TranslatorTranslationNamespace.CLIENT,
-                key: TranslatorTranslationClientKey.TOKEN_EXCHANGE_TOKEN_MAX_AGE,
+                key: TranslatorTranslationClientKey.TOKEN_EXCHANGE_MAX_AGE,
             },
             {
                 namespace: TranslatorTranslationNamespace.CLIENT,
@@ -132,8 +132,8 @@ export default defineComponent({
                 cellClass: 'text-left',
             },
             {
-                key: 'tokenMaxAge',
-                label: translations.tokenExchangeTokenMaxAge,
+                key: 'maxAge',
+                label: translations.tokenExchangeMaxAge,
                 headerClass: 'text-center',
                 cellClass: 'text-center',
             },

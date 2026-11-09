@@ -26,7 +26,7 @@ export interface ClientTokenExchangeCapability {
     /**
      * Ceiling for the lifetime of an issued token, in seconds.
      */
-    tokenMaxAge: number;
+    maxAge: number;
 
     realmScope: `${ClientTokenExchangeRealmScope}`;
 

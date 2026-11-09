@@ -14,7 +14,7 @@ import {
     CLIENT_TOKEN_EXCHANGE_CAPABILITY_ACTION_PATTERN,
     CLIENT_TOKEN_EXCHANGE_CAPABILITY_TYPE_PATTERN,
     CLIENT_TOKEN_EXCHANGE_CAPABILITY_VALUE_MAX_LENGTH,
-    CLIENT_TOKEN_EXCHANGE_TOKEN_MAX_AGE,
+    CLIENT_TOKEN_EXCHANGE_MAX_AGE,
     ClientTokenExchangeRealmScope,
 } from './constants';
 import type { ClientTokenExchangeCapability } from './entity';
@@ -99,8 +99,8 @@ export class ClientTokenExchangeCapabilityValidator extends Container<ClientToke
         this.mountRequiredOnCreate('value', createValidator(valueSchema));
 
         this.mountRequiredOnCreate(
-            'tokenMaxAge',
-            createValidator(z.number().int().min(1).max(CLIENT_TOKEN_EXCHANGE_TOKEN_MAX_AGE)),
+            'maxAge',
+            createValidator(z.number().int().min(1).max(CLIENT_TOKEN_EXCHANGE_MAX_AGE)),
         );
 
         this.mount(

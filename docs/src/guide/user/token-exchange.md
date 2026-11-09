@@ -72,8 +72,8 @@ client's **Token exchange capabilities** tab in the admin console, or through
 |---|---|
 | `clientId` | The actor. Fixed once the capability exists. |
 | `audience` | The resource server, up to 256 characters without whitespace. Matched exactly, including case. |
-| `value` | What the client may delegate, separated by spaces. `type` allows every action of that type, `type:action` allows that one action, and one value can hold both forms (`bucket:read bucket:write bucket-file`). At least one entry is required, and a type cannot appear both bare and with an action. A type matches `[a-z][a-z0-9-]{0,63}`, an action `[a-z][a-z0-9-]{0,31}`. |
-| `tokenMaxAge` | The longest an issued token may live, from 1 to 86400 seconds. |
+| `value` | What the client may delegate, separated by spaces. `type` allows every action of that type, `type:action` allows that one action, and one value can hold both forms (`bucket:read bucket:write bucket-file`). At least one entry is required, up to 512 characters, and a type cannot appear both bare and with an action. A type matches `[a-z][a-z0-9-]{0,63}`, an action `[a-z][a-z0-9-]{0,31}`. |
+| `maxAge` | The longest an issued token may live, from 1 to 86400 seconds. |
 | `realmScope` | `own` (the default) allows only subjects of the client's own realm. `any` allows subjects of **every** realm. |
 
 ::: warning `any` crosses every realm
@@ -133,7 +133,7 @@ curl -X POST 'http://localhost:3000/token' \
 | `audience` | yes | Exactly one audience, allowed by a capability of the client. |
 | `cap` | yes | One or more capability entries, separated by spaces. |
 | `requested_token_type` | no | If sent, `urn:ietf:params:oauth:token-type:jwt`. |
-| `expires_in` | no | The requested lifetime in seconds. It is clamped to the capability's `tokenMaxAge`, which is also the default. |
+| `expires_in` | no | The requested lifetime in seconds. It is clamped to the capability's `maxAge`, which is also the default. |
 | `realm_id` or `realm_name` | no | The realm of the actor, by id or name. Needed when the actor is named by `name` outside the master realm. |
 
 Parameters are read from the form body only. Anything else is ignored, including
@@ -243,5 +243,5 @@ Give the realm an RSA or EC signing key.
 A capability token is not stored. It cannot be revoked, and ending the subject's
 session, deactivating the subject or changing a capability does not reach a token
 already issued. It stays valid until its `exp`, which may be later than the
-expiry of the subject token it was exchanged for. `tokenMaxAge` is the longest
+expiry of the subject token it was exchanged for. `maxAge` is the longest
 window this leaves open, so set it to what the use case really needs.

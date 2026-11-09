@@ -22,7 +22,7 @@ export class ClientTokenExchangeCapabilities1794155837154 implements MigrationIn
                 \`id\` varchar(36) NOT NULL,
                 \`audience\` varchar(256) NOT NULL,
                 \`value\` text NOT NULL,
-                \`token_max_age\` int NOT NULL,
+                \`max_age\` int NOT NULL,
                 \`realm_scope\` varchar(16) NOT NULL DEFAULT 'own',
                 \`created_at\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                 \`updated_at\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),

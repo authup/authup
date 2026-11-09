@@ -19,14 +19,14 @@ export const CLIENT_TOKEN_EXCHANGE_AUDIENCE_MAX_LENGTH = 256;
 /**
  * The widest ceiling a capability may set for an issued token, in seconds.
  */
-export const CLIENT_TOKEN_EXCHANGE_TOKEN_MAX_AGE = 86400;
+export const CLIENT_TOKEN_EXCHANGE_MAX_AGE = 86400;
 
 export const CLIENT_TOKEN_EXCHANGE_CAPABILITY_TYPE_PATTERN = /^[a-z][a-z0-9-]{0,63}$/;
 
 export const CLIENT_TOKEN_EXCHANGE_CAPABILITY_ACTION_PATTERN = /^[a-z][a-z0-9-]{0,31}$/;
 
 /**
- * Bounds the `text` column, so an oversized list is a validation error on
- * every dialect instead of a mysql write failure.
+ * The entity audit diff keeps 512 characters of a value, so a longer list could
+ * change without the whole change being recorded.
  */
-export const CLIENT_TOKEN_EXCHANGE_CAPABILITY_VALUE_MAX_LENGTH = 4096;
+export const CLIENT_TOKEN_EXCHANGE_CAPABILITY_VALUE_MAX_LENGTH = 512;

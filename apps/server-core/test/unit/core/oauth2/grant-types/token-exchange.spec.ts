@@ -118,7 +118,7 @@ describe('OAuth2TokenExchangeGrant', () => {
             clientId: client.id,
             audience: 'storage',
             value: 'bucket bucket-file',
-            tokenMaxAge: 3600,
+            maxAge: 3600,
             realmScope: ClientTokenExchangeRealmScope.ANY,
             realmId: actorRealmId,
         } as ClientTokenExchangeCapability;
@@ -295,7 +295,7 @@ describe('OAuth2TokenExchangeGrant', () => {
         });
 
         it('clamps a longer requested lifetime to the capability maximum', async () => {
-            capability.tokenMaxAge = 120;
+            capability.maxAge = 120;
 
             const response = await run(buildInput({ expiresIn: 86400 }));
 

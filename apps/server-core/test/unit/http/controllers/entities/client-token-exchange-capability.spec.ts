@@ -48,7 +48,7 @@ describe('client token exchange capabilities', () => {
             clientId,
             audience,
             value: 'bucket bucket-file',
-            tokenMaxAge: 3600,
+            maxAge: 3600,
         };
     }
 
@@ -120,7 +120,7 @@ describe('client token exchange capabilities', () => {
             expect(created.clientId).toEqual(client.id);
             expect(created.audience).toEqual(payload.audience);
             expect(created.value).toEqual('bucket bucket-file');
-            expect(created.tokenMaxAge).toEqual(3600);
+            expect(created.maxAge).toEqual(3600);
             expect(created.realmScope).toEqual('own');
             expect(created.createdAt).toBeDefined();
             expect(created.updatedAt).toBeDefined();
@@ -131,11 +131,11 @@ describe('client token exchange capabilities', () => {
             expect(read.id).toEqual(created.id);
 
             const { data: updated } = await suite.client.clientTokenExchangeCapability.update(created.id, {
-                tokenMaxAge: 60,
+                maxAge: 60,
                 realmScope: 'any',
             });
 
-            expect(updated.tokenMaxAge).toEqual(60);
+            expect(updated.maxAge).toEqual(60);
             expect(updated.realmScope).toEqual('any');
             expect(updated.audience).toEqual(payload.audience);
 
@@ -191,12 +191,12 @@ describe('client token exchange capabilities', () => {
             const body = {
                 clientId: otherClient.id,
                 realmId: otherRealm.id,
-                tokenMaxAge: 120,
+                maxAge: 120,
             };
 
             const { data: updated } = await suite.client.clientTokenExchangeCapability.update(created.id, body);
 
-            expect(updated.tokenMaxAge).toEqual(120);
+            expect(updated.maxAge).toEqual(120);
             expect(updated.clientId).toEqual(client.id);
             expect(updated.realmId).toEqual(realm.id);
         });
@@ -267,9 +267,9 @@ describe('client token exchange capabilities', () => {
             ['no capability type', { value: '' }],
             ['a malformed capability type', { value: 'Bucket' }],
             ['a duplicate capability type', { value: 'bucket bucket' }],
-            ['a zero lifetime', { tokenMaxAge: 0 }],
-            ['a lifetime above the ceiling', { tokenMaxAge: 86401 }],
-            ['a fractional lifetime', { tokenMaxAge: 1.5 }],
+            ['a zero lifetime', { maxAge: 0 }],
+            ['a lifetime above the ceiling', { maxAge: 86401 }],
+            ['a fractional lifetime', { maxAge: 1.5 }],
             ['an unknown subject realm scope', { realmScope: 'all' }],
         ])('should reject %s', async (_label, patch) => {
             const body = { ...buildPayload(client.id), ...patch } as ReturnType<typeof buildPayload>;
@@ -363,7 +363,7 @@ describe('client token exchange capabilities', () => {
             const { data: capability } = await suite.client.clientTokenExchangeCapability.create(buildPayload(client.id));
 
             await expectClientError(
-                () => realmAdmin.clientTokenExchangeCapability.update(capability.id, { tokenMaxAge: 60 }),
+                () => realmAdmin.clientTokenExchangeCapability.update(capability.id, { maxAge: 60 }),
                 { status: 403 },
             );
         });

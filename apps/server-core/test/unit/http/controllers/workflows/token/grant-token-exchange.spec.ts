@@ -73,7 +73,7 @@ describe('token endpoint: token exchange (RFC 8693)', () => {
             clientId,
             audience: AUDIENCE,
             value: 'bucket bucket-file',
-            tokenMaxAge: 3600,
+            maxAge: 3600,
             ...overrides,
         });
     };

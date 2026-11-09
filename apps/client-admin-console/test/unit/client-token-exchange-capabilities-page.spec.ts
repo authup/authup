@@ -46,7 +46,7 @@ const capability = {
     id: CAPABILITY_ID,
     audience: 'storage',
     value: 'bucket',
-    tokenMaxAge: 600,
+    maxAge: 600,
     realmScope: 'any',
     clientId: CLIENT_ID,
     realmId: '5cb2b3fa-6a3a-4f1e-9a4f-2d1f6a1b0c11',

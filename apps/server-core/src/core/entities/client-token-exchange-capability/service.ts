@@ -136,7 +136,7 @@ export class ClientTokenExchangeCapabilityService extends AbstractEntityService 
             clientId: validated.clientId,
             audience: validated.audience,
             value: validated.value,
-            tokenMaxAge: validated.tokenMaxAge,
+            maxAge: validated.maxAge,
             realmScope: validated.realmScope ?? ClientTokenExchangeRealmScope.OWN,
             realmId: validated.client.realmId,
         });

@@ -16,7 +16,7 @@ function buildInput(data: Record<string, unknown> = {}) {
         clientId: ID,
         audience: 'storage',
         value: 'bucket bucket-file',
-        tokenMaxAge: 3600,
+        maxAge: 3600,
         ...data,
     };
 }
@@ -38,7 +38,7 @@ describe('ClientTokenExchangeCapabilityValidator', () => {
         ['clientId'],
         ['audience'],
         ['value'],
-        ['tokenMaxAge'],
+        ['maxAge'],
     ])('should require %s on create', async (key) => {
         const input = buildInput();
 
@@ -66,12 +66,12 @@ describe('ClientTokenExchangeCapabilityValidator', () => {
 
     it('should accept a partial update and drop the client', async () => {
         const output = await update({
-            tokenMaxAge: 60, 
+            maxAge: 60, 
             clientId: ID, 
             realmId: ID, 
         });
 
-        expect(output).toEqual({ tokenMaxAge: 60 });
+        expect(output).toEqual({ maxAge: 60 });
     });
 
     describe('audience', () => {
@@ -139,18 +139,18 @@ describe('ClientTokenExchangeCapabilityValidator', () => {
             ['a comma list', 'bucket,file'],
             ['a duplicate', 'bucket file bucket'],
             ['a segment too long', `a${'b'.repeat(64)}`],
-            ['a list too long', 'a'.repeat(4097)],
+            ['a list too long', Array.from({ length: 80 }, (_, index) => `t${index}:read`).join(' ')],
             ['not a string', ['bucket']],
         ])('should reject %s', async (_label, value) => {
             await expect(create(buildInput({ value }))).rejects.toThrow();
         });
     });
 
-    describe('tokenMaxAge', () => {
-        it.each([[1], [86400]])('should accept %d', async (tokenMaxAge) => {
-            const output = await create(buildInput({ tokenMaxAge }));
+    describe('maxAge', () => {
+        it.each([[1], [86400]])('should accept %d', async (maxAge) => {
+            const output = await create(buildInput({ maxAge }));
 
-            expect(output.tokenMaxAge).toEqual(tokenMaxAge);
+            expect(output.maxAge).toEqual(maxAge);
         });
 
         it.each([
@@ -160,8 +160,8 @@ describe('ClientTokenExchangeCapabilityValidator', () => {
             [1.5],
             ['3600'],
             [null],
-        ])('should reject %s', async (tokenMaxAge) => {
-            await expect(create(buildInput({ tokenMaxAge }))).rejects.toThrow();
+        ])('should reject %s', async (maxAge) => {
+            await expect(create(buildInput({ maxAge }))).rejects.toThrow();
         });
     });
 });

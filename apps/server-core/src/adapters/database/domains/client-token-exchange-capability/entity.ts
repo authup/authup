@@ -39,8 +39,8 @@ export class ClientTokenExchangeCapabilityEntity implements ClientTokenExchangeC
     @Column({ type: 'text' })
     value: string;
 
-    @Column({ name: 'token_max_age', type: 'int' })
-    tokenMaxAge: number;
+    @Column({ name: 'max_age', type: 'int' })
+    maxAge: number;
 
     @Column({
         name: 'realm_scope',

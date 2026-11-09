@@ -34,7 +34,7 @@ describe('core/entities/client-token-exchange-capability/service', () => {
             clientId: randomUUID(),
             audience: 'storage',
             value: 'bucket',
-            tokenMaxAge: 3600,
+            maxAge: 3600,
             ...data,
         };
     }
@@ -44,7 +44,7 @@ describe('core/entities/client-token-exchange-capability/service', () => {
             clientId: randomUUID(),
             audience: 'storage',
             value: 'bucket',
-            tokenMaxAge: 3600,
+            maxAge: 3600,
             realmScope: 'own',
             realmId: clientRealmId,
             ...data,
@@ -194,7 +194,7 @@ describe('core/entities/client-token-exchange-capability/service', () => {
         });
 
         it('should reject an invalid payload', async () => {
-            await expect(service.create(buildPayload({ tokenMaxAge: 0 }), createAllowAllActor())).rejects.toThrow();
+            await expect(service.create(buildPayload({ maxAge: 0 }), createAllowAllActor())).rejects.toThrow();
         });
 
         it('should refuse an actor without a grant before validating', async () => {
@@ -207,9 +207,9 @@ describe('core/entities/client-token-exchange-capability/service', () => {
             const entity = seed();
             const actor = createAllowAllActor();
 
-            const result = await service.update(entity.id, { tokenMaxAge: 60 }, actor);
+            const result = await service.update(entity.id, { maxAge: 60 }, actor);
 
-            expect(result.tokenMaxAge).toEqual(60);
+            expect(result.maxAge).toEqual(60);
             expect(readEvaluatedRecordRealms(actor.permissionEvaluator, PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_UPDATE))
                 .toEqual([clientRealmId, clientRealmId]);
         });
@@ -241,7 +241,7 @@ describe('core/entities/client-token-exchange-capability/service', () => {
         it('should write once in one transaction when nothing changed', async () => {
             const entity = seed();
 
-            await service.update(entity.id, { tokenMaxAge: 60 }, createAllowAllActor());
+            await service.update(entity.id, { maxAge: 60 }, createAllowAllActor());
 
             expect(repository.transactionCalls).toBe(1);
         });
@@ -256,9 +256,9 @@ describe('core/entities/client-token-exchange-capability/service', () => {
                 await repository.commit(entity.id, { realmScope: 'own', value: 'bucket-file' });
             };
 
-            const result = await service.update(entity.id, { tokenMaxAge: 60 }, actor);
+            const result = await service.update(entity.id, { maxAge: 60 }, actor);
 
-            expect(result.tokenMaxAge).toEqual(60);
+            expect(result.maxAge).toEqual(60);
             expect(result.value).toEqual('bucket-file');
             expect(result.realmScope).toEqual('own');
             expect(repository.transactionCalls).toBe(2);
@@ -267,17 +267,17 @@ describe('core/entities/client-token-exchange-capability/service', () => {
         });
 
         it('should not write back an echoed field a concurrent update changed', async () => {
-            const entity = seed({ tokenMaxAge: 3600 });
+            const entity = seed({ maxAge: 3600 });
 
             repository.beforeTransaction = async () => {
                 repository.beforeTransaction = undefined;
 
-                await repository.commit(entity.id, { tokenMaxAge: 60 });
+                await repository.commit(entity.id, { maxAge: 60 });
             };
 
-            const result = await service.update(entity.id, { tokenMaxAge: 3600, value: 'bucket-file' }, createAllowAllActor());
+            const result = await service.update(entity.id, { maxAge: 3600, value: 'bucket-file' }, createAllowAllActor());
 
-            expect(result.tokenMaxAge).toEqual(60);
+            expect(result.maxAge).toEqual(60);
             expect(result.value).toEqual('bucket-file');
         });
 
@@ -288,7 +288,7 @@ describe('core/entities/client-token-exchange-capability/service', () => {
             const result = await service.update(entity.id, {
                 clientId: randomUUID(),
                 realmId: randomUUID(),
-                tokenMaxAge: 60,
+                maxAge: 60,
             }, createAllowAllActor());
 
             expect(result.clientId).toEqual(clientId);
@@ -315,12 +315,12 @@ describe('core/entities/client-token-exchange-capability/service', () => {
         });
 
         it('should answer not found for an unknown row', async () => {
-            await expect(service.update(randomUUID(), { tokenMaxAge: 60 }, createAllowAllActor()))
+            await expect(service.update(randomUUID(), { maxAge: 60 }, createAllowAllActor()))
                 .rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should refuse an actor without a grant', async () => {
-            await expect(service.update(seed().id, { tokenMaxAge: 60 }, createDenyAllActor()))
+            await expect(service.update(seed().id, { maxAge: 60 }, createDenyAllActor()))
                 .rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });

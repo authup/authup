@@ -22,7 +22,7 @@ export class ClientTokenExchangeCapabilities1794155837154 implements MigrationIn
                 "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
                 "audience" character varying(256) NOT NULL,
                 "value" text NOT NULL,
-                "token_max_age" integer NOT NULL,
+                "max_age" integer NOT NULL,
                 "realm_scope" character varying(16) NOT NULL DEFAULT 'own',
                 "created_at" TIMESTAMP NOT NULL DEFAULT now(),
                 "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
