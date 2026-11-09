@@ -208,11 +208,14 @@ export default defineComponent({
             </VCFormGroup>
         </IFieldValidation>
 
-        <AFormSubmit
-            :is-busy="busy"
-            :is-editing="isEditing"
-            :is-invalid="v.$invalid.value"
-            @submit="submit"
-        />
+        <div class="flex items-center gap-2">
+            <AFormSubmit
+                :is-busy="busy"
+                :is-editing="isEditing"
+                :is-invalid="v.$invalid.value"
+                @submit="submit"
+            />
+            <slot name="actions" />
+        </div>
     </form>
 </template>

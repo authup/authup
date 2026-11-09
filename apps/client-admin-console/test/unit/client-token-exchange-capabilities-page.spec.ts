@@ -206,7 +206,12 @@ describe('src/pages/clients/[id]/token-exchange-capabilities.vue', () => {
 
         expect(wrapper.findComponent(VCModalContent).findComponent(AClientTokenExchangeCapabilityForm).exists()).toBe(true);
 
-        await wrapper.findAllComponents(VCButton).find((button) => button.text() === 'Abort')!.trigger('click');
+        // next to the submit button, inside the form's action row
+        await wrapper
+            .findComponent(AClientTokenExchangeCapabilityForm)
+            .findAllComponents(VCButton)
+            .find((button) => button.text() === 'Abort')!
+            .trigger('click');
         await flushPromises();
 
         expect(wrapper.findComponent(AClientTokenExchangeCapabilityForm).exists()).toBe(false);
