@@ -16,7 +16,7 @@ import type {
     IClientPermissionAPI,
     IClientRoleAPI,
     IClientScopeAPI,
-    IClientTokenExchangePolicyAPI,
+    IClientTokenExchangeCapabilityAPI,
     IConsentAPI,
     IEntityAPI,
     IEntitySchemaAPI,
@@ -82,7 +82,7 @@ export interface IClient extends IBaseClient {
 
     readonly clientScope : IClientScopeAPI;
 
-    readonly clientTokenExchangePolicy : IClientTokenExchangePolicyAPI;
+    readonly clientTokenExchangeCapability : IClientTokenExchangeCapabilityAPI;
 
     readonly consent : IConsentAPI;
 

@@ -21,8 +21,8 @@ import type {
     AClientScopeAssignment,
     AClientScopeAssignments,
     AClientScopes,
-    AClientTokenExchangePolicies,
-    AClientTokenExchangePolicyForm,
+    AClientTokenExchangeCapabilities,
+    AClientTokenExchangeCapabilityForm,
     AClients,
     ACompositePolicyForm,
     ADatePolicyForm,
@@ -182,8 +182,8 @@ declare module 'vue' {
         AClientScopeAssignment: typeof AClientScopeAssignment;
         AClientScopeAssignments: typeof AClientScopeAssignments;
 
-        AClientTokenExchangePolicies: typeof AClientTokenExchangePolicies;
-        AClientTokenExchangePolicyForm: typeof AClientTokenExchangePolicyForm;
+        AClientTokenExchangeCapabilities: typeof AClientTokenExchangeCapabilities;
+        AClientTokenExchangeCapabilityForm: typeof AClientTokenExchangeCapabilityForm;
 
         AIdentityProvider: typeof AIdentityProvider;
         AIdentityProviders: typeof AIdentityProviders;

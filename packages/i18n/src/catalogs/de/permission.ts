@@ -29,10 +29,10 @@ export const TranslatorTranslationPermissionGerman : NamespaceTranslations<`${Pe
     [PermissionName.CLIENT_SCOPE_DELETE]: 'Client-Bereiche entfernen',
     [PermissionName.CLIENT_SCOPE_READ]: 'Client-Bereiche lesen',
 
-    [PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_CREATE]: 'Client-Token-Exchange-Richtlinien erstellen',
-    [PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_DELETE]: 'Client-Token-Exchange-Richtlinien löschen',
-    [PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_READ]: 'Client-Token-Exchange-Richtlinien lesen',
-    [PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_UPDATE]: 'Client-Token-Exchange-Richtlinien bearbeiten',
+    [PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_CREATE]: 'Client-Token-Exchange-Capabilities erstellen',
+    [PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_DELETE]: 'Client-Token-Exchange-Capabilities löschen',
+    [PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_READ]: 'Client-Token-Exchange-Capabilities lesen',
+    [PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_UPDATE]: 'Client-Token-Exchange-Capabilities bearbeiten',
 
     [PermissionName.CONSENT_READ]: 'Einwilligungen lesen',
     [PermissionName.CONSENT_DELETE]: 'Einwilligungen löschen',

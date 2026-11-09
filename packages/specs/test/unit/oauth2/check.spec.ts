@@ -25,7 +25,7 @@ describe('src/oauth2/check', () => {
     describe('isOAuth2TargetError', () => {
         it.each([
             ['audience', OAuth2TargetError.audience()],
-            ['capability type', OAuth2TargetError.capabilityType('bucket')],
+            ['capability', OAuth2TargetError.capability('bucket:read')],
         ])('should match a %s refusal, also rehydrated', (_label, error) => {
             expect(error.code).toEqual(ErrorCode.OAUTH_TARGET_INVALID);
             expect(error.data).toMatchObject({ error: OAuth2ErrorCode.INVALID_TARGET });

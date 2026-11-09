@@ -18,7 +18,7 @@ export const SCHEMA_COLLECTIONS: Record<string, `${EntityType}`> = {
     'client-permissions': EntityType.CLIENT_PERMISSION,
     'client-roles': EntityType.CLIENT_ROLE,
     'client-scopes': EntityType.CLIENT_SCOPE,
-    'client-token-exchange-policies': EntityType.CLIENT_TOKEN_EXCHANGE_POLICY,
+    'client-token-exchange-capabilities': EntityType.CLIENT_TOKEN_EXCHANGE_CAPABILITY,
     consents: EntityType.CONSENT,
     events: EntityType.EVENT,
     'identity-providers': EntityType.IDENTITY_PROVIDER,

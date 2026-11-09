@@ -52,7 +52,7 @@ const ENTITY_REALM_KEY_MAP : Record<`${EntityType}`, string> = {
     [EntityType.CLIENT_PERMISSION]: 'clientRealmId',
     [EntityType.CLIENT_ROLE]: 'clientRealmId',
     [EntityType.CLIENT_SCOPE]: 'clientRealmId',
-    [EntityType.CLIENT_TOKEN_EXCHANGE_POLICY]: 'realmId',
+    [EntityType.CLIENT_TOKEN_EXCHANGE_CAPABILITY]: 'realmId',
     [EntityType.CONSENT]: 'realmId',
     // Unreachable in practice: auth_session_tokens has no entity subscriber,
     // so no domain event is ever published for it. Present for exhaustiveness,

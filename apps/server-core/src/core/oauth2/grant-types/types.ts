@@ -12,7 +12,7 @@ import type { Logger } from '@authup/server-kit';
 import type { ISessionManager } from '../../authentication/index.ts';
 import type { IIdentityResolver } from '../../identity/resolver/types.ts';
 import type {
-    IClientTokenExchangePolicyRepository,
+    IClientTokenExchangeCapabilityRepository,
     IEventService,
     IUserAuthenticatorRequirementProvider,
 } from '../../entities/index.ts';
@@ -91,7 +91,7 @@ export type OAuth2RefreshTokenGrantContext = BaseGrantContext & {
 
 export type OAuth2TokenExchangeGrantContext = {
     capabilityTokenIssuer: IOAuth2TokenIssuer,
-    policyRepository: Pick<IClientTokenExchangePolicyRepository, 'findOneBy'>,
+    capabilityRepository: Pick<IClientTokenExchangeCapabilityRepository, 'findOneBy'>,
     tokenVerifier: IOAuth2TokenVerifier,
     sessionManager: ISessionManager,
     identityResolver: IIdentityResolver,

@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ClientTokenExchangePolicy } from '@authup/core-kit';
+import type { ClientTokenExchangeCapability } from '@authup/core-kit';
 import {
     CLIENT_TOKEN_EXCHANGE_AUDIENCE_MAX_LENGTH,
-    ClientTokenExchangeSubjectRealmScope,
+    ClientTokenExchangeRealmScope,
     EventName,
     EventRefType,
     EventScope,
@@ -25,7 +25,7 @@ import {
     isJWTError,
 } from '@authup/specs';
 import type { ISessionManager } from '../../authentication/index.ts';
-import type { IClientTokenExchangePolicyRepository, IEventService } from '../../entities/index.ts';
+import type { IClientTokenExchangeCapabilityRepository, IEventService } from '../../entities/index.ts';
 import type { IIdentityResolver } from '../../identity/resolver/types.ts';
 import type { IOAuth2TokenIssuer, IOAuth2TokenVerifier } from '../token/index.ts';
 import { isTokenSession, isTokenSubjectActive } from '../token/subject.ts';
@@ -55,7 +55,7 @@ function isMatchableAudience(audience: string) : boolean {
 export class OAuth2TokenExchangeGrant {
     protected capabilityTokenIssuer : IOAuth2TokenIssuer;
 
-    protected policyRepository : Pick<IClientTokenExchangePolicyRepository, 'findOneBy'>;
+    protected capabilityRepository : Pick<IClientTokenExchangeCapabilityRepository, 'findOneBy'>;
 
     protected tokenVerifier : IOAuth2TokenVerifier;
 
@@ -67,7 +67,7 @@ export class OAuth2TokenExchangeGrant {
 
     constructor(ctx: OAuth2TokenExchangeGrantContext) {
         this.capabilityTokenIssuer = ctx.capabilityTokenIssuer;
-        this.policyRepository = ctx.policyRepository;
+        this.capabilityRepository = ctx.capabilityRepository;
         this.tokenVerifier = ctx.tokenVerifier;
         this.sessionManager = ctx.sessionManager;
         this.identityResolver = ctx.identityResolver;
@@ -79,12 +79,12 @@ export class OAuth2TokenExchangeGrant {
      * @throws OAuth2GrantError
      */
     async authorize(input: OAuth2TokenExchangeInput) : Promise<OAuth2TokenExchangeDecision> {
-        const policy = await this.resolvePolicy(input);
+        const entry = await this.resolveEntry(input);
 
         const subject = await this.verifySubjectToken(input.subjectToken);
 
         if (
-            policy.subjectRealmScope !== ClientTokenExchangeSubjectRealmScope.ANY &&
+            entry.realmScope !== ClientTokenExchangeRealmScope.ANY &&
             input.client.realmId !== subject.realm_id
         ) {
             throw OAuth2GrantError.invalid('The subject belongs to a realm this client may not delegate for.');
@@ -100,7 +100,7 @@ export class OAuth2TokenExchangeGrant {
             client: input.client,
             audience: input.audience,
             capabilities: input.capabilities.map((capability) => capability.value),
-            lifetime: Math.min(input.expiresIn ?? policy.maxLifetime, policy.maxLifetime),
+            lifetime: Math.min(input.expiresIn ?? entry.tokenMaxAge, entry.tokenMaxAge),
             subject,
         };
     }
@@ -161,31 +161,37 @@ export class OAuth2TokenExchangeGrant {
         };
     }
 
-    protected async resolvePolicy(input: OAuth2TokenExchangeInput) : Promise<ClientTokenExchangePolicy> {
+    protected async resolveEntry(input: OAuth2TokenExchangeInput) : Promise<ClientTokenExchangeCapability> {
         if (!isMatchableAudience(input.audience)) {
             throw OAuth2TargetError.audience();
         }
 
-        const policy = await this.policyRepository.findOneBy({
+        const entry = await this.capabilityRepository.findOneBy({
             clientId: input.client.id,
             audience: input.audience,
         });
 
         // A case-insensitive collation answers a lookup that differs in case;
         // the audience is case-sensitive by contract.
-        if (!policy || policy.audience !== input.audience) {
+        if (!entry || entry.audience !== input.audience) {
             throw OAuth2TargetError.audience();
         }
 
-        const allowedTypes = new Set(policy.capabilityTypes.split(/\s+/));
+        const allowed = new Set(entry.value.split(/\s+/));
 
         for (const capability of input.capabilities) {
-            if (!allowedTypes.has(capability.type)) {
-                throw OAuth2TargetError.capabilityType(capability.type);
+            if (allowed.has(capability.type)) {
+                continue;
+            }
+
+            const denied = capability.actions.find((action) => !allowed.has(`${capability.type}:${action}`));
+
+            if (typeof denied !== 'undefined') {
+                throw OAuth2TargetError.capability(`${capability.type}:${denied}`);
             }
         }
 
-        return policy;
+        return entry;
     }
 
     /**

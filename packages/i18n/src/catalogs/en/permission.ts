@@ -29,10 +29,10 @@ export const TranslatorTranslationPermissionEnglish : NamespaceTranslations<`${P
     [PermissionName.CLIENT_SCOPE_DELETE]: 'Remove client scopes',
     [PermissionName.CLIENT_SCOPE_READ]: 'Read client scopes',
 
-    [PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_CREATE]: 'Create client token exchange policies',
-    [PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_DELETE]: 'Delete client token exchange policies',
-    [PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_READ]: 'Read client token exchange policies',
-    [PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_UPDATE]: 'Edit client token exchange policies',
+    [PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_CREATE]: 'Create client token exchange capabilities',
+    [PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_DELETE]: 'Delete client token exchange capabilities',
+    [PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_READ]: 'Read client token exchange capabilities',
+    [PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_UPDATE]: 'Edit client token exchange capabilities',
 
     [PermissionName.CONSENT_READ]: 'Read consents',
     [PermissionName.CONSENT_DELETE]: 'Delete consents',

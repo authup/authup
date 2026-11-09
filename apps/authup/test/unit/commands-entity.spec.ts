@@ -37,7 +37,7 @@ const NOUNS = [
     'client-permission',
     'client-role',
     'client-scope',
-    'client-token-exchange-policy',
+    'client-token-exchange-capability',
     'consent',
     'event',
     'identity-provider',

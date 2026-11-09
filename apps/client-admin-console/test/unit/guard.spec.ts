@@ -369,9 +369,9 @@ describe('src/guard', () => {
 
     // The real guard over the real route meta, so a gate that narrows to READ
     // or stops being one-of fails here.
-    describe('the token exchange policy route', () => {
+    describe('the token exchange capability route', () => {
         const route = createRouter({ history: createMemoryHistory(), routes })
-            .resolve('/clients/client-1/token-exchange-policies') as unknown as RouteLocationNormalized;
+            .resolve('/clients/client-1/token-exchange-capabilities') as unknown as RouteLocationNormalized;
 
         function createHolderGuard(held: string[]) {
             return createGuard({
@@ -390,7 +390,7 @@ describe('src/guard', () => {
         }
 
         it('should let a holder of the update permission alone in', async () => {
-            const { guard } = createHolderGuard(['client_update', 'client_token_exchange_policy_update']);
+            const { guard } = createHolderGuard(['client_update', 'client_token_exchange_capability_update']);
 
             await expect(guard(route, createRoute({ path: '/clients' }))).resolves.toBeUndefined();
         });
@@ -402,7 +402,7 @@ describe('src/guard', () => {
         });
 
         it('should refuse a holder without the update permission of the parent route', async () => {
-            const { guard } = createHolderGuard(['client_token_exchange_policy_read']);
+            const { guard } = createHolderGuard(['client_token_exchange_capability_read']);
 
             await expect(guard(route, createRoute({ path: '/clients' }))).resolves.toMatchObject({ path: '/clients' });
         });

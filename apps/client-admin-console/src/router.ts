@@ -9,7 +9,7 @@ import { PermissionName } from '@authup/core-kit';
 import type { RouteRecordRaw, Router } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
 import { LayoutKey } from './config/layout';
-import { TOKEN_EXCHANGE_POLICY_ACCESS_PERMISSIONS } from './config/permissions';
+import { TOKEN_EXCHANGE_CAPABILITY_ACCESS_PERMISSIONS } from './config/permissions';
 
 declare module 'vue-router' {
     interface RouteMeta {
@@ -101,9 +101,9 @@ export const routes : RouteRecordRaw[] = [
             { path: 'scopes', component: () => import('./pages/clients/[id]/scopes.vue') },
             { path: 'url', component: () => import('./pages/clients/[id]/url.vue') },
             {
-                path: 'token-exchange-policies',
-                component: () => import('./pages/clients/[id]/token-exchange-policies.vue'),
-                meta: auth(TOKEN_EXCHANGE_POLICY_ACCESS_PERMISSIONS),
+                path: 'token-exchange-capabilities',
+                component: () => import('./pages/clients/[id]/token-exchange-capabilities.vue'),
+                meta: auth(TOKEN_EXCHANGE_CAPABILITY_ACCESS_PERMISSIONS),
             },
         ],
     },

@@ -15,7 +15,6 @@ import {
     OAuth2TokenTypeIdentifier,
 } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
-import { useRequestQuery } from '@routup/basic/query';
 import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import {
@@ -39,28 +38,6 @@ import {
     readRealmHint,
     readStringField,
 } from './utils/index.ts';
-
-/**
- * Refused rather than read from the query string: a bearer in a url lands in
- * access logs.
- */
-const QUERY_REFUSED_PARAMETERS = [
-    'grant_type',
-    'subject_token',
-    'subject_token_type',
-    'audience',
-    'cap',
-    'requested_token_type',
-    'expires_in',
-    'scope',
-    'resource',
-    'actor_token',
-    'actor_token_type',
-    'realm_id',
-    'realm_name',
-];
-
-const UNSUPPORTED_PARAMETERS = ['scope', 'resource', 'actor_token', 'actor_token_type'];
 
 function readRequiredField(body: Record<string, any> | undefined, key: string) : string {
     if (Array.isArray(body?.[key])) {
@@ -97,20 +74,7 @@ function readExpiresIn(body: Record<string, any> | undefined) : number | undefin
 function readParameters(
     client: Client,
     body: Record<string, any> | undefined,
-    query: Record<string, any> | undefined,
 ) : OAuth2TokenExchangeInput {
-    const queryParameter = QUERY_REFUSED_PARAMETERS.find((key) => typeof query?.[key] !== 'undefined');
-
-    if (queryParameter) {
-        throw OAuth2RequestError.malformed('Token exchange parameters must be sent in the request body.');
-    }
-
-    const unsupported = UNSUPPORTED_PARAMETERS.find((key) => typeof body?.[key] !== 'undefined');
-
-    if (unsupported) {
-        throw OAuth2RequestError.malformed(`${unsupported} is not supported.`);
-    }
-
     const subjectToken = readRequiredField(body, 'subject_token');
 
     if (readRequiredField(body, 'subject_token_type') !== OAuth2TokenTypeIdentifier.ACCESS_TOKEN) {
@@ -161,7 +125,7 @@ export class HTTPOAuth2TokenExchangeGrant extends OAuth2TokenExchangeGrant imple
 
         assertClientGrantAllowed(client, OAuth2TokenGrant.TOKEN_EXCHANGE);
 
-        const input = readParameters(client, body, useRequestQuery(event));
+        const input = readParameters(client, body);
         const decision = await this.authorize(input);
 
         const ipAddress = getRequestIP(event) ?? undefined;

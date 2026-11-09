@@ -404,7 +404,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
      *
      * Excluded:
      * - Everything in REALM_ADMIN_EXCLUDED_PERMISSIONS (realm CRUD and the
-     *   client token exchange policy permissions)
+     *   client token exchange capability permissions)
      * - Custom global permissions (non-built-in with realmId: null)
      */
     private async assignToRealmAdminRoles(permission: Permission): Promise<void> {

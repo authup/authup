@@ -9,7 +9,7 @@ import { randomUUID } from 'node:crypto';
 import { BuiltInPolicyType } from '@authup/access';
 import type { Client, Key, Realm } from '@authup/core-kit';
 import {
-    ClientTokenExchangeSubjectRealmScope,
+    ClientTokenExchangeRealmScope,
     EventName,
     EventRefType,
     EventScope,
@@ -68,12 +68,12 @@ describe('token endpoint: token exchange (RFC 8693)', () => {
         return data;
     };
 
-    const createPolicy = async (clientId: string, overrides: Record<string, unknown> = {}) => {
-        await suite.client.clientTokenExchangePolicy.create({
+    const createCapability = async (clientId: string, overrides: Record<string, unknown> = {}) => {
+        await suite.client.clientTokenExchangeCapability.create({
             clientId,
             audience: AUDIENCE,
-            capabilityTypes: 'bucket bucket-file',
-            maxLifetime: 3600,
+            value: 'bucket bucket-file',
+            tokenMaxAge: 3600,
             ...overrides,
         });
     };
@@ -142,7 +142,7 @@ describe('token endpoint: token exchange (RFC 8693)', () => {
         userToken = await passwordGrant(username, password);
         actor = await createActor();
 
-        await createPolicy(actor.id);
+        await createCapability(actor.id);
     });
 
     afterAll(async () => {
@@ -232,7 +232,7 @@ describe('token endpoint: token exchange (RFC 8693)', () => {
             expect(response.status).toEqual(200);
         });
 
-        it('clamps expires_in to the policy maximum', async () => {
+        it('clamps expires_in to the capability maximum', async () => {
             const response = await exchange(buildForm(actor, { expires_in: '86400' }));
             const body = await response.json() as OAuth2TokenGrantResponse;
 
@@ -368,7 +368,7 @@ describe('token endpoint: token exchange (RFC 8693)', () => {
         it('refuses a public client', async () => {
             const publicClient = await createActor({ authMethod: 'none' });
 
-            await createPolicy(publicClient.id);
+            await createCapability(publicClient.id);
 
             const form = buildForm(publicClient);
 
@@ -380,7 +380,7 @@ describe('token endpoint: token exchange (RFC 8693)', () => {
         it('answers unauthorized_client when the grant is not listed', async () => {
             const client = await createActor({ grantTypes: 'client_credentials' });
 
-            await createPolicy(client.id);
+            await createCapability(client.id);
 
             await expectRefused(await exchange(buildForm(client)), 400, OAuth2ErrorCode.UNAUTHORIZED_CLIENT);
         });
@@ -388,12 +388,12 @@ describe('token endpoint: token exchange (RFC 8693)', () => {
         it('answers unauthorized_client for a client with null grantTypes', async () => {
             const client = await createActor({ grantTypes: null });
 
-            await createPolicy(client.id);
+            await createCapability(client.id);
 
             await expectRefused(await exchange(buildForm(client)), 400, OAuth2ErrorCode.UNAUTHORIZED_CLIENT);
         });
 
-        it('answers invalid_target for an actor without a policy', async () => {
+        it('answers invalid_target for an actor without a capability', async () => {
             const client = await createActor();
 
             await expectRefused(await exchange(buildForm(client)), 400, OAuth2ErrorCode.INVALID_TARGET);
@@ -441,14 +441,12 @@ describe('token endpoint: token exchange (RFC 8693)', () => {
             },
         );
 
-        it.each([['scope'], ['resource'], ['actor_token'], ['actor_token_type']])(
-            'answers invalid_request for %s',
+        it.each([['scope'], ['resource'], ['actor_token'], ['actor_token_type'], ['unknown']])(
+            'ignores an additional %s',
             async (key) => {
-                await expectRefused(
-                    await exchange(buildForm(actor, { [key]: 'value' })),
-                    400,
-                    OAuth2ErrorCode.INVALID_REQUEST,
-                );
+                const response = await exchange(buildForm(actor, { [key]: 'value' }));
+
+                expect(response.status).toEqual(200);
             },
         );
 
@@ -460,7 +458,7 @@ describe('token endpoint: token exchange (RFC 8693)', () => {
             );
         });
 
-        it('refuses subject_token in the query string', async () => {
+        it('does not read subject_token from the query string', async () => {
             const { subject_token: token, ...form } = buildForm(actor);
 
             await expectRefused(
@@ -470,12 +468,10 @@ describe('token endpoint: token exchange (RFC 8693)', () => {
             );
         });
 
-        it.each([['realm_id'], ['realm_name']])('refuses %s in the query string', async (key) => {
-            await expectRefused(
-                await exchange(buildForm(actor), `/token?${key}=master`),
-                400,
-                OAuth2ErrorCode.INVALID_REQUEST,
-            );
+        it.each([['realm_id'], ['realm_name']])('ignores %s in the query string', async (key) => {
+            const response = await exchange(buildForm(actor), `/token?${key}=master`);
+
+            expect(response.status).toEqual(200);
         });
 
         it.each([
@@ -503,16 +499,17 @@ describe('token endpoint: token exchange (RFC 8693)', () => {
             expect(body.error_description ?? body.message).toEqual(`${key} must be given once.`);
         });
 
-        it('refuses a grant parameter in the query even when the body is complete', async () => {
-            await expectRefused(
-                await exchange(buildForm(actor), '/token?cap=bucket:x:read'),
-                400,
-                OAuth2ErrorCode.INVALID_REQUEST,
-            );
+        it('takes a grant parameter from the body when the query carries another', async () => {
+            const response = await exchange(buildForm(actor), '/token?cap=bucket:x:read');
+            const { access_token: token } = await response.json() as { access_token: string };
+            const claims = decodeJwt(token);
+
+            expect(response.status).toEqual(200);
+            expect(claims.cap).toEqual(CAP.split(' '));
         });
     });
 
-    describe('the policy', () => {
+    describe('the capability', () => {
         it('answers invalid_target for another audience', async () => {
             await expectRefused(
                 await exchange(buildForm(actor, { audience: 'other' })),
@@ -537,7 +534,23 @@ describe('token endpoint: token exchange (RFC 8693)', () => {
             );
         });
 
-        it('honours each capability type of the policy', async () => {
+        it('honours the actions a type:action entry lists', async () => {
+            const client = await createActor();
+
+            await createCapability(client.id, { value: 'bucket:read' });
+
+            const allowed = await exchange(buildForm(client, { cap: 'bucket:a:read' }));
+
+            expect(allowed.status).toEqual(200);
+
+            await expectRefused(
+                await exchange(buildForm(client, { cap: 'bucket:a:write' })),
+                400,
+                OAuth2ErrorCode.INVALID_TARGET,
+            );
+        });
+
+        it('honours each capability type of the capability', async () => {
             const response = await exchange(buildForm(actor, { cap: 'bucket:a:read bucket-file:b:write' }));
             const body = await response.json() as OAuth2TokenGrantResponse;
 
@@ -649,7 +662,7 @@ describe('token endpoint: token exchange (RFC 8693)', () => {
         it('exchanges a subject of another realm under any, signed by that realm', async () => {
             const client = await createActor();
 
-            await createPolicy(client.id, { subjectRealmScope: ClientTokenExchangeSubjectRealmScope.ANY });
+            await createCapability(client.id, { realmScope: ClientTokenExchangeRealmScope.ANY });
 
             const response = await exchange(buildForm(client, {}, foreignToken.access_token));
             const body = await response.json() as OAuth2TokenGrantResponse;
@@ -679,7 +692,7 @@ describe('token endpoint: token exchange (RFC 8693)', () => {
 
             const client = await createActor({ accessPolicyId: denyPolicy.id });
 
-            await createPolicy(client.id);
+            await createCapability(client.id);
 
             const recordAuthorize = vi.spyOn(suite.container.resolve(MetricsInjectionKey), 'recordAuthorize');
 
@@ -727,7 +740,7 @@ describe('token endpoint: token exchange (RFC 8693)', () => {
 
             const client = await createActor({ accessPolicyId: allowPolicy.id });
 
-            await createPolicy(client.id);
+            await createCapability(client.id);
 
             const response = await exchange(buildForm(client));
 

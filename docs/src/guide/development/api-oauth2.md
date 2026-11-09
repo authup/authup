@@ -662,6 +662,6 @@ themselves never appear in an event.
 `grant_type=urn:ietf:params:oauth:grant-type:token-exchange` turns a subject's
 access token into a short-lived capability token for one audience, requested by
 a confidential client acting as the delegate. The grant is opt-in per client and
-also needs a policy for the audience. The token is verified locally by the
+also needs a token exchange capability for the audience. The token is verified locally by the
 resource server and is never accepted as an Authup access token. Its parameters,
 claims, setup and errors are described in [Token Exchange](../user/token-exchange.md).

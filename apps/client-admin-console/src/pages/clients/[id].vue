@@ -20,7 +20,7 @@ import type { Ref } from 'vue';
 import { computed, defineComponent, ref } from 'vue';
 import { buildRecordHeading } from '../../composables/record';
 import { LayoutSection } from '../../config/layout';
-import { TOKEN_EXCHANGE_POLICY_ACCESS_PERMISSIONS } from '../../config/permissions';
+import { TOKEN_EXCHANGE_CAPABILITY_ACCESS_PERMISSIONS } from '../../config/permissions';
 import { useRoute, useRouter } from 'vue-router';
 import { buildEntityBreadcrumb, buildPathAncestors, useSectionBreadcrumb } from '../../composables/breadcrumb';
 import { useErrorToast } from '../../composables/error';
@@ -39,7 +39,7 @@ export default defineComponent({
         // below is awaited.
         const breadcrumbBase = useSectionBreadcrumb(LayoutSection.CLIENTS);
 
-        const hasTokenExchangePolicyAccess = usePermissionCheck({ name: TOKEN_EXCHANGE_POLICY_ACCESS_PERMISSIONS });
+        const hasTokenExchangeCapabilityAccess = usePermissionCheck({ name: TOKEN_EXCHANGE_CAPABILITY_ACCESS_PERMISSIONS });
 
         const translationsDefault = useTranslations(
             [
@@ -49,7 +49,7 @@ export default defineComponent({
                 },
                 {
                     namespace: TranslatorTranslationNamespace.ENTITY,
-                    key: TranslatorTranslationEntityKey.CLIENT_TOKEN_EXCHANGE_POLICY,
+                    key: TranslatorTranslationEntityKey.CLIENT_TOKEN_EXCHANGE_CAPABILITY,
                     count: 2,
                 },
                 {
@@ -128,10 +128,10 @@ export default defineComponent({
                 icon: 'fa6-solid:user-group',
                 url: `/clients/${entity.value.id}/roles`,
             },
-            ...(hasTokenExchangePolicyAccess.value ? [{
-                name: translationsDefault.clientTokenExchangePolicy,
+            ...(hasTokenExchangeCapabilityAccess.value ? [{
+                name: translationsDefault.clientTokenExchangeCapability,
                 icon: 'fa6-solid:right-left',
-                url: `/clients/${entity.value.id}/token-exchange-policies`,
+                url: `/clients/${entity.value.id}/token-exchange-capabilities`,
             }] : []),
         ] : []));
 

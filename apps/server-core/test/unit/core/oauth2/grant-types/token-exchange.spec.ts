@@ -8,11 +8,11 @@
 import { randomUUID } from 'node:crypto';
 import type {
     Client,
-    ClientTokenExchangePolicy,
+    ClientTokenExchangeCapability,
     Identity,
 } from '@authup/core-kit';
 import {
-    ClientTokenExchangeSubjectRealmScope,
+    ClientTokenExchangeRealmScope,
     EventName,
     EventRefType,
     EventScope,
@@ -64,8 +64,8 @@ describe('OAuth2TokenExchangeGrant', () => {
     let sessionManager: FakeSessionManager;
     let identityResolver: FakeIdentityResolver;
     let eventService: FakeEventService;
-    let policy: ClientTokenExchangePolicy;
-    let policyLookups: Record<string, unknown>[];
+    let capability: ClientTokenExchangeCapability;
+    let capabilityLookups: Record<string, unknown>[];
     let grant: OAuth2TokenExchangeGrant;
 
     function buildPayload(overrides: OAuth2TokenPayload = {}) : OAuth2TokenPayload {
@@ -113,16 +113,16 @@ describe('OAuth2TokenExchangeGrant', () => {
         identityResolver = new FakeIdentityResolver();
         eventService = new FakeEventService();
 
-        policy = {
+        capability = {
             id: randomUUID(),
             clientId: client.id,
             audience: 'storage',
-            capabilityTypes: 'bucket bucket-file',
-            maxLifetime: 3600,
-            subjectRealmScope: ClientTokenExchangeSubjectRealmScope.ANY,
+            value: 'bucket bucket-file',
+            tokenMaxAge: 3600,
+            realmScope: ClientTokenExchangeRealmScope.ANY,
             realmId: actorRealmId,
-        } as ClientTokenExchangePolicy;
-        policyLookups = [];
+        } as ClientTokenExchangeCapability;
+        capabilityLookups = [];
 
         verifier.seed('subject', buildPayload());
 
@@ -144,11 +144,11 @@ describe('OAuth2TokenExchangeGrant', () => {
 
         grant = new OAuth2TokenExchangeGrant({
             capabilityTokenIssuer: issuer,
-            policyRepository: {
+            capabilityRepository: {
                 findOneBy: async (where: Record<string, unknown>) => {
-                    policyLookups.push(where);
+                    capabilityLookups.push(where);
 
-                    return policy;
+                    return capability;
                 },
             },
             tokenVerifier: verifier,
@@ -279,7 +279,7 @@ describe('OAuth2TokenExchangeGrant', () => {
     });
 
     describe('lifetime', () => {
-        it('defaults to the policy maximum', async () => {
+        it('defaults to the capability maximum', async () => {
             const response = await run();
 
             expect(response.expires_in).toEqual(3600);
@@ -294,15 +294,15 @@ describe('OAuth2TokenExchangeGrant', () => {
             expect(claims.exp).toBeGreaterThanOrEqual(NOW() + 58);
         });
 
-        it('clamps a longer requested lifetime to the policy maximum', async () => {
-            policy.maxLifetime = 120;
+        it('clamps a longer requested lifetime to the capability maximum', async () => {
+            capability.tokenMaxAge = 120;
 
             const response = await run(buildInput({ expiresIn: 86400 }));
 
             expect(response.expires_in).toEqual(120);
         });
 
-        it('may outlive the subject token up to the policy maximum', async () => {
+        it('may outlive the subject token up to the capability maximum', async () => {
             verifier.seed('short', buildPayload({ exp: NOW() + 10 }));
 
             const response = await run(buildInput({ subjectToken: 'short' }));
@@ -311,17 +311,17 @@ describe('OAuth2TokenExchangeGrant', () => {
         });
     });
 
-    describe('the policy', () => {
-        it('looks the policy up by the actor and the audience', async () => {
+    describe('the capability', () => {
+        it('looks the capability up by the actor and the audience', async () => {
             await run();
 
-            expect(policyLookups).toEqual([{ clientId: client.id, audience: 'storage' }]);
+            expect(capabilityLookups).toEqual([{ clientId: client.id, audience: 'storage' }]);
         });
 
-        it('answers invalid_target when the actor has no policy for the audience', async () => {
+        it('answers invalid_target when the actor has no capability for the audience', async () => {
             grant = new OAuth2TokenExchangeGrant({
                 capabilityTokenIssuer: issuer,
-                policyRepository: { findOneBy: async () => null },
+                capabilityRepository: { findOneBy: async () => null },
                 tokenVerifier: verifier,
                 sessionManager,
                 identityResolver,
@@ -331,7 +331,7 @@ describe('OAuth2TokenExchangeGrant', () => {
         });
 
         it('compares the audience strictly, whatever the collation answered', async () => {
-            policy.audience = 'Storage';
+            capability.audience = 'Storage';
 
             await expectRefused(buildInput({ audience: 'storage' }), OAuth2ErrorCode.INVALID_TARGET);
         });
@@ -343,18 +343,52 @@ describe('OAuth2TokenExchangeGrant', () => {
             ['longer than the column', 'a'.repeat(257)],
         ])('answers invalid_target for an audience %s without a lookup', async (_label, audience) => {
             await expectRefused(buildInput({ audience }), OAuth2ErrorCode.INVALID_TARGET);
-            expect(policyLookups).toHaveLength(0);
+            expect(capabilityLookups).toHaveLength(0);
         });
 
-        it('answers invalid_target for a capability type the policy does not allow', async () => {
+        it('answers invalid_target for a capability type the capability does not allow', async () => {
             await expectRefused(
                 buildInput({ capabilities: parseOAuth2Capabilities('bucket:b:read other:o:read') }),
                 OAuth2ErrorCode.INVALID_TARGET,
             );
         });
 
-        it('checks the policy before it looks at the subject token', async () => {
-            policy.capabilityTypes = 'other';
+        it('allows every action of a bare type', async () => {
+            capability.value = 'bucket';
+
+            const response = await run(buildInput({ capabilities: parseOAuth2Capabilities('bucket:b:read,write,delete') }));
+
+            expect(response.token_type).toEqual('Bearer');
+        });
+
+        it('allows the actions a type:action entry lists', async () => {
+            capability.value = 'bucket:read bucket:write';
+
+            const response = await run(buildInput({ capabilities: parseOAuth2Capabilities('bucket:b:read,write') }));
+
+            expect(response.token_type).toEqual('Bearer');
+        });
+
+        it('answers invalid_target when one requested action is not listed', async () => {
+            capability.value = 'bucket:read bucket:write';
+
+            await expectRefused(
+                buildInput({ capabilities: parseOAuth2Capabilities('bucket:b:read,delete') }),
+                OAuth2ErrorCode.INVALID_TARGET,
+            );
+        });
+
+        it('does not let a type:action entry allow another type', async () => {
+            capability.value = 'bucket:read';
+
+            await expectRefused(
+                buildInput({ capabilities: parseOAuth2Capabilities('bucket-file:f:read') }),
+                OAuth2ErrorCode.INVALID_TARGET,
+            );
+        });
+
+        it('checks the capability before it looks at the subject token', async () => {
+            capability.value = 'other';
 
             await expectRefused(buildInput(), OAuth2ErrorCode.INVALID_TARGET);
             expect(verifier.verifyCalls).toHaveLength(0);
@@ -489,13 +523,13 @@ describe('OAuth2TokenExchangeGrant', () => {
         });
 
         it('refuses a subject of another realm under `own`', async () => {
-            policy.subjectRealmScope = ClientTokenExchangeSubjectRealmScope.OWN;
+            capability.realmScope = ClientTokenExchangeRealmScope.OWN;
 
             await expectRefused(buildInput(), OAuth2ErrorCode.INVALID_GRANT);
         });
 
         it('allows a subject of the actor realm under `own`', async () => {
-            policy.subjectRealmScope = ClientTokenExchangeSubjectRealmScope.OWN;
+            capability.realmScope = ClientTokenExchangeRealmScope.OWN;
 
             verifier.seed('own', buildPayload({ realm_id: actorRealmId }));
             await sessionManager.revoke(sessionId);

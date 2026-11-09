@@ -32,7 +32,7 @@ export class OAuth2TargetError extends OAuth2Error {
         return new OAuth2TargetError({ message: 'The requested audience is not allowed for this client.' });
     }
 
-    static capabilityType(type: string) {
-        return new OAuth2TargetError({ message: `The capability type ${type} is not allowed for this audience.` });
+    static capability(capability: string) {
+        return new OAuth2TargetError({ message: `The capability ${capability} is not allowed for this audience.` });
     }
 }

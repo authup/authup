@@ -16,10 +16,10 @@ export const REALM_ADMIN_EXCLUDED_PERMISSIONS : string[] = [
     PermissionName.REALM_DELETE,
     // a policy lets its client mint tokens every resource server trusts for any
     // opaque capability id, which is a root of trust beyond the realm
-    PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_CREATE,
-    PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_READ,
-    PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_UPDATE,
-    PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_DELETE,
+    PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_CREATE,
+    PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_READ,
+    PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_UPDATE,
+    PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_DELETE,
 ];
 
 /**

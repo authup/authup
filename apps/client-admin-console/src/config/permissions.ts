@@ -8,11 +8,11 @@
 import { PermissionName } from '@authup/core-kit';
 
 /**
- * One of these lets a visitor read the token exchange policies, the same set
+ * One of these lets a visitor read the token exchange capabilities, the same set
  * the server's read gate accepts.
  */
-export const TOKEN_EXCHANGE_POLICY_ACCESS_PERMISSIONS : `${PermissionName}`[] = [
-    PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_READ,
-    PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_UPDATE,
-    PermissionName.CLIENT_TOKEN_EXCHANGE_POLICY_DELETE,
+export const TOKEN_EXCHANGE_CAPABILITY_ACCESS_PERMISSIONS : `${PermissionName}`[] = [
+    PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_READ,
+    PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_UPDATE,
+    PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_DELETE,
 ];

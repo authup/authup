@@ -208,7 +208,7 @@ defaulting fail-closed to `own`:
 | Role | Scope | Realm reach (junction `realmScope`) |
 |------|-------|-----------------|
 | `admin` | All permissions, no restrictions | `any`: all realms + global, **from an identity in ANY realm** |
-| `realm_admin` | All permissions except `realm_create`, `realm_update`, `realm_delete` and the `client_token_exchange_policy_*` set (topics/authorization.md -> *Security: Permission Assignment*) | `ownOrNull` (reads, assignments) / `own` (direct entity CUD and role-permission writes, so a global role's bindings are out of reach) |
+| `realm_admin` | All permissions except `realm_create`, `realm_update`, `realm_delete` and the `client_token_exchange_capability_*` set (topics/authorization.md -> *Security: Permission Assignment*) | `ownOrNull` (reads, assignments) / `own` (direct entity CUD and role-permission writes, so a global role's bindings are out of reach) |
 
 ### Nested Route Mounting
 

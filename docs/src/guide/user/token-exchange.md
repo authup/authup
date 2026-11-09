@@ -21,7 +21,7 @@ caller ---- Bearer <capability token> ----> resource server                   |
                                             verifies against /jwks  <---------+
 ```
 
-Authup decides only **whether this client may delegate these capability types
+Authup decides only **whether this client may delegate these capabilities
 to this audience**. Whether the user may read this particular bucket is the
 backend's decision, made before it asks.
 
@@ -43,7 +43,7 @@ token is about is the **subject**. The actor never becomes the subject:
   the lifetime and the token's `jti`. With event persistence turned off, or if
   writing the row fails, the exchange still succeeds and only a server log line
   remains.
-- A policy of subject realm scope `any` can only be written by a grant that
+- A capability of realm scope `any` can only be written by a grant that
   reaches every realm with no policy narrowing it, since it acts on subjects
   outside the client's own realm.
 
@@ -61,45 +61,45 @@ this one.
 The client must be confidential. A client with `authMethod: none` is refused
 with `invalid_client`.
 
-### 2. Create a policy
+### 2. Create a capability
 
-A policy states what the client may delegate to one audience. There is at most
-one policy per client and audience. Manage them on the client's **Token exchange
-policies** tab in the admin console, or through
-`/client-token-exchange-policies`.
+A token exchange capability states what the client may delegate to one
+audience. There is at most one per client and audience. Manage them on the
+client's **Token exchange capabilities** tab in the admin console, or through
+`/client-token-exchange-capabilities`.
 
 | Field | Meaning |
 |---|---|
-| `clientId` | The actor. Fixed once the policy exists. |
+| `clientId` | The actor. Fixed once the capability exists. |
 | `audience` | The resource server, up to 256 characters without whitespace. Matched exactly, including case. |
-| `capabilityTypes` | The capability types the client may delegate, separated by spaces. At least one is required, and there is no wildcard. Each type matches `[a-z][a-z0-9-]{0,63}`. |
-| `maxLifetime` | The longest an issued token may live, from 1 to 86400 seconds. |
-| `subjectRealmScope` | `own` (the default) allows only subjects of the client's own realm. `any` allows subjects of **every** realm. |
+| `value` | What the client may delegate, separated by spaces. `type` allows every action of that type, `type:action` allows that one action, and one value can hold both forms (`bucket:read bucket:write bucket-file`). At least one entry is required, and a type cannot appear both bare and with an action. A type matches `[a-z][a-z0-9-]{0,63}`, an action `[a-z][a-z0-9-]{0,31}`. |
+| `tokenMaxAge` | The longest an issued token may live, from 1 to 86400 seconds. |
+| `realmScope` | `own` (the default) allows only subjects of the client's own realm. `any` allows subjects of **every** realm. |
 
 ::: warning `any` crosses every realm
-With `subjectRealmScope: any` the client can obtain a capability token for a
+With `realmScope: any` the client can obtain a capability token for a
 user or client of any realm, as long as it holds that subject's access token.
 Use it only for a client the whole deployment trusts.
 :::
 
 ### Permissions
 
-Policies are managed under their own permissions:
+Capabilities are managed under their own permissions:
 
 | Permission | Allows |
 |---|---|
-| `client_token_exchange_policy_create` | Creating a policy |
-| `client_token_exchange_policy_read` | Reading policies |
-| `client_token_exchange_policy_update` | Changing a policy |
-| `client_token_exchange_policy_delete` | Deleting a policy |
+| `client_token_exchange_capability_create` | Creating a capability |
+| `client_token_exchange_capability_read` | Reading capabilities |
+| `client_token_exchange_capability_update` | Changing a capability |
+| `client_token_exchange_capability_delete` | Deleting a capability |
 
 `client_update` is deliberately not enough, and the built-in `realm_admin` role
-does not hold these permissions. A policy lets its client mint tokens that
+does not hold these permissions. A capability lets its client mint tokens that
 resource servers trust for any capability id, so writing one is a decision over
 every resource server of the deployment and not a change local to one realm.
 The built-in `admin` role holds all four.
 
-The policy API needs only the permissions above. The **Token exchange policies**
+The capability API needs only the permissions above. The **Token exchange capabilities**
 tab sits on the client page of the admin console, which also requires
 `client_update`, and it needs one of the read, update or delete permissions.
 
@@ -130,29 +130,29 @@ curl -X POST 'http://localhost:3000/token' \
 | `grant_type` | yes | `urn:ietf:params:oauth:grant-type:token-exchange` |
 | `subject_token` | yes | An access token of the subject, issued by this Authup. |
 | `subject_token_type` | yes | `urn:ietf:params:oauth:token-type:access_token` |
-| `audience` | yes | Exactly one audience, allowed by a policy of the client. |
+| `audience` | yes | Exactly one audience, allowed by a capability of the client. |
 | `cap` | yes | One or more capability entries, separated by spaces. |
 | `requested_token_type` | no | If sent, `urn:ietf:params:oauth:token-type:jwt`. |
-| `expires_in` | no | The requested lifetime in seconds. It is clamped to the policy's `maxLifetime`, which is also the default. |
+| `expires_in` | no | The requested lifetime in seconds. It is clamped to the capability's `tokenMaxAge`, which is also the default. |
 | `realm_id` or `realm_name` | no | The realm of the actor, by id or name. Needed when the actor is named by `name` outside the master realm. |
 
-Every parameter of this grant must be in the form body. One in the query string
-is refused with `invalid_request`, because a token in a URL ends up in access
-logs. `scope`, `resource`, `actor_token` and `actor_token_type` are not
-supported and are refused the same way.
+Parameters are read from the form body only. Anything else is ignored, including
+query string parameters and the `scope`, `resource`, `actor_token` and
+`actor_token_type` parameters of the RFC, so they have no effect on the token.
 
 ### Capability entries
 
 Each entry has the form `<type>:<id>:<actions>`:
 
-- `type` matches `[a-z][a-z0-9-]{0,63}` and must be listed in the policy.
+- `type` matches `[a-z][a-z0-9-]{0,63}` and must be allowed by the capability, as must each action.
 - `id` matches `[A-Za-z0-9._-]{1,128}`.
 - `actions` is a comma-separated list without duplicates, each matching
   `[a-z][a-z0-9-]{0,31}`.
 
 A request carries at most 32 entries and 4096 bytes, without duplicate entries.
-Authup checks only the syntax and the type. `id` and `actions` mean whatever the
-resource server says they mean.
+Authup checks the syntax and compares the type and actions with the capability.
+`id` and the actions mean whatever the resource server says they mean, and every
+`id` of an allowed type is allowed.
 
 ### Response
 
@@ -173,9 +173,9 @@ There is no `refresh_token`, `id_token` or `scope`.
 |---|---|
 | `invalid_client` | The actor did not authenticate, or it is a public client. |
 | `unauthorized_client` | The grant is not in the client's `grantTypes`. |
-| `invalid_request` | A missing or malformed parameter, a wrong token type, invalid `cap` syntax, or a parameter in the query string. |
-| `invalid_grant` | The subject token is invalid, expired, revoked, not an access token, bound to a certificate, or its subject is inactive or outside the policy's realm scope, or the client's application access policy denied the subject. |
-| `invalid_target` | No policy for this audience, or a capability type the policy does not list. |
+| `invalid_request` | A missing or malformed parameter, a wrong token type, or invalid `cap` syntax. |
+| `invalid_grant` | The subject token is invalid, expired, revoked, not an access token, bound to a certificate, or its subject is inactive or outside the capability's realm scope, or the client's application access policy denied the subject. |
+| `invalid_target` | No capability for this audience, or a requested type or action its `value` does not allow. |
 | `server_error` | The subject's realm cannot sign the token. See [signing keys](#signing-keys). |
 
 ## The issued token
@@ -202,6 +202,11 @@ A resource server verifies the token itself, against the signing keys Authup
 publishes at `/jwks` (every realm) or `/realms/<realm>/jwks` (one realm). It must
 check the signature, `exp`, that `aud` is its own audience and that `kind` is
 `capability_token`, then read `sub` and `cap`.
+
+Authup does not know which resources exist, so a capability allows every `id` of
+its types. With `realmScope: own`, `realm_id` always equals the client's realm: a
+resource server that looks a resource up within the token's `realm_id` confines
+each realm's client to that realm's resources.
 
 With plain [jose](https://github.com/panva/jose):
 
@@ -236,7 +241,7 @@ Give the realm an RSA or EC signing key.
 ### No revocation
 
 A capability token is not stored. It cannot be revoked, and ending the subject's
-session, deactivating the subject or changing a policy does not reach a token
+session, deactivating the subject or changing a capability does not reach a token
 already issued. It stays valid until its `exp`, which may be later than the
-expiry of the subject token it was exchanged for. `maxLifetime` is the longest
+expiry of the subject token it was exchanged for. `tokenMaxAge` is the longest
 window this leaves open, so set it to what the use case really needs.

@@ -17,7 +17,7 @@ back to a secret.
 | `authorization_code` | Configured method. `client_id` must equal the code's bound client, else `invalid_grant`. |
 | `refresh_token` | `secret` / `tls` must authenticate and match the token's bound client (`invalid_grant`). A request without `client_id` resolves the client from the token and passes only if it is still `none`. A bound token also needs the same certificate thumbprint. |
 | `password` | Configured method when a client is supplied. `client_id` and the OpenID `aud` are that resolved client's id. The realm hint resolves the user realm and scopes the client leg. |
-| `token-exchange` | `secret` or `tls` only; `none` answers `invalid_client`. Parameters come from the form body only: one in the query string is `invalid_request`, and `subject_token` is redacted from the request log. |
+| `token-exchange` | `secret` or `tls` only; `none` answers `invalid_client`. Parameters are read from the form body only and anything else is ignored; `subject_token` is redacted from the request log. |
 
 ### Per-client grant allowlist (`grantTypes`)
 

@@ -12,7 +12,7 @@ import type {
     ClientPermission,
     ClientRole,
     ClientScope,
-    ClientTokenExchangePolicy,
+    ClientTokenExchangeCapability,
     Path,
     Permission,
     PermissionPolicy,
@@ -33,7 +33,7 @@ import {
     ClientPermissionEntity,
     ClientRoleEntity,
     ClientScopeEntity,
-    ClientTokenExchangePolicyEntity,
+    ClientTokenExchangeCapabilityEntity,
     EventAggregateEntity,
     EventEntity,
     IdentityProviderEntity,
@@ -63,7 +63,7 @@ import {
     ClientRepositoryAdapter,
     ClientRoleRepositoryAdapter,
     ClientScopeRepositoryAdapter,
-    ClientTokenExchangePolicyRepositoryAdapter,
+    ClientTokenExchangeCapabilityRepositoryAdapter,
     DatabaseInjectionKey,
     EntityStatsRepositoryAdapter,
     EventAggregateRepositoryAdapter,
@@ -91,7 +91,7 @@ import {
     ClientPermissionController,
     ClientRoleController,
     ClientScopeController,
-    ClientTokenExchangePolicyController,
+    ClientTokenExchangeCapabilityController,
     ConsentController,
     EventController,
     IdentityProviderAccountController,
@@ -144,7 +144,7 @@ import {
     ClientRoleService,
     ClientScopeService,
     ClientService,
-    ClientTokenExchangePolicyService,
+    ClientTokenExchangeCapabilityService,
     ConsentService,
     CredentialsAuthenticator,
     EVENT_AGGREGATE_COLUMNS,
@@ -228,7 +228,7 @@ export class HTTPControllerModule {
         const clientPermissionController = this.createClientPermissionController(container);
         const clientRoleController = this.createClientRoleController(container);
         const clientScopeController = this.createClientScopeController(container);
-        const clientTokenExchangePolicyController = this.createClientTokenExchangePolicyController(container);
+        const clientTokenExchangeCapabilityController = this.createClientTokenExchangeCapabilityController(container);
         const roleAttributeController = this.createRoleAttributeController(container);
         const rolePermissionController = this.createRolePermissionController(container);
         const scopeController = this.createScopeController(container);
@@ -273,7 +273,7 @@ export class HTTPControllerModule {
                 clientPermissionController,
                 clientRoleController,
                 clientScopeController,
-                clientTokenExchangePolicyController,
+                clientTokenExchangeCapabilityController,
                 consentController,
                 eventController,
                 identityProviderAccountController,
@@ -399,8 +399,8 @@ export class HTTPControllerModule {
             tokenRevoker,
             tokenRepository,
             sessionTokenRepository,
-            clientTokenExchangePolicyRepository: new ClientTokenExchangePolicyRepositoryAdapter(
-                container.resolve<Repository<ClientTokenExchangePolicy>>(ClientTokenExchangePolicyEntity),
+            clientTokenExchangeCapabilityRepository: new ClientTokenExchangeCapabilityRepositoryAdapter(
+                container.resolve<Repository<ClientTokenExchangeCapability>>(ClientTokenExchangeCapabilityEntity),
             ),
 
             eventService,
@@ -869,13 +869,13 @@ export class HTTPControllerModule {
         return new ClientScopeController({ service });
     }
 
-    createClientTokenExchangePolicyController(container: IContainer) {
-        const repository = new ClientTokenExchangePolicyRepositoryAdapter(
-            container.resolve<Repository<ClientTokenExchangePolicy>>(ClientTokenExchangePolicyEntity),
+    createClientTokenExchangeCapabilityController(container: IContainer) {
+        const repository = new ClientTokenExchangeCapabilityRepositoryAdapter(
+            container.resolve<Repository<ClientTokenExchangeCapability>>(ClientTokenExchangeCapabilityEntity),
         );
-        const service = new ClientTokenExchangePolicyService({ repository });
+        const service = new ClientTokenExchangeCapabilityService({ repository });
 
-        return new ClientTokenExchangePolicyController({ service });
+        return new ClientTokenExchangeCapabilityController({ service });
     }
 
     createRoleAttributeController(container: IContainer) {

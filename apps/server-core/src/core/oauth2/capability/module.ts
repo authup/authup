@@ -5,10 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { CLIENT_TOKEN_EXCHANGE_CAPABILITY_TYPE_PATTERN } from '@authup/core-kit';
+import {
+    CLIENT_TOKEN_EXCHANGE_CAPABILITY_ACTION_PATTERN,
+    CLIENT_TOKEN_EXCHANGE_CAPABILITY_TYPE_PATTERN,
+} from '@authup/core-kit';
 import { OAuth2RequestError } from '@authup/specs';
 import {
-    OAUTH2_CAPABILITY_ACTION_PATTERN,
     OAUTH2_CAPABILITY_ID_PATTERN,
     OAUTH2_CAPABILITY_MAX_BYTES,
     OAUTH2_CAPABILITY_MAX_ENTRIES,
@@ -34,7 +36,7 @@ function parseEntry(value: string) : OAuth2Capability {
 
     const list = actions.split(',');
 
-    const invalidAction = list.find((action) => !OAUTH2_CAPABILITY_ACTION_PATTERN.test(action));
+    const invalidAction = list.find((action) => !CLIENT_TOKEN_EXCHANGE_CAPABILITY_ACTION_PATTERN.test(action));
 
     if (typeof invalidAction !== 'undefined') {
         throw OAuth2RequestError.malformed('A cap entry has an invalid action.');

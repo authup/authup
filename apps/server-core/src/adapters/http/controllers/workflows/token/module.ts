@@ -194,7 +194,7 @@ export class TokenController {
             }),
             [OAuth2TokenGrant.TOKEN_EXCHANGE]: new HTTPOAuth2TokenExchangeGrant({
                 capabilityTokenIssuer: ctx.capabilityTokenIssuer,
-                policyRepository: ctx.clientTokenExchangePolicyRepository,
+                capabilityRepository: ctx.clientTokenExchangeCapabilityRepository,
                 tokenVerifier: ctx.tokenVerifier,
                 sessionManager: ctx.sessionManager,
                 identityResolver: ctx.identityResolver,
