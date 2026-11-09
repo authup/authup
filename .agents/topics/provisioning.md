@@ -23,7 +23,7 @@ Core logic lives in `core/provisioning/`, wiring in `app/modules/provisioning/`.
 - **`app/modules/provisioning/sources/`**: `default` (built-ins), `file`
   (`.json`, `.yaml`, `.ts`, `.js`), `composite`.
 - **The composite source DEEP-MERGES colliding entries** (key
-  `name:realmId:clientId`), never replaces wholesale: a mounted file declaring
+  `name:realmId:clientId`, a nameless entry keying on its `path` or `audience`), never replaces wholesale: a mounted file declaring
   the master realm to add one client must not displace the default source's
   admin user and `system` client relations. Later source wins per scalar;
   relation lists union (entity lists recurse by key, scalar lists dedup);

@@ -345,7 +345,7 @@ Types in `packages/access/src/permission/types.ts`:
 
 ## Security: Permission Assignment
 
-**`realm_admin` never holds `client_token_exchange_capability_*`** (`REALM_ADMIN_EXCLUDED_PERMISSIONS`), and those permissions are separate from `client_update`, which it does hold: a token exchange capability lets its client mint tokens resource servers trust for any opaque capability id, so writing one is a root of trust over every resource server, not a realm-local act. A grant writing one of `realmScope: any` must also reach every realm (`hasUnboundedReach`, so a policy-narrowed grant is refused), since that row acts on subjects outside its own realm.
+**`realm_admin` never holds `client_token_exchange_capability_*`** (`REALM_ADMIN_EXCLUDED_PERMISSIONS`), and those permissions are separate from `client_update`, which it does hold: a token exchange capability lets its client mint tokens resource servers trust for any opaque capability id, so writing one is a root of trust over every resource server, not a realm-local act. A grant writing one of `realmScope: any` must also reach every realm (`hasUnboundedReach`, so a policy-narrowed grant is refused), since that row acts on subjects outside its own realm. Withholding the row is not enough, since whoever can authenticate as the client holds what it delegates: `assertTokenExchangeAuthority` guards every route that decides that (`ClientService` secret rotation and the `TOKEN_EXCHANGE_AUTHENTICATION_KEYS`, a new or re-enabled trust anchor of its realm), and `secretReadGate` hides the stored secret of a client listing the grant from a realm-bound reader. A new client-authentication field or method belongs behind the same check.
 
 ### Superset Check
 

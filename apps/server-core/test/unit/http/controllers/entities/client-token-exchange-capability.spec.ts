@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { readFileSync } from 'node:fs';
 import { RealmScope } from '@authup/access';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import type { Client, Realm } from '@authup/core-kit';
@@ -332,6 +333,91 @@ describe('client token exchange capabilities', () => {
             });
 
             expect(data.realmScope).toEqual('any');
+        });
+    });
+
+    describe('the authentication of an exchange client is withheld from realm_admin', () => {
+        const EXCHANGE_GRANT = 'urn:ietf:params:oauth:grant-type:token-exchange';
+        const SECRET = 'exchange-client-secret';
+
+        let exchangeClient: Client;
+        let plainClient: Client;
+
+        beforeAll(async () => {
+            exchangeClient = (await suite.client.client.create({
+                ...createFakeClient({ realmId: realm.id }),
+                secret: SECRET,
+                secretHashed: false,
+                secretEncrypted: false,
+                grantTypes: EXCHANGE_GRANT,
+            })).data;
+
+            await suite.client.clientTokenExchangeCapability.create(buildPayload(exchangeClient.id));
+
+            plainClient = (await suite.client.client.create({
+                ...createFakeClient({ realmId: realm.id }),
+                secret: SECRET,
+                secretHashed: false,
+                secretEncrypted: false,
+            })).data;
+        });
+
+        it('should refuse rotating the secret to one of its choosing', async () => {
+            await expectClientError(
+                () => realmAdmin.client.rotateSecret(exchangeClient.id, { secret: 'attacker-chosen-secret' }),
+                { status: 403 },
+            );
+
+            const { data } = await suite.client.client.getOne(exchangeClient.id, { fields: ['+secret'] });
+
+            expect(data.secret).toEqual(SECRET);
+        });
+
+        it('should refuse changing how the client authenticates or what it may use', async () => {
+            await expectClientError(
+                () => realmAdmin.client.update(exchangeClient.id, { grantTypes: 'client_credentials' }),
+                { status: 403 },
+            );
+            await expectClientError(
+                () => realmAdmin.client.update(exchangeClient.id, { secret: 'attacker-chosen-secret' }),
+                { status: 403 },
+            );
+        });
+
+        it('should leave the rest of the client editable', async () => {
+            const { data } = await realmAdmin.client.update(exchangeClient.id, { description: 'edited by the realm admin' });
+
+            expect(data.description).toEqual('edited by the realm admin');
+            expect(data.secret ?? null).toBeNull();
+        });
+
+        it('should hide the stored secret and keep showing an ordinary client\'s', async () => {
+            const { data: exchange } = await realmAdmin.client.getOne(exchangeClient.id, { fields: ['+secret'] });
+            const { data: plain } = await realmAdmin.client.getOne(plainClient.id, { fields: ['+secret'] });
+
+            expect(exchange.secret ?? null).toBeNull();
+            expect(plain.secret).toEqual(SECRET);
+        });
+
+        it('should hide the secret when only the secret is projected', async () => {
+            const { data } = await realmAdmin.client.getOne(exchangeClient.id, { fields: ['id', 'secret'] });
+
+            expect(data.secret ?? null).toBeNull();
+        });
+
+        it('should refuse trusting another CA in the realm', async () => {
+            await expectClientError(
+                () => realmAdmin.trustAnchor.create({
+                    name: 'attacker-ca',
+                    certificate: readFileSync(new URL('../../../../data/certificates/certificate.pem', import.meta.url), 'utf8'),
+                    realmId: realm.id,
+                }),
+                { status: 403 },
+            );
+        });
+
+        it('should let a global admin rotate the secret', async () => {
+            await expect(suite.client.client.rotateSecret(exchangeClient.id, { secret: 'an-admin-chosen-secret' })).resolves.toBeDefined();
         });
     });
 

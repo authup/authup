@@ -585,7 +585,7 @@ Declaring both flags fails the startup.
 
 `grantTypes` restricts the OAuth2 grants the client may use, as a space- or
 comma-separated list. Omitted or `null` allows every grant except the device
-grant:
+grant and the token exchange grant:
 
 | Value | Grant |
 |---|---|
@@ -594,9 +594,10 @@ grant:
 | `client_credentials` | Machine-to-machine |
 | `password` | Resource owner password credentials |
 | `urn:ietf:params:oauth:grant-type:device_code` | [Device authorization grant](../development/api-oauth2.md#_8-device-authorization-grant-rfc-8628) |
+| `urn:ietf:params:oauth:grant-type:token-exchange` | [Token exchange](../user/token-exchange.md) |
 
-The device grant is opt-in: a client uses it only while the URN is listed, and
-an omitted `grantTypes` does not enable it. A CLI or a TV application is
+The device and token exchange grants are opt-in: a client uses one only while
+its URN is listed, and an omitted `grantTypes` enables neither. A CLI or a TV application is
 declared with the URN and the scopes it may be granted:
 
 ```yaml
@@ -628,6 +629,37 @@ realms:
 | `realmRoles`        | `string[]`                    | Assign realm roles. `'*'` = all.                        |
 | `globalScopes`      | `string[]`                    | Assign global scopes. `'*'` = all.                      |
 | `realmScopes`       | `string[]`                    | Assign realm scopes. `'*'` = all.                       |
+| `tokenExchangeCapabilities` | `TokenExchangeCapabilityProvisioning[]` | Define what the client may delegate through [token exchange](../user/token-exchange.md). See below. |
+
+A token exchange capability belongs to its client and is identified by its
+`audience`, so there is one per client and audience. Each entry takes its own
+`strategy`, which also applies when the client itself is left alone by
+`createOnly`. `attributes` takes `audience` (always required), `value` and
+`maxAge` (required to create or replace a capability) and `realmScope` (`own`
+by default). The client also has to list the grant:
+
+```yaml
+realms:
+  - attributes:
+      name: master
+    relations:
+      clients:
+        - attributes:
+            name: hub-core
+            authMethod: secret
+            secret: change-me
+            secretHashed: true
+            grantTypes: client_credentials urn:ietf:params:oauth:grant-type:token-exchange
+          relations:
+            tokenExchangeCapabilities:
+              - strategy:
+                  type: merge
+                attributes:
+                  audience: storage
+                  value: bucket:read bucket-file
+                  maxAge: 3600
+                  realmScope: any
+```
 
 Assigned scopes are what the authorization endpoint grants the client. A client
 with none of them can only be authorized for requests that include the `global`
@@ -742,7 +774,8 @@ This creates a `realm_admin` role that:
 ## Merging Behavior
 
 When multiple provisioning files (or sources) define the same entity, the **last one wins**.
-Entity identity is determined by the composite key: `name` + `realmId` + `clientId`.
+Entity identity is determined by the composite key: `name` + `realmId` + `clientId`
+(a token exchange capability uses its `audience` in place of `name`).
 
 The built-in defaults are always loaded first, so your files can override default entities
 using the `merge` or `replace` strategy.

@@ -8,13 +8,17 @@
 import type { ICondition, KeyValidationVerdict } from '@rapiq/core';
 import {
     and,
+    contains,
     defineSchema,
     eq,
     ne,
+    not,
     or,
 } from '@rapiq/core';
 import type { Client } from '@authup/core-kit';
-import { EntityType, IdentityType } from '@authup/core-kit';
+import { hasUnboundedReach } from '@authup/access';
+import { EntityType, IdentityType, PermissionName } from '@authup/core-kit';
+import { OAuth2TokenGrant } from '@authup/specs';
 import type { ActorContext } from '@authup/server-kit';
 import { createFieldsReadGate } from '../../query/fields.ts';
 import { createRelationsReadGate } from '../../query/relations.ts';
@@ -56,7 +60,15 @@ const schemaMapping = {
 async function secretReadGate(actor: ActorContext) : Promise<KeyValidationVerdict> {
     const compiled = await actor.permissionEvaluator.compile({ name: CLIENT_READ_PERMISSIONS });
 
-    if (compiled.verdict === 'allow') {
+    // A secret a reader can see is a secret it can present, and on a client of
+    // the exchange grant that is its delegation authority, which reading every
+    // client does not imply.
+    const readsExchangeClients = await hasUnboundedReach(
+        actor.permissionEvaluator,
+        PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_UPDATE,
+    );
+
+    if (readsExchangeClients && compiled.verdict === 'allow') {
         return true;
     }
 
@@ -64,8 +76,14 @@ async function secretReadGate(actor: ActorContext) : Promise<KeyValidationVerdic
         eq('secret', null),
     ];
 
-    if (compiled.verdict === 'conditional') {
-        visible.push(compiled.condition);
+    if (compiled.verdict === 'allow' || compiled.verdict === 'conditional') {
+        const legs : ICondition[] = compiled.verdict === 'conditional' ? [compiled.condition] : [];
+
+        if (!readsExchangeClients) {
+            legs.push(or(eq('grantTypes', null), not(contains('grantTypes', OAuth2TokenGrant.TOKEN_EXCHANGE))));
+        }
+
+        visible.push(and(...legs));
     }
 
     if (

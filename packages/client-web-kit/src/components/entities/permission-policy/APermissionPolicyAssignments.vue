@@ -113,7 +113,8 @@ export default defineComponent({
                 <div class="flex items-center justify-between gap-2">
                     <VCModalTitle>{{ detailPolicy.name }}</VCModalTitle>
                     <VCModalClose
-                        class="text-fg-muted hover:text-fg"
+                        icon
+                        class="cursor-pointer"
                         :aria-label="translationsAction.close"
                     >
                         <VCIcon name="fa6-solid:xmark" />

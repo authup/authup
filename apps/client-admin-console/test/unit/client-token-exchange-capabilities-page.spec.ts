@@ -11,6 +11,8 @@ import { AClientTokenExchangeCapabilityForm, AEntityDelete, AFormSubmit } from '
 import { PermissionName } from '@authup/core-kit';
 import type { FakeRequest } from '@authup/core-http-kit/testing';
 import { flushPromises } from '@vue/test-utils';
+import { VCButton } from '@vuecs/button';
+import { VCModalContent } from '@vuecs/overlays';
 import type { RouteRecordRaw } from 'vue-router';
 import {
     afterEach,
@@ -167,7 +169,7 @@ describe('src/pages/clients/[id]/token-exchange-capabilities.vue', () => {
         wrapper.unmount();
     });
 
-    it('should close the edit form when the row being edited is deleted', async () => {
+    it('should close the form when the row being edited is deleted', async () => {
         allow(
             PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_UPDATE,
             PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_DELETE,
@@ -185,6 +187,35 @@ describe('src/pages/clients/[id]/token-exchange-capabilities.vue', () => {
 
         expect(wrapper.findComponent(AClientTokenExchangeCapabilityForm).exists()).toBe(false);
         expect(wrapper.find('table').text()).not.toContain('storage');
+
+        wrapper.unmount();
+    });
+
+    it('should keep the form closed until asked and close it again on abort', async () => {
+        allow(
+            PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_READ,
+            PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_CREATE,
+        );
+
+        const { wrapper } = await mountCapabilities();
+
+        expect(wrapper.findComponent(AClientTokenExchangeCapabilityForm).exists()).toBe(false);
+
+        await wrapper.findAll('button').find((button) => button.text() === 'Add')!.trigger('click');
+        await flushPromises();
+
+        expect(wrapper.findComponent(VCModalContent).findComponent(AClientTokenExchangeCapabilityForm).exists()).toBe(true);
+
+        // next to the submit button, inside the form's action row
+        await wrapper
+            .findComponent(AClientTokenExchangeCapabilityForm)
+            .findAllComponents(VCButton)
+            .find((button) => button.text() === 'Abort')!
+            .trigger('click');
+        await flushPromises();
+
+        expect(wrapper.findComponent(AClientTokenExchangeCapabilityForm).exists()).toBe(false);
+        expect(wrapper.find('table').text()).toContain('storage');
 
         wrapper.unmount();
     });
@@ -216,9 +247,11 @@ describe('src/pages/clients/[id]/token-exchange-capabilities.vue', () => {
         await wrapper.findAll('button').find((button) => button.text() === 'Add')!.trigger('click');
         await flushPromises();
 
-        expect(wrapper.findComponent(AClientTokenExchangeCapabilityForm).exists()).toBe(true);
+        const form = wrapper.findComponent(AClientTokenExchangeCapabilityForm);
 
-        const [audience, value] = wrapper.findAll('input');
+        expect(form.exists()).toBe(true);
+
+        const [audience, value] = form.findAll('input');
 
         await audience!.setValue('analysis');
         await value!.setValue('run');

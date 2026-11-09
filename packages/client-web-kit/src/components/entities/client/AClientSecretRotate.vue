@@ -221,7 +221,8 @@ export default defineComponent({
                 <div class="flex items-center justify-between gap-2 mb-3">
                     <VCModalTitle>{{ translations.secretRotate }}</VCModalTitle>
                     <VCModalClose
-                        class="text-fg-muted hover:text-fg"
+                        icon
+                        class="cursor-pointer"
                         :aria-label="translations.close"
                     >
                         <VCIcon name="fa6-solid:xmark" />

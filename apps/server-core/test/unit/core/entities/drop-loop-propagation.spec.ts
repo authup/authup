@@ -28,6 +28,7 @@ import { createFakeClient, createFakeRole, createFakeScope } from '../../../util
 import { FakeEventService, FakeIdentityPermissionProvider } from '../helpers/index.ts';
 import { createFakeRealmCipher } from '../helpers/realm-cipher.ts';
 import { FakeClientRepository } from './client/fake-repository.ts';
+import { FakeClientTokenExchangeCapabilityRepository } from './client-token-exchange-capability/fake-repository.ts';
 import { FakeConsentRepository } from './consent/fake-repository.ts';
 import { FakeEventRepository } from './event/fake-repository.ts';
 import { FakeIdentityProviderAccountRepository } from './identity-provider-account/fake-repository.ts';
@@ -160,6 +161,7 @@ const cases: Case[] = [
         repository.seed([createFakeClient({ realmId })]);
 
         const service = new ClientService({
+            tokenExchangeCapabilityRepository: new FakeClientTokenExchangeCapabilityRepository(),
             repository,
             realmRepository: new FakeRealmRepository(),
             cipher: createFakeRealmCipher(realmId),

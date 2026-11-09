@@ -147,8 +147,14 @@ export default defineComponent({
         // The storage mode is fixed at creation and changes only through the
         // rotation endpoint, so an update may write the secret of a PLAIN
         // client alone; every other secret client rotates through the dialog.
+        // A row without the key is one the reader may not see the secret of
+        // (`null` means it holds none), so the blank field is no new value.
+        const isSecretWithheld = computed(() => isEditing.value &&
+            !!manager.data.value &&
+            typeof manager.data.value.secret === 'undefined');
         const isSecretEditable = computed(() => !isEditing.value || (
             !!manager.data.value &&
+            !isSecretWithheld.value &&
             getClientSecretMode(manager.data.value) === ClientSecretMode.PLAIN
         ));
         const isSecretRotatable = computed(() => isEditing.value &&
@@ -420,6 +426,7 @@ export default defineComponent({
             isTLSAuthentication,
             isSecretEditable,
             isSecretRotatable,
+            isSecretWithheld,
             handleSecretRotated,
             authMethodOptions,
             tokenBindingMethodOptions,
@@ -555,7 +562,7 @@ export default defineComponent({
                         @updated="handleSecretRotated"
                     />
                     <template
-                        v-if="!isSecretEditable"
+                        v-if="!isSecretEditable && !isSecretWithheld"
                         #hint
                     >
                         {{ translationsClient.secretHashedHint }}

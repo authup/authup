@@ -6,6 +6,7 @@
  */
 
 export * from './client/index.ts';
+export * from './client-token-exchange-capability/index.ts';
 export * from './path/index.ts';
 export * from './permission/index.ts';
 export * from './policy/index.ts';

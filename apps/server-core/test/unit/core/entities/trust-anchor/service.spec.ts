@@ -31,6 +31,7 @@ import {
 import { TrustAnchorService } from '../../../../../src/core/entities/trust-anchor/service.ts';
 import { FakeEventService, readEvaluatedRecordRealms } from '../../helpers/index.ts';
 import { FakeTrustAnchorRepository } from './fake-repository.ts';
+import { FakeClientTokenExchangeCapabilityRepository } from '../client-token-exchange-capability/fake-repository.ts';
 
 const CA_CERTIFICATE = readFileSync(
     new URL('../../../../data/certificates/certificate.pem', import.meta.url),
@@ -56,10 +57,12 @@ function buildTrustAnchor(overrides: Partial<TrustAnchor> = {}): Partial<TrustAn
 describe('core/entities/trust-anchor/service', () => {
     let repository: FakeTrustAnchorRepository;
     let service: TrustAnchorService;
+    let capabilityRepository: FakeClientTokenExchangeCapabilityRepository;
 
     beforeEach(() => {
         repository = new FakeTrustAnchorRepository();
-        service = new TrustAnchorService({ repository });
+        capabilityRepository = new FakeClientTokenExchangeCapabilityRepository();
+        service = new TrustAnchorService({ repository, tokenExchangeCapabilityRepository: capabilityRepository });
     });
 
     describe('getMany', () => {
@@ -284,6 +287,7 @@ describe('core/entities/trust-anchor/service', () => {
         beforeEach(() => {
             eventService = new FakeEventService();
             service = new TrustAnchorService({
+                tokenExchangeCapabilityRepository: capabilityRepository,
                 repository,
                 eventService,
                 requestContext: () => ({

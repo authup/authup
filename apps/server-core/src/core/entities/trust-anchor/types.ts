@@ -13,6 +13,8 @@ export interface ITrustAnchorRepository extends IEntityRepository<TrustAnchor> {
     checkUniqueness(data: Partial<TrustAnchor>, existing?: TrustAnchor): Promise<void>;
 
     findOneByIdOrName(idOrName: string, realm?: string): Promise<TrustAnchor | null>;
+
+    transaction<R>(fn: (repository: ITrustAnchorRepository) => Promise<R>): Promise<R>;
 }
 
 export type TrustAnchorServiceReadOptions = {

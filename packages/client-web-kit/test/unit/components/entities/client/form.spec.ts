@@ -683,6 +683,23 @@ describe('AClientForm secret rotation', () => {
         expect(request!.body).not.toHaveProperty('secret');
     });
 
+    it('sends no secret and offers rotation when the secret is withheld from the reader', async () => {
+        const entity = createEntity();
+
+        Reflect.deleteProperty(entity, 'secret');
+
+        const { wrapper, httpClient } = mountForm(entity);
+
+        await flushPromises();
+
+        expect(findRotate(wrapper).exists()).toBe(true);
+
+        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await flushPromises();
+
+        expect(findUpdateRequest(httpClient)!.body).not.toHaveProperty('secret');
+    });
+
     it('sends the changed secret of a plain client on update', async () => {
         const { wrapper, httpClient } = mountForm(createEntity());
 

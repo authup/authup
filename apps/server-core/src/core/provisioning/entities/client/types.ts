@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import type { Client } from '@authup/core-kit';
+import type { ClientTokenExchangeCapabilityProvisioningEntity } from '../client-token-exchange-capability/index.ts';
 import type { PermissionProvisioningEntity } from '../permission/index.ts';
 import type { RoleProvisioningEntity } from '../role/index.ts';
 import type { BaseProvisioningEntity } from '../types.ts';
@@ -60,6 +61,12 @@ export type ClientProvisioningRelations = {
      */
     globalScopes?: string[],
 
+    // ------------------------------------------
+
+    /**
+     * Create, update or remove the token exchange capabilities of the client.
+     */
+    tokenExchangeCapabilities?: ClientTokenExchangeCapabilityProvisioningEntity[],
 };
 
 export type ClientProvisioningEntity = BaseProvisioningEntity<Client> & {
