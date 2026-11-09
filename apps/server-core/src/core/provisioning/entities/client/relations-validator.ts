@@ -8,6 +8,7 @@
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
+import { ClientTokenExchangeCapabilityProvisioningValidator } from '../client-token-exchange-capability/index.ts';
 import { createPathValidator } from '../path/utils.ts';
 import { PermissionProvisioningValidator } from '../permission/index.ts';
 import { RoleProvisioningValidator } from '../role/index.ts';
@@ -20,6 +21,7 @@ export class ClientProvisioningRelationsValidator extends Container<ClientProvis
 
         const permissionValidator = new PermissionProvisioningValidator();
         const roleValidator = new RoleProvisioningValidator();
+        const tokenExchangeCapabilityValidator = new ClientTokenExchangeCapabilityProvisioningValidator();
 
         this.mount('path', { optional: true }, createPathValidator());
 
@@ -57,6 +59,12 @@ export class ClientProvisioningRelationsValidator extends Container<ClientProvis
 
         this.mount('globalScopes', { optional: true }, createValidator(
             z.array(z.string()),
+        ));
+
+        this.mount('tokenExchangeCapabilities', { optional: true }, createValidator(
+            z
+                .array(z.any())
+                .check(createProvisioningEntitiesValidator(tokenExchangeCapabilityValidator)),
         ));
     }
 }

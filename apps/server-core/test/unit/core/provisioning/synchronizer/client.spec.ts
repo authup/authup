@@ -26,6 +26,7 @@ import {
 } from 'vitest';
 import { ClientProvisioningSynchronizer } from '../../../../../src/core/provisioning/synchronizer/client/module.ts';
 import type { ClientProvisioningEntity } from '../../../../../src/core/provisioning/entities/client/types.ts';
+import type { ClientTokenExchangeCapabilityProvisioningEntity } from '../../../../../src/core/provisioning/entities/client-token-exchange-capability/index.ts';
 import { ProvisioningEntityStrategyType } from '../../../../../src/core/provisioning/strategy/index.ts';
 import type {
     IClientPermissionRepository,
@@ -54,6 +55,7 @@ describe('core/provisioning/synchronizer/client', () => {
     let synchronizer: ClientProvisioningSynchronizer;
     const realmId = randomUUID();
     const cipher = createFakeRealmCipher(realmId);
+    const synchronizedCapabilities: ClientTokenExchangeCapabilityProvisioningEntity[] = [];
 
     beforeEach(() => {
         clientRepository = new FakeClientRepository();
@@ -84,7 +86,62 @@ describe('core/provisioning/synchronizer/client', () => {
                 synchronize: async (input) => input,
                 synchronizeMany: async (inputs) => inputs,
             },
+            tokenExchangeCapabilitySynchronizer: {
+                synchronize: async (input) => input,
+                synchronizeMany: async (inputs) => {
+                    synchronizedCapabilities.push(...inputs);
+
+                    return inputs;
+                },
+            },
         });
+        synchronizedCapabilities.length = 0;
+    });
+
+    it('should hand declared token exchange capabilities over with the client and its realm', async () => {
+        const input = buildInput({});
+
+        input.relations = {
+            tokenExchangeCapabilities: [{
+                attributes: {
+                    audience: 'storage',
+                    value: 'bucket',
+                    maxAge: 600,
+                },
+            }],
+        };
+
+        await synchronizer.synchronize(input);
+
+        const [stored] = clientRepository.getAll();
+
+        expect(synchronizedCapabilities).toHaveLength(1);
+        expect(synchronizedCapabilities[0]!.attributes).toMatchObject({
+            audience: 'storage',
+            clientId: stored.id,
+            realmId,
+        });
+    });
+
+    it('should reach the capabilities of a createOnly client that already exists', async () => {
+        await synchronizer.synchronize(buildInput({}));
+
+        const input = buildInput({});
+
+        input.strategy = { type: ProvisioningEntityStrategyType.CREATE_ONLY };
+        input.relations = {
+            tokenExchangeCapabilities: [{
+                attributes: {
+                    audience: 'storage',
+                    value: 'bucket',
+                    maxAge: 600,
+                },
+            }],
+        };
+
+        await synchronizer.synchronize(input);
+
+        expect(synchronizedCapabilities).toHaveLength(1);
     });
 
     function buildInput(attributes: Record<string, any>): ClientProvisioningEntity {

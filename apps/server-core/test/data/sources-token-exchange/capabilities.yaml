@@ -1,0 +1,15 @@
+realms:
+  - attributes:
+      name: token-exchange
+    relations:
+      clients:
+        - attributes:
+            name: delegating-client
+            grantTypes: urn:ietf:params:oauth:grant-type:token-exchange
+          relations:
+            tokenExchangeCapabilities:
+              - attributes:
+                  audience: storage
+                  value: bucket:read bucket-file
+                  maxAge: 600
+                  realmScope: any

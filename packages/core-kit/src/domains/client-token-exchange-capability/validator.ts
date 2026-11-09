@@ -84,17 +84,19 @@ export class ClientTokenExchangeCapabilityValidator extends Container<ClientToke
             createValidator(z.uuid()),
         );
 
-        this.mountRequiredOnCreate(
-            'audience',
-            createValidator(
-                z
-                    .string()
-                    .trim()
-                    .min(1)
-                    .max(CLIENT_TOKEN_EXCHANGE_AUDIENCE_MAX_LENGTH)
-                    .regex(/^[^\s\p{C}]+$/u),
-            ),
+        // Provisioning requires only what identifies a row: an `absent` or a
+        // partial `merge` declares nothing else.
+        const audience = createValidator(
+            z
+                .string()
+                .trim()
+                .min(1)
+                .max(CLIENT_TOKEN_EXCHANGE_AUDIENCE_MAX_LENGTH)
+                .regex(/^[^\s\p{C}]+$/u),
         );
+
+        this.mount('audience', { group: [ValidatorGroup.CREATE, ValidatorGroup.PROVISIONING] }, audience);
+        this.mount('audience', { group: ValidatorGroup.UPDATE, optional: true }, audience);
 
         this.mountRequiredOnCreate('value', createValidator(valueSchema));
 
@@ -115,6 +117,6 @@ export class ClientTokenExchangeCapabilityValidator extends Container<ClientToke
         validator: ReturnType<typeof createValidator>,
     ) {
         this.mount(key, { group: ValidatorGroup.CREATE }, validator);
-        this.mount(key, { group: ValidatorGroup.UPDATE, optional: true }, validator);
+        this.mount(key, { group: [ValidatorGroup.UPDATE, ValidatorGroup.PROVISIONING], optional: true }, validator);
     }
 }

@@ -9,6 +9,7 @@ import type {
     ClientPermission,
     ClientRole,
     ClientScope,
+    ClientTokenExchangeCapability,
     Path,
     PermissionPolicy,
     Realm,
@@ -25,6 +26,7 @@ import {
     ClientPermissionEntity,
     ClientRoleEntity,
     ClientScopeEntity,
+    ClientTokenExchangeCapabilityEntity,
     PathEntity,
     PermissionEntity,
     RealmEntity,
@@ -43,6 +45,7 @@ import {
 import type { IContainer } from 'eldin';
 import {
     ClientProvisioningSynchronizer,
+    ClientTokenExchangeCapabilityProvisioningSynchronizer,
     GraphProvisioningSynchronizer,
     PathProvisioningSynchronizer,
     PermissionProvisioningSynchronizer,
@@ -65,6 +68,7 @@ import {
     ClientRepositoryAdapter,
     ClientRoleRepositoryAdapter,
     ClientScopeRepositoryAdapter,
+    ClientTokenExchangeCapabilityRepositoryAdapter,
     KeyRepositoryAdapter,
     PathRepositoryAdapter,
     PermissionPolicyRepositoryAdapter,
@@ -261,6 +265,11 @@ export class ProvisionerModule implements IModule {
 
             roleSynchronizer,
             permissionSynchronizer,
+            tokenExchangeCapabilitySynchronizer: new ClientTokenExchangeCapabilityProvisioningSynchronizer({
+                repository: new ClientTokenExchangeCapabilityRepositoryAdapter(
+                    container.resolve<Repository<ClientTokenExchangeCapability>>(ClientTokenExchangeCapabilityEntity),
+                ),
+            }),
         });
 
         const userSynchronizer = new UserProvisioningSynchronizer({

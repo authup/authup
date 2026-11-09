@@ -15,7 +15,9 @@ export function buildProvisioningEntityKey(
     // it would key on nothing and every declaration of one folder would be
     // pushed as a separate entry: a wildcard `absent` next to an explicit
     // create would then delete and recreate that subtree on every boot
-    const identifier = attributes.name || attributes.path;
+    // a token exchange capability has no name either; it is unique per client
+    // and audience
+    const identifier = attributes.name || attributes.path || attributes.audience;
 
     if (!identifier) {
         return undefined;

@@ -6,6 +6,7 @@
  */
 
 export * from './client/index.ts';
+export * from './client-token-exchange-capability/index.ts';
 export * from './entity-resolver.ts';
 export * from './junction-synchronizer.ts';
 export * from './path/index.ts';

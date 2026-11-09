@@ -36,6 +36,10 @@ export type MergeableProvisioningEntity = {
          * `name`, so it identifies itself through this key instead.
          */
         path?: string,
+        /**
+         * A token exchange capability is identified by its audience.
+         */
+        audience?: string,
         realmId?: string | null,
         clientId?: string | null,
     },

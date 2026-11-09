@@ -23,6 +23,7 @@ import type { IPathRepository } from '../../../entities/path/types.ts';
 import { isRealmCipherBlob } from '../../../key/realm-cipher.ts';
 import type { IRealmCipher } from '../../../key/types.ts';
 import type { ClientProvisioningEntity } from '../../entities/client';
+import type { ClientTokenExchangeCapabilityProvisioningEntity } from '../../entities/client-token-exchange-capability/index.ts';
 import type { PermissionProvisioningEntity } from '../../entities/permission';
 import type { RoleProvisioningEntity } from '../../entities/role';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
@@ -55,6 +56,8 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
     protected roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningEntity>;
 
+    protected tokenExchangeCapabilitySynchronizer: IProvisioningSynchronizer<ClientTokenExchangeCapabilityProvisioningEntity>;
+
     constructor(ctx: ClientProvisioningSynchronizerContext) {
         super();
 
@@ -84,6 +87,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
         this.permissionSynchronizer = ctx.permissionSynchronizer;
         this.roleSynchronizer = ctx.roleSynchronizer;
+        this.tokenExchangeCapabilitySynchronizer = ctx.tokenExchangeCapabilitySynchronizer;
     }
 
     async synchronize(input: ClientProvisioningEntity): Promise<ClientProvisioningEntity> {
@@ -243,6 +247,17 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             });
 
             await this.roleSynchronizer.synchronizeMany(children);
+        }
+
+        if (input.relations && input.relations.tokenExchangeCapabilities) {
+            const children = input.relations.tokenExchangeCapabilities.map((child) => {
+                child.attributes.clientId = attributes.id;
+                child.attributes.realmId = attributes.realmId as string;
+
+                return child;
+            });
+
+            await this.tokenExchangeCapabilitySynchronizer.synchronizeMany(children);
         }
 
         return {

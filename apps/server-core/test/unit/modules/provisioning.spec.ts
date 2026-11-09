@@ -13,6 +13,7 @@ import type {
 
     Client,
     ClientScope,
+    ClientTokenExchangeCapability,
     Permission,
     PermissionPolicy,
     Realm,
@@ -38,6 +39,7 @@ import {
     CacheModule,
     ClientEntity,
     ClientScopeEntity,
+    ClientTokenExchangeCapabilityEntity,
     ConfigInjectionKey,
     ConfigModule,
     DefaultProvisioningSource,
@@ -216,6 +218,34 @@ describe('app/modules/provisioning', () => {
         });
 
         expect(clientScopes.map((row) => row.scope.name).sort()).toEqual(['foo', 'realm-scope']);
+    });
+
+    it('should provision the token exchange capabilities of a file once', async () => {
+        const boot = () => new ProvisionerModule([
+            new FileProvisioningSource({ cwd: 'test/data/sources-token-exchange' }),
+        ]).setup(di);
+
+        await boot();
+        await boot();
+
+        const realm = await di.resolve<Repository<Realm>>(RealmEntity).findOneBy({ name: 'token-exchange' });
+        const client = await di.resolve<Repository<Client>>(ClientEntity).findOneBy({
+            name: 'delegating-client',
+            realmId: realm!.id,
+        });
+        const capabilities = await di
+            .resolve<Repository<ClientTokenExchangeCapability>>(ClientTokenExchangeCapabilityEntity)
+            .findBy({ clientId: client!.id });
+
+        expect(client!.grantTypes).toEqual('urn:ietf:params:oauth:grant-type:token-exchange');
+        expect(capabilities).toHaveLength(1);
+        expect(capabilities[0]).toMatchObject({
+            audience: 'storage',
+            value: 'bucket:read bucket-file',
+            maxAge: 600,
+            realmScope: 'any',
+            realmId: realm!.id,
+        });
     });
 
     // Every realm carries the console system clients whose provisioned
