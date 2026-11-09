@@ -1,5 +1,40 @@
 # Change Log
 
+## [1.0.0-beta.74](https://github.com/authup/authup/compare/v1.0.0-beta.73...v1.0.0-beta.74) (2026-11-09)
+
+
+### Features
+
+* add rfc 8693 token exchange for delegated capability tokens ([#3802](https://github.com/authup/authup/issues/3802)) ([aa1fe5e](https://github.com/authup/authup/commit/aa1fe5eeb243b9bab0e3871596ea4518c89c4b4c))
+* provision token exchange capabilities and guard exchange client authentication ([#3806](https://github.com/authup/authup/issues/3806)) ([d685bce](https://github.com/authup/authup/commit/d685bceddd5d2ebb1f9a56f2285fb4e9b65f1f4c))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group with 4 updates ([#3796](https://github.com/authup/authup/issues/3796)) ([6ec1932](https://github.com/authup/authup/commit/6ec19323d78af57cec99ade21a6c959d5176190c))
+* **deps:** bump the minorandpatch group with 4 updates ([#3800](https://github.com/authup/authup/issues/3800)) ([de6f7d8](https://github.com/authup/authup/commit/de6f7d84cdb9bcb03cb809866a206de98fb92254))
+* **server-core:** accept long issued JWTs in token introspection and revocation ([#3805](https://github.com/authup/authup/issues/3805)) ([e92e057](https://github.com/authup/authup/commit/e92e057df004c1550f9ed50620623f01753a9ebc))
+* **server-core:** stop serving expired tokens from the verifier cache ([#3804](https://github.com/authup/authup/issues/3804)) ([cfc4e9c](https://github.com/authup/authup/commit/cfc4e9c1cf8a7cbc87980f02a59bbebb1d00140c)), closes [#3803](https://github.com/authup/authup/issues/3803)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+    * @authup/core-http-kit bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+    * @authup/core-kit bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+    * @authup/errors bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+    * @authup/i18n bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+    * @authup/kit bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+    * @authup/server-config bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+    * @authup/server-config-kit bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+    * @authup/server-console-kit bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+    * @authup/server-kit bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+    * @authup/specs bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+  * devDependencies
+    * @authup/server-test-kit bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+
 ## [1.0.0-beta.73](https://github.com/authup/authup/compare/v1.0.0-beta.72...v1.0.0-beta.73) (2026-11-01)
 
 

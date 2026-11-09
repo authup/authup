@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.0-beta.74](https://github.com/authup/authup/compare/v1.0.0-beta.73...v1.0.0-beta.74) (2026-11-09)
+
+
+### Features
+
+* add rfc 8693 token exchange for delegated capability tokens ([#3802](https://github.com/authup/authup/issues/3802)) ([aa1fe5e](https://github.com/authup/authup/commit/aa1fe5eeb243b9bab0e3871596ea4518c89c4b4c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+    * @authup/core-kit bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+    * @authup/errors bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+
 ## [1.0.0-beta.73](https://github.com/authup/authup/compare/v1.0.0-beta.72...v1.0.0-beta.73) (2026-11-01)
 
 

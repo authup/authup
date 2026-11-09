@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.0-beta.74](https://github.com/authup/authup/compare/v1.0.0-beta.73...v1.0.0-beta.74) (2026-11-09)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([8fed879](https://github.com/authup/authup/commit/8fed8790f6079a83f552d5859d60642cc38cf383))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/server-adapter-kit bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+
 ## [1.0.0-beta.73](https://github.com/authup/authup/compare/v1.0.0-beta.72...v1.0.0-beta.73) (2026-11-01)
 
 
