@@ -72,6 +72,21 @@ describe('core/entities/trust-anchor/service token exchange authority', () => {
         service = new TrustAnchorService({ repository, tokenExchangeCapabilityRepository: capabilityRepository });
     });
 
+    it('should not let an echoed enabled undo a disable that landed in between', async () => {
+        const anchor = repository.seed({ ...payload(), enabled: true });
+
+        attachCapability();
+
+        repository.beforeTransaction = () => {
+            repository.beforeTransaction = undefined;
+            repository.getAll()[0]!.enabled = false;
+        };
+
+        await expect(service.update(anchor.id, { enabled: true, name: 'renamed-anchor' }, buildKeyAdmin())).rejects.toThrow(PermissionError);
+
+        expect(repository.getAll()[0]!.enabled).toBe(false);
+    });
+
     it('should refuse a new anchor in a realm with a capability', async () => {
         attachCapability();
 

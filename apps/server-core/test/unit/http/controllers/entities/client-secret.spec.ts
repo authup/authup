@@ -78,7 +78,7 @@ describe('http/controllers/client (secret rotation)', () => {
     });
 
     it('should record a clientSecretRotated event carrying the mode and never the secret', async () => {
-        const { data: events } = await suite.client.event.getMany({ filters: { name: EventName.CLIENT_SECRET_ROTATED } });
+        const { data: events } = await suite.client.event.getMany({ filters: { name: EventName.CLIENT_SECRET_ROTATED, refId: entity.id } });
 
         expect(events).toHaveLength(1);
         expect(events[0].refId).toEqual(entity.id);

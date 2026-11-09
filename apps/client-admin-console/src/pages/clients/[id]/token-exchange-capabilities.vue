@@ -80,6 +80,13 @@ export default defineComponent({
             emit('failed', e);
         };
 
+        // A delete still in flight can answer after its row was opened.
+        const handleDeleted = (capability: ClientTokenExchangeCapability) => {
+            if (editing.value?.id === capability.id) {
+                editing.value = null;
+            }
+        };
+
         const handleOpenChange = (open: boolean) => {
             if (!open) {
                 close();
@@ -181,6 +188,7 @@ export default defineComponent({
             close,
             columns,
             editing,
+            handleDeleted,
             handleFailed,
             handleOpenChange,
             hasCreatePermission,
@@ -279,7 +287,7 @@ export default defineComponent({
                         :entity-id="row.id"
                         entity-type="clientTokenExchangeCapability"
                         :with-text="false"
-                        @deleted="props.deleted"
+                        @deleted="(capability) => { props.deleted(capability); handleDeleted(capability); }"
                         @failed="handleFailed"
                     />
                 </template>

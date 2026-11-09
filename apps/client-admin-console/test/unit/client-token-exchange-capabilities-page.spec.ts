@@ -169,6 +169,28 @@ describe('src/pages/clients/[id]/token-exchange-capabilities.vue', () => {
         wrapper.unmount();
     });
 
+    it('should close the form when the row being edited is deleted', async () => {
+        allow(
+            PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_UPDATE,
+            PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_DELETE,
+        );
+
+        const { wrapper } = await mountCapabilities();
+
+        await wrapper.find('button[aria-label="Details"]').trigger('click');
+        await flushPromises();
+
+        expect(wrapper.findComponent(AClientTokenExchangeCapabilityForm).exists()).toBe(true);
+
+        wrapper.findComponent(AEntityDelete).vm.$emit('deleted', capability);
+        await flushPromises();
+
+        expect(wrapper.findComponent(AClientTokenExchangeCapabilityForm).exists()).toBe(false);
+        expect(wrapper.find('table').text()).not.toContain('storage');
+
+        wrapper.unmount();
+    });
+
     it('should keep the form closed until asked and close it again on abort', async () => {
         allow(
             PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_READ,

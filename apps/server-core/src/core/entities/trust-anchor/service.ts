@@ -37,6 +37,7 @@ import { appendQueryConditions, decodeQuery, scopeReadQuery } from '../../query/
 import type { ReadScope } from '../../query/index.ts';
 import { assertTokenExchangeAuthority } from '../client-token-exchange-capability/helpers.ts';
 import type { IClientTokenExchangeCapabilityRepository } from '../client-token-exchange-capability/types.ts';
+import { assertRowUnchanged, retryOnStaleRow } from '../stale-row/index.ts';
 import { trustAnchorSchema } from './schema.ts';
 
 export type TrustAnchorServiceContext = {
@@ -214,31 +215,53 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
 
         const validated = await this.validator.run(data, { group: ValidatorGroup.UPDATE });
 
-        await this.evaluateUpdate(
-            actor,
-            PermissionName.KEY_UPDATE,
-            entity,
-            { ...entity, ...validated },
-            { realm: (row) => row.realmId },
-        );
+        const { id } = entity;
 
-        // Only turning an anchor on trusts anything new: its certificate is
-        // immutable, and the console echoes `enabled` on every save.
-        if (validated.enabled === true && !entity.enabled) {
-            await this.assertTokenExchangeAuthority(entity.realmId, actor);
-        }
+        let previous = this.pickAuditFields(entity);
 
-        if (validated.name && validated.name !== entity.name) {
-            await this.repository.checkUniqueness({
-                name: validated.name,
-                realmId: entity.realmId,
-            }, entity);
-        }
+        // The write refuses a row that moved since its authorization, or an
+        // echoed `enabled` would undo a disable that landed in between.
+        entity = await retryOnStaleRow({
+            row: entity,
+            reread: () => this.repository.findOneBy({ id }),
+        }, async (stored) => {
+            const before = { ...stored };
 
-        const previous = this.pickAuditFields(entity);
+            await this.evaluateUpdate(
+                actor,
+                PermissionName.KEY_UPDATE,
+                before,
+                { ...before, ...validated },
+                { realm: (row) => row.realmId },
+            );
 
-        entity = this.repository.merge(entity, validated);
-        entity = await this.repository.save(entity);
+            // Only turning an anchor on trusts anything new: its certificate
+            // is immutable, and the console echoes `enabled` on every save.
+            if (validated.enabled === true && !before.enabled) {
+                await this.assertTokenExchangeAuthority(before.realmId, actor);
+            }
+
+            if (validated.name && validated.name !== before.name) {
+                await this.repository.checkUniqueness({
+                    name: validated.name,
+                    realmId: before.realmId,
+                }, before);
+            }
+
+            previous = this.pickAuditFields(before);
+
+            return this.repository.transaction(async (repository) => {
+                const current = await repository.findOneBy({ id });
+
+                if (!current) {
+                    throw new EntityNotFoundError();
+                }
+
+                assertRowUnchanged(before, current);
+
+                return repository.save(repository.merge(current, validated));
+            });
+        });
 
         const diff = buildEntityDiff(this.pickAuditFields(entity), previous);
 

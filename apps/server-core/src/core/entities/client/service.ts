@@ -323,6 +323,10 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         let isSelfEdit = false;
 
+        const isOwnClient = !!entity &&
+            actor.identity?.type === 'client' &&
+            actor.identity.data.id === entity.id;
+
         if (entity) {
             try {
                 await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_UPDATE });
@@ -461,8 +465,12 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 if (!isSelfEdit) {
                     await this.evaluateUpdate(actor, PermissionName.CLIENT_UPDATE, before, next, { realm: (row) => row.realmId });
 
+                    // A client already holds its own secret, so replacing it
+                    // takes no authority over what the client delegates.
                     const changes = dropEchoes(input);
-                    const changesAuthentication = TOKEN_EXCHANGE_AUTHENTICATION_KEYS.some((key) => changes[key] !== undefined);
+                    const changesAuthentication = TOKEN_EXCHANGE_AUTHENTICATION_KEYS
+                        .filter((key) => !isOwnClient || key !== 'secret')
+                        .some((key) => changes[key] !== undefined);
 
                     if (changesAuthentication) {
                         await this.assertTokenExchangeAuthority(id, actor);
@@ -528,7 +536,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 await this.sessionManager?.revokeByOwner({ sub: id, subKind: 'client' });
             }
 
-            if (!isSelfEdit) {
+            if (!isOwnClient) {
                 await this.withholdTokenExchangeSecret(entity, actor);
             }
 
@@ -720,7 +728,10 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 { realm: (row) => row.realmId },
             );
 
-            await this.assertTokenExchangeAuthority(entity.id, actor);
+            // A client rotating its own secret keeps the storage mode out of it.
+            if (!isMe || mode !== currentMode) {
+                await this.assertTokenExchangeAuthority(entity.id, actor);
+            }
         }
 
         // Protect BEFORE the lock: hashing is CPU and encryption reaches the

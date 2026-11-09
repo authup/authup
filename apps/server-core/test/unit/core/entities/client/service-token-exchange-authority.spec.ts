@@ -122,6 +122,36 @@ describe('core/entities/client/service token exchange authority', () => {
         await expect(service.rotateSecret(client.id, { secret: 'a-new-secret-value' }, createAllowAllActor())).resolves.toBeDefined();
     });
 
+    describe('a client that also holds client_update', () => {
+        function buildOwnActor(): FakeActorContext {
+            const actor = buildClientAdmin();
+
+            actor.identity = { type: IdentityType.CLIENT, data: client } as FakeActorContext['identity'];
+
+            return actor;
+        }
+
+        it('should keep rotating its own secret', async () => {
+            attachCapability();
+
+            await expect(service.rotateSecret(client.id, { secret: 'a-new-secret-value' }, buildOwnActor())).resolves.toBeDefined();
+        });
+
+        it('should keep replacing its own secret through an update', async () => {
+            attachCapability();
+
+            await expect(service.update(client.id, { secret: 'a-new-secret-value' }, buildOwnActor())).resolves.toBeDefined();
+        });
+
+        it('should not change its storage mode or its grants', async () => {
+            attachCapability();
+
+            await expect(service.rotateSecret(client.id, { secret: 'a-new-secret-value', mode: 'hashed' }, buildOwnActor()))
+                .rejects.toThrow(PermissionError);
+            await expect(service.update(client.id, { grantTypes: 'password' }, buildOwnActor())).rejects.toThrow(PermissionError);
+        });
+    });
+
     it('should let a client rotate its own secret', async () => {
         attachCapability();
 
