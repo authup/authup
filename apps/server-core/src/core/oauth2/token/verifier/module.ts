@@ -57,7 +57,8 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
 
         let payload = await this.tokenRepository.findOneBySignature(token);
 
-        if (payload) {
+        // An entry past its `exp` is a miss, so the full verification decides.
+        if (payload && this.isUnexpired(payload)) {
             if (!payload.jti) {
                 throw JWTError.payloadPropertyInvalid('jti');
             }
@@ -168,14 +169,10 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
         }
 
         // Never populate the shared signature-keyed claims cache on the
-        // exp-ignoring path. An expired token verified with `ignoreExpiry`
-        // (the RP-initiated-logout id_token_hint) would otherwise be re-cached
-        // with buildTTL's 1h fallback (a past exp yields a non-positive ttl),
-        // and the cache-first branch above returns it with no exp re-check on
-        // every subsequent verify — so `/token/introspect` would report an
-        // expired token as active for up to an hour (RFC 7662). Keep the
-        // exp-bypass scoped to this single call.
-        if (!options.ignoreExpiry) {
+        // exp-ignoring path or for a payload already past its `exp`: buildTTL
+        // keeps such an entry for its 1h fallback (a past exp yields a
+        // non-positive ttl). Keep the exp-bypass scoped to this single call.
+        if (!options.ignoreExpiry && this.isUnexpired(payload)) {
             await this.tokenRepository.saveWithSignature(payload, token);
         }
 
@@ -188,5 +185,9 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
         }
 
         return payload;
+    }
+
+    protected isUnexpired(payload: OAuth2TokenPayload) : boolean {
+        return typeof payload.exp === 'number' && payload.exp * 1000 > Date.now();
     }
 }

@@ -90,6 +90,30 @@ describe('src/json-web-token', () => {
         }).rejects.toThrow(JWTError.expired());
     });
 
+    it('should grant an asymmetric key no leeway past exp', async () => {
+        const signedText = await signToken({ exp: Math.floor(Date.now() / 1000) - 5 }, {
+            type: 'rsa',
+            key: keyPair.privateKey,
+        });
+
+        await expect(verifyToken(signedText, {
+            type: 'rsa',
+            key: keyPair.publicKey,
+        })).rejects.toThrow(JWTError.expired());
+    });
+
+    it('should grant a symmetric key no leeway past exp', async () => {
+        const signedText = await signToken({ exp: Math.floor(Date.now() / 1000) - 5 }, {
+            type: 'oct',
+            key,
+        });
+
+        await expect(verifyToken(signedText, {
+            type: 'oct',
+            key,
+        })).rejects.toThrow(JWTError.expired());
+    });
+
     it('should verify an expired token when ignoreExpiry is set', async () => {
         const data : JWTClaims = { exp: 1000, text: 'secretText' };
 
