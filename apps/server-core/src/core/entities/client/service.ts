@@ -9,8 +9,10 @@ import {
     BuiltInPolicyType,
     evaluateRecord,
     evaluateRecordOneOf,
+    hasUnboundedReach,
     reachesRecordOneOf,
 } from '@authup/access';
+import { OAuth2TokenGrant } from '@authup/specs';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import {
@@ -38,15 +40,35 @@ import type { ClientSecretRotateResult, IClientRepository, IClientService } from
 import { CLIENT_READ_PERMISSIONS } from './constants.ts';
 import { decodeQuery, redactUnreachedRelations, scopeReadQuery } from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
+import { assertTokenExchangeAuthority } from '../client-token-exchange-capability/helpers.ts';
+import type { IClientTokenExchangeCapabilityRepository } from '../client-token-exchange-capability/types.ts';
 import { clientSchema } from './schema.ts';
 import { assertRowUnchanged, retryOnStaleRow } from '../stale-row/index.ts';
 import { isRealmReachable } from '../realm/helpers.ts';
 import type { IQuery } from '@rapiq/core';
 import type { ISessionManager } from '../../authentication/session/types.ts';
 
+/**
+ * What decides who can present a client at the token endpoint and whether it
+ * may use the exchange grant there.
+ */
+const TOKEN_EXCHANGE_AUTHENTICATION_KEYS = [
+    'authMethod',
+    'grantTypes',
+    'secret',
+    'secretEncrypted',
+    'secretHashed',
+    'tokenBindingMethod',
+] as const satisfies readonly (keyof Client)[];
+
 export type ClientServiceContext = {
     repository: IClientRepository;
     realmRepository: IRealmRepository;
+    /**
+     * Required, so no wiring can leave a capability-bearing client's
+     * authentication open to a plain client update.
+     */
+    tokenExchangeCapabilityRepository: Pick<IClientTokenExchangeCapabilityRepository, 'findManyBy'>;
     /**
      * Optional so a caller that never writes a `pathId` needs no folder
      * repository. A supplied `pathId` without it is refused, never accepted
@@ -73,6 +95,8 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
     protected pathRepository?: IPathRepository;
 
+    protected tokenExchangeCapabilityRepository: Pick<IClientTokenExchangeCapabilityRepository, 'findManyBy'>;
+
     protected validator: ClientValidator;
 
     protected secretValidator: ClientSecretRotateValidator;
@@ -90,6 +114,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
         this.pathRepository = ctx.pathRepository;
+        this.tokenExchangeCapabilityRepository = ctx.tokenExchangeCapabilityRepository;
         this.validator = new ClientValidator();
         this.secretValidator = new ClientSecretRotateValidator();
         this.cipher = ctx.cipher;
@@ -435,6 +460,13 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
                 if (!isSelfEdit) {
                     await this.evaluateUpdate(actor, PermissionName.CLIENT_UPDATE, before, next, { realm: (row) => row.realmId });
+
+                    const changes = dropEchoes(input);
+                    const changesAuthentication = TOKEN_EXCHANGE_AUTHENTICATION_KEYS.some((key) => changes[key] !== undefined);
+
+                    if (changesAuthentication) {
+                        await this.assertTokenExchangeAuthority(id, actor);
+                    }
                 }
 
                 if (next.authMethod === ClientAuthMethod.SECRET) {
@@ -496,6 +528,10 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 await this.sessionManager?.revokeByOwner({ sub: id, subKind: 'client' });
             }
 
+            if (!isSelfEdit) {
+                await this.withholdTokenExchangeSecret(entity, actor);
+            }
+
             return {
                 entity,
                 created: false,
@@ -542,6 +578,26 @@ export class ClientService extends AbstractEntityService implements IClientServi
             entity,
             created: true,
         };
+    }
+
+    /**
+     * A write answers with the row it loaded for the secret handling, which
+     * no read gate has seen, so it withholds what `secretReadGate` would.
+     */
+    protected async withholdTokenExchangeSecret(entity: Client, actor: ActorContext): Promise<void> {
+        if (
+            entity.grantTypes?.includes(OAuth2TokenGrant.TOKEN_EXCHANGE) &&
+            !await hasUnboundedReach(actor.permissionEvaluator, PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_UPDATE)
+        ) {
+            Reflect.deleteProperty(entity, 'secret');
+        }
+    }
+
+    protected async assertTokenExchangeAuthority(clientId: string, actor: ActorContext): Promise<void> {
+        await assertTokenExchangeAuthority(
+            actor,
+            await this.tokenExchangeCapabilityRepository.findManyBy({ clientId }),
+        );
     }
 
     // validateJoinColumns proves the folder exists, not that it sits in the
@@ -663,6 +719,8 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 { ...entity, ...flags },
                 { realm: (row) => row.realmId },
             );
+
+            await this.assertTokenExchangeAuthority(entity.id, actor);
         }
 
         // Protect BEFORE the lock: hashing is CPU and encryption reaches the

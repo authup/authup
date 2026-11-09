@@ -27,6 +27,7 @@ import {
     UserRepositoryAdapter,
 } from '../../../../../src';
 import { ClientService, ClientTokenExchangeCapabilityService, UserService } from '../../../../../src/core';
+import { FakeClientTokenExchangeCapabilityRepository } from '../../../core/entities/client-token-exchange-capability/fake-repository.ts';
 import { createTestApplication } from '../../../../app';
 import { createFakeClient, createFakeUser } from '../../../../utils';
 
@@ -71,6 +72,7 @@ describe.skipIf(!rowLockable)('http/controllers/user (concurrency)', () => {
             realmRepository,
         });
         clientService = new ClientService({
+            tokenExchangeCapabilityRepository: new FakeClientTokenExchangeCapabilityRepository(),
             repository: clientRepository,
             realmRepository: realmRepositoryAdapter,
         });

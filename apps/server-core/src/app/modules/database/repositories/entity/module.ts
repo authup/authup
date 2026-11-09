@@ -21,7 +21,7 @@ import {
     hasUnmatchableId,
     translateWhereConditions,
 } from '../helpers.ts';
-import { applyQuery, fetchMany } from '../query.ts';
+import { applyQuery, fetchMany, fetchOne } from '../query.ts';
 import type { EntityRepositoryAdapterOptions } from './types.ts';
 
 /**
@@ -185,7 +185,7 @@ export abstract class EntityRepositoryAdapter<
         // caller whether the row is its own (issue #3667)
         this.applyRealmScopeSelect(qb, ['id']);
 
-        const entity = await qb.getOne();
+        const entity = await fetchOne(qb, query);
 
         if (entity) {
             await this.extendOne(entity);

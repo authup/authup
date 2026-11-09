@@ -94,11 +94,30 @@ export async function fetchMany<T extends ObjectLiteral>(
 }
 
 /**
+ * The record read of a decoded query, with the same field visibility
+ * conditions as {@link fetchMany}.
+ */
+export async function fetchOne<T extends ObjectLiteral>(
+    queryBuilder: SelectQueryBuilder<T>,
+    query?: IQuery,
+) : Promise<T | null> {
+    const entity = await queryBuilder.getOne();
+
+    if (!entity) {
+        return null;
+    }
+
+    const [redacted] = redactFieldConditions(query, [entity]);
+
+    return redacted ?? null;
+}
+
+/**
  * Enforce the field visibility conditions of a decoded query on
  * already-fetched rows: a gated column is dropped from every row that
  * fails its condition; no row is ever removed. Condition-less queries
- * pass through untouched. Module-private on purpose: `fetchMany` is the
- * only exported fetch, so an adapter cannot obtain rows without passing
+ * pass through untouched. Module-private on purpose: `fetchMany` and
+ * `fetchOne` are the only exported fetches, so an adapter cannot obtain rows without passing
  * through here.
  */
 function redactFieldConditions<T>(query: IQuery | undefined, data: T[]) : T[] {

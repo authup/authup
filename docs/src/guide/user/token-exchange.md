@@ -65,8 +65,9 @@ with `invalid_client`.
 
 A token exchange capability states what the client may delegate to one
 audience. There is at most one per client and audience. Manage them on the
-client's **Token exchange capabilities** tab in the admin console, or through
-`/client-token-exchange-capabilities`.
+client's **Token exchange capabilities** tab in the admin console, through
+`/client-token-exchange-capabilities`, or in a
+[provisioning file](../deployment/provisioning.md#client).
 
 | Field | Meaning |
 |---|---|
@@ -98,6 +99,18 @@ does not hold these permissions. A capability lets its client mint tokens that
 resource servers trust for any capability id, so writing one is a decision over
 every resource server of the deployment and not a change local to one realm.
 The built-in `admin` role holds all four.
+
+Controlling how a client authenticates carries the same weight, so once a client
+holds a capability, `client_token_exchange_capability_update` is also needed to
+rotate its secret or change its `secret`, `authMethod`, `tokenBindingMethod` or
+`grantTypes`, and to add or enable a trust anchor in its realm. A client can
+still rotate its own secret. A reader limited to a realm does not see the stored
+secret of a client listing the token exchange grant.
+
+These checks start once the capability exists. Whoever could manage the client
+before keeps what they learned or planted, so when realm administrators are not
+fully trusted, rotate the secret after enabling the grant and review the realm's
+trust anchors.
 
 The capability API needs only the permissions above. The **Token exchange capabilities**
 tab sits on the client page of the admin console, which also requires

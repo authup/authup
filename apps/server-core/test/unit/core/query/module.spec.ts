@@ -14,6 +14,7 @@ import {
 } from '@rapiq/core';
 import { IdentityType, PermissionName } from '@authup/core-kit';
 import type { Client } from '@authup/core-kit';
+import { OAuth2TokenGrant } from '@authup/specs';
 import type { ActorContext } from '@authup/server-kit';
 import { FakePermissionEvaluator } from '@authup/server-test-kit';
 import { randomUUID } from 'node:crypto';
@@ -298,7 +299,30 @@ describe('core/query', () => {
 
             expect(field).toBeDefined();
             expect(field!.condition).toBeUndefined();
-            expect(evaluator.compileCalls.map((call) => call.name)).toEqual([CLIENT_PERMISSIONS]);
+            expect(evaluator.compileCalls.map((call) => call.name)).toEqual([
+                CLIENT_PERMISSIONS,
+                PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_UPDATE,
+            ]);
+        });
+
+        it('should keep an exchange client\'s secret from an unbounded reader without the capability authority', async () => {
+            const evaluator = new FakePermissionEvaluator();
+            const compile = evaluator.compile.bind(evaluator);
+
+            evaluator.compile = async (ctx) => {
+                await compile(ctx);
+
+                return ctx.name === PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_UPDATE ?
+                    { verdict: 'deny' } :
+                    { verdict: 'allow' };
+            };
+
+            const parsed = await decodeQuery(
+                { fields: '+secret' },
+                { schema: clientSchema, actor: buildActor(evaluator) },
+            );
+
+            expect(findField(parsed, 'secret')!.condition).toBeDefined();
         });
 
         it('should attach a fail-closed condition for a conditional verdict', async () => {
@@ -322,6 +346,8 @@ describe('core/query', () => {
                 ['realmId', null],
                 ['secret', null],
                 ['realmId', 'realm-a'],
+                ['grantTypes', null],
+                ['grantTypes', OAuth2TokenGrant.TOKEN_EXCHANGE],
             ]);
         });
 
@@ -389,7 +415,11 @@ describe('core/query', () => {
             expect(field!.condition).toBeDefined();
             expect(collectFieldConditions(field!.condition!)).toContainEqual(['realmId', 'realm-a']);
             // the field gate, then the relation reach widening the sparse projection
-            expect(evaluator.compileCalls.map((call) => call.name)).toEqual([CLIENT_PERMISSIONS, CLIENT_PERMISSIONS]);
+            expect(evaluator.compileCalls.map((call) => call.name)).toEqual([
+                CLIENT_PERMISSIONS,
+                PermissionName.CLIENT_TOKEN_EXCHANGE_CAPABILITY_UPDATE,
+                CLIENT_PERMISSIONS,
+            ]);
         });
 
         it('should not fire for a projection without gated fields', async () => {

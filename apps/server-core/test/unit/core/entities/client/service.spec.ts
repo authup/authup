@@ -39,6 +39,7 @@ import type { FakeActorContext } from '@authup/server-test-kit';
 import { FakeRealmRepository } from '../realm/fake-repository.ts';
 import { FakePathRepository } from '../path/fake-repository.ts';
 import { FakeClientRepository } from './fake-repository.ts';
+import { FakeClientTokenExchangeCapabilityRepository } from '../client-token-exchange-capability/fake-repository.ts';
 import { FakeEventService } from '../../helpers/fake-event-service.ts';
 import { createFakeRealmCipher } from '../../helpers/realm-cipher.ts';
 import { isRealmCipherBlob } from '../../../../../src/core/key/index.ts';
@@ -48,6 +49,7 @@ describe('core/entities/client/service', () => {
     let repository: FakeClientRepository;
     let realmRepository: FakeRealmRepository;
     let service: ClientService;
+    let capabilityRepository: FakeClientTokenExchangeCapabilityRepository;
 
     // one realm enc key; encrypted fixtures must live in this realm
     const cipherRealmId = randomUUID();
@@ -56,7 +58,9 @@ describe('core/entities/client/service', () => {
     beforeEach(() => {
         repository = new FakeClientRepository();
         realmRepository = new FakeRealmRepository();
+        capabilityRepository = new FakeClientTokenExchangeCapabilityRepository();
         service = new ClientService({
+            tokenExchangeCapabilityRepository: capabilityRepository,
             repository,
             realmRepository,
             cipher,
@@ -833,6 +837,7 @@ describe('core/entities/client/service', () => {
         beforeEach(() => {
             pathRepository = new FakePathRepository();
             service = new ClientService({
+                tokenExchangeCapabilityRepository: capabilityRepository,
                 repository,
                 realmRepository,
                 cipher,
@@ -1323,7 +1328,11 @@ describe('core/entities/client/service', () => {
         });
 
         it('should refuse encrypted mode when no realm cipher is wired', async () => {
-            const uncipheredService = new ClientService({ repository, realmRepository });
+            const uncipheredService = new ClientService({
+                repository,
+                realmRepository,
+                tokenExchangeCapabilityRepository: capabilityRepository,
+            });
             const entity = repository.seed(createFakeClient({ secret: 'keep', realmId: cipherRealmId }));
 
             await expect(
@@ -1453,6 +1462,7 @@ describe('core/entities/client/service', () => {
         it('should record a clientSecretRotated event carrying the mode and never the secret', async () => {
             const eventService = new FakeEventService();
             const auditedService = new ClientService({
+                tokenExchangeCapabilityRepository: capabilityRepository,
                 repository,
                 realmRepository,
                 eventService,

@@ -35,10 +35,13 @@ import type {
 } from './types.ts';
 import { appendQueryConditions, decodeQuery, scopeReadQuery } from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
+import { assertTokenExchangeAuthority } from '../client-token-exchange-capability/helpers.ts';
+import type { IClientTokenExchangeCapabilityRepository } from '../client-token-exchange-capability/types.ts';
 import { trustAnchorSchema } from './schema.ts';
 
 export type TrustAnchorServiceContext = {
     repository: ITrustAnchorRepository,
+    tokenExchangeCapabilityRepository: Pick<IClientTokenExchangeCapabilityRepository, 'findManyBy'>,
     eventService?: IEventService,
     requestContext?: () => EventRequestContext | undefined,
 };
@@ -52,6 +55,8 @@ const PERMISSION_NAMES = [
 export class TrustAnchorService extends AbstractEntityService implements ITrustAnchorService {
     protected repository: ITrustAnchorRepository;
 
+    protected tokenExchangeCapabilityRepository: Pick<IClientTokenExchangeCapabilityRepository, 'findManyBy'>;
+
     protected validator: TrustAnchorValidator;
 
     protected eventService?: IEventService;
@@ -61,6 +66,7 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
     constructor(ctx: TrustAnchorServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.tokenExchangeCapabilityRepository = ctx.tokenExchangeCapabilityRepository;
         this.validator = new TrustAnchorValidator();
         this.eventService = ctx.eventService;
         this.requestContext = ctx.requestContext;
@@ -169,6 +175,8 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
             data: { [BuiltInPolicyType.ATTRIBUTES]: validated },
         });
 
+        await this.assertTokenExchangeAuthority(validated.realmId, actor);
+
         await this.repository.checkUniqueness(validated);
 
         const chain = parseCertificateChain(validated.certificate as string);
@@ -213,6 +221,12 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
             { ...entity, ...validated },
             { realm: (row) => row.realmId },
         );
+
+        // Only turning an anchor on trusts anything new: its certificate is
+        // immutable, and the console echoes `enabled` on every save.
+        if (validated.enabled === true && !entity.enabled) {
+            await this.assertTokenExchangeAuthority(entity.realmId, actor);
+        }
 
         if (validated.name && validated.name !== entity.name) {
             await this.repository.checkUniqueness({
@@ -262,6 +276,17 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
     }
 
     // ------------------------------------------------------------------
+
+    /**
+     * An anchor vouches for a certificate naming any client of its realm, so
+     * trusting one more CA is taking over the realm's `tls` exchange clients.
+     */
+    protected async assertTokenExchangeAuthority(realmId: string, actor: ActorContext): Promise<void> {
+        await assertTokenExchangeAuthority(
+            actor,
+            await this.tokenExchangeCapabilityRepository.findManyBy({ realmId }),
+        );
+    }
 
     /**
      * Metadata-only audit trail for trust-anchor lifecycle operations

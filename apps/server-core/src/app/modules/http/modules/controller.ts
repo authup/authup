@@ -724,6 +724,9 @@ export class HTTPControllerModule {
         const service = new ClientService({
             repository,
             realmRepository: realmRepositoryAdapter,
+            tokenExchangeCapabilityRepository: new ClientTokenExchangeCapabilityRepositoryAdapter(
+                container.resolve<Repository<ClientTokenExchangeCapability>>(ClientTokenExchangeCapabilityEntity),
+            ),
             pathRepository: new PathRepositoryAdapter({
                 repository: container.resolve<Repository<Path>>(PathEntity),
                 realmRepository,
@@ -990,6 +993,9 @@ export class HTTPControllerModule {
         );
         const service = new TrustAnchorService({
             repository,
+            tokenExchangeCapabilityRepository: new ClientTokenExchangeCapabilityRepositoryAdapter(
+                container.resolve<Repository<ClientTokenExchangeCapability>>(ClientTokenExchangeCapabilityEntity),
+            ),
             eventService: container.resolve(DatabaseInjectionKey.EventService),
             requestContext: useRequestEventContext,
         });

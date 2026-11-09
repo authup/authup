@@ -7,10 +7,8 @@
 
 import {
     BuiltInPolicyType,
-    PermissionError,
     evaluateRecord,
     evaluateRecordOneOf,
-    hasUnboundedReach,
     reachesRecordOneOf,
 } from '@authup/access';
 import {
@@ -26,6 +24,7 @@ import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/serve
 import { AbstractEntityService } from '@authup/server-kit';
 import { appendQueryConditions, decodeQuery, redactUnreachedRelations } from '../../query/index.ts';
 import { assertRowUnchanged, retryOnStaleRow } from '../stale-row/index.ts';
+import { assertCapabilitySubjectRealmReach } from './helpers.ts';
 import { clientTokenExchangeCapabilitySchema } from './schema.ts';
 import type { IClientTokenExchangeCapabilityRepository, IClientTokenExchangeCapabilityService } from './types.ts';
 
@@ -243,21 +242,13 @@ export class ClientTokenExchangeCapabilityService extends AbstractEntityService 
     }
 
     /**
-     * A capability of realm scope `any` acts on subjects of every realm, so the grant
-     * writing it has to reach every realm. A policy-narrowed `any` grant reads
-     * as not reaching them, the fail-closed answer for this root of trust.
+     * See {@link assertCapabilitySubjectRealmReach}.
      */
     protected async assertSubjectRealmReach(
         actor: ActorContext,
         name: PermissionName,
         entity: ClientTokenExchangeCapability,
     ) : Promise<void> {
-        if (entity.realmScope !== ClientTokenExchangeRealmScope.ANY) {
-            return;
-        }
-
-        if (!await hasUnboundedReach(actor.permissionEvaluator, name)) {
-            throw PermissionError.denied(name);
-        }
+        await assertCapabilitySubjectRealmReach(actor, name, entity);
     }
 }
