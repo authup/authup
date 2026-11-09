@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.0.0-beta.74](https://github.com/authup/authup/compare/v1.0.0-beta.73...v1.0.0-beta.74) (2026-11-09)
+
+
+### Bug Fixes
+
+* **server-core:** stop serving expired tokens from the verifier cache ([#3804](https://github.com/authup/authup/issues/3804)) ([cfc4e9c](https://github.com/authup/authup/commit/cfc4e9c1cf8a7cbc87980f02a59bbebb1d00140c)), closes [#3803](https://github.com/authup/authup/issues/3803)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+    * @authup/core-kit bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+    * @authup/kit bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+    * @authup/specs bumped from ^1.0.0-beta.73 to ^1.0.0-beta.74
+
 ## [1.0.0-beta.73](https://github.com/authup/authup/compare/v1.0.0-beta.72...v1.0.0-beta.73) (2026-11-01)
 
 
