@@ -13,11 +13,18 @@ import {
     TranslatorTranslationActionKey,
     TranslatorTranslationAppKey,
     TranslatorTranslationClientKey,
+    TranslatorTranslationEntityKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import { defineQuery } from '@rapiq/core';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
+import {
+    VCModal,
+    VCModalClose,
+    VCModalContent,
+    VCModalTitle,
+} from '@vuecs/overlays';
 import type { TableColumn } from '@vuecs/table';
 import type { PropType } from 'vue';
 import { computed, defineComponent, ref } from 'vue';
@@ -31,6 +38,10 @@ export default defineComponent({
         APagination,
         VCButton,
         VCIcon,
+        VCModal,
+        VCModalClose,
+        VCModalContent,
+        VCModalTitle,
     },
     props: {
         entity: {
@@ -69,9 +80,9 @@ export default defineComponent({
             emit('failed', e);
         };
 
-        const handleDeleted = (capability: ClientTokenExchangeCapability) => {
-            if (editing.value?.id === capability.id) {
-                editing.value = null;
+        const handleOpenChange = (open: boolean) => {
+            if (!open) {
+                close();
             }
         };
 
@@ -111,6 +122,15 @@ export default defineComponent({
             {
                 namespace: TranslatorTranslationNamespace.ACTION,
                 key: TranslatorTranslationActionKey.ABORT,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.CLOSE,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.CLIENT_TOKEN_EXCHANGE_CAPABILITY,
+                count: 1,
             },
             {
                 namespace: TranslatorTranslationNamespace.APP,
@@ -161,8 +181,8 @@ export default defineComponent({
             close,
             columns,
             editing,
-            handleDeleted,
             handleFailed,
+            handleOpenChange,
             hasCreatePermission,
             hasDeletePermission,
             hasReadPermission,
@@ -188,7 +208,7 @@ export default defineComponent({
                     {{ translations.tokenExchangeCapabilityDescription }}
                 </p>
                 <VCButton
-                    v-if="hasCreatePermission && !adding"
+                    v-if="hasCreatePermission"
                     size="sm"
                     color="primary"
                     @click="openAdd"
@@ -199,28 +219,36 @@ export default defineComponent({
                     {{ translations.add }}
                 </VCButton>
             </div>
-            <div
-                v-if="adding || editing"
-                class="mb-3"
+            <VCModal
+                :open="adding || !!editing"
+                @update:open="handleOpenChange"
             >
-                <AClientTokenExchangeCapabilityForm
-                    :key="editing ? editing.id : 'new'"
-                    :entity="editing ?? undefined"
-                    :client-id="entity.id"
-                    @created="(capability) => { props.created(capability); close(); }"
-                    @updated="(capability) => { props.updated(capability); close(); }"
-                    @failed="handleFailed"
-                />
-                <VCButton
-                    size="sm"
-                    color="neutral"
-                    variant="outline"
-                    class="mt-2"
-                    @click="close"
-                >
-                    {{ translations.abort }}
-                </VCButton>
-            </div>
+                <VCModalContent>
+                    <div class="flex items-center justify-between gap-2 mb-3">
+                        <VCModalTitle>{{ editing ? editing.audience : translations.clientTokenExchangeCapability }}</VCModalTitle>
+                        <VCModalClose
+                            class="text-fg-muted hover:text-fg"
+                            :aria-label="translations.close"
+                        >
+                            <VCIcon name="fa6-solid:xmark" />
+                        </VCModalClose>
+                    </div>
+                    <AClientTokenExchangeCapabilityForm
+                        :key="editing ? editing.id : 'new'"
+                        :entity="editing ?? undefined"
+                        :client-id="entity.id"
+                        @created="(capability) => { props.created(capability); close(); }"
+                        @updated="(capability) => { props.updated(capability); close(); }"
+                        @failed="handleFailed"
+                    />
+                    <VCButton
+                        color="neutral"
+                        class="mt-2"
+                        :label="translations.abort"
+                        @click="close"
+                    />
+                </VCModalContent>
+            </VCModal>
         </template>
         <template #body="props">
             <VCTable
@@ -251,7 +279,7 @@ export default defineComponent({
                         :entity-id="row.id"
                         entity-type="clientTokenExchangeCapability"
                         :with-text="false"
-                        @deleted="(capability) => { props.deleted(capability); handleDeleted(capability); }"
+                        @deleted="props.deleted"
                         @failed="handleFailed"
                     />
                 </template>
