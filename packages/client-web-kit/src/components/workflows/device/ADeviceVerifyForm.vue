@@ -6,6 +6,7 @@
   -->
 <script lang="ts">
 import type { DeviceAuthorizationInfo, UserAuthenticatorChallengeResponse } from '@authup/core-http-kit';
+import type { Scope } from '@authup/core-kit';
 import { IDENTITY_PROVIDER_LOGIN_NOT_PENDING } from '@authup/core-http-kit';
 import { isDeviceVerificationThrottledError } from '@authup/errors';
 import {
@@ -38,6 +39,7 @@ import {
     wrapFnWithBusyState,
 } from '../../../core';
 import AUserAuthenticatorEnroll from '../../entities/user-authenticator/AUserAuthenticatorEnroll.vue';
+import AuthorizeScope from '../authorize/AuthorizeScope.vue';
 import AuthorizeText from '../authorize/AuthorizeText.vue';
 import LoginForm from '../login/LoginForm.vue';
 import AMfaChallengeForm from '../mfa/AMfaChallengeForm.vue';
@@ -62,6 +64,7 @@ export default defineComponent({
     components: {
         AMfaChallengeForm,
         AUserAuthenticatorEnroll,
+        AuthorizeScope,
         AuthorizeText,
         LoginForm,
         VCAlert,
@@ -134,6 +137,10 @@ export default defineComponent({
         const identityName = computed<string>(() => user.value?.name ?? user.value?.displayName ?? '');
         const scopes = computed<string[]>(() => unwrapOAuth2Scope(info.value?.scope ?? '')
             .filter((token) => token.length > 0));
+        const scopeItems = computed<{ name: string, entity?: Scope }[]>(() => scopes.value.map((name) => ({
+            name,
+            entity: (info.value?.scopes ?? []).find((scope) => scope.name === name),
+        })));
 
         const confirmText = useTranslation({
             namespace: TranslatorTranslationNamespace.CLIENT,
@@ -338,6 +345,7 @@ export default defineComponent({
             clientName,
             identityName,
             scopes,
+            scopeItems,
             confirmText,
             realmMismatchText,
             signedInAsLabel,
@@ -473,21 +481,31 @@ export default defineComponent({
         <div v-if="scopes.length > 0">
             <div>{{ translations.deviceVerifyScopes }}</div>
             <div class="flex flex-col">
-                <div
-                    v-for="scope in scopes"
-                    :key="scope"
-                    class="flex flex-row gap-1"
+                <template
+                    v-for="item in scopeItems"
+                    :key="item.name"
                 >
-                    <div>
-                        <VCIcon
-                            name="fa6-solid:check"
-                            class="text-success-600"
-                        />
+                    <AuthorizeScope
+                        v-if="item.entity"
+                        :entity="item.entity"
+                        :requested="scopes"
+                        class="flex flex-row gap-1"
+                    />
+                    <div
+                        v-else
+                        class="flex flex-row gap-1"
+                    >
+                        <div>
+                            <VCIcon
+                                name="fa6-solid:check"
+                                class="text-success-600"
+                            />
+                        </div>
+                        <div>
+                            <strong>{{ item.name }}</strong>
+                        </div>
                     </div>
-                    <div>
-                        <strong>{{ scope }}</strong>
-                    </div>
-                </div>
+                </template>
             </div>
         </div>
 
