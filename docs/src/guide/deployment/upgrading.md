@@ -20,6 +20,10 @@ different keys. A write made on one is visible on the other after at most a minu
 client deactivation is the case that matters. Upgrade all replicas together if that window is
 not acceptable.
 
+If Redis is unreachable while a write commits, the server that wrote answers its cached reads
+from the database for the next minute. Other servers sharing that Redis may serve the
+previous value for up to a minute.
+
 **Action required:** A deployment on a Redis older than 5, or with an `allkeys-*` eviction
 policy, upgrades Redis or changes the policy before the upgrade.
 
