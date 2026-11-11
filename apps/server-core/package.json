@@ -92,7 +92,7 @@
         "@rapiq/adapter-sql": "^2.4.0",
         "@rapiq/adapter-typeorm": "^2.4.0",
         "@rapiq/codec-url": "^2.4.0",
-        "@rapiq/core": "^2.4.0",
+        "@rapiq/core": "^2.4.1",
         "@routup/basic": "^3.0.1",
         "@routup/cors": "^2.0.0",
         "@routup/decorators": "^5.0.1",
