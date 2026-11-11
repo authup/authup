@@ -6,9 +6,11 @@
   -->
 <script lang="ts">
 import type { Scope } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import { VCIcon } from '@vuecs/icon';
 import type { PropType } from 'vue';
 import { computed, defineComponent } from 'vue';
+import { useEntityNameTranslator } from '../../../core';
 
 export default defineComponent({
     components: { VCIcon },
@@ -23,9 +25,12 @@ export default defineComponent({
         },
     },
     setup(props) {
-        const isEnabled = computed(() => props.requested.includes(props.entity.name));
+        const translateEntityName = useEntityNameTranslator();
 
-        return { isEnabled };
+        const isEnabled = computed(() => props.requested.includes(props.entity.name));
+        const label = computed(() => translateEntityName(EntityType.SCOPE, props.entity));
+
+        return { isEnabled, label };
     },
 });
 </script>
@@ -41,7 +46,7 @@ export default defineComponent({
             />
         </div>
         <div>
-            <strong>{{ entity.name }}</strong>
+            <strong>{{ label }}</strong>
 
             <template v-if="entity.description">
                 <p>{{ entity.description }}</p>
