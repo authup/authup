@@ -21,19 +21,19 @@ export class ClientPermissionValidator extends Container<
         this.mount(
             'clientId',
             { group: ValidatorGroup.CREATE },
-            createValidator(z.uuid().toLowerCase()),
+            createValidator(z.uuid()),
         );
 
         this.mount(
             'permissionId',
             { group: ValidatorGroup.CREATE },
-            createValidator(z.uuid().toLowerCase()),
+            createValidator(z.uuid()),
         );
 
         this.mount(
             'policyId',
             { optional: true },
-            createValidator(z.uuid().toLowerCase().nullable()),
+            createValidator(z.uuid().nullable()),
         );
 
         this.mount(
