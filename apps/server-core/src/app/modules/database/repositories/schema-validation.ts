@@ -46,7 +46,7 @@ import {
  * the boot-time validation. A mapped name missing from the registry
  * fails via `getOrFail`, so a renamed/removed schema surfaces here too.
  */
-const SCHEMA_ENTITY_TARGETS : Record<string, EntityTarget<ObjectLiteral>> = {
+export const SCHEMA_ENTITY_TARGETS : Record<string, EntityTarget<ObjectLiteral>> = {
     [EntityType.CLIENT]: ClientEntity,
     [EntityType.CLIENT_PERMISSION]: ClientPermissionEntity,
     [EntityType.CLIENT_ROLE]: ClientRoleEntity,

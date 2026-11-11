@@ -6,6 +6,9 @@
  */
 
 import type { ICache } from '@authup/server-kit';
+import type { ITaggedCache } from '@rapiq/cache';
 import { TypedToken } from 'eldin';
 
 export const CacheInjectionKey = new TypedToken<ICache>('Cache');
+
+export const TaggedCacheInjectionKey = new TypedToken<ITaggedCache>('TaggedCache');

@@ -62,7 +62,7 @@
         "@authup/server-core": "^1.0.0-beta.74",
         "@authup/specs": "^1.0.0-beta.74",
         "@rapiq/codec-url": "^2.4.0",
-        "@rapiq/core": "^2.4.0",
+        "@rapiq/core": "^2.4.1",
         "@validup/zod": "^2.0.2",
         "citty": "^0.2.2",
         "dotenv": "^18.0.9",

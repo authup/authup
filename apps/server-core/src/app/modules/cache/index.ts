@@ -7,3 +7,5 @@
 
 export * from './constants.ts';
 export * from './module.ts';
+export * from './tagged/index.ts';
+export * from './throttle.ts';

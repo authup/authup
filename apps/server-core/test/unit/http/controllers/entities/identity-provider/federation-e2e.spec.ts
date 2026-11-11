@@ -32,7 +32,7 @@ import {
     createFakeRealm,
     httpRequest,
 } from '../../../../../utils';
-import { createTestApplication, createTestDatabaseModuleForSecondaryInstance } from '../../../../../app';
+import { buildTestRedisOptions, createTestApplication, createTestDatabaseModuleForSecondaryInstance } from '../../../../../app';
 
 /**
  * Two REAL authup instances, each with its own database: a downstream one that
@@ -66,7 +66,7 @@ function createUpstreamApplication(): TestHTTPApplication {
             config.middlewareSwagger = false;
             config.userAdminEnabled = true;
             config.userAuthBasic = true;
-            config.redis = false;
+            config.redis = buildTestRedisOptions('upstream');
 
             return config;
         }))

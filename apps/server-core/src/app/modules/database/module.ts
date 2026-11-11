@@ -12,7 +12,8 @@ import {
     createRedisClient,
 } from '@authup/server-kit';
 import type { RedisClient } from '@authup/server-kit';
-import { AuthupError } from '@authup/errors';
+import { AuthupError, normalizeError } from '@authup/errors';
+import { CacheInvalidationSubscriber } from '@rapiq/cache/typeorm';
 import type { DataSourceOptions } from 'typeorm';
 import { DataSource, InstanceChecker } from 'typeorm';
 import {
@@ -31,13 +32,19 @@ import {
     isFencedCacheKey,
 } from '../../../adapters/database/index.ts';
 import type { Event } from '@authup/core-kit';
-import { EntityEventHandler, EventService } from '../../../core/index.ts';
+import { EntityEventHandler, EventService, schemaRegistry } from '../../../core/index.ts';
 import { useRequestEventContext } from '../../../adapters/http/request/index.ts';
 import { EventRepositoryAdapter } from './repositories/index.ts';
 import { validateEntitySchemas } from './repositories/schema-validation.ts';
 import { verifySchemaOrSynchronize } from './migration.ts';
-import { CacheInjectionKey } from '../cache/index.ts';
-import type { IModule } from 'orkos';
+import {
+    CacheInjectionKey,
+    TAGGED_CACHE_ERROR_LOG_INTERVAL,
+    TaggedCacheInjectionKey,
+    throttle,
+} from '../cache/index.ts';
+import { QUERY_CACHE_SCOPED_VALUE_NORMALIZER, QueryCache, resolveCacheSchemaName } from './cache/index.ts';
+import type { IModule, ModuleDependency } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import { DATABASE_LOCK_OPTIONS, DatabaseInjectionKey, MIGRATION_DATABASE_LOCK } from './constants.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
@@ -53,7 +60,7 @@ export type DatabaseModuleOptions = {
 export class DatabaseModule implements IModule {
     readonly name: string;
 
-    readonly dependencies: string[];
+    readonly dependencies: (string | ModuleDependency)[];
 
     protected optionsBuilder : DataSourceOptionsBuilder;
 
@@ -65,7 +72,11 @@ export class DatabaseModule implements IModule {
 
     constructor(options: DatabaseModuleOptions = {}) {
         this.name = ModuleName.DATABASE;
-        this.dependencies = [ModuleName.CONFIG, ModuleName.LOGGER];
+        this.dependencies = [
+            ModuleName.CONFIG,
+            ModuleName.LOGGER,
+            { name: ModuleName.CACHE, optional: true },
+        ];
 
         this.optionsBuilder = new DataSourceOptionsBuilder();
         this.options = options;
@@ -91,6 +102,8 @@ export class DatabaseModule implements IModule {
         logger.debug('Establishing database connection...');
         await dataSource.initialize();
         logger.debug('Established database connection.');
+
+        this.registerQueryCache(container, dataSource);
 
         try {
             if (this.options.migrate) {
@@ -136,6 +149,7 @@ export class DatabaseModule implements IModule {
             container.unregister(DatabaseInjectionKey.DataSource);
         }
 
+        container.unregister(DatabaseInjectionKey.QueryCache);
         container.unregister(DatabaseInjectionKey.DomainEventPublisher);
         container.unregister(DatabaseInjectionKey.EventRepository);
         container.unregister(DatabaseInjectionKey.EventService);
@@ -250,6 +264,29 @@ export class DatabaseModule implements IModule {
         }
 
         return options;
+    }
+
+    protected registerQueryCache(container: IContainer, dataSource: DataSource) : void {
+        const logger = container.resolve(LoggerInjectionKey);
+        const cacheResult = container.tryResolve(TaggedCacheInjectionKey);
+        const cache = cacheResult.success ? cacheResult.data : undefined;
+        const queryCache = new QueryCache({ dataSource, cache });
+
+        if (cache) {
+            // initialize() rebuilds the subscribers array, so the instance is pushed after it.
+            dataSource.subscribers.push(new CacheInvalidationSubscriber({
+                cache: queryCache.createInvalidator(),
+                registry: schemaRegistry,
+                normalizeScopedValue: QUERY_CACHE_SCOPED_VALUE_NORMALIZER,
+                resolveSchemaName: resolveCacheSchemaName,
+                // every commit on a tracked table reports while Redis is down.
+                onError: throttle((error: unknown) => {
+                    logger.warn(`The cache invalidation failed: ${normalizeError(error).message}`);
+                }, TAGGED_CACHE_ERROR_LOG_INTERVAL),
+            }));
+        }
+
+        container.register(DatabaseInjectionKey.QueryCache, { useValue: queryCache });
     }
 
     protected registerRepositories(container: IContainer, dataSource: DataSource) : void {

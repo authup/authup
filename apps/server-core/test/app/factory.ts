@@ -17,6 +17,7 @@ import { readConfigRawFromEnv } from '@authup/server-config';
 import { TestApplication } from './module.ts';
 import { TestHTTPApplication } from './http.ts';
 import { createTestDatabaseModuleForSuite } from './database.ts';
+import { buildTestRedisOptions } from './redis.ts';
 
 async function buildTestConfig(alter?: (config: Config) => void): Promise<Config> {
     const raw = readConfigRawFromEnv<Config>(
@@ -32,7 +33,8 @@ async function buildTestConfig(alter?: (config: Config) => void): Promise<Config
     config.userAdminEnabled = true;
     config.userAuthBasic = true;
 
-    config.redis = false;
+    // TEST_REDIS_URL opts a run into Redis, for the cache specs (#3688).
+    config.redis = buildTestRedisOptions();
 
     config.registrationEnabled = true;
     config.emailVerificationEnabled = true;
