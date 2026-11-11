@@ -10,9 +10,11 @@ import type { DataSource } from 'typeorm';
 import type { DatabaseLockOptions } from 'typeorm-extension';
 import { TypedToken } from 'eldin';
 import type { IEventRepository, IEventService } from '../../../core/index.ts';
+import type { IQueryCache } from './cache/types.ts';
 
 export const DatabaseInjectionKey = {
     DataSource: new TypedToken<DataSource>('DataSource'),
+    QueryCache: new TypedToken<IQueryCache>('QueryCache'),
     DomainEventPublisher: new TypedToken<IDomainEventPublisher>('DomainEventPublisher'),
     EventRepository: new TypedToken<IEventRepository>('EventRepository'),
     EventService: new TypedToken<IEventService>('EventService'),

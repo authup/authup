@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './cache/index.ts';
 export * from './constants.ts';
 export * from './migration.ts';
 export * from './module.ts';
