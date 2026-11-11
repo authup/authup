@@ -21,7 +21,11 @@ export const CLIENT_TOKEN_EXCHANGE_AUDIENCE_MAX_LENGTH = 256;
  */
 export const CLIENT_TOKEN_EXCHANGE_MAX_AGE = 86400;
 
-export const CLIENT_TOKEN_EXCHANGE_CAPABILITY_TYPE_PATTERN = /^[a-z][a-z0-9-]{0,63}$/;
+/**
+ * Lower-case first character; camelCase or kebab-case after it, so a resource
+ * server can use its own domain type names (`bucketFile`) as capability types.
+ */
+export const CLIENT_TOKEN_EXCHANGE_CAPABILITY_TYPE_PATTERN = /^[a-z][a-zA-Z0-9-]{0,63}$/;
 
 export const CLIENT_TOKEN_EXCHANGE_CAPABILITY_ACTION_PATTERN = /^[a-z][a-z0-9-]{0,31}$/;
 

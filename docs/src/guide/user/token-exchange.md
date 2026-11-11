@@ -157,7 +157,7 @@ query string parameters and the `scope`, `resource`, `actor_token` and
 
 Each entry has the form `<type>:<id>:<actions>`:
 
-- `type` matches `[a-z][a-z0-9-]{0,63}` and must be allowed by the capability, as must each action.
+- `type` matches `[a-z][a-zA-Z0-9-]{0,63}` (camelCase like `bucketFile` or kebab-case like `bucket-file`) and must be allowed by the capability, as must each action.
 - `id` matches `[A-Za-z0-9._-]{1,128}`.
 - `actions` is a comma-separated list without duplicates, each matching
   `[a-z][a-z0-9-]{0,31}`.

@@ -115,6 +115,12 @@ describe('ClientTokenExchangeCapabilityValidator', () => {
             expect(output.value).toEqual('bucket:read bucket:write bucket-file');
         });
 
+        it('should accept camelCase types', async () => {
+            const output = await create(buildInput({ value: 'bucket bucketFile:read' }));
+
+            expect(output.value).toEqual('bucket bucketFile:read');
+        });
+
         it('should accept a single type at the maximum segment length', async () => {
             const type = `a${'b'.repeat(63)}`;
             const output = await create(buildInput({ value: type }));
@@ -125,7 +131,7 @@ describe('ClientTokenExchangeCapabilityValidator', () => {
         it.each([
             ['empty', ''],
             ['blank', ' '.repeat(3)],
-            ['an uppercase type', 'Bucket'],
+            ['a type starting with an uppercase letter', 'Bucket'],
             ['a leading digit', '1bucket'],
             ['a leading dash', '-bucket'],
             ['an empty action', 'bucket:'],
