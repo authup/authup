@@ -7,24 +7,29 @@
 
 import type { Realm } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
-import { REALM_MASTER_NAME  } from '@authup/core-kit';
+import { EntityType, REALM_MASTER_NAME } from '@authup/core-kit';
+import { buildRecordTag } from '@rapiq/cache';
 import { InternalError, ValidationError } from '@authup/errors';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { validateEntityJoinColumns } from 'typeorm-extension';
 import { applyQuery, fetchMany } from '../query.ts';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
-import { buildRedisKeyPath } from '@authup/server-kit';
 import type { IRealmRepository } from '../../../../../core/index.ts';
-import { CachePrefix, RealmEntity } from '../../../../../adapters/database/domains/index.ts';
+import { RealmEntity } from '../../../../../adapters/database/domains/index.ts';
 import { hasUnmatchableId, translateWhereConditions } from '../helpers.ts';
 import { runPathTransaction, unwindPaths } from '../path/unwind.ts';
+import { QueryCache } from '../../cache/module.ts';
+import type { IQueryCache } from '../../cache/index.ts';
 
 export class RealmRepositoryAdapter implements IRealmRepository {
     private readonly repository: Repository<Realm>;
 
-    constructor(repository: Repository<Realm>) {
+    private readonly cache: IQueryCache;
+
+    constructor(repository: Repository<Realm>, cache: IQueryCache) {
         this.repository = repository;
+        this.cache = cache;
     }
 
     async findOneById(id: string): Promise<Realm | null> {
@@ -32,18 +37,17 @@ export class RealmRepositoryAdapter implements IRealmRepository {
             return null;
         }
 
-        const qb = this.repository.createQueryBuilder('realm');
+        // a uuid compares case-insensitively on the server dialects, so one key serves every spelling
+        const key = id.toLowerCase();
 
-        qb.where('realm.id = :id', { id });
-        qb.cache(
-            buildRedisKeyPath({
-                prefix: CachePrefix.REALM,
-                key: id,
-            }),
-            60_000,
+        return this.cache.remember(
+            `realm/${key}`,
+            () => [buildRecordTag(EntityType.REALM, key)],
+            () => this.repository.createQueryBuilder('realm')
+                .where('realm.id = :id', { id: key })
+                .getOne(),
+            { manager: this.repository.manager },
         );
-
-        return qb.getOne();
     }
 
     findOneByName(name: string): Promise<Realm | null> {
@@ -159,4 +163,11 @@ export class RealmRepositoryAdapter implements IRealmRepository {
 
         return entity;
     }
+}
+
+/**
+ * A realm adapter for an entity adapter's realm-name resolution, which reads nothing through the cache.
+ */
+export function createRealmNameResolver(repository: Repository<Realm>) : RealmRepositoryAdapter {
+    return new RealmRepositoryAdapter(repository, new QueryCache({ dataSource: repository.manager.connection }));
 }

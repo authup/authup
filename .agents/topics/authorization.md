@@ -69,36 +69,50 @@ old snake_case shape. It is an upper bound on what may be asked, not an entitlem
   (`IAuthorizationCatalogRepository.findDefinitions`) plus every grant-referenced tree
   (`findGrantPolicies`). `findDefinitions` throws `InternalError` when a junction row names
   a tree it cannot load (#3634): served without it, the restriction would vanish. Only that
-  read throws: grant junctions are `ON DELETE SET NULL` and cached 60 s, so a deleted
-  policy legitimately leaves a policy-free grant.
+  read throws: grant junctions are `ON DELETE SET NULL`, so a deleted policy legitimately
+  leaves a policy-free grant.
 - A tree failing projection is warned about: a definition keeps its entry with
   `policies: null`; a grant tree is dropped (and the introspection drops its grants).
 
-**Caching (#3599).** The document is per caller and not cached; `findDefinitions` and
-`findGrantPolicies` are identity-free and sit in the DataSource query result cache
-(`PermissionDatabaseProvider`), shared by both authorization routes. Staleness turns a
-`POST /permissions` into a stale-catalog refetch that ends in deny-all, so invalidation is
-load-bearing:
+**Caching (#3599, #3688).** The document is per caller and not cached; `findDefinitions`
+and `findGrantPolicies` are identity-free and sit in the tagged read cache
+(`PermissionDatabaseProvider` through `QueryCache`), shared by both authorization routes.
+Staleness turns a `POST /permissions` into a stale-catalog refetch that ends in deny-all, so
+invalidation is load-bearing:
 
-- Every table the reads derive from drops `AUTHORIZATION_CACHE_KEYS` on insert, update and
-  remove: `auth_permissions`, `auth_permission_policies`, `auth_policies`,
-  `auth_policy_attributes`, the role/user/client permission junctions, realms (cascade) and
-  clients (delete nulls `auth_permissions.client_id`).
-- A stored value counts only in the epoch it was read in; every invalidation drops the
-  epoch key. Dropping only the value key lets a read that started before a commit
-  overwrite a fresher value. The by-id principal keys (`client`, `user`, trusted for
-  `active`), the owned role and permission keys of a user, client or role, and the
-  covering consent key get the same fence per key inside `DatabaseQueryResultCache`
-  (`isFencedCacheKey`); a new cached read whose stale value would re-activate a
-  principal or restore a revoked grant needs it too.
-- `EntitySubscriber` drops its keys again after the outermost commit (hooks run before the
-  commit). Applies to every subscriber cache.
-- The 60 s TTL is only a backstop for writes bypassing subscribers (query-builder
-  `delete()`).
+- Both entries carry the collection tag of every schema the reads derive from (`CATALOG_TAGS`:
+  permissions, permission policies, policies, policy attributes and the role/user/client
+  permission junctions). `CacheInvalidationSubscriber` bumps them after the outermost commit,
+  `onDelete` cascades and `SET NULL` included, so a realm or client delete reaches them. A
+  read that derives from another table adds its tag there.
+- A stored value counts only while none of its tags moved since its read started, so a read
+  that straddles a commit is never served. The by-id principal reads (`client`, `user`,
+  trusted for `active`), the owned role and permission lists of a user, client or role, and
+  the covering consent read ride the same cache and the same rule, since a stale value would
+  re-activate a principal or restore a revoked grant.
+- A read inside an open transaction bypasses the cache (`QueryCache`): a rollback bumps
+  nothing, so an uncommitted row must never be stored.
+- The TTL (`TAGGED_CACHE_TTL`, 60 s) is the only backstop for raw SQL, which fires no
+  subscriber. A bump that fails (Redis down at commit) makes this process read past the cache
+  for one TTL from the failure (`QueryCache.createInvalidator`); other replicas sharing the
+  Redis serve the stale entry until it lapses. Remove the guard once tada5hi/rapiq#993
+  replays lost tags.
 - Trees are cached normalized (once, not per definition) and reassembled on read, which is
-  where a missing tree still throws. Reads return a `structuredClone`: the memory cache
-  hands out the stored reference and the realm-match evaluator writes `decisionStrategy`
-  onto policies it evaluates.
+  where a missing tree still throws. Every hit is a copy (JSON on Redis, a clone in the
+  memory driver), so the realm-match evaluator writing `decisionStrategy` onto a policy
+  never reaches the stored value.
+- Invariants of every cached read:
+  - A hit is a plain object, never an entity instance: never hand it to `save`, `merge`
+    or `remove`.
+  - A new cached read passes the manager it reads through, so a read on a transactional
+    manager bypasses the cache.
+  - A write without a primary key (criteria `update` / `delete`) bumps the collection tag
+    alone; a reader carrying only scoped or record tags is not reached by it.
+  - The reader and the invalidation subscriber spell a scoped uuid value through one
+    normalizer (`QUERY_CACHE_SCOPED_VALUE_NORMALIZER`), so a row written in any case reaches
+    the reads scoped to its lower-case id. Hand both sides the same function.
+  - The consent covering tag is spelled by hand and is bumped only while `clientId` leads
+    an index of the consent schema.
 - Rejected: narrowing query parameters on the route (reach narrowing already decides; the
   document is near constant-size).
 
@@ -296,8 +310,8 @@ token together with the global permissions it carries. Unowned grants always app
     owned by ANY client apply there.
   - An actor with an X token can assign itself an unowned role carrying grants it holds
     only through X: delegation checks what is held, not where it applies.
-  - A user's owned roles/permissions are cached 60 s. Removing a junction or deleting a
-    role invalidates at once; deleting a whole permission may lag up to 60 s.
+  - A user's owned roles/permissions sit in the tagged read cache. Removing a junction,
+    deleting a role or deleting a permission invalidates at once.
 - `isSuperset`'s role side includes every permission the role carries, regardless of
   client ownership (#3607).
 

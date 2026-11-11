@@ -13,14 +13,11 @@ import {
 } from '@authup/core-kit';
 import type { DomainEventDestinations, IDomainEventPublisher } from '@authup/server-kit';
 import type {
-    DataSource,
     EntityManager,
     EntitySubscriberInterface,
     InsertEvent,
     ObjectLiteral,
-    QueryRunner,
     RemoveEvent,
-    TransactionCommitEvent,
     UpdateEvent,
 } from 'typeorm';
 import { getMetadataArgsStorage } from 'typeorm';
@@ -53,8 +50,6 @@ export function buildEntityDestinations<T extends ObjectLiteral>(
         return destinations;
     };
 }
-
-const PENDING_CACHE_KEYS = 'authupPendingCacheKeys';
 
 export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscriberInterface<T> {
     protected ctx : EntitySubscriberContext<T>;
@@ -91,10 +86,6 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
             return;
         }
 
-        if (this.ctx.cache && this.ctx.cache.onInsert) {
-            await this.dropCacheKeys(event.connection, event.queryRunner, event.entity);
-        }
-
         await this.publish(EntityDefaultEventName.CREATED, event.entity, undefined, event.manager);
     }
 
@@ -103,64 +94,20 @@ export class EntitySubscriber<T extends ObjectLiteral> implements EntitySubscrib
             return;
         }
 
-        await this.dropCacheKeys(event.connection, event.queryRunner, event.entity as T);
-
         await this.publish(EntityDefaultEventName.UPDATED, event.entity as T, event.databaseEntity, event.manager);
     }
 
     async afterRemove(event: RemoveEvent<T>): Promise<any> {
         // remove() strips the primary key from event.entity before the
-        // subscriber runs — databaseEntity is the pre-removal row and keeps
-        // the id-keyed cache invalidation (and the DELETED payload) intact.
+        // subscriber runs, so databaseEntity (the pre-removal row) keeps the
+        // DELETED payload intact.
         const entity = event.databaseEntity ?? event.entity;
 
         if (!entity) {
             return;
         }
 
-        await this.dropCacheKeys(event.connection, event.queryRunner, entity);
-
         await this.publish(EntityDefaultEventName.DELETED, entity, undefined, event.manager);
-    }
-
-    /**
-     * The hooks run inside the persist transaction, so a concurrent reader may
-     * repopulate a key before the write commits. The keys are therefore dropped
-     * again once the outermost transaction has committed (#3599).
-     */
-    async afterTransactionCommit(event: TransactionCommitEvent): Promise<any> {
-        if (event.queryRunner.isTransactionActive) {
-            return;
-        }
-
-        const keys = event.queryRunner.data[PENDING_CACHE_KEYS] as Set<string> | undefined;
-
-        if (!keys || !event.connection.queryResultCache) {
-            return;
-        }
-
-        delete event.queryRunner.data[PENDING_CACHE_KEYS];
-        await event.connection.queryResultCache.remove([...keys]);
-    }
-
-    protected async dropCacheKeys(connection: DataSource, queryRunner: QueryRunner, data: T) : Promise<void> {
-        if (!this.ctx.cache || !connection.queryResultCache) {
-            return;
-        }
-
-        const keys = this.ctx.cache.keys(data);
-
-        await connection.queryResultCache.remove(keys);
-
-        if (!queryRunner.isTransactionActive) {
-            return;
-        }
-
-        const pending = (queryRunner.data[PENDING_CACHE_KEYS] ??= new Set<string>()) as Set<string>;
-
-        for (const key of keys) {
-            pending.add(key);
-        }
     }
 
     /**

@@ -7,11 +7,9 @@
 
 import type { UserPermission } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
-import { buildRedisKeyPath } from '@authup/server-kit';
 import { EventSubscriber } from 'typeorm';
 import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { UserPermissionEntity } from './entity.ts';
-import { AUTHORIZATION_CACHE_KEYS, CachePrefix } from '../constants.ts';
 
 @EventSubscriber()
 export class UserPermissionSubscriber extends EntitySubscriber<UserPermission> {
@@ -23,16 +21,6 @@ export class UserPermissionSubscriber extends EntitySubscriber<UserPermission> {
                 data.userRealmId,
                 data.permissionRealmId,
             ]),
-            cache: {
-                onInsert: true,
-                keys: (data) => [
-                    buildRedisKeyPath({
-                        prefix: CachePrefix.USER_OWNED_PERMISSIONS,
-                        key: data.userId,
-                    }),
-                    ...AUTHORIZATION_CACHE_KEYS,
-                ],
-            },
         });
     }
 }

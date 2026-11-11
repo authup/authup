@@ -7,11 +7,9 @@
 
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
-import { buildRedisKeyPath } from '@authup/server-kit';
 import { EventSubscriber } from 'typeorm';
 import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { IdentityProviderRoleMappingEntity } from './entity.ts';
-import { CachePrefix } from '../constants.ts';
 
 @EventSubscriber()
 export class IdentityProviderRoleSubscriber extends EntitySubscriber<IdentityProviderRoleMapping> {
@@ -23,14 +21,6 @@ export class IdentityProviderRoleSubscriber extends EntitySubscriber<IdentityPro
                 data.providerRealmId,
                 data.roleRealmId,
             ]),
-            cache: {
-                keys: (data) => [
-                    buildRedisKeyPath({
-                        prefix: CachePrefix.IDENTITY_PROVIDER_ROLE,
-                        key: data.id,
-                    }),
-                ],
-            },
         });
     }
 }

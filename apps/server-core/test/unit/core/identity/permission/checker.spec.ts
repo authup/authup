@@ -34,6 +34,7 @@ import { PermissionCheckerService, PolicyEngine } from '../../../../../src/core'
 import type { IIdentityPermissionProvider } from '../../../../../src/core';
 import { IdentityInjectionKey } from '../../../../../src/app/modules/identity/index.ts';
 import { PermissionDatabaseProvider } from '../../../../../src/app/modules/database/repositories/permission-provider/module.ts';
+import { DatabaseInjectionKey } from '../../../../../src/app/index.ts';
 import { PermissionRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/permission/repository.ts';
 import { RealmRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/realm/repository.ts';
 import {
@@ -68,7 +69,7 @@ describe('core/identity/permission/checker', () => {
             identity,
             grants: () => useRequestPolicyGrants(event, { type: identity.type, id: identity.data.id }),
             permissionEvaluator: new RequestPermissionEvaluator(event, new PermissionEvaluator({
-                provider: new PermissionDatabaseProvider(suite.dataSource),
+                provider: new PermissionDatabaseProvider(suite.dataSource, suite.container.resolve(DatabaseInjectionKey.QueryCache)),
                 policyEngine: new PolicyEngine(),
             })),
         };
@@ -82,7 +83,7 @@ describe('core/identity/permission/checker', () => {
         adminUser = await userRepository.findOneByOrFail({ name: 'admin' }) as unknown as UserEntity;
 
         const realmEntityRepository = suite.dataSource.getRepository(RealmEntity);
-        const realmRepository = new RealmRepositoryAdapter(realmEntityRepository);
+        const realmRepository = new RealmRepositoryAdapter(realmEntityRepository, suite.container.resolve(DatabaseInjectionKey.QueryCache));
         const permissionRepository = new PermissionRepositoryAdapter({
             repository: suite.dataSource.getRepository(PermissionEntity),
             realmRepository: realmEntityRepository,
@@ -96,7 +97,7 @@ describe('core/identity/permission/checker', () => {
             repository: permissionRepository,
             realmRepository,
             identityResolver: suite.container.resolve(IdentityInjectionKey.Resolver),
-            permissionProvider: new PermissionDatabaseProvider(suite.dataSource),
+            permissionProvider: new PermissionDatabaseProvider(suite.dataSource, suite.container.resolve(DatabaseInjectionKey.QueryCache)),
             identityPermissionProvider,
         });
     });

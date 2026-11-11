@@ -8,12 +8,14 @@
 import type { Consent } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { IQuery } from '@rapiq/core';
-import { IdentityType  } from '@authup/core-kit';
+import { EntityType, IdentityType } from '@authup/core-kit';
 import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
-import { buildRedisKeyPath } from '@authup/server-kit';
+import { buildRecordTag, buildScopedTag } from '@rapiq/cache';
 import type { DataSource, Repository } from 'typeorm';
+import type { IQueryCache } from '../../../database/cache/index.ts';
+import { QUERY_CACHE_SCOPED_VALUE_NORMALIZER } from '../../../database/cache/index.ts';
 import { applyQuery, fetchMany } from '../../../database/repositories/query.ts';
-import { CachePrefix, ConsentEntity } from '../../../../../adapters/database/domains/index.ts';
+import { ConsentEntity } from '../../../../../adapters/database/domains/index.ts';
 import { isDatabaseUniqueViolationError } from 'typeorm-extension';
 import type {
     ConsentFindManyOptions,
@@ -25,8 +27,11 @@ import { applyRealmScopeSelect } from '../../../database/repositories/helpers.ts
 export class ConsentRepositoryAdapter implements IConsentRepository {
     protected repository: Repository<ConsentEntity>;
 
-    constructor(dataSource: DataSource) {
+    protected cache: IQueryCache;
+
+    constructor(dataSource: DataSource, cache: IQueryCache) {
         this.repository = dataSource.getRepository(ConsentEntity);
+        this.cache = cache;
     }
 
     async findMany(
@@ -89,23 +94,28 @@ export class ConsentRepositoryAdapter implements IConsentRepository {
         return this.repository.findOneBy({ id });
     }
 
-    async findAllBySubjectClient(clientId: string, owner: ConsentOwner): Promise<Consent[]> {
-        const qb = this.repository.createQueryBuilder('consent');
+    async findAllBySubjectClient(input: string, owner: ConsentOwner): Promise<Consent[]> {
+        // one spelling for the key, the query and the tag: the writer bumps the normalized value.
+        const clientId = input.toLowerCase();
 
-        qb.where('consent.clientId = :clientId AND consent.sub = :sub AND consent.subKind = :subKind', {
-            clientId,
-            sub: owner.sub,
-            subKind: owner.subKind,
-        });
-        qb.cache(
-            buildRedisKeyPath({
-                prefix: CachePrefix.CONSENT_COVERING,
-                key: `${clientId}:${owner.subKind}:${owner.sub}`,
-            }),
-            60_000,
+        return this.cache.remember(
+            `consent/${clientId}/${owner.subKind}/${owner.sub}`,
+            (rows) => [
+                buildScopedTag(
+                    EntityType.CONSENT,
+                    'clientId',
+                    QUERY_CACHE_SCOPED_VALUE_NORMALIZER(EntityType.CONSENT, 'clientId', clientId),
+                ),
+                ...rows.map((row) => buildRecordTag(EntityType.CONSENT, row.id)),
+            ],
+            () => this.repository.createQueryBuilder('consent')
+                .where('consent.clientId = :clientId AND consent.sub = :sub AND consent.subKind = :subKind', {
+                    clientId,
+                    sub: owner.sub,
+                    subKind: owner.subKind,
+                })
+                .getMany(),
         );
-
-        return qb.getMany();
     }
 
     async insertMissing(input: {

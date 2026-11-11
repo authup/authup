@@ -21,6 +21,7 @@ import {
     ClientRepositoryAdapter,
     ClientTokenExchangeCapabilityEntity,
     ClientTokenExchangeCapabilityRepositoryAdapter,
+    DatabaseInjectionKey,
     RealmEntity,
     RealmRepositoryAdapter,
     UserRepository,
@@ -54,14 +55,15 @@ describe.skipIf(!rowLockable)('http/controllers/user (concurrency)', () => {
         await suite.setup();
 
         const realmRepository = suite.dataSource.getRepository(RealmEntity);
-        const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository);
+        const queryCache = suite.container.resolve(DatabaseInjectionKey.QueryCache);
+        const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository, queryCache);
 
         realm = await realmRepositoryAdapter.resolve('', true);
 
         userRepository = new UserRepositoryAdapter({
             repository: new UserRepository(suite.dataSource),
             realmRepository,
-        });
+        }, queryCache);
         userService = new UserService({
             repository: userRepository,
             realmRepository: realmRepositoryAdapter,
@@ -70,7 +72,7 @@ describe.skipIf(!rowLockable)('http/controllers/user (concurrency)', () => {
         clientRepository = new ClientRepositoryAdapter({
             repository: suite.dataSource.getRepository(ClientEntity),
             realmRepository,
-        });
+        }, queryCache);
         clientService = new ClientService({
             tokenExchangeCapabilityRepository: new FakeClientTokenExchangeCapabilityRepository(),
             repository: clientRepository,

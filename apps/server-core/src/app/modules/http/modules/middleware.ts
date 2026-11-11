@@ -168,8 +168,11 @@ export class HTTPMiddlewareModule {
     }
 
     async mountRealmResolver(router: IApp, container: IContainer): Promise<void> {
-        const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
-        const middleware = createRealmResolverMiddleware({ realmRepository: new RealmRepositoryAdapter(realmRepository) });
+        const realmRepository = new RealmRepositoryAdapter(
+            container.resolve<Repository<Realm>>(RealmEntity),
+            container.resolve(DatabaseInjectionKey.QueryCache),
+        );
+        const middleware = createRealmResolverMiddleware({ realmRepository });
 
         // Mounted at /realms/:realmId/:nested so the middleware only fires on
         // nested-resource URLs (e.g. /realms/master/users/...). Bare
@@ -189,7 +192,10 @@ export class HTTPMiddlewareModule {
         const oauth2TokenVerifier = container.resolve(OAuth2InjectionToken.TokenVerifier);
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
 
-        const permissionProvider = new PermissionDatabaseProvider(dataSource);
+        const permissionProvider = new PermissionDatabaseProvider(
+            dataSource,
+            container.resolve(DatabaseInjectionKey.QueryCache),
+        );
 
         const middleware = createAuthorizationMiddleware({
             identityResolver,

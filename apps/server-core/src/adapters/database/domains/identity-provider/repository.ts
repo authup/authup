@@ -8,7 +8,6 @@
 import type { IdentityProvider, IdentityProviderAttribute } from '@authup/core-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker } from 'typeorm';
-import { CachePrefix } from '../constants.ts';
 import { EARepository } from '../../extra-attribute-repository/index.ts';
 import { IdentityProviderEntity } from './entity.ts';
 import { IdentityProviderAttributeEntity } from '../identity-provider-attribute/index.ts';
@@ -31,7 +30,6 @@ export class IdentityProviderRepository extends EARepository<
                 entityPrimaryColumn: 'id',
                 attributeEntity: IdentityProviderAttributeEntity,
                 attributeForeignColumn: 'providerId',
-                cachePrefix: CachePrefix.IDENTITY_PROVIDER_ATTRIBUTE,
             },
         );
     }

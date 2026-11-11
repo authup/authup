@@ -17,6 +17,7 @@ import { BuiltInPolicyType, buildPermissionKey } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
 import { InternalError } from '@authup/errors';
 import { PermissionDatabaseProvider } from '../../../../../src/app/modules/database/repositories/permission-provider/module.ts';
+import { DatabaseInjectionKey } from '../../../../../src/app/index.ts';
 import {
     ClientPermissionEntity,
     PermissionEntity,
@@ -43,7 +44,7 @@ describe('app/modules/database/repositories/permission-provider (definitions)', 
     });
 
     it('answers every definition with its policy trees in one pass', async () => {
-        const provider = new PermissionDatabaseProvider(suite.dataSource);
+        const provider = new PermissionDatabaseProvider(suite.dataSource, suite.container.resolve(DatabaseInjectionKey.QueryCache));
         const permissions = suite.dataSource.getRepository(PermissionEntity);
         const junctions = suite.dataSource.getRepository(PermissionPolicyEntity);
         const policies = suite.dataSource.getRepository(PolicyEntity);
@@ -97,7 +98,7 @@ describe('app/modules/database/repositories/permission-provider (definitions)', 
     });
 
     it('answers every policy tree the role, user and client junction rows name, each once', async () => {
-        const provider = new PermissionDatabaseProvider(suite.dataSource);
+        const provider = new PermissionDatabaseProvider(suite.dataSource, suite.container.resolve(DatabaseInjectionKey.QueryCache));
         const permissions = suite.dataSource.getRepository(PermissionEntity);
 
         const admin = await suite.dataSource.getRepository(UserEntity).findOneByOrFail({ name: 'admin' });
@@ -158,7 +159,7 @@ describe('app/modules/database/repositories/permission-provider (definitions)', 
     // restriction did not exist (fail-open under unanimous), so the read
     // refuses instead (issue #3634)
     it('refuses a definition whose junction names a tree it cannot load', async () => {
-        const provider = new PermissionDatabaseProvider(suite.dataSource);
+        const provider = new PermissionDatabaseProvider(suite.dataSource, suite.container.resolve(DatabaseInjectionKey.QueryCache));
         const permissions = suite.dataSource.getRepository(PermissionEntity);
         const junctions = suite.dataSource.getRepository(PermissionPolicyEntity);
 

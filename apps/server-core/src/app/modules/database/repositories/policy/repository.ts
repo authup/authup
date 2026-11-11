@@ -11,7 +11,7 @@ import type { IPolicyRepository } from '../../../../../core/index.ts';
 import { PolicyEntity, PolicyRepository, RealmEntity } from '../../../../../adapters/database/domains/index.ts';
 import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
 import { EntityRepositoryAdapter } from '../entity/index.ts';
-import { RealmRepositoryAdapter } from '../realm/repository.ts';
+import { createRealmNameResolver } from '../realm/repository.ts';
 
 /**
  * Well below the 65535 bound parameters postgres allows per statement.
@@ -35,7 +35,7 @@ export class PolicyRepositoryAdapter extends EntityRepositoryAdapter<Policy, Pol
             entity: 'policy',
             // the per-row realm gate reads `realmId` (issue #3574)
             realmScope: {},
-            realmRepository: new RealmRepositoryAdapter(ctx.realmRepository),
+            realmRepository: createRealmNameResolver(ctx.realmRepository),
             lockRows: options.lockRows,
         });
     }

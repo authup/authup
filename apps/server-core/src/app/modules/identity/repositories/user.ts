@@ -6,19 +6,21 @@
  */
 
 import type { User, UserPermission, UserRole } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
-import { buildRedisKeyPath } from '@authup/server-kit';
+import { buildCollectionTag, buildRecordTag } from '@rapiq/cache';
 import type { Repository } from 'typeorm';
 import { In } from 'typeorm';
 import type { IUserIdentityRepository, IdentityProviderMapperElement } from '../../../../core/index.ts';
 import { IdentityProviderMapperOperation } from '../../../../core/index.ts';
 import type { UserEntity, UserRepository } from '../../../../adapters/database/domains/index.ts';
-import { CachePrefix } from '../../../../adapters/database/domains/index.ts';
+import type { IQueryCache } from '../../database/index.ts';
 
 export type UserIdentityRepositoryContext = {
     repository: UserRepository,
     userPermissionRepository: Repository<UserPermission>,
     userRoleRepository: Repository<UserRole>,
+    cache: IQueryCache,
 };
 
 export class UserIdentityRepository implements IUserIdentityRepository {
@@ -28,10 +30,13 @@ export class UserIdentityRepository implements IUserIdentityRepository {
 
     private readonly userRoleRepository: Repository<UserRole>;
 
+    private readonly cache: IQueryCache;
+
     constructor(ctx: UserIdentityRepositoryContext) {
         this.repository = ctx.repository;
         this.userPermissionRepository = ctx.userPermissionRepository;
         this.userRoleRepository = ctx.userRoleRepository;
+        this.cache = ctx.cache;
     }
 
     async findOneById(id: string): Promise<User | null> {
@@ -55,7 +60,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
             .leftJoinAndSelect('user.realm', 'realm');
 
         // A uuid compares case-insensitively on the server dialects, so it is
-        // canonicalized here: the cache key must be the one the subscriber drops.
+        // canonicalized here: one cache key serves every spelling.
         const isId = isUUID(input);
         const key = isId ? input.toLowerCase() : input;
 
@@ -81,17 +86,18 @@ export class UserIdentityRepository implements IUserIdentityRepository {
             }
         }
 
-        if (isId) {
-            query.cache(
-                buildRedisKeyPath({
-                    prefix: CachePrefix.USER,
-                    key,
-                }),
-                60_000,
-            );
-        }
-
-        const entity = await query.getOne();
+        // the path unwind updates users by criteria, which bumps the collection tag alone
+        const entity = isId ?
+            await this.cache.remember(
+                `identity/user/${key}`,
+                (value) => [
+                    buildCollectionTag(EntityType.USER),
+                    ...(value ? [buildRecordTag(EntityType.REALM, value.realmId)] : []),
+                ],
+                () => query.getOne(),
+                { manager: this.repository.manager },
+            ) :
+            await query.getOne();
 
         if (entity) {
             return this.repository.extendOneWithEA(entity);

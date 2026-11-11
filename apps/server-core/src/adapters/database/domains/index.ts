@@ -39,4 +39,3 @@ export * from './user-authenticator/index.ts';
 export * from './user-permission/index.ts';
 export * from './user-role/index.ts';
 
-export * from './constants.ts';

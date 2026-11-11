@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './cache/index.ts';
 export * from './data-source/index.ts';
 export * from './domains/index.ts';
 export * from './helpers/index.ts';

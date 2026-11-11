@@ -7,11 +7,9 @@
 
 import type { PolicyAttribute } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
-import { buildRedisKeyPath } from '@authup/server-kit';
 import { EventSubscriber } from 'typeorm';
 import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { PolicyAttributeEntity } from './entity.ts';
-import { AUTHORIZATION_CACHE_KEYS, CachePrefix } from '../constants.ts';
 
 @EventSubscriber()
 export class PolicyAttributeSubscriber extends EntitySubscriber<PolicyAttribute> {
@@ -20,16 +18,6 @@ export class PolicyAttributeSubscriber extends EntitySubscriber<PolicyAttribute>
             type: EntityType.POLICY_ATTRIBUTE,
             target: PolicyAttributeEntity,
             destinations: buildEntityDestinations(EntityType.POLICY_ATTRIBUTE, (data) => [data.realmId]),
-            cache: {
-                onInsert: true,
-                keys: (data) => [
-                    buildRedisKeyPath({
-                        prefix: CachePrefix.POLICY_OWNED_ATTRIBUTES,
-                        key: data.policyId,
-                    }),
-                    ...AUTHORIZATION_CACHE_KEYS,
-                ],
-            },
         });
     }
 }
