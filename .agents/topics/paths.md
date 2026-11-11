@@ -62,10 +62,11 @@ folder tree and subtree lookups need `PATH_READ`.
   `isDatabaseLockConflictError` (typeorm-extension): the aborted transaction
   wrote nothing and the callback derives every write from its own locked reads.
   Unretried, that race answers 500.
-- A create locks its resolved parent and derives the path from THAT read,
-  never from the unlocked resolve the gates ran on. Otherwise an ancestor
-  rename in between stores a path its own parent chain contradicts, and
-  nothing recomputes it later.
+- A create locks its resolved parent and writes only when THAT read yields the
+  path the gates ran on; a different path aborts and the create is authorized
+  again (`retryOnStaleRow`, a conflict after three attempts). Otherwise an
+  ancestor rename in between stores a path its own parent chain contradicts,
+  or one no policy saw, and nothing recomputes it later.
 - Delete is never refused on occupancy and never relies on the DB cascades:
   `unwindPaths` (`app/modules/database/repositories/path/unwind.ts`) unfiles
   the subtree's users and clients, then deletes folders deepest first, in one
