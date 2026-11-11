@@ -1,6 +1,7 @@
 <script lang="ts">
 
 import type { Event as EventEntity } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import {
     TranslatorTranslationCommonKey,
     TranslatorTranslationEntityKey,
@@ -9,6 +10,7 @@ import {
 } from '@authup/i18n';
 import {
     injectHTTPClient,
+    useEntityNameTranslator,
     useTranslation,
     useTranslations,
 } from '@authup/client-web-kit';
@@ -107,6 +109,7 @@ export default defineComponent({
         });
 
         const httpClient = injectHTTPClient();
+        const translateEntityName = useEntityNameTranslator();
 
         // A record that cannot be loaded sends the visitor back to the
         // collection; the template renders nothing until then (`v-if`).
@@ -129,7 +132,10 @@ export default defineComponent({
             },
         ]);
 
-        const heading = computed(() => buildRecordHeading(entity.value ?? {}));
+        const heading = computed(() => buildRecordHeading(
+            entity.value ?? {},
+            (record) => translateEntityName(EntityType.EVENT, record),
+        ));
 
         const breadcrumbItems = computed(() => buildEntityBreadcrumb({
             base: breadcrumbBase.value,

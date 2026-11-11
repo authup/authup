@@ -2,8 +2,14 @@
 import { defineQuery } from '@rapiq/core';
 import { buildURL } from '@authup/kit';
 import { TranslatorTranslationAppKey, TranslatorTranslationEntityKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { AClientScopes, useTranslations, useTranslationsForNamespace } from '@authup/client-web-kit';
-import type { Client, ClientScope } from '@authup/core-kit';
+import {
+    AClientScopes,
+    useEntityNameTranslator,
+    useTranslations,
+    useTranslationsForNamespace,
+} from '@authup/client-web-kit';
+import type { Client, ClientScope, Scope } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import { VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import type { PropType } from 'vue';
 import { computed, defineComponent, ref } from 'vue';
@@ -24,6 +30,9 @@ export default defineComponent({
     setup(props) {
         const scopes = ref<string[]>([]);
         const redirectUri = ref<string>('');
+
+        const translateEntityName = useEntityNameTranslator();
+        const scopeLabel = (scope: Scope) => translateEntityName(EntityType.SCOPE, scope);
 
         const translationsDefault = useTranslations(
             [
@@ -84,6 +93,7 @@ export default defineComponent({
             query,
             redirectUri,
             generatedUrl,
+            scopeLabel,
             scopes,
             translationsDefault,
             translationsApp,
@@ -113,7 +123,11 @@ export default defineComponent({
                 >
                     <template #label="iProps">
                         <label :for="iProps.id">
-                            {{ props.data.scope.name }}
+                            {{ scopeLabel(props.data.scope) }}
+                            <small
+                                v-if="scopeLabel(props.data.scope) !== props.data.scope.name"
+                                class="block text-fg-muted"
+                            >{{ props.data.scope.name }}</small>
                         </label>
                     </template>
                 </VCFormSwitch>

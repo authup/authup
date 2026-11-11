@@ -49,7 +49,7 @@ export type RecordHeading = {
  * the rail down the page.
  *
  * `localizeName` fills an empty display name from the `@authup/i18n` catalogs
- * (a built-in permission, policy or scope), so the raw name moves to rung 2;
+ * (a built-in permission, policy or scope, or an event name), so the raw name moves to rung 2;
  * it answers the raw name for any other record, which keeps the ladder above
  * unchanged for those.
  */
