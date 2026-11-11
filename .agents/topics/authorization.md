@@ -105,8 +105,9 @@ invalidation is load-bearing:
     manager bypasses the cache.
   - A write without a primary key (criteria `update` / `delete`) bumps the collection tag
     alone; a reader carrying only scoped or record tags is not reached by it.
-  - Junction owner ids are stored lower-case, because the scoped tag is spelled from the
-    row as written.
+  - The reader and the invalidation subscriber spell a scoped uuid value through one
+    normalizer (`QUERY_CACHE_SCOPED_VALUE_NORMALIZER`), so a row written in any case reaches
+    the reads scoped to its lower-case id. Hand both sides the same function.
   - The consent covering tag is spelled by hand and is bumped only while `clientId` leads
     an index of the consent schema.
 - Rejected: narrowing query parameters on the route (reach narrowing already decides; the
