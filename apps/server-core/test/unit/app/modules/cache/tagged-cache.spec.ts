@@ -19,6 +19,7 @@ import {
 import {
     CacheInjectionKey,
     CacheModule,
+    TAGGED_CACHE_CONNECT_TIMEOUT,
     TAGGED_CACHE_PREFIX,
     TaggedCacheInjectionKey,
     createTaggedCache,
@@ -138,6 +139,34 @@ describe('app/modules/cache/tagged', () => {
         expect(onError).toHaveBeenCalled();
 
         await dispose();
+    });
+
+    it('ready waits out the connect timeout against a refused redis and never rejects', async () => {
+        const onError = vi.fn();
+        const { ready, dispose } = createTaggedCache({ redis: 'redis://127.0.0.1:1', onError });
+
+        const startedAt = Date.now();
+
+        await expect(ready()).resolves.toBeUndefined();
+
+        const elapsed = Date.now() - startedAt;
+
+        expect(elapsed).toBeGreaterThanOrEqual(TAGGED_CACHE_CONNECT_TIMEOUT - 50);
+        expect(elapsed).toBeLessThan(TAGGED_CACHE_CONNECT_TIMEOUT + 1000);
+        expect(onError).toHaveBeenCalled();
+
+        await dispose();
+    });
+
+    it('ready settles at once for a disposed client', async () => {
+        const { ready, dispose } = createTaggedCache({ redis: 'redis://127.0.0.1:1', onError: vi.fn() });
+
+        await dispose();
+
+        const startedAt = Date.now();
+
+        await expect(ready()).resolves.toBeUndefined();
+        expect(Date.now() - startedAt).toBeLessThan(TAGGED_CACHE_CONNECT_TIMEOUT);
     });
 
     it('CacheModule registers both tokens', async () => {

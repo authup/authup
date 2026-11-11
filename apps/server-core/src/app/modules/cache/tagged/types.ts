@@ -24,7 +24,7 @@ export type TaggedCacheClient = {
 export type TaggedCacheCreateResult = {
     cache: ITaggedCache,
     /**
-     * Settles once the client is ready, has failed or the connect timeout ran out; never rejects.
+     * Connects the client and settles once it is ready, has ended or the connect timeout ran out; never rejects.
      */
     ready: () => Promise<void>,
     dispose: () => Promise<void>,

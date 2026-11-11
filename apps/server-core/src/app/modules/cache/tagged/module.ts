@@ -55,10 +55,11 @@ export function resolveTaggedCachePrefix(source: Redis) : string {
 export function createTaggedCacheClient(input: TaggedCacheClientCreateInput) : TaggedCacheClient {
     const source = createSourceClient(input);
     const prefix = resolveTaggedCachePrefix(source);
+    // the driver's ready() opens the connection.
     const client = source.duplicate({
         ...TAGGED_CACHE_REDIS_OPTIONS,
         keyPrefix: undefined,
-        lazyConnect: false,
+        lazyConnect: true,
     });
 
     if (source !== input) {
@@ -66,28 +67,6 @@ export function createTaggedCacheClient(input: TaggedCacheClientCreateInput) : T
     }
 
     return { client, prefix };
-}
-
-// without an offline queue, a command sent before the connection is up fails.
-function waitForClient(client: Redis) : Promise<void> {
-    if (client.status === 'ready' || client.status === 'wait') {
-        return Promise.resolve();
-    }
-
-    return new Promise((resolve) => {
-        const done = () => {
-            clearTimeout(timeout);
-            client.off('ready', done);
-            client.off('error', done);
-            client.off('end', done);
-            resolve();
-        };
-        const timeout = setTimeout(done, TAGGED_CACHE_CONNECT_TIMEOUT);
-
-        client.once('ready', done);
-        client.once('error', done);
-        client.once('end', done);
-    });
 }
 
 export function createTaggedCache(input: TaggedCacheCreateInput) : TaggedCacheCreateResult {
@@ -103,12 +82,13 @@ export function createTaggedCache(input: TaggedCacheCreateInput) : TaggedCacheCr
 
     client.on('error', (error) => input.onError(error));
 
+    const driver = new RedisCacheDriver({ client, prefix });
+
     return {
-        cache: new TaggedCache({
-            driver: new RedisCacheDriver({ client, prefix }),
-            onError: input.onError,
-        }),
-        ready: () => waitForClient(client),
+        cache: new TaggedCache({ driver, onError: input.onError }),
+        ready: async () => {
+            await driver.ready(TAGGED_CACHE_CONNECT_TIMEOUT);
+        },
         dispose: async () => {
             client.disconnect();
         },
