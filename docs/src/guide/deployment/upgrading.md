@@ -12,7 +12,13 @@ either requires operator action or deliberately changes behavior.
 With Redis configured, the server opens one more Redis connection for its read cache. That
 cache needs Redis 5 or newer and a `maxmemory-policy` of `noeviction` or one of the
 `volatile-*` policies. Its keys sit under `authup:`, behind the configured Redis `keyPrefix`
-when there is one (`<keyPrefix>authup:`).
+when there is one (`<keyPrefix>authup:`). The keys of the previous cache (`db:*`) expire on
+their own within a minute; nothing has to be removed by hand.
+
+During a rolling upgrade, replicas of the previous version and of this one invalidate
+different keys. A write made on one is visible on the other after at most a minute; a user or
+client deactivation is the case that matters. Upgrade all replicas together if that window is
+not acceptable.
 
 **Action required:** A deployment on a Redis older than 5, or with an `allkeys-*` eviction
 policy, upgrades Redis or changes the policy before the upgrade.

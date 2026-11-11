@@ -568,15 +568,14 @@ threads instances through constructor/context args:
 - **Entity subscribers**: all 22+ subscribers in
   `adapters/database/domains/*/subscriber.ts` extend `EntitySubscriber<T>`
   (`adapters/database/subscriber/`), a declarative base class configured with
-  `{ type, target, destinations, cache? }`: `destinations` is built with
+  `{ type, target, destinations }`: `destinations` is built with
   `buildEntityDestinations(type, (data) => [realmIds...])` (one global channel
   destination + one namespaced destination per non-null realm id, named by
   `buildEntityNamespaceName` from `@authup/core-kit`, which the kit's entity
   socket also connects through, falling back to `/` for a master-realm
-  session); `cache.keys`
-  returns the query-result-cache keys to drop on update/remove
-  (`cache.onInsert: true` adds insert: used by junction/attribute subscribers
-  whose cache is keyed by the owner id). Every `after*` hook hands its
+  session). Cache invalidation is not theirs: one `CacheInvalidationSubscriber`
+  derives the tags to bump from the rapiq schemas on every entity write
+  (#3688). Every `after*` hook hands its
   `event.manager` to the publish as the opaque `transaction`, because the
   hooks run inside the persist transaction and a handler that persists must
   ride it (#3539). The base strips every `select: false` column of its
@@ -655,7 +654,7 @@ Canonical form is enforced at four boundaries (defense-in-depth):
 1. **Validator transform**: every `name` / `email` validator chains `.trim().toLowerCase()` before its format check (Zod path) or `.matches(...)` (validup path). Mixed-case input is silently lowercased; callers see canonical form in the response.
 2. **Validator regex**: the format check (`isNameValid` for names: `/^[a-z0-9-_.]+$/`; emails: `/^[^A-Z]+$/`) operates on the post-transform value. After `.toLowerCase()` the regex always passes; it remains as documentation of the contract and as a catch for code paths that bypass the transform.
 3. **External boundary canonicalization**: when an identifier enters Authup outside the validator chain, it is lowercased at the ingress. Currently: `IdentityProviderAccountManager` taking attribute candidates from external IdPs (so external mixed-case usernames don't fall through to the random-nanoid fallback), and the OAuth2 password grant's `realm_id`/`realm_name` hint.
-4. **Repository-level lookup canonicalization**: name-based *lookups* on the authentication surface canonicalize the key before binding it: the identity repositories (`app/modules/identity/repositories/{user,client}.ts`, the name, a realm-name filter and a uuid key, which is lowercased so its 60 s query-cache key is the one the entity subscriber drops), `OAuth2ClientRepository.findOneByIdOrName` (the `/authorize` client resolution), and `RealmRepositoryAdapter.findOneByName`. An auth ingress that misses layer 3 (the `/realms/<key>` URL segment specifically, an HTTP Basic username, a token-body credential key) still matches canonically stored rows instead of diverging by database collation. Lookup-only, auth-surface-only: write paths rely on layers 1–3, and the entity repository adapters' `findOneByName` (`GET /roles/<name>` etc.) still bind raw.
+4. **Repository-level lookup canonicalization**: name-based *lookups* on the authentication surface canonicalize the key before binding it: the identity repositories (`app/modules/identity/repositories/{user,client}.ts`, the name, a realm-name filter and a uuid key, which is lowercased so one cache key serves every spelling), `OAuth2ClientRepository.findOneByIdOrName` (the `/authorize` client resolution), and `RealmRepositoryAdapter.findOneByName`. An auth ingress that misses layer 3 (the `/realms/<key>` URL segment specifically, an HTTP Basic username, a token-body credential key) still matches canonically stored rows instead of diverging by database collation. Lookup-only, auth-surface-only: write paths rely on layers 1–3, and the entity repository adapters' `findOneByName` (`GET /roles/<name>` etc.) still bind raw.
 
 ### Adding a new identifier column
 
