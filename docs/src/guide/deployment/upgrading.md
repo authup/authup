@@ -14,6 +14,10 @@ cache needs Redis 5 or newer and a `maxmemory-policy` of `noeviction` or one of 
 `volatile-*` policies. Its keys sit under `authup:`, behind the configured Redis `keyPrefix`
 when there is one (`<keyPrefix>authup:`).
 
+If Redis is unreachable while a write commits, the server that wrote answers its cached reads
+from the database for the next minute. Other servers sharing that Redis may serve the
+previous value for up to a minute.
+
 **Action required:** A deployment on a Redis older than 5, or with an `allkeys-*` eviction
 policy, upgrades Redis or changes the policy before the upgrade.
 
