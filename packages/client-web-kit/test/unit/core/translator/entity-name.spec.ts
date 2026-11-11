@@ -6,7 +6,12 @@
  */
 
 import { SystemPolicyName } from '@authup/access';
-import { EntityType, PermissionName, ScopeName } from '@authup/core-kit';
+import {
+    EntityType,
+    EventName,
+    PermissionName,
+    ScopeName,
+} from '@authup/core-kit';
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h } from 'vue';
@@ -30,6 +35,8 @@ const component = defineComponent({
                 displayName: 'Onboard apps',
                 builtIn: true,
             }),
+            translate(EntityType.EVENT, { name: EventName.LOGIN_FAILED }),
+            translate(EntityType.EVENT, { name: 'somethingNew' }),
         ].map((text) => h('li', text)).concat(h('button', {
             onClick: () => {
                 locale.value = 'de';
@@ -39,7 +46,7 @@ const component = defineComponent({
 });
 
 describe('useEntityNameTranslator', () => {
-    it('prefers the display name, localizes built-in rows only, and answers the raw name otherwise', async () => {
+    it('prefers the display name, localizes built-in rows and known event names only, and answers the raw name otherwise', async () => {
         const { wrapper } = mountKitComponent(component);
 
         expect(wrapper.findAll('li').map((item) => item.text())).toEqual([
@@ -50,6 +57,8 @@ describe('useEntityNameTranslator', () => {
             'admin',
             PermissionName.CLIENT_CREATE,
             'Onboard apps',
+            'Failed sign-in',
+            'somethingNew',
         ]);
 
         await wrapper.find('button').trigger('click');

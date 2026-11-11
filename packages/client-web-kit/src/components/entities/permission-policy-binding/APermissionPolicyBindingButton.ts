@@ -12,7 +12,7 @@ import type {
     Policy,
     RealmScopeValue,
 } from '@authup/core-kit';
-import { REALM_SCOPE } from '@authup/core-kit';
+import { EntityType, REALM_SCOPE } from '@authup/core-kit';
 import { defineQuery } from '@rapiq/core';
 import type { PropType, Ref } from 'vue';
 import {
@@ -36,6 +36,7 @@ import {
     DEFAULT_BUTTON_SIZE,
     SlotName,
     injectHTTPClient,
+    useEntityNameTranslator,
     useTranslation,
 } from '../../../core';
 import { hasOwnProperty } from '@authup/kit';
@@ -69,6 +70,8 @@ export const APermissionPolicyBindingButton = defineComponent({
     emits: ['created', 'updated', 'failed'],
     setup(props, { emit }) {
         const client = injectHTTPClient();
+        const translateEntityName = useEntityNameTranslator();
+        const policyLabel = (policy: Policy) => translateEntityName(EntityType.POLICY, policy);
 
         const modalOpen = ref(false);
         const busy = ref(false);
@@ -356,8 +359,12 @@ export const APermissionPolicyBindingButton = defineComponent({
                         selectVariant = 'solid';
                     }
 
+                    const label = policyLabel(slotProps.data);
+
                     return [
-                        h('div', [slotProps.data.name]),
+                        h('div', label === slotProps.data.name ?
+                            [label] :
+                            [label, h('small', { class: 'block text-fg-muted' }, slotProps.data.name)]),
                         h(APolicyInlineInfo, {
                             entity: slotProps.data,
                             onDetail: (policy: Policy) => {
@@ -426,7 +433,7 @@ export const APermissionPolicyBindingButton = defineComponent({
 
         const renderDetailContent = (policy: Policy) => [
             h('div', { class: 'flex items-center justify-between gap-2' }, [
-                h(VCModalTitle, () => policy.name),
+                h(VCModalTitle, () => policyLabel(policy)),
                 renderCloseIcon(),
             ]),
             h(APolicySummary, { entity: policy }),

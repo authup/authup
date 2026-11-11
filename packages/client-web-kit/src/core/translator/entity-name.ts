@@ -6,7 +6,12 @@
  */
 
 import { SystemPolicyName } from '@authup/access';
-import { EntityType, PermissionName, ScopeName } from '@authup/core-kit';
+import {
+    EntityType,
+    EventName,
+    PermissionName,
+    ScopeName,
+} from '@authup/core-kit';
 import { TranslatorTranslationNamespace } from '@authup/i18n';
 import { injectIlingo, injectLocale } from '@ilingo/vue';
 
@@ -14,13 +19,25 @@ const ENTITY_NAME_NAMESPACES : Partial<Record<string, TranslatorTranslationNames
     [EntityType.PERMISSION]: TranslatorTranslationNamespace.PERMISSION,
     [EntityType.POLICY]: TranslatorTranslationNamespace.POLICY,
     [EntityType.SCOPE]: TranslatorTranslationNamespace.SCOPE,
+    [EntityType.EVENT]: TranslatorTranslationNamespace.EVENT,
 };
 
 const ENTITY_NAME_KEYS : Partial<Record<string, readonly string[]>> = {
     [EntityType.PERMISSION]: Object.values(PermissionName),
     [EntityType.POLICY]: Object.values(SystemPolicyName),
     [EntityType.SCOPE]: Object.values(ScopeName),
+    [EntityType.EVENT]: Object.values(EventName),
 };
+
+const ENTITY_NAME_CLOSED_TYPES : readonly string[] = [EntityType.EVENT];
+
+/**
+ * Whether every name of an entity type is a catalog key (events), so a row
+ * carries no `builtIn` / `displayName` to qualify a catalog-label match.
+ */
+export function isEntityNameVocabularyClosed(type: string) : boolean {
+    return ENTITY_NAME_CLOSED_TYPES.includes(type);
+}
 
 // ponytail: bounded so a one-letter search cannot put the whole catalog in the URL.
 const ENTITY_NAME_SEARCH_LIMIT = 100;
@@ -36,8 +53,10 @@ export type EntityNamed = {
  * `displayName` first, then the `@authup/i18n` catalog name in the active
  * locale, then the raw `name`. The catalog is consulted for a BUILT-IN
  * permission, policy or scope only, so an operator row that happens to be
- * named like a built-in identifier keeps its own name. A store refusing the
- * sync read falls through to the raw name as well.
+ * named like a built-in identifier keeps its own name. An event name is a
+ * fixed vocabulary with no `builtIn` flag, so it is looked up whenever
+ * `EventName` knows it. A store refusing the sync read falls through to the
+ * raw name as well.
  * Runs in `setup()`; the returned function reads the locale on each call, so
  * a render using it follows a locale switch.
  */
@@ -74,7 +93,15 @@ export function useEntityNameTranslator() : (type: string, entity: EntityNamed) 
 
         const namespace = ENTITY_NAME_NAMESPACES[type];
 
-        if (!name || !namespace || !entity.builtIn) {
+        if (!name || !namespace) {
+            return name;
+        }
+
+        if (ENTITY_NAME_CLOSED_TYPES.includes(type)) {
+            if (!ENTITY_NAME_KEYS[type]?.includes(name)) {
+                return name;
+            }
+        } else if (!entity.builtIn) {
             return name;
         }
 

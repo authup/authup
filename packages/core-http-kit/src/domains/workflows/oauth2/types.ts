@@ -94,6 +94,12 @@ export type DeviceAuthorizationInfo = {
     client: ClientSummary,
     realm: RealmSummary,
     scope: string,
+    /**
+     * The scopes bound to the client, resolved like `AuthorizeInfo.scopes`,
+     * so the page can label a built-in one. A requested name without a row
+     * appears in `scope` only. Absent from a server that predates it.
+     */
+    scopes?: Scope[],
 };
 
 export type DeviceAuthorizationDecisionResponse = {

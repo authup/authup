@@ -6,7 +6,7 @@
  */
 
 import { SystemPolicyName } from '@authup/access';
-import { PermissionName, ScopeName } from '@authup/core-kit';
+import { EventName, PermissionName, ScopeName } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
 import type { Translations } from 'ilingo';
 import { describe, expect, it } from 'vitest';
@@ -43,6 +43,7 @@ const EXPECTED_KEYS: Record<`${TranslatorTranslationNamespace}`, string[]> = {
     [TranslatorTranslationNamespace.PERMISSION]: Object.values(PermissionName),
     [TranslatorTranslationNamespace.POLICY]: Object.values(SystemPolicyName),
     [TranslatorTranslationNamespace.SCOPE]: Object.values(ScopeName),
+    [TranslatorTranslationNamespace.EVENT]: Object.values(EventName),
 };
 
 /**

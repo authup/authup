@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionName, ScopeName } from '@authup/core-kit';
+import type { EventName, PermissionName, ScopeName } from '@authup/core-kit';
 import type { ErrorCode } from '@authup/errors';
 import {
     type NamespaceChild,
@@ -35,6 +35,7 @@ import {
     TranslatorTranslationCommonEnglish,
     TranslatorTranslationEntityEnglish,
     TranslatorTranslationErrorEnglish,
+    TranslatorTranslationEventEnglish,
     TranslatorTranslationFieldEnglish,
     TranslatorTranslationMailEnglish,
     TranslatorTranslationPermissionEnglish,
@@ -49,6 +50,7 @@ import {
     TranslatorTranslationCommonGerman,
     TranslatorTranslationEntityGerman,
     TranslatorTranslationErrorGerman,
+    TranslatorTranslationEventGerman,
     TranslatorTranslationFieldGerman,
     TranslatorTranslationMailGerman,
     TranslatorTranslationPermissionGerman,
@@ -63,6 +65,7 @@ import {
     TranslatorTranslationCommonFrench,
     TranslatorTranslationEntityFrench,
     TranslatorTranslationErrorFrench,
+    TranslatorTranslationEventFrench,
     TranslatorTranslationFieldFrench,
     TranslatorTranslationMailFrench,
     TranslatorTranslationPermissionFrench,
@@ -77,6 +80,7 @@ import {
     TranslatorTranslationCommonSpanish,
     TranslatorTranslationEntitySpanish,
     TranslatorTranslationErrorSpanish,
+    TranslatorTranslationEventSpanish,
     TranslatorTranslationFieldSpanish,
     TranslatorTranslationMailSpanish,
     TranslatorTranslationPermissionSpanish,
@@ -109,6 +113,7 @@ type LocaleNamespaces = {
     permission: NamespaceTranslations<`${PermissionName}`>,
     policy: NamespaceTranslations<SystemPolicyNameValue>,
     scope: NamespaceTranslations<`${ScopeName}`>,
+    event: NamespaceTranslations<`${EventName}`>,
 };
 
 /**
@@ -130,6 +135,7 @@ function defineAuthupLocale(code: string, namespaces: LocaleNamespaces) {
         defineNamespace(TranslatorTranslationNamespace.PERMISSION, [defineTranslations(namespaces.permission)]),
         defineNamespace(TranslatorTranslationNamespace.POLICY, [defineTranslations(namespaces.policy)]),
         defineNamespace(TranslatorTranslationNamespace.SCOPE, [defineTranslations(namespaces.scope)]),
+        defineNamespace(TranslatorTranslationNamespace.EVENT, [defineTranslations(namespaces.event)]),
     ];
 
     return defineLocale(code, children);
@@ -163,6 +169,7 @@ export const CATALOGS = defineCatalog([
         permission: TranslatorTranslationPermissionEnglish,
         policy: TranslatorTranslationPolicyEnglish,
         scope: TranslatorTranslationScopeEnglish,
+        event: TranslatorTranslationEventEnglish,
     }),
     defineAuthupLocale('de', {
         entity: TranslatorTranslationEntityGerman,
@@ -177,6 +184,7 @@ export const CATALOGS = defineCatalog([
         permission: TranslatorTranslationPermissionGerman,
         policy: TranslatorTranslationPolicyGerman,
         scope: TranslatorTranslationScopeGerman,
+        event: TranslatorTranslationEventGerman,
     }),
     defineAuthupLocale('fr', {
         entity: TranslatorTranslationEntityFrench,
@@ -191,6 +199,7 @@ export const CATALOGS = defineCatalog([
         permission: TranslatorTranslationPermissionFrench,
         policy: TranslatorTranslationPolicyFrench,
         scope: TranslatorTranslationScopeFrench,
+        event: TranslatorTranslationEventFrench,
     }),
     defineAuthupLocale('es', {
         entity: TranslatorTranslationEntitySpanish,
@@ -205,5 +214,6 @@ export const CATALOGS = defineCatalog([
         permission: TranslatorTranslationPermissionSpanish,
         policy: TranslatorTranslationPolicySpanish,
         scope: TranslatorTranslationScopeSpanish,
+        event: TranslatorTranslationEventSpanish,
     }),
 ]);

@@ -1,7 +1,7 @@
 <script lang="ts">
 
 import type { Event as EventEntity, Session, SessionToken } from '@authup/core-kit';
-import { PermissionName } from '@authup/core-kit';
+import { EntityType, PermissionName } from '@authup/core-kit';
 import { defineQuery } from '@rapiq/core';
 import {
     TranslatorTranslationActionKey,
@@ -18,6 +18,7 @@ import {
     ASessionTokens,
     injectHTTPClient,
     injectStore,
+    useEntityNameTranslator,
     usePermissionCheck,
     useTranslation,
     useTranslations,
@@ -47,6 +48,8 @@ export default defineComponent({
         const route = useRoute();
         const router = useRouter();
         const httpClient = injectHTTPClient();
+        const translateEntityName = useEntityNameTranslator();
+        const eventLabel = (row: EventEntity) => translateEntityName(EntityType.EVENT, row);
 
         // Resolves through inject(), so it has to run before the record fetch
         // below is awaited.
@@ -262,6 +265,7 @@ export default defineComponent({
         };
 
         return {
+            eventLabel,
             subTitle,
             breadcrumbItems,
             entity,
@@ -479,9 +483,9 @@ export default defineComponent({
                     >
                         <template #cell-name="{ row }">
                             <div class="leading-tight">
-                                {{ row.name }}
+                                {{ eventLabel(row) }}
                                 <div class="text-xs text-fg-muted">
-                                    {{ row.scope }}
+                                    {{ row.scope }}.{{ row.name }}
                                 </div>
                             </div>
                         </template>

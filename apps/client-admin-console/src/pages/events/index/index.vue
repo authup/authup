@@ -2,6 +2,7 @@
 
 import { defineQuery } from '@rapiq/core';
 import type { Event as EventEntity } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import {
     TranslatorTranslationAppKey,
     TranslatorTranslationFieldKey,
@@ -12,6 +13,7 @@ import {
     APagination,
     ASearch,
     ATitle,
+    useEntityNameTranslator,
     useTranslations,
 } from '@authup/client-web-kit';
 import { VCButton } from '@vuecs/button';
@@ -36,6 +38,9 @@ export default defineComponent({
         };
 
         const query = defineQuery<EventEntity>({ sorts: { createdAt: 'DESC' } });
+
+        const translateEntityName = useEntityNameTranslator();
+        const eventLabel = (row: EventEntity) => translateEntityName(EntityType.EVENT, row);
 
         const translations = useTranslations([
             {
@@ -106,6 +111,7 @@ export default defineComponent({
 
         return {
             columns,
+            eventLabel,
             handleFailed,
             query,
             shortenId,
@@ -142,9 +148,9 @@ export default defineComponent({
             >
                 <template #cell-name="{ row }">
                     <div class="leading-tight">
-                        {{ row.name }}
+                        {{ eventLabel(row) }}
                         <div class="text-xs text-fg-muted">
-                            {{ row.scope }}
+                            {{ row.scope }}.{{ row.name }}
                         </div>
                     </div>
                 </template>
