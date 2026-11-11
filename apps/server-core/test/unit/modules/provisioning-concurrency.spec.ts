@@ -35,6 +35,7 @@ import {
 } from 'vitest';
 import {
     CacheModule,
+    ConfigInjectionKey,
     ConfigModule,
     DefaultProvisioningSource,
     LoggerModule,
@@ -50,7 +51,7 @@ import {
     UserEntity,
 } from '../../../src/adapters/database/domains/index.ts';
 import { DatabaseInjectionKey } from '../../../src/app/modules/database/index.ts';
-import { createTestDatabaseModuleForSecondaryInstance } from '../../app/index.ts';
+import { buildTestRedisOptions, createTestDatabaseModuleForSecondaryInstance } from '../../app/index.ts';
 
 // The provisioning lock is a no-op on better-sqlite3: one database file per
 // container means a second replica cannot reach it, so there is nothing to
@@ -75,6 +76,7 @@ describe.skipIf(!lockable)('app/modules/provisioning (concurrency)', () => {
         di = new Container();
 
         await config.setup(di);
+        di.resolve(ConfigInjectionKey).redis = buildTestRedisOptions('provisioning-race');
         await logger.setup(di);
         await cache.setup(di);
         await database.setup(di);
@@ -91,6 +93,7 @@ describe.skipIf(!lockable)('app/modules/provisioning (concurrency)', () => {
 
     afterAll(async () => {
         await database.teardown(di);
+        await cache.teardown();
     });
 
     it('should not crash the losing replica on a unique constraint', () => {

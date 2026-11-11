@@ -12,8 +12,9 @@ import { wait } from '@authup/kit';
 import type { TestProject } from 'vitest/node';
 import type { StartedTestContainer } from 'testcontainers';
 import { GenericContainer } from 'testcontainers';
+import { Redis } from 'ioredis';
 import { ApplicationBuilder, DefaultProvisioningSource, ProvisionerModule } from '../src/index.ts';
-import { createTestDatabaseModuleForSetup } from './app/index.ts';
+import { TEST_REDIS_KEY_PREFIX, createTestDatabaseModuleForSetup } from './app/index.ts';
 
 export type DatabaseConnectionConfig = {
     type: string,
@@ -203,10 +204,37 @@ async function setupDatabase(project: TestProject) {
     project.provide('DATABASE_CONNECTION', connection);
 }
 
+// Redis outlives the per-run sqlite copies, so the keys of an earlier run are
+// removed; a Redis shared with anything else keeps every key outside the prefix.
+async function setupRedis() {
+    if (!process.env.TEST_REDIS_URL) {
+        return;
+    }
+
+    const client = new Redis(process.env.TEST_REDIS_URL);
+
+    try {
+        let cursor = '0';
+
+        do {
+            const [next, keys] = await client.scan(cursor, 'MATCH', `${TEST_REDIS_KEY_PREFIX}*`, 'COUNT', 1000);
+
+            if (keys.length > 0) {
+                await client.unlink(...keys);
+            }
+
+            cursor = next;
+        } while (cursor !== '0');
+    } finally {
+        client.disconnect();
+    }
+}
+
 async function setup(project: TestProject) {
     await Promise.all([
         setupLdap(project),
         setupDatabase(project),
+        setupRedis(),
     ]);
 
     const app = new ApplicationBuilder()
