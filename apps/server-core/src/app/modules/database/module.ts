@@ -24,12 +24,10 @@ import {
 } from 'typeorm-extension';
 import {
     DataSourceOptionsBuilder,
-    DatabaseQueryResultCache,
     EntitySubscriber,
     EventEntity,
     isDatabaseTypeSupported,
     isDatabaseTypeSupportedForEnvironment,
-    isFencedCacheKey,
 } from '../../../adapters/database/index.ts';
 import type { Event } from '@authup/core-kit';
 import { EntityEventHandler, EventService, schemaRegistry } from '../../../core/index.ts';
@@ -37,12 +35,7 @@ import { useRequestEventContext } from '../../../adapters/http/request/index.ts'
 import { EventRepositoryAdapter } from './repositories/index.ts';
 import { validateEntitySchemas } from './repositories/schema-validation.ts';
 import { verifySchemaOrSynchronize } from './migration.ts';
-import {
-    CacheInjectionKey,
-    TAGGED_CACHE_ERROR_LOG_INTERVAL,
-    TaggedCacheInjectionKey,
-    throttle,
-} from '../cache/index.ts';
+import { TAGGED_CACHE_ERROR_LOG_INTERVAL, TaggedCacheInjectionKey, throttle } from '../cache/index.ts';
 import { QUERY_CACHE_SCOPED_VALUE_NORMALIZER, QueryCache, resolveCacheSchemaName } from './cache/index.ts';
 import type { IModule, ModuleDependency } from 'orkos';
 import { ModuleName } from '../constants.ts';
@@ -249,18 +242,6 @@ export class DatabaseModule implements IModule {
 
         if (!isDatabaseTypeSupportedForEnvironment(options.type, config.env)) {
             throw new AuthupError(`Database type "${options.type}" is not supported in the ${config.env} environment. Set DB_TYPE to "postgres" or "mysql" together with DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD and DB_DATABASE, or declare "db" in authup.yml. With no database configured at all, "better-sqlite3" is the fallback.`);
-        }
-
-        const cacheResult = container.tryResolve(CacheInjectionKey);
-
-        if (cacheResult.success) {
-            Object.assign(options, {
-                cache: {
-                    provider() {
-                        return new DatabaseQueryResultCache(cacheResult.data, { fenced: isFencedCacheKey });
-                    },
-                },
-            } satisfies Partial<DataSourceOptions>);
         }
 
         return options;

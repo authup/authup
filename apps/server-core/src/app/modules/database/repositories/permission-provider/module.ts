@@ -16,8 +16,9 @@ import {
     aggregatePermissionPolicyBindings,
     buildPermissionKey,
 } from '@authup/access';
+import { EntityType } from '@authup/core-kit';
 import { InternalError } from '@authup/errors';
-import { buildCacheKey } from '@authup/server-kit';
+import { buildCollectionTag } from '@rapiq/cache';
 import type {
     DataSource,
     EntityTarget,
@@ -28,10 +29,6 @@ import type {
 import { IsNull } from 'typeorm';
 import type { IAuthorizationCatalogRepository, PermissionPolicies } from '../../../../../core/authorization/types.ts';
 import {
-    AUTHORIZATION_DEFINITIONS_CACHE_KEY,
-    AUTHORIZATION_EPOCH_CACHE_KEY,
-    AUTHORIZATION_GRANT_POLICIES_CACHE_KEY,
-    CachePrefix,
     ClientPermissionEntity,
     PermissionEntity,
     PermissionPolicyEntity,
@@ -39,18 +36,35 @@ import {
     RolePermissionEntity,
     UserPermissionEntity,
 } from '../../../../../adapters/database/domains/index.ts';
+import type { IQueryCache } from '../../cache/index.ts';
 import { loadPolicyTrees } from '../bindings.ts';
 
-const CATALOG_CACHE_DURATION = 60_000;
+const CATALOG_TAGS = [
+    EntityType.PERMISSION,
+    EntityType.PERMISSION_POLICY,
+    EntityType.POLICY,
+    EntityType.POLICY_ATTRIBUTE,
+    EntityType.ROLE_PERMISSION,
+    EntityType.USER_PERMISSION,
+    EntityType.CLIENT_PERMISSION,
+].map((schema) => buildCollectionTag(schema));
+
+function spellOwner(value: string | null | undefined) : string {
+    if (typeof value === 'undefined') {
+        return '*';
+    }
+
+    if (value === null) {
+        return '-';
+    }
+
+    // encodeURIComponent keeps '*' and '-' literal, so they are escaped too: an id never spells a marker.
+    return encodeURIComponent(value).replace(/[*-]/g, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`);
+}
 
 type DefinitionRows = {
     permissions: [BasePermission, string[]][],
     trees: Record<string, BasePolicy>,
-};
-
-type CatalogCacheEntry<T> = {
-    epoch: string,
-    value: T,
 };
 
 export class PermissionDatabaseProvider implements IPermissionProvider, IAuthorizationCatalogRepository {
@@ -62,8 +76,11 @@ export class PermissionDatabaseProvider implements IPermissionProvider, IAuthori
 
     protected policyRepository: PolicyRepository;
 
-    constructor(dataSource: DataSource) {
+    protected cache: IQueryCache;
+
+    constructor(dataSource: DataSource, cache: IQueryCache) {
         this.dataSource = dataSource;
+        this.cache = cache;
         this.repository = this.dataSource.getRepository(PermissionEntity);
         this.permissionPolicyRepository = this.dataSource.getRepository(PermissionPolicyEntity);
         this.policyRepository = new PolicyRepository(this.dataSource);
@@ -80,20 +97,11 @@ export class PermissionDatabaseProvider implements IPermissionProvider, IAuthori
             where.realmId = options.realmId === null ? IsNull() : options.realmId;
         }
 
-        const entity = await this.repository.findOne({
-            where,
-            cache: {
-                id: buildCacheKey({
-                    prefix: CachePrefix.PERMISSION,
-                    key: buildPermissionKey({
-                        name: options.name,
-                        clientId: options.clientId,
-                        realmId: options.realmId,
-                    }),
-                }),
-                milliseconds: 60_000,
-            },
-        });
+        const entity = await this.cache.remember(
+            `permission/${encodeURIComponent(options.name)}/${spellOwner(options.clientId)}/${spellOwner(options.realmId)}`,
+            () => [buildCollectionTag(EntityType.PERMISSION)],
+            () => this.repository.findOne({ where }),
+        );
 
         if (entity) {
             const junctions = await this.permissionPolicyRepository.find({
@@ -127,8 +135,9 @@ export class PermissionDatabaseProvider implements IPermissionProvider, IAuthori
     }
 
     async findDefinitions() : Promise<PermissionPolicies[]> {
-        const { permissions, trees } = await this.withCache(
-            AUTHORIZATION_DEFINITIONS_CACHE_KEY,
+        const { permissions, trees } = await this.cache.remember(
+            'authorization/definitions',
+            () => [...CATALOG_TAGS],
             () => this.readDefinitions(),
         );
 
@@ -151,66 +160,11 @@ export class PermissionDatabaseProvider implements IPermissionProvider, IAuthori
     }
 
     async findGrantPolicies() : Promise<BasePolicy[]> {
-        return this.withCache(AUTHORIZATION_GRANT_POLICIES_CACHE_KEY, () => this.readGrantPolicies());
-    }
-
-    /**
-     * Invalidated by the subscriber of every table the value derives from
-     * (AUTHORIZATION_CACHE_KEYS). A value is tagged with the epoch it was read
-     * in and served only while that epoch is still current: every invalidation
-     * drops the epoch, so a read that started before a write committed and
-     * stored its result after the invalidation is never served. The duration
-     * bounds a write that bypasses the subscribers (#3599).
-     * Cloned on the way out, since the memory cache hands back the stored
-     * reference and an evaluator may write to a policy it evaluates.
-     */
-    protected async withCache<T>(identifier: string, read: () => Promise<T>) : Promise<T> {
-        const cache = this.dataSource.queryResultCache;
-
-        if (!cache) {
-            return read();
-        }
-
-        const lookup = async (key: string) => {
-            const entry = await cache.getFromCache({
-                identifier: key,
-                query: '',
-                duration: CATALOG_CACHE_DURATION,
-            });
-
-            return entry && !cache.isExpired(entry) ? entry : undefined;
-        };
-
-        let epoch = (await lookup(AUTHORIZATION_EPOCH_CACHE_KEY))?.result as string | undefined;
-
-        if (epoch) {
-            const saved = (await lookup(identifier))?.result as CatalogCacheEntry<T> | undefined;
-
-            if (saved && saved.epoch === epoch) {
-                return structuredClone(saved.value);
-            }
-        } else {
-            epoch = crypto.randomUUID();
-            await cache.storeInCache({
-                identifier: AUTHORIZATION_EPOCH_CACHE_KEY,
-                time: Date.now(),
-                duration: CATALOG_CACHE_DURATION,
-                query: '',
-                result: epoch,
-            }, undefined);
-        }
-
-        const value = await read();
-
-        await cache.storeInCache({
-            identifier,
-            time: Date.now(),
-            duration: CATALOG_CACHE_DURATION,
-            query: '',
-            result: { epoch, value } satisfies CatalogCacheEntry<T>,
-        }, undefined);
-
-        return structuredClone(value);
+        return this.cache.remember(
+            'authorization/grant-policies',
+            () => [...CATALOG_TAGS],
+            () => this.readGrantPolicies(),
+        );
     }
 
     /**

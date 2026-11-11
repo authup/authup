@@ -75,9 +75,8 @@ export interface IConsentRepository {
     findOneById(id: string): Promise<Consent | null>;
 
     /**
-     * Covering-lookup source — query-cached
-     * (`CachePrefix.CONSENT_COVERING`, 60s), invalidated by the
-     * `ConsentEntitySubscriber` on insert/update/remove.
+     * Covering-lookup source. Cached for 60s and invalidated by every
+     * consent write of the client (#3688).
      */
     findAllBySubjectClient(clientId: string, owner: ConsentOwner): Promise<Consent[]>;
 

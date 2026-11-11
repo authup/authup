@@ -5,14 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildPermissionKey } from '@authup/access';
 import type { Permission } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
-import { buildRedisKeyPath } from '@authup/server-kit';
 import { EventSubscriber } from 'typeorm';
 import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { PermissionEntity } from './entity.ts';
-import { AUTHORIZATION_CACHE_KEYS, CachePrefix } from '../constants.ts';
 
 @EventSubscriber()
 export class PermissionSubscriber extends EntitySubscriber<Permission> {
@@ -21,24 +18,6 @@ export class PermissionSubscriber extends EntitySubscriber<Permission> {
             type: EntityType.PERMISSION,
             target: PermissionEntity,
             destinations: buildEntityDestinations(EntityType.PERMISSION),
-            cache: {
-                onInsert: true,
-                keys: (data) => [
-                    buildRedisKeyPath({
-                        prefix: CachePrefix.PERMISSION,
-                        key: data.id,
-                    }),
-                    buildRedisKeyPath({
-                        prefix: CachePrefix.PERMISSION,
-                        key: buildPermissionKey({
-                            name: data.name,
-                            clientId: data.clientId,
-                            realmId: data.realmId,
-                        }),
-                    }),
-                    ...AUTHORIZATION_CACHE_KEYS,
-                ],
-            },
         });
     }
 }

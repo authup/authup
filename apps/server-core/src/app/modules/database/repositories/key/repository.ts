@@ -43,7 +43,7 @@ import {
     hasUnmatchableId,
     translateWhereConditions,
 } from '../helpers.ts';
-import { RealmRepositoryAdapter } from '../realm/repository.ts';
+import { createRealmNameResolver } from '../realm/repository.ts';
 
 export type KeyRepositoryAdapterOptions = {
     /**
@@ -78,7 +78,7 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
         this.dataSource = dataSource;
         this.secretsCipher = options.secretsCipher ?? null;
         this.logger = options.logger;
-        this.realmRepository = new RealmRepositoryAdapter(dataSource.getRepository(RealmEntity));
+        this.realmRepository = createRealmNameResolver(dataSource.getRepository(RealmEntity));
     }
 
     protected get repository() : Repository<KeyEntity> {

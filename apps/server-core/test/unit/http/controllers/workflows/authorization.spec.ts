@@ -292,8 +292,6 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
             }));
         }
 
-        await suite.dataSource.queryResultCache?.clear();
-
         const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
         const introspection = await suite.client.token.introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
 
@@ -435,7 +433,6 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
             realmScope: 'any',
             policyId: restriction.id,
         }));
-        await suite.dataSource.queryResultCache?.clear();
 
         const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
         const introspection = await suite.client.token.introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
@@ -506,7 +503,6 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
             realmScope: 'any',
             policyId: unsupported.id,
         }));
-        await suite.dataSource.queryResultCache?.clear();
 
         const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
         const introspection = await suite.client.token.introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });

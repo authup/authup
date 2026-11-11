@@ -421,7 +421,10 @@ export class HTTPControllerModule {
             oauth2ClientAuthenticator,
             certificateSource: config.certificateSource,
 
-            realmRepository: new RealmRepositoryAdapter(container.resolve<Repository<Realm>>(RealmEntity)),
+            realmRepository: new RealmRepositoryAdapter(
+                container.resolve<Repository<Realm>>(RealmEntity),
+                container.resolve(DatabaseInjectionKey.QueryCache),
+            ),
 
             sessionManager,
         });
@@ -452,7 +455,10 @@ export class HTTPControllerModule {
         return new DeviceAuthorizationController({
             service,
             clientAuthenticator: this.createOAuth2ClientAuthenticator(container),
-            realmRepository: new RealmRepositoryAdapter(container.resolve<Repository<Realm>>(RealmEntity)),
+            realmRepository: new RealmRepositoryAdapter(
+                container.resolve<Repository<Realm>>(RealmEntity),
+                container.resolve(DatabaseInjectionKey.QueryCache),
+            ),
             certificateSource: config.certificateSource,
         });
     }
@@ -503,7 +509,7 @@ export class HTTPControllerModule {
         const repository = new UserRepositoryAdapter({
             repository: new UserRepository(dataSource),
             realmRepository,
-        });
+        }, container.resolve(DatabaseInjectionKey.QueryCache));
         const mailClient = container.resolve(MailInjectionKey);
         const mailTemplateRenderer = container.resolve(MailTemplateRendererInjectionKey);
 
@@ -511,7 +517,7 @@ export class HTTPControllerModule {
             mailClient,
             mailTemplateRenderer,
             repository,
-            realmRepository: new RealmRepositoryAdapter(realmRepository),
+            realmRepository: new RealmRepositoryAdapter(realmRepository, container.resolve(DatabaseInjectionKey.QueryCache)),
             eventService: container.resolve(DatabaseInjectionKey.EventService),
             sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
             options: {
@@ -537,7 +543,10 @@ export class HTTPControllerModule {
         const tokenVerifier = container.resolve(OAuth2InjectionToken.TokenVerifier);
         const sessionManager = container.resolve(AuthenticationInjectionKey.SessionManager);
         const clientRepository = container.resolve(OAuth2InjectionToken.ClientRepository);
-        const realmRepository = new RealmRepositoryAdapter(container.resolve<Repository<Realm>>(RealmEntity));
+        const realmRepository = new RealmRepositoryAdapter(
+            container.resolve<Repository<Realm>>(RealmEntity),
+            container.resolve(DatabaseInjectionKey.QueryCache),
+        );
 
         const endSessionService = new OAuth2EndSessionService({
             tokenVerifier,
@@ -636,7 +645,7 @@ export class HTTPControllerModule {
         const repository = new UserRepositoryAdapter({
             repository: new UserRepository(dataSource),
             realmRepository,
-        });
+        }, container.resolve(DatabaseInjectionKey.QueryCache));
         const mailClient = container.resolve(MailInjectionKey);
         const mailTemplateRenderer = container.resolve(MailTemplateRendererInjectionKey);
 
@@ -644,7 +653,7 @@ export class HTTPControllerModule {
             mailClient,
             mailTemplateRenderer,
             repository,
-            realmRepository: new RealmRepositoryAdapter(realmRepository),
+            realmRepository: new RealmRepositoryAdapter(realmRepository, container.resolve(DatabaseInjectionKey.QueryCache)),
             eventService: container.resolve(DatabaseInjectionKey.EventService),
             options: {
                 registrationEnabled: config.registrationEnabled,
@@ -676,7 +685,7 @@ export class HTTPControllerModule {
             options: { baseURL: config.publicUrl },
 
             accountManager,
-            realmRepository: new RealmRepositoryAdapter(realmRepository),
+            realmRepository: new RealmRepositoryAdapter(realmRepository, container.resolve(DatabaseInjectionKey.QueryCache)),
             codeRequestVerifier,
 
             sessionManager: container.resolve(AuthenticationInjectionKey.SessionManager),
@@ -697,7 +706,7 @@ export class HTTPControllerModule {
             },
 
             repository,
-            realmRepository: new RealmRepositoryAdapter(realmRepository),
+            realmRepository: new RealmRepositoryAdapter(realmRepository, container.resolve(DatabaseInjectionKey.QueryCache)),
             accountManager,
             linkStore,
 
@@ -719,8 +728,8 @@ export class HTTPControllerModule {
         const repository = new ClientRepositoryAdapter({
             repository: container.resolve<Repository<Client>>(ClientEntity),
             realmRepository,
-        });
-        const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository);
+        }, container.resolve(DatabaseInjectionKey.QueryCache));
+        const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository, container.resolve(DatabaseInjectionKey.QueryCache));
         const service = new ClientService({
             repository,
             realmRepository: realmRepositoryAdapter,
@@ -759,7 +768,7 @@ export class HTTPControllerModule {
         return new RoleRepositoryAdapter({
             repository: container.resolve<Repository<Role>>(RoleEntity),
             realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
-        });
+        }, container.resolve(DatabaseInjectionKey.QueryCache));
     }
 
     async createPermissionController(container: IContainer) {
@@ -770,11 +779,11 @@ export class HTTPControllerModule {
             realmRepository,
         });
 
-        const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository);
+        const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository, container.resolve(DatabaseInjectionKey.QueryCache));
         const roleRepository = new RoleRepositoryAdapter({
             repository: container.resolve<Repository<Role>>(RoleEntity),
             realmRepository,
-        });
+        }, container.resolve(DatabaseInjectionKey.QueryCache));
         const rolePermissionRepository = new RolePermissionRepositoryAdapter(
             container.resolve<Repository<RolePermission>>(RolePermissionEntity),
         );
@@ -800,7 +809,7 @@ export class HTTPControllerModule {
             repository,
             realmRepository: realmRepositoryAdapter,
             identityResolver: container.resolve(IdentityInjectionKey.Resolver),
-            permissionProvider: new PermissionDatabaseProvider(dataSource),
+            permissionProvider: new PermissionDatabaseProvider(dataSource, container.resolve(DatabaseInjectionKey.QueryCache)),
             identityPermissionProvider: container.resolve(IdentityInjectionKey.PermissionProvider),
         });
 
@@ -818,11 +827,12 @@ export class HTTPControllerModule {
     createRoleController(container: IContainer) {
         const realmRepository = new RealmRepositoryAdapter(
             container.resolve<Repository<Realm>>(RealmEntity),
+            container.resolve(DatabaseInjectionKey.QueryCache),
         );
         const repository = new RoleRepositoryAdapter({
             repository: container.resolve<Repository<Role>>(RoleEntity),
             realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
-        });
+        }, container.resolve(DatabaseInjectionKey.QueryCache));
         const service = new RoleService({
             repository,
             realmRepository,
@@ -924,6 +934,7 @@ export class HTTPControllerModule {
     createScopeController(container: IContainer) {
         const realmRepository = new RealmRepositoryAdapter(
             container.resolve<Repository<Realm>>(RealmEntity),
+            container.resolve(DatabaseInjectionKey.QueryCache),
         );
         const repository = new ScopeRepositoryAdapter({
             repository: container.resolve<Repository<Scope>>(ScopeEntity),
@@ -947,6 +958,7 @@ export class HTTPControllerModule {
     createPathController(container: IContainer) {
         const realmRepository = new RealmRepositoryAdapter(
             container.resolve<Repository<Realm>>(RealmEntity),
+            container.resolve(DatabaseInjectionKey.QueryCache),
         );
         const repository = new PathRepositoryAdapter({
             repository: container.resolve<Repository<Path>>(PathEntity),
@@ -1062,6 +1074,7 @@ export class HTTPControllerModule {
                 repository: new UserRepository(dataSource),
                 userPermissionRepository: container.resolve<Repository<UserPermission>>(UserPermissionEntity),
                 userRoleRepository: container.resolve<Repository<UserRole>>(UserRoleEntity),
+                cache: container.resolve(DatabaseInjectionKey.QueryCache),
             }),
             eventService: container.resolve(DatabaseInjectionKey.EventService),
             requestContext: useRequestEventContext,
@@ -1113,7 +1126,7 @@ export class HTTPControllerModule {
         const userRepository = new UserRepositoryAdapter({
             repository: new UserRepository(dataSource),
             realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
-        });
+        }, container.resolve(DatabaseInjectionKey.QueryCache));
 
         let issuer : string | undefined;
         let webauthn : {
@@ -1262,8 +1275,8 @@ export class HTTPControllerModule {
         const repository = new UserRepositoryAdapter({
             repository: new UserRepository(dataSource),
             realmRepository,
-        });
-        const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository);
+        }, container.resolve(DatabaseInjectionKey.QueryCache));
+        const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository, container.resolve(DatabaseInjectionKey.QueryCache));
 
         return new UserService({
             repository,
@@ -1297,7 +1310,10 @@ export class HTTPControllerModule {
 
     createAuthorizationController(container: IContainer) {
         return new AuthorizationController({
-            catalogRepository: new PermissionDatabaseProvider(container.resolve(DatabaseInjectionKey.DataSource)),
+            catalogRepository: new PermissionDatabaseProvider(
+                container.resolve(DatabaseInjectionKey.DataSource),
+                container.resolve(DatabaseInjectionKey.QueryCache),
+            ),
             logger: container.resolve(LoggerInjectionKey),
         });
     }
@@ -1350,7 +1366,7 @@ export class HTTPControllerModule {
             repository: new PolicyRepository(dataSource),
             realmRepository,
         });
-        const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository);
+        const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository, container.resolve(DatabaseInjectionKey.QueryCache));
         const service = new PolicyService({
             repository,
             realmRepository: realmRepositoryAdapter,
@@ -1400,12 +1416,12 @@ export class HTTPControllerModule {
         const config = container.resolve(ConfigInjectionKey);
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
-        const repository = new RealmRepositoryAdapter(realmRepository);
+        const repository = new RealmRepositoryAdapter(realmRepository, container.resolve(DatabaseInjectionKey.QueryCache));
 
         const clientRepository = new ClientRepositoryAdapter({
             repository: container.resolve<Repository<Client>>(ClientEntity),
             realmRepository,
-        });
+        }, container.resolve(DatabaseInjectionKey.QueryCache));
         const logger = container.resolve(LoggerInjectionKey);
         const systemClientProvisioner = new SystemClientProvisioner({
             clientRepository,

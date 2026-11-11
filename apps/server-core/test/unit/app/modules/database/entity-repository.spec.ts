@@ -27,6 +27,7 @@ import {
     UserRoleEntity,
 } from '../../../../../src/adapters/database/domains/index.ts';
 import { decodeQuery } from '../../../../../src/core/query/index.ts';
+import { DatabaseInjectionKey } from '../../../../../src/app/modules/database/constants.ts';
 import {
     PolicyRepositoryAdapter,
     RoleRepositoryAdapter,
@@ -54,12 +55,14 @@ describe('app/modules/database/repositories/entity', () => {
 
         const { dataSource } = suite;
 
+        const queryCache = suite.container.resolve(DatabaseInjectionKey.QueryCache);
+
         realm = (await dataSource.getRepository(RealmEntity).findOneBy({ name: 'master' }))!;
 
         roles = new RoleRepositoryAdapter({
             repository: dataSource.getRepository(RoleEntity),
             realmRepository: dataSource.getRepository(RealmEntity),
-        });
+        }, queryCache);
         policies = new PolicyRepositoryAdapter({
             repository: new PolicyRepository(dataSource),
             realmRepository: dataSource.getRepository(RealmEntity),
@@ -67,7 +70,7 @@ describe('app/modules/database/repositories/entity', () => {
         users = new UserRepositoryAdapter({
             repository: new UserRepository(dataSource),
             realmRepository: dataSource.getRepository(RealmEntity),
-        });
+        }, queryCache);
         userRoles = new UserRoleRepositoryAdapter(dataSource.getRepository(UserRoleEntity));
         userAttributes = new UserAttributeRepositoryAdapter(dataSource.getRepository(UserAttributeEntity));
     });

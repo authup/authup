@@ -17,6 +17,7 @@ import {
 } from 'vitest';
 import { RealmEntity } from '../../../../../src/adapters/database/domains/index.ts';
 import { RealmRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/index.ts';
+import { DatabaseInjectionKey } from '../../../../../src/app/index.ts';
 import { createTestDatabaseApplication } from '../../../../app';
 
 describe('app/modules/database/repositories/realm', () => {
@@ -27,7 +28,10 @@ describe('app/modules/database/repositories/realm', () => {
     beforeAll(async () => {
         await suite.setup();
 
-        realms = new RealmRepositoryAdapter(suite.dataSource.getRepository(RealmEntity));
+        realms = new RealmRepositoryAdapter(
+            suite.dataSource.getRepository(RealmEntity),
+            suite.container.resolve(DatabaseInjectionKey.QueryCache),
+        );
     });
 
     afterAll(async () => {

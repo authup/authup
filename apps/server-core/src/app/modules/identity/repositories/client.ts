@@ -5,18 +5,22 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import { buildRedisKeyPath } from '@authup/server-kit';
 import { isUUID } from '@authup/kit';
 import type { Client } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
+import { buildCollectionTag, buildRecordTag } from '@rapiq/cache';
 import type { Repository } from 'typeorm';
 import type { IClientIdentityRepository } from '../../../../core/index.ts';
-import { CachePrefix } from '../../../../adapters/database/domains/index.ts';
+import type { IQueryCache } from '../../database/index.ts';
 
 export class ClientIdentityRepository implements IClientIdentityRepository {
     private readonly repository: Repository<Client>;
 
-    constructor(repository: Repository<Client>) {
+    private readonly cache: IQueryCache;
+
+    constructor(repository: Repository<Client>, cache: IQueryCache) {
         this.repository = repository;
+        this.cache = cache;
     }
 
     async findOneById(id: string): Promise<Client | null> {
@@ -40,7 +44,7 @@ export class ClientIdentityRepository implements IClientIdentityRepository {
             .leftJoinAndSelect('client.realm', 'realm');
 
         // A uuid compares case-insensitively on the server dialects, so it is
-        // canonicalized here: the cache key must be the one the subscriber drops.
+        // canonicalized here: one cache key serves every spelling.
         const isId = isUUID(input);
         const key = isId ? input.toLowerCase() : input;
 
@@ -66,16 +70,19 @@ export class ClientIdentityRepository implements IClientIdentityRepository {
             }
         }
 
-        if (isId) {
-            query.cache(
-                buildRedisKeyPath({
-                    prefix: CachePrefix.CLIENT,
-                    key,
-                }),
-                60_000,
-            );
+        if (!isId) {
+            return query.getOne();
         }
 
-        return query.getOne();
+        // the path unwind updates clients by criteria, which bumps the collection tag alone
+        return this.cache.remember(
+            `identity/client/${key}`,
+            (value) => [
+                buildCollectionTag(EntityType.CLIENT),
+                ...(value ? [buildRecordTag(EntityType.REALM, value.realmId)] : []),
+            ],
+            () => query.getOne(),
+            { manager: this.repository.manager },
+        );
     }
 }

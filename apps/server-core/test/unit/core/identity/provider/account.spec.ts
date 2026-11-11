@@ -56,6 +56,7 @@ import {
     UserRoleEntity,
 } from '../../../../../src';
 import { RealmRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/realm/repository';
+import { DatabaseInjectionKey } from '../../../../../src/app/index.ts';
 import { createTestApplication } from '../../../../app';
 
 describe('core/identity/provider/account', () => {
@@ -78,6 +79,7 @@ describe('core/identity/provider/account', () => {
 
         const realmRepository = new RealmRepositoryAdapter(
             suite.dataSource.getRepository(RealmEntity),
+            suite.container.resolve(DatabaseInjectionKey.QueryCache),
         );
 
         realm = await realmRepository.resolve('', true);
@@ -119,6 +121,7 @@ describe('core/identity/provider/account', () => {
             repository: new UserRepository(suite.dataSource),
             userPermissionRepository: suite.dataSource.getRepository(UserPermissionEntity),
             userRoleRepository: suite.dataSource.getRepository(UserRoleEntity),
+            cache: suite.container.resolve(DatabaseInjectionKey.QueryCache),
         });
 
         accountManagerContext = {

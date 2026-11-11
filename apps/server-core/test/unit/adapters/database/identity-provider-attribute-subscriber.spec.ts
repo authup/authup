@@ -30,20 +30,15 @@ function buildUpdateEvent(
     entity: IdentityProviderAttribute,
     databaseEntity: IdentityProviderAttribute,
 ): UpdateEvent<IdentityProviderAttribute> {
-    // The subscriber only reads entity / databaseEntity / connection, and
-    // dropCacheKeys returns early without a queryResultCache.
+    // The subscriber only reads entity / databaseEntity / manager.
     return {
         entity,
         databaseEntity,
-        connection: {},
     } as unknown as UpdateEvent<IdentityProviderAttribute>;
 }
 
 function buildInsertEvent(entity: IdentityProviderAttribute): InsertEvent<IdentityProviderAttribute> {
-    return {
-        entity,
-        connection: {},
-    } as unknown as InsertEvent<IdentityProviderAttribute>;
+    return { entity } as unknown as InsertEvent<IdentityProviderAttribute>;
 }
 
 function createPublisherSpy() {

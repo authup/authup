@@ -29,6 +29,7 @@ import type { IIdentityPermissionProvider } from '../../../../../src/core';
 import { IdentityInjectionKey } from '../../../../../src/app/modules/identity/index.ts';
 import { PolicyRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/policy/repository.ts';
 import { RealmRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/realm/repository.ts';
+import { DatabaseInjectionKey } from '../../../../../src/app/index.ts';
 import { createTestApplication } from '../../../../app';
 
 describe('core/identity/policy/checker', () => {
@@ -45,7 +46,7 @@ describe('core/identity/policy/checker', () => {
         adminUser = await userRepository.findOneByOrFail({ name: 'admin' }) as unknown as UserEntity;
 
         const realmEntityRepository = suite.dataSource.getRepository(RealmEntity);
-        const realmRepository = new RealmRepositoryAdapter(realmEntityRepository);
+        const realmRepository = new RealmRepositoryAdapter(realmEntityRepository, suite.container.resolve(DatabaseInjectionKey.QueryCache));
         const policyRepository = new PolicyRepositoryAdapter({
             repository: new PolicyRepository(suite.dataSource),
             realmRepository: realmEntityRepository,

@@ -192,14 +192,15 @@ export class ProvisionerModule implements IModule {
             permissionPolicyRepository,
         });
 
+        const queryCache = container.resolve(DatabaseInjectionKey.QueryCache);
         const roleRepository = new RoleRepositoryAdapter({
             repository: container.resolve<Repository<Role>>(RoleEntity),
             realmRepository,
-        });
+        }, queryCache);
         const clientRepository = new ClientRepositoryAdapter({
             repository: container.resolve<Repository<Client>>(ClientEntity),
             realmRepository,
-        });
+        }, queryCache);
         const scopeRepository = new ScopeRepositoryAdapter({
             repository: container.resolve<Repository<Scope>>(ScopeEntity),
             realmRepository,
@@ -276,7 +277,7 @@ export class ProvisionerModule implements IModule {
             userRepository: new UserRepositoryAdapter({
                 repository: new UserRepository(dataSource),
                 realmRepository,
-            }),
+            }, queryCache),
             userRoleRepository: new UserRoleRepositoryAdapter(
                 container.resolve<Repository<UserRole>>(UserRoleEntity),
             ),
@@ -294,7 +295,7 @@ export class ProvisionerModule implements IModule {
         const pathSynchronizer = new PathProvisioningSynchronizer({ repository: pathRepository });
 
         const realmSynchronizer = new RealmProvisioningSynchronizer({
-            repository: new RealmRepositoryAdapter(realmRepository),
+            repository: new RealmRepositoryAdapter(realmRepository, queryCache),
 
             clientSynchronizer,
             roleSynchronizer,

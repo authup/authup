@@ -7,11 +7,9 @@
 
 import type { Client } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
-import { buildRedisKeyPath } from '@authup/server-kit';
 import { EventSubscriber } from 'typeorm';
 import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { ClientEntity } from './entity.ts';
-import { AUTHORIZATION_CACHE_KEYS, CachePrefix } from '../constants.ts';
 
 @EventSubscriber()
 export class ClientSubscriber extends EntitySubscriber<Client> {
@@ -20,17 +18,6 @@ export class ClientSubscriber extends EntitySubscriber<Client> {
             type: EntityType.CLIENT,
             target: ClientEntity,
             destinations: buildEntityDestinations(EntityType.CLIENT, (data) => [data.realmId]),
-            cache: {
-                keys: (data) => [
-                    buildRedisKeyPath({
-                        prefix: CachePrefix.CLIENT,
-                        key: data.id,
-                    }),
-                    // a client delete sets auth_permissions.client_id to NULL
-                    // by foreign key, which runs no permission subscriber
-                    ...AUTHORIZATION_CACHE_KEYS,
-                ],
-            },
         });
     }
 }

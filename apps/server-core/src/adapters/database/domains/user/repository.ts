@@ -7,7 +7,6 @@
 
 import type { User, UserAttribute } from '@authup/core-kit';
 import type { DataSource, EntityManager } from 'typeorm';
-import { CachePrefix } from '../constants.ts';
 import { EARepository } from '../../extra-attribute-repository/index.ts';
 import { UserAttributeEntity } from '../user-attribute/index.ts';
 import { UserEntity } from './entity.ts';
@@ -25,7 +24,6 @@ export class UserRepository extends EARepository<User, UserAttribute> {
             entityPrimaryColumn: 'id',
             attributeEntity: UserAttributeEntity,
             attributeForeignColumn: 'userId',
-            cachePrefix: CachePrefix.USER_OWNED_ATTRIBUTES,
         });
     }
 }

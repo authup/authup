@@ -7,6 +7,7 @@
 
 import {
     afterAll,
+    afterEach,
     beforeAll,
     describe,
     expect,
@@ -15,35 +16,46 @@ import {
 } from 'vitest';
 import type { BasePolicy } from '@authup/access';
 import { BuiltInPolicyType } from '@authup/access';
+import { EntityType } from '@authup/core-kit';
+import type { ITaggedCache } from '@rapiq/cache';
 import { PermissionDatabaseProvider } from '../../../../../src/app/modules/database/repositories/permission-provider/module.ts';
 import {
-    AUTHORIZATION_DEFINITIONS_CACHE_KEY,
-    AUTHORIZATION_EPOCH_CACHE_KEY,
     ClientPermissionEntity,
     PermissionEntity,
     PermissionPolicyEntity,
     PolicyAttributeEntity,
     PolicyEntity,
-    PolicyRepository,
     RolePermissionEntity,
     UserEntity,
     UserPermissionEntity,
 } from '../../../../../src/adapters/database/domains/index.ts';
+import { DatabaseInjectionKey, TaggedCacheInjectionKey } from '../../../../../src/app/index.ts';
 import { createTestApplication } from '../../../../app';
 import { createFakeClient, createFakeRealm, createFakeRole } from '../../../../utils';
 import { createFakeTimePolicy } from '../../../../utils/domains/policy';
+
+const DEFINITIONS_KEY = 'authorization/definitions';
 
 function readId(policy: BasePolicy) : string {
     return (policy as { id: string }).id;
 }
 
-describe('app/modules/database/repositories/permission-provider (cache, #3599)', () => {
+describe('app/modules/database/repositories/permission-provider (cache, #3599, #3688)', () => {
     const suite = createTestApplication();
     let provider : PermissionDatabaseProvider;
+    let tagged : ITaggedCache;
 
     beforeAll(async () => {
         await suite.setup();
-        provider = new PermissionDatabaseProvider(suite.dataSource);
+        provider = new PermissionDatabaseProvider(
+            suite.dataSource,
+            suite.container.resolve(DatabaseInjectionKey.QueryCache),
+        );
+        tagged = suite.container.resolve(TaggedCacheInjectionKey);
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
     });
 
     afterAll(async () => {
@@ -62,26 +74,22 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
         return trees.find((tree) => readId(tree) === id);
     }
 
-    it('has a query result cache to serve from', () => {
-        expect(suite.dataSource.queryResultCache).toBeDefined();
-    });
-
     it('serves a second read from the cache', async () => {
         await provider.findDefinitions();
         await provider.findGrantPolicies();
 
-        const spy = vi.spyOn(PolicyRepository.prototype, 'findDescendantsTreeById');
+        const find = vi.spyOn(suite.dataSource.manager.getRepository(PermissionEntity), 'find');
+        const junctionFind = vi.spyOn(suite.dataSource.manager.getRepository(PermissionPolicyEntity), 'find');
+        const grantRead = vi.spyOn(suite.dataSource.manager.getRepository(RolePermissionEntity), 'createQueryBuilder');
 
-        try {
-            const definitions = await provider.findDefinitions();
-            const trees = await provider.findGrantPolicies();
+        const definitions = await provider.findDefinitions();
+        const trees = await provider.findGrantPolicies();
 
-            expect(definitions.length).toBeGreaterThan(0);
-            expect(Array.isArray(trees)).toBe(true);
-            expect(spy).not.toHaveBeenCalled();
-        } finally {
-            spy.mockRestore();
-        }
+        expect(definitions.length).toBeGreaterThan(0);
+        expect(Array.isArray(trees)).toBe(true);
+        expect(find).not.toHaveBeenCalled();
+        expect(junctionFind).not.toHaveBeenCalled();
+        expect(grantRead).not.toHaveBeenCalled();
     });
 
     it('hands out a copy, so a caller cannot write into the cached value', async () => {
@@ -101,7 +109,7 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
     });
 
     it('hands out a copy on a cache miss too', async () => {
-        await suite.dataSource.queryResultCache!.remove([AUTHORIZATION_DEFINITIONS_CACHE_KEY]);
+        await tagged.invalidate([EntityType.PERMISSION]);
 
         const first = await provider.findDefinitions();
         const [permission] = first[0]!;
@@ -115,31 +123,34 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
         expect(second.some(([entry]) => entry.name === name)).toBe(true);
     });
 
-    it('drops the keys again once the writing transaction commits', async () => {
-        const cache = suite.dataSource.queryResultCache!;
-        const store = (identifier: string, result: unknown) => cache.storeInCache({
-            identifier,
-            time: Date.now(),
-            duration: 60_000,
-            query: '',
-            result,
-        }, undefined);
+    it('drops an entry stored during the writing transaction once it commits', async () => {
+        const stale = { permissions: [], trees: {} };
+
+        await tagged.invalidate([EntityType.PERMISSION]);
 
         await suite.dataSource.transaction(async (manager) => {
             const permissions = manager.getRepository(PermissionEntity);
 
             await permissions.save(permissions.create({ name: 'issue3599_committed' }));
 
-            // a concurrent reader repopulating the keys with pre-commit rows
-            await store(AUTHORIZATION_EPOCH_CACHE_KEY, 'stale');
-            await store(AUTHORIZATION_DEFINITIONS_CACHE_KEY, { epoch: 'stale', value: [] });
+            // a concurrent reader repopulating the key with pre-commit rows
+            await tagged.remember(
+                DEFINITIONS_KEY,
+                async () => stale,
+                { tags: () => [EntityType.PERMISSION] },
+            );
+
+            const stored = await tagged.remember(
+                DEFINITIONS_KEY,
+                async () => {
+                    throw new Error('The stale entry was not stored.');
+                },
+                { tags: () => [] },
+            );
+
+            expect(stored).toEqual(stale);
         });
 
-        expect(await cache.getFromCache({
-            identifier: AUTHORIZATION_EPOCH_CACHE_KEY,
-            query: '',
-            duration: 60_000,
-        })).toBeUndefined();
         expect(await findDefinition('issue3599_committed')).toBeDefined();
     });
 
@@ -149,10 +160,11 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
         await provider.findDefinitions();
 
         // A read takes its rows, a write commits and invalidates, a second
-        // reader starts a new epoch and stores fresh rows, and only then does
-        // the first read store its stale rows over them.
-        const original = (provider as unknown as { readDefinitions: () => Promise<unknown> }).readDefinitions.bind(provider);
-        const spy = vi.spyOn(provider as unknown as { readDefinitions: () => Promise<unknown> }, 'readDefinitions')
+        // reader stores fresh rows, and only then does the first read try to
+        // store its stale rows over them.
+        type Reader = { readDefinitions: () => Promise<unknown> };
+        const original = (provider as unknown as Reader).readDefinitions.bind(provider);
+        const spy = vi.spyOn(provider as unknown as Reader, 'readDefinitions')
             .mockImplementationOnce(async () => {
                 const rows = await original();
 
@@ -162,15 +174,12 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
                 return rows;
             });
 
-        try {
-            await suite.dataSource.queryResultCache!.remove([AUTHORIZATION_DEFINITIONS_CACHE_KEY]);
-            await provider.findDefinitions();
+        await tagged.invalidate([EntityType.PERMISSION]);
+        await provider.findDefinitions();
 
-            expect(await findDefinition('issue3599_overtaken')).toBeDefined();
-            expect(spy).toHaveBeenCalledTimes(3);
-        } finally {
-            spy.mockRestore();
-        }
+        expect(await findDefinition('issue3599_overtaken')).toBeDefined();
+        // the overtaken store was refused, so the fresh entry is the one served
+        expect(spy).toHaveBeenCalledTimes(2);
     });
 
     it('sees a subtree moved under a bound policy', async () => {
@@ -242,15 +251,17 @@ describe('app/modules/database/repositories/permission-provider (cache, #3599)',
     });
 
     it('keeps every policy tree once', async () => {
-        await suite.dataSource.queryResultCache!.remove([AUTHORIZATION_DEFINITIONS_CACHE_KEY]);
+        await tagged.invalidate([EntityType.PERMISSION]);
         await provider.findDefinitions();
 
-        const entry = await suite.dataSource.queryResultCache!.getFromCache({
-            identifier: AUTHORIZATION_DEFINITIONS_CACHE_KEY,
-            query: '',
-            duration: 60_000,
-        });
-        const { value } = entry!.result as { value: { permissions: [unknown, string[]][], trees: Record<string, unknown> } };
+        type Stored = { permissions: [unknown, string[]][], trees: Record<string, unknown> };
+        const value = await tagged.remember<Stored>(
+            DEFINITIONS_KEY,
+            async () => {
+                throw new Error('The definitions were not stored.');
+            },
+            { tags: () => [] },
+        );
         const bound = new Set(value.permissions.flatMap(([, ids]) => ids));
 
         expect(Object.keys(value.trees).sort()).toEqual([...bound].sort());

@@ -11,7 +11,7 @@ import { RealmEntity, TrustAnchorEntity } from '../../../../../adapters/database
 import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
 import type { ITrustAnchorRepository } from '../../../../../core/index.ts';
 import { EntityRepositoryAdapter } from '../entity/index.ts';
-import { RealmRepositoryAdapter } from '../realm/repository.ts';
+import { createRealmNameResolver } from '../realm/repository.ts';
 
 export type TrustAnchorRepositoryAdapterOptions = {
     lockRows?: boolean,
@@ -24,7 +24,7 @@ export class TrustAnchorRepositoryAdapter extends EntityRepositoryAdapter<TrustA
             target: TrustAnchorEntity,
             entity: 'trust anchor',
             realmScope: {},
-            realmRepository: new RealmRepositoryAdapter(dataSource.getRepository(RealmEntity)),
+            realmRepository: createRealmNameResolver(dataSource.getRepository(RealmEntity)),
             lockRows: options.lockRows,
         });
     }
