@@ -7,10 +7,11 @@
 
 import type { ActorContext } from '@authup/server-kit';
 import { FakePermissionEvaluator } from '@authup/server-test-kit';
-import { isFilter, isParseError } from '@rapiq/core';
+import { isFilter, isGroupedQuery, isParseError } from '@rapiq/core';
 import type { ICondition } from '@rapiq/core';
 import { describe, expect, it } from 'vitest';
 import { decodeQuery } from '../../../../src/core/query/module.ts';
+import { sessionSchema } from '../../../../src/core/entities/session/schema.ts';
 import { userRoleSchema } from '../../../../src/core/entities/user-role/schema.ts';
 
 function fieldsOf(node: ICondition): string[] {
@@ -66,5 +67,71 @@ describe('core/query/reach', () => {
         const query = await decodeQuery(input, { schema: userRoleSchema });
 
         expect(fieldsOf(query.filters)).toContain('role.name');
+    });
+});
+
+describe('core/query/reach on a grouped decode', () => {
+    const parameters = ['filters', 'groups', 'aggregates'] as const;
+    const grouped = {
+        group: 'bucket(createdAt,day)',
+        aggregate: 'count',
+    };
+
+    it('should decode no sort key for a grouped read, whatever the reader', async () => {
+        for (const verdict of ['allow', 'conditional', 'deny'] as const) {
+            const query = await decodeQuery({ ...grouped, sort: 'user.name' }, {
+                schema: sessionSchema,
+                parameters: [...parameters],
+                actor: actorWith(verdict),
+            });
+
+            expect(isGroupedQuery(query)).toBe(true);
+            expect(query.sorts.value).toEqual([]);
+        }
+    });
+
+    it('should prune a dotted filter key of a grouped read for a conditional reader', async () => {
+        const input = { ...grouped, filter: { 'user.name': 'foo' } };
+
+        const allowed = await decodeQuery(input, {
+            schema: sessionSchema,
+            parameters: [...parameters],
+            actor: actorWith('allow'),
+        });
+        const conditional = await decodeQuery(input, {
+            schema: sessionSchema,
+            parameters: [...parameters],
+            actor: actorWith('conditional'),
+        });
+
+        expect(fieldsOf(allowed.filters)).toContain('user.name');
+        expect(fieldsOf(conditional.filters)).not.toContain('user.name');
+    });
+
+    it.each([
+        ['a group key through a relation', { group: 'bucket(createdAt,day),user.name', aggregate: 'count' }],
+        ['a group function over a relation column', { group: 'bucket(user.createdAt,day)', aggregate: 'count' }],
+        ['a dotted group alias', { group: 'bucket(createdAt,day):user.name', aggregate: 'count' }],
+        ['a dotted aggregate alias', { group: 'bucket(createdAt,day)', aggregate: 'count:user.name' }],
+    ])('should refuse %s', async (_label, input) => {
+        const error = await decodeQuery(input, {
+            schema: sessionSchema,
+            parameters: [...parameters],
+            actor: actorWith('allow'),
+        }).catch((e) => e);
+
+        expect(isParseError(error)).toBe(true);
+    });
+
+    it('should not group a list decode, so its dotted sort key is pruned like any other', async () => {
+        const input = { ...grouped, sort: 'user.name' };
+
+        const allowed = await decodeQuery(input, { schema: sessionSchema, actor: actorWith('allow') });
+        const conditional = await decodeQuery(input, { schema: sessionSchema, actor: actorWith('conditional') });
+
+        expect(isGroupedQuery(allowed)).toBe(false);
+        expect(allowed.sorts.value.map((sort) => sort.name)).toContain('user.name');
+        expect(isGroupedQuery(conditional)).toBe(false);
+        expect(conditional.sorts.value.map((sort) => sort.name)).not.toContain('user.name');
     });
 });

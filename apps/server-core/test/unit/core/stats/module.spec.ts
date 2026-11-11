@@ -6,7 +6,12 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { Event, EventAggregate, User } from '@authup/core-kit';
+import type {
+    Event,
+    EventAggregate,
+    Session,
+    User,
+} from '@authup/core-kit';
 import {
     EventName,
     EventScope,
@@ -36,6 +41,7 @@ import {
 } from 'vitest';
 import { FakePermissionEvaluator } from '@authup/server-test-kit';
 import { EventService, eventSchema } from '../../../../src/core/entities/event/index.ts';
+import { sessionSchema } from '../../../../src/core/entities/session/schema.ts';
 import {
     EVENT_AGGREGATE_COLUMNS,
     resolveEventRawHorizonDays,
@@ -194,6 +200,27 @@ describe('EntityStatsService', () => {
 
         return actor;
     }
+
+    it('hands the repository no sort key, a dotted one through a relation included', async () => {
+        const sessions = new FakeEntityStatsRepository<Session>();
+        const stats = new EntityStatsService({
+            definition: {
+                type: 'session',
+                schema: sessionSchema,
+                repository: sessions,
+            },
+            cache,
+        });
+
+        await stats.getMany({
+            ...wire({ groups: [] }),
+            sort: 'user.name',
+        }, allowed());
+
+        expect(sessions.aggregateCalls).toHaveLength(1);
+        expect(sessions.aggregateCalls[0]!.sorts.value).toEqual([]);
+        expect(sessions.countCalls[0]!.sorts.value).toEqual([]);
+    });
 
     it('counts rows per day bucket and (scope, name), keyed by column', async () => {
         seed();
