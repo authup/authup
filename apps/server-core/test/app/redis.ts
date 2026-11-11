@@ -1,0 +1,50 @@
+/*
+ * Copyright (c) 2026.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+import type { RedisOptions } from 'ioredis';
+
+export const TEST_REDIS_KEY_PREFIX = 'authup-test:';
+
+/**
+ * Connection options for TEST_REDIS_URL under a key prefix of this worker
+ * (and of `name`, for a second application in one worker), or `false`
+ * when the run does not opt into Redis (#3688).
+ */
+export function buildTestRedisOptions(name?: string) : RedisOptions | false {
+    if (!process.env.TEST_REDIS_URL) {
+        return false;
+    }
+
+    const url = new URL(process.env.TEST_REDIS_URL);
+    const segments = [process.env.VITEST_POOL_ID || '0'];
+
+    if (name) {
+        segments.push(name);
+    }
+
+    const options : RedisOptions = {
+        host: url.hostname,
+        port: Number(url.port || 6379),
+        keyPrefix: `${TEST_REDIS_KEY_PREFIX}${segments.join(':')}:`,
+    };
+
+    const db = Number(url.pathname.slice(1));
+
+    if (Number.isSafeInteger(db) && db > 0) {
+        options.db = db;
+    }
+
+    if (url.username) {
+        options.username = decodeURIComponent(url.username);
+    }
+
+    if (url.password) {
+        options.password = decodeURIComponent(url.password);
+    }
+
+    return options;
+}
