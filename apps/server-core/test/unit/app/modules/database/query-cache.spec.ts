@@ -314,6 +314,25 @@ describe('app/modules/database/cache (#3688)', () => {
         expect((await consents.findAllBySubjectClient(client.id, owner)).map((row) => row.scope)).toEqual(['openid']);
     });
 
+    it('a consent grant is visible on a covering read asked with an upper-case client id', async () => {
+        const user = await createUser();
+        const client = await suite.dataSource.getRepository(ClientEntity).save(createFakeClient({ realmId: master.id }));
+        const consents = new ConsentRepositoryAdapter(suite.dataSource, cache);
+        const owner = { sub: user.id, subKind: IdentityType.USER };
+        const clientId = client.id.toUpperCase();
+
+        expect(await consents.findAllBySubjectClient(clientId, owner)).toEqual([]);
+
+        await consents.insertMissing({
+            clientId: client.id,
+            realmId: master.id,
+            owner,
+            scopes: ['openid'],
+        });
+
+        expect((await consents.findAllBySubjectClient(clientId, owner)).map((row) => row.scope)).toEqual(['openid']);
+    });
+
     it('a consent fill that straddles a revocation is never served', async () => {
         const user = await createUser();
         const client = await suite.dataSource.getRepository(ClientEntity).save(createFakeClient({ realmId: master.id }));

@@ -13,6 +13,7 @@ import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import { buildRecordTag, buildScopedTag } from '@rapiq/cache';
 import type { DataSource, Repository } from 'typeorm';
 import type { IQueryCache } from '../../../database/cache/index.ts';
+import { QUERY_CACHE_SCOPED_VALUE_NORMALIZER } from '../../../database/cache/index.ts';
 import { applyQuery, fetchMany } from '../../../database/repositories/query.ts';
 import { ConsentEntity } from '../../../../../adapters/database/domains/index.ts';
 import { isDatabaseUniqueViolationError } from 'typeorm-extension';
@@ -93,11 +94,18 @@ export class ConsentRepositoryAdapter implements IConsentRepository {
         return this.repository.findOneBy({ id });
     }
 
-    async findAllBySubjectClient(clientId: string, owner: ConsentOwner): Promise<Consent[]> {
+    async findAllBySubjectClient(input: string, owner: ConsentOwner): Promise<Consent[]> {
+        // one spelling for the key, the query and the tag: the writer bumps the normalized value.
+        const clientId = input.toLowerCase();
+
         return this.cache.remember(
             `consent/${clientId}/${owner.subKind}/${owner.sub}`,
             (rows) => [
-                buildScopedTag(EntityType.CONSENT, 'clientId', clientId),
+                buildScopedTag(
+                    EntityType.CONSENT,
+                    'clientId',
+                    QUERY_CACHE_SCOPED_VALUE_NORMALIZER(EntityType.CONSENT, 'clientId', clientId),
+                ),
                 ...rows.map((row) => buildRecordTag(EntityType.CONSENT, row.id)),
             ],
             () => this.repository.createQueryBuilder('consent')
