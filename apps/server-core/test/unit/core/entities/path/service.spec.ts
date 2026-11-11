@@ -607,6 +607,97 @@ describe('core/entities/path/service', () => {
         });
     });
 
+    describe('create with a restricted grant', () => {
+        const reachable = (attributes: Record<string, any>) => typeof attributes.path === 'string' &&
+            (attributes.path === 'analyses' || attributes.path.startsWith('analyses/'));
+
+        const renameConcurrently = (folder: Path, name: () => string) => {
+            repository.beforeTransaction = async () => {
+                const next = name();
+
+                await repository.save({
+                    ...folder,
+                    name: next,
+                    path: next,
+                });
+            };
+        };
+
+        it('should open one transaction when the parent did not change', async () => {
+            const analyses = seedPath({ name: 'analyses', path: 'analyses' });
+
+            const result = await service.create(
+                {
+                    name: 'a',
+                    parentId: analyses.id,
+                    realmId,
+                },
+                createRestrictedActor(PermissionName.PATH_CREATE, reachable),
+            );
+
+            expect(result.path).toBe('analyses/a');
+            expect(repository.transactionCalls).toBe(1);
+        });
+
+        it('should refuse the write when the parent was renamed out of reach', async () => {
+            const analyses = seedPath({ name: 'analyses', path: 'analyses' });
+
+            renameConcurrently(analyses, () => 'other');
+
+            await expect(service.create(
+                {
+                    name: 'a',
+                    parentId: analyses.id,
+                    realmId,
+                },
+                createRestrictedActor(PermissionName.PATH_CREATE, reachable),
+            )).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+            expect(await repository.findOneBy({ parentId: analyses.id })).toBeNull();
+        });
+
+        it('should authorize the path the write lands on', async () => {
+            const analyses = seedPath({ name: 'analyses', path: 'analyses' });
+            const actor = createAllowAllActor();
+
+            renameConcurrently(analyses, () => 'other');
+
+            const result = await service.create({
+                name: 'a',
+                parentId: analyses.id,
+                realmId,
+            }, actor);
+
+            expect(result.path).toBe('other/a');
+
+            const evaluated = actor.permissionEvaluator.evaluateCalls
+                .filter((call) => call.name === PermissionName.PATH_CREATE)
+                .map((call) => call.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES).path);
+
+            expect(evaluated.at(-1)).toBe('other/a');
+        });
+
+        it('should answer a conflict when the parent never stabilizes', async () => {
+            const analyses = seedPath({ name: 'analyses', path: 'analyses' });
+
+            let counter = 0;
+
+            renameConcurrently(analyses, () => {
+                counter += 1;
+
+                return `concurrent-${counter}`;
+            });
+
+            await expect(service.create({
+                name: 'a',
+                parentId: analyses.id,
+                realmId,
+            }, createAllowAllActor()))
+                .rejects.toMatchObject({ code: ErrorCode.ENTITY_CONFLICT });
+            expect(repository.transactionCalls).toBe(3);
+            expect(await repository.findOneBy({ parentId: analyses.id })).toBeNull();
+        });
+    });
+
     describe('delete', () => {
         it('should delete an existing folder', async () => {
             const entity = seedPath({

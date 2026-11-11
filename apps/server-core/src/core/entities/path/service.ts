@@ -167,52 +167,52 @@ export class PathService extends AbstractEntityService implements IPathService {
             validated.realmId = actorRealmId;
         }
 
-        const parent = await this.resolveParent(this.repository, validated.parentId ?? null, validated.realmId);
+        const { realmId } = validated;
+        const parentId = validated.parentId ?? null;
 
-        // the validator omits an absent optional key, so a root folder is
-        // stamped explicitly rather than left undefined: the created record
-        // must read like a later fetch of the same row
-        validated.parentId = parent ? parent.id : null;
-        validated.path = buildPathForParent(parent, validated.name);
-        assertPathBounds(validated.path);
-
-        await evaluateRecord(actor.permissionEvaluator, {
-            name: PermissionName.PATH_CREATE,
-            realm: validated.realmId,
-            data: { [BuiltInPolicyType.ATTRIBUTES]: validated },
-        });
-
-        await this.repository.checkUniqueness(validated);
-
-        // The parent is resolved AGAIN inside the transaction, under a row
-        // lock, and the path is recomputed from what that read returns. The
-        // resolve above cannot be the one the write trusts: a rename of an
-        // ANCESTOR commits between it and this insert, and the row would be
-        // written with a path its own parent chain contradicts. Nothing
-        // recomputes a stored path later, so that desync is permanent, and
-        // the subtree prefix then finds the row under neither name.
-        //
-        // The gates and checkUniqueness stay outside for the pool reason the
-        // update path documents (#3526). Unlike there, a parent renamed in
-        // between is not re-authorized: the policy sees the path resolved
-        // above rather than the one finally written.
-        return this.repository.transaction(async (repository) => {
-            const parentLocked = await this.resolveParent(
-                repository,
-                validated.parentId ?? null,
-                validated.realmId,
-            );
-
-            const path = buildPathForParent(parentLocked, validated.name);
-
-            assertPathBounds(path);
-
-            const entity = repository.create({
+        // The gate and the uniqueness check run OUTSIDE the transaction for
+        // the pool reason the update path documents (#3526), on the path the
+        // parent yields as it reads now. A transaction whose locked parent
+        // yields another path aborts, and the attempt is authorized again:
+        // a rename of an ANCESTOR commits between the two reads, and the row
+        // would otherwise be written under a path no policy saw.
+        return retryOnStaleRow({
+            row: { parent: await this.resolveParent(this.repository, parentId, realmId) },
+            reread: async () => ({ parent: await this.resolveParent(this.repository, parentId, realmId) }),
+        }, async ({ parent }) => {
+            // the validator omits an absent optional key, so a root folder is
+            // stamped explicitly rather than left undefined: the created record
+            // must read like a later fetch of the same row
+            const input = {
                 ...validated,
-                path,
+                parentId: parent ? parent.id : null,
+                path: buildPathForParent(parent, validated.name),
+            };
+
+            assertPathBounds(input.path);
+
+            await evaluateRecord(actor.permissionEvaluator, {
+                name: PermissionName.PATH_CREATE,
+                realm: realmId,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: input },
             });
 
-            return repository.save(entity);
+            await this.repository.checkUniqueness(input);
+
+            // The parent is resolved AGAIN inside the transaction, under a
+            // row lock: nothing recomputes a stored path later, so a row
+            // written with a path its own parent chain contradicts stays
+            // desynced, and the subtree prefix then finds it under neither
+            // name.
+            return this.repository.transaction(async (repository) => {
+                const parentLocked = await this.resolveParent(repository, parentId, realmId);
+
+                if (buildPathForParent(parentLocked, validated.name) !== input.path) {
+                    throw new StaleRowSignal();
+                }
+
+                return repository.save(repository.create(input));
+            });
         });
     }
 
