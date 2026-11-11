@@ -54,5 +54,10 @@ export function buildTestRedisOptions(name?: string) : RedisOptions | false {
         options.password = decodeURIComponent(url.password);
     }
 
+    // ioredis derives TLS from a rediss url, never from options rebuilt from it.
+    if (url.protocol === 'rediss:') {
+        options.tls = {};
+    }
+
     return options;
 }

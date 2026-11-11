@@ -12,7 +12,7 @@ import {
     vi,
 } from 'vitest';
 import { TaggedCacheInjectionKey } from '../../../src/app/modules/cache/index.ts';
-import { createTestApplication } from '../../app/index.ts';
+import { buildTestRedisOptions, createTestApplication } from '../../app/index.ts';
 
 // Spec files sharing a pool slot share its database, and writers outside
 // createTestApplication (provisioning.spec.ts) do not share its cache (#3688).
@@ -36,6 +36,30 @@ describe('test applications in one worker', () => {
             expect(read).toHaveBeenCalledTimes(1);
         } finally {
             await second.teardown();
+        }
+    });
+});
+
+describe('buildTestRedisOptions', () => {
+    it('keeps tls for a rediss url', () => {
+        const previous = process.env.TEST_REDIS_URL;
+
+        try {
+            process.env.TEST_REDIS_URL = 'rediss://127.0.0.1:6380';
+            expect(buildTestRedisOptions()).toMatchObject({
+                host: '127.0.0.1', 
+                port: 6380, 
+                tls: {}, 
+            });
+
+            process.env.TEST_REDIS_URL = 'redis://127.0.0.1:6380';
+            expect(buildTestRedisOptions()).not.toHaveProperty('tls');
+        } finally {
+            if (typeof previous === 'undefined') {
+                delete process.env.TEST_REDIS_URL;
+            } else {
+                process.env.TEST_REDIS_URL = previous;
+            }
         }
     });
 });
