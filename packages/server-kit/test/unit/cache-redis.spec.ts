@@ -121,6 +121,48 @@ describeRedis('src/cache/adapters/redis', () => {
         });
     });
 
+    describe('a key holding another type or an unreadable value', () => {
+        function raw() {
+            return (cache as unknown as {
+                client: {
+                    rpush(key: string, value: string): Promise<number>,
+                    set(key: string, value: string): Promise<unknown>,
+                }
+            }).client;
+        }
+
+        it('get reads a wrong-type key as a miss', async () => {
+            await raw().rpush('list', 'a');
+
+            await expect(cache.get('list')).resolves.toBeNull();
+        });
+
+        it('pop and increment reject on a wrong-type key', async () => {
+            await raw().rpush('list', 'a');
+
+            await expect(cache.pop('list')).rejects.toThrow(/WRONGTYPE/);
+            await expect(cache.increment('list')).rejects.toThrow(/WRONGTYPE/);
+        });
+
+        it('has, add, set and drop treat a wrong-type key as a present key', async () => {
+            await raw().rpush('list', 'a');
+
+            await expect(cache.has('list')).resolves.toBe(true);
+            await expect(cache.add('list', 1, { ttl: 5_000 })).resolves.toBe(false);
+            await expect(cache.set('list', 1, { ttl: 5_000 })).resolves.toBeUndefined();
+            await expect(cache.get('list')).resolves.toBe(1);
+            await expect(cache.drop('list')).resolves.toBeUndefined();
+            await expect(cache.has('list')).resolves.toBe(false);
+        });
+
+        it('get and pop read a value that is not JSON as a miss', async () => {
+            await raw().set('text', 'not json');
+
+            await expect(cache.get('text')).resolves.toBeNull();
+            await expect(cache.pop('text')).resolves.toBeNull();
+        });
+    });
+
     describe('increment (atomic counter)', () => {
         it('returns the post-increment value and never loses a concurrent update', async () => {
             expect(await cache.increment('counter', 1, { ttl: 5_000 })).toBe(1);
