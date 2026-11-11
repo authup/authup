@@ -202,6 +202,49 @@ describe('app/modules/database/cache (#3688)', () => {
         expect(read).toHaveBeenCalledTimes(2);
     });
 
+    it('a junction row saved with an upper-case owner id drops the entry scoped to the lower-case id', async () => {
+        const owner = await createUser();
+        const role = await createRole();
+
+        const read = vi.fn(async () => [] as UserRoleEntity[]);
+        const input = {
+            key: `userRole?userId=${owner.id}`,
+            query: defineQuery({ filters: { userId: owner.id } }),
+            schema: EntityType.USER_ROLE,
+            caseSensitive: ['userId'],
+        };
+
+        await cache.rememberQuery(input, read);
+        await cache.rememberQuery(input, read);
+        expect(read).toHaveBeenCalledTimes(1);
+
+        const repository = suite.dataSource.getRepository(UserRoleEntity);
+        // sqlite compares a foreign key as text and would refuse the upper-case spelling.
+        const isSqlite = suite.dataSource.options.type === 'better-sqlite3';
+
+        if (isSqlite) {
+            await suite.dataSource.query('PRAGMA foreign_keys = OFF');
+        }
+
+        try {
+            const row = await repository.save(repository.create({
+                userId: owner.id.toUpperCase(),
+                userRealmId: master.id,
+                roleId: role.id,
+                roleRealmId: null,
+            }));
+
+            await cache.rememberQuery(input, read);
+            expect(read).toHaveBeenCalledTimes(2);
+
+            await repository.delete({ id: row.id });
+        } finally {
+            if (isSqlite) {
+                await suite.dataSource.query('PRAGMA foreign_keys = ON');
+            }
+        }
+    });
+
     it('policy attribute writes bump policyAttribute', async () => {
         const read = vi.fn(async () => 'value');
 

@@ -32,7 +32,7 @@ import {
     isFencedCacheKey,
 } from '../../../adapters/database/index.ts';
 import type { Event } from '@authup/core-kit';
-import { EntityEventHandler, EventService } from '../../../core/index.ts';
+import { EntityEventHandler, EventService, schemaRegistry } from '../../../core/index.ts';
 import { useRequestEventContext } from '../../../adapters/http/request/index.ts';
 import { EventRepositoryAdapter } from './repositories/index.ts';
 import { validateEntitySchemas } from './repositories/schema-validation.ts';
@@ -43,7 +43,7 @@ import {
     TaggedCacheInjectionKey,
     throttle,
 } from '../cache/index.ts';
-import { QueryCache, cacheSchemaRegistry, resolveCacheSchemaName } from './cache/index.ts';
+import { QUERY_CACHE_SCOPED_VALUE_NORMALIZER, QueryCache, resolveCacheSchemaName } from './cache/index.ts';
 import type { IModule, ModuleDependency } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import { DATABASE_LOCK_OPTIONS, DatabaseInjectionKey, MIGRATION_DATABASE_LOCK } from './constants.ts';
@@ -275,7 +275,8 @@ export class DatabaseModule implements IModule {
             // initialize() rebuilds the subscribers array, so the instance is pushed after it.
             dataSource.subscribers.push(new CacheInvalidationSubscriber({
                 cache,
-                registry: cacheSchemaRegistry,
+                registry: schemaRegistry,
+                normalizeScopedValue: QUERY_CACHE_SCOPED_VALUE_NORMALIZER,
                 resolveSchemaName: resolveCacheSchemaName,
                 // every commit on a tracked table reports while Redis is down.
                 onError: throttle((error: unknown) => {

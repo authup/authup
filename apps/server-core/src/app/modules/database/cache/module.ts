@@ -6,9 +6,11 @@
  */
 
 import type { ITaggedCache } from '@rapiq/cache';
-import { collectQueryTags, isCacheable } from '@rapiq/cache';
+import { rememberQuery } from '@rapiq/cache';
+import { isTransactionActive } from '@rapiq/cache/typeorm';
 import type { DataSource } from 'typeorm';
-import { cacheSchemaRegistry } from './registry.ts';
+import { schemaRegistry } from '../../../../core/index.ts';
+import { QUERY_CACHE_SCOPED_VALUE_NORMALIZER } from './constants.ts';
 import type {
     IQueryCache,
     QueryCacheContext,
@@ -44,31 +46,15 @@ export class QueryCache implements IQueryCache {
         read: () => Promise<T>,
         options: QueryCacheReadOptions = {},
     ): Promise<T> {
-        if (!isCacheable(input.query)) {
+        if (!this.cache || this.isTransactionActive(options)) {
             return read();
         }
 
-        return this.remember(
-            input.key,
-            (value) => {
-                const tags = collectQueryTags({
-                    query: input.query,
-                    schema: input.schema,
-                    registry: cacheSchemaRegistry,
-                    value,
-                    rows: input.rows,
-                    caseSensitive: input.caseSensitive,
-                });
-
-                if (!input.tags) {
-                    return tags;
-                }
-
-                return [...new Set([...tags, ...input.tags(value)])];
-            },
-            read,
-            options,
-        );
+        return rememberQuery(this.cache, {
+            ...input,
+            registry: schemaRegistry,
+            normalizeScopedValue: QUERY_CACHE_SCOPED_VALUE_NORMALIZER,
+        }, read);
     }
 
     /**
@@ -76,17 +62,6 @@ export class QueryCache implements IQueryCache {
      * which a rollback never bumps away (#3688).
      */
     protected isTransactionActive(options: QueryCacheReadOptions): boolean {
-        const manager = options.manager ?? this.dataSource.manager;
-
-        if (manager.queryRunner?.isTransactionActive) {
-            return true;
-        }
-
-        // better-sqlite3 hands back its one shared runner, which must not be released.
-        if (this.dataSource.options.type === 'better-sqlite3') {
-            return this.dataSource.createQueryRunner().isTransactionActive;
-        }
-
-        return false;
+        return isTransactionActive(this.dataSource, options.manager);
     }
 }

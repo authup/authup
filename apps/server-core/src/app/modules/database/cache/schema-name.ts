@@ -6,6 +6,7 @@
  */
 
 import { EntityType } from '@authup/core-kit';
+import type { CacheInvalidationSchemaTarget } from '@rapiq/cache/typeorm';
 import type { EntityMetadata, EntityTarget } from 'typeorm';
 import type { ObjectLiteral } from '@rapiq/core';
 import { PolicyAttributeEntity } from '../../../../adapters/database/domains/index.ts';
@@ -18,17 +19,18 @@ const CACHE_SCHEMA_NAMES_UNTRACKED = new Set<string>([
     EntityType.SESSION_TOKEN,
 ]);
 
-const CACHE_SCHEMA_NAMES = new Map<EntityTarget<ObjectLiteral>, string>([
+const CACHE_SCHEMA_NAMES = new Map<EntityTarget<ObjectLiteral>, string | CacheInvalidationSchemaTarget>([
     ...Object.entries(SCHEMA_ENTITY_TARGETS)
         .filter(([name]) => !CACHE_SCHEMA_NAMES_UNTRACKED.has(name))
         .map(([name, target]) => [target, name] as const),
-    [PolicyAttributeEntity, EntityType.POLICY_ATTRIBUTE],
+    // tracked by name alone: the public query vocabulary has no schema for it.
+    [PolicyAttributeEntity, { name: EntityType.POLICY_ATTRIBUTE, schema: false }],
 ]);
 
 /**
  * The cache schema name of an entity, `undefined` for a table the
  * cache does not track.
  */
-export function resolveCacheSchemaName(metadata: EntityMetadata): string | undefined {
+export function resolveCacheSchemaName(metadata: EntityMetadata): string | CacheInvalidationSchemaTarget | undefined {
     return CACHE_SCHEMA_NAMES.get(metadata.target);
 }
