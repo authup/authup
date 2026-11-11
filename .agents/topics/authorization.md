@@ -92,8 +92,11 @@ invalidation is load-bearing:
   re-activate a principal or restore a revoked grant.
 - A read inside an open transaction bypasses the cache (`QueryCache`): a rollback bumps
   nothing, so an uncommitted row must never be stored.
-- The 60 s TTL is only a backstop for raw SQL, which fires no subscriber, and for a bump
-  that failed (Redis down at commit).
+- The TTL (`TAGGED_CACHE_TTL`, 60 s) is the only backstop for raw SQL, which fires no
+  subscriber. A bump that fails (Redis down at commit) makes this process read past the cache
+  for one TTL from the failure (`QueryCache.createInvalidator`); other replicas sharing the
+  Redis serve the stale entry until it lapses. Remove the guard once tada5hi/rapiq#993
+  replays lost tags.
 - Trees are cached normalized (once, not per definition) and reassembled on read, which is
   where a missing tree still throws. Every hit is a copy (JSON on Redis, a clone in the
   memory driver), so the realm-match evaluator writing `decisionStrategy` onto a policy
