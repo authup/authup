@@ -155,6 +155,13 @@ describeRedis('src/cache/adapters/redis', () => {
             await expect(cache.has('list')).resolves.toBe(false);
         });
 
+        it('set stores undefined, which reads back as a miss', async () => {
+            await expect(cache.set('undef', undefined, { ttl: 5_000 })).resolves.toBeUndefined();
+
+            await expect(cache.has('undef')).resolves.toBe(true);
+            await expect(cache.get('undef')).resolves.toBeNull();
+        });
+
         it('get and pop read a value that is not JSON as a miss', async () => {
             await raw().set('text', 'not json');
 

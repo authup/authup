@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JsonAdapter } from 'redis-extension';
+import { ValueStore } from 'redis-extension';
 import {
     afterEach,
     describe,
@@ -32,7 +32,7 @@ describe('redis token cache', () => {
     }
 
     it('stores an entry under a vouchly key, rounding the ttl up', async () => {
-        const set = vi.spyOn(JsonAdapter.prototype, 'set').mockResolvedValue(undefined);
+        const set = vi.spyOn(ValueStore.prototype, 'set').mockResolvedValue(true);
 
         await create().set('abc', entry, 1.2);
 
@@ -40,7 +40,7 @@ describe('redis token cache', () => {
     });
 
     it('stores nothing for a ttl that is not positive', async () => {
-        const set = vi.spyOn(JsonAdapter.prototype, 'set').mockResolvedValue(undefined);
+        const set = vi.spyOn(ValueStore.prototype, 'set').mockResolvedValue(true);
 
         await create().set('abc', entry, 0);
 
@@ -48,7 +48,7 @@ describe('redis token cache', () => {
     });
 
     it('reads an entry under the vouchly key', async () => {
-        const get = vi.spyOn(JsonAdapter.prototype, 'get').mockResolvedValue(entry);
+        const get = vi.spyOn(ValueStore.prototype, 'get').mockResolvedValue(entry);
 
         await expect(create().get('abc')).resolves.toEqual(entry);
         expect(get).toHaveBeenCalledWith('vouchly:abc');
