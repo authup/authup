@@ -20,13 +20,13 @@ export class ClientRoleValidator extends Container<
         this.mount(
             'clientId',
             { group: ValidatorGroup.CREATE },
-            createValidator(z.uuid()),
+            createValidator(z.uuid().toLowerCase()),
         );
 
         this.mount(
             'roleId',
             { group: ValidatorGroup.CREATE },
-            createValidator(z.uuid()),
+            createValidator(z.uuid().toLowerCase()),
         );
     }
 }

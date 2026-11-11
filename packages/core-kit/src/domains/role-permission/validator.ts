@@ -21,19 +21,19 @@ export class RolePermissionValidator extends Container<
         this.mount(
             'roleId',
             { group: ValidatorGroup.CREATE },
-            createValidator(z.uuid()),
+            createValidator(z.uuid().toLowerCase()),
         );
 
         this.mount(
             'permissionId',
             { group: ValidatorGroup.CREATE },
-            createValidator(z.uuid()),
+            createValidator(z.uuid().toLowerCase()),
         );
 
         this.mount(
             'policyId',
             { optional: true },
-            createValidator(z.uuid().nullable()),
+            createValidator(z.uuid().toLowerCase().nullable()),
         );
 
         this.mount(
