@@ -73,7 +73,7 @@ client's **Token exchange capabilities** tab in the admin console, through
 |---|---|
 | `clientId` | The actor. Fixed once the capability exists. |
 | `audience` | The resource server, up to 256 characters without whitespace. Matched exactly, including case. |
-| `value` | What the client may delegate, separated by spaces. `type` allows every action of that type, `type:action` allows that one action, and one value can hold both forms (`bucket:read bucket:write bucket-file`). At least one entry is required, up to 512 characters, and a type cannot appear both bare and with an action. A type matches `[a-z][a-z0-9-]{0,63}`, an action `[a-z][a-z0-9-]{0,31}`. |
+| `value` | What the client may delegate, separated by spaces. `type` allows every action of that type, `type:action` allows that one action, and one value can hold both forms (`bucket:read bucket:write bucket-file`). At least one entry is required, up to 512 characters, and a type cannot appear both bare and with an action. A type matches `[a-z][a-zA-Z0-9-]{0,63}` (camelCase or kebab-case), an action `[a-z][a-z0-9-]{0,31}`. |
 | `maxAge` | The longest an issued token may live, from 1 to 86400 seconds. |
 | `realmScope` | `own` (the default) allows only subjects of the client's own realm. `any` allows subjects of **every** realm. |
 
