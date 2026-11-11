@@ -14,6 +14,7 @@ import {
     inArray,
     or,
 } from '@rapiq/core';
+import { isEntityNameVocabularyClosed } from '../../../../../core/translator/entity-name';
 import { ENTITY_SEARCH_FIELDS, ENTITY_SEARCH_FIELD_DEFAULT } from '../constants';
 
 /**
@@ -23,6 +24,8 @@ import { ENTITY_SEARCH_FIELDS, ENTITY_SEARCH_FIELD_DEFAULT } from '../constants'
  * built-in identifiers whose localized catalog label matched (`names`).
  * That branch only matches rows that actually display the label: built-in
  * and without an own `displayName`, which would take precedence over it.
+ * An event name is always a catalog key and the event schema has neither
+ * column, so for events the branch is the bare `in(name, ...)`.
  *
  * A single field stays a plain `contains` rather than a one-armed `or`,
  * which would only add a compound wrapper to the query string.
@@ -37,7 +40,9 @@ export function buildEntitySearchCondition(
     const extra : ICondition[] = (ENTITY_SEARCH_FIELDS[type as EntityType] || [])
         .map((field) => contains(field, value));
 
-    if (names.length > 0) {
+    if (names.length > 0 && isEntityNameVocabularyClosed(type)) {
+        extra.push(inArray(ENTITY_SEARCH_FIELD_DEFAULT, names));
+    } else if (names.length > 0) {
         extra.push(and(
             inArray(ENTITY_SEARCH_FIELD_DEFAULT, names),
             eq('builtIn', true),

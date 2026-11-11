@@ -14,6 +14,7 @@ import {
     it,
     vi,
 } from 'vitest';
+import { flushPromises } from '@vue/test-utils';
 import { mountPage } from '../utils';
 
 // chart.js measures its canvas, which happy-dom cannot lay out.
@@ -81,6 +82,32 @@ describe('event names', () => {
         expect(cells[0].find('.text-fg-muted').text()).toEqual(`${EventScope.IDENTITY}.${EventName.LOGIN_FAILED}`);
         expect(cells[1].find('.leading-tight').element.firstChild?.textContent?.trim()).toEqual('Created');
         expect(cells[1].find('.text-fg-muted').text()).toEqual(`${EventScope.ENTITY}.${EventName.CREATED}`);
+    });
+
+    it('should match the localized event name when searching the /events list', async () => {
+        const { wrapper, httpClient } = await mountPage('/events', {
+            'GET /events': () => ({
+                data: [],
+                meta: {
+                    total: 0,
+                    limit: 10,
+                    offset: 0,
+                },
+            }),
+        });
+
+        await wrapper.find('input[type="text"]').setValue('Failed sign-in');
+        await new Promise((resolve) => {
+            setTimeout(resolve, 250);
+        });
+        await flushPromises();
+
+        const filters = httpClient.requests
+            .map((request) => new URL(request.url, 'http://fake.test'))
+            .filter((url) => url.pathname === '/events')
+            .map((url) => url.searchParams.get('filter'));
+
+        expect(filters.at(-1)).toEqual(`or(contains(name,'Failed sign-in'),in(name,'${EventName.LOGIN_FAILED}'))`);
     });
 
     it('should lead the /events/:id heading with the localized name and keep the raw name under it', async () => {

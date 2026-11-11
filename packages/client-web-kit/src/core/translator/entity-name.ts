@@ -31,6 +31,14 @@ const ENTITY_NAME_KEYS : Partial<Record<string, readonly string[]>> = {
 
 const ENTITY_NAME_CLOSED_TYPES : readonly string[] = [EntityType.EVENT];
 
+/**
+ * Whether every name of an entity type is a catalog key (events), so a row
+ * carries no `builtIn` / `displayName` to qualify a catalog-label match.
+ */
+export function isEntityNameVocabularyClosed(type: string) : boolean {
+    return ENTITY_NAME_CLOSED_TYPES.includes(type);
+}
+
 // ponytail: bounded so a one-letter search cannot put the whole catalog in the URL.
 const ENTITY_NAME_SEARCH_LIMIT = 100;
 
@@ -113,7 +121,7 @@ export function useEntityNameSearch() : (type: string, text: string) => string[]
 
     return (type, text) => {
         const namespace = ENTITY_NAME_NAMESPACES[type];
-        const keys = ENTITY_NAME_CLOSED_TYPES.includes(type) ? undefined : ENTITY_NAME_KEYS[type];
+        const keys = ENTITY_NAME_KEYS[type];
         const needle = text.trim().toLowerCase();
 
         if (!namespace || !keys || needle.length === 0) {
