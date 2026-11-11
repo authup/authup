@@ -9,7 +9,12 @@ import { isRedisClient } from '@authup/server-kit';
 import { MemoryCacheDriver, TaggedCache } from '@rapiq/cache';
 import { RedisCacheDriver } from '@rapiq/cache-redis';
 import { Redis } from 'ioredis';
-import { TAGGED_CACHE_CONNECT_TIMEOUT, TAGGED_CACHE_PREFIX, TAGGED_CACHE_REDIS_OPTIONS } from './constants.ts';
+import {
+    TAGGED_CACHE_CONNECT_TIMEOUT,
+    TAGGED_CACHE_PREFIX,
+    TAGGED_CACHE_REDIS_OPTIONS,
+    TAGGED_CACHE_TTL,
+} from './constants.ts';
 import type {
     TaggedCacheClient,
     TaggedCacheClientCreateInput,
@@ -72,7 +77,11 @@ export function createTaggedCacheClient(input: TaggedCacheClientCreateInput) : T
 export function createTaggedCache(input: TaggedCacheCreateInput) : TaggedCacheCreateResult {
     if (!input.redis) {
         return {
-            cache: new TaggedCache({ driver: new MemoryCacheDriver(), onError: input.onError }),
+            cache: new TaggedCache({
+                driver: new MemoryCacheDriver({ maxTtl: TAGGED_CACHE_TTL }),
+                ttl: TAGGED_CACHE_TTL,
+                onError: input.onError,
+            }),
             ready: async () => {},
             dispose: async () => {},
         };
@@ -82,10 +91,18 @@ export function createTaggedCache(input: TaggedCacheCreateInput) : TaggedCacheCr
 
     client.on('error', (error) => input.onError(error));
 
-    const driver = new RedisCacheDriver({ client, prefix });
+    const driver = new RedisCacheDriver({
+        client,
+        prefix,
+        maxTtl: TAGGED_CACHE_TTL,
+    });
 
     return {
-        cache: new TaggedCache({ driver, onError: input.onError }),
+        cache: new TaggedCache({
+            driver,
+            ttl: TAGGED_CACHE_TTL,
+            onError: input.onError,
+        }),
         ready: async () => {
             await driver.ready(TAGGED_CACHE_CONNECT_TIMEOUT);
         },

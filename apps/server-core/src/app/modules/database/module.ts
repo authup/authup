@@ -270,11 +270,12 @@ export class DatabaseModule implements IModule {
         const logger = container.resolve(LoggerInjectionKey);
         const cacheResult = container.tryResolve(TaggedCacheInjectionKey);
         const cache = cacheResult.success ? cacheResult.data : undefined;
+        const queryCache = new QueryCache({ dataSource, cache });
 
         if (cache) {
             // initialize() rebuilds the subscribers array, so the instance is pushed after it.
             dataSource.subscribers.push(new CacheInvalidationSubscriber({
-                cache,
+                cache: queryCache.createInvalidator(),
                 registry: schemaRegistry,
                 normalizeScopedValue: QUERY_CACHE_SCOPED_VALUE_NORMALIZER,
                 resolveSchemaName: resolveCacheSchemaName,
@@ -285,7 +286,7 @@ export class DatabaseModule implements IModule {
             }));
         }
 
-        container.register(DatabaseInjectionKey.QueryCache, { useValue: new QueryCache({ dataSource, cache }) });
+        container.register(DatabaseInjectionKey.QueryCache, { useValue: queryCache });
     }
 
     protected registerRepositories(container: IContainer, dataSource: DataSource) : void {

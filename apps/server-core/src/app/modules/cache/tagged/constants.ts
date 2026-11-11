@@ -9,6 +9,12 @@ import type { RedisOptions } from 'ioredis';
 
 export const TAGGED_CACHE_PREFIX = 'authup';
 
+/**
+ * How long an entry lives, and how long reads bypass the cache after a
+ * lost invalidation (#3688).
+ */
+export const TAGGED_CACHE_TTL = 60_000;
+
 export const TAGGED_CACHE_ERROR_LOG_INTERVAL = 10_000;
 
 export const TAGGED_CACHE_CONNECT_TIMEOUT = 1_000;
