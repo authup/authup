@@ -115,6 +115,7 @@ export class OAuth2Module implements IModule {
         container.register(OAuth2InjectionToken.ConsentRepository, {
             useFactory: (c) => new ConsentRepositoryAdapter(
                 c.resolve(DatabaseInjectionKey.DataSource),
+                c.resolve(DatabaseInjectionKey.QueryCache),
             ),
         });
 

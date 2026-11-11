@@ -10,7 +10,6 @@ import { EntityType } from '@authup/core-kit';
 import { EventSubscriber } from 'typeorm';
 import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { PermissionPolicyEntity } from './entity.ts';
-import { AUTHORIZATION_CACHE_KEYS } from '../constants.ts';
 
 @EventSubscriber()
 export class PermissionPolicySubscriber extends EntitySubscriber<PermissionPolicy> {
@@ -22,10 +21,6 @@ export class PermissionPolicySubscriber extends EntitySubscriber<PermissionPolic
                 data.permissionRealmId,
                 data.policyRealmId,
             ]),
-            cache: {
-                onInsert: true,
-                keys: () => [...AUTHORIZATION_CACHE_KEYS],
-            },
         });
     }
 }

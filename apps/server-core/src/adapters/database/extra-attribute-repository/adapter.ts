@@ -37,8 +37,6 @@ export class ExtraAttributesRepositoryAdapter<
 
     public attributeForeignColumn : keyof A;
 
-    protected cachePrefix?: string;
-
     protected extra : EARepositoryPropertiesModifyFn<T, A>;
 
     protected entityProperties : ReadonlySet<string> | undefined;
@@ -60,7 +58,6 @@ export class ExtraAttributesRepositoryAdapter<
         this.primaryColumn = ctx.entityPrimaryColumn;
         this.attributeRepository = ctx.attributeRepository;
         this.attributeForeignColumn = ctx.attributeForeignColumn;
-        this.cachePrefix = ctx.cachePrefix;
     }
 
     // ------------------------------------------------------------------------------

@@ -9,7 +9,6 @@ import type { BasePolicy } from '@authup/access';
 import type { Policy, PolicyAttribute } from '@authup/core-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { EntityNotFoundError } from 'typeorm';
-import { CachePrefix } from '../constants.ts';
 import { EATreeRepository } from '../../extra-attribute-repository/index.ts';
 import { PolicyAttributeEntity } from '../policy-attribute/index.ts';
 import { PolicyEntity } from './entity.ts';
@@ -27,7 +26,6 @@ export class PolicyRepository extends EATreeRepository<Policy, PolicyAttribute> 
             entityPrimaryColumn: 'id',
             attributeEntity: PolicyAttributeEntity,
             attributeForeignColumn: 'policyId',
-            cachePrefix: CachePrefix.POLICY_OWNED_ATTRIBUTES,
         });
     }
 

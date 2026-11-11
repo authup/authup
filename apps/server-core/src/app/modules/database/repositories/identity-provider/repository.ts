@@ -16,7 +16,7 @@ import {
 import type { IdentityProviderRepository } from '../../../../../adapters/database/domains/index.ts';
 import { IdentityProviderEntity } from '../../../../../adapters/database/domains/index.ts';
 import { EntityRepositoryAdapter } from '../entity/index.ts';
-import { RealmRepositoryAdapter } from '../realm/repository.ts';
+import { createRealmNameResolver } from '../realm/repository.ts';
 
 export type IdentityProviderRepositoryAdapterContext = {
     repository: IdentityProviderRepository,
@@ -39,7 +39,7 @@ export class IdentityProviderRepositoryAdapter extends EntityRepositoryAdapter<I
             alias: 'provider',
             target: IdentityProviderEntity,
             entity: 'identity provider',
-            realmRepository: new RealmRepositoryAdapter(ctx.realmRepository),
+            realmRepository: createRealmNameResolver(ctx.realmRepository),
         });
 
         this.cipher = ctx.cipher;

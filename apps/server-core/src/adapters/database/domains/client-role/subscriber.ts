@@ -7,11 +7,9 @@
 
 import type { ClientRole } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
-import { buildRedisKeyPath } from '@authup/server-kit';
 import { EventSubscriber } from 'typeorm';
 import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { ClientRoleEntity } from './entity.ts';
-import { CachePrefix } from '../constants.ts';
 
 @EventSubscriber()
 export class ClientRoleSubscriber extends EntitySubscriber<ClientRole> {
@@ -23,15 +21,6 @@ export class ClientRoleSubscriber extends EntitySubscriber<ClientRole> {
                 data.clientRealmId,
                 data.roleRealmId,
             ]),
-            cache: {
-                onInsert: true,
-                keys: (data) => [
-                    buildRedisKeyPath({
-                        prefix: CachePrefix.CLIENT_OWNED_ROLES,
-                        key: data.clientId,
-                    }),
-                ],
-            },
         });
     }
 }

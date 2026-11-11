@@ -7,11 +7,9 @@
 
 import type { UserAttribute } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
-import { buildRedisKeyPath } from '@authup/server-kit';
 import { EventSubscriber } from 'typeorm';
 import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { UserAttributeEntity } from './entity.ts';
-import { CachePrefix } from '../constants.ts';
 
 @EventSubscriber()
 export class UserAttributeSubscriber extends EntitySubscriber<UserAttribute> {
@@ -20,15 +18,6 @@ export class UserAttributeSubscriber extends EntitySubscriber<UserAttribute> {
             type: EntityType.USER_ATTRIBUTE,
             target: UserAttributeEntity,
             destinations: buildEntityDestinations(EntityType.USER_ATTRIBUTE, (data) => [data.realmId]),
-            cache: {
-                onInsert: true,
-                keys: (data) => [
-                    buildRedisKeyPath({
-                        prefix: CachePrefix.USER_OWNED_ATTRIBUTES,
-                        key: data.userId,
-                    }),
-                ],
-            },
         });
     }
 }

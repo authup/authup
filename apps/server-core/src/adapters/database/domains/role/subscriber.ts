@@ -7,11 +7,9 @@
 
 import type { Role } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
-import { buildRedisKeyPath } from '@authup/server-kit';
 import { EventSubscriber } from 'typeorm';
 import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { RoleEntity } from './entity.ts';
-import { CachePrefix } from '../constants.ts';
 
 @EventSubscriber()
 export class RoleSubscriber extends EntitySubscriber<Role> {
@@ -20,20 +18,6 @@ export class RoleSubscriber extends EntitySubscriber<Role> {
             type: EntityType.ROLE,
             target: RoleEntity,
             destinations: buildEntityDestinations(EntityType.ROLE, (data) => [data.realmId]),
-            cache: {
-                keys: (data) => [
-                    buildRedisKeyPath({
-                        prefix: CachePrefix.ROLE,
-                        key: data.id,
-                    }),
-                    // the role's permission junctions go by cascade, which
-                    // runs no subscriber of their own
-                    buildRedisKeyPath({
-                        prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
-                        key: data.id,
-                    }),
-                ],
-            },
         });
     }
 }

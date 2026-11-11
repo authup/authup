@@ -79,13 +79,17 @@ export class IdentityModule implements IModule {
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
 
+        const queryCache = container.resolve(DatabaseInjectionKey.QueryCache);
+
         const clientRepository = new ClientIdentityRepository(
             container.resolve<Repository<Client>>(ClientEntity),
+            queryCache,
         );
         const userRepository = new UserIdentityRepository({
             repository: new UserRepository(dataSource),
             userPermissionRepository: container.resolve<Repository<UserPermission>>(UserPermissionEntity),
             userRoleRepository: container.resolve<Repository<UserRole>>(UserRoleEntity),
+            cache: queryCache,
         });
 
         container.register(IdentityInjectionKey.Resolver, {
@@ -100,15 +104,15 @@ export class IdentityModule implements IModule {
         const clientRepositoryAdapter = new ClientRepositoryAdapter({
             repository: container.resolve<Repository<Client>>(ClientEntity),
             realmRepository,
-        });
+        }, queryCache);
         const userRepositoryAdapter = new UserRepositoryAdapter({
             repository: new UserRepository(dataSource),
             realmRepository,
-        });
+        }, queryCache);
         const roleRepositoryAdapter = new RoleRepositoryAdapter({
             repository: container.resolve<Repository<Role>>(RoleEntity),
             realmRepository,
-        });
+        }, queryCache);
 
         container.register(IdentityInjectionKey.RoleProvider, {
             useFactory: () => new IdentityRoleProvider({

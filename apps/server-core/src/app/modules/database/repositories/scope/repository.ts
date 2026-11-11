@@ -10,7 +10,7 @@ import type { Repository } from 'typeorm';
 import type { IScopeRepository } from '../../../../../core/index.ts';
 import { ScopeEntity } from '../../../../../adapters/database/domains/index.ts';
 import { EntityRepositoryAdapter } from '../entity/index.ts';
-import { RealmRepositoryAdapter } from '../realm/repository.ts';
+import { createRealmNameResolver } from '../realm/repository.ts';
 
 export type ScopeRepositoryAdapterContext = {
     repository: Repository<Scope>,
@@ -25,7 +25,7 @@ export class ScopeRepositoryAdapter extends EntityRepositoryAdapter<Scope> imple
             entity: 'scope',
             // the per-row realm gate reads `realmId` (issue #3574)
             realmScope: {},
-            realmRepository: new RealmRepositoryAdapter(ctx.realmRepository),
+            realmRepository: createRealmNameResolver(ctx.realmRepository),
         });
     }
 }

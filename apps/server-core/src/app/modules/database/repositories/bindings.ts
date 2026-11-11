@@ -14,16 +14,26 @@ import type {
 } from 'typeorm';
 import type { BasePolicy, PermissionPolicyBinding } from '@authup/access';
 import { RealmScope } from '@authup/access';
-import type { Permission } from '@authup/core-kit';
-import { buildRedisKeyPath } from '@authup/server-kit';
+import type { EntityType, Permission, Role } from '@authup/core-kit';
+import { defineQuery } from '@rapiq/core';
 import { PolicyRepository } from '../../../../adapters/database/domains/policy/index.ts';
+import type { IQueryCache } from '../cache/index.ts';
 
-export type LoadBoundPermissionsOptions<E extends ObjectLiteral> = {
+type LoadBoundOptions<E extends ObjectLiteral> = {
     manager: EntityManager;
+    cache: IQueryCache;
     junctionTarget: EntityTarget<E>;
-    where: FindOptionsWhere<E>;
-    cachePrefix: string;
-    cacheKey: string;
+    schema: EntityType;
+    ownerColumn: string;
+    ownerId: string;
+};
+
+export type LoadBoundRolesOptions<E extends ObjectLiteral> = LoadBoundOptions<E>;
+
+export type LoadBoundPermissionsOptions<E extends ObjectLiteral> = LoadBoundOptions<E>;
+
+type RoleJunction = {
+    role: Role;
 };
 
 type PermissionJunction = {
@@ -32,20 +42,43 @@ type PermissionJunction = {
     realmScope?: `${RealmScope}` | null;
 };
 
+async function loadJunctions<E extends ObjectLiteral>(
+    options: LoadBoundOptions<E>,
+    relation: string,
+): Promise<E[]> {
+    const id = options.ownerId.toLowerCase();
+    const repository = options.manager.getRepository(options.junctionTarget);
+
+    return options.cache.rememberQuery<E[]>(
+        {
+            key: `grant/${options.schema}/${options.ownerColumn}=${id}/${relation}`,
+            query: defineQuery({
+                filters: { [options.ownerColumn]: id },
+                relations: [relation],
+            }),
+            schema: options.schema,
+            caseSensitive: [options.ownerColumn],
+        },
+        () => repository.find({
+            where: { [options.ownerColumn]: id } as FindOptionsWhere<E>,
+            relations: { [relation]: true } as FindOptionsRelations<E>,
+        }),
+        { manager: options.manager },
+    );
+}
+
+export async function loadBoundRoles<E extends RoleJunction & ObjectLiteral>(
+    options: LoadBoundRolesOptions<E>,
+): Promise<Role[]> {
+    const entries = await loadJunctions(options, 'role');
+
+    return entries.map((entry) => entry.role);
+}
+
 export async function loadBoundPermissions<E extends PermissionJunction & ObjectLiteral>(
     options: LoadBoundPermissionsOptions<E>,
 ): Promise<PermissionPolicyBinding[]> {
-    const repository = options.manager.getRepository(options.junctionTarget);
-    const relations = { permission: true } as FindOptionsRelations<E>;
-
-    const entries = await repository.find({
-        where: options.where,
-        relations,
-        cache: {
-            id: buildRedisKeyPath({ prefix: options.cachePrefix, key: options.cacheKey }),
-            milliseconds: 60_000,
-        },
-    });
+    const entries = await loadJunctions(options, 'permission');
 
     const policyIds = new Set<string>();
 

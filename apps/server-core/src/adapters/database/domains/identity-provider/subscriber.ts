@@ -7,11 +7,9 @@
 
 import type { IdentityProvider } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
-import { buildRedisKeyPath } from '@authup/server-kit';
 import { EventSubscriber } from 'typeorm';
 import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { IdentityProviderEntity } from './entity.ts';
-import { CachePrefix } from '../constants.ts';
 
 @EventSubscriber()
 export class IdentityProviderSubscriber extends EntitySubscriber<IdentityProvider> {
@@ -20,14 +18,6 @@ export class IdentityProviderSubscriber extends EntitySubscriber<IdentityProvide
             type: EntityType.IDENTITY_PROVIDER,
             target: IdentityProviderEntity,
             destinations: buildEntityDestinations(EntityType.IDENTITY_PROVIDER, (data) => [data.realmId]),
-            cache: {
-                keys: (data) => [
-                    buildRedisKeyPath({
-                        prefix: CachePrefix.IDENTITY_PROVIDER,
-                        key: data.id,
-                    }),
-                ],
-            },
         });
     }
 }

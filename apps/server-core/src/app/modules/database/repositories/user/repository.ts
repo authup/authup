@@ -6,14 +6,13 @@
  */
 
 import type { Realm, Role, User } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { PermissionPolicyBinding } from '@authup/access';
-import { buildRedisKeyPath } from '@authup/server-kit';
 import type { Repository } from 'typeorm';
 import type { IUserRepository } from '../../../../../core/index.ts';
 import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
 import {
-    CachePrefix,
     RealmEntity,
     UserEntity,
     UserPermissionEntity,
@@ -21,7 +20,8 @@ import {
     UserRoleEntity,
 } from '../../../../../adapters/database/domains/index.ts';
 import { translateWhereConditions } from '../helpers.ts';
-import { loadBoundPermissions } from '../bindings.ts';
+import { loadBoundPermissions, loadBoundRoles } from '../bindings.ts';
+import type { IQueryCache } from '../../cache/index.ts';
 import { EntityRepositoryAdapter } from '../entity/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
@@ -35,16 +35,24 @@ export type UserRepositoryAdapterOptions = {
 };
 
 export class UserRepositoryAdapter extends EntityRepositoryAdapter<User, UserRepository> implements IUserRepository {
-    constructor(ctx: UserRepositoryAdapterContext, options: UserRepositoryAdapterOptions = {}) {
+    protected cache: IQueryCache;
+
+    constructor(
+        ctx: UserRepositoryAdapterContext,
+        cache: IQueryCache,
+        options: UserRepositoryAdapterOptions = {},
+    ) {
         super(ctx.repository, {
             alias: 'user',
             target: UserEntity,
             entity: 'user',
             // `id` for the self short-circuit of the per-row gate
             realmScope: { extraColumns: ['id'] },
-            realmRepository: new RealmRepositoryAdapter(ctx.realmRepository),
+            realmRepository: new RealmRepositoryAdapter(ctx.realmRepository, cache),
             lockRows: options.lockRows,
         });
+
+        this.cache = cache;
     }
 
     protected override async extendOne(entity: User): Promise<void> {
@@ -95,26 +103,20 @@ export class UserRepositoryAdapter extends EntityRepositoryAdapter<User, UserRep
         return dataSource.transaction((manager) => fn(new UserRepositoryAdapter({
             repository: new UserRepository(manager),
             realmRepository: manager.getRepository(RealmEntity),
-        }, { lockRows: true })));
+        }, this.cache, { lockRows: true })));
     }
 
     async getBoundRoles(entity: string | User): Promise<Role[]> {
         const id = typeof entity === 'string' ? entity : entity.id;
-        const entries = await this.repository.manager
-            .getRepository(UserRoleEntity)
-            .find({
-                where: { userId: id },
-                relations: { role: true },
-                cache: {
-                    id: buildRedisKeyPath({
-                        prefix: CachePrefix.USER_OWNED_ROLES,
-                        key: id,
-                    }),
-                    milliseconds: 60_000,
-                },
-            });
 
-        return entries.map((entry) => entry.role);
+        return loadBoundRoles({
+            manager: this.repository.manager,
+            cache: this.cache,
+            junctionTarget: UserRoleEntity,
+            schema: EntityType.USER_ROLE,
+            ownerColumn: 'userId',
+            ownerId: id,
+        });
     }
 
     async getBoundPermissions(entity: string | User): Promise<PermissionPolicyBinding[]> {
@@ -122,10 +124,11 @@ export class UserRepositoryAdapter extends EntityRepositoryAdapter<User, UserRep
 
         return loadBoundPermissions({
             manager: this.repository.manager,
+            cache: this.cache,
             junctionTarget: UserPermissionEntity,
-            where: { userId: id },
-            cachePrefix: CachePrefix.USER_OWNED_PERMISSIONS,
-            cacheKey: id,
+            schema: EntityType.USER_PERMISSION,
+            ownerColumn: 'userId',
+            ownerId: id,
         });
     }
 }

@@ -12,8 +12,6 @@ export type EARepositoryOptions<
     T,
     A,
 > = {
-    cachePrefix?: string,
-
     entity: EntityTarget<T>,
     entityPrimaryColumn: keyof T,
 

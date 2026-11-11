@@ -14,13 +14,16 @@ import {
     vi,
 } from 'vitest';
 import { randomUUID } from 'node:crypto';
-import { EntityType } from '@authup/core-kit';
+import { EntityType, IdentityType } from '@authup/core-kit';
 import { OAuth2SubKind } from '@authup/specs';
 import type { Policy, Realm } from '@authup/core-kit';
 import { BuiltInPolicyType } from '@authup/access';
 import { defineQuery } from '@rapiq/core';
 import { CacheInvalidationSubscriber } from '@rapiq/cache/typeorm';
 import {
+    ClientEntity,
+    ConsentEntity,
+    PermissionEntity,
     PolicyRepository,
     RealmEntity,
     RoleEntity,
@@ -33,8 +36,10 @@ import {
     ConfigModule,
     DatabaseInjectionKey,
     LoggerModule,
+    PermissionDatabaseProvider,
     PolicyRepositoryAdapter,
 } from '../../../../../src/app/index.ts';
+import { ConsentRepositoryAdapter } from '../../../../../src/app/modules/oauth2/repositories/index.ts';
 import type { IQueryCache } from '../../../../../src/app/index.ts';
 import {
     TestApplication,
@@ -42,7 +47,13 @@ import {
     createTestDatabaseApplication,
     createTestDatabaseModuleForSuite,
 } from '../../../../app';
-import { createFakeRole, createFakeUser } from '../../../../utils';
+import {
+    createFakeClient,
+    createFakePermission,
+    createFakeRealm,
+    createFakeRole,
+    createFakeUser,
+} from '../../../../utils';
 import { createFakeTimePolicy } from '../../../../utils/domains/policy';
 import type { Logger } from '@authup/server-kit';
 import { DomainEventPublisher, createNoopLogger } from '@authup/server-kit';
@@ -273,6 +284,90 @@ describe('app/modules/database/cache (#3688)', () => {
 
         await cache.remember('p', () => [EntityType.POLICY_ATTRIBUTE], read);
         expect(read).toHaveBeenCalledTimes(2);
+    });
+
+    it('findOne distinguishes an unfiltered owner from a global one', async () => {
+        const realm = await suite.dataSource.getRepository(RealmEntity).save(createFakeRealm());
+        const permission = await suite.dataSource.getRepository(PermissionEntity)
+            .save(createFakePermission({ realmId: realm.id }));
+        const provider = new PermissionDatabaseProvider(suite.dataSource, cache);
+
+        expect((await provider.findOne({ name: permission.name }))?.permission.realmId).toEqual(realm.id);
+        expect(await provider.findOne({ name: permission.name, realmId: null })).toBeNull();
+    });
+
+    it('a consent grant is visible on the next covering read', async () => {
+        const user = await createUser();
+        const client = await suite.dataSource.getRepository(ClientEntity).save(createFakeClient({ realmId: master.id }));
+        const consents = new ConsentRepositoryAdapter(suite.dataSource, cache);
+        const owner = { sub: user.id, subKind: IdentityType.USER };
+
+        expect(await consents.findAllBySubjectClient(client.id, owner)).toEqual([]);
+
+        await consents.insertMissing({
+            clientId: client.id,
+            realmId: master.id,
+            owner,
+            scopes: ['openid'],
+        });
+
+        expect((await consents.findAllBySubjectClient(client.id, owner)).map((row) => row.scope)).toEqual(['openid']);
+    });
+
+    it('a consent grant is visible on a covering read asked with an upper-case client id', async () => {
+        const user = await createUser();
+        const client = await suite.dataSource.getRepository(ClientEntity).save(createFakeClient({ realmId: master.id }));
+        const consents = new ConsentRepositoryAdapter(suite.dataSource, cache);
+        const owner = { sub: user.id, subKind: IdentityType.USER };
+        const clientId = client.id.toUpperCase();
+
+        expect(await consents.findAllBySubjectClient(clientId, owner)).toEqual([]);
+
+        await consents.insertMissing({
+            clientId: client.id,
+            realmId: master.id,
+            owner,
+            scopes: ['openid'],
+        });
+
+        expect((await consents.findAllBySubjectClient(clientId, owner)).map((row) => row.scope)).toEqual(['openid']);
+    });
+
+    it('a consent fill that straddles a revocation is never served', async () => {
+        const user = await createUser();
+        const client = await suite.dataSource.getRepository(ClientEntity).save(createFakeClient({ realmId: master.id }));
+        const consents = new ConsentRepositoryAdapter(suite.dataSource, cache);
+        const owner = { sub: user.id, subKind: IdentityType.USER };
+
+        await consents.insertMissing({
+            clientId: client.id,
+            realmId: master.id,
+            owner,
+            scopes: ['openid'],
+        });
+
+        const repository = suite.dataSource.getRepository(ConsentEntity);
+        const createQueryBuilder = repository.createQueryBuilder.bind(repository);
+        const spy = vi.spyOn(repository, 'createQueryBuilder').mockImplementationOnce((alias) => {
+            const qb = createQueryBuilder(alias);
+            const getMany = qb.getMany.bind(qb);
+
+            qb.getMany = async () => {
+                const stale = await getMany();
+
+                await repository.remove(await repository.findBy({ clientId: client.id }));
+
+                return stale;
+            };
+
+            return qb;
+        });
+
+        expect(await consents.findAllBySubjectClient(client.id, owner)).toHaveLength(1);
+
+        spy.mockRestore();
+
+        expect(await consents.findAllBySubjectClient(client.id, owner)).toEqual([]);
     });
 });
 

@@ -6,15 +6,15 @@
  */
 
 import type { Client, Realm, Role } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { IQuery } from '@rapiq/core';
 import type { PermissionPolicyBinding } from '@authup/access';
-import { buildRedisKeyPath } from '@authup/server-kit';
 import type { Repository } from 'typeorm';
 import type { IClientRepository } from '../../../../../core/index.ts';
 import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
-import { loadBoundPermissions } from '../bindings.ts';
+import { loadBoundPermissions, loadBoundRoles } from '../bindings.ts';
+import type { IQueryCache } from '../../cache/index.ts';
 import {
-    CachePrefix,
     ClientEntity,
     ClientPermissionEntity,
     ClientRoleEntity,
@@ -33,15 +33,23 @@ export type ClientRepositoryAdapterOptions = {
 };
 
 export class ClientRepositoryAdapter extends EntityRepositoryAdapter<Client> implements IClientRepository {
-    constructor(ctx: ClientRepositoryAdapterContext, options: ClientRepositoryAdapterOptions = {}) {
+    protected cache: IQueryCache;
+
+    constructor(
+        ctx: ClientRepositoryAdapterContext,
+        cache: IQueryCache,
+        options: ClientRepositoryAdapterOptions = {},
+    ) {
         super(ctx.repository, {
             alias: 'client',
             target: ClientEntity,
             entity: 'client',
-            realmRepository: new RealmRepositoryAdapter(ctx.realmRepository),
+            realmRepository: new RealmRepositoryAdapter(ctx.realmRepository, cache),
             realmScope: {},
             lockRows: options.lockRows,
         });
+
+        this.cache = cache;
     }
 
     async findOne(id: string, query?: IQuery, realmKey?: string): Promise<Client | null> {
@@ -84,26 +92,20 @@ export class ClientRepositoryAdapter extends EntityRepositoryAdapter<Client> imp
         return dataSource.transaction((manager) => fn(new ClientRepositoryAdapter({
             repository: manager.getRepository(ClientEntity),
             realmRepository: manager.getRepository(RealmEntity),
-        }, { lockRows: true })));
+        }, this.cache, { lockRows: true })));
     }
 
     async getBoundRoles(entity: string | Client): Promise<Role[]> {
         const id = typeof entity === 'string' ? entity : entity.id;
-        const entries = await this.repository.manager
-            .getRepository(ClientRoleEntity)
-            .find({
-                where: { clientId: id },
-                relations: { role: true },
-                cache: {
-                    id: buildRedisKeyPath({
-                        prefix: CachePrefix.CLIENT_OWNED_ROLES,
-                        key: id,
-                    }),
-                    milliseconds: 60_000,
-                },
-            });
 
-        return entries.map((entry) => entry.role);
+        return loadBoundRoles({
+            manager: this.repository.manager,
+            cache: this.cache,
+            junctionTarget: ClientRoleEntity,
+            schema: EntityType.CLIENT_ROLE,
+            ownerColumn: 'clientId',
+            ownerId: id,
+        });
     }
 
     async getBoundPermissions(entity: string | Client): Promise<PermissionPolicyBinding[]> {
@@ -111,10 +113,11 @@ export class ClientRepositoryAdapter extends EntityRepositoryAdapter<Client> imp
 
         return loadBoundPermissions({
             manager: this.repository.manager,
+            cache: this.cache,
             junctionTarget: ClientPermissionEntity,
-            where: { clientId: id },
-            cachePrefix: CachePrefix.CLIENT_OWNED_PERMISSIONS,
-            cacheKey: id,
+            schema: EntityType.CLIENT_PERMISSION,
+            ownerColumn: 'clientId',
+            ownerId: id,
         });
     }
 }

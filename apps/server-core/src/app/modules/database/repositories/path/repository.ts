@@ -11,7 +11,7 @@ import type { IPathRepository } from '../../../../../core/index.ts';
 import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
 import { PathEntity, RealmEntity } from '../../../../../adapters/database/domains/index.ts';
 import { EntityRepositoryAdapter } from '../entity/index.ts';
-import { RealmRepositoryAdapter } from '../realm/repository.ts';
+import { createRealmNameResolver } from '../realm/repository.ts';
 import { runPathTransaction, unwindPaths } from './unwind.ts';
 
 export type PathRepositoryAdapterContext = {
@@ -31,7 +31,7 @@ export class PathRepositoryAdapter extends EntityRepositoryAdapter<Path> impleme
             entity: 'path',
             // the per-row realm gate reads `realmId` (issue #3574)
             realmScope: {},
-            realmRepository: new RealmRepositoryAdapter(ctx.realmRepository),
+            realmRepository: createRealmNameResolver(ctx.realmRepository),
             // a folder is addressed by its FULL path, never by the single
             // segment `name`: the name repeats across the tree while the
             // path is unique per realm

@@ -118,10 +118,9 @@ sign-in with an empty account bootstraps an explicit browser value upward.
   row is an absent claim, never `null` (#3518). They reach the id_token and
   both introspection routes only; `/userinfo` uses the attribute names.
 - **Introspection is the reader** because it rebuilds claims on every call.
-  The 60s by-id identity cache holds the user row only; attribute rows are
-  re-read uncached. `CachePrefix.USER_OWNED_ATTRIBUTES` is passed to the EA
-  repository but no read caches under it: caching the attribute read there
-  would break the "visible on next introspection" guarantee.
+  The by-id identity cache holds the user row only; attribute rows are
+  re-read uncached on every call. Caching the attribute read would break the
+  "visible on next introspection" guarantee.
 - **Value validation is per name**: `assertPreferenceValue`
   (`core/entities/user-attribute/preferences.ts`) runs in
   `UserAttributeService.create` and `update` over the resulting pair
@@ -367,7 +366,6 @@ failure is `access_denied` (400, neutral message, no oracle).
   only when the reference changes). Every leg evaluates with the client's
   realm, so an old cross-realm binding denies. `buildSystemClientAttributes`
   omits the key (the provisioner MERGE would wipe an admin-set policy).
-  Assignment lags up to 60s at `/token` (client query cache).
 - **Every leg records** one `AUTHORIZE_FAILED` (`reason: 'accessPolicy'`) and
   `authup_authorize_total{outcome="denied"}` (#3575).
 - **Admission control, not continuous**: not evaluated on `refresh_token`. To
@@ -393,9 +391,9 @@ always null today but is honored by the covering check.
   issued code). Not at `/token`. Federated logins write here too.
 - Tokens over `CONSENT_SCOPE_MAX_LENGTH` (128, shared by column and service)
   are dropped at normalization.
-- **Covering read cache**: `findAllBySubjectClient` uses a 60s cache
-  (`CachePrefix.CONSENT_COVERING`), dropped by the subscriber with
-  `cache.onInsert: true`. The kit probe uses the uncached list path.
+- **Covering read cache**: `findAllBySubjectClient` sits in the tagged read
+  cache under the consent schema's `clientId` scoped tag, so an inserted grant
+  for that client drops it. The kit probe uses the uncached list path.
 - **API**: `/consents` + `/realms/:realmId/consents`, read and delete only.
   Without `CONSENT_READ` a reader is force-scoped to own rows; foreign rows go
   through the compiled WHERE, with a per-row `reachesRecord` on `post` (the
