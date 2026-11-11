@@ -28,7 +28,7 @@ import {
     EventEntity,
     isDatabaseTypeSupported,
     isDatabaseTypeSupportedForEnvironment,
-    isPrincipalCacheKey,
+    isFencedCacheKey,
 } from '../../../adapters/database/index.ts';
 import type { Event } from '@authup/core-kit';
 import { EntityEventHandler, EventService } from '../../../core/index.ts';
@@ -243,7 +243,7 @@ export class DatabaseModule implements IModule {
             Object.assign(options, {
                 cache: {
                     provider() {
-                        return new DatabaseQueryResultCache(cacheResult.data, { fenced: isPrincipalCacheKey });
+                        return new DatabaseQueryResultCache(cacheResult.data, { fenced: isFencedCacheKey });
                     },
                 },
             } satisfies Partial<DataSourceOptions>);

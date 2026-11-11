@@ -87,8 +87,10 @@ load-bearing:
 - A stored value counts only in the epoch it was read in; every invalidation drops the
   epoch key. Dropping only the value key lets a read that started before a commit
   overwrite a fresher value. The by-id principal keys (`client`, `user`, trusted for
-  `active`) get the same fence per key inside `DatabaseQueryResultCache`
-  (`isPrincipalCacheKey`); a new cached read that authentication trusts needs it too.
+  `active`), the owned role and permission keys of a user, client or role, and the
+  covering consent key get the same fence per key inside `DatabaseQueryResultCache`
+  (`isFencedCacheKey`); a new cached read whose stale value would re-activate a
+  principal or restore a revoked grant needs it too.
 - `EntitySubscriber` drops its keys again after the outermost commit (hooks run before the
   commit). Applies to every subscriber cache.
 - The 60 s TTL is only a backstop for writes bypassing subscribers (query-builder

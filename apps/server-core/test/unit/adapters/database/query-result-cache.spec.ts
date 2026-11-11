@@ -6,9 +6,10 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { MemoryCache } from '@authup/server-kit';
+import { MemoryCache, buildCacheKey } from '@authup/server-kit';
 import type { QueryResultCacheOptions } from 'typeorm/cache/QueryResultCacheOptions.js';
 import { DatabaseQueryResultCache } from '../../../../src/adapters/database/cache/index.ts';
+import { CachePrefix, isFencedCacheKey } from '../../../../src/adapters/database/domains/constants.ts';
 
 const IDENTIFIER = 'client#p#00000000-0000-4000-8000-000000000001';
 
@@ -130,5 +131,46 @@ describe('adapters/database/cache (generation fence)', () => {
         const second = await lookup(cache, identifier);
 
         expect(second.hit).toBeDefined();
+    });
+});
+
+describe('adapters/database/cache (fenced identifiers)', () => {
+    const key = '00000000-0000-4000-8000-000000000001';
+
+    it.each([
+        CachePrefix.CLIENT,
+        CachePrefix.USER,
+        CachePrefix.CLIENT_OWNED_ROLES,
+        CachePrefix.CLIENT_OWNED_PERMISSIONS,
+        CachePrefix.USER_OWNED_ROLES,
+        CachePrefix.USER_OWNED_PERMISSIONS,
+        CachePrefix.ROLE_OWNED_PERMISSIONS,
+        CachePrefix.CONSENT_COVERING,
+    ])('never serves a %s fill whose read started before an invalidation', async (prefix) => {
+        const cache = new DatabaseQueryResultCache(new MemoryCache(), { fenced: isFencedCacheKey });
+        const identifier = buildCacheKey({ prefix, key });
+
+        const pending = await lookup(cache, identifier);
+
+        await cache.remove([identifier]);
+        await store(cache, [{ id: key }], pending.saved, identifier);
+
+        const next = await lookup(cache, identifier);
+
+        expect(next.hit).toBeUndefined();
+
+        await store(cache, [], next.saved, identifier);
+
+        const last = await lookup(cache, identifier);
+
+        expect(last.hit).toBeDefined();
+        expect(JSON.parse(last.hit!.result)).toEqual([]);
+    });
+
+    it.each([
+        CachePrefix.REALM,
+        CachePrefix.PERMISSION,
+    ])('keeps a %s identifier on the plain path', (prefix) => {
+        expect(isFencedCacheKey(buildCacheKey({ prefix, key }))).toBe(false);
     });
 });
