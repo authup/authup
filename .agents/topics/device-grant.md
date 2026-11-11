@@ -98,7 +98,11 @@ GET (#3591). Do not route `resolve`'s throttle and miss errors through
   whether a code exists; a non-pending or expired blob and a missing or
   inactive client count as misses.
 - `lookup` projects `ClientSummary` + `RealmSummary` + `scope`, never
-  `redirectUri`, `grantTypes`, `accessPolicyId` or the secret flags.
+  `redirectUri`, `grantTypes`, `accessPolicyId` or the secret flags, plus
+  `scopes`: the client's bound scope rows through the same
+  `IOAuth2ScopeRepository.findByClientId` read as `/authorize/info`, so the
+  page labels built-in rows without a name-only lookup a realm scope could
+  shadow.
 - A second decision of any kind answers the neutral `invalid_grant`. A consent
   write failure is a warn line, never a failed approval.
 - Request attribution is not automatic: the ctx carries `requestContext` and
