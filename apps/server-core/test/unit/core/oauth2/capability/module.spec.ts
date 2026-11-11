@@ -46,6 +46,7 @@ describe('parseOAuth2Capabilities', () => {
     });
 
     it.each([
+        ['a camelCase type', 'bucketFile:id:read'],
         ['a type of 64 characters', `${'a'.repeat(64)}:id:read`],
         ['an id of 128 characters', `bucket:${'a'.repeat(128)}:read`],
         ['an action of 32 characters', `bucket:id:${'a'.repeat(32)}`],
@@ -57,7 +58,7 @@ describe('parseOAuth2Capabilities', () => {
         ['a missing segment', 'bucket:id'],
         ['an additional segment', 'bucket:id:read:more'],
         ['a type starting with a digit', '1bucket:id:read'],
-        ['an upper-case type', 'Bucket:id:read'],
+        ['a type starting with an upper-case letter', 'Bucket:id:read'],
         ['an empty type', ':id:read'],
         ['a type of 65 characters', `${'a'.repeat(65)}:id:read`],
         ['an empty id', 'bucket::read'],
