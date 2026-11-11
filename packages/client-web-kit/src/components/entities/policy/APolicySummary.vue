@@ -7,15 +7,16 @@
 
 <script lang="ts">
 import type { Policy } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { PropType } from 'vue';
-import { defineComponent } from 'vue';
+import { computed, defineComponent } from 'vue';
 import { VCBadge } from '@vuecs/elements';
 import {
     TranslatorTranslationCommonKey,
     TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { useTranslations } from '../../../core';
+import { useEntityNameTranslator, useTranslations } from '../../../core';
 import APolicyTypeBadge from './APolicyTypeBadge.vue';
 
 export default defineComponent({
@@ -26,7 +27,10 @@ export default defineComponent({
             required: true,
         },
     },
-    setup() {
+    setup(props) {
+        const translateEntityName = useEntityNameTranslator();
+        const label = computed(() => translateEntityName(EntityType.POLICY, props.entity));
+
         const translations = useTranslations([
             {
                 namespace: TranslatorTranslationNamespace.FIELD,
@@ -58,7 +62,7 @@ export default defineComponent({
             },
         ]);
 
-        return { translations };
+        return { label, translations };
     },
 });
 </script>
@@ -75,11 +79,11 @@ export default defineComponent({
             </div>
         </div>
         <div
-            v-if="entity.displayName"
+            v-if="label !== entity.name"
             class="flex flex-row gap-2 mb-2"
         >
             <strong style="min-width: 120px">{{ translations.displayName }}</strong>
-            <div>{{ entity.displayName }}</div>
+            <div>{{ label }}</div>
         </div>
         <div
             v-if="entity.description"

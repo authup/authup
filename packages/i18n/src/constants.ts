@@ -39,6 +39,8 @@ export enum TranslatorTranslationNamespace {
     POLICY = 'authupPolicy',
 
     SCOPE = 'authupScope',
+
+    EVENT = 'authupEvent',
 }
 
 export enum TranslatorTranslationVuecsKey {

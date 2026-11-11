@@ -24,3 +24,4 @@ Promise.try(() => createCLIEntryPointCommand())
         console.log(err); // eslint-disable-line no-console
         process.exit(1);
     });
+

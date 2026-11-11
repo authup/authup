@@ -5,7 +5,7 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { EventName } from '@authup/core-kit';
+import { EntityType, EventName } from '@authup/core-kit';
 import type { EntityStatsQuery } from '@authup/core-http-kit';
 import {
     TranslatorTranslationAppKey,
@@ -16,6 +16,7 @@ import {
     injectHTTPClient,
     injectStore,
     injectTranslatorLocale,
+    useEntityNameTranslator,
     useTranslation,
     useTranslations,
     useTranslationsForNamespace,
@@ -363,7 +364,10 @@ export default defineComponent({
             },
         ]);
 
-        const ranked = computed(() => rankEventStats(rows.value).slice(0, RANK_LIMIT));
+        const translateEntityName = useEntityNameTranslator();
+        const ranked = computed(() => rankEventStats(rows.value)
+            .slice(0, RANK_LIMIT)
+            .map((entry) => ({ ...entry, label: translateEntityName(EntityType.EVENT, entry) })));
         const rankedMax = computed(() => ranked.value[0]?.count ?? 0);
 
         const share = (count: number) => (rankedMax.value > 0 ?
@@ -510,7 +514,8 @@ export default defineComponent({
                         >
                             <div class="flex items-baseline justify-between gap-2 text-sm">
                                 <span>
-                                    <span class="text-fg-muted">{{ entry.scope }}.</span>{{ entry.name }}
+                                    {{ entry.label }}
+                                    <small class="block text-fg-muted">{{ entry.scope }}.{{ entry.name }}</small>
                                 </span>
                                 <span class="tabular-nums">{{ numberFormat.format(entry.count) }}</span>
                             </div>

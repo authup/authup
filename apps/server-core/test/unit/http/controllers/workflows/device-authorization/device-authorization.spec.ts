@@ -13,7 +13,7 @@ import {
 } from 'vitest';
 import { BuiltInPolicyType } from '@authup/access';
 import { Client as HTTPClient } from '@authup/core-http-kit';
-import type { Client, User } from '@authup/core-kit';
+import type { Client, Scope, User } from '@authup/core-kit';
 import {
     CLIENT_ACCOUNT_CONSOLE_NAME,
     EventName,
@@ -610,13 +610,66 @@ describe('src/http/controllers/workflows/device-authorization', () => {
 
         const body = await response.json();
 
-        expect(Object.keys(body).sort()).toEqual(['client', 'realm', 'scope']);
+        expect(Object.keys(body).sort()).toEqual(['client', 'realm', 'scope', 'scopes']);
         expect(Object.keys(body.client).sort()).toEqual(['builtIn', 'createdAt', 'displayName', 'id', 'name']);
         expect(body.client.id).toEqual(client.id);
         expect(body.client.name).toEqual(client.name);
         expect(body.realm.id).toEqual(realm.id);
         expect(body.realm.name).toEqual(realm.name);
         expect(body.scope.split(' ').sort()).toEqual([ScopeName.GLOBAL, ScopeName.OPEN_ID]);
+    });
+
+    it('should answer the lookup with the scope records bound to the client and keep an unknown name in the scope string', async () => {
+        const client = await createPublicClient();
+        const response = await request({ client_id: client.id, scope: `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID} reports` });
+        const { user_code: userCode } = await response.json();
+        const { accessToken } = await createUserBearer();
+
+        const lookup = await verify('lookup', accessToken, { user_code: userCode });
+
+        expect(lookup.status).toEqual(200);
+
+        const body = await lookup.json();
+
+        expect(body.scope.split(' ')).toContain('reports');
+        expect(body.scopes.map((scope: Scope) => scope.name).sort()).toEqual([ScopeName.GLOBAL, ScopeName.OPEN_ID]);
+
+        for (const scope of body.scopes as Scope[]) {
+            expect(scope.builtIn).toBe(true);
+            expect(Object.keys(scope).sort()).toEqual([
+                'builtIn',
+                'createdAt',
+                'description',
+                'displayName',
+                'id',
+                'name',
+                'realmId',
+                'updatedAt',
+            ]);
+        }
+    });
+
+    it('should answer the lookup with a realm scope named like a built-in one as not built-in', async () => {
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        const { data: custom } = await suite.client.scope.create({ name: ScopeName.EMAIL, realmId: realm.id });
+        const client = await createPublicClient({ realmId: realm.id }, [ScopeName.OPEN_ID]);
+
+        await suite.client.clientScope.create({ scopeId: custom.id, clientId: client.id });
+
+        const response = await request({ client_id: client.id, scope: `${ScopeName.OPEN_ID} ${ScopeName.EMAIL}` });
+        const { user_code: userCode } = await response.json();
+        const { accessToken } = await createUserBearer(realm.id);
+
+        const lookup = await verify('lookup', accessToken, { user_code: userCode });
+
+        expect(lookup.status).toEqual(200);
+
+        const body = await lookup.json();
+        const email = (body.scopes as Scope[]).find((scope) => scope.name === ScopeName.EMAIL);
+
+        expect(email?.id).toEqual(custom.id);
+        expect(email?.builtIn).toBe(false);
+        expect(email?.realmId).toEqual(realm.id);
     });
 
     it('should redeem an approved code on the approver session', async () => {

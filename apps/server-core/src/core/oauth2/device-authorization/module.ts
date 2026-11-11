@@ -133,6 +133,7 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
 
     async lookup(userCode: unknown, identity: Identity) : Promise<DeviceAuthorizationInfo> {
         const { code, client } = await this.resolve(userCode, identity);
+        const scopes = await this.scopeRepository.findByClientId(client.id);
 
         return {
             client: {
@@ -148,6 +149,7 @@ export class OAuth2DeviceAuthorizationService implements IOAuth2DeviceAuthorizat
                 displayName: client.realm.displayName,
             },
             scope: code.scope,
+            scopes,
         };
     }
 

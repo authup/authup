@@ -6,6 +6,8 @@
  */
 
 import type { DeviceAuthorizationInfo } from '@authup/core-http-kit';
+import type { Scope } from '@authup/core-kit';
+import { ScopeName } from '@authup/core-kit';
 import { IDENTITY_PROVIDER_LOGIN_NOT_PENDING } from '@authup/core-http-kit';
 import type { FakeClient, FakeHandlerMap } from '@authup/core-http-kit/testing';
 import { DeviceVerificationThrottledError } from '@authup/errors';
@@ -125,6 +127,21 @@ async function submitCode(wrapper: ReturnType<typeof mountForm>['wrapper'], code
 
     await wrapper.find('form').trigger('submit');
     await flushPromises();
+}
+
+function buildScope(input: Partial<Scope>) : Scope {
+    return {
+        id: 'scope-1',
+        builtIn: false,
+        name: 'reports',
+        displayName: null,
+        description: null,
+        realmId: null,
+        realm: null,
+        createdAt: new Date(0).toISOString(),
+        updatedAt: new Date(0).toISOString(),
+        ...input,
+    };
 }
 
 const findButton = (wrapper: ReturnType<typeof mountForm>['wrapper'], label: string) => wrapper
@@ -471,5 +488,57 @@ describe('ADeviceVerifyForm federated login', () => {
         expect(wrapper.text()).toContain('You are not permitted to access this application.');
         expect(wrapper.find('input').exists()).toBe(false);
         expect(requestsTo(httpClient, LOGIN_COMPLETE_PATH)).toHaveLength(0);
+    });
+
+    it('labels the requested scopes like the consent screen and keeps a name without a row raw', async () => {
+        const { wrapper } = mountForm({ userCode: 'BCDFGHJK' }, {
+            'POST /device_authorization/lookup': () => ({
+                ...buildInfo(),
+                scope: `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID} ${ScopeName.EMAIL} reports`,
+                scopes: [
+                    buildScope({
+                        id: 's-1', 
+                        name: ScopeName.GLOBAL, 
+                        builtIn: true, 
+                    }),
+                    buildScope({
+                        id: 's-2',
+                        name: ScopeName.OPEN_ID,
+                        builtIn: true,
+                        displayName: 'Your identity',
+                    }),
+                    buildScope({
+                        id: 's-3',
+                        name: ScopeName.EMAIL,
+                        realmId: REALM.id,
+                    }),
+                    buildScope({
+                        id: 's-4', 
+                        name: ScopeName.ROLES, 
+                        builtIn: true, 
+                    }),
+                ],
+            }),
+        });
+
+        await submitCode(wrapper);
+
+        expect(wrapper.findAll('strong').map((item) => item.text())).toEqual([
+            'Full access',
+            'Your identity',
+            ScopeName.EMAIL,
+            'reports',
+        ]);
+    });
+
+    it('renders the raw scope names when the server sends no scope records', async () => {
+        const { wrapper } = mountForm({ userCode: 'BCDFGHJK' });
+
+        await submitCode(wrapper);
+
+        expect(wrapper.findAll('strong').map((item) => item.text())).toEqual([
+            ScopeName.GLOBAL,
+            ScopeName.OPEN_ID,
+        ]);
     });
 });

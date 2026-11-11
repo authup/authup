@@ -11,6 +11,7 @@ export * from './client';
 export * from './common';
 export * from './entity';
 export * from './error';
+export * from './event';
 export * from './field';
 export * from './mail';
 export * from './permission';

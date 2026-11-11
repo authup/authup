@@ -7,6 +7,7 @@
 
 <script lang="ts">
 import type { Policy } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import { defineQuery } from '@rapiq/core';
 import type { PropType } from 'vue';
 import {
@@ -24,7 +25,7 @@ import {
     VCModalTitle,
 } from '@vuecs/overlays';
 import { TranslatorTranslationActionKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { DEFAULT_BUTTON_SIZE, useTranslations } from '../../../core';
+import { DEFAULT_BUTTON_SIZE, useEntityNameTranslator, useTranslations } from '../../../core';
 import APermissionPolicyAssignment from './APermissionPolicyAssignment.vue';
 import { APolicies } from '../policy';
 import APolicyInlineInfo from '../policy/APolicyInlineInfo.vue';
@@ -61,6 +62,9 @@ export default defineComponent({
             },
         ]);
 
+        const translateEntityName = useEntityNameTranslator();
+        const policyLabel = (entity: Policy) => translateEntityName(EntityType.POLICY, entity);
+
         const detailPolicy = ref<Policy | null>(null);
 
         const forwardedSlots = computed(() => Object.fromEntries(Object.entries(slots).filter(([name]) => name !== 'item')));
@@ -70,6 +74,7 @@ export default defineComponent({
         return {
             detailPolicy,
             forwardedSlots,
+            policyLabel,
             policyQuery,
             translationsAction,
         };
@@ -80,7 +85,13 @@ export default defineComponent({
     <div>
         <APolicies :query="policyQuery">
             <template #item="{ data }">
-                <div>{{ data.name }}</div>
+                <div>
+                    {{ policyLabel(data) }}
+                    <small
+                        v-if="policyLabel(data) !== data.name"
+                        class="block text-fg-muted"
+                    >{{ data.name }}</small>
+                </div>
                 <APolicyInlineInfo
                     :entity="data"
                     @detail="detailPolicy = $event"
@@ -111,7 +122,7 @@ export default defineComponent({
         >
             <VCModalContent v-if="detailPolicy">
                 <div class="flex items-center justify-between gap-2">
-                    <VCModalTitle>{{ detailPolicy.name }}</VCModalTitle>
+                    <VCModalTitle>{{ policyLabel(detailPolicy) }}</VCModalTitle>
                     <VCModalClose
                         icon
                         class="cursor-pointer"
