@@ -36,6 +36,15 @@ Some behaviour exists only on a server database, and a green sqlite run says not
 - `test/unit/modules/provisioning-concurrency.spec.ts`: two `ProvisionerModule` instances boot concurrently against one empty secondary database and must leave one master realm, one `system` client, one `admin` user and one row per global permission/role/scope/policy. The provisioning lock is a passthrough on better-sqlite3. One DataSource models two replicas because each `setup()` takes its own query runner. Confirm the spec is honest by making `withDatabaseLock` an unconditional passthrough: it must fail with a duplicate key on `auth_realms(name)`.
 - `test/unit/adapters/database/global-uniqueness.spec.ts`: runs `1788782400000-WidenClientSecretAndGlobalUniqueness`'s own `up()` / `down()` on an empty synchronized secondary database and asserts the unsynced index (name matches the entity, zero drift, a second global row refused, the pre-check naming duplicate tables). It has this shape because the suite synchronizes from entities, so an index declared `synchronize: false` never exists in any other spec.
 
+### Redis-backed run (server-core)
+
+`TEST_REDIS_URL` switches every test application's caches (the tagged read cache and the
+key-value cache) from memory to that Redis, under the key prefix `authup-test:<pool id>:`
+(plus a name for a second application in one worker, `buildTestRedisOptions` in
+`test/app/redis.ts`). The global setup deletes only keys under `authup-test:`, never the rest
+of that Redis. Run it against a Redis of your own:
+`TEST_REDIS_URL=redis://127.0.0.1:16379 npm run test --workspace=apps/server-core`.
+
 ## Test Layers (server-core)
 
 ### Service-Level Tests

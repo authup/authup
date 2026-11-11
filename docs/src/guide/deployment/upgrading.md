@@ -5,6 +5,18 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
+## Next release (after v1.0.0-beta.74)
+
+### The read cache opens its own Redis connection
+
+With Redis configured, the server opens one more Redis connection for its read cache. That
+cache needs Redis 5 or newer and a `maxmemory-policy` of `noeviction` or one of the
+`volatile-*` policies. Its keys sit under `authup:`, behind the configured Redis `keyPrefix`
+when there is one (`<keyPrefix>authup:`).
+
+**Action required:** A deployment on a Redis older than 5, or with an `allkeys-*` eviction
+policy, upgrades Redis or changes the policy before the upgrade.
+
 ## v1.0.0-beta.74 (was: next release after v1.0.0-beta.73)
 
 ### `@authup/client-web-kit` normalizes `cookiePath` and skips the shadow cleanup for host cookie functions
