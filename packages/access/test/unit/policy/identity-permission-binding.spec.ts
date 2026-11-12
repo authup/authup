@@ -220,8 +220,9 @@ describe('identity permission binding compilation', () => {
 
 // A grant policy tree carrying a binding node re-enters this evaluator with the
 // same data, which loads the same grants and evaluates the same tree again
-// (issue #3633). The consumer side drops such a grant (`containsBindingCheck`),
-// so the server settles the term false and moves on, never recursing.
+// (issue #3633). The evaluator answers such a term as one that cannot be
+// evaluated and moves on, never recursing; the consumer side keeps the grant
+// and reaches the same branch.
 describe('identity permission binding recursion (#3633)', () => {
     const run = (bindings: PermissionPolicyBinding[]) => {
         const engine = new PolicyEngine({
