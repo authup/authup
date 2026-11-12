@@ -15,8 +15,9 @@ The following built-in policies are available:
 
 Every policy configuration additionally accepts `invert?: boolean`, which flips the
 evaluation outcome (allow ⇄ deny). Inversion applies only to genuine outcomes: a
-policy that could not be evaluated (see
-[Pending & data availability](#pending--data-availability)) is never inverted.
+policy that is pending or could not be evaluated (see
+[Pending & data availability](#pending--data-availability) and
+[Not evaluable](#not-evaluable)) is never inverted.
 
 ## Pending & data availability
 
@@ -38,6 +39,36 @@ the decision and never masked to a settled value, and `invert` is never applied 
 pending result. This is what makes pre-flight checks
 ([`preEvaluate`](./permission-checker.md#pre-evaluate)) safe: a policy that cannot be
 evaluated yet does not deny at the gate: it is re-evaluated later with the full data.
+
+## Not evaluable
+
+A policy that cannot be evaluated at all, and never will be with more data, settles
+neither true nor false:
+
+```typescript
+{
+    success: false,
+    unevaluable: true,
+}
+```
+
+The engine answers it for a policy without a `type`, a type no evaluator is registered
+for, and an evaluator or validator that throws (an invalid configuration included). The
+built-in evaluators answer it for a composite without children, an attributes query that
+does not parse, and data they need that is missing or malformed without being declared in
+`requires()`: a permission-binding check without an identity, or with an identity that
+carries no `grants` list. An identity carrying `grants: []` is a known fact, not missing
+data: that check settles false and inverts as usual.
+
+A not evaluable result is never pending and never carries a condition, and every consumer
+treats it as a deny:
+
+- `invert` is never applied to it, so a negated policy cannot turn a failure to evaluate
+  into a pass.
+- A composite treats such a child as an unknown that never resolves. An inverted
+  `affirmative` composite over it can never pass; an inverted `unanimous` one passes only
+  when another child settles false.
+- `preEvaluate` never permits it, and `compile` drops it from a disjunction of names.
 
 ## Attributes
 
@@ -396,6 +427,10 @@ Guidelines:
   policy pending until the data arrives.
 - **Never invert a non-evaluation.** Apply `invert` only to genuine outcomes; neutral
   passes (policy does not apply) and pending results stay as they are.
+- **Report what you cannot evaluate.** When the configuration or the data makes a
+  decision impossible, return `{ success: false, unevaluable: true }` rather than a plain
+  `false`, which an inverted parent would turn into a pass. The engine drops `pending`
+  and any `condition` from such a result.
 - **`toCondition` must be exact.** A row satisfies the returned condition if and only
   if the policy would settle true with that row as its attributes. When in doubt,
   return `null`: a per-row check is always sound.

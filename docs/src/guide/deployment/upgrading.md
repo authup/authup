@@ -45,6 +45,18 @@ still reads those errors as a miss.
 has no other ioredis; one pinned to ioredis 5 upgrades it). Code using `RedisJsonAdapter`
 moves to `RedisValueStore`. Deployments of the server need no change.
 
+### An inverted policy over a child that cannot be evaluated denies
+
+A policy that cannot be evaluated (an unknown type, a configuration its validator refuses, a
+composite without children, or a permission-binding check without an identity) is reported as
+not evaluable rather than as an ordinary denial, and `invert` is never applied to it. An
+inverted composite policy over such a child therefore denies where it passed: for example an
+inverted check of a binding passed for an anonymous caller and now denies. An identity that
+holds no grants is unchanged: its binding check settles false and inverts as before.
+
+**Action required:** Review composite policies with `invert` set. One whose child cannot be
+evaluated grants nothing until the child is fixed.
+
 ## v1.0.0-beta.74 (was: next release after v1.0.0-beta.73)
 
 ### `@authup/client-web-kit` normalizes `cookiePath` and skips the shadow cleanup for host cookie functions

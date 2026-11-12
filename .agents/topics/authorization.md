@@ -99,8 +99,8 @@ invalidation is load-bearing:
   replays lost tags.
 - Trees are cached normalized (once, not per definition) and reassembled on read, which is
   where a missing tree still throws. Every hit is a copy (JSON on Redis, a clone in the
-  memory driver), so the realm-match evaluator writing `decisionStrategy` onto a policy
-  never reaches the stored value.
+  memory driver), because the memory driver would otherwise hand out the stored reference.
+  No built-in evaluator writes into the policy it is handed (#3817).
 - Invariants of every cached read:
   - A hit is a plain object, never an entity instance: never hand it to `save`, `merge`
     or `remove`.
@@ -131,14 +131,23 @@ the endpoints cannot drift.
 
 **`createAuthorizationEvaluator({ catalog, grants?, identity? }, { validators?, evaluators? })`**
 rebuilds the server's raw `PermissionPolicyBinding` model and runs the same aggregation and
-evaluators, so parity holds by construction.
+evaluators, so parity holds by construction. It is `buildAuthorizationSnapshot` followed by
+`createAuthorizationSnapshotEvaluator` (#3817).
+
+- **The snapshot** is `{ definitions, grants }` as plain, JSON-safe bindings. Stored, it is
+  untrusted: the evaluator re-projects every tree, re-binds each grant to the definition
+  it names (dropping one naming none) and refuses `realmScope` on a definition (the
+  definition layer applies no reach, so honouring it would fail open). `{ definitions }`
+  alone is the flat list of self-contained bindings, ORed across same-named bindings.
+  Rejected: a flat list with reach baked in for one realm (lossy: it drops every grant it
+  cannot express).
 
 - A grant naming a definition or policy the catalog lacks throws
   `AuthorizationCatalogStaleError`: refetch and rebuild. Never read an absence as a deny.
 - `policies: null` is NOT stale: deny the permission, drop its grants.
 - A tree the consumer cannot project (unknown type, refused config) tombstones only the
   definitions referencing it. A malformed catalog (duplicate namespace) still throws.
-- A grant tree containing a `permissionBinding` node settles false with `INVALID`
+- A grant tree containing a `permissionBinding` node is not evaluable (`INVALID`)
   (`containsBindingCheck` on the consumer side), so it cannot re-enter the evaluator
   without bound (#3633).
 - **Policy types are open (#3635).** `PolicyDefaultValidators` sits next to
@@ -172,7 +181,7 @@ be shadowed by `POST /permissions/:id`, and `check` is a legal permission name.
 - **No permission gate and no login gate.** Anonymous is a caller class: identity-free
   definitions (`date`/`time`, or none) have an answer before sign-in. Identity-bound ones
   deny on their own because `IdentityPermissionBindingPolicyEvaluator` does not declare
-  IDENTITY in `requires` (missing identity = settled `DATA_MISSING`, not pending).
+  IDENTITY in `requires` (missing identity = not evaluable, not pending).
   `PermissionService.create` binds `system.default` unconditionally, so a default
   deployment answers anonymous callers an empty set. Cost is bounded by the body caps and
   the anonymous rate-limit bucket.
@@ -328,8 +337,8 @@ caller wanting a shared registry passes the same object to `registerEvaluators` 
 ### Grants are policy data
 
 - `IdentityPermissionBindingPolicyEvaluator` loads nothing: it reads
-  `IdentityPolicyData.grants` from the `IDENTITY` key. No grants = settled `DATA_MISSING`
-  deny (`accessGrants` throws a `PolicyError`). The identity data validator must mount
+  `IdentityPolicyData.grants` from the `IDENTITY` key. No identity or no `grants` member =
+  not evaluable, `grants: []` = a plain false. The identity data validator must mount
   `grants`, or it strips them on the first read. Neither case is pending (the pre-gate
   permits pending).
 - Grants ride ON the identity so no placer can pair one subject with another's grants.
@@ -484,10 +493,19 @@ Defaults (declared in `app/modules/provisioning/sources/default/module.ts`):
     own `ATTRIBUTE_NAMES` key (a projection list) or the `ATTRIBUTES` record (both
     enforced when both present); the engine gate is AND-only.
   - permissionBinding -> `[PERMISSION_BINDING]`; IDENTITY deliberately NOT declared, so a
-    missing identity is a settled deny and a scope-restricted bearer fails the pre-gate.
+    missing identity is not evaluable and a scope-restricted bearer (`grants: []`) settles
+    false; both fail the pre-gate.
   - realmMatch -> `[IDENTITY]` in scope mode, `[IDENTITY, ATTRIBUTES]` in attribute mode.
 - Composites treat pending children as unknown and settle only when no resolution could
   change the outcome. **`invert` is never applied to a pending result.**
+- **The third outcome is `unevaluable` (#3817)**, on `success: false`, never with `pending`
+  or a condition: no type, no evaluator, a throwing evaluator or validator, an empty
+  composite, an unparsable attributes query, a settled missing-data path (a binding check
+  without an identity or without a grant list). `invert` is never applied to it;
+  composites treat it as an unknown that never resolves, deciding precedence after
+  `invert`; the pre-gate never permits it; `compile` drops it. `grants: []` is a known
+  fact, a plain false. Rejected: an opt-in fail-closed mode (the engine already claimed
+  the behaviour).
 - A pending junction policy is a pending grant term; the disjunction settles false only
   when every term settled.
 - A childless composite fails closed with `PolicyIssueCode.INVALID` (#3304);

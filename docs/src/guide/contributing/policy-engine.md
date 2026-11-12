@@ -52,6 +52,15 @@ ignores the flag fails closed).
   `pendingPolicies: 'permit'`, so a pending tree passes the gate and only a tree that
   settles false with the current bag denies. The full `evaluate()` with the enriched bag
   remains the authority (pending ⇒ deny there).
+- A policy that cannot be evaluated at all reports `unevaluable` (#3817), again on
+  `success: false` and never together with `pending` or a `condition`: no type, no
+  evaluator, a throwing evaluator or validator, a childless composite, an unparsable
+  attributes query, or data a check needs that is missing without being declared (a
+  permission-binding check without an identity or without a grant list). `invert` is
+  never applied to it, the composite algebra treats it as an unknown that never resolves
+  (deciding precedence on the outcome after `invert`), the pre-gate never permits it and
+  `compile` drops it. An identity with `grants: []` is a known fact: that check settles
+  false. A fail-closed mode switch was rejected; the engine applies the rule always.
 
 There is **no hand-maintained exclusion list** anymore. A new policy type places itself
 by shipping `requires()`, with zero engine edits.
@@ -80,7 +89,9 @@ rows).
    `validator.ts`, `evaluator.ts` (+ barrel `index.ts`), mirroring an existing sibling.
 2. The evaluator implements `IPolicyEvaluator`:
    - `evaluate(value, ctx)`: settle against the bag; use `maybeInvertPolicyOutcome`
-     only on genuine outcomes (never on non-evaluations or pendings).
+     only on genuine outcomes (never on non-evaluations or pendings); answer
+     `{ success: false, unevaluable: true }` for a configuration or data that makes a
+     decision impossible. Never write into the policy you are handed.
    - `requires(value)`: the data keys the config needs; may be config-dependent (see
      the realm-match evaluator's scope vs. attribute mode).
    - `toCondition(value, ctx)`: optional, only when the policy is expressible over row
@@ -94,7 +105,7 @@ rows).
 4. Server-side persistence: add the config's attribute validators in
    `@authup/core-kit`'s policy validator so the API can persist it, and extend the kit's
    policy form components for the UI.
-5. Tests live in `packages/access/test/unit/policy/`: pin settled/pending/inverted
+5. Tests live in `packages/access/test/unit/policy/`: pin settled/pending/unevaluable/inverted
    behavior, and when `toCondition` exists, pin **semantic parity**: compile the
    condition with `@rapiq/adapter-memory` and assert the predicate equals full evaluation row by
    row (see `to-condition.spec.ts`).

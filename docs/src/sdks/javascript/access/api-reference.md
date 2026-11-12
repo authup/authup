@@ -68,6 +68,12 @@ export type PermissionPolicyBinding = {
 };
 ```
 
+`isPermissionPolicyBinding(value)` narrows an unknown value (a stored or received
+binding) to this type. It checks the shape only: `permission.name` a non-empty string,
+`realmId` / `clientId` absent, `null` or a string, `decisionStrategy` and `realmScope`
+absent or a known value, `policies` absent or a list of objects carrying a string `type`.
+A policy's configuration is its validator's to check.
+
 ## `PolicyData`
 
 **Type**

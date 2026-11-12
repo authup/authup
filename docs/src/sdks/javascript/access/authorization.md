@@ -187,6 +187,69 @@ adapter instead. Call `compile` without `realmMatch` or `attributes` data. A
 pending policy that cannot be lowered produces `post`, never an unrestricted
 query.
 
+## Store the decision data as a snapshot
+
+`createAuthorizationEvaluator` runs in two steps you can call yourself. When
+the decision has to be made later or elsewhere (a stored job, a worker, a
+browser), build the snapshot where the catalog and the introspection are at
+hand, store it, and build the evaluator from it when you need one.
+
+```typescript
+import {
+    buildAuthorizationSnapshot,
+    createAuthorizationSnapshotEvaluator,
+} from '@authup/access';
+
+// where the catalog and the grants are at hand; no identity is needed
+const snapshot = await buildAuthorizationSnapshot({
+    catalog,
+    grants: introspection.permissions ?? [],
+});
+
+await store.save(JSON.stringify(snapshot));
+
+// later, possibly in another process
+const authorization = await createAuthorizationSnapshotEvaluator({
+    snapshot: JSON.parse(await store.load()),
+    identity,
+});
+```
+
+`AuthorizationSnapshot` is `{ definitions, grants? }`: one
+`PermissionPolicyBinding` per definition and one per grant, plain data that
+shares no object with the catalog and survives a JSON round trip. The builder
+applies the catalog rules above (a stale grant throws, a definition carried
+with `policies: null` is left out and denies, a duplicate permission namespace
+is refused), so the same catalog, grants and identity answer the same way
+through a snapshot as through `createAuthorizationEvaluator`.
+
+A stored snapshot is untrusted input, and the evaluator treats it that way:
+
+- A malformed envelope throws a validation error naming the member. Use
+  `isPermissionPolicyBinding` to check a single binding yourself.
+- Every policy tree is projected again under your validators. A definition
+  whose tree does not project denies; a grant whose tree does not project, or
+  carries a permission-binding check, is left out.
+- A grant is evaluated under the permission of the definition it names, so a
+  stored grant cannot disagree with it on `decisionStrategy`. A grant naming no
+  definition of the snapshot is left out.
+- `realmScope` on a definition is refused: the definition layer applies no
+  reach, so honouring it would allow what the server denies.
+- A non-empty `grants` without an `identity` is refused, as above.
+
+A `Date` at the top level of a policy node (`date`, `time`) is stored as epoch
+milliseconds, so a custom policy type must accept a number wherever it accepts
+a `Date`, and a `Date` nested deeper in its configuration does not survive
+JSON. A custom validator must accept its own output, since the evaluator
+projects a stored tree again.
+
+**Self-contained bindings.** `{ definitions: bindings }` without `grants`
+evaluates a flat list: bindings sharing a name are ORed, and the policies of
+one binding combine under its `decisionStrategy`. Such a list has no grant
+layer, so a definition carrying a `permissionBinding` node (as
+`system.default` does) denies in it. A list derived from the catalog must go
+through `buildAuthorizationSnapshot`, which keeps both layers.
+
 ## Catalog and grant contract
 
 The catalog (`GET /authorization`):
