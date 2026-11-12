@@ -356,8 +356,18 @@ describe('authorization snapshot', () => {
             validators: { ...PolicyDefaultValidators, opaque: createOpaquePolicyValidator() },
             evaluators: { ...PolicyDefaultEvaluators, opaque: { evaluate: async () => ({ success: true }) } },
         };
+        const cyclic : Record<string, unknown> = { depth: 1 };
+
+        cyclic.self = cyclic;
+
+        const cyclicList : unknown[] = [1];
+
+        cyclicList.push({ list: cyclicList });
+
         const catalog = {
             policies: {
+                cyclic: { type: 'opaque', value: cyclic },
+                cyclicList: { type: 'opaque', value: cyclicList },
                 date: { type: 'opaque', value: { at: new Date(2020, 0, 1) } },
                 bigint: { type: 'opaque', value: 10n },
                 regex: { type: 'opaque', value: [/^adm/i] },
@@ -367,7 +377,7 @@ describe('authorization snapshot', () => {
                 binding: { type: 'permissionBinding' },
             },
             permissions: [
-                ...['date', 'bigint', 'regex', 'list', 'infinite', 'ok'].map((name) => definition(name, [name])),
+                ...['cyclic', 'cyclicList', 'date', 'bigint', 'regex', 'list', 'infinite', 'ok'].map((name) => definition(name, [name])),
                 definition('granted', ['binding']),
             ],
         };
@@ -393,7 +403,7 @@ describe('authorization snapshot', () => {
         for (const input of [snapshot, stored]) {
             const evaluator = await createAuthorizationSnapshotEvaluator({ snapshot: input, identity }, options);
 
-            for (const name of ['date', 'bigint', 'regex', 'list', 'infinite', 'granted']) {
+            for (const name of ['cyclic', 'cyclicList', 'date', 'bigint', 'regex', 'list', 'infinite', 'granted']) {
                 expect(await allowed(evaluator, { name })).toBe(false);
             }
 

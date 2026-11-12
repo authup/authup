@@ -101,7 +101,11 @@ function withheldPolicy() : BasePolicy {
 
 const UNSTORABLE = Symbol('unstorable');
 
-function toStorableValue(value: unknown, key?: string) : unknown {
+function toStorableValue(
+    value: unknown,
+    key?: string,
+    ancestors: Set<object> = new Set<object>(),
+) : unknown {
     if (value === null || typeof value === 'string' || typeof value === 'boolean') {
         return value;
     }
@@ -114,49 +118,59 @@ function toStorableValue(value: unknown, key?: string) : unknown {
         return key === '$regex' ? String(value) : UNSTORABLE;
     }
 
-    if (Array.isArray(value)) {
-        const output : unknown[] = [];
+    if (typeof value !== 'object' || ancestors.has(value)) {
+        return UNSTORABLE;
+    }
 
-        for (const item of value) {
-            const next = typeof item === 'undefined' ? UNSTORABLE : toStorableValue(item);
+    if (!Array.isArray(value)) {
+        const prototype = Object.getPrototypeOf(value);
+
+        if (prototype !== null && prototype !== Object.prototype) {
+            return UNSTORABLE;
+        }
+    }
+
+    ancestors.add(value);
+
+    try {
+        if (Array.isArray(value)) {
+            const output : unknown[] = [];
+
+            for (const item of value) {
+                const next = typeof item === 'undefined' ?
+                    UNSTORABLE :
+                    toStorableValue(item, undefined, ancestors);
+
+                if (next === UNSTORABLE) {
+                    return UNSTORABLE;
+                }
+
+                output.push(next);
+            }
+
+            return output;
+        }
+
+        const output : Record<string, unknown> = {};
+
+        for (const [name, item] of Object.entries(value)) {
+            if (typeof item === 'undefined') {
+                continue;
+            }
+
+            const next = toStorableValue(item, name, ancestors);
 
             if (next === UNSTORABLE) {
                 return UNSTORABLE;
             }
 
-            output.push(next);
+            output[name] = next;
         }
 
         return output;
+    } finally {
+        ancestors.delete(value);
     }
-
-    if (typeof value !== 'object') {
-        return UNSTORABLE;
-    }
-
-    const prototype = Object.getPrototypeOf(value);
-
-    if (prototype !== null && prototype !== Object.prototype) {
-        return UNSTORABLE;
-    }
-
-    const output : Record<string, unknown> = {};
-
-    for (const [name, item] of Object.entries(value)) {
-        if (typeof item === 'undefined') {
-            continue;
-        }
-
-        const next = toStorableValue(item, name);
-
-        if (next === UNSTORABLE) {
-            return UNSTORABLE;
-        }
-
-        output[name] = next;
-    }
-
-    return output;
 }
 
 function toSerializablePolicy(input: BasePolicy) : BasePolicy | null {
