@@ -76,9 +76,11 @@ A grant whose junction policy the server cannot project (a policy type it has no
 for, or a configuration its validator refuses) is listed in `permissions` of
 `POST /token/introspect` and `GET /sessions/@me/introspect`, and `GET /authorization` carries
 that policy with the part that cannot be projected as a withheld node. Such a grant was left
-out of both. The server evaluates it as
-a grant that cannot be evaluated, and `createAuthorizationEvaluator` from `@authup/access`
-now reaches the same verdict, also under an inverted binding check.
+out of both. The rest of the policy still decides where it can: a `unanimous` composite with
+another child that settles false is false, an `affirmative` one with a child that settles true
+is true. Only where the withheld part would have to decide is the grant one that cannot be
+evaluated. `createAuthorizationEvaluator` from `@authup/access` reaches the server's verdict
+in each case, also under an inverted binding check.
 
 **Action required:** None for a consumer built on `createAuthorizationEvaluator`. A consumer
 that reads `permissions` as a set of names sees the name of such a grant, as it already sees

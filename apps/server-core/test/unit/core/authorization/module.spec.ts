@@ -467,6 +467,24 @@ describe('core/authorization/module', () => {
         expect(catalog.policies['policy-realmless']).toEqual({ type: AUTHORIZATION_POLICY_WITHHELD_TYPE });
     });
 
+    it('withholds a grant policy whole when its reach cannot be decided', async () => {
+        const ctx = setup();
+
+        ctx.catalogRepository.setDefinitions([bindingDefinition('read')]);
+        ctx.catalogRepository.setGrantPolicies([scoped, visible]);
+
+        const catalog = await build(ctx, async (id) => {
+            if (id === realmId) {
+                throw new Error('The realm reach could not be read.');
+            }
+
+            return true;
+        });
+
+        expect(catalog.policies['policy-scoped']).toEqual({ type: AUTHORIZATION_POLICY_WITHHELD_TYPE });
+        expect(catalog.policies['policy-visible']).toEqual({ type: 'attributes', query: { visible: { $eq: true } } });
+    });
+
     it('withholds a grant policy out of reach', async () => {
         const ctx = setup();
 

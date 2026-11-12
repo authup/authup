@@ -151,7 +151,12 @@ export async function buildAuthorizationCatalog(
             try {
                 id = readPolicyId(tree);
 
-                if (!await canReachTree(tree)) {
+                // A reach that could not be decided is no reach: the tree is
+                // withheld whole, never handed to the grant branch below, which
+                // carries the projectable part of a tree without a reach check.
+                const reachable = await canReachTree(tree).catch(() => false);
+
+                if (!reachable) {
                     withheld.add(id);
                     projected.push([id, { type: AUTHORIZATION_POLICY_WITHHELD_TYPE }]);
 
