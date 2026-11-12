@@ -70,6 +70,14 @@ treats it as a deny:
   when another child settles false.
 - `preEvaluate` never permits it, and `compile` drops it from a disjunction of names.
 
+A composite with a pending child next to a not evaluable one stays pending and reports
+which settled outcome it can still reach: `reachable: 'pass'` (it can pass but never
+fail) or `reachable: 'fail'` (it can fail but never pass); without `reachable` both are
+open. `invert` swaps the two. `preEvaluate` permits a pending result unless `reachable` is
+`'fail'`. A subtree containing a not evaluable term is never lowered to a query, so a
+result with `reachable` carries no condition: `compile` treats `'fail'` as a denial and
+`'pass'` as a per-row check (`post`).
+
 ## Attributes
 
 The attributes policy configuration specifies conditions in the form of a MongoDB query, which are evaluated against the `attributes` key in the policy data.
@@ -430,7 +438,8 @@ Guidelines:
 - **Report what you cannot evaluate.** When the configuration or the data makes a
   decision impossible, return `{ success: false, unevaluable: true }` rather than a plain
   `false`, which an inverted parent would turn into a pass. The engine drops `pending`
-  and any `condition` from such a result.
+  and any `condition` from such a result. Never set `reachable`: the composites derive
+  it from their children.
 - **`toCondition` must be exact.** A row satisfies the returned condition if and only
   if the policy would settle true with that row as its attributes. When in doubt,
   return `null`: a per-row check is always sound.

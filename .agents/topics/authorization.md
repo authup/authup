@@ -131,16 +131,18 @@ the endpoints cannot drift.
 
 **`createAuthorizationEvaluator({ catalog, grants?, identity? }, { validators?, evaluators? })`**
 rebuilds the server's raw `PermissionPolicyBinding` model and runs the same aggregation and
-evaluators, so parity holds by construction. It is `buildAuthorizationSnapshot` followed by
-`createAuthorizationSnapshotEvaluator` (#3817).
+evaluators, so parity holds by construction. It shares one internal resolver (catalog to
+bindings) and one evaluator factory with `buildAuthorizationSnapshot` /
+`createAuthorizationSnapshotEvaluator` (#3817), but never goes through a snapshot: its
+evaluators get the validator output once, unconverted.
 
-- **The snapshot** is `{ definitions, grants }` as plain, JSON-safe bindings. Stored, it is
-  untrusted: the evaluator re-projects every tree, re-binds each grant to the definition
-  it names (dropping one naming none) and refuses `realmScope` on a definition (the
-  definition layer applies no reach, so honouring it would fail open). `{ definitions }`
-  alone is the flat list of self-contained bindings, ORed across same-named bindings.
-  Rejected: a flat list with reach baked in for one realm (lossy: it drops every grant it
-  cannot express).
+- **The snapshot** is `{ definitions, grants }` as plain, JSON-safe bindings (a top-level
+  `Date` stored as epoch ms). Stored, it is untrusted: the evaluator re-projects every
+  tree, re-binds each grant to the first definition of its namespace (dropping one naming
+  none) and refuses `realmScope` on a definition (the definition layer applies no reach,
+  so honouring it would fail open). `{ definitions }` alone is the flat list of
+  self-contained bindings, ORed across same-named bindings. Rejected: a flat list with
+  reach baked in for one realm (lossy: it drops every grant it cannot express).
 
 - A grant naming a definition or policy the catalog lacks throws
   `AuthorizationCatalogStaleError`: refetch and rebuild. Never read an absence as a deny.
@@ -501,18 +503,22 @@ Defaults (declared in `app/modules/provisioning/sources/default/module.ts`):
 - **The third outcome is `unevaluable` (#3817)**, on `success: false`, never with `pending`
   or a condition: no type, no evaluator, a throwing evaluator or validator, an empty
   composite, an unparsable attributes query, a settled missing-data path (a binding check
-  without an identity or without a grant list). `invert` is never applied to it;
-  composites treat it as an unknown that never resolves, deciding precedence after
-  `invert`; the pre-gate never permits it; `compile` drops it. `grants: []` is a known
-  fact, a plain false. Rejected: an opt-in fail-closed mode (the engine already claimed
-  the behaviour).
+  without an identity or without a grant list). `invert` is never applied to it; the
+  pre-gate never permits it; `compile` drops it. `grants: []` is a known fact, a plain
+  false. Rejected: an opt-in fail-closed mode (the engine already claimed the behaviour).
+- A composite or binding node with a pending term next to an unevaluable one stays pending
+  and reports `reachable: 'pass' | 'fail'`, the one settled outcome still open (absent:
+  both); it is unevaluable only when nothing pends or no outcome is left. `invert` swaps
+  `reachable`. CONSENSUS never narrows. A condition exists only for a subtree with no
+  unevaluable term, never next to `reachable`, so every condition is exact.
 - A pending junction policy is a pending grant term; the disjunction settles false only
   when every term settled.
 - A childless composite fails closed with `PolicyIssueCode.INVALID` (#3304);
   `PolicyProvisioningValidator` rejects it at config load. The entity API create path is
   NOT gated (the admin UI creates the composite before attaching children).
-- `preEvaluate` passes `pendingPolicies: 'permit'` (default `'deny'`): only a tree that
-  settles false denies. New policy types place themselves via `requires`; there is no
+- `preEvaluate` passes `pendingPolicies: 'permit'` (default `'deny'`): it permits a pending
+  tree unless `reachable` is `'fail'`; `compile` drops a pending `'fail'` like a false and
+  answers `post` for any other pending tree without a condition. New policy types place themselves via `requires`; there is no
   exclusion list. The full `evaluate()` with data denies on pending.
 
 **Condition lowering (#3286):** optional `IPolicyEvaluator.toCondition?(value, ctx)`

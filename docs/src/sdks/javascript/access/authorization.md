@@ -221,7 +221,8 @@ shares no object with the catalog and survives a JSON round trip. The builder
 applies the catalog rules above (a stale grant throws, a definition carried
 with `policies: null` is left out and denies, a duplicate permission namespace
 is refused), so the same catalog, grants and identity answer the same way
-through a snapshot as through `createAuthorizationEvaluator`.
+through a snapshot as through `createAuthorizationEvaluator` (for a custom
+policy type, within the limits below).
 
 A stored snapshot is untrusted input, and the evaluator treats it that way:
 
@@ -237,15 +238,21 @@ A stored snapshot is untrusted input, and the evaluator treats it that way:
   reach, so honouring it would allow what the server denies.
 - A non-empty `grants` without an `identity` is refused, as above.
 
-A `Date` at the top level of a policy node (`date`, `time`) is stored as epoch
-milliseconds, so a custom policy type must accept a number wherever it accepts
-a `Date`, and a `Date` nested deeper in its configuration does not survive
-JSON. A custom validator must accept its own output, since the evaluator
-projects a stored tree again.
+In a snapshot, a `Date` at the top level of a policy node (`date`, `time`) is
+stored as epoch milliseconds, and a `Date` nested deeper in a configuration
+does not survive JSON. `createAuthorizationEvaluator` builds no snapshot: it
+hands the evaluators the validator output unchanged, a `Date` included. To be
+evaluated from a snapshot, a custom policy type must therefore accept a number
+wherever it accepts a `Date`, and its validator must accept its own output,
+since the snapshot evaluator projects a stored tree again. A type that does not
+still evaluates through `createAuthorizationEvaluator`; from a snapshot, the
+definitions using it deny.
 
 **Self-contained bindings.** `{ definitions: bindings }` without `grants`
 evaluates a flat list: bindings sharing a name are ORed, and the policies of
-one binding combine under its `decisionStrategy`. Such a list has no grant
+one binding combine under its `decisionStrategy`. When grants are given next
+to definitions sharing a namespace, each grant is evaluated under the first of
+them. Such a list has no grant
 layer, so a definition carrying a `permissionBinding` node (as
 `system.default` does) denies in it. A list derived from the catalog must go
 through `buildAuthorizationSnapshot`, which keeps both layers.
