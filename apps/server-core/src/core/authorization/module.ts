@@ -15,6 +15,7 @@ import {
     AUTHORIZATION_POLICY_WITHHELD_TYPE,
     buildPermissionKey,
     projectAuthorizationPolicy,
+    projectAuthorizationPolicyPartially,
 } from '@authup/access';
 import { InternalError } from '@authup/errors';
 import type { AuthorizationCatalogBuilderContext, AuthorizationRealmReach } from './types.ts';
@@ -121,7 +122,9 @@ export async function buildAuthorizationCatalog(
 
     // A tree is one policy expression, so it travels whole or not at all: one
     // node out of reach withholds the tree, since a partial one would deny or
-    // permit by a rule the caller cannot see.
+    // permit by a rule the caller cannot see. That is fail-closed by design: a
+    // consumer reads a grant of such a tree as one that cannot be evaluated,
+    // even where the part it may not see would not have decided it.
     const canReachTree = async (tree: BasePolicy) : Promise<boolean> => {
         for (const realmId of collectRealmIds(tree, new Set<string | null | undefined>())) {
             if (typeof realmId === 'undefined' || !await canReach(realmId)) {
@@ -219,18 +222,21 @@ export async function buildAuthorizationCatalog(
             continue;
         }
 
-        // A grant tree this catalog cannot project still travels, as the node no
-        // consumer can project: the server evaluates such a grant as a term that
-        // cannot be evaluated, and a consumer never told about it would settle
-        // an inverted binding check the other way (#3823). Without an id there
-        // is nothing a grant could name, so that tree is dropped.
+        // A grant tree this catalog cannot project still travels, as its partial
+        // projection: only the part that cannot be projected becomes the node no
+        // consumer can project, so a consumer settles the grant where the rest
+        // of the tree decides it and reads it as one that cannot be evaluated
+        // where it does not, as the server does. A consumer never told about it
+        // would settle an inverted binding check the other way (#3823). Without
+        // an id there is nothing a grant could name, so that tree is dropped.
         if (ids.policyId) {
             withheld.add(ids.policyId);
-            policies[ids.policyId] = { type: AUTHORIZATION_POLICY_WITHHELD_TYPE };
+            policies[ids.policyId] = await projectAuthorizationPolicyPartially(tree);
 
             ctx.logger?.warn(
-                `Carried the grant policy ${ids.policyId} in the authorization catalog as withheld: ${ids.message}. ` +
-                'Every consumer reads a grant of it as one that cannot be evaluated until the policy is fixed.',
+                `Carried the grant policy ${ids.policyId} in the authorization catalog with the part it cannot ` +
+                `project withheld: ${ids.message}. Every consumer evaluates a grant of it without that part ` +
+                'until the policy is fixed.',
             );
 
             continue;

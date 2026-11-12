@@ -331,6 +331,55 @@ describe('core/authorization/module', () => {
         expect(catalog.permissions.find((permission) => permission.name === 'custom')!.policies).toBeNull();
         expect(catalog.permissions.find((permission) => permission.name === 'read')!.policies).toEqual(['policy-default']);
     });
+    it('carries the projectable part of a grant tree, withholding only the child it cannot project', async () => {
+        const ctx = setup();
+        const partial = {
+            id: 'policy-partial',
+            realmId: null,
+            type: 'composite',
+            decisionStrategy: 'unanimous',
+            invert: true,
+            children: [custom, {
+                id: 'policy-client',
+                realmId: null,
+                type: 'identity',
+                types: ['client'],
+            }],
+        };
+
+        ctx.catalogRepository.setDefinitions([[globalPermission('partial'), [partial]], bindingDefinition('read')]);
+        ctx.catalogRepository.setGrantPolicies([partial]);
+
+        const catalog = await build(ctx);
+
+        expect(catalog.policies['policy-partial']).toEqual({
+            type: 'composite',
+            decisionStrategy: 'unanimous',
+            invert: true,
+            children: [{ type: AUTHORIZATION_POLICY_WITHHELD_TYPE }, { type: 'identity', types: ['client'] }],
+        });
+        expect(catalog.permissions.find((permission) => permission.name === 'partial')!.policies).toBeNull();
+        expect(ctx.warn).toHaveBeenCalledTimes(2);
+        expect(String(ctx.warn.mock.calls[1]![0])).toContain('policy-partial');
+    });
+
+    it('withholds a grant tree out of reach as a whole, even one it could project in part', async () => {
+        const ctx = setup();
+        const scopedPartial = {
+            id: 'policy-scoped-partial',
+            realmId,
+            type: 'composite',
+            children: [{ ...custom, realmId }, { ...scoped, id: 'policy-scoped-child' }],
+        };
+
+        ctx.catalogRepository.setDefinitions([bindingDefinition('read')]);
+        ctx.catalogRepository.setGrantPolicies([scopedPartial]);
+
+        const catalog = await build(ctx, async (realm) => realm !== realmId);
+
+        expect(catalog.policies['policy-scoped-partial']).toEqual({ type: AUTHORIZATION_POLICY_WITHHELD_TYPE });
+        expect(ctx.warn).not.toHaveBeenCalled();
+    });
     // The realm reach of the caller's own read grant, the gate `GET /permissions`
     // and `GET /policies` apply to the same rows. What it removes is the policy
     // configuration, never an entry: an absent definition has to keep meaning

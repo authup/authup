@@ -75,7 +75,8 @@ including those bound as application access or enrollment policies.
 A grant whose junction policy the server cannot project (a policy type it has no validator
 for, or a configuration its validator refuses) is listed in `permissions` of
 `POST /token/introspect` and `GET /sessions/@me/introspect`, and `GET /authorization` carries
-that policy as a withheld node. Such a grant was left out of both. The server evaluates it as
+that policy with the part that cannot be projected as a withheld node. Such a grant was left
+out of both. The server evaluates it as
 a grant that cannot be evaluated, and `createAuthorizationEvaluator` from `@authup/access`
 now reaches the same verdict, also under an inverted binding check.
 

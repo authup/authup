@@ -539,7 +539,7 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         expect(await evaluator.compile({ name: permission.name })).toEqual({ verdict: 'deny' });
     });
 
-    it('denies an inverted binding check over such a grant on the consumer, as the server does', async () => {
+    it('decides an inverted binding check over such a grant on the consumer as the server does', async () => {
         const user = await suite.dataSource.getRepository(UserEntity).findOneByOrFail({ name: 'admin' });
         const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
         const permissionPolicyRepository = suite.dataSource.getRepository(PermissionPolicyEntity);
@@ -552,27 +552,45 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
             invert: true,
         });
 
-        const create = async (granted: boolean) => {
+        // a unanimous composite whose unsupported child cannot be evaluated,
+        // next to a child that settles false for the admin USER: the composite
+        // settles false, so the grant fails and the inverted check passes
+        const { data: decisive } = await suite.client.policy.create({
+            name: randomUUID(),
+            type: BuiltInPolicyType.COMPOSITE,
+            decisionStrategy: 'unanimous',
+            children: [{ name: randomUUID(), type: 'plan109custom' }],
+        });
+
+        await suite.client.policy.create({
+            name: randomUUID(),
+            type: BuiltInPolicyType.IDENTITY,
+            types: ['client'],
+            parentId: decisive.id,
+        });
+
+        const create = async (policyId?: string) => {
             const permission = await permissionRepository.save(permissionRepository.create({ name: randomUUID() }));
 
             await permissionPolicyRepository.save(permissionPolicyRepository.create({ permissionId: permission.id, policyId: inverted.id }));
 
-            if (granted) {
+            if (policyId) {
                 await userPermissionRepository.save(userPermissionRepository.create({
                     userId: user.id,
                     userRealmId: user.realmId,
                     permissionId: permission.id,
                     permissionRealmId: null,
                     realmScope: 'any',
-                    policyId: unsupported.id,
+                    policyId,
                 }));
             }
 
             return permission;
         };
 
-        const held = await create(true);
-        const unheld = await create(false);
+        const held = await create(unsupported.id);
+        const unheld = await create();
+        const settled = await create(decisive.id);
 
         const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
         const introspection = await suite.client.token.introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
@@ -598,5 +616,25 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
 
         expect(await server(unheld.id)).toBe(true);
         expect(await consumer(unheld.name)).toBe(true);
+
+        // the children travel in the order the tree loads them, which is not fixed
+        const { children, ...node } = catalog.policies[decisive.id]!;
+
+        expect(node).toEqual({
+            type: BuiltInPolicyType.COMPOSITE,
+            decisionStrategy: 'unanimous',
+            invert: false,
+        });
+        expect(children).toHaveLength(2);
+        expect(children).toEqual(expect.arrayContaining([
+            { type: AUTHORIZATION_POLICY_WITHHELD_TYPE },
+            {
+                type: BuiltInPolicyType.IDENTITY,
+                types: ['client'],
+                invert: false,
+            },
+        ]));
+        expect(await server(settled.id)).toBe(true);
+        expect(await consumer(settled.name)).toBe(true);
     });
 });
