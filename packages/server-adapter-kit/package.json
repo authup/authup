@@ -57,15 +57,19 @@
         "@authup/errors": "^1.0.0-beta.74",
         "@authup/kit": "^1.0.0-beta.74",
         "@authup/specs": "^1.0.0-beta.74",
-        "redis-extension": "^2.0.4",
+        "redis-extension": "^3.0.0",
         "vouchly": "^0.1.1"
     },
     "devDependencies": {
         "@authup/server-kit": "^1.0.0-beta.74",
+        "ioredis": "^6.0.0",
         "jose": "^6.2.13",
         "vitest": "^5.0.3"
     },
     "publishConfig": {
         "access": "public"
+    },
+    "peerDependencies": {
+        "ioredis": "^6.0.0"
     }
 }

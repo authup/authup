@@ -6,7 +6,7 @@
  */
 
 import type { Client } from 'redis-extension';
-import { JsonAdapter } from 'redis-extension';
+import { ValueStore } from 'redis-extension';
 import type { RedisClient, RedisClientOptions } from '../../redis';
 import { createRedisClient } from '../../redis';
 import type { CacheClearOptions, CacheSetOptions, ICache } from '../types';
@@ -28,18 +28,28 @@ return 0
 export class RedisCache implements ICache {
     protected client : Client;
 
-    protected jsonAdapter : JsonAdapter;
+    protected store : ValueStore;
 
     constructor(input: string | boolean | RedisClient | RedisClientOptions) {
         this.client = createRedisClient(input);
-        this.jsonAdapter = new JsonAdapter(this.client);
+        this.store = new ValueStore(this.client, {
+            // an undefined value is stored as an empty string, which reads back as a miss.
+            serialize: (value) => JSON.stringify(value) ?? '',
+        });
     }
 
     async get(key: string): Promise<any> {
-        // jsonAdapter.get returns undefined for an absent key — distinguish that
+        // store.get returns undefined for an absent key — distinguish that
         // from a stored falsy value (`0` counter, `false`, `''`) which must
         // round-trip instead of reading back as null.
-        const output = await this.jsonAdapter.get(key);
+        let output: unknown;
+
+        try {
+            output = await this.store.get(key);
+        } catch {
+            // an unreachable redis or a key of another type reads as a miss.
+            return null;
+        }
 
         if (typeof output === 'undefined') {
             return null;
@@ -69,7 +79,7 @@ export class RedisCache implements ICache {
     }
 
     async set(key: string, value: any, options: CacheSetOptions): Promise<void> {
-        await this.jsonAdapter.set(key, value, { milliseconds: options.ttl });
+        await this.store.set(key, value, { milliseconds: options.ttl });
     }
 
     async add(key: string, value: any, options: CacheSetOptions = {}): Promise<boolean> {
@@ -120,7 +130,7 @@ export class RedisCache implements ICache {
     }
 
     async drop(key: string): Promise<void> {
-        await this.jsonAdapter.drop(key);
+        await this.store.drop(key);
     }
 
     async dropMany(keys: string[]) : Promise<void> {

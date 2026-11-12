@@ -6,7 +6,7 @@
  */
 
 import type { Client } from 'redis-extension';
-import { JsonAdapter, createClient } from 'redis-extension';
+import { ValueStore, createClient } from 'redis-extension';
 import type { ITokenCache, TokenCacheEntry } from 'vouchly';
 
 /**
@@ -14,7 +14,7 @@ import type { ITokenCache, TokenCacheEntry } from 'vouchly';
  * SHA-256 of the namespace and the token, so it is stored as is.
  */
 export class RedisTokenCache implements ITokenCache {
-    protected instance : JsonAdapter;
+    protected instance : ValueStore<TokenCacheEntry>;
 
     constructor(input?: Client | string) {
         let client: Client;
@@ -22,16 +22,21 @@ export class RedisTokenCache implements ITokenCache {
         if (!input) {
             client = createClient();
         } else if (typeof input === 'string') {
-            client = createClient({ connectionString: input });
+            client = createClient({ url: input });
         } else {
             client = input;
         }
 
-        this.instance = new JsonAdapter(client);
+        this.instance = new ValueStore<TokenCacheEntry>(client);
     }
 
-    get(key: string): Promise<TokenCacheEntry | undefined> {
-        return this.instance.get(this.buildKey(key));
+    async get(key: string): Promise<TokenCacheEntry | undefined> {
+        try {
+            return await this.instance.get(this.buildKey(key));
+        } catch {
+            // an unreachable redis or a key of another type reads as a miss.
+            return undefined;
+        }
     }
 
     async set(key: string, entry: TokenCacheEntry, ttl: number): Promise<void> {

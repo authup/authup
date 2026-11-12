@@ -41,7 +41,7 @@ For an HTTP server, a Socket.IO server or a Web `Request` handler, use one of th
 npm install @authup/server-adapter-kit
 ```
 
-The package is ESM-only and needs Node.js `>=26.0.0`. It has no peer dependencies. Install [`@authup/core-http-kit`](https://github.com/authup/authup/tree/master/packages/core-http-kit) as well when you use remote mode, for `createClientTokenCreator`.
+The package is ESM-only and needs Node.js `>=26.0.0`. Its one peer dependency is `ioredis` (`^6.0.0`), which npm installs for you; `RedisTokenCache` connects through it. Install [`@authup/core-http-kit`](https://github.com/authup/authup/tree/master/packages/core-http-kit) as well when you use remote mode, for `createClientTokenCreator`.
 
 ## Usage
 
@@ -102,7 +102,7 @@ const shared = new TokenVerifier({
 });
 ```
 
-Verified results are cached only when you pass a `cache`. A result is kept for the token's remaining lifetime, or at most `maxRemoteCacheTTL` seconds in remote mode. Entries are keyed by a SHA-256 hash of the namespace and the token, the namespace defaulting to `authup:<local|remote>:<baseURL>`. `MemoryTokenCache` (re-exported from vouchly) keeps up to 10000 entries in process memory. `RedisTokenCache` takes a connection string, a `redis-extension` client, or nothing (redis-extension's default connection). A cache of your own implements vouchly's `ITokenCache` (`get(key)` and `set(key, entry, ttl)`).
+Verified results are cached only when you pass a `cache`. A result is kept for the token's remaining lifetime, or at most `maxRemoteCacheTTL` seconds in remote mode. Entries are keyed by a SHA-256 hash of the namespace and the token, the namespace defaulting to `authup:<local|remote>:<baseURL>`. `MemoryTokenCache` (re-exported from vouchly) keeps up to 10000 entries in process memory. `RedisTokenCache` takes a connection string, an `ioredis` client, or nothing (`redis://127.0.0.1:6379`). A cache of your own implements vouchly's `ITokenCache` (`get(key)` and `set(key, entry, ttl)`).
 
 Signing keys are never stored in `cache`: they stay in process memory, since a `CryptoKey` cannot be serialized.
 

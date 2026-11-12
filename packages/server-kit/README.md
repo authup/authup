@@ -38,10 +38,10 @@ You rarely install it directly: to protect an API, use one of the server adapter
 ## Installation
 
 ```shell
-npm install @authup/server-kit
+npm install @authup/server-kit ioredis
 ```
 
-It ships native bindings through `@node-rs/bcrypt` and `@node-rs/jsonwebtoken`, and depends on `winston`, `redis-extension` and the Socket.IO Redis emitter. The package is ESM only and needs Node.js `>=26.0.0`.
+It ships native bindings through `@node-rs/bcrypt` and `@node-rs/jsonwebtoken`, and depends on `winston`, `redis-extension` and the Socket.IO Redis emitter. `ioredis` (`^6.0.0`) is a peer dependency: a client you pass in and the clients the package creates come from your copy. The package is ESM only and needs Node.js `>=26.0.0`.
 
 ## Usage
 
@@ -69,6 +69,7 @@ const attempts = await cache.increment('attempts:alice', 1, { ttl: 60_000 });
 - **A `ttl` is in milliseconds.** `MemoryCache` keeps an entry forever when none is given.
 - **`add`, `increment`, `renewIfValue` and `dropIfValue` are atomic** on both adapters (Redis `SET NX` and scripts, a single tick in memory): the building blocks of a lock and of an attempt counter. `increment` re-arms the `ttl` on every call.
 - **`RedisCache` takes a connection URL, client options, an existing client or `true`** (which connects to `redis://127.0.0.1`).
+- **`RedisCache.get` reads an unreachable Redis or a key of another type as a miss** (`null`) instead of rejecting.
 
 ### Domain events
 
@@ -130,7 +131,7 @@ const plain = await cipher.decrypt(await cipher.encrypt('plain'));
 |---|---|---|
 | `createLogger`, `createNoopLogger`, `Logger`, `LoggerCreateContext` | function, type | winston-backed and silent loggers |
 | `ICache`, `MemoryCache`, `RedisCache`, `buildCacheKey` | interface, class, function | Cache port and its two adapters |
-| `createRedisClient`, `isRedisClient`, `RedisClient`, `RedisJsonAdapter`, `RedisWatcher`, `buildRedisKeyPath`, `parseRedisKeyPath`, `escapeRedisKey` | function, class | Redis client and key helpers (re-exported from `redis-extension`) |
+| `createRedisClient`, `isRedisClient`, `RedisClient`, `RedisValueStore`, `RedisWatcher`, `buildRedisKeyPath`, `parseRedisKeyPath`, `escapeRedisKey` | function, class | Redis client and key helpers (re-exported from `redis-extension`) |
 | `DomainEventPublisher`, `DomainEventRedisHandler`, `DomainEventSocketHandler`, `IDomainEventHandler`, `IDomainEventPublisher`, `DomainEventPublishContext` | class, interface, type | Domain-event bus |
 | `buildDomainEventChannelName`, `transformDomainEventData` | function | Channel naming and payload normalization |
 | `signToken`, `verifyToken`, `extractTokenHeader`, `extractTokenPayload` | function | JWT sign, verify and decode without verification |

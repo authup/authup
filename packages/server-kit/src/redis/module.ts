@@ -7,7 +7,7 @@
 
 import {
     Client as RedisClient,
-    JsonAdapter as RedisJsonAdapter,
+    ValueStore as RedisValueStore,
     Watcher as RedisWatcher,
     buildKeyPath as buildRedisKeyPath,
 
@@ -21,7 +21,7 @@ export type { RedisClientOptions };
 
 export {
     RedisClient,
-    RedisJsonAdapter,
+    RedisValueStore,
     RedisWatcher,
 
     escapeRedisKey,
