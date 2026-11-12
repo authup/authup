@@ -99,28 +99,108 @@ function withheldPolicy() : BasePolicy {
     return { type: AUTHORIZATION_POLICY_WITHHELD_TYPE };
 }
 
-function toSerializablePolicy(input: BasePolicy) : BasePolicy {
+const UNSTORABLE = Symbol('unstorable');
+
+function toStorableValue(value: unknown, key?: string) : unknown {
+    if (value === null || typeof value === 'string' || typeof value === 'boolean') {
+        return value;
+    }
+
+    if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : UNSTORABLE;
+    }
+
+    if (value instanceof RegExp) {
+        return key === '$regex' ? String(value) : UNSTORABLE;
+    }
+
+    if (Array.isArray(value)) {
+        const output : unknown[] = [];
+
+        for (const item of value) {
+            const next = typeof item === 'undefined' ? UNSTORABLE : toStorableValue(item);
+
+            if (next === UNSTORABLE) {
+                return UNSTORABLE;
+            }
+
+            output.push(next);
+        }
+
+        return output;
+    }
+
+    if (typeof value !== 'object') {
+        return UNSTORABLE;
+    }
+
+    const prototype = Object.getPrototypeOf(value);
+
+    if (prototype !== null && prototype !== Object.prototype) {
+        return UNSTORABLE;
+    }
+
     const output : Record<string, unknown> = {};
 
-    for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
-        if (value instanceof Date) {
-            output[key] = value.getTime();
-        } else if (key === 'children' && Array.isArray(value)) {
-            output[key] = value.map((child: BasePolicy) => toSerializablePolicy(child));
-        } else {
-            output[key] = value;
+    for (const [name, item] of Object.entries(value)) {
+        if (typeof item === 'undefined') {
+            continue;
         }
+
+        const next = toStorableValue(item, name);
+
+        if (next === UNSTORABLE) {
+            return UNSTORABLE;
+        }
+
+        output[name] = next;
     }
 
     return output;
 }
 
-function toSerializableBinding(input: PermissionPolicyBinding) : PermissionPolicyBinding {
-    return toBinding(
-        toPermission(input.permission),
-        (input.policies ?? []).map((policy) => toSerializablePolicy(policy)),
-        input.realmScope,
-    );
+function toSerializablePolicy(input: BasePolicy) : BasePolicy | null {
+    const output : Record<string, unknown> = {};
+
+    for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+        if (typeof value === 'undefined') {
+            continue;
+        }
+
+        if (value instanceof Date) {
+            output[key] = value.getTime();
+
+            continue;
+        }
+
+        if (key === 'children' && Array.isArray(value)) {
+            const children : BasePolicy[] = [];
+
+            for (const child of value as BasePolicy[]) {
+                const next = toSerializablePolicy(child);
+
+                if (!next) {
+                    return null;
+                }
+
+                children.push(next);
+            }
+
+            output[key] = children;
+
+            continue;
+        }
+
+        const next = toStorableValue(value, key);
+
+        if (next === UNSTORABLE) {
+            return null;
+        }
+
+        output[key] = next;
+    }
+
+    return output;
 }
 
 function toPermission(input: BasePermission) : BasePermission {
@@ -270,18 +350,24 @@ async function resolveAuthorizationBindings(
  * an inverted binding check must not read as an absent grant. A duplicate
  * permission namespace is refused. `grants` is always present, possibly empty.
  *
- * A `Date` in a node's configuration is emitted as its epoch milliseconds: a
- * JSON round trip turns a `Date` into a timestamp string the date policy's
- * validator refuses, while every built-in validator taking a `Date` takes the
- * number for the same instant.
+ * Two values are converted so they survive JSON. A `Date` at the top of a
+ * node's configuration is emitted as its epoch milliseconds: a JSON round trip
+ * turns a `Date` into a timestamp string the date policy's validator refuses,
+ * while every built-in validator taking a `Date` takes the number for the
+ * same instant. A `RegExp` under a `$regex` key is emitted as its slash
+ * literal (`"/^adm/i"`), the form the attributes evaluator reads back.
  *
  * Three limits follow. The conversion happens in the snapshot only:
  * `createAuthorizationEvaluator` hands evaluators the validator output
  * unchanged, while a custom policy type evaluated from a snapshot must accept
- * a number wherever it accepts a `Date`, or its definition drops. A `Date`
- * nested deeper in a node's configuration is not converted and does not
- * survive JSON. A custom validator must be a fixed point of its own output,
- * since the snapshot evaluator projects a stored tree again.
+ * a number wherever it accepts a `Date`, or its definition drops. Any other
+ * value JSON cannot carry faithfully (a nested `Date`, a `RegExp` elsewhere,
+ * a `bigint`, a non-finite number, a function, a class instance, `undefined`
+ * in an array) makes its tree one the snapshot cannot store, treated like a
+ * tree that does not project: a definition naming it is left out, a grant
+ * naming it keeps the withheld node in its place. A custom validator must be
+ * a fixed point of its own output, since the snapshot evaluator projects a
+ * stored tree again.
  */
 export async function buildAuthorizationSnapshot(
     input: AuthorizationSnapshotInput,
@@ -290,10 +376,49 @@ export async function buildAuthorizationSnapshot(
     const { catalog, grants } = await parseAuthorizationSnapshotInput(input);
     const bindings = await resolveAuthorizationBindings(catalog, grants, options.validators);
 
-    return structuredClone({
-        definitions: bindings.definitions.map((binding) => toSerializableBinding(binding)),
-        grants: bindings.grants.map((binding) => toSerializableBinding(binding)),
-    });
+    const definitions : PermissionPolicyBinding[] = [];
+    const permissions = new Set<string>();
+
+    for (const binding of bindings.definitions) {
+        const policies : BasePolicy[] = [];
+
+        for (const policy of binding.policies ?? []) {
+            const next = toSerializablePolicy(policy);
+
+            if (!next) {
+                break;
+            }
+
+            policies.push(next);
+        }
+
+        if (policies.length !== (binding.policies ?? []).length) {
+            continue;
+        }
+
+        const permission = toPermission(binding.permission);
+
+        permissions.add(buildPermissionKey(permission));
+        definitions.push(toBinding(permission, policies));
+    }
+
+    const stored : PermissionPolicyBinding[] = [];
+
+    for (const binding of bindings.grants) {
+        const permission = toPermission(binding.permission);
+
+        if (!permissions.has(buildPermissionKey(permission))) {
+            continue;
+        }
+
+        stored.push(toBinding(
+            permission,
+            (binding.policies ?? []).map((policy) => toSerializablePolicy(policy) ?? withheldPolicy()),
+            binding.realmScope,
+        ));
+    }
+
+    return { definitions, grants: stored };
 }
 
 /**

@@ -40,6 +40,14 @@ class StampPolicyValidator extends Container<{ at: Date }> {
     }
 }
 
+function createOpaquePolicyValidator() {
+    const validator = new Container<{ value: unknown }>();
+
+    validator.mount('value', createValidator(z.unknown()));
+
+    return validator;
+}
+
 const realmA = 'c641912c-21e5-4cb4-84b6-169e2b2bb023';
 const realmB = 'c641912c-21e5-4cb4-84b6-169e2b2bb024';
 
@@ -248,6 +256,7 @@ describe('authorization snapshot', () => {
                 },
                 identity: passes,
                 realmMatch: { type: 'realmMatch', attributeName: 'realmId' },
+                regex: { type: 'attributes', query: { name: { $regex: /^adm\/in/i } } },
                 time: {
                     type: 'time',
                     start: new Date(2020, 0, 1, 9, 0),
@@ -262,6 +271,7 @@ describe('authorization snapshot', () => {
                 'date',
                 'identity',
                 'realmMatch',
+                'regex',
                 'time',
             ].map((name) => definition(name, [name])),
         };
@@ -269,7 +279,7 @@ describe('authorization snapshot', () => {
         const rows = [
             {
                 [BuiltInPolicyType.ATTRIBUTES]: {
-                    name: 'x',
+                    name: 'ADM/in',
                     visible: true,
                     realmId: realmA,
                 },
@@ -278,6 +288,7 @@ describe('authorization snapshot', () => {
             },
             {
                 [BuiltInPolicyType.ATTRIBUTES]: {
+                    name: 'adm-in',
                     secret: 'x',
                     visible: false,
                     realmId: realmB,
@@ -333,7 +344,61 @@ describe('authorization snapshot', () => {
             false,
             true,
             false,
+            true,
+            false,
         ]);
+        expect(snapshot.definitions.find((entry) => entry.permission.name === 'regex')!.policies)
+            .toStrictEqual([{ type: 'attributes', query: { name: { $regex: '/^adm\\/in/i' } } }]);
+    });
+
+    it('leaves out a tree a stored snapshot cannot carry, and keeps the rest', async () => {
+        const options = {
+            validators: { ...PolicyDefaultValidators, opaque: createOpaquePolicyValidator() },
+            evaluators: { ...PolicyDefaultEvaluators, opaque: { evaluate: async () => ({ success: true }) } },
+        };
+        const catalog = {
+            policies: {
+                date: { type: 'opaque', value: { at: new Date(2020, 0, 1) } },
+                bigint: { type: 'opaque', value: 10n },
+                regex: { type: 'opaque', value: [/^adm/i] },
+                list: { type: 'opaque', value: [1, undefined] },
+                infinite: { type: 'opaque', value: Infinity },
+                ok: { type: 'opaque', value: { at: '2020-01-01', list: [1, null] } },
+                binding: { type: 'permissionBinding' },
+            },
+            permissions: [
+                ...['date', 'bigint', 'regex', 'list', 'infinite', 'ok'].map((name) => definition(name, [name])),
+                definition('granted', ['binding']),
+            ],
+        };
+        const grants = [grant('granted', 'any', ['bigint'])];
+
+        const direct = await createAuthorizationEvaluator({
+            catalog, 
+            grants, 
+            identity, 
+        }, options);
+
+        expect(await allowed(direct, { name: 'bigint' })).toBe(true);
+
+        const snapshot = await buildAuthorizationSnapshot({ catalog, grants }, options);
+
+        expect(() => JSON.stringify(snapshot)).not.toThrow();
+        expect(snapshot.definitions.map((entry) => entry.permission.name)).toEqual(['ok', 'granted']);
+        expect(snapshot.grants!.map((entry) => entry.policies))
+            .toEqual([[{ type: AUTHORIZATION_POLICY_WITHHELD_TYPE }]]);
+
+        const stored = JSON.parse(JSON.stringify(snapshot)) as AuthorizationSnapshot;
+
+        for (const input of [snapshot, stored]) {
+            const evaluator = await createAuthorizationSnapshotEvaluator({ snapshot: input, identity }, options);
+
+            for (const name of ['date', 'bigint', 'regex', 'list', 'infinite', 'granted']) {
+                expect(await allowed(evaluator, { name })).toBe(false);
+            }
+
+            expect(await allowed(evaluator, { name: 'ok' })).toBe(true);
+        }
     });
 
     it('hands a custom evaluator the validator output on the catalog path, and stores a Date as a number', async () => {
