@@ -5,11 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isValidupError } from 'validup';
+import { createValidator } from '@validup/zod';
+import { Container, isValidupError } from 'validup';
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import type {
     AuthorizationSnapshot,
     IPermissionEvaluator,
+    IPolicyEvaluator,
     IdentityPolicyData,
     PermissionCompileContext,
     PermissionEvaluationContext,
@@ -19,11 +22,21 @@ import {
     AuthorizationCatalogStaleError,
     BuiltInPolicyType,
     PolicyData,
+    PolicyDefaultEvaluators,
+    PolicyDefaultValidators,
     buildAuthorizationSnapshot,
     createAuthorizationEvaluator,
     createAuthorizationSnapshotEvaluator,
     isPermissionError,
 } from '../../../src';
+
+class StampPolicyValidator extends Container<{ at: Date }> {
+    override initialize() {
+        super.initialize();
+
+        this.mount('at', createValidator(z.date()));
+    }
+}
 
 const realmA = 'c641912c-21e5-4cb4-84b6-169e2b2bb023';
 const realmB = 'c641912c-21e5-4cb4-84b6-169e2b2bb024';
@@ -319,6 +332,48 @@ describe('authorization snapshot', () => {
             true,
             false,
         ]);
+    });
+
+    it('hands a custom evaluator the validator output on the catalog path, and stores a Date as a number', async () => {
+        const at = new Date(2000, 0, 1);
+        const received : unknown[] = [];
+        const options = {
+            validators: { ...PolicyDefaultValidators, stamp: new StampPolicyValidator() },
+            evaluators: {
+                ...PolicyDefaultEvaluators,
+                stamp: {
+                    async evaluate(value: Record<string, unknown>) {
+                        received.push(value.at);
+
+                        return { success: (value.at as Date).getTime() < Date.now() };
+                    },
+                } satisfies IPolicyEvaluator,
+            },
+        };
+        const catalog = {
+            policies: { stamp: { type: 'stamp', at } },
+            permissions: [definition('stamped', ['stamp'])],
+        };
+
+        const direct = await createAuthorizationEvaluator({ catalog }, options);
+
+        expect(await allowed(direct, { name: 'stamped' })).toBe(true);
+        expect(received).toHaveLength(1);
+        expect(received[0]).toBeInstanceOf(Date);
+        expect((received[0] as Date).getTime()).toBe(at.getTime());
+
+        // the documented limit: the snapshot stores the number, which a
+        // validator accepting only a Date refuses, so the definition drops
+        const snapshot = await buildAuthorizationSnapshot({ catalog }, options);
+
+        expect(snapshot.definitions[0]!.policies).toStrictEqual([{ type: 'stamp', at: at.getTime() }]);
+
+        received.length = 0;
+
+        const stored = await createAuthorizationSnapshotEvaluator({ snapshot }, options);
+
+        expect(await allowed(stored, { name: 'stamped' })).toBe(false);
+        expect(received).toHaveLength(0);
     });
 
     it('shares no object with the catalog it was built from', async () => {

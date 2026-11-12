@@ -10,7 +10,7 @@ import { InternalError } from '@authup/errors';
 import { buildIssuesForZodError } from '@validup/zod';
 import { ValidupError } from 'validup';
 import { z } from 'zod';
-import type { BasePolicy } from '../../policy';
+import type { BasePolicy, IdentityPolicyData } from '../../policy';
 import {
     BuiltInPolicyType,
     IdentityPermissionBindingPolicyEvaluator,
@@ -35,11 +35,13 @@ import { AuthorizationCatalogStaleError } from './error';
 import { containsBindingCheck, projectAuthorizationPolicy } from './policy';
 import { parseAuthorizationCheckEvaluatorInput } from './check-schema';
 import { parseAuthorizationEvaluatorInput, parseAuthorizationSnapshotInput } from './schema';
-import { parseAuthorizationSnapshot } from './snapshot-schema';
+import { parseAuthorizationSnapshotEvaluatorInput } from './snapshot-schema';
 import type {
+    AuthorizationCatalog,
     AuthorizationCheckEvaluatorInput,
     AuthorizationEvaluatorInput,
     AuthorizationEvaluatorOptions,
+    AuthorizationGrant,
     AuthorizationPolicy,
     AuthorizationSnapshot,
     AuthorizationSnapshotEvaluatorInput,
@@ -79,17 +81,35 @@ function toPolicy(tree: AuthorizationPolicy) : BasePolicy {
         ...policy
     } = tree;
 
-    for (const [key, value] of Object.entries(policy)) {
-        if (value instanceof Date) {
-            policy[key] = value.getTime();
-        }
-    }
-
     return {
         ...policy,
         ...(typeof invert === 'boolean' ? { invert } : {}),
         ...(children ? { children: children.map((child) => toPolicy(child)) } : {}),
     };
+}
+
+function toSerializablePolicy(input: BasePolicy) : BasePolicy {
+    const output : Record<string, unknown> = {};
+
+    for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+        if (value instanceof Date) {
+            output[key] = value.getTime();
+        } else if (key === 'children' && Array.isArray(value)) {
+            output[key] = value.map((child: BasePolicy) => toSerializablePolicy(child));
+        } else {
+            output[key] = value;
+        }
+    }
+
+    return output;
+}
+
+function toSerializableBinding(input: PermissionPolicyBinding) : PermissionPolicyBinding {
+    return toBinding(
+        toPermission(input.permission),
+        (input.policies ?? []).map((policy) => toSerializablePolicy(policy)),
+        input.realmScope,
+    );
 }
 
 function toPermission(input: BasePermission) : BasePermission {
@@ -113,45 +133,26 @@ function toBinding(
     };
 }
 
-/**
- * The first half of `createAuthorizationEvaluator`: the catalog and the
- * identity's grants as the introspection endpoints report them, reduced to the
- * two lists an evaluator is built from, as plain data that shares no object
- * with the input and survives a JSON round trip. No identity is needed.
- *
- * Its rules are the evaluator's. A grant referencing a definition or a policy
- * the catalog lacks throws `AuthorizationCatalogStaleError`, the signal to
- * refetch the catalog. A definition the server could not project
- * (`policies: null`) or whose tree this copy cannot project under
- * `options.validators` is left out, which denies it, and every grant of it is
- * dropped; so is a grant whose junction tree carries a binding check or does
- * not project. A duplicate permission namespace is refused. `grants` is
- * always present, possibly empty.
- *
- * A `Date` in a node's configuration is emitted as its epoch milliseconds: a
- * JSON round trip turns a `Date` into a timestamp string the date policy's
- * validator refuses, while every built-in validator taking a `Date` takes the
- * number for the same instant.
- *
- * Three limits follow. A top-level `Date` of a projected node is stored as
- * epoch milliseconds also when the snapshot is never serialized, so a custom
- * policy type must accept a number wherever it accepts a `Date`. A `Date`
- * nested deeper in a node's configuration is not converted and does not
- * survive JSON. A custom validator must be a fixed point of its own output,
- * since the snapshot evaluator projects a stored tree again.
- */
-export async function buildAuthorizationSnapshot(
-    input: AuthorizationSnapshotInput,
-    options: Pick<AuthorizationEvaluatorOptions, 'validators'> = {},
-) : Promise<AuthorizationSnapshot> {
-    const { catalog, grants } = await parseAuthorizationSnapshotInput(input);
+type AuthorizationBindings = {
+    definitions: PermissionPolicyBinding[],
+    grants: PermissionPolicyBinding[],
+};
 
+/**
+ * The catalog and the grants reduced to the definition and grant bindings,
+ * each tree as the validators produced it.
+ */
+async function resolveAuthorizationBindings(
+    catalog: AuthorizationCatalog,
+    grants: AuthorizationGrant[],
+    validators: AuthorizationEvaluatorOptions['validators'],
+) : Promise<AuthorizationBindings> {
     const trees = new Map<string, AuthorizationPolicy>();
     const unevaluable = new Set<string>();
 
     for (const [id, raw] of Object.entries(catalog.policies)) {
         try {
-            trees.set(id, await projectAuthorizationPolicy(raw, options.validators));
+            trees.set(id, await projectAuthorizationPolicy(raw, validators));
         } catch {
             unevaluable.add(id);
         }
@@ -196,7 +197,7 @@ export async function buildAuthorizationSnapshot(
             policies.push(toPolicy(tree));
         }
 
-        definitions.push(toBinding(toPermission(permission), policies));
+        definitions.push(toBinding(permission, policies));
     }
 
     const bindings : PermissionPolicyBinding[] = [];
@@ -246,10 +247,51 @@ export async function buildAuthorizationSnapshot(
             continue;
         }
 
-        bindings.push(toBinding(toPermission(permission), policies, normalizeRealmScope(grant.realm_scope)));
+        bindings.push(toBinding(permission, policies, normalizeRealmScope(grant.realm_scope)));
     }
 
     return { definitions, grants: bindings };
+}
+
+/**
+ * The catalog and the identity's grants as the introspection endpoints report
+ * them, reduced to the two lists `createAuthorizationEvaluator` evaluates, as
+ * plain data that shares no object with the input and survives a JSON round
+ * trip. No identity is needed.
+ *
+ * Its rules are the evaluator's. A grant referencing a definition or a policy
+ * the catalog lacks throws `AuthorizationCatalogStaleError`, the signal to
+ * refetch the catalog. A definition the server could not project
+ * (`policies: null`) or whose tree this copy cannot project under
+ * `options.validators` is left out, which denies it, and every grant of it is
+ * dropped; so is a grant whose junction tree carries a binding check or does
+ * not project. A duplicate permission namespace is refused. `grants` is
+ * always present, possibly empty.
+ *
+ * A `Date` in a node's configuration is emitted as its epoch milliseconds: a
+ * JSON round trip turns a `Date` into a timestamp string the date policy's
+ * validator refuses, while every built-in validator taking a `Date` takes the
+ * number for the same instant.
+ *
+ * Three limits follow. The conversion happens in the snapshot only:
+ * `createAuthorizationEvaluator` hands evaluators the validator output
+ * unchanged, while a custom policy type evaluated from a snapshot must accept
+ * a number wherever it accepts a `Date`, or its definition drops. A `Date`
+ * nested deeper in a node's configuration is not converted and does not
+ * survive JSON. A custom validator must be a fixed point of its own output,
+ * since the snapshot evaluator projects a stored tree again.
+ */
+export async function buildAuthorizationSnapshot(
+    input: AuthorizationSnapshotInput,
+    options: Pick<AuthorizationEvaluatorOptions, 'validators'> = {},
+) : Promise<AuthorizationSnapshot> {
+    const { catalog, grants } = await parseAuthorizationSnapshotInput(input);
+    const bindings = await resolveAuthorizationBindings(catalog, grants, options.validators);
+
+    return structuredClone({
+        definitions: bindings.definitions.map((binding) => toSerializableBinding(binding)),
+        grants: bindings.grants.map((binding) => toSerializableBinding(binding)),
+    });
 }
 
 /**
@@ -284,8 +326,9 @@ async function reprojectPolicies(
 }
 
 /**
- * The second half of `createAuthorizationEvaluator`: an evaluator over an
- * `AuthorizationSnapshot` and the identity its grants belong to.
+ * An evaluator over an `AuthorizationSnapshot` and the identity its grants
+ * belong to, answering what `createAuthorizationEvaluator` answers for the
+ * catalog and grants the snapshot was built from.
  *
  * The snapshot is untrusted stored data and is validated first: a malformed
  * envelope or a definition carrying `realmScope` throws a `ValidupError`
@@ -305,7 +348,7 @@ export async function createAuthorizationSnapshotEvaluator(
     input: AuthorizationSnapshotEvaluatorInput,
     options: AuthorizationEvaluatorOptions = {},
 ) : Promise<IPermissionEvaluator> {
-    const parsed = await parseAuthorizationSnapshot(input);
+    const parsed = await parseAuthorizationSnapshotEvaluatorInput(input);
     const { identity } = parsed;
 
     const definitions : PermissionPolicyBinding[] = [];
@@ -345,6 +388,22 @@ export async function createAuthorizationSnapshotEvaluator(
 
         grants.push(toBinding(permission, policies, entry.realmScope));
     }
+
+    return createBindingEvaluator({ definitions, grants }, identity, options);
+}
+
+/**
+ * The evaluator over trusted definition and grant bindings: the engine with
+ * its own binding evaluator, the memory provider, identity injection and
+ * removal, the bypass-option refusal, the `realmMatch` data check and
+ * `compile`.
+ */
+function createBindingEvaluator(
+    bindings: AuthorizationBindings,
+    identity: IdentityPolicyData | undefined,
+    options: AuthorizationEvaluatorOptions,
+) : IPermissionEvaluator {
+    const { definitions, grants } = bindings;
 
     const engine = new PolicyEngine(options.evaluators ?? PolicyDefaultEvaluators);
 
@@ -505,9 +564,9 @@ export async function createAuthorizationEvaluator(
         identity,
     } = await parseAuthorizationEvaluatorInput(input);
 
-    const snapshot = await buildAuthorizationSnapshot({ catalog, grants }, options);
+    const bindings = await resolveAuthorizationBindings(catalog, grants, options.validators);
 
-    return createAuthorizationSnapshotEvaluator({ snapshot, identity }, options);
+    return createBindingEvaluator(bindings, identity, options);
 }
 
 /**

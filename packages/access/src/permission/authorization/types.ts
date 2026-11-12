@@ -100,6 +100,8 @@ export type AuthorizationEvaluatorInput = {
  * under its permission's `decisionStrategy`. A definition carrying a binding
  * check then denies, since no grant can satisfy it; a list taken from a
  * catalog keeps both layers by going through `buildAuthorizationSnapshot`.
+ * Where a namespace has several definitions, a grant of it is bound to the
+ * first.
  */
 export type AuthorizationSnapshot = {
     /**

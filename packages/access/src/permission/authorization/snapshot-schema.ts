@@ -60,7 +60,7 @@ export type AuthorizationSnapshotEvaluatorInputParsed = {
  * input: a non-empty grant list without an identity belongs to nobody. An
  * empty or absent one is the anonymous caller's.
  */
-export async function parseAuthorizationSnapshot(
+export async function parseAuthorizationSnapshotEvaluatorInput(
     input: AuthorizationSnapshotEvaluatorInput,
 ) : Promise<AuthorizationSnapshotEvaluatorInputParsed> {
     // Detach for the reason the catalog's input is detached: a later mutation
