@@ -722,6 +722,85 @@ describe('authorization snapshot', () => {
         });
     });
 
+    describe('a grant tree that projects in part', () => {
+        const client : Policy = { type: 'identity', types: ['client'] };
+        const user : Policy = { type: 'identity', types: ['user'] };
+        const unsupported : Policy = { type: 'unsupported' };
+        const composite = (decisionStrategy: string, children: Policy[]) : Policy => ({
+            type: 'composite',
+            decisionStrategy,
+            children,
+        });
+
+        async function verdicts(definitionPolicy: Policy, junction: Policy) {
+            const catalog = {
+                policies: { definition: definitionPolicy, junction },
+                permissions: [definition('d', ['definition'])],
+            };
+            const grants = [grant('d', 'any', ['junction'])];
+            const snapshot = await buildAuthorizationSnapshot({ catalog, grants });
+            const stored = JSON.parse(JSON.stringify(snapshot)) as AuthorizationSnapshot;
+            const output : boolean[] = [];
+
+            for (const evaluator of [
+                await createAuthorizationEvaluator({
+                    catalog, 
+                    grants, 
+                    identity, 
+                }),
+                await createAuthorizationSnapshotEvaluator({ snapshot, identity }),
+                await createAuthorizationSnapshotEvaluator({ snapshot: stored, identity }),
+            ]) {
+                output.push(await allowed(evaluator, { name: 'd', data: resource(realmA, true) }));
+                output.push(await allowed(evaluator, { name: 'd' }, 'preEvaluate'));
+            }
+
+            return output;
+        }
+
+        const inverted : Policy = { type: 'permissionBinding', invert: true };
+        const plain : Policy = { type: 'permissionBinding' };
+        const cases : [string, Policy, boolean | undefined][] = [
+            ['unanimous over a decisive false sibling', composite('unanimous', [unsupported, client]), false],
+            ['unanimous over a passing sibling', composite('unanimous', [unsupported, user]), undefined],
+            ['affirmative over a passing sibling', composite('affirmative', [unsupported, user]), true],
+            ['affirmative over a failing sibling', composite('affirmative', [unsupported, client]), undefined],
+            ['an unsupported leaf alone', unsupported, undefined],
+            [
+                'a catalog tree already carrying a withheld child',
+                composite('unanimous', [{ type: AUTHORIZATION_POLICY_WITHHELD_TYPE }, client]),
+                false,
+            ],
+        ];
+
+        // the last member is the grant term on the server: true, false, or
+        // undefined for a term that cannot be evaluated, which no binding
+        // check passes over
+        it.each(cases)('decides an inverted binding check as the server does: %s', async (_, junction, grantTerm) => {
+            const expected = grantTerm === false;
+
+            expect(await verdicts(inverted, junction)).toEqual(Array(6).fill(expected));
+        });
+
+        it.each(cases)('decides a plain binding check as the server does: %s', async (_, junction, grantTerm) => {
+            const expected = grantTerm === true;
+
+            expect(await verdicts(plain, junction)).toEqual(Array(6).fill(expected));
+        });
+
+        it('stores the partial tree, which survives JSON and projects again as it is', async () => {
+            const junction = composite('unanimous', [unsupported, client]);
+            const snapshot = await buildAuthorizationSnapshot({
+                catalog: { policies: { plain, junction }, permissions: [definition('d', ['plain'])] },
+                grants: [grant('d', 'any', ['junction'])],
+            });
+
+            expect(snapshot.grants![0]!.policies).toEqual([
+                composite('unanimous', [{ type: AUTHORIZATION_POLICY_WITHHELD_TYPE }, client]),
+            ]);
+        });
+    });
+
     describe('a grant that cannot be evaluated', () => {
         const policies = {
             inverted: { type: 'permissionBinding', invert: true },

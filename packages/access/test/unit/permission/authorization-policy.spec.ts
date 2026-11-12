@@ -9,7 +9,13 @@ import { createValidator } from '@validup/zod';
 import { Container, isValidupError } from 'validup';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { AUTHORIZATION_POLICY_WITHHELD_TYPE, PolicyDefaultValidators, projectAuthorizationPolicy } from '../../../src';
+import {
+    AUTHORIZATION_POLICY_WITHHELD_TYPE,
+    PolicyDefaultValidators,
+    containsWithheldPolicy,
+    projectAuthorizationPolicy,
+    projectAuthorizationPolicyPartially,
+} from '../../../src';
 
 class WeekdayPolicyValidator extends Container<{ weekday: number }> {
     override initialize() {
@@ -176,5 +182,151 @@ describe('permission/authorization/policy', () => {
             type: 'composite',
             children: [{ type: 'identity' }, { type: 'composite', children: [{ type: 'custom' }] }],
         }))[0]!.path).toEqual(['children', 1, 'children', 0, 'type']);
+    });
+
+    describe('partially', () => {
+        const withheld = { type: AUTHORIZATION_POLICY_WITHHELD_TYPE };
+        const user = { type: 'identity', types: ['user'] };
+
+        it.each<[string, unknown, unknown]>([
+            ['an unknown-type root', { type: 'plan109future', secret: 1 }, withheld],
+            ['a refused configuration', { type: 'attributes', query: 'broken' }, withheld],
+            ['a node without a type', { types: ['user'] }, withheld],
+            ['a non-object root', 'composite', withheld],
+            ['the withheld node itself', withheld, withheld],
+            [
+                'a composite with one unknown child',
+                {
+                    id: 'c',
+                    type: 'composite',
+                    decisionStrategy: 'unanimous',
+                    invert: true,
+                    children: [{
+                        id: 'u', 
+                        type: 'plan109future', 
+                        secret: 1, 
+                    }, { id: 'i', ...user }],
+                },
+                {
+                    type: 'composite',
+                    decisionStrategy: 'unanimous',
+                    invert: true,
+                    children: [withheld, user],
+                },
+            ],
+            [
+                'a nested composite two levels deep',
+                {
+                    type: 'composite',
+                    decisionStrategy: 'affirmative',
+                    children: [
+                        user,
+                        {
+                            type: 'composite',
+                            decisionStrategy: 'unanimous',
+                            children: [{ type: 'attributes', query: 'broken' }, user],
+                        },
+                    ],
+                },
+                {
+                    type: 'composite',
+                    decisionStrategy: 'affirmative',
+                    children: [
+                        user,
+                        {
+                            type: 'composite',
+                            decisionStrategy: 'unanimous',
+                            children: [withheld, user],
+                        },
+                    ],
+                },
+            ],
+            [
+                'a composite holding a withheld node',
+                { type: 'composite', children: [withheld, user] },
+                { type: 'composite', children: [withheld, user] },
+            ],
+            [
+                // the composite's own validator refuses a child without a type,
+                // and so does the server's, so the whole composite cannot be
+                // evaluated there either
+                'a composite whose own configuration is refused',
+                {
+                    type: 'composite', 
+                    decisionStrategy: 'bogus', 
+                    children: [user], 
+                },
+                withheld,
+            ],
+            [
+                'a composite with a non-object child',
+                { type: 'composite', children: ['identity', user] },
+                withheld,
+            ],
+            [
+                'a nested composite with a non-object child',
+                { type: 'composite', children: [user, { type: 'composite', children: [42] }] },
+                { type: 'composite', children: [user, withheld] },
+            ],
+        ])('withholds only what cannot be projected: %s', async (_, input, expected) => {
+            const projected = await projectAuthorizationPolicyPartially(input);
+
+            expect(projected).toEqual(expected);
+            expect(containsWithheldPolicy(projected)).toBe(true);
+            await expect(projectAuthorizationPolicy(input)).rejects.toThrow();
+        });
+
+        it('equals the full projection for a tree that projects', async () => {
+            const input = {
+                id: 'c',
+                type: 'composite',
+                decisionStrategy: 'affirmative',
+                children: [{
+                    id: 'i', 
+                    ...user, 
+                    builtIn: true, 
+                }, { type: 'attributes', query: { name: { $eq: 'x' } } }],
+            };
+
+            expect(await projectAuthorizationPolicyPartially(input)).toEqual(await projectAuthorizationPolicy(input));
+            expect(containsWithheldPolicy(await projectAuthorizationPolicyPartially(input))).toBe(false);
+        });
+
+        it('uses the registry it is handed', async () => {
+            const validators = { ...PolicyDefaultValidators, weekday: new WeekdayPolicyValidator() };
+            const input = { type: 'composite', children: [{ type: 'weekday', weekday: 3 }, { type: 'plan109future' }] };
+
+            expect(await projectAuthorizationPolicyPartially(input, validators))
+                .toEqual({ type: 'composite', children: [{ type: 'weekday', weekday: 3 }, withheld] });
+        });
+
+        it.each<[string, unknown]>([
+            [
+                'a binding node under a composite whose configuration is refused',
+                {
+                    type: 'composite',
+                    children: [
+                        {
+                            type: 'composite', 
+                            decisionStrategy: 'bogus', 
+                            children: [{ type: 'permissionBinding' }], 
+                        },
+                        user,
+                    ],
+                },
+            ],
+            [
+                'a binding node whose configuration is refused',
+                { type: 'composite', children: [{ type: 'permissionBinding', invert: 'yes' }, user] },
+            ],
+            [
+                'a binding node next to an unprojectable sibling',
+                { type: 'composite', children: [{ type: 'permissionBinding' }, { type: 'plan109future' }] },
+            ],
+        ])('keeps a tree that evaluates the binding a binding check: %s', async (_, input) => {
+            // a grant term over such a tree cannot be evaluated whatever its
+            // siblings settle, so the projection must keep saying so
+            expect(await projectAuthorizationPolicyPartially(input)).toEqual({ type: 'permissionBinding' });
+        });
     });
 });

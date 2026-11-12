@@ -9,6 +9,7 @@ import { defineIssueItem, prefixIssuePath } from '@ebec/core';
 import { createValidator } from '@validup/zod';
 import { Container, ValidupError, isValidupError } from 'validup';
 import { z } from 'zod';
+import { isObject } from '@authup/kit';
 import type { PolicyValidators } from '../../policy';
 import { BuiltInPolicyType, PolicyDefaultValidators } from '../../policy';
 import { AUTHORIZATION_POLICY_WITHHELD_TYPE } from './constants';
@@ -55,42 +56,6 @@ export async function projectAuthorizationPolicy(
     input: unknown,
     validators: PolicyValidators = PolicyDefaultValidators,
 ) : Promise<AuthorizationPolicy> {
-    const headValidator = new AuthorizationPolicyHeadValidator();
-
-    const project = async (value: unknown) : Promise<AuthorizationPolicy> => {
-        const head = await headValidator.run(value as Record<string, any>);
-        const validator = head.type !== AUTHORIZATION_POLICY_WITHHELD_TYPE && Object.hasOwn(validators, head.type) ?
-            validators[head.type] :
-            undefined;
-
-        if (!validator) {
-            throw new ValidupError([defineIssueItem({
-                message: `The policy type ${head.type} is not supported.`,
-                path: ['type'],
-            })]);
-        }
-
-        const validated = await validator.run(value as Record<string, any>) as Record<string, unknown>;
-
-        const output : AuthorizationPolicy = { ...validated, type: head.type };
-
-        for (const key of Object.keys(output)) {
-            if (typeof output[key] === 'undefined') {
-                delete output[key];
-            }
-        }
-
-        if (head.type === BuiltInPolicyType.COMPOSITE) {
-            output.children = await Promise.all(
-                (head.children ?? []).map((child, index) => projectChild(child, index)),
-            );
-        } else {
-            delete output.children;
-        }
-
-        return output;
-    };
-
     const projectChild = async (child: unknown, index: number) : Promise<AuthorizationPolicy> => {
         try {
             return await project(child);
@@ -103,7 +68,129 @@ export async function projectAuthorizationPolicy(
         }
     };
 
+    const project = (value: unknown) : Promise<AuthorizationPolicy> => projectNode(
+        value,
+        validators,
+        (children) => Promise.all(children.map((child, index) => projectChild(child, index))),
+    );
+
     return project(input);
+}
+
+/**
+ * The projection of a GRANT's junction tree, which withholds only what cannot
+ * be projected: a node whose type the registry lacks, whose configuration its
+ * validator refuses, that is no policy node at all or that is the withheld node
+ * itself becomes the withheld node, its configuration left behind, while a
+ * composite whose own configuration projects keeps its other children. It
+ * never throws for a policy-shaped input.
+ *
+ * It is exact, not an approximation: the engine answers a node it has no
+ * evaluator for, and one whose validator refuses it, as a node that cannot be
+ * evaluated, and the withheld node has no evaluator, so a composite around it
+ * settles from its other children exactly as it does where the whole tree is
+ * known. A composite's own validator reads its children's heads, so a child
+ * that is no node at all withholds the composite, as it fails it there.
+ *
+ * One rule is not per node: a grant term whose tree evaluates the permission
+ * binding at any depth cannot be evaluated whatever the rest settles. Where
+ * such a binding node would be hidden inside a withheld node, or be the
+ * withheld node, the tree projects as the bare `permissionBinding` node, which
+ * keeps saying exactly that and carries nothing else. A DEFINITION tree must
+ * use `projectAuthorizationPolicy`: there a binding check is an ordinary node.
+ */
+export async function projectAuthorizationPolicyPartially(
+    input: unknown,
+    validators: PolicyValidators = PolicyDefaultValidators,
+) : Promise<AuthorizationPolicy> {
+    const project = async (value: unknown) : Promise<AuthorizationPolicy> => {
+        try {
+            return await projectNode(
+                value,
+                validators,
+                (children) => Promise.all(children.map((child) => project(child))),
+            );
+        } catch {
+            return { type: AUTHORIZATION_POLICY_WITHHELD_TYPE };
+        }
+    };
+
+    const output = await project(input);
+
+    if (containsWithheldPolicy(output) && evaluatesBinding(input)) {
+        return { type: BuiltInPolicyType.PERMISSION_BINDING };
+    }
+
+    return output;
+}
+
+async function projectNode(
+    value: unknown,
+    validators: PolicyValidators,
+    projectChildren: (children: unknown[]) => Promise<AuthorizationPolicy[]>,
+) : Promise<AuthorizationPolicy> {
+    const headValidator = new AuthorizationPolicyHeadValidator();
+    const head = await headValidator.run(value as Record<string, any>);
+    const validator = head.type !== AUTHORIZATION_POLICY_WITHHELD_TYPE && Object.hasOwn(validators, head.type) ?
+        validators[head.type] :
+        undefined;
+
+    if (!validator) {
+        throw new ValidupError([defineIssueItem({
+            message: `The policy type ${head.type} is not supported.`,
+            path: ['type'],
+        })]);
+    }
+
+    const validated = await validator.run(value as Record<string, any>) as Record<string, unknown>;
+
+    const output : AuthorizationPolicy = { ...validated, type: head.type };
+
+    for (const key of Object.keys(output)) {
+        if (typeof output[key] === 'undefined') {
+            delete output[key];
+        }
+    }
+
+    if (head.type === BuiltInPolicyType.COMPOSITE) {
+        output.children = await projectChildren(head.children ?? []);
+    } else {
+        delete output.children;
+    }
+
+    return output;
+}
+
+/**
+ * Whether an UNPROJECTED tree evaluates the permission binding, read the way
+ * the binding evaluator reads a grant policy: a binding node, or a composite
+ * with one among its children at any depth, whatever else the nodes carry.
+ */
+function evaluatesBinding(value: unknown) : boolean {
+    if (!isObject(value)) {
+        return false;
+    }
+
+    if (value.type === BuiltInPolicyType.PERMISSION_BINDING) {
+        return true;
+    }
+
+    if (value.type !== BuiltInPolicyType.COMPOSITE || !Array.isArray(value.children)) {
+        return false;
+    }
+
+    return value.children.some((child) => evaluatesBinding(child));
+}
+
+/**
+ * Whether a projected tree withholds a node at any depth.
+ */
+export function containsWithheldPolicy(policy: AuthorizationPolicy) : boolean {
+    if (policy.type === AUTHORIZATION_POLICY_WITHHELD_TYPE) {
+        return true;
+    }
+
+    return (policy.children ?? []).some((child) => containsWithheldPolicy(child));
 }
 
 /**
