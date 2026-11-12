@@ -30,8 +30,7 @@ policy, upgrades Redis or changes the policy before the upgrade.
 ### The Redis client is ioredis 6
 
 The server talks to Redis through ioredis 6. It negotiates RESP3 on Redis 6 and newer and falls
-back to RESP2 on older servers, and it sends a TCP keepalive every 30 seconds. The read cache's
-connection waits up to about 5 seconds between reconnect attempts instead of 2.
+back to RESP2 on older servers, and it sends a TCP keepalive every 30 seconds.
 
 `@authup/server-kit` and `@authup/server-adapter-kit` declare `ioredis` `^6.0.0` as a peer
 dependency and no longer bring their own copy. `@authup/server-kit` exports `RedisValueStore`
