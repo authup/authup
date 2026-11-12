@@ -17,6 +17,15 @@ const realmId = 'c641912c-21e5-4cb4-84b6-169e2b2bb023';
 const clientId = 'c641912c-21e5-4cb4-84b6-169e2b2bb025';
 
 describe('buildPermissionKey', () => {
+    it('builds a key for a name carrying a lone surrogate instead of throwing', () => {
+        expect(buildPermissionKey({ name: 'a\uD800' })).toBe(buildPermissionKey({ name: 'a\uFFFD' }));
+        expect(() => buildPermissionKey({
+            name: 'a',
+            realmId: '\uDC00',
+            clientId: '\uD800',
+        })).not.toThrow();
+    });
+
     it('keeps the key of every value the server produces', () => {
         expect(buildPermissionKey({ name: 'user_read' })).toBe('*/*/user_read');
         expect(buildPermissionKey({

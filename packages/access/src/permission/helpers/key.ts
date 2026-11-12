@@ -9,7 +9,9 @@
 import type { BasePermission } from '../types.ts';
 
 function encodeKeySegment(value: string): string {
-    return encodeURIComponent(value).replaceAll('*', '%2A');
+    // a lone surrogate makes encodeURIComponent throw; well-formed, it names
+    // a permission nobody holds instead of failing the lookup
+    return encodeURIComponent(value.toWellFormed()).replaceAll('*', '%2A');
 }
 
 function formatKeySegment(value?: string | null): string {
