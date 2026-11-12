@@ -70,6 +70,22 @@ A `date` or `time` policy whose `start` or `end` is exactly `0` (the epoch) appl
 **Action required:** Review policies with `invert` set whose children could fail to evaluate,
 including those bound as application access or enrollment policies.
 
+### The introspection lists a grant whose policy the catalog cannot project
+
+A grant whose junction policy the server cannot project (a policy type it has no validator
+for, or a configuration its validator refuses) is listed in `permissions` of
+`POST /token/introspect` and `GET /sessions/@me/introspect`, and `GET /authorization` carries
+that policy with the part that cannot be projected as a withheld node. Such a grant was left
+out of both. The rest of the policy still decides where it can: a `unanimous` composite with
+another child that settles false is false, an `affirmative` one with a child that settles true
+is true. Only where the withheld part would have to decide is the grant one that cannot be
+evaluated. `createAuthorizationEvaluator` from `@authup/access` reaches the server's verdict
+in each case, also under an inverted binding check.
+
+**Action required:** None for a consumer built on `createAuthorizationEvaluator`. A consumer
+that reads `permissions` as a set of names sees the name of such a grant, as it already sees
+the name of any grant restricted by a junction policy.
+
 ## v1.0.0-beta.74 (was: next release after v1.0.0-beta.73)
 
 ### `@authup/client-web-kit` normalizes `cookiePath` and skips the shadow cleanup for host cookie functions

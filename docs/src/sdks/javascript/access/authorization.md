@@ -231,11 +231,12 @@ A stored snapshot is untrusted input, and the evaluator treats it that way:
   a validup container you can mount into the validator of the document that
   stores the snapshot; `isPermissionPolicyBinding` checks a single binding.
 - Every policy tree is projected again under your validators. A definition
-  whose tree does not project denies. A grant whose tree does not project is
-  kept with a withheld node in that tree's place, and a grant whose tree
-  carries a permission-binding check is kept as it is: either is a grant that
-  cannot be evaluated, which never passes and which an inverted
-  `permissionBinding` check never reads as a missing grant.
+  whose tree does not project denies. A grant's tree is projected partially:
+  only the part that does not project becomes a withheld node, and a composite
+  around it still decides from its other children. A grant whose tree carries
+  a permission-binding check is kept as it is. A grant is never left out for
+  either reason, so an inverted `permissionBinding` check never reads it as a
+  missing grant.
 - A grant is evaluated under the permission of the definition it names, so a
   stored grant cannot disagree with it on `decisionStrategy`. A grant naming no
   definition of the snapshot is left out.
@@ -284,10 +285,18 @@ The catalog (`GET /authorization`):
   denies it and drops every grant of it until the policy is fixed. Such a
   definition is carried rather than left out, so that a definition absent from
   the catalog can only mean a copy older than the definition.
+- A junction policy tree the server could not project travels with only the
+  part it could not project as a withheld node, and the introspection still
+  lists the grant that names it. The evaluator settles such a grant where the
+  rest of the tree decides it and reads it as one that cannot be evaluated
+  where it does not, exactly as the server does. A tree the server withholds
+  for realm reach travels as one withheld node.
 - A tree YOUR copy of `@authup/access` cannot project is read the same way: a
   policy type newer than that copy, or a configuration its validator refuses,
-  denies the definitions that reference it and turns the grants that name it
-  into grants that cannot be evaluated, and never takes the other permissions down with it. Upgrade `@authup/access`
+  denies the definitions that reference it, and in a grant that names it only
+  the part that cannot be projected is withheld
+  (`projectAuthorizationPolicyPartially`, next to the all-or-nothing
+  `projectAuthorizationPolicy` a definition tree uses). It never takes the other permissions down with it. Upgrade `@authup/access`
   after the server, and expect the permissions using a newly added policy type
   to deny until you do.
 
@@ -308,9 +317,10 @@ The grants (the introspection response's `permissions`):
   and build again. A grant naming a definition carried with `policies: null`
   is left out and denies, and its own policy ids are never resolved, so that
   case never reports stale. A grant whose junction policy contains a
-  permission-binding check, or one your copy cannot project, is kept as a grant
-  that cannot be evaluated: it never passes, and under an inverted
-  `permissionBinding` check the permission denies rather than passing.
+  permission-binding check is kept as a grant that cannot be evaluated, and one
+  your copy cannot project in full keeps the part it can: it is never left
+  out, so an inverted `permissionBinding` check never reads it as a missing
+  grant.
 
 `createAuthorizationEvaluator` rejects missing fields, a definition referencing
 an undeclared policy id, a duplicate permission namespace, an identity that is

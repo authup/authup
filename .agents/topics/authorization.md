@@ -73,7 +73,13 @@ old snake_case shape. It is an upper bound on what may be asked, not an entitlem
   read throws: grant junctions are `ON DELETE SET NULL`, so a deleted policy legitimately
   leaves a policy-free grant.
 - A tree failing projection is warned about: a definition keeps its entry with
-  `policies: null`; a grant tree is dropped (and the introspection drops its grants).
+  `policies: null`; a grant tree travels as its partial projection
+  (`projectAuthorizationPolicyPartially`: only the subtree that cannot be projected is the
+  withheld node, the composite around it keeps deciding) and the introspection keeps its
+  grants, so a consumer settles them exactly as the server does (#3823). A tree out of
+  REACH still travels as one withheld node (fail-closed: its configuration must not travel).
+  Dropped, an inverted binding check passed on the consumer alone. Only a grant tree
+  without an id is dropped, with its grants: it has nothing to be named by.
 
 **Caching (#3599, #3688).** The document is per caller and not cached; `findDefinitions`
 and `findGrantPolicies` are identity-free and sit in the tagged read cache
@@ -141,7 +147,7 @@ evaluators get the validator output once, unconverted.
   `Date` stored as epoch ms, a `$regex` `RegExp` as its slash literal; any other value JSON
   cannot carry makes the tree unstorable (definition left out, grant keeps the withheld
   node), never a throw. Stored, it is untrusted: the evaluator re-projects every tree (a
-  grant tree that does not project becomes the withheld node), re-binds each grant to the
+  grant tree partially, #3823), re-binds each grant to the
   first definition of its namespace (dropping one naming none) and refuses `realmScope` on
   a definition (the definition layer applies no reach, so honouring it would fail open). `{ definitions }` alone is the flat list of
   self-contained bindings, ORed across same-named bindings. Rejected: a flat list with
@@ -151,8 +157,13 @@ evaluators get the validator output once, unconverted.
   `AuthorizationCatalogStaleError`: refetch and rebuild. Never read an absence as a deny.
 - `policies: null` is NOT stale: deny the permission, drop its grants.
 - A tree the consumer cannot project (unknown type, refused config) tombstones only the
-  definitions referencing it; a grant naming it is kept with the withheld node in its
-  place. A malformed catalog (duplicate namespace) still throws. `buildPermissionKey`
+  definitions referencing it; a grant naming it keeps the tree's partial projection, only
+  the subtree that cannot be projected withheld (#3823). Exact because the engine answers a
+  node without an evaluator, or whose validator refuses it, as not evaluable; a composite
+  whose own validator refuses its children is withheld whole, as it fails whole on the
+  server; a tree hiding a binding node inside a withheld part projects as a bare
+  `permissionBinding` node, since the binding evaluator answers the whole term not
+  evaluable whatever its siblings settle. A malformed catalog (duplicate namespace) still throws. `buildPermissionKey`
   URI-encodes its segments, so a realm or client named `*` or holding `/` cannot collide.
 - A grant tree containing a `permissionBinding` node is kept and answered not evaluable
   (`INVALID`) by the binding evaluator, so it cannot re-enter the evaluator without bound
