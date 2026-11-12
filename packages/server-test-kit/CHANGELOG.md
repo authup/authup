@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.0.0-beta.75](https://github.com/authup/authup/compare/v1.0.0-beta.74...v1.0.0-beta.75) (2026-11-12)
+
+
+### Features
+
+* **server-core:** register a tag-invalidated read cache ([#3815](https://github.com/authup/authup/issues/3815)) ([2979752](https://github.com/authup/authup/commit/2979752178de23d057bd761747b8fc6db2d53542))
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([aedbeca](https://github.com/authup/authup/commit/aedbeca2d6a4ac565e0af465752405204d783845))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/core-kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/server-kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+
 ## [1.0.0-beta.74](https://github.com/authup/authup/compare/v1.0.0-beta.73...v1.0.0-beta.74) (2026-11-09)
 
 

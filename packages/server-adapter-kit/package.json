@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-adapter-kit",
     "type": "module",
-    "version": "1.0.0-beta.74",
+    "version": "1.0.0-beta.75",
     "description": "Verify Authup access tokens in your own API, locally against realm keys or by introspection.",
     "exports": {
         "./package.json": "./package.json",
@@ -53,15 +53,15 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/core-http-kit": "^1.0.0-beta.74",
-        "@authup/errors": "^1.0.0-beta.74",
-        "@authup/kit": "^1.0.0-beta.74",
-        "@authup/specs": "^1.0.0-beta.74",
+        "@authup/core-http-kit": "^1.0.0-beta.75",
+        "@authup/errors": "^1.0.0-beta.75",
+        "@authup/kit": "^1.0.0-beta.75",
+        "@authup/specs": "^1.0.0-beta.75",
         "redis-extension": "^3.0.0",
         "vouchly": "^0.1.1"
     },
     "devDependencies": {
-        "@authup/server-kit": "^1.0.0-beta.74",
+        "@authup/server-kit": "^1.0.0-beta.75",
         "ioredis": "^6.0.0",
         "jose": "^6.2.13",
         "vitest": "^5.0.3"

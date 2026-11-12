@@ -1,5 +1,38 @@
 # Change Log
 
+## [1.0.0-beta.75](https://github.com/authup/authup/compare/v1.0.0-beta.74...v1.0.0-beta.75) (2026-11-12)
+
+
+### Features
+
+* **server-core:** register a tag-invalidated read cache ([#3815](https://github.com/authup/authup/issues/3815)) ([2979752](https://github.com/authup/authup/commit/2979752178de23d057bd761747b8fc6db2d53542))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group with 9 updates ([#3819](https://github.com/authup/authup/issues/3819)) ([0082ac6](https://github.com/authup/authup/commit/0082ac6593923b3744d8635f7d2747409e1583b9))
+* ensure consistent version for release ([aedbeca](https://github.com/authup/authup/commit/aedbeca2d6a4ac565e0af465752405204d783845))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-http-kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/core-kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/errors bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/server-account-console bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/server-admin-console bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/server-auth-console bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/server-config bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/server-config-kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/server-console-kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/server-core bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/specs bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+  * devDependencies
+    * @authup/client-auth-console bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+
 ## [1.0.0-beta.74](https://github.com/authup/authup/compare/v1.0.0-beta.73...v1.0.0-beta.74) (2026-11-09)
 
 

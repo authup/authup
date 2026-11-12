@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.0.0-beta.75](https://github.com/authup/authup/compare/v1.0.0-beta.74...v1.0.0-beta.75) (2026-11-12)
+
+
+### Features
+
+* **access:** helpers to evaluate permission bindings without a catalog ([#3822](https://github.com/authup/authup/issues/3822)) ([b792a7b](https://github.com/authup/authup/commit/b792a7b9468f4209b7a6040827d17348c97b8962))
+* **access:** lower a pending policy to a pass and a fail condition ([#3826](https://github.com/authup/authup/issues/3826)) ([1255d9f](https://github.com/authup/authup/commit/1255d9fb785d47fd93d2f7a2a7d7f1e857a96034))
+* **server-core:** register a tag-invalidated read cache ([#3815](https://github.com/authup/authup/issues/3815)) ([2979752](https://github.com/authup/authup/commit/2979752178de23d057bd761747b8fc6db2d53542))
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([aedbeca](https://github.com/authup/authup/commit/aedbeca2d6a4ac565e0af465752405204d783845))
+* policy pre-gate, inline policy children and cache-outage reads ([#3827](https://github.com/authup/authup/issues/3827)) ([d40eb8b](https://github.com/authup/authup/commit/d40eb8be0044d81600f7e43dfbf9428435e2210f))
+* **server-core:** report a grant whose policy cannot be projected instead of dropping it ([#3824](https://github.com/authup/authup/issues/3824)) ([8491e5b](https://github.com/authup/authup/commit/8491e5bb70bd2ea580b175fa0bb337b30abba145)), closes [#3823](https://github.com/authup/authup/issues/3823)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+
 ## [1.0.0-beta.74](https://github.com/authup/authup/compare/v1.0.0-beta.73...v1.0.0-beta.74) (2026-11-09)
 
 

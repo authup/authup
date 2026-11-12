@@ -1,5 +1,33 @@
 # Change Log
 
+## [1.0.0-beta.75](https://github.com/authup/authup/compare/v1.0.0-beta.74...v1.0.0-beta.75) (2026-11-12)
+
+
+### Features
+
+* localized event names and scope labels on the device and consent pages ([#3814](https://github.com/authup/authup/issues/3814)) ([48d66df](https://github.com/authup/authup/commit/48d66df3423e9668a3b395c012e034ede83f4152))
+* **server-core:** register a tag-invalidated read cache ([#3815](https://github.com/authup/authup/issues/3815)) ([2979752](https://github.com/authup/authup/commit/2979752178de23d057bd761747b8fc6db2d53542))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group with 4 updates ([#3807](https://github.com/authup/authup/issues/3807)) ([2a2567f](https://github.com/authup/authup/commit/2a2567fbdc1ac26483d9aa37c6022f44fce4c8f7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/client-web-kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/client-web-theme bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/core-http-kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/core-kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/i18n bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/specs bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+
 ## [1.0.0-beta.74](https://github.com/authup/authup/compare/v1.0.0-beta.73...v1.0.0-beta.74) (2026-11-09)
 
 

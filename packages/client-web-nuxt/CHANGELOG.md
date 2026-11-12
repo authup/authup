@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.0.0-beta.75](https://github.com/authup/authup/compare/v1.0.0-beta.74...v1.0.0-beta.75) (2026-11-12)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group with 4 updates ([#3807](https://github.com/authup/authup/issues/3807)) ([2a2567f](https://github.com/authup/authup/commit/2a2567fbdc1ac26483d9aa37c6022f44fce4c8f7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/client-web-kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/core-http-kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+
 ## [1.0.0-beta.74](https://github.com/authup/authup/compare/v1.0.0-beta.73...v1.0.0-beta.74) (2026-11-09)
 
 

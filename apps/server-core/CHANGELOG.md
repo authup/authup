@@ -1,5 +1,45 @@
 # Change Log
 
+## [1.0.0-beta.75](https://github.com/authup/authup/compare/v1.0.0-beta.74...v1.0.0-beta.75) (2026-11-12)
+
+
+### Features
+
+* **core-kit:** allow camelCase token exchange capability types ([#3810](https://github.com/authup/authup/issues/3810)) ([3b8b5da](https://github.com/authup/authup/commit/3b8b5da17d8239d6a7e7007e61e1dcb6d6543542))
+* localized event names and scope labels on the device and consent pages ([#3814](https://github.com/authup/authup/issues/3814)) ([48d66df](https://github.com/authup/authup/commit/48d66df3423e9668a3b395c012e034ede83f4152))
+* **server-core:** register a tag-invalidated read cache ([#3815](https://github.com/authup/authup/issues/3815)) ([2979752](https://github.com/authup/authup/commit/2979752178de23d057bd761747b8fc6db2d53542))
+
+
+### Bug Fixes
+
+* **deps:** bump nodemailer ([#3809](https://github.com/authup/authup/issues/3809)) ([18b0fa6](https://github.com/authup/authup/commit/18b0fa6b9665710715c1bb5fe5fba5527bf5e36d))
+* **deps:** bump redis-extension to v3 and ioredis to v6 ([#3820](https://github.com/authup/authup/issues/3820)) ([838cebe](https://github.com/authup/authup/commit/838cebe0cccddcc77c3865856e6aeeeeb702d260))
+* **deps:** bump the minorandpatch group with 4 updates ([#3807](https://github.com/authup/authup/issues/3807)) ([2a2567f](https://github.com/authup/authup/commit/2a2567fbdc1ac26483d9aa37c6022f44fce4c8f7))
+* **deps:** bump the minorandpatch group with 9 updates ([#3819](https://github.com/authup/authup/issues/3819)) ([0082ac6](https://github.com/authup/authup/commit/0082ac6593923b3744d8635f7d2747409e1583b9))
+* policy pre-gate, inline policy children and cache-outage reads ([#3827](https://github.com/authup/authup/issues/3827)) ([d40eb8b](https://github.com/authup/authup/commit/d40eb8be0044d81600f7e43dfbf9428435e2210f))
+* **server-core:** authorize path creates on the locked parent and fence cached grants ([#3813](https://github.com/authup/authup/issues/3813)) ([f4bcf52](https://github.com/authup/authup/commit/f4bcf52a480e9a693ea92835dcc5484e15463337))
+* **server-core:** invalidate cached reads through derived tags ([#3816](https://github.com/authup/authup/issues/3816)) ([e55fd7f](https://github.com/authup/authup/commit/e55fd7fe16f33b82ee2d9e22307701a57165c692))
+* **server-core:** report a grant whose policy cannot be projected instead of dropping it ([#3824](https://github.com/authup/authup/issues/3824)) ([8491e5b](https://github.com/authup/authup/commit/8491e5bb70bd2ea580b175fa0bb337b30abba145)), closes [#3823](https://github.com/authup/authup/issues/3823)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/core-http-kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/core-kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/errors bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/i18n bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/server-config bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/server-config-kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/server-console-kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/server-kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/specs bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+  * devDependencies
+    * @authup/server-test-kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+
 ## [1.0.0-beta.74](https://github.com/authup/authup/compare/v1.0.0-beta.73...v1.0.0-beta.74) (2026-11-09)
 
 

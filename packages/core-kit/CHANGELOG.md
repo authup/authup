@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.0.0-beta.75](https://github.com/authup/authup/compare/v1.0.0-beta.74...v1.0.0-beta.75) (2026-11-12)
+
+
+### Features
+
+* **core-kit:** allow camelCase token exchange capability types ([#3810](https://github.com/authup/authup/issues/3810)) ([3b8b5da](https://github.com/authup/authup/commit/3b8b5da17d8239d6a7e7007e61e1dcb6d6543542))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/specs bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+
 ## [1.0.0-beta.74](https://github.com/authup/authup/compare/v1.0.0-beta.73...v1.0.0-beta.74) (2026-11-09)
 
 
