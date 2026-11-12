@@ -77,6 +77,7 @@ export class AttributesPolicyEvaluator<
         if (!data) {
             return {
                 success: false,
+                unevaluable: true,
                 issues: [
                     definePolicyIssueItem({
                         code: PolicyIssueCode.DATA_MISSING,
@@ -100,6 +101,7 @@ export class AttributesPolicyEvaluator<
         } catch (e) {
             return {
                 success: false,
+                unevaluable: true,
                 issues: [
                     definePolicyIssueItem({
                         code: PolicyIssueCode.FIELD_INVALID,

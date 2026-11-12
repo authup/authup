@@ -204,4 +204,75 @@ describe('src/policy/composite (tri-state algebra)', () => {
             expect(outcome.pending).toBeFalsy();
         });
     });
+
+    // An unevaluable child is an unknown that never resolves: it neither counts
+    // nor early-returns, and `invert` is never applied to it.
+    describe('unevaluable', () => {
+        const unevaluable : BasePolicy = { type: 'unregistered' };
+
+        it('should still settle false on a failing child seen after an unevaluable one', async () => {
+            const outcome = await engine.evaluate(
+                composite(DecisionStrategy.UNANIMOUS, [unevaluable, falsy]),
+                context(),
+            );
+
+            expect(outcome.success).toBeFalsy();
+            expect(outcome.unevaluable).toBeFalsy();
+
+            const inverted = await engine.evaluate(
+                composite(DecisionStrategy.UNANIMOUS, [unevaluable, falsy], true),
+                context(),
+            );
+
+            expect(inverted.success).toBeTruthy();
+        });
+
+        it('should let unevaluable win over pending when unanimous', async () => {
+            const outcome = await engine.evaluate(
+                composite(DecisionStrategy.UNANIMOUS, [pending, unevaluable]),
+                context(),
+            );
+
+            expect(outcome.success).toBeFalsy();
+            expect(outcome.pending).toBeFalsy();
+            expect(outcome.unevaluable).toBeTruthy();
+        });
+
+        it('should never apply invert to an unevaluable composite', async () => {
+            for (const decisionStrategy of Object.values(DecisionStrategy)) {
+                const outcome = await engine.evaluate(
+                    composite(decisionStrategy, [unevaluable], true),
+                    context(),
+                );
+
+                expect(outcome.success).toBeFalsy();
+                expect(outcome.pending).toBeFalsy();
+                expect(outcome.unevaluable).toBeTruthy();
+            }
+        });
+
+        it('should group the issues of the children like a failure', async () => {
+            const outcome = await engine.evaluate(
+                composite(DecisionStrategy.AFFIRMATIVE, [falsy, unevaluable]),
+                context(),
+            );
+
+            expect(outcome.unevaluable).toBeTruthy();
+            expect(outcome.condition).toBeUndefined();
+            expect(outcome.issues).toHaveLength(1);
+        });
+
+        it('should propagate through nested composites', async () => {
+            const outcome = await engine.evaluate(
+                composite(DecisionStrategy.UNANIMOUS, [
+                    truthy,
+                    composite(DecisionStrategy.AFFIRMATIVE, [unevaluable], true),
+                ], true),
+                context(),
+            );
+
+            expect(outcome.success).toBeFalsy();
+            expect(outcome.unevaluable).toBeTruthy();
+        });
+    });
 });

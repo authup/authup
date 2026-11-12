@@ -53,6 +53,7 @@ export class IdentityPolicyEvaluator implements IPolicyEvaluator {
         if (!data) {
             return {
                 success: false,
+                unevaluable: true,
                 issues: [
                     definePolicyIssueItem({
                         code: PolicyIssueCode.DATA_MISSING,

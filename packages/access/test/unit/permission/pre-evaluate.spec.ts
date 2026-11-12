@@ -10,6 +10,7 @@ import { DecisionStrategy } from '@authup/kit';
 import type { PermissionPolicyBinding } from '../../../src';
 import {
     BuiltInPolicyType,
+    IdentityPermissionBindingPolicyEvaluator,
     PermissionError,
     PermissionEvaluator,
     PermissionMemoryProvider,
@@ -129,5 +130,80 @@ describe('src/permission/evaluator (derived pre-gate)', () => {
             name: 'user_edit',
             options: { policiesExcluded: [BuiltInPolicyType.ATTRIBUTES] },
         })).resolves.toBeUndefined();
+    });
+});
+
+// A policy that could not be evaluated is no pass at either gate: the pre-gate
+// permits pending only, and `invert` never turns the failure into a pass.
+describe('src/permission/evaluator (not evaluable)', () => {
+    const unregistered = { type: 'unregistered' };
+    const bindings : PermissionPolicyBinding[] = [
+        {
+            // the shape of `system.default`
+            permission: { name: 'user_read' },
+            policies: [
+                definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                    decisionStrategy: DecisionStrategy.UNANIMOUS,
+                    children: [
+                        definePolicyWithType(BuiltInPolicyType.IDENTITY, {}),
+                        definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {}),
+                    ],
+                }),
+            ],
+        },
+        {
+            permission: { name: 'user_create' },
+            policies: [unregistered],
+        },
+        {
+            permission: { name: 'user_delete' },
+            policies: [
+                definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                    invert: true,
+                    decisionStrategy: DecisionStrategy.UNANIMOUS,
+                    children: [unregistered],
+                }),
+            ],
+        },
+        {
+            permission: { name: 'user_update' },
+            policies: [
+                definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                    invert: true,
+                    decisionStrategy: DecisionStrategy.AFFIRMATIVE,
+                    children: [attributesPolicy, unregistered],
+                }),
+            ],
+        },
+    ];
+
+    const bindingEvaluator = new PermissionEvaluator({
+        provider: new PermissionMemoryProvider(bindings),
+        policyEngine: new PolicyEngine({
+            ...PolicyDefaultEvaluators,
+            [BuiltInPolicyType.PERMISSION_BINDING]: new IdentityPermissionBindingPolicyEvaluator(),
+        }),
+    });
+
+    it('should deny an anonymous caller at the pre-gate of a binding check', async () => {
+        await expect(bindingEvaluator.preEvaluate({ name: 'user_read' }))
+            .rejects.toBeInstanceOf(PermissionError);
+    });
+
+    it.each([
+        ['an unregistered policy type', 'user_create'],
+        ['an inverted composite over an unregistered policy type', 'user_delete'],
+        ['an inverted composite over a pending and an unregistered policy type', 'user_update'],
+    ])('should deny %s at both gates', async (_label, name) => {
+        await expect(bindingEvaluator.preEvaluate({ name }))
+            .rejects.toBeInstanceOf(PermissionError);
+
+        await expect(bindingEvaluator.evaluate({ name }))
+            .rejects.toBeInstanceOf(PermissionError);
+
+        await expect(bindingEvaluator.evaluate({
+            name,
+            data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { name: 'guest' } }),
+        })).rejects.toBeInstanceOf(PermissionError);
     });
 });

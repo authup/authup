@@ -23,6 +23,18 @@ export type PolicyEvaluationResult = {
      */
     pending?: boolean,
     /**
+     * The policy could not be evaluated at all: it has no type or no evaluator, its
+     * evaluator threw, its configuration is invalid, or data it needs is missing or
+     * malformed without being declared (see {@link IPolicyEvaluator.requires}).
+     * Unlike `pending` it will not resolve once more data arrives. Unevaluable always
+     * rides on `success: false`, never together with `pending`, and never carries a
+     * `condition`: every consumer treats it as a deny.
+     *
+     * Unknown stays unknown: `invert` is never applied to an unevaluable result, so
+     * a negated parent can not turn a failure to evaluate into a pass.
+     */
+    unevaluable?: boolean,
+    /**
      * EXACT condition form of the pending subtree (see
      * {@link IPolicyEvaluator.toCondition}): a row satisfies the condition iff the
      * pending subtree settles true on that row's attributes, given the current bag.

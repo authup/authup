@@ -108,6 +108,7 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
         if (!identity) {
             return {
                 success: false,
+                unevaluable: true,
                 issues: [
                     definePolicyIssueItem({
                         code: PolicyIssueCode.DATA_MISSING,
@@ -123,6 +124,7 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
         if (!binding) {
             return {
                 success: false,
+                unevaluable: true,
                 issues: [
                     definePolicyIssueItem({
                         code: PolicyIssueCode.DATA_MISSING,
@@ -139,7 +141,11 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
             grants = this.accessGrants(ctx, identity);
         } catch (e) {
             if (isPolicyError(e)) {
-                return { success: false, issues: [...e.issues] };
+                return {
+                    success: false,
+                    unevaluable: true,
+                    issues: [...e.issues],
+                };
             }
 
             throw e;
@@ -176,6 +182,7 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
         const pendingIssues : Issue[] = [];
         const conditions : ICondition[] = [];
         let pending = false;
+        let unevaluable = false;
         let lowerable = true;
 
         for (const grant of aggr.grants) {
@@ -238,8 +245,10 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
             // A grant policy carrying a binding node re-enters this evaluator with the
             // same data, which loads the same grants and evaluates the same tree again,
             // without bound (issue #3633). The consumer side drops such a grant
-            // (`containsBindingCheck`); the term settles false here so the two agree.
+            // (`containsBindingCheck`); the term never passes here so the two agree.
             if (containsPermissionBinding(grant.policy)) {
+                unevaluable = true;
+
                 issues.push(definePolicyIssueItem({
                     code: PolicyIssueCode.INVALID,
                     message: 'A grant policy must not evaluate the permission binding.',
@@ -307,9 +316,27 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
                 continue;
             }
 
+            // A grant policy that could not be evaluated leaves the term UNKNOWN for
+            // good: it never passes, and nothing may be concluded from that.
+            if (outcome.unevaluable) {
+                unevaluable = true;
+            }
+
             if (outcome.issues) {
                 issues.push(...outcome.issues);
             }
+        }
+
+        // No grant term settled true, and one of them could not be evaluated. The
+        // disjunction can only still become true, so it stays pending below while a
+        // term pends and the node is not inverted. Otherwise it can never pass and is
+        // unevaluable itself, which `invert` is never applied to.
+        if (unevaluable && (!pending || policy.invert)) {
+            return {
+                success: false,
+                unevaluable: true,
+                issues,
+            };
         }
 
         // No grant term settled true. If some term is still pending, the disjunction is

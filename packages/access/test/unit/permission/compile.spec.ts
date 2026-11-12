@@ -8,6 +8,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ICondition, IFilter, IFilters } from '@rapiq/core';
 import { compileFilters } from '@rapiq/adapter-memory';
+import { DecisionStrategy } from '@authup/kit';
 import type { PermissionPolicyBinding } from '../../../src';
 import {
     BuiltInPolicyType,
@@ -117,5 +118,79 @@ describe('src/permission/evaluator (compile)', () => {
         const result = await evaluator.compile({ name: 'user_view' });
 
         expect(result.verdict).toEqual('post');
+    });
+});
+
+// A subtree that could not be evaluated never passes, so a condition must not
+// admit a row through it and `invert` must not turn it into an allow.
+describe('src/permission/evaluator (compile, not evaluable)', () => {
+    const attributes = definePolicyWithType(BuiltInPolicyType.ATTRIBUTES, { query: { name: { $eq: 'admin' } } });
+    const unregistered = { type: 'unregistered' };
+
+    const bindings : PermissionPolicyBinding[] = [
+        {
+            permission: { name: 'affirmative' },
+            policies: [
+                definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                    invert: true,
+                    decisionStrategy: DecisionStrategy.AFFIRMATIVE,
+                    children: [attributes, unregistered],
+                }),
+            ],
+        },
+        {
+            permission: { name: 'unanimous' },
+            policies: [
+                definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                    invert: true,
+                    decisionStrategy: DecisionStrategy.UNANIMOUS,
+                    children: [attributes, unregistered],
+                }),
+            ],
+        },
+        {
+            permission: { name: 'unregistered' },
+            policies: [unregistered],
+        },
+    ];
+
+    const unevaluableEvaluator = new PermissionEvaluator({
+        provider: new PermissionMemoryProvider(bindings),
+        policyEngine: new PolicyEngine(PolicyDefaultEvaluators),
+    });
+
+    it('should compile an inverted affirmative composite over an unevaluable child to deny', async () => {
+        const result = await unevaluableEvaluator.compile({ name: 'affirmative' });
+
+        expect(result.verdict).toEqual('deny');
+    });
+
+    it('should compile an inverted unanimous composite over an unevaluable child to the negated condition', async () => {
+        const result = await unevaluableEvaluator.compile({ name: 'unanimous' });
+
+        expect(result.verdict).toEqual('conditional');
+
+        if (result.verdict !== 'conditional') {
+            return;
+        }
+
+        const predicate = test(result.condition);
+
+        for (const row of [{ name: 'admin' }, { name: 'guest' }]) {
+            const allowed = await unevaluableEvaluator.evaluate({
+                name: 'unanimous',
+                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: row }),
+            }).then(() => true, () => false);
+
+            expect(predicate(row), row.name).toBe(allowed);
+        }
+
+        expect(predicate({ name: 'admin' })).toBe(false);
+        expect(predicate({ name: 'guest' })).toBe(true);
+    });
+
+    it('should drop an unevaluable name from the disjunction', async () => {
+        expect((await unevaluableEvaluator.compile({ name: 'unregistered' })).verdict).toEqual('deny');
+        expect((await unevaluableEvaluator.compile({ name: ['unregistered', 'affirmative'] })).verdict).toEqual('deny');
     });
 });

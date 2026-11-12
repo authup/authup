@@ -80,6 +80,7 @@ export class PolicyEngine implements IPolicyEngine {
         if (!policy.type) {
             return {
                 success: false,
+                unevaluable: true,
                 issues: [
                     defineIssueItem({
                         path: [],
@@ -123,6 +124,7 @@ export class PolicyEngine implements IPolicyEngine {
 
             return {
                 success: false,
+                unevaluable: true,
                 issues,
             };
         }
@@ -186,6 +188,7 @@ export class PolicyEngine implements IPolicyEngine {
 
             return {
                 success: false,
+                unevaluable: true,
                 issues,
             };
         }

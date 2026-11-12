@@ -37,6 +37,7 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
         if (policy.children.length === 0) {
             return {
                 success: false,
+                unevaluable: true,
                 issues: [
                     definePolicyIssueItem({
                         code: PolicyIssueCode.INVALID,
@@ -49,6 +50,7 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
 
         let count = 0;
         let pending = 0;
+        let unevaluable = 0;
 
         const decisionStrategy = policy.decisionStrategy ??
             DecisionStrategy.UNANIMOUS;
@@ -85,6 +87,23 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
                 if (outcome.issues && outcome.issues.length > 0) {
                     pendingIssues.push(defineIssueGroup({
                         message: `The evaluation of child policy ${childPolicy.type} is pending`,
+                        issues: outcome.issues,
+                        path,
+                    }));
+                }
+
+                continue;
+            }
+
+            // An unevaluable child is UNKNOWN as well, but one that never resolves:
+            // it neither counts nor early-returns, and a settled sibling may still
+            // decide the node. Its issues are kept like those of a failure.
+            if (outcome.unevaluable) {
+                unevaluable++;
+
+                if (outcome.issues) {
+                    issues.push(defineIssueGroup({
+                        message: `The evaluation of child policy ${childPolicy.type} failed`,
                         issues: outcome.issues,
                         path,
                     }));
@@ -133,32 +152,76 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
             }
         }
 
-        // Settle the remainder: the composite settles despite pending children only
-        // when no resolution of those children could change the outcome.
+        // Settle the remainder: the composite settles despite pending or unevaluable
+        // children only when no resolution of those children could change the outcome.
+        const unknown = pending + unevaluable;
         let settled : boolean | null;
 
         switch (decisionStrategy) {
             case DecisionStrategy.AFFIRMATIVE: {
-                // every settled child failed; any pending child could still succeed
-                settled = pending > 0 ? null : false;
+                // every settled child failed; any unknown child could still succeed
+                settled = unknown > 0 ? null : false;
 
                 break;
             }
             case DecisionStrategy.UNANIMOUS: {
-                // every settled child succeeded; any pending child could still fail
-                settled = pending > 0 ? null : count > 0;
+                // every settled child succeeded; any unknown child could still fail
+                settled = unknown > 0 ? null : count > 0;
 
                 break;
             }
             default: {
-                // CONSENSUS: final outcome is `count > 0`, each pending worth ±1
-                if (count - pending > 0) {
+                // CONSENSUS: final outcome is `count > 0`, each unknown worth ±1
+                if (count - unknown > 0) {
                     settled = true;
-                } else if (count + pending <= 0) {
+                } else if (count + unknown <= 0) {
                     settled = false;
                 } else {
                     settled = null;
                 }
+            }
+        }
+
+        if (settled === null && unevaluable > 0) {
+            // An unevaluable child never resolves, so the node can no longer settle.
+            // What remains is decided on the outcome AFTER `invert`: the node stays
+            // pending only while a pending child could still turn it into a pass.
+            // The raw value of an AFFIRMATIVE node can only become true, that of a
+            // UNANIMOUS node only false, so the first passes uninverted and the
+            // second inverted. Anything else can never pass and is unevaluable
+            // itself, which `invert` is never applied to. A CONSENSUS node with a
+            // pending child stays pending (it carries no condition below, so the
+            // full evaluation decides).
+            let passable : boolean;
+
+            switch (decisionStrategy) {
+                case DecisionStrategy.AFFIRMATIVE: {
+                    passable = pending > 0 && !policy.invert;
+
+                    break;
+                }
+                case DecisionStrategy.UNANIMOUS: {
+                    passable = pending > 0 && !!policy.invert;
+
+                    break;
+                }
+                default: {
+                    passable = pending > 0;
+                }
+            }
+
+            if (!passable) {
+                return {
+                    success: false,
+                    unevaluable: true,
+                    issues: [
+                        defineIssueGroup({
+                            message: `The evaluation of composite policy failed (${decisionStrategy})`,
+                            issues,
+                            path: ctx.path,
+                        }),
+                    ],
+                };
             }
         }
 

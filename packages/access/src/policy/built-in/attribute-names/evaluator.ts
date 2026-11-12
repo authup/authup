@@ -69,6 +69,7 @@ export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
             if (hasInvalidAttributeNames) {
                 return {
                     success: false,
+                    unevaluable: true,
                     issues: [
                         definePolicyIssueItem({
                             code: PolicyIssueCode.DATA_INVALID,
