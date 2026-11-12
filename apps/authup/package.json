@@ -70,7 +70,7 @@
         "hapic": "^3.0.2",
         "orkos": "^1.1.1",
         "reflect-metadata": "^0.2.2",
-        "routup": "^6.1.1",
+        "routup": "^6.2.0",
         "validup": "^2.0.1",
         "zod": "^4.6.7"
     },
