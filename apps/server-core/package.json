@@ -108,7 +108,7 @@
         "change-case": "^5.4.4",
         "citty": "^0.2.2",
         "confinity": "^2.0.1",
-        "dotenv": "^18.0.9",
+        "dotenv": "^18.0.10",
         "dycraft": "^1.1.0",
         "eldin": "^1.3.0",
         "envix": "^1.5.0",
