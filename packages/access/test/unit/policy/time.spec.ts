@@ -120,4 +120,20 @@ describe('src/policy/time', () => {
         expect(output.foo)
             .toBeUndefined();
     });
+    it('applies a bound at the epoch', async () => {
+        // 23:59 local is after the epoch's local time of day in every zone
+        const evaluator = new TimePolicyEvaluator();
+        const data = () => {
+            const time = new Date();
+
+            time.setHours(23, 59, 0, 0);
+
+            return definePolicyEvaluationContext({ data: new PolicyData({ [BuiltInPolicyType.TIME]: time }) });
+        };
+
+        expect((await evaluator.evaluate({ end: 0 }, data())).success).toBe(false);
+        expect((await evaluator.evaluate({ end: new Date(0) }, data())).success).toBe(false);
+        expect((await evaluator.evaluate({ start: 0 }, data())).success).toBe(true);
+        expect((await evaluator.evaluate({ start: new Date(0) }, data())).success).toBe(true);
+    });
 });
