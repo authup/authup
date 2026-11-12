@@ -38,13 +38,13 @@ import {
 // ---------------------------------------------------------------------
 
 type Leaf = 't' | 'f' | 'p' | 'u';
-type Truth = 'T' | 'F' | 'U';
-type Verdict = 'pass' | 'deny' | 'pending' | 'unevaluable';
-type Expectation = {
-    verdict: Verdict,
-    // whether a pending node is expected to carry a condition under `withConditions`
-    condition: boolean,
+type Node = {
+    strategy: DecisionStrategy,
+    invert: boolean,
+    children: Tree[],
 };
+type Tree = Leaf | Node;
+type Truth = 'T' | 'F' | 'U';
 
 const ROW_KEY = 'row';
 
@@ -69,20 +69,20 @@ function createSettledEvaluator(success: boolean) : IPolicyEvaluator {
     };
 }
 
-// pends while the bag carries no row, and settles on the row's flag once it does
+// pends while the bag carries no row, and settles on its own field of the row once it does
 const rowEvaluator : IPolicyEvaluator = {
     requires() : string[] {
         return [ROW_KEY];
     },
 
-    async toCondition() : Promise<ICondition | null> {
-        return eq('flag', true);
+    async toCondition(value: Record<string, any>) : Promise<ICondition | null> {
+        return eq(value.field, true);
     },
 
-    async evaluate(_value: Record<string, any>, ctx: PolicyEvaluationContext): Promise<PolicyEvaluationResult> {
-        const row = ctx.data.get<{ flag: boolean }>(ROW_KEY);
+    async evaluate(value: Record<string, any>, ctx: PolicyEvaluationContext): Promise<PolicyEvaluationResult> {
+        const row = ctx.data.get<Record<string, boolean>>(ROW_KEY);
 
-        return { success: row.flag };
+        return { success: row[value.field] === true };
     },
 };
 
@@ -100,194 +100,308 @@ const STRATEGIES = [
     DecisionStrategy.CONSENSUS,
 ];
 
-function buildMixes(size: number) : Leaf[][] {
-    if (size === 0) {
-        return [[]];
-    }
-
-    const output : Leaf[][] = [];
-
-    for (const rest of buildMixes(size - 1)) {
-        for (const leaf of LEAVES) {
-            output.push([leaf, ...rest]);
+// every ordered mix of the given sizes, which covers every multiset in every order
+function buildMixes<T>(items: T[], sizes: number[]) : T[][] {
+    const build = (size: number) : T[][] => {
+        if (size === 0) {
+            return [[]];
         }
-    }
 
-    return output;
+        return build(size - 1).flatMap((rest) => items.map((item) => [item, ...rest]));
+    };
+
+    return sizes.flatMap((size) => build(size));
 }
 
-// every ordered mix of one to three children, which covers every multiset in every order
-const MIXES = [...buildMixes(1), ...buildMixes(2), ...buildMixes(3)];
+function buildNodes(children: Tree[][]) : Node[] {
+    return STRATEGIES.flatMap((strategy) => [false, true].flatMap((invert) => children.map((mix) => ({
+        strategy,
+        invert,
+        children: mix,
+    }))));
+}
 
-// Kleene: an unevaluable child is an unknown that never resolves
-function combine(strategy: DecisionStrategy, children: Truth[]) : Truth {
-    if (strategy === DecisionStrategy.AFFIRMATIVE) {
+function isLeaf(tree: Tree) : tree is Leaf {
+    return typeof tree === 'string';
+}
+
+function describeTree(tree: Tree) : string {
+    if (isLeaf(tree)) {
+        return tree;
+    }
+
+    return `${tree.invert ? 'not ' : ''}${tree.strategy}(${tree.children.map((child) => describeTree(child)).join(', ')})`;
+}
+
+function countPending(tree: Tree) : number {
+    if (isLeaf(tree)) {
+        return tree === 'p' ? 1 : 0;
+    }
+
+    return tree.children.reduce((sum, child) => sum + countPending(child), 0);
+}
+
+function hasConsensus(tree: Tree) : boolean {
+    if (isLeaf(tree)) {
+        return false;
+    }
+
+    return tree.strategy === DecisionStrategy.CONSENSUS ||
+        tree.children.some((child) => hasConsensus(child));
+}
+
+// the n-th pending leaf, in tree order, reads the row field `f<n>`
+function buildPolicy(tree: Tree, counter: { next: number } = { next: 0 }) : BasePolicy {
+    if (isLeaf(tree)) {
+        if (tree === 'p') {
+            const policy : PolicyWithType = { type: 'p', field: `f${counter.next}` };
+
+            counter.next++;
+
+            return policy;
+        }
+
+        return { type: tree };
+    }
+
+    return definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+        decisionStrategy: tree.strategy,
+        invert: tree.invert,
+        children: tree.children.map((child) => buildPolicy(child, counter)),
+    });
+}
+
+// every way the pending leaves could still resolve, one flag per leaf in tree order
+function buildResolutions(count: number) : boolean[][] {
+    return buildMixes([true, false], [count]);
+}
+
+function buildRow(resolution: boolean[]) : Record<string, boolean> {
+    return Object.fromEntries(resolution.map((flag, index) => [`f${index}`, flag]));
+}
+
+// The value of the tree once every pending leaf resolved. An unevaluable leaf is
+// an unknown that never resolves (Kleene), and `invert` moves settled values only.
+function valueOf(tree: Tree, resolution: boolean[], counter: { next: number } = { next: 0 }) : Truth {
+    if (isLeaf(tree)) {
+        if (tree === 'p') {
+            const flag = resolution[counter.next];
+
+            counter.next++;
+
+            return flag ? 'T' : 'F';
+        }
+
+        if (tree === 'u') {
+            return 'U';
+        }
+
+        return tree === 't' ? 'T' : 'F';
+    }
+
+    const children = tree.children.map((child) => valueOf(child, resolution, counter));
+
+    let value : Truth;
+
+    if (tree.strategy === DecisionStrategy.AFFIRMATIVE) {
         if (children.includes('T')) {
-            return 'T';
+            value = 'T';
+        } else {
+            value = children.includes('U') ? 'U' : 'F';
         }
+    } else if (tree.strategy === DecisionStrategy.UNANIMOUS) {
+        if (children.includes('F')) {
+            value = 'F';
+        } else {
+            value = children.includes('U') ? 'U' : 'T';
+        }
+    } else {
+        // the majority of the settled children, as long as the unknown ones could not turn it
+        const count = children.filter((child) => child === 'T').length -
+            children.filter((child) => child === 'F').length;
+        const unknown = children.filter((child) => child === 'U').length;
 
-        return children.includes('U') ? 'U' : 'F';
+        if (count - unknown > 0) {
+            value = 'T';
+        } else {
+            value = count + unknown <= 0 ? 'F' : 'U';
+        }
     }
 
-    if (children.includes('F')) {
-        return 'F';
-    }
-
-    return children.includes('U') ? 'U' : 'T';
-}
-
-function negate(value: Truth, invert: boolean) : Truth {
-    if (!invert || value === 'U') {
+    if (value === 'U' || !tree.invert) {
         return value;
     }
 
     return value === 'T' ? 'F' : 'T';
 }
 
-// every way the pending children could still resolve
-function resolve(children: Leaf[]) : Truth[][] {
-    let output : Truth[][] = [[]];
-
-    for (const child of children) {
-        let values : Truth[];
-
-        if (child === 'p') {
-            values = ['T', 'F'];
-        } else if (child === 'u') {
-            values = ['U'];
-        } else {
-            values = [child === 't' ? 'T' : 'F'];
-        }
-
-        output = output.flatMap((prefix) => values.map((value) => [...prefix, value]));
-    }
-
-    return output;
-}
-
-function expected(strategy: DecisionStrategy, invert: boolean, children: Leaf[]) : Expectation {
-    const pending = children.filter((child) => child === 'p').length;
-    const unevaluable = children.filter((child) => child === 'u').length;
-
-    if (strategy === DecisionStrategy.CONSENSUS) {
-        const count = children.filter((child) => child === 't').length -
-            children.filter((child) => child === 'f').length;
-        const unknown = pending + unevaluable;
-
-        if (count - unknown > 0) {
-            return { verdict: invert ? 'deny' : 'pass', condition: false };
-        }
-
-        if (count + unknown <= 0) {
-            return { verdict: invert ? 'pass' : 'deny', condition: false };
-        }
-
-        return {
-            verdict: pending === 0 && unevaluable > 0 ? 'unevaluable' : 'pending',
-            condition: false,
-        };
-    }
-
-    // decided on the outcome AFTER invert: what can this node still become?
-    const outcomes = new Set(
-        resolve(children).map((resolution) => negate(combine(strategy, resolution), invert)),
-    );
-
-    if (outcomes.size === 1 && outcomes.has('T')) {
-        return { verdict: 'pass', condition: false };
-    }
-
-    if (outcomes.size === 1 && outcomes.has('F')) {
-        return { verdict: 'deny', condition: false };
-    }
-
-    if (outcomes.has('T')) {
-        return { verdict: 'pending', condition: true };
-    }
-
-    return { verdict: 'unevaluable', condition: false };
-}
-
-function readVerdict(result: PolicyEvaluationResult) : Verdict {
-    if (result.success) {
-        return 'pass';
-    }
-
+function readTruth(result: PolicyEvaluationResult) : Truth | undefined {
     if (result.pending) {
-        return 'pending';
+        return undefined;
     }
 
-    return result.unevaluable ? 'unevaluable' : 'deny';
+    if (result.success) {
+        return 'T';
+    }
+
+    return result.unevaluable ? 'U' : 'F';
 }
 
-function buildTablePolicy(strategy: DecisionStrategy, invert: boolean, children: Leaf[]) {
-    return definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
-        decisionStrategy: strategy,
-        invert,
-        children: children.map((type) => ({ type })),
-    });
+async function checkTree(tree: Node) : Promise<void> {
+    const label = describeTree(tree);
+    const policy = buildPolicy(tree);
+    const resolutions = buildResolutions(countPending(tree));
+    const values = resolutions.map((resolution) => valueOf(tree, resolution));
+    const somePass = values.includes('T');
+    const someFail = values.includes('F');
+    const someUnknown = values.includes('U');
+
+    const result = await tableEngine.evaluate(policy, definePolicyEvaluationContext({ withConditions: true }));
+
+    // the invariants of the result shape
+    expect(!!result.pending && !!result.unevaluable, label).toBe(false);
+    expect(result.success && (!!result.pending || !!result.unevaluable), label).toBe(false);
+
+    if (result.unevaluable) {
+        expect(result.condition, label).toBeUndefined();
+    }
+
+    if (result.reachable) {
+        expect(result.pending, label).toBe(true);
+        expect(result.condition, label).toBeUndefined();
+    }
+
+    // soundness, for every strategy
+    if (somePass) {
+        expect(result.success || (!!result.pending && result.reachable !== 'fail'), label).toBe(true);
+    }
+
+    if (someFail || someUnknown) {
+        expect(result.success, label).toBe(false);
+    }
+
+    if (someFail) {
+        expect(result.reachable, label).not.toEqual('pass');
+    }
+
+    if (somePass || someFail) {
+        expect(!!result.unevaluable, label).toBe(false);
+    }
+
+    if (hasConsensus(tree)) {
+        // a threshold over unknown children only narrows soundly, never exactly
+        if (!result.pending) {
+            expect(new Set(values), label).toEqual(new Set([readTruth(result)]));
+        }
+    } else if (new Set(values).size === 1) {
+        expect(readTruth(result), label).toEqual(values[0]);
+    } else {
+        let reachable : 'pass' | 'fail' | undefined;
+
+        if (!someFail) {
+            reachable = 'pass';
+        } else if (!somePass) {
+            reachable = 'fail';
+        }
+
+        expect(result.pending, label).toBe(true);
+        expect(result.reachable, label).toEqual(reachable);
+
+        // one level deep the condition is all or nothing: every pending leaf lowers,
+        // so only an unevaluable sibling withholds it
+        const flat = tree.children.every((child) => isLeaf(child));
+
+        if (flat) {
+            expect(!!result.condition, label).toBe(!tree.children.includes('u'));
+        }
+    }
+
+    // the same verdict without the condition request
+    const plain = await tableEngine.evaluate(policy, definePolicyEvaluationContext());
+
+    expect(plain.condition, label).toBeUndefined();
+    expect(readTruth(plain), label).toEqual(readTruth(result));
+    expect(plain.reachable, label).toEqual(result.reachable);
+
+    if (result.condition) {
+        expect(someUnknown, label).toBe(false);
+    }
+
+    const predicate = result.condition ?
+        compileFilters(result.condition as IFilter | IFilters, { caseSensitive: true }) :
+        undefined;
+
+    for (const [index, resolution] of resolutions.entries()) {
+        const row = buildRow(resolution);
+        const full = await tableEngine.evaluate(policy, definePolicyEvaluationContext({ data: definePolicyData({ [ROW_KEY]: row }) }));
+        const hint = `${label} with ${JSON.stringify(row)}`;
+
+        // once the data arrived, the tree has exactly the value of the reference
+        expect(readTruth(full), hint).toEqual(values[index]);
+
+        // a condition admits exactly the rows the full evaluation allows
+        if (predicate) {
+            expect(predicate(row), hint).toBe(full.success);
+        }
+    }
 }
+
+const LEAF_MIXES = buildMixes<Tree>(LEAVES, [1, 2, 3]);
+
+// a child is a leaf, or a composite of any strategy and inversion over one or two leaves
+const CHILDREN : Tree[] = [...LEAVES, ...buildNodes(buildMixes<Tree>(LEAVES, [1, 2]))];
+const CHILD_MIXES = buildMixes(CHILDREN, [1, 2]);
 
 describe('src/policy (not evaluable): truth table', () => {
     describe.each(STRATEGIES)('%s', (strategy) => {
         describe.each([false, true])('invert: %s', (invert) => {
-            it.each(MIXES.map((mix) => [mix.join(','), mix] as const))('children: %s', async (_label, mix) => {
-                const policy = buildTablePolicy(strategy, invert, mix);
-                const expectation = expected(strategy, invert, mix);
-
-                const result = await tableEngine.evaluate(policy, definePolicyEvaluationContext({ withConditions: true }));
-
-                expect(readVerdict(result)).toEqual(expectation.verdict);
-                expect(result.success).toBe(expectation.verdict === 'pass');
-                expect(!!result.pending).toBe(expectation.verdict === 'pending');
-                expect(!!result.unevaluable).toBe(expectation.verdict === 'unevaluable');
-
-                expect(!!result.pending && !!result.unevaluable).toBe(false);
-
-                if (result.unevaluable) {
-                    expect(result.condition).toBeUndefined();
-                }
-
-                expect(!!result.condition).toBe(expectation.condition);
-
-                // the same verdict without the condition request
-                const plain = await tableEngine.evaluate(policy, definePolicyEvaluationContext());
-
-                expect(readVerdict(plain)).toEqual(expectation.verdict);
-                expect(plain.condition).toBeUndefined();
-
-                const predicate = result.condition ?
-                    compileFilters(result.condition as IFilter | IFilters, { caseSensitive: true }) :
-                    undefined;
-
-                for (const flag of [true, false]) {
-                    const row = { flag };
-                    const full = await tableEngine.evaluate(policy, definePolicyEvaluationContext({ data: definePolicyData({ [ROW_KEY]: row }) }));
-
-                    expect(full.pending).toBeFalsy();
-
-                    if (result.pending) {
-                        // a condition admits exactly the rows the full evaluation allows
-                        if (predicate) {
-                            expect(predicate(row), `flag: ${flag}`).toBe(full.success);
-                        }
-                    } else {
-                        // what the gate settles, the full evaluation never contradicts
-                        expect(full.success, `flag: ${flag}`).toBe(result.success);
-                    }
-                }
+            it.each(LEAF_MIXES.map((mix) => [mix.join(','), mix] as const))('children: %s', async (_label, mix) => {
+                await checkTree({
+                    strategy,
+                    invert,
+                    children: mix,
+                });
             });
+
+            it('holds two levels deep', async () => {
+                for (const mix of CHILD_MIXES) {
+                    await checkTree({
+                        strategy,
+                        invert,
+                        children: mix,
+                    });
+                }
+            }, 120_000);
         });
     });
 
     it('carries the issues of the children it could not evaluate', async () => {
         const result = await tableEngine.evaluate(
-            buildTablePolicy(DecisionStrategy.UNANIMOUS, false, ['t', 'u']),
+            buildPolicy({
+                strategy: DecisionStrategy.UNANIMOUS,
+                invert: false,
+                children: ['t', 'u'],
+            }),
             definePolicyEvaluationContext(),
         );
 
         expect(result.unevaluable).toBe(true);
         expect(result.issues).toHaveLength(1);
+    });
+
+    it('keeps the issues of a child it could not evaluate while it pends', async () => {
+        const result = await tableEngine.evaluate(
+            buildPolicy({
+                strategy: DecisionStrategy.AFFIRMATIVE,
+                invert: false,
+                children: ['p', 'u'],
+            }),
+            definePolicyEvaluationContext(),
+        );
+
+        expect(result.pending).toBe(true);
+        expect(result.reachable).toEqual('pass');
+        expect(JSON.stringify(result.issues)).toContain('can not be handled');
     });
 });
 
@@ -547,6 +661,42 @@ describe('src/policy (not evaluable): a custom evaluator flagging both', () => {
         const result = await permissionEvaluator.compile({ name: 'mixed' });
 
         expect(result.verdict).toEqual('deny');
+    });
+});
+
+describe('src/policy (not evaluable): a custom evaluator misreporting what it can reach', () => {
+    const engine = new PolicyEngine({
+        ...PolicyDefaultEvaluators,
+        settled: {
+            async evaluate(): Promise<PolicyEvaluationResult> {
+                return { success: false, reachable: 'pass' };
+            },
+        },
+        narrowed: {
+            async evaluate(): Promise<PolicyEvaluationResult> {
+                return {
+                    success: false,
+                    pending: true,
+                    reachable: 'pass',
+                    condition: eq('name', 'admin'),
+                };
+            },
+        },
+    });
+
+    it('drops it from a result that is not pending', async () => {
+        const result = await engine.evaluate({ type: 'settled' }, definePolicyEvaluationContext());
+
+        expect(result.success).toBe(false);
+        expect(result.reachable).toBeUndefined();
+    });
+
+    it('drops the condition of a pending result that carries it', async () => {
+        const result = await engine.evaluate({ type: 'narrowed' }, definePolicyEvaluationContext({ withConditions: true }));
+
+        expect(result.pending).toBe(true);
+        expect(result.reachable).toEqual('pass');
+        expect(result.condition).toBeUndefined();
     });
 });
 

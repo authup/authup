@@ -191,6 +191,20 @@ export class PolicyEngine implements IPolicyEngine {
                 };
             }
 
+            // What a pending result can still reach means nothing once it settled,
+            // and a result narrowed that way is not exact, so it carries no condition.
+            if (result.reachable) {
+                const normalized : PolicyEvaluationResult = { ...result };
+
+                delete normalized.condition;
+
+                if (!normalized.pending) {
+                    delete normalized.reachable;
+                }
+
+                return normalized;
+            }
+
             return result;
         } catch (e) {
             issues.push(defineIssueItem({

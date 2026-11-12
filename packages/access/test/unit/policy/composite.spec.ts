@@ -227,15 +227,27 @@ describe('src/policy/composite (tri-state algebra)', () => {
             expect(inverted.success).toBeTruthy();
         });
 
-        it('should let unevaluable win over pending when unanimous', async () => {
+        it('should stay pending next to a pending child, able to fail only, when unanimous', async () => {
             const outcome = await engine.evaluate(
                 composite(DecisionStrategy.UNANIMOUS, [pending, unevaluable]),
                 context(),
             );
 
             expect(outcome.success).toBeFalsy();
-            expect(outcome.pending).toBeFalsy();
-            expect(outcome.unevaluable).toBeTruthy();
+            expect(outcome.pending).toBeTruthy();
+            expect(outcome.reachable).toEqual('fail');
+            expect(outcome.unevaluable).toBeFalsy();
+        });
+
+        it('should swap what a pending composite can still reach when inverted', async () => {
+            const outcome = await engine.evaluate(
+                composite(DecisionStrategy.UNANIMOUS, [pending, unevaluable], true),
+                context(),
+            );
+
+            expect(outcome.success).toBeFalsy();
+            expect(outcome.pending).toBeTruthy();
+            expect(outcome.reachable).toEqual('pass');
         });
 
         it('should never apply invert to an unevaluable composite', async () => {

@@ -152,6 +152,38 @@ describe('src/permission/evaluator (compile, not evaluable)', () => {
             permission: { name: 'unregistered' },
             policies: [unregistered],
         },
+        {
+            // not(attributes or unknown): never a pass, whatever the row
+            permission: { name: 'nestedAffirmative' },
+            policies: [
+                definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                    invert: true,
+                    decisionStrategy: DecisionStrategy.UNANIMOUS,
+                    children: [
+                        definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                            decisionStrategy: DecisionStrategy.AFFIRMATIVE,
+                            children: [attributes, unregistered],
+                        }),
+                    ],
+                }),
+            ],
+        },
+        {
+            // not(attributes and unknown): a pass exactly where the attributes fail
+            permission: { name: 'nestedUnanimous' },
+            policies: [
+                definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                    invert: true,
+                    decisionStrategy: DecisionStrategy.UNANIMOUS,
+                    children: [
+                        definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                            decisionStrategy: DecisionStrategy.UNANIMOUS,
+                            children: [attributes, unregistered],
+                        }),
+                    ],
+                }),
+            ],
+        },
     ];
 
     const unevaluableEvaluator = new PermissionEvaluator({
@@ -159,49 +191,53 @@ describe('src/permission/evaluator (compile, not evaluable)', () => {
         policyEngine: new PolicyEngine(PolicyDefaultEvaluators),
     });
 
+    const allows = (name: string, row: Record<string, any>) => unevaluableEvaluator.evaluate({
+        name,
+        data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: row }),
+    }).then(() => true, () => false);
+
     it('should compile an inverted affirmative composite over an unevaluable child to deny', async () => {
         const result = await unevaluableEvaluator.compile({ name: 'affirmative' });
 
         expect(result.verdict).toEqual('deny');
     });
 
-    it('should compile an inverted unanimous composite over an unevaluable child to the negated condition', async () => {
+    it('should degrade an inverted unanimous composite over an unevaluable child to post', async () => {
+        // it passes exactly where the attributes fail, but nothing can be said
+        // about the rows where they hold, so no condition may stand for it
         const result = await unevaluableEvaluator.compile({ name: 'unanimous' });
 
-        expect(result.verdict).toEqual('conditional');
+        expect(result.verdict).toEqual('post');
 
-        if (result.verdict !== 'conditional') {
-            return;
-        }
-
-        const predicate = test(result.condition);
-
-        for (const row of [{ name: 'admin' }, { name: 'guest' }]) {
-            const allowed = await unevaluableEvaluator.evaluate({
-                name: 'unanimous',
-                data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: row }),
-            }).then(() => true, () => false);
-
-            expect(predicate(row), row.name).toBe(allowed);
-        }
-
-        expect(predicate({ name: 'admin' })).toBe(false);
-        expect(predicate({ name: 'guest' })).toBe(true);
+        expect(await allows('unanimous', { name: 'guest' })).toBe(true);
+        expect(await allows('unanimous', { name: 'admin' })).toBe(false);
     });
 
     it('should drop an unevaluable name from the disjunction', async () => {
         expect((await unevaluableEvaluator.compile({ name: 'unregistered' })).verdict).toEqual('deny');
 
-        const paired = await unevaluableEvaluator.compile({ name: ['unregistered', 'unanimous'] });
-        const alone = await unevaluableEvaluator.compile({ name: 'unanimous' });
+        expect((await unevaluableEvaluator.compile({ name: ['unregistered', 'affirmative'] })).verdict).toEqual('deny');
+        expect((await unevaluableEvaluator.compile({ name: ['unregistered', 'unanimous'] })).verdict).toEqual('post');
+    });
 
-        expect(paired.verdict).toEqual('conditional');
-        expect(alone.verdict).toEqual('conditional');
+    // A pending child next to an unevaluable sibling, under a negating parent: the
+    // inner node alone can not say which way it may still go, so a parent that
+    // negated its condition admitted a row the full evaluation denies.
+    it('should never admit a row through a negated affirmative node over an unevaluable child', async () => {
+        const result = await unevaluableEvaluator.compile({ name: 'nestedAffirmative' });
 
-        if (paired.verdict !== 'conditional' || alone.verdict !== 'conditional') {
-            return;
-        }
+        expect(result.verdict).toEqual('deny');
 
-        expect(paired.condition).toEqual(alone.condition);
+        expect(await allows('nestedAffirmative', { name: 'guest' })).toBe(false);
+        expect(await allows('nestedAffirmative', { name: 'admin' })).toBe(false);
+    });
+
+    it('should leave a negated unanimous node over an unevaluable child to the full evaluation', async () => {
+        const result = await unevaluableEvaluator.compile({ name: 'nestedUnanimous' });
+
+        expect(result.verdict).toEqual('post');
+
+        expect(await allows('nestedUnanimous', { name: 'guest' })).toBe(true);
+        expect(await allows('nestedUnanimous', { name: 'admin' })).toBe(false);
     });
 });

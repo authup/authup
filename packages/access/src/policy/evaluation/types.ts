@@ -35,13 +35,26 @@ export type PolicyEvaluationResult = {
      */
     unevaluable?: boolean,
     /**
+     * The one settled outcome a pending subtree can still reach, once part of it
+     * could not be evaluated. Absent: it can still pass or fail. `pass`: it can pass
+     * or stay not evaluable, never fail. `fail`: it can fail or stay not evaluable,
+     * never pass, so a pre-gate style consumer denies it like a settled false.
+     *
+     * Only on pending results, and never next to a `condition`: such a subtree
+     * holds for some rows without failing for the others, so no condition could be
+     * negated by a parent. `invert` swaps the two values instead of touching
+     * `success`.
+     */
+    reachable?: 'pass' | 'fail',
+    /**
      * EXACT condition form of the pending subtree (see
      * {@link IPolicyEvaluator.toCondition}): a row satisfies the condition iff the
      * pending subtree settles true on that row's attributes, given the current bag.
      * Attached only on pending results, only when the evaluation context requested it
      * (`withConditions`), and only when the ENTIRE pending subtree is expressible —
      * a partially expressible tree carries no condition (fail-safe: the consumer
-     * falls back to a per-row post-check).
+     * falls back to a per-row post-check). A subtree containing a term that could not
+     * be evaluated is never expressible.
      */
     condition?: ICondition,
     issues?: Issue[]

@@ -59,7 +59,26 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
         const issues : PolicyIssue[] = [];
         const pendingIssues : PolicyIssue[] = [];
         const pendingConditions : ICondition[] = [];
+        const unevaluableIssues : PolicyIssue[] = [];
         let pendingWithoutCondition = 0;
+
+        // Which settled outcome the node can still reach before its own `invert`,
+        // folded over the children: an AFFIRMATIVE node passes when some child
+        // does and fails when every child does, a UNANIMOUS node the other way
+        // round. A pending child contributes what it can still reach itself, an
+        // unevaluable child neither.
+        const affirmative = decisionStrategy === DecisionStrategy.AFFIRMATIVE;
+        let canPass = !affirmative;
+        let canFail = affirmative;
+        const reach = (childCanPass: boolean, childCanFail: boolean) => {
+            if (affirmative) {
+                canPass = canPass || childCanPass;
+                canFail = canFail && childCanFail;
+            } else {
+                canPass = canPass && childCanPass;
+                canFail = canFail || childCanFail;
+            }
+        };
 
         for (const childPolicy of policy.children) {
             const path = [
@@ -77,8 +96,11 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
             // (mask-then-negate ≠ negate-then-mask — issue #3286).
             if (outcome.pending) {
                 pending++;
+                reach(outcome.reachable !== 'fail', outcome.reachable !== 'pass');
 
-                if (outcome.condition) {
+                // a child that can only still pass or fail is not exact, whatever
+                // condition it carries
+                if (outcome.condition && !outcome.reachable) {
                     pendingConditions.push(outcome.condition);
                 } else {
                     pendingWithoutCondition++;
@@ -100,17 +122,23 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
             // decide the node. Its issues are kept like those of a failure.
             if (outcome.unevaluable) {
                 unevaluable++;
+                reach(false, false);
 
                 if (outcome.issues) {
-                    issues.push(defineIssueGroup({
+                    const group = defineIssueGroup({
                         message: `The evaluation of child policy ${childPolicy.type} failed`,
                         issues: outcome.issues,
                         path,
-                    }));
+                    });
+
+                    issues.push(group);
+                    unevaluableIssues.push(group);
                 }
 
                 continue;
             }
+
+            reach(outcome.success, !outcome.success);
 
             if (outcome.success) {
                 if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
@@ -182,47 +210,28 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
             }
         }
 
-        if (settled === null && unevaluable > 0) {
-            // An unevaluable child never resolves, so the node can no longer settle.
-            // What remains is decided on the outcome AFTER `invert`: the node stays
-            // pending only while a pending child could still turn it into a pass.
-            // The raw value of an AFFIRMATIVE node can only become true, that of a
-            // UNANIMOUS node only false, so the first passes uninverted and the
-            // second inverted. Anything else can never pass and is unevaluable
-            // itself, which `invert` is never applied to. A CONSENSUS node with a
-            // pending child stays pending (it carries no condition below, so the
-            // full evaluation decides).
-            let passable : boolean;
+        // An unevaluable child never resolves, so the node can no longer settle. It
+        // still depends on the pending data while a pending child could decide it;
+        // without one, or when no outcome is left to reach, it is unevaluable
+        // itself, which `invert` is never applied to. A CONSENSUS threshold is not
+        // narrowed: with a pending child it can still go either way.
+        if (decisionStrategy === DecisionStrategy.CONSENSUS) {
+            canPass = true;
+            canFail = true;
+        }
 
-            switch (decisionStrategy) {
-                case DecisionStrategy.AFFIRMATIVE: {
-                    passable = pending > 0 && !policy.invert;
-
-                    break;
-                }
-                case DecisionStrategy.UNANIMOUS: {
-                    passable = pending > 0 && !!policy.invert;
-
-                    break;
-                }
-                default: {
-                    passable = pending > 0;
-                }
-            }
-
-            if (!passable) {
-                return {
-                    success: false,
-                    unevaluable: true,
-                    issues: [
-                        defineIssueGroup({
-                            message: `The evaluation of composite policy failed (${decisionStrategy})`,
-                            issues,
-                            path: ctx.path,
-                        }),
-                    ],
-                };
-            }
+        if (settled === null && (pending === 0 || (!canPass && !canFail))) {
+            return {
+                success: false,
+                unevaluable: true,
+                issues: [
+                    defineIssueGroup({
+                        message: `The evaluation of composite policy failed (${decisionStrategy})`,
+                        issues,
+                        path: ctx.path,
+                    }),
+                ],
+            };
         }
 
         if (settled === null) {
@@ -237,9 +246,23 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
             // outcomes never lower. `invert` wraps the residual SYMBOLICALLY via
             // rapiq's null-inclusive-complement not() — negation applies to the
             // condition even though the pending success stays uninverted.
+            //
+            // A node that can only still pass or fail says so (`reachable`), swapped
+            // by `invert`. It holds for some rows without failing for the others, so
+            // a condition is composed only when no child is unevaluable and no
+            // pending child is narrowed that way: every condition that exists is
+            // exact in both directions and may be negated by a parent.
+            let reachable : 'pass' | 'fail' | undefined;
+
+            if (canPass !== canFail) {
+                reachable = canPass === !policy.invert ? 'pass' : 'fail';
+            }
+
             let condition : ICondition | null = null;
 
             if (
+                unevaluable === 0 &&
+                !reachable &&
                 pendingWithoutCondition === 0 &&
                 ctx.withConditions &&
                 pendingConditions.length > 0 &&
@@ -263,8 +286,9 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
             return {
                 success: false,
                 pending: true,
+                ...(reachable ? { reachable } : {}),
                 ...(condition ? { condition } : {}),
-                issues: pendingIssues,
+                issues: [...pendingIssues, ...unevaluableIssues],
             };
         }
 

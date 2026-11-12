@@ -175,6 +175,48 @@ describe('src/permission/evaluator (not evaluable)', () => {
                 }),
             ],
         },
+        {
+            permission: { name: 'user_restore' },
+            policies: [
+                definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                    invert: true,
+                    decisionStrategy: DecisionStrategy.UNANIMOUS,
+                    children: [attributesPolicy, unregistered],
+                }),
+            ],
+        },
+        {
+            // not(attributes or unknown): never a pass, whatever the row
+            permission: { name: 'nested_affirmative' },
+            policies: [
+                definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                    invert: true,
+                    decisionStrategy: DecisionStrategy.UNANIMOUS,
+                    children: [
+                        definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                            decisionStrategy: DecisionStrategy.AFFIRMATIVE,
+                            children: [attributesPolicy, unregistered],
+                        }),
+                    ],
+                }),
+            ],
+        },
+        {
+            // not(attributes and unknown): a pass exactly where the attributes fail
+            permission: { name: 'nested_unanimous' },
+            policies: [
+                definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                    invert: true,
+                    decisionStrategy: DecisionStrategy.UNANIMOUS,
+                    children: [
+                        definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                            decisionStrategy: DecisionStrategy.UNANIMOUS,
+                            children: [attributesPolicy, unregistered],
+                        }),
+                    ],
+                }),
+            ],
+        },
     ];
 
     const bindingEvaluator = new PermissionEvaluator({
@@ -205,5 +247,35 @@ describe('src/permission/evaluator (not evaluable)', () => {
             name,
             data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { name: 'guest' } }),
         })).rejects.toBeInstanceOf(PermissionError);
+    });
+
+    const allows = (name: string, row: Record<string, any>) => bindingEvaluator.evaluate({
+        name,
+        data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: row }),
+    }).then(() => true, () => false);
+
+    // The pre-gate must never deny what the full evaluation allows once the
+    // pending data arrives: a pending child decides these trees, whatever the
+    // unevaluable sibling adds.
+    it.each([
+        ['an inverted unanimous composite over a pending and an unregistered policy type', 'user_restore'],
+        ['a negated unanimous node over a pending and an unregistered policy type', 'nested_unanimous'],
+    ])('should permit %s at the pre-gate', async (_label, name) => {
+        await expect(bindingEvaluator.preEvaluate({ name }))
+            .resolves.toBeUndefined();
+
+        await expect(bindingEvaluator.evaluate({ name }))
+            .rejects.toBeInstanceOf(PermissionError);
+
+        expect(await allows(name, { name: 'guest' })).toBe(true);
+        expect(await allows(name, { name: 'admin' })).toBe(false);
+    });
+
+    it('should deny a negated affirmative node over a pending and an unregistered policy type at both gates', async () => {
+        await expect(bindingEvaluator.preEvaluate({ name: 'nested_affirmative' }))
+            .rejects.toBeInstanceOf(PermissionError);
+
+        expect(await allows('nested_affirmative', { name: 'guest' })).toBe(false);
+        expect(await allows('nested_affirmative', { name: 'admin' })).toBe(false);
     });
 });
