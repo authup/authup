@@ -157,9 +157,11 @@ export class PermissionEvaluator implements IPermissionEvaluator {
             // A pending evaluation (missing data keys) is settled by the caller's
             // phase: the full evaluate denies (fail-closed default), the pre-gate
             // permits — the enriched-bag evaluate is the backstop.
+            // A pending tree that can only still fail is permitted by neither.
             const passed = evaluationResult.success || (
                 options.pendingPolicies === 'permit' &&
-                !!evaluationResult.pending
+                !!evaluationResult.pending &&
+                evaluationResult.reachable !== 'fail'
             );
 
             if (passed) {
@@ -295,7 +297,8 @@ export class PermissionEvaluator implements IPermissionEvaluator {
                 return { verdict: 'allow' };
             }
 
-            if (evaluationResult.pending) {
+            // a pending tree that can only still fail admits no row either
+            if (evaluationResult.pending && evaluationResult.reachable !== 'fail') {
                 if (evaluationResult.condition) {
                     conditions.push(evaluationResult.condition);
                 } else {

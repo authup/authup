@@ -14,6 +14,10 @@ import { TimePolicyValidator } from './validator';
 
 const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/;
 
+function isBound(value: Date | string | number | null | undefined) : value is Date | string | number {
+    return value !== undefined && value !== null;
+}
+
 function normalizeDate(input: Date, dateRef?: Date) {
     const date = dateRef ? new Date(dateRef) : new Date();
 
@@ -81,11 +85,11 @@ function nextTimeTransition(policy: TimePolicy, now: Date) : Date | undefined {
         input.getMinutes(),
     );
 
-    if (policy.start) {
+    if (isBound(policy.start)) {
         candidates.push(atMinute(toDate(policy.start, now)));
     }
 
-    if (policy.end) {
+    if (isBound(policy.end)) {
         // One minute of ELAPSED time after the end, not the local wall-clock
         // minute after it: on a DST fall-back day the end can sit just before
         // the repeated hour, and `H:(M+1)` then names the second occurrence of
@@ -93,7 +97,7 @@ function nextTimeTransition(policy: TimePolicy, now: Date) : Date | undefined {
         candidates.push(new Date(atMinute(toDate(policy.end, now)).getTime() + 60_000));
     }
 
-    if (policy.start || policy.end || policy.interval) {
+    if (isBound(policy.start) || isBound(policy.end) || policy.interval) {
         candidates.push(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
     }
 
@@ -147,7 +151,7 @@ export class TimePolicyEvaluator implements IPolicyEvaluator {
             }
         }
 
-        if (policy.start) {
+        if (isBound(policy.start)) {
             const start = normalizeDate(toDate(policy.start, now), now);
 
             if (now < start) {
@@ -155,7 +159,7 @@ export class TimePolicyEvaluator implements IPolicyEvaluator {
             }
         }
 
-        if (policy.end) {
+        if (isBound(policy.end)) {
             const end = normalizeDate(toDate(policy.end, now), now);
 
             if (now > end) {

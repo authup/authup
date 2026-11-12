@@ -23,13 +23,38 @@ export type PolicyEvaluationResult = {
      */
     pending?: boolean,
     /**
+     * The policy could not be evaluated at all: it has no type or no evaluator, its
+     * evaluator threw, its configuration is invalid, or data it needs is missing or
+     * malformed without being declared (see {@link IPolicyEvaluator.requires}).
+     * Unlike `pending` it will not resolve once more data arrives. Unevaluable always
+     * rides on `success: false`, never together with `pending`, and never carries a
+     * `condition`: every consumer treats it as a deny.
+     *
+     * Unknown stays unknown: `invert` is never applied to an unevaluable result, so
+     * a negated parent can not turn a failure to evaluate into a pass.
+     */
+    unevaluable?: boolean,
+    /**
+     * The one settled outcome a pending subtree can still reach, once part of it
+     * could not be evaluated. Absent: it can still pass or fail. `pass`: it can pass
+     * or stay not evaluable, never fail. `fail`: it can fail or stay not evaluable,
+     * never pass, so a pre-gate style consumer denies it like a settled false.
+     *
+     * Only on pending results, and never next to a `condition`: such a subtree
+     * holds for some rows without failing for the others, so no condition could be
+     * negated by a parent. `invert` swaps the two values instead of touching
+     * `success`.
+     */
+    reachable?: 'pass' | 'fail',
+    /**
      * EXACT condition form of the pending subtree (see
      * {@link IPolicyEvaluator.toCondition}): a row satisfies the condition iff the
      * pending subtree settles true on that row's attributes, given the current bag.
      * Attached only on pending results, only when the evaluation context requested it
      * (`withConditions`), and only when the ENTIRE pending subtree is expressible —
      * a partially expressible tree carries no condition (fail-safe: the consumer
-     * falls back to a per-row post-check).
+     * falls back to a per-row post-check). A subtree containing a term that could not
+     * be evaluated is never expressible.
      */
     condition?: ICondition,
     issues?: Issue[]

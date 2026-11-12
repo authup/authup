@@ -220,8 +220,9 @@ describe('identity permission binding compilation', () => {
 
 // A grant policy tree carrying a binding node re-enters this evaluator with the
 // same data, which loads the same grants and evaluates the same tree again
-// (issue #3633). The consumer side drops such a grant (`containsBindingCheck`),
-// so the server settles the term false and moves on, never recursing.
+// (issue #3633). The evaluator answers such a term as one that cannot be
+// evaluated and moves on, never recursing; the consumer side keeps the grant
+// and reaches the same branch.
 describe('identity permission binding recursion (#3633)', () => {
     const run = (bindings: PermissionPolicyBinding[]) => {
         const engine = new PolicyEngine({
@@ -355,5 +356,205 @@ describe('identity permission binding grants data', () => {
         const outcome = await evaluate(bindings);
 
         expect(outcome.success).toBe(true);
+    });
+});
+
+// The grants of a permission are a disjunction with the node's own `invert`. A
+// grant term that could not be evaluated is an unknown that never resolves: a
+// passing grant still wins, but nothing may be concluded from its absence.
+describe('identity permission binding grant disjunction (not evaluable)', () => {
+    const engine = new PolicyEngine({
+        ...PolicyDefaultEvaluators,
+        [BuiltInPolicyType.PERMISSION_BINDING]: new IdentityPermissionBindingPolicyEvaluator(),
+    });
+
+    const passing : PermissionPolicyBinding = { permission, realmScope: 'any' };
+    const failing : PermissionPolicyBinding = {
+        permission,
+        realmScope: 'any',
+        policies: [definePolicyWithType(BuiltInPolicyType.IDENTITY, { types: ['client'] })],
+    };
+    const pending : PermissionPolicyBinding = {
+        permission,
+        realmScope: 'any',
+        policies: [definePolicyWithType(BuiltInPolicyType.ATTRIBUTES, { query: { name: 'public' } })],
+    };
+    const UNEVALUABLE : [string, PermissionPolicyBinding][] = [
+        ['a grant policy of an unregistered type', {
+            permission,
+            realmScope: 'any',
+            policies: [{ type: 'unregistered' }],
+        }],
+        ['a grant policy carrying a binding node', {
+            permission,
+            realmScope: 'any',
+            policies: [definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {})],
+        }],
+    ];
+
+    const run = (
+        bindings: PermissionPolicyBinding[],
+        invert: boolean,
+        attributes?: Record<string, any>,
+    ) => engine.evaluate(
+        definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, { invert }),
+        definePolicyEvaluationContext({
+            data: definePolicyData({
+                [BuiltInPolicyType.IDENTITY]: { ...identity, grants: bindings },
+                [BuiltInPolicyType.PERMISSION_BINDING]: { permission, grants: [] },
+                ...(attributes ? { [BuiltInPolicyType.ATTRIBUTES]: attributes } : {}),
+            }),
+            withConditions: true,
+        }),
+    );
+
+    describe.each(UNEVALUABLE)('%s', (_label, unevaluable) => {
+        it.each([false, true])('lets a passing grant win (invert: %s)', async (invert) => {
+            const outcome = await run([unevaluable, passing], invert);
+
+            expect(outcome.success).toBe(!invert);
+            expect(outcome.pending).toBeFalsy();
+            expect(outcome.unevaluable).toBeFalsy();
+        });
+
+        it.each([false, true])('is not evaluable when no grant passes (invert: %s)', async (invert) => {
+            const outcome = await run([failing, unevaluable], invert);
+
+            expect(outcome.success).toBe(false);
+            expect(outcome.pending).toBeFalsy();
+            expect(outcome.unevaluable).toBe(true);
+            expect(outcome.condition).toBeUndefined();
+            expect((outcome.issues ?? []).length).toBeGreaterThan(0);
+        });
+
+        it('stays pending next to a pending grant, able to pass only', async () => {
+            const outcome = await run([unevaluable, pending], false);
+
+            expect(outcome.success).toBe(false);
+            expect(outcome.pending).toBe(true);
+            expect(outcome.reachable).toEqual('pass');
+            expect(outcome.unevaluable).toBeFalsy();
+            // not exact under negation, so nothing stands for it
+            expect(outcome.condition).toBeUndefined();
+
+            const [passes, fails] = await Promise.all([
+                run([unevaluable, pending], false, { name: 'public' }),
+                run([unevaluable, pending], false, { name: 'private' }),
+            ]);
+
+            expect(passes.success).toBe(true);
+            expect(fails.success).toBe(false);
+            expect(fails.unevaluable).toBe(true);
+        });
+
+        it('stays pending next to a pending grant when inverted, able to fail only', async () => {
+            const outcome = await run([unevaluable, pending], true);
+
+            expect(outcome.success).toBe(false);
+            expect(outcome.pending).toBe(true);
+            expect(outcome.reachable).toEqual('fail');
+            expect(outcome.unevaluable).toBeFalsy();
+            expect(outcome.condition).toBeUndefined();
+
+            // and no row turns it into a pass
+            for (const row of [{ name: 'public' }, { name: 'private' }]) {
+                const settled = await run([unevaluable, pending], true, row);
+
+                expect(settled.success, row.name).toBe(false);
+            }
+        });
+
+        it('never passes under an inverted composite next to a pending grant', async () => {
+            const evaluate = (attributes?: Record<string, any>) => engine.evaluate(
+                definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                    invert: true,
+                    children: [definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {})],
+                }),
+                definePolicyEvaluationContext({
+                    data: definePolicyData({
+                        [BuiltInPolicyType.IDENTITY]: { ...identity, grants: [unevaluable, pending] },
+                        [BuiltInPolicyType.PERMISSION_BINDING]: { permission, grants: [] },
+                        ...(attributes ? { [BuiltInPolicyType.ATTRIBUTES]: attributes } : {}),
+                    }),
+                    withConditions: true,
+                }),
+            );
+
+            const outcome = await evaluate();
+
+            expect(outcome.pending).toBe(true);
+            expect(outcome.reachable).toEqual('fail');
+            expect(outcome.condition).toBeUndefined();
+
+            for (const row of [{ name: 'public' }, { name: 'private' }]) {
+                expect((await evaluate(row)).success, row.name).toBe(false);
+            }
+        });
+    });
+
+    // A grant policy that pends next to something it could not evaluate says which
+    // outcome it can still reach, and the binding node passes that on.
+    describe('a grant policy that can only still pass or fail', () => {
+        const attributes = definePolicyWithType(BuiltInPolicyType.ATTRIBUTES, { query: { name: 'public' } });
+        const grant = (decisionStrategy: 'affirmative' | 'unanimous') : PermissionPolicyBinding => ({
+            permission,
+            realmScope: 'any',
+            policies: [definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                decisionStrategy,
+                children: [attributes, { type: 'unregistered' }],
+            })],
+        });
+
+        it.each([
+            ['affirmative', false, 'pass'],
+            ['affirmative', true, 'fail'],
+            ['unanimous', false, 'fail'],
+            ['unanimous', true, 'pass'],
+        ] as const)('a %s grant policy (invert: %s) can still %s', async (decisionStrategy, invert, reachable) => {
+            const outcome = await run([grant(decisionStrategy)], invert);
+
+            expect(outcome.success).toBe(false);
+            expect(outcome.pending).toBe(true);
+            expect(outcome.reachable).toEqual(reachable);
+            expect(outcome.condition).toBeUndefined();
+        });
+
+        it('passes an inverted binding node exactly where the unanimous grant policy fails', async () => {
+            // public: the grant policy is (true and unknown), which is not evaluable
+            const unknown = await run([grant('unanimous')], true, { name: 'public' });
+
+            expect(unknown.success).toBe(false);
+            expect(unknown.unevaluable).toBe(true);
+
+            // private: it is (false and unknown), a settled false the node inverts
+            const settled = await run([grant('unanimous')], true, { name: 'private' });
+
+            expect(settled.success).toBe(true);
+        });
+
+        it('never passes an inverted binding node over the affirmative grant policy', async () => {
+            for (const row of [{ name: 'public' }, { name: 'private' }]) {
+                const settled = await run([grant('affirmative')], true, row);
+
+                expect(settled.success, row.name).toBe(false);
+            }
+        });
+    });
+
+    it.each([false, true])('inverts a disjunction of failing grants as before (invert: %s)', async (invert) => {
+        const outcome = await run([failing], invert);
+
+        expect(outcome.success).toBe(invert);
+        expect(outcome.pending).toBeFalsy();
+        expect(outcome.unevaluable).toBeFalsy();
+    });
+
+    it.each([false, true])('keeps a pending disjunction pending as before (invert: %s)', async (invert) => {
+        const outcome = await run([failing, pending], invert);
+
+        expect(outcome.success).toBe(false);
+        expect(outcome.pending).toBe(true);
+        expect(outcome.unevaluable).toBeFalsy();
+        expect(outcome.condition).toBeDefined();
     });
 });

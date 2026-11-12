@@ -163,6 +163,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
         if (!identity) {
             return {
                 success: false,
+                unevaluable: true,
                 issues: [
                     definePolicyIssueItem({
                         code: PolicyIssueCode.DATA_MISSING,
@@ -219,6 +220,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
         if (!attributes) {
             return {
                 success: false,
+                unevaluable: true,
                 issues: [
                     definePolicyIssueItem({
                         code: PolicyIssueCode.DATA_MISSING,

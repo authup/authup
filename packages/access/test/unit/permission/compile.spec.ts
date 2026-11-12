@@ -8,9 +8,11 @@
 import { describe, expect, it } from 'vitest';
 import type { ICondition, IFilter, IFilters } from '@rapiq/core';
 import { compileFilters } from '@rapiq/adapter-memory';
+import { DecisionStrategy } from '@authup/kit';
 import type { PermissionPolicyBinding } from '../../../src';
 import {
     BuiltInPolicyType,
+    IdentityPermissionBindingPolicyEvaluator,
     PermissionEvaluator,
     PermissionMemoryProvider,
     PolicyDefaultEvaluators,
@@ -117,5 +119,195 @@ describe('src/permission/evaluator (compile)', () => {
         const result = await evaluator.compile({ name: 'user_view' });
 
         expect(result.verdict).toEqual('post');
+    });
+});
+
+// A subtree that could not be evaluated never passes, so a condition must not
+// admit a row through it and `invert` must not turn it into an allow.
+describe('src/permission/evaluator (compile, not evaluable)', () => {
+    const attributes = definePolicyWithType(BuiltInPolicyType.ATTRIBUTES, { query: { name: { $eq: 'admin' } } });
+    const unregistered = { type: 'unregistered' };
+
+    const bindings : PermissionPolicyBinding[] = [
+        {
+            permission: { name: 'affirmative' },
+            policies: [
+                definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                    invert: true,
+                    decisionStrategy: DecisionStrategy.AFFIRMATIVE,
+                    children: [attributes, unregistered],
+                }),
+            ],
+        },
+        {
+            permission: { name: 'unanimous' },
+            policies: [
+                definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                    invert: true,
+                    decisionStrategy: DecisionStrategy.UNANIMOUS,
+                    children: [attributes, unregistered],
+                }),
+            ],
+        },
+        {
+            permission: { name: 'unregistered' },
+            policies: [unregistered],
+        },
+        {
+            // not(attributes or unknown): never a pass, whatever the row
+            permission: { name: 'nestedAffirmative' },
+            policies: [
+                definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                    invert: true,
+                    decisionStrategy: DecisionStrategy.UNANIMOUS,
+                    children: [
+                        definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                            decisionStrategy: DecisionStrategy.AFFIRMATIVE,
+                            children: [attributes, unregistered],
+                        }),
+                    ],
+                }),
+            ],
+        },
+        {
+            // not(attributes and unknown): a pass exactly where the attributes fail
+            permission: { name: 'nestedUnanimous' },
+            policies: [
+                definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                    invert: true,
+                    decisionStrategy: DecisionStrategy.UNANIMOUS,
+                    children: [
+                        definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                            decisionStrategy: DecisionStrategy.UNANIMOUS,
+                            children: [attributes, unregistered],
+                        }),
+                    ],
+                }),
+            ],
+        },
+    ];
+
+    const unevaluableEvaluator = new PermissionEvaluator({
+        provider: new PermissionMemoryProvider(bindings),
+        policyEngine: new PolicyEngine(PolicyDefaultEvaluators),
+    });
+
+    const allows = (name: string, row: Record<string, any>) => unevaluableEvaluator.evaluate({
+        name,
+        data: definePolicyData({ [BuiltInPolicyType.ATTRIBUTES]: row }),
+    }).then(() => true, () => false);
+
+    it('should compile an inverted affirmative composite over an unevaluable child to deny', async () => {
+        const result = await unevaluableEvaluator.compile({ name: 'affirmative' });
+
+        expect(result.verdict).toEqual('deny');
+    });
+
+    it('should degrade an inverted unanimous composite over an unevaluable child to post', async () => {
+        // it passes exactly where the attributes fail, but nothing can be said
+        // about the rows where they hold, so no condition may stand for it
+        const result = await unevaluableEvaluator.compile({ name: 'unanimous' });
+
+        expect(result.verdict).toEqual('post');
+
+        expect(await allows('unanimous', { name: 'guest' })).toBe(true);
+        expect(await allows('unanimous', { name: 'admin' })).toBe(false);
+    });
+
+    it('should drop an unevaluable name from the disjunction', async () => {
+        expect((await unevaluableEvaluator.compile({ name: 'unregistered' })).verdict).toEqual('deny');
+
+        expect((await unevaluableEvaluator.compile({ name: ['unregistered', 'affirmative'] })).verdict).toEqual('deny');
+        expect((await unevaluableEvaluator.compile({ name: ['unregistered', 'unanimous'] })).verdict).toEqual('post');
+    });
+
+    // A pending child next to an unevaluable sibling, under a negating parent: the
+    // inner node alone can not say which way it may still go, so a parent that
+    // negated its condition admitted a row the full evaluation denies.
+    it('should never admit a row through a negated affirmative node over an unevaluable child', async () => {
+        const result = await unevaluableEvaluator.compile({ name: 'nestedAffirmative' });
+
+        expect(result.verdict).toEqual('deny');
+
+        expect(await allows('nestedAffirmative', { name: 'guest' })).toBe(false);
+        expect(await allows('nestedAffirmative', { name: 'admin' })).toBe(false);
+    });
+
+    it('should leave a negated unanimous node over an unevaluable child to the full evaluation', async () => {
+        const result = await unevaluableEvaluator.compile({ name: 'nestedUnanimous' });
+
+        expect(result.verdict).toEqual('post');
+
+        expect(await allows('nestedUnanimous', { name: 'guest' })).toBe(true);
+        expect(await allows('nestedUnanimous', { name: 'admin' })).toBe(false);
+    });
+});
+
+// A grant whose policy could not be evaluated still fails for every row out of
+// its reach, so a negated binding check passes there: while the reach is open
+// the term is no reason to deny.
+describe('src/permission/evaluator (compile, a not evaluable grant with an open reach)', () => {
+    const foreignRealmId = '11111111-2222-4333-8444-555555555555';
+    const binding = definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {});
+
+    const reachEvaluator = new PermissionEvaluator({
+        provider: new PermissionMemoryProvider([
+            {
+                permission: { name: 'negated' },
+                policies: [definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, { invert: true })],
+            },
+            {
+                permission: { name: 'negatedParent' },
+                policies: [
+                    definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                        invert: true,
+                        children: [binding],
+                    }),
+                ],
+            },
+        ]),
+        policyEngine: new PolicyEngine({
+            ...PolicyDefaultEvaluators,
+            [BuiltInPolicyType.PERMISSION_BINDING]: new IdentityPermissionBindingPolicyEvaluator(),
+        }),
+    });
+
+    const unevaluableGrant = (name: string) : PermissionPolicyBinding => ({
+        permission: { name },
+        realmScope: 'own',
+        policies: [{ type: 'unregistered' }],
+    });
+    const plainGrant = (name: string) : PermissionPolicyBinding => ({
+        permission: { name },
+        realmScope: 'own',
+    });
+
+    it.each([
+        ['an inverted binding node over a not evaluable grant', 'negated', [unevaluableGrant('negated')]],
+        [
+            'an inverted binding node over a not evaluable and a policy-free grant',
+            'negated',
+            [unevaluableGrant('negated'), plainGrant('negated')],
+        ],
+        ['an inverted composite over a binding node with a not evaluable grant', 'negatedParent', [unevaluableGrant('negatedParent')]],
+        [
+            'an inverted composite over a binding node with a not evaluable and a policy-free grant',
+            'negatedParent',
+            [unevaluableGrant('negatedParent'), plainGrant('negatedParent')],
+        ],
+    ])('should leave %s to the full evaluation', async (_label, name, grants) => {
+        const data = (realmId?: string) => definePolicyData({
+            [BuiltInPolicyType.IDENTITY]: { ...identityData, grants },
+            ...(realmId ? { [BuiltInPolicyType.REALM_MATCH]: realmId } : {}),
+        });
+        const allows = (realmId: string) => reachEvaluator.evaluate({ name, data: data(realmId) })
+            .then(() => true, () => false);
+
+        const result = await reachEvaluator.compile({ name, data: data() });
+
+        expect(result.verdict).toEqual('post');
+
+        expect(await allows(foreignRealmId)).toBe(true);
+        expect(await allows(identityData.realmId)).toBe(false);
     });
 });

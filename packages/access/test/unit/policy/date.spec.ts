@@ -66,4 +66,13 @@ describe('src/policy/date', () => {
         expect(output.end).toEqual('2024-05-01');
         expect(output.foo).toBeUndefined();
     });
+    it('applies a bound at the epoch', async () => {
+        const evaluator = new DatePolicyEvaluator();
+        const data = () => definePolicyEvaluationContext({ data: new PolicyData({ [BuiltInPolicyType.DATE]: new Date('2024-04-15') }) });
+
+        expect((await evaluator.evaluate({ end: 0 }, data())).success).toBe(false);
+        expect((await evaluator.evaluate({ end: new Date(0) }, data())).success).toBe(false);
+        expect((await evaluator.evaluate({ start: 0 }, data())).success).toBe(true);
+        expect((await evaluator.evaluate({ start: new Date(0) }, data())).success).toBe(true);
+    });
 });

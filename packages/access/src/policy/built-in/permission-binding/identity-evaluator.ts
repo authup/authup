@@ -54,11 +54,12 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
     }
 
     requires() : string[] {
-        // IDENTITY is deliberately NOT declared: a missing identity must stay a
-        // settled DATA_MISSING deny (fail-closed) so a scope-restricted or
-        // anonymous bearer still fails the pre-gate through system.default —
-        // pending would be permitted there. An identity without grants is the
-        // same deny: it holds none we could prove.
+        // IDENTITY is deliberately NOT declared: declared, a missing identity
+        // would pend, and the pre-gate permits pending. Undeclared, a missing
+        // identity and an identity without grants are both not evaluable, which
+        // the pre-gate never permits and `invert` never flips, so an anonymous
+        // bearer still fails the pre-gate through system.default. A
+        // scope-restricted bearer carries `grants: []` and settles a plain false.
         return [BuiltInPolicyType.PERMISSION_BINDING];
     }
 
@@ -108,6 +109,7 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
         if (!identity) {
             return {
                 success: false,
+                unevaluable: true,
                 issues: [
                     definePolicyIssueItem({
                         code: PolicyIssueCode.DATA_MISSING,
@@ -123,6 +125,7 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
         if (!binding) {
             return {
                 success: false,
+                unevaluable: true,
                 issues: [
                     definePolicyIssueItem({
                         code: PolicyIssueCode.DATA_MISSING,
@@ -139,7 +142,11 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
             grants = this.accessGrants(ctx, identity);
         } catch (e) {
             if (isPolicyError(e)) {
-                return { success: false, issues: [...e.issues] };
+                return {
+                    success: false,
+                    unevaluable: true,
+                    issues: [...e.issues],
+                };
             }
 
             throw e;
@@ -176,7 +183,14 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
         const pendingIssues : Issue[] = [];
         const conditions : ICondition[] = [];
         let pending = false;
+        let unevaluable = false;
         let lowerable = true;
+
+        // Which settled outcome the disjunction can still reach before the node's own
+        // `invert`: it passes when some grant term does and fails when every term
+        // does. A term skipped below is a settled false, which changes neither.
+        let canPass = false;
+        let canFail = true;
 
         for (const grant of aggr.grants) {
             // Realm reach (coarse, actor-relative) — a SEPARATE factor from the grant's
@@ -211,6 +225,7 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
                 if (scope !== RealmScope.ANY) {
                     if (!realmOutcome.condition) {
                         pending = true;
+                        canPass = true;
                         lowerable = false;
 
                         continue;
@@ -231,15 +246,25 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
                 // Reach is the grant's only restriction — a pure condition term.
                 conditions.push(reachCondition);
                 pending = true;
+                canPass = true;
 
                 continue;
             }
 
             // A grant policy carrying a binding node re-enters this evaluator with the
             // same data, which loads the same grants and evaluates the same tree again,
-            // without bound (issue #3633). The consumer side drops such a grant
-            // (`containsBindingCheck`); the term settles false here so the two agree.
+            // without bound (issue #3633). The consumer side keeps such a grant as
+            // it is, so it reaches this branch there too and the two agree.
+            // Like every unevaluable term it still fails for a row out of a pending reach.
             if (containsPermissionBinding(grant.policy)) {
+                unevaluable = true;
+
+                if (reachCondition) {
+                    pending = true;
+                } else {
+                    canFail = false;
+                }
+
                 issues.push(definePolicyIssueItem({
                     code: PolicyIssueCode.INVALID,
                     message: 'A grant policy must not evaluate the permission binding.',
@@ -268,6 +293,7 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
 
                 conditions.push(reachCondition);
                 pending = true;
+                canPass = true;
 
                 continue;
             }
@@ -278,6 +304,16 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
             // disjunction to false.
             if (outcome.pending) {
                 pending = true;
+
+                // The term is `reach AND policy`: it can pass where the policy can, and
+                // fail where the policy can or where a pending reach does not match.
+                if (outcome.reachable !== 'fail') {
+                    canPass = true;
+                }
+
+                if (!reachCondition && outcome.reachable === 'pass') {
+                    canFail = false;
+                }
 
                 // A caller that names its realm column has told us the row shape is not the
                 // default one, and nothing rebases a GRANT policy's own condition onto it.
@@ -290,7 +326,12 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
                 // identical verdict wherever the pushdown would not have crashed. The grant's
                 // REACH is unaffected — it is built above from the column the caller named, so
                 // the policy-free grants that dominate real deployments still push down.
-                if (ctx.withConditions && outcome.condition && !ctx.realmAttributeName) {
+                if (
+                    ctx.withConditions &&
+                    outcome.condition &&
+                    !outcome.reachable &&
+                    !ctx.realmAttributeName
+                ) {
                     conditions.push(
                         reachCondition ?
                             and(reachCondition, outcome.condition) :
@@ -307,24 +348,62 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
                 continue;
             }
 
+            // A grant policy that could not be evaluated leaves the term UNKNOWN for
+            // good: it never passes, and nothing may be concluded from that. The term
+            // is `reach AND policy` though, so while the reach is pending it still
+            // fails for every row out of reach and the disjunction depends on the row.
+            if (outcome.unevaluable) {
+                unevaluable = true;
+
+                if (reachCondition) {
+                    pending = true;
+                } else {
+                    canFail = false;
+                }
+            }
+
             if (outcome.issues) {
                 issues.push(...outcome.issues);
             }
+        }
+
+        // No grant term settled true, and one of them could not be evaluated. The
+        // disjunction can no longer settle. It still depends on the pending data while
+        // a pending term could decide it; without one, or when no outcome is left to
+        // reach, it is unevaluable itself, which `invert` is never applied to.
+        if (unevaluable && (!pending || (!canPass && !canFail))) {
+            return {
+                success: false,
+                unevaluable: true,
+                issues,
+            };
         }
 
         // No grant term settled true. If some term is still pending, the disjunction is
         // pending — deliberately uninverted (unknown stays unknown under negation). The
         // condition form composes the grant terms as a disjunction, all-or-nothing: a
         // single non-expressible grant term makes the whole binding non-expressible
-        // (pushing a partial OR would wrongly exclude rows).
+        // (pushing a partial OR would wrongly exclude rows). A disjunction that can only
+        // still pass or fail says so (`reachable`), swapped by `invert`, and carries no
+        // condition: it is not exact in both directions, so a parent could not negate it.
         if (pending) {
             const result : PolicyEvaluationResult = {
                 success: false,
                 pending: true,
-                issues: pendingIssues,
+                issues: unevaluable ? [...pendingIssues, ...issues] : pendingIssues,
             };
 
-            if (lowerable && ctx.withConditions && conditions.length > 0) {
+            if (canPass !== canFail) {
+                result.reachable = canPass === !policy.invert ? 'pass' : 'fail';
+            }
+
+            if (
+                lowerable &&
+                !unevaluable &&
+                !result.reachable &&
+                ctx.withConditions &&
+                conditions.length > 0
+            ) {
                 const condition = conditions.length === 1 ?
                     conditions[0]! :
                     or(...conditions);

@@ -49,9 +49,31 @@ ignores the flag fails closed).
   resolution could change the outcome. `invert` is **never applied to a pending result**.
   Unknown stays unknown under negation.
 - `preEvaluate` (the pre-flight gate) is *derived* from data availability: it passes
-  `pendingPolicies: 'permit'`, so a pending tree passes the gate and only a tree that
-  settles false with the current bag denies. The full `evaluate()` with the enriched bag
-  remains the authority (pending ⇒ deny there).
+  `pendingPolicies: 'permit'`, so a pending tree passes the gate unless it can only still
+  fail (`reachable: 'fail'`, below); a tree that settles false or is not evaluable denies.
+  The full `evaluate()` with the enriched bag remains the authority (pending ⇒ deny
+  there).
+- A policy that cannot be evaluated at all reports `unevaluable` (#3817), again on
+  `success: false` and never together with `pending` or a `condition`: no type, no
+  evaluator, a throwing evaluator or validator, a childless composite, an unparsable
+  attributes query, or data a check needs that is missing without being declared (a
+  permission-binding check without an identity or without a grant list). `invert` is
+  never applied to it, the pre-gate never permits it and `compile` drops it. An identity
+  with `grants: []` is a known fact: that check settles false. A fail-closed mode switch
+  was rejected; the engine applies the rule always.
+- A composite (or a permission-binding node over its grants) with a pending child next to
+  an unevaluable one stays pending and reports `reachable`: `'pass'` when it can still
+  pass but never fail, `'fail'` when it can still fail but never pass, absent when both
+  are open. It is unevaluable only when no child pends or no settled outcome is left.
+  A grant term is `reach AND policy`: with an unevaluable policy and a realm reach that
+  is still open (a query build) it can still fail, for a row out of reach, so the node
+  pends on it.
+  `invert` swaps `reachable` and never touches `success`; a `consensus` composite never
+  narrows. A result with `reachable` carries no `condition`, and a node composes a
+  condition only when nothing below it is unevaluable, so every condition stays exact.
+  `compile` drops a pending `'fail'` like a settled false and answers `post` for any
+  other pending tree without a condition. An evaluator never sets `reachable` itself: the
+  composites derive it, and the engine drops it from a result that is not pending.
 
 There is **no hand-maintained exclusion list** anymore. A new policy type places itself
 by shipping `requires()`, with zero engine edits.
@@ -80,7 +102,9 @@ rows).
    `validator.ts`, `evaluator.ts` (+ barrel `index.ts`), mirroring an existing sibling.
 2. The evaluator implements `IPolicyEvaluator`:
    - `evaluate(value, ctx)`: settle against the bag; use `maybeInvertPolicyOutcome`
-     only on genuine outcomes (never on non-evaluations or pendings).
+     only on genuine outcomes (never on non-evaluations or pendings); answer
+     `{ success: false, unevaluable: true }` for a configuration or data that makes a
+     decision impossible. Never write into the policy you are handed.
    - `requires(value)`: the data keys the config needs; may be config-dependent (see
      the realm-match evaluator's scope vs. attribute mode).
    - `toCondition(value, ctx)`: optional, only when the policy is expressible over row
@@ -94,7 +118,7 @@ rows).
 4. Server-side persistence: add the config's attribute validators in
    `@authup/core-kit`'s policy validator so the API can persist it, and extend the kit's
    policy form components for the UI.
-5. Tests live in `packages/access/test/unit/policy/`: pin settled/pending/inverted
+5. Tests live in `packages/access/test/unit/policy/`: pin settled/pending/unevaluable/inverted
    behavior, and when `toCondition` exists, pin **semantic parity**: compile the
    condition with `@rapiq/adapter-memory` and assert the predicate equals full evaluation row by
    row (see `to-condition.spec.ts`).

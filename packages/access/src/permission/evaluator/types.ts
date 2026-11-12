@@ -41,6 +41,7 @@ export type PermissionEvaluationOptions = {
      *   matching the historical missing-data deny.
      * - `permit`: pending counts as pass — the data-availability-derived pre-gate
      *   (`preEvaluate()`): only a tree that settles false with the current bag denies.
+     *   A pending tree that can only still fail (`reachable: 'fail'`) denies as well.
      */
     pendingPolicies?: 'deny' | 'permit',
     /**

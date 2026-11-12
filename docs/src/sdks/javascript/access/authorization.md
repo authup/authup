@@ -28,8 +28,8 @@ document that denies everything.
 What you get back is narrowed to your own realm reach, the way those two reads
 are narrowed. Reach removes the policy configuration rather than the entry: a
 definition outside your reach arrives with `policies: null` and denies, and a
-policy tree outside it arrives as a node no consumer can project, which drops
-the grants naming it. A foreign realm's definitions therefore still appear,
+policy tree outside it arrives as a node no consumer can project, which turns
+a grant naming it into one that cannot be evaluated. A foreign realm's definitions therefore still appear,
 carrying their `name`, `realmId`, `clientId` and `decisionStrategy` with no
 policies, so that an absent definition keeps its one meaning: your copy is
 older than the server's. Cache the answer per credential rather than per
@@ -187,6 +187,84 @@ adapter instead. Call `compile` without `realmMatch` or `attributes` data. A
 pending policy that cannot be lowered produces `post`, never an unrestricted
 query.
 
+## Store the decision data as a snapshot
+
+`createAuthorizationEvaluator` runs in two steps you can call yourself. When
+the decision has to be made later or elsewhere (a stored job, a worker, a
+browser), build the snapshot where the catalog and the introspection are at
+hand, store it, and build the evaluator from it when you need one.
+
+```typescript
+import {
+    buildAuthorizationSnapshot,
+    createAuthorizationSnapshotEvaluator,
+} from '@authup/access';
+
+// where the catalog and the grants are at hand; no identity is needed
+const snapshot = await buildAuthorizationSnapshot({
+    catalog,
+    grants: introspection.permissions ?? [],
+});
+
+await store.save(JSON.stringify(snapshot));
+
+// later, possibly in another process
+const authorization = await createAuthorizationSnapshotEvaluator({
+    snapshot: JSON.parse(await store.load()),
+    identity,
+});
+```
+
+`AuthorizationSnapshot` is `{ definitions, grants? }`: one
+`PermissionPolicyBinding` per definition and one per grant, plain data that
+shares no object with the catalog and survives a JSON round trip. The builder
+applies the catalog rules above (a stale grant throws, a definition carried
+with `policies: null` is left out and denies, a duplicate permission namespace
+is refused), so the same catalog, grants and identity answer the same way
+through a snapshot as through `createAuthorizationEvaluator` (for a custom
+policy type, within the limits below).
+
+A stored snapshot is untrusted input, and the evaluator treats it that way:
+
+- A malformed envelope throws a validation error, grouped under `snapshot`
+  with the member at fault nested. The check is `AuthorizationSnapshotValidator`,
+  a validup container you can mount into the validator of the document that
+  stores the snapshot; `isPermissionPolicyBinding` checks a single binding.
+- Every policy tree is projected again under your validators. A definition
+  whose tree does not project denies. A grant whose tree does not project is
+  kept with a withheld node in that tree's place, and a grant whose tree
+  carries a permission-binding check is kept as it is: either is a grant that
+  cannot be evaluated, which never passes and which an inverted
+  `permissionBinding` check never reads as a missing grant.
+- A grant is evaluated under the permission of the definition it names, so a
+  stored grant cannot disagree with it on `decisionStrategy`. A grant naming no
+  definition of the snapshot is left out.
+- `realmScope` on a definition is refused: the definition layer applies no
+  reach, so honouring it would allow what the server denies.
+- A non-empty `grants` without an `identity` is refused, as above.
+
+In a snapshot, a `Date` at the top level of a policy node (`date`, `time`) is
+stored as epoch milliseconds, and a `RegExp` under `$regex` as its slash
+literal (`"/^adm/i"`). Any other value JSON cannot carry (a nested `Date`, a
+`RegExp` elsewhere, a `bigint`, a non-finite number, a function, a class
+instance, `undefined` in an array) makes its tree unstorable: a definition
+naming it is left out and denies, and a grant naming it keeps a withheld node
+in its place. Nothing throws. `createAuthorizationEvaluator` builds no snapshot: it
+hands the evaluators the validator output unchanged, a `Date` included. To be
+evaluated from a snapshot, a custom policy type must therefore accept a number
+wherever it accepts a `Date`, and its validator must accept its own output,
+since the snapshot evaluator projects a stored tree again. A type that does not
+still evaluates through `createAuthorizationEvaluator`; from a snapshot, the
+definitions using it deny.
+
+**Self-contained bindings.** `{ definitions: bindings }` without `grants`
+evaluates a flat list: bindings sharing a name are ORed, and the policies of
+one binding combine under its `decisionStrategy`. When grants are given next
+to definitions sharing a namespace, each grant is evaluated under the first of
+them. Such a list has no grant layer, so a definition carrying a
+`permissionBinding` node (as `system.default` does) denies in it. A list derived from the catalog must go
+through `buildAuthorizationSnapshot`, which keeps both layers.
+
 ## Catalog and grant contract
 
 The catalog (`GET /authorization`):
@@ -208,8 +286,8 @@ The catalog (`GET /authorization`):
   the catalog can only mean a copy older than the definition.
 - A tree YOUR copy of `@authup/access` cannot project is read the same way: a
   policy type newer than that copy, or a configuration its validator refuses,
-  denies the definitions that reference it and drops the grants that name it,
-  and never takes the other permissions down with it. Upgrade `@authup/access`
+  denies the definitions that reference it and turns the grants that name it
+  into grants that cannot be evaluated, and never takes the other permissions down with it. Upgrade `@authup/access`
   after the server, and expect the permissions using a newly added policy type
   to deny until you do.
 
@@ -230,7 +308,9 @@ The grants (the introspection response's `permissions`):
   and build again. A grant naming a definition carried with `policies: null`
   is left out and denies, and its own policy ids are never resolved, so that
   case never reports stale. A grant whose junction policy contains a
-  permission-binding check, or one your copy cannot project, is left out.
+  permission-binding check, or one your copy cannot project, is kept as a grant
+  that cannot be evaluated: it never passes, and under an inverted
+  `permissionBinding` check the permission denies rather than passing.
 
 `createAuthorizationEvaluator` rejects missing fields, a definition referencing
 an undeclared policy id, a duplicate permission namespace, an identity that is

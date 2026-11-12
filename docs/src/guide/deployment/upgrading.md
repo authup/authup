@@ -44,6 +44,32 @@ still reads those errors as a miss.
 has no other ioredis; one pinned to ioredis 5 upgrades it). Code using `RedisJsonAdapter`
 moves to `RedisValueStore`. Deployments of the server need no change.
 
+### An inverted policy over a part that cannot be evaluated denies
+
+A policy that cannot be evaluated is reported as not evaluable rather than as an ordinary
+denial, and `invert` is never applied to it. That covers an unknown policy type, a
+configuration its validator refuses, a composite without children, an attributes query that
+does not parse, and data the policy needs that is missing or malformed: no identity, an
+identity without a grant list, attributes given as `null` instead of an object, or attribute
+names that are not a list of strings. An identity holding no grants is unaffected: its binding check settles false and
+inverts.
+
+An inverted composite policy over such a child, and an inverted `permissionBinding` policy
+whose grant carries such a junction policy, therefore deny where they passed. An inverted
+`unanimous` composite still passes when another of its children settles false. Application
+access policies and identity-provider enrollment policies are evaluated the same way, so an
+inverted composite over a broken child there refuses the sign-in to the application or the
+enrollment.
+
+A list read whose permission holds one grant that cannot be evaluated next to others is
+answered row by row instead of by one filtered query (`compile` answers `post` rather than
+`conditional`), so it may be slower and its total is an upper bound.
+
+A `date` or `time` policy whose `start` or `end` is exactly `0` (the epoch) applies that bound.
+
+**Action required:** Review policies with `invert` set whose children could fail to evaluate,
+including those bound as application access or enrollment policies.
+
 ## v1.0.0-beta.74 (was: next release after v1.0.0-beta.73)
 
 ### `@authup/client-web-kit` normalizes `cookiePath` and skips the shadow cleanup for host cookie functions

@@ -480,8 +480,9 @@ describe('authorization catalog consumer', () => {
         await expect(evaluator.evaluate({ name: 'event_delete', data: resource(realmA) })).rejects.toThrow();
         expect(await evaluator.compile({ name: 'event_delete' })).toEqual({ verdict: 'deny' });
 
-        // a GRANT naming such a tree is dropped like one carrying a binding
-        // check: the permission itself stays evaluable for another grant
+        // a GRANT naming such a tree is kept as a term that cannot be
+        // evaluated, like one carrying a binding check: it never passes, and
+        // the permission itself stays evaluable for another grant
         const junction = await build({
             catalog: catalog(['binding'], {
                 binding: { type: 'permissionBinding' },
@@ -610,7 +611,7 @@ describe('authorization catalog consumer', () => {
             .rejects.toThrow(AuthorizationCatalogStaleError);
     });
 
-    it('drops a grant whose junction tree carries a binding node while a sibling grant still authorizes', async () => {
+    it('never passes a grant whose junction tree carries a binding node while a sibling grant still authorizes', async () => {
         const policies = {
             binding: { type: 'permissionBinding' },
             nested: {

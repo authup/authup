@@ -11,6 +11,10 @@ import { BuiltInPolicyType } from '../constants.ts';
 import type { DatePolicy } from './types';
 import { DatePolicyValidator } from './validator';
 
+function isBound(value: Date | string | number | null | undefined) : value is Date | string | number {
+    return value !== undefined && value !== null;
+}
+
 function normalizeDate(input: Date) {
     return new Date(input.getFullYear(), input.getMonth(), input.getDate());
 }
@@ -34,7 +38,7 @@ function toDate(input: Date | string | number) : Date {
  * end day is behind, since the verdict is final from then on.
  */
 function nextDateTransition(policy: DatePolicy, now: Date) : Date | undefined {
-    if (policy.start) {
+    if (isBound(policy.start)) {
         const start = normalizeDate(toDate(policy.start));
 
         if (now < start) {
@@ -42,7 +46,7 @@ function nextDateTransition(policy: DatePolicy, now: Date) : Date | undefined {
         }
     }
 
-    if (policy.end) {
+    if (isBound(policy.end)) {
         const end = normalizeDate(toDate(policy.end));
 
         if (now <= end) {
@@ -89,7 +93,7 @@ export class DatePolicyEvaluator implements IPolicyEvaluator {
             }
         }
 
-        if (policy.start) {
+        if (isBound(policy.start)) {
             const start = normalizeDate(toDate(policy.start));
 
             if (now < start) {
@@ -97,7 +101,7 @@ export class DatePolicyEvaluator implements IPolicyEvaluator {
             }
         }
 
-        if (policy.end) {
+        if (isBound(policy.end)) {
             const end = normalizeDate(toDate(policy.end));
 
             if (now > end) {

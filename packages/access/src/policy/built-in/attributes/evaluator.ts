@@ -40,8 +40,7 @@ export class AttributesPolicyEvaluator<
 
         try {
             policy = await this.validator.run(value);
-            this.fixQuery(policy.query);
-            condition = this.parser.parse(policy.query);
+            condition = this.parser.parse(this.fixQuery(policy.query));
         } catch {
             return null;
         }
@@ -77,6 +76,7 @@ export class AttributesPolicyEvaluator<
         if (!data) {
             return {
                 success: false,
+                unevaluable: true,
                 issues: [
                     definePolicyIssueItem({
                         code: PolicyIssueCode.DATA_MISSING,
@@ -87,12 +87,10 @@ export class AttributesPolicyEvaluator<
             };
         }
 
-        this.fixQuery(policy.query);
-
         let testIt : Predicate;
 
         try {
-            const condition = this.parser.parse(policy.query);
+            const condition = this.parser.parse(this.fixQuery(policy.query));
 
             // string equality stays byte-exact (the semantics the previous
             // @ucast/mongo2js evaluator enforced)
@@ -100,6 +98,7 @@ export class AttributesPolicyEvaluator<
         } catch (e) {
             return {
                 success: false,
+                unevaluable: true,
                 issues: [
                     definePolicyIssueItem({
                         code: PolicyIssueCode.FIELD_INVALID,
@@ -115,31 +114,26 @@ export class AttributesPolicyEvaluator<
         return { success: maybeInvertPolicyOutcome(testIt(data), policy.invert) };
     }
 
-    protected fixQuery(
-        query: unknown | unknown[],
-    ) {
+    protected fixQuery(query: unknown) : unknown {
         if (Array.isArray(query)) {
-            for (const element of query) {
-                this.fixQuery(element);
-            }
-
-            return;
+            return query.map((element) => this.fixQuery(element));
         }
 
         if (!isObject(query)) {
-            return;
+            return query;
         }
 
+        const prototype = Object.getPrototypeOf(query);
+
+        if (prototype !== null && prototype !== Object.prototype) {
+            return query;
+        }
+
+        const output : Record<string, unknown> = {};
         const keys = Object.keys(query);
 
         for (const key of keys) {
             const value = query[key];
-
-            if (isObject(value) || Array.isArray(value)) {
-                this.fixQuery(value);
-
-                continue;
-            }
 
             if (
                 key === '$regex' &&
@@ -148,9 +142,15 @@ export class AttributesPolicyEvaluator<
                 const fragments = value.match(/\/(.*?)\/([a-z]*)?$/i);
 
                 if (fragments && fragments[1] !== undefined) {
-                    query[key] = new RegExp(fragments[1], fragments[2] || '');
+                    output[key] = new RegExp(fragments[1], fragments[2] || '');
+
+                    continue;
                 }
             }
+
+            output[key] = this.fixQuery(value);
         }
+
+        return output;
     }
 }
