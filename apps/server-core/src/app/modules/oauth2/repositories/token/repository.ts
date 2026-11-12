@@ -155,9 +155,10 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
             key,
         });
 
-        const response = await this.cache.get(cacheKey);
-
-        return !!response;
+        // `has`, not `get`: a cache read answers a miss when the backend is
+        // unreachable, and a miss here would read a revoked token as live.
+        // The lookup has to fail with the backend instead.
+        return this.cache.has(cacheKey);
     }
 
     async setInactive(key: string, exp?: number): Promise<void> {

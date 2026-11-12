@@ -109,6 +109,29 @@ export class EATreeRepository<
                 (entity as Record<string, any>)[key] = value;
             }
         }
+
+        // typeorm builds each nested child from columns and relations alone,
+        // so a child's extra attributes are dropped the same way the root's
+        // are: a tree created in one request would be stored without its
+        // children's options, which reads as no restriction.
+        const childColumnName = this.metadata.treeChildrenRelation?.propertyName;
+
+        if (!childColumnName) {
+            return;
+        }
+
+        const children = (entity as Record<string, any>)[childColumnName];
+        const sources = (source as Record<string, any>)[childColumnName];
+
+        if (!Array.isArray(children) || !Array.isArray(sources)) {
+            return;
+        }
+
+        for (const [i, child] of children.entries()) {
+            if (child && sources[i]) {
+                this.preserveExtraAttributes(child, sources[i]);
+            }
+        }
     }
 
     // ------------------------------------------------------------------------------

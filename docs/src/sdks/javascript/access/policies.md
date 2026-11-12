@@ -295,7 +295,9 @@ It operates in one of two modes:
   `realmMatch` policy-data key against the identity's realm using a coarse,
   actor-relative reach: `own` (identity's own realm only), `ownOrNull` (own realm or
   global/null resources), `any`, `none`. When no `realmMatch` key is present, the
-  policy does not apply and passes neutrally. This mode powers the `realmScope`
+  policy does not apply and passes neutrally; in `preEvaluate`, where the
+  resource has not arrived yet, it stays pending instead (an uninverted `any` still passes),
+  so an inverted parent cannot deny what the full evaluation allows. This mode powers the `realmScope`
   column on permission grants.
 - **Attribute mode** (no `scope`): matches one or more keys of the `attributes`
   policy-data bag (by default `realmId` / `realmName` and variants) against the

@@ -123,6 +123,19 @@ describe('src/policy/attributes', () => {
         expect(outcome.success).toBeTruthy();
     });
 
+    it('should keep a $regex string that is not a slash literal as the pattern it is', async () => {
+        // two slashes inside a plain pattern are not a literal's delimiters:
+        // read as one, the pattern lost everything before the first slash
+        const regexPolicy : AttributesPolicy<User> = { query: { name: { $regex: '^https://trusted.example/' } } };
+        const evaluate = (name: string) => evaluator.evaluate(
+            regexPolicy,
+            definePolicyEvaluationContext({ data: new PolicyData({ attributes: { name, age: 30 } }) }),
+        );
+
+        expect((await evaluate('https://trusted.example/path')).success).toBeTruthy();
+        expect((await evaluate('https://evil.example//trusted.example')).success).toBeFalsy();
+    });
+
     it('should fail with issue for a malformed query', async () => {
         const malformedPolicy = { query: { name: { $unknownOperator: 'foo' } } } as unknown as AttributesPolicy<User>;
 

@@ -219,7 +219,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
             group = ValidatorGroup.CREATE;
         }
 
-        const validated = await this.validate(data, group, entity?.type);
+        const validated = await this.validate(data, group, entity ?? undefined);
 
         await this.repository.validateJoinColumns(validated);
 
@@ -348,13 +348,24 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
     private async validate(
         data: Record<string, any>,
         group: string,
-        type?: string,
+        stored?: Policy,
     ): Promise<Policy> {
         const validated = await this.validator.run(data, { group });
 
         // `type` is create-only, so an update reads its options by the stored type
-        const resolvedType = type ?? data.type;
+        const resolvedType = stored?.type ?? data.type;
         const attributes = await this.attributesValidator.run({ ...data, type: resolvedType });
+
+        // An identity policy naming no type passes every identity, and its
+        // evaluator does not apply `invert` to that: the combination would be
+        // stored as a negation and evaluate as none.
+        if (
+            resolvedType === BuiltInPolicyType.IDENTITY &&
+            (validated.invert ?? stored?.invert) &&
+            !(Array.isArray(attributes.types) && attributes.types.length > 0)
+        ) {
+            throw new ValidationError('An inverted identity policy must name the identity types it excludes.');
+        }
 
         extendObject(validated, attributes);
 

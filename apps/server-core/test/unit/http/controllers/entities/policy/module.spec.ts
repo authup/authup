@@ -13,6 +13,9 @@ import {
     it,
 } from 'vitest';
 import { BuiltInPolicyType } from '@authup/access';
+import type { DataSource } from 'typeorm';
+import { PolicyRepository } from '../../../../../../src/adapters/database/domains/index.ts';
+import { DatabaseInjectionKey } from '../../../../../../src/app/index.ts';
 import { createTestApplication } from '../../../../../app';
 import { expectClientError } from '../../../../../utils';
 import { createFakeTimePolicy } from '../../../../../utils/domains/policy';
@@ -98,6 +101,86 @@ describe('src/http/controllers/policy', () => {
         expect(response.children).toHaveLength(1);
 
         ids.push(response.id);
+    });
+
+    it('should store the options of children created inline', async () => {
+        const identityChild = {
+            name: 'group-inline-identity',
+            type: BuiltInPolicyType.IDENTITY,
+            invert: false,
+            types: ['client'],
+        };
+        const nestedChild = {
+            name: 'group-inline-nested',
+            type: BuiltInPolicyType.COMPOSITE,
+            invert: false,
+            decisionStrategy: 'affirmative',
+            children: [createFakeTimePolicy({ name: 'group-inline-time' })],
+        };
+
+        const { data: response } = await suite.client
+            .policy.createBuiltIn({
+                name: 'group-inline-options',
+                type: BuiltInPolicyType.COMPOSITE,
+                invert: false,
+                children: [identityChild, nestedChild],
+            });
+
+        const { data: children } = await suite.client
+            .policy
+            .getMany({ filters: { parentId: response.id } });
+
+        const identity = children.find((child) => child.name === 'group-inline-identity') as Record<string, any>;
+        const nested = children.find((child) => child.name === 'group-inline-nested') as Record<string, any>;
+
+        expect(identity.types).toEqual(['client']);
+        expect(nested.decisionStrategy).toEqual('affirmative');
+
+        const { data: [time] } = await suite.client
+            .policy
+            .getMany({ filters: { parentId: nested.id } });
+
+        expect(time).toEqual(expect.objectContaining({ start: '08:00:00', end: '16:00:00' }));
+    });
+
+    it('should read the children of a tree in a stable order', async () => {
+        const { data: response } = await suite.client
+            .policy.createBuiltIn({
+                name: 'group-ordered',
+                type: BuiltInPolicyType.COMPOSITE,
+                invert: false,
+                children: ['c', 'a', 'b'].map((suffix) => createFakeTimePolicy({ name: `group-ordered-${suffix}` })),
+            });
+
+        const repository = new PolicyRepository(suite.container.resolve<DataSource>(DatabaseInjectionKey.DataSource));
+        const tree = await repository.findDescendantsTreeById(response.id);
+
+        expect((tree as { children: { name: string }[] }).children.map((child) => child.name))
+            .toEqual(['group-ordered-a', 'group-ordered-b', 'group-ordered-c']);
+    });
+
+    it('should refuse an inverted identity policy naming no type', async () => {
+        await expectClientError(
+            () => suite.client.policy.create({
+                name: 'identity-inverted-open',
+                type: BuiltInPolicyType.IDENTITY,
+                invert: true,
+            }),
+            { status: 400 },
+        );
+
+        const { data: response } = await suite.client.policy.create({
+            name: 'identity-inverted',
+            type: BuiltInPolicyType.IDENTITY,
+            invert: true,
+            types: ['client'],
+        });
+
+        // an update replaces the options, so one dropping `types` is refused too
+        await expectClientError(
+            () => suite.client.policy.update(response.id, { description: 'open' }),
+            { status: 400 },
+        );
     });
 
     it('should read child policies', async () => {

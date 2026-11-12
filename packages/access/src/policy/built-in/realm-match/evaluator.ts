@@ -199,6 +199,20 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
                     };
                 }
 
+                // The pre-gate runs ahead of the resource, so its realm is
+                // data that has not arrived: the reach pends, like any policy
+                // whose data key is absent. Passing it here instead would let
+                // an inverted ancestor settle a deny the row could overturn.
+                // `any` holds whatever the realm turns out to be, unless the
+                // leaf itself is inverted: with a realm it then fails, without
+                // one it neutral-passes, so that is not known here either.
+                if (
+                    ctx.preliminary &&
+                    (policy.invert || normalizeRealmScope(policy.scope) !== RealmScope.ANY)
+                ) {
+                    return { success: false, pending: true };
+                }
+
                 return { success: true };
             }
 

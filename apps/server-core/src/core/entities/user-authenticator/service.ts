@@ -1487,7 +1487,16 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
     }
 
     protected async assertNotThrottled(userId: string): Promise<void> {
-        const lockedUntil = await this.cache.get<number>(this.buildThrottleCacheKey(userId));
+        const key = this.buildThrottleCacheKey(userId);
+
+        // `has` first: a cache read answers a miss when the backend is
+        // unreachable, which would lift a lockout. `has` fails with the
+        // backend, so the callers' fail-closed handling still applies.
+        if (!await this.cache.has(key)) {
+            return;
+        }
+
+        const lockedUntil = await this.cache.get<number>(key);
 
         if (typeof lockedUntil === 'number' && lockedUntil > Date.now()) {
             throw new MfaThrottledError({ retryAfter: Math.ceil((lockedUntil - Date.now()) / 1_000) });

@@ -48,4 +48,23 @@ describe('OAuth2TokenRepository', () => {
         await repository.dropKeyInactive(kid);
         expect(await repository.isKeyInactive(kid)).toBe(false);
     });
+
+    it('should fail the blocklist lookup with the backend instead of reading a revoked token as live', async () => {
+        const cache = new MemoryCache();
+        const repository = new OAuth2TokenRepository(cache);
+        const jti = randomUUID();
+
+        await repository.setInactive(jti);
+        expect(await repository.isInactive(jti)).toBe(true);
+        expect(await repository.isInactive(randomUUID())).toBe(false);
+
+        // what the redis adapter does while redis is unreachable: a value
+        // read answers a miss, every other command rejects
+        cache.get = async () => null;
+        cache.has = async () => {
+            throw new Error('Connection is closed.');
+        };
+
+        await expect(repository.isInactive(jti)).rejects.toThrow('Connection is closed.');
+    });
 });

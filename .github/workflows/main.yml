@@ -138,6 +138,42 @@ jobs:
                 run: |
                     npm run test --workspace=apps/server-core
 
+    tests-server-core-redis:
+        name: Test Server Core (redis)
+        needs: [build]
+        runs-on: ubuntu-latest
+
+        services:
+            redis:
+                image: redis:7
+                ports:
+                    - 6379:6379
+                options: >-
+                    --health-cmd "redis-cli ping"
+                    --health-interval 5s
+                    --health-timeout 5s
+                    --health-retries 10
+
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v6
+
+            -   name: Install
+                uses: ./.github/actions/install
+                with:
+                    node-version: ${{ env.NODE_VERSION }}
+                    node-registry: ${{ env.NODE_REGISTRY }}
+
+            -   name: Build
+                uses: ./.github/actions/build
+
+            -   name: Run tests
+                env:
+                    NODE_ENV: test
+                    TEST_REDIS_URL: redis://127.0.0.1:6379
+                run: |
+                    npm run test --workspace=apps/server-core
+
     tests-migrations:
         name: Test Migrations
         needs: [build]

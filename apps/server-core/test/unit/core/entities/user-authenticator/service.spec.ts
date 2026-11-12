@@ -510,7 +510,10 @@ describe('UserAuthenticatorService', () => {
 
             await service.confirm(enrolled.data.id, totpCode(enrolled.meta.secret!), makeActor());
 
-            cache.get = async () => {
+            // the redis adapter during an outage: a value read answers a
+            // miss, every other command rejects
+            cache.get = async () => null;
+            cache.has = async () => {
                 throw new Error('cache unavailable');
             };
 
@@ -524,8 +527,11 @@ describe('UserAuthenticatorService', () => {
             const enrolled = await service.enroll({ kind: UserAuthenticatorKind.TOTP }, makeActor());
 
             // the throttle read blips — confirm must degrade to a retry-able 429,
-            // never surface the raw cache error as an internal 500.
-            cache.get = async () => {
+            // never surface the raw cache error as an internal 500. This is
+            // what the redis adapter does while redis is unreachable: a value
+            // read answers a miss, every other command rejects.
+            cache.get = async () => null;
+            cache.has = async () => {
                 throw new Error('cache unavailable');
             };
 
