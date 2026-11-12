@@ -45,7 +45,8 @@ old snake_case shape. It is an upper bound on what may be asked, not an entitlem
   narrowing `GET /permissions` and `GET /policies` apply.
 - **Reach withholds configuration, never an entry.** A definition out of reach travels with
   `policies: null`; a tree out of reach travels as `AUTHORIZATION_POLICY_WITHHELD_TYPE`, a
-  node no consumer can project, so grants of it are dropped. An ABSENT definition must mean
+  node no consumer can project, so a consumer keeps a grant of it as a term that cannot be
+  evaluated. An ABSENT definition must mean
   exactly one thing: the consumer's copy is stale. Accepted cost: a foreign realm's
   identifier tuples and policy ids still travel. Re-open if the tuple ever carries more.
 - The reach test asks about the realm only. A read grant restricted by an ATTRIBUTES
@@ -136,11 +137,13 @@ bindings) and one evaluator factory with `buildAuthorizationSnapshot` /
 `createAuthorizationSnapshotEvaluator` (#3817), but never goes through a snapshot: its
 evaluators get the validator output once, unconverted.
 
-- **The snapshot** is `{ definitions, grants }` as plain, JSON-safe bindings (a top-level
-  `Date` stored as epoch ms). Stored, it is untrusted: the evaluator re-projects every
-  tree, re-binds each grant to the first definition of its namespace (dropping one naming
-  none) and refuses `realmScope` on a definition (the definition layer applies no reach,
-  so honouring it would fail open). `{ definitions }` alone is the flat list of
+- **The snapshot** is `{ definitions, grants }` as plain, JSON-safe bindings: a top-level
+  `Date` stored as epoch ms, a `$regex` `RegExp` as its slash literal; any other value JSON
+  cannot carry makes the tree unstorable (definition left out, grant keeps the withheld
+  node), never a throw. Stored, it is untrusted: the evaluator re-projects every tree (a
+  grant tree that does not project becomes the withheld node), re-binds each grant to the
+  first definition of its namespace (dropping one naming none) and refuses `realmScope` on
+  a definition (the definition layer applies no reach, so honouring it would fail open). `{ definitions }` alone is the flat list of
   self-contained bindings, ORed across same-named bindings. Rejected: a flat list with
   reach baked in for one realm (lossy: it drops every grant it cannot express).
 
@@ -148,10 +151,13 @@ evaluators get the validator output once, unconverted.
   `AuthorizationCatalogStaleError`: refetch and rebuild. Never read an absence as a deny.
 - `policies: null` is NOT stale: deny the permission, drop its grants.
 - A tree the consumer cannot project (unknown type, refused config) tombstones only the
-  definitions referencing it. A malformed catalog (duplicate namespace) still throws.
-- A grant tree containing a `permissionBinding` node is not evaluable (`INVALID`)
-  (`containsBindingCheck` on the consumer side), so it cannot re-enter the evaluator
-  without bound (#3633).
+  definitions referencing it; a grant naming it is kept with the withheld node in its
+  place. A malformed catalog (duplicate namespace) still throws. `buildPermissionKey`
+  URI-encodes its segments, so a realm or client named `*` or holding `/` cannot collide.
+- A grant tree containing a `permissionBinding` node is kept and answered not evaluable
+  (`INVALID`) by the binding evaluator, so it cannot re-enter the evaluator without bound
+  (#3633). Kept, never dropped (#3817): an inverted binding check reads an absent grant as
+  "holds none" and would pass where the server denies.
 - **Policy types are open (#3635).** `PolicyDefaultValidators` sits next to
   `PolicyDefaultEvaluators`; `projectAuthorizationPolicy(input, validators?)` refuses what
   its registry lacks (and the withheld node always). Passed registries REPLACE the
