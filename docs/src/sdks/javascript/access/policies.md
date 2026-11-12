@@ -441,9 +441,9 @@ Guidelines:
   passes (policy does not apply) and pending results stay as they are.
 - **Report what you cannot evaluate.** When the configuration or the data makes a
   decision impossible, return `{ success: false, unevaluable: true }` rather than a plain
-  `false`, which an inverted parent would turn into a pass. The engine drops `pending`
-  and any `condition` from such a result. Never set `reachable`: the composites derive
-  it from their children.
+  `false`, which an inverted parent would turn into a pass. The engine drops `pending`,
+  `condition`, `failCondition` and `reachable` from such a result. Never set `reachable`:
+  the composites derive it from their children.
 - **`toCondition` must be exact on every row.** A row satisfies the returned condition
   if and only if the policy would settle true with that row as its attributes. The engine
   derives the fail side as its negation, so every other row must settle false. When in
