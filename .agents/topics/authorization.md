@@ -528,8 +528,12 @@ Defaults (declared in `app/modules/provisioning/sources/default/module.ts`):
   both); it is unevaluable only when nothing pends or no outcome is left. An unevaluable
   grant term with a pending reach (a query build) still fails out of reach, so it pends
   as able to fail and never settles the node to `deny`. `invert` swaps `reachable`.
-  CONSENSUS never narrows. A condition exists only for a subtree with no unevaluable
-  term, never next to `reachable`, so every condition is exact.
+  CONSENSUS never narrows. Under `withConditions` a pending result states two exact
+  conditions (#3825): `condition` (rows it passes for) and `failCondition` (rows it fails
+  for); a row in neither could not be evaluated. `invert` swaps them, so negation never
+  reads such a row as a failure. An absent side is UNKNOWN: the engine derives
+  `failCondition = not(condition)` only for a leaf it lowers itself via `toCondition`,
+  never from a result an evaluator returned.
 - A pending junction policy is a pending grant term; the disjunction settles false only
   when every term settled.
 - A childless composite fails closed with `PolicyIssueCode.INVALID` (#3304);
@@ -545,9 +549,10 @@ Defaults (declared in `app/modules/provisioning/sources/default/module.ts`):
 expresses a pending policy as a rapiq `ICondition` over row attributes, opt-in via
 `PolicyEvaluationContext.withConditions`.
 
-- Composite: settled children drop out; AND/OR compose ALL-OR-NOTHING per node (pushing
-  one OR disjunct wrongly excludes rows); CONSENSUS never lowers; `invert` wraps via
-  rapiq `not()` (null-inclusive, matches predicate inversion).
+- Composite: settled children drop out; each side composes ALL-OR-NOTHING per node
+  (pushing one OR disjunct wrongly excludes rows) unless a sibling already decides it;
+  CONSENSUS never lowers; `invert` swaps the two sides. rapiq `not()` (null-inclusive)
+  only derives a leaf's fail side.
 - The condition is exact: row matches iff the pending subtree settles true on it.
 - Lowerable: `attributes`, `realmMatch` scope mode (field `attributeName`, default
   `realmId`; under `withConditions` an absent `realmMatch` key PENDS instead of

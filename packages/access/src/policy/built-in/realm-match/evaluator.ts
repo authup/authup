@@ -51,7 +51,8 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
      * Condition form over the row's realm column, with the actor realm baked in
      * (mirrors `realmScopeMatches` / the attribute-mode match). Exactness holds for
      * row-shaped data where the referenced field exists (DB rows) — the object-bag
-     * "key absent → neutral-pass" case has no SQL counterpart. Lowerable configs:
+     * "key absent → neutral-pass" case has no SQL counterpart. The same caveat governs
+     * the fail side, which is this condition negated. Lowerable configs:
      * scope mode (field = single-string `attributeName`, default `realmId` — scope-mode
      * EVALUATION ignores `attributeName`, lowering reuses it as the column override),
      * and strict attribute mode with a single explicit `attributeName`. Everything
@@ -190,10 +191,11 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
                 if (ctx.withConditions) {
                     const condition = await this.toCondition(value, ctx);
 
+                    // the reach is total on rows: where it does not hold, it fails
                     return {
                         success: false,
                         pending: true,
-                        ...(condition ? { condition } : {}),
+                        ...(condition ? { condition, failCondition: not(condition) } : {}),
                     };
                 }
 

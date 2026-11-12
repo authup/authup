@@ -203,12 +203,27 @@ describe('src/permission/evaluator (compile, not evaluable)', () => {
         expect(result.verdict).toEqual('deny');
     });
 
-    it('should degrade an inverted unanimous composite over an unevaluable child to post', async () => {
-        // it passes exactly where the attributes fail, but nothing can be said
-        // about the rows where they hold, so no condition may stand for it
-        const result = await unevaluableEvaluator.compile({ name: 'unanimous' });
+    const expectExact = async (name: string | string[], check: string) => {
+        const result = await unevaluableEvaluator.compile({ name });
 
-        expect(result.verdict).toEqual('post');
+        expect(result.verdict).toEqual('conditional');
+
+        if (result.verdict !== 'conditional') {
+            return;
+        }
+
+        const predicate = test(result.condition);
+
+        // the condition is a negation, so a row without the field counts as well
+        for (const row of [{ name: 'guest' }, { name: 'admin' }, { name: null }, {}]) {
+            expect(predicate(row), JSON.stringify(row)).toBe(await allows(check, row));
+        }
+    };
+
+    it('should compile an inverted unanimous composite over an unevaluable child to where its sibling fails', async () => {
+        // it passes exactly where the attributes fail: the fail side of the
+        // attributes is known, whatever the unevaluable child adds
+        await expectExact('unanimous', 'unanimous');
 
         expect(await allows('unanimous', { name: 'guest' })).toBe(true);
         expect(await allows('unanimous', { name: 'admin' })).toBe(false);
@@ -218,7 +233,7 @@ describe('src/permission/evaluator (compile, not evaluable)', () => {
         expect((await unevaluableEvaluator.compile({ name: 'unregistered' })).verdict).toEqual('deny');
 
         expect((await unevaluableEvaluator.compile({ name: ['unregistered', 'affirmative'] })).verdict).toEqual('deny');
-        expect((await unevaluableEvaluator.compile({ name: ['unregistered', 'unanimous'] })).verdict).toEqual('post');
+        await expectExact(['unregistered', 'unanimous'], 'unanimous');
     });
 
     // A pending child next to an unevaluable sibling, under a negating parent: the
@@ -233,10 +248,8 @@ describe('src/permission/evaluator (compile, not evaluable)', () => {
         expect(await allows('nestedAffirmative', { name: 'admin' })).toBe(false);
     });
 
-    it('should leave a negated unanimous node over an unevaluable child to the full evaluation', async () => {
-        const result = await unevaluableEvaluator.compile({ name: 'nestedUnanimous' });
-
-        expect(result.verdict).toEqual('post');
+    it('should compile a negated unanimous node over an unevaluable child to where its sibling fails', async () => {
+        await expectExact('nestedUnanimous', 'nestedUnanimous');
 
         expect(await allows('nestedUnanimous', { name: 'guest' })).toBe(true);
         expect(await allows('nestedUnanimous', { name: 'admin' })).toBe(false);
@@ -295,7 +308,7 @@ describe('src/permission/evaluator (compile, a not evaluable grant with an open 
             'negatedParent',
             [unevaluableGrant('negatedParent'), plainGrant('negatedParent')],
         ],
-    ])('should leave %s to the full evaluation', async (_label, name, grants) => {
+    ])('should compile %s to the rows out of reach', async (_label, name, grants) => {
         const data = (realmId?: string) => definePolicyData({
             [BuiltInPolicyType.IDENTITY]: { ...identityData, grants },
             ...(realmId ? { [BuiltInPolicyType.REALM_MATCH]: realmId } : {}),
@@ -305,9 +318,104 @@ describe('src/permission/evaluator (compile, a not evaluable grant with an open 
 
         const result = await reachEvaluator.compile({ name, data: data() });
 
-        expect(result.verdict).toEqual('post');
-
         expect(await allows(foreignRealmId)).toBe(true);
         expect(await allows(identityData.realmId)).toBe(false);
+
+        expect(result.verdict).toEqual('conditional');
+
+        if (result.verdict !== 'conditional') {
+            return;
+        }
+
+        const predicate = test(result.condition);
+
+        for (const realmId of [foreignRealmId, identityData.realmId, null]) {
+            expect(predicate({ realmId }), `${realmId}`).toBe(await reachEvaluator.evaluate({
+                name,
+                data: definePolicyData({
+                    [BuiltInPolicyType.IDENTITY]: { ...identityData, grants },
+                    [BuiltInPolicyType.REALM_MATCH]: realmId,
+                }),
+            }).then(() => true, () => false));
+        }
+    });
+});
+
+// A grant that could not be evaluated next to one that lowers: the working grant
+// still decides where the permission passes, so the read stays one filtered query.
+describe('src/permission/evaluator (compile, a not evaluable grant next to a working one)', () => {
+    const visible = definePolicyWithType(BuiltInPolicyType.ATTRIBUTES, { query: { visible: true } });
+    const grants : PermissionPolicyBinding[] = ['plain', 'negatedParent'].flatMap((name) => [
+        {
+            permission: { name },
+            realmScope: 'any',
+            policies: [visible],
+        },
+        {
+            permission: { name },
+            realmScope: 'any',
+            policies: [{ type: 'unregistered' }],
+        },
+    ]);
+
+    const mixedEvaluator = new PermissionEvaluator({
+        provider: new PermissionMemoryProvider([
+            {
+                permission: { name: 'plain' },
+                policies: [definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {})],
+            },
+            {
+                permission: { name: 'negatedParent' },
+                policies: [
+                    definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                        invert: true,
+                        children: [definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {})],
+                    }),
+                ],
+            },
+        ]),
+        policyEngine: new PolicyEngine({
+            ...PolicyDefaultEvaluators,
+            [BuiltInPolicyType.PERMISSION_BINDING]: new IdentityPermissionBindingPolicyEvaluator(),
+        }),
+    });
+
+    const data = (row?: Record<string, any>) => definePolicyData({
+        [BuiltInPolicyType.IDENTITY]: { ...identityData, grants },
+        ...(row ? { [BuiltInPolicyType.ATTRIBUTES]: row } : {}),
+    });
+    const allows = (name: string, row: Record<string, any>) => mixedEvaluator.evaluate({ name, data: data(row) })
+        .then(() => true, () => false);
+    const rows = [{ visible: true }, { visible: false }];
+
+    it('should compile the binding check to the condition of the working grant', async () => {
+        const result = await mixedEvaluator.compile({ name: 'plain', data: data() });
+
+        expect(await allows('plain', { visible: true })).toBe(true);
+        expect(await allows('plain', { visible: false })).toBe(false);
+
+        expect(result.verdict).toEqual('conditional');
+
+        if (result.verdict !== 'conditional') {
+            return;
+        }
+
+        const predicate = test(result.condition);
+
+        for (const row of rows) {
+            expect(predicate(row), JSON.stringify(row)).toBe(await allows('plain', row));
+        }
+    });
+
+    it('should never admit a row through an inverted composite above it', async () => {
+        // visible: the binding check passes, so its negation fails; hidden: it could
+        // not be evaluated, and neither can its negation
+        const result = await mixedEvaluator.compile({ name: 'negatedParent', data: data() });
+
+        for (const row of rows) {
+            expect(await allows('negatedParent', row), JSON.stringify(row)).toBe(false);
+        }
+
+        expect(result.verdict).toEqual('deny');
     });
 });

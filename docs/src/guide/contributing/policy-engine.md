@@ -69,11 +69,17 @@ ignores the flag fails closed).
   is still open (a query build) it can still fail, for a row out of reach, so the node
   pends on it.
   `invert` swaps `reachable` and never touches `success`; a `consensus` composite never
-  narrows. A result with `reachable` carries no `condition`, and a node composes a
-  condition only when nothing below it is unevaluable, so every condition stays exact.
-  `compile` drops a pending `'fail'` like a settled false and answers `post` for any
-  other pending tree without a condition. An evaluator never sets `reachable` itself: the
-  composites derive it, and the engine drops it from a result that is not pending.
+  narrows. `compile` drops a pending `'fail'` like a settled false and answers `post` for
+  any other pending tree without a condition. An evaluator never sets `reachable` itself:
+  the composites derive it, and the engine drops it from a result that is not pending.
+- Under `withConditions` a pending result states two exact conditions (#3825):
+  `condition`, the rows it passes for, and `failCondition`, the rows it fails for. A row
+  in neither is one it could not be evaluated for. `invert` swaps the two, so a negating
+  parent never reads such a row as a failure, and a condition may sit next to an
+  unevaluable term. A result that can only still fail carries no `condition`, one that
+  can only still pass no `failCondition`. An absent side is unknown, never "everything
+  else": the engine derives `failCondition` as `not(condition)` only for a leaf it lowers
+  itself through `toCondition`, and takes a result an evaluator returned as stated.
 
 There is **no hand-maintained exclusion list** anymore. A new policy type places itself
 by shipping `requires()`, with zero engine edits.
@@ -89,10 +95,11 @@ stays a per-row post-check, which is always sound.
 
 Lowering rides the same evaluation walk, opt-in via the evaluation-context flag
 `withConditions` (default off, so `evaluate`/`preEvaluate` hot paths never pay it): the
-engine attaches `result.condition` when a leaf pends, and the composite composes
-residuals structurally: settled children drop out as identity elements, `AND`/`OR`
-residuals compose **all-or-nothing per node** (pushing a single `OR` disjunct would
-wrongly exclude rows), and `invert` wraps the residual symbolically via rapiq's `not()`
+engine attaches `result.condition` and its negation as `result.failCondition` when a leaf
+pends, and the composite composes both sides structurally: settled children drop out as
+identity elements, `AND`/`OR` residuals compose **all-or-nothing per side** (pushing a
+single `OR` disjunct would wrongly exclude rows), and `invert` swaps the two sides. The
+leaf's fail side is rapiq's `not()` of its condition
 (null-inclusive complement, so pushdown and in-memory post-checks agree on null-bearing
 rows).
 

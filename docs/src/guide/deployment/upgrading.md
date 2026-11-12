@@ -61,9 +61,9 @@ access policies and identity-provider enrollment policies are evaluated the same
 inverted composite over a broken child there refuses the sign-in to the application or the
 enrollment.
 
-A list read whose permission holds one grant that cannot be evaluated next to others is
-answered row by row instead of by one filtered query (`compile` answers `post` rather than
-`conditional`), so it may be slower and its total is an upper bound.
+A custom policy evaluator that reports a pending result with a `condition` by itself (not
+through `toCondition`) must also state `failCondition` for a negating parent to lower it;
+without it such a list read is answered row by row.
 
 A `date` or `time` policy whose `start` or `end` is exactly `0` (the epoch) applies that bound.
 
