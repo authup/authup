@@ -73,7 +73,8 @@ treats it as a deny:
 A composite with a pending child next to a not evaluable one stays pending and reports
 which settled outcome it can still reach: `reachable: 'pass'` (it can pass but never
 fail) or `reachable: 'fail'` (it can fail but never pass); without `reachable` both are
-open. `invert` swaps the two. `preEvaluate` permits a pending result unless `reachable` is
+open. It is not evaluable only when no child pends or no settled outcome is left. `invert`
+swaps the two. `preEvaluate` permits a pending result unless `reachable` is
 `'fail'`. A subtree containing a not evaluable term is never lowered to a query, so a
 result with `reachable` carries no condition: `compile` treats `'fail'` as a denial and
 `'pass'` as a per-row check (`post`).

@@ -508,9 +508,11 @@ Defaults (declared in `app/modules/provisioning/sources/default/module.ts`):
   false. Rejected: an opt-in fail-closed mode (the engine already claimed the behaviour).
 - A composite or binding node with a pending term next to an unevaluable one stays pending
   and reports `reachable: 'pass' | 'fail'`, the one settled outcome still open (absent:
-  both); it is unevaluable only when nothing pends or no outcome is left. `invert` swaps
-  `reachable`. CONSENSUS never narrows. A condition exists only for a subtree with no
-  unevaluable term, never next to `reachable`, so every condition is exact.
+  both); it is unevaluable only when nothing pends or no outcome is left. An unevaluable
+  grant term with a pending reach (a query build) still fails out of reach, so it pends
+  as able to fail and never settles the node to `deny`. `invert` swaps `reachable`.
+  CONSENSUS never narrows. A condition exists only for a subtree with no unevaluable
+  term, never next to `reachable`, so every condition is exact.
 - A pending junction policy is a pending grant term; the disjunction settles false only
   when every term settled.
 - A childless composite fails closed with `PolicyIssueCode.INVALID` (#3304);
@@ -518,8 +520,9 @@ Defaults (declared in `app/modules/provisioning/sources/default/module.ts`):
   NOT gated (the admin UI creates the composite before attaching children).
 - `preEvaluate` passes `pendingPolicies: 'permit'` (default `'deny'`): it permits a pending
   tree unless `reachable` is `'fail'`; `compile` drops a pending `'fail'` like a false and
-  answers `post` for any other pending tree without a condition. New policy types place themselves via `requires`; there is no
-  exclusion list. The full `evaluate()` with data denies on pending.
+  answers `post` for any other pending tree without a condition. New policy types place
+  themselves via `requires`; there is no exclusion list. The full `evaluate()` with data
+  denies on pending.
 
 **Condition lowering (#3286):** optional `IPolicyEvaluator.toCondition?(value, ctx)`
 expresses a pending policy as a rapiq `ICondition` over row attributes, opt-in via

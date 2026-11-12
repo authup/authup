@@ -12,6 +12,7 @@ import { DecisionStrategy } from '@authup/kit';
 import type { PermissionPolicyBinding } from '../../../src';
 import {
     BuiltInPolicyType,
+    IdentityPermissionBindingPolicyEvaluator,
     PermissionEvaluator,
     PermissionMemoryProvider,
     PolicyDefaultEvaluators,
@@ -239,5 +240,74 @@ describe('src/permission/evaluator (compile, not evaluable)', () => {
 
         expect(await allows('nestedUnanimous', { name: 'guest' })).toBe(true);
         expect(await allows('nestedUnanimous', { name: 'admin' })).toBe(false);
+    });
+});
+
+// A grant whose policy could not be evaluated still fails for every row out of
+// its reach, so a negated binding check passes there: while the reach is open
+// the term is no reason to deny.
+describe('src/permission/evaluator (compile, a not evaluable grant with an open reach)', () => {
+    const foreignRealmId = '11111111-2222-4333-8444-555555555555';
+    const binding = definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {});
+
+    const reachEvaluator = new PermissionEvaluator({
+        provider: new PermissionMemoryProvider([
+            {
+                permission: { name: 'negated' },
+                policies: [definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, { invert: true })],
+            },
+            {
+                permission: { name: 'negatedParent' },
+                policies: [
+                    definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                        invert: true,
+                        children: [binding],
+                    }),
+                ],
+            },
+        ]),
+        policyEngine: new PolicyEngine({
+            ...PolicyDefaultEvaluators,
+            [BuiltInPolicyType.PERMISSION_BINDING]: new IdentityPermissionBindingPolicyEvaluator(),
+        }),
+    });
+
+    const unevaluableGrant = (name: string) : PermissionPolicyBinding => ({
+        permission: { name },
+        realmScope: 'own',
+        policies: [{ type: 'unregistered' }],
+    });
+    const plainGrant = (name: string) : PermissionPolicyBinding => ({
+        permission: { name },
+        realmScope: 'own',
+    });
+
+    it.each([
+        ['an inverted binding node over a not evaluable grant', 'negated', [unevaluableGrant('negated')]],
+        [
+            'an inverted binding node over a not evaluable and a policy-free grant',
+            'negated',
+            [unevaluableGrant('negated'), plainGrant('negated')],
+        ],
+        ['an inverted composite over a binding node with a not evaluable grant', 'negatedParent', [unevaluableGrant('negatedParent')]],
+        [
+            'an inverted composite over a binding node with a not evaluable and a policy-free grant',
+            'negatedParent',
+            [unevaluableGrant('negatedParent'), plainGrant('negatedParent')],
+        ],
+    ])('should leave %s to the full evaluation', async (_label, name, grants) => {
+        const data = (realmId?: string) => definePolicyData({
+            [BuiltInPolicyType.IDENTITY]: { ...identityData, grants },
+            ...(realmId ? { [BuiltInPolicyType.REALM_MATCH]: realmId } : {}),
+        });
+        const allows = (realmId: string) => reachEvaluator.evaluate({ name, data: data(realmId) })
+            .then(() => true, () => false);
+
+        const result = await reachEvaluator.compile({ name, data: data() });
+
+        expect(result.verdict).toEqual('post');
+
+        expect(await allows(foreignRealmId)).toBe(true);
+        expect(await allows(identityData.realmId)).toBe(false);
     });
 });

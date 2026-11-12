@@ -51,8 +51,8 @@ A policy that cannot be evaluated is reported as not evaluable rather than as an
 denial, and `invert` is never applied to it. That covers an unknown policy type, a
 configuration its validator refuses, a composite without children, an attributes query that
 does not parse, and data the policy needs that is missing or malformed: no identity, an
-identity without a grant list, empty attributes data, or attribute names that are not a list
-of strings. An identity holding no grants is unaffected: its binding check settles false and
+identity without a grant list, attributes given as `null` instead of an object, or attribute
+names that are not a list of strings. An identity holding no grants is unaffected: its binding check settles false and
 inverts.
 
 An inverted composite policy over such a child, and an inverted `permissionBinding` policy
@@ -61,6 +61,10 @@ whose grant carries such a junction policy, therefore deny where they passed. An
 access policies and identity-provider enrollment policies are evaluated the same way, so an
 inverted composite over a broken child there refuses the sign-in to the application or the
 enrollment.
+
+A list read whose permission holds one grant that cannot be evaluated next to others is
+answered row by row instead of by one filtered query (`compile` answers `post` rather than
+`conditional`), so it may be slower and its total is an upper bound.
 
 A `date` or `time` policy whose `start` or `end` is exactly `0` (the epoch) applies that bound.
 

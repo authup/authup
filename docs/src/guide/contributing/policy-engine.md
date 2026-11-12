@@ -65,6 +65,9 @@ ignores the flag fails closed).
   an unevaluable one stays pending and reports `reachable`: `'pass'` when it can still
   pass but never fail, `'fail'` when it can still fail but never pass, absent when both
   are open. It is unevaluable only when no child pends or no settled outcome is left.
+  A grant term is `reach AND policy`: with an unevaluable policy and a realm reach that
+  is still open (a query build) it can still fail, for a row out of reach, so the node
+  pends on it.
   `invert` swaps `reachable` and never touches `success`; a `consensus` composite never
   narrows. A result with `reachable` carries no `condition`, and a node composes a
   condition only when nothing below it is unevaluable, so every condition stays exact.

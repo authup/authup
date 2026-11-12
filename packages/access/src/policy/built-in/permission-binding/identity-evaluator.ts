@@ -255,9 +255,15 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
             // same data, which loads the same grants and evaluates the same tree again,
             // without bound (issue #3633). The consumer side drops such a grant
             // (`containsBindingCheck`); the term never passes here so the two agree.
+            // Like every unevaluable term it still fails for a row out of a pending reach.
             if (containsPermissionBinding(grant.policy)) {
                 unevaluable = true;
-                canFail = false;
+
+                if (reachCondition) {
+                    pending = true;
+                } else {
+                    canFail = false;
+                }
 
                 issues.push(definePolicyIssueItem({
                     code: PolicyIssueCode.INVALID,
@@ -343,10 +349,17 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
             }
 
             // A grant policy that could not be evaluated leaves the term UNKNOWN for
-            // good: it never passes, and nothing may be concluded from that.
+            // good: it never passes, and nothing may be concluded from that. The term
+            // is `reach AND policy` though, so while the reach is pending it still
+            // fails for every row out of reach and the disjunction depends on the row.
             if (outcome.unevaluable) {
                 unevaluable = true;
-                canFail = false;
+
+                if (reachCondition) {
+                    pending = true;
+                } else {
+                    canFail = false;
+                }
             }
 
             if (outcome.issues) {
