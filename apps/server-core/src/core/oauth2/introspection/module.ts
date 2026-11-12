@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildPermissionKey, normalizeRealmScope, projectAuthorizationPolicy } from '@authup/access';
+import { buildPermissionKey, normalizeRealmScope } from '@authup/access';
 import { ScopeName } from '@authup/core-kit';
 import type { OAuth2TokenPermission } from '@authup/specs';
 import { OAuth2RequestError } from '@authup/specs';
@@ -30,10 +30,11 @@ import type {
  * `permissions` is the identity's GRANT list, one entry per junction row in
  * the order the provider returns them: the namespace, the grant's own realm
  * reach and the ids of its junction policy trees, which pair with the catalog
- * `GET /authorization` serves. A grant whose junction tree that catalog cannot
- * carry (no id, or a tree its projection refuses) is dropped with a warning:
- * the server itself fails such a grant closed, and naming it would read as a
- * stale catalog to every consumer.
+ * `GET /authorization` serves. A grant whose junction tree carries no id is
+ * dropped with a warning, since it could name nothing. A grant whose tree that
+ * catalog cannot project is reported like any other: the catalog carries the
+ * tree as the node no consumer can project, so a consumer reads the grant as
+ * the server does, as one that cannot be evaluated (#3823).
  *
  * The projection is the grants the token carries (`getForToken`), exactly what
  * a request made with it evaluates, so both endpoints report what the server's
@@ -92,7 +93,6 @@ export async function resolveIntrospectionSubject(
         try {
             for (const policy of binding.policies ?? []) {
                 policies.push(readPolicyId(policy));
-                await projectAuthorizationPolicy(policy);
             }
         } catch (e) {
             ctx.logger?.warn(

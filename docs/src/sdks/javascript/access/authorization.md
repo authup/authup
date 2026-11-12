@@ -284,6 +284,10 @@ The catalog (`GET /authorization`):
   denies it and drops every grant of it until the policy is fixed. Such a
   definition is carried rather than left out, so that a definition absent from
   the catalog can only mean a copy older than the definition.
+- A junction policy tree the server could not project travels as a withheld
+  node, and the introspection still lists the grant that names it. The
+  evaluator reads such a grant as one that cannot be evaluated, which is what
+  the server decides for it.
 - A tree YOUR copy of `@authup/access` cannot project is read the same way: a
   policy type newer than that copy, or a configuration its validator refuses,
   denies the definitions that reference it and turns the grants that name it

@@ -335,7 +335,7 @@ describe('token-introspect', () => {
         }]);
     });
 
-    it('should omit a grant whose junction policy the catalog cannot carry', async () => {
+    it('should list a grant whose junction policy the catalog cannot project', async () => {
         const { data: permission } = await suite.client.permission.getOne(PermissionName.USER_READ);
         const { data: policy } = await suite.client.policy.create({ name: randomUUID(), type: 'plan109custom' });
         const { data: role } = await suite.client.role.create(createFakeRole());
@@ -359,7 +359,13 @@ describe('token-introspect', () => {
         );
 
         expect(introspection.active).toBe(true);
-        expect(introspection.permissions).toEqual([]);
+        expect(introspection.permissions).toEqual([{
+            name: PermissionName.USER_READ,
+            realm_id: null,
+            client_id: null,
+            realm_scope: 'own',
+            policies: [policy.id],
+        }]);
     });
 
     // The kit's `store.user` is built from these claims and nothing else, so

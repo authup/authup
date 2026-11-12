@@ -73,7 +73,10 @@ old snake_case shape. It is an upper bound on what may be asked, not an entitlem
   read throws: grant junctions are `ON DELETE SET NULL`, so a deleted policy legitimately
   leaves a policy-free grant.
 - A tree failing projection is warned about: a definition keeps its entry with
-  `policies: null`; a grant tree is dropped (and the introspection drops its grants).
+  `policies: null`; a grant tree travels as the withheld node and the introspection keeps
+  its grants, so a consumer reads them as not evaluable, as the server does (#3823).
+  Dropped, an inverted binding check passed on the consumer alone. Only a grant tree
+  without an id is dropped, with its grants: it has nothing to be named by.
 
 **Caching (#3599, #3688).** The document is per caller and not cached; `findDefinitions`
 and `findGrantPolicies` are identity-free and sit in the tagged read cache

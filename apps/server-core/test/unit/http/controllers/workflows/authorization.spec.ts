@@ -17,6 +17,7 @@ import {
 } from 'vitest';
 import type { AuthorizationCatalog } from '@authup/access';
 import {
+    AUTHORIZATION_POLICY_WITHHELD_TYPE,
     BuiltInPolicyType,
     PolicyData,
     RealmScope,
@@ -484,7 +485,7 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         expect(!!predicate({ realmId: user.realmId, visible: false })).toBe(false);
     });
 
-    it('omits a grant whose junction policy the catalog cannot carry, so the evaluator denies rather than reads stale', async () => {
+    it('reports a grant whose junction policy the catalog cannot project, as a tree no consumer can evaluate', async () => {
         const user = await suite.dataSource.getRepository(UserEntity).findOneByOrFail({ name: 'admin' });
         const binding = await suite.dataSource.getRepository(PolicyEntity).findOneByOrFail({ type: BuiltInPolicyType.PERMISSION_BINDING });
         const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
@@ -507,11 +508,17 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
         const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
         const introspection = await suite.client.token.introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
 
-        expect((introspection.permissions ?? []).some((entry: OAuth2TokenPermission) => entry.name === permission.name)).toBe(false);
+        expect((introspection.permissions ?? []).filter((entry: OAuth2TokenPermission) => entry.name === permission.name)).toEqual([{
+            name: permission.name,
+            realm_id: null,
+            client_id: null,
+            realm_scope: 'any',
+            policies: [unsupported.id],
+        }]);
 
         const catalog : AuthorizationCatalog = JSON.parse(JSON.stringify(await suite.client.authorization.get()));
 
-        expect(catalog.policies).not.toHaveProperty(unsupported.id);
+        expect(catalog.policies[unsupported.id]).toEqual({ type: AUTHORIZATION_POLICY_WITHHELD_TYPE });
         expect(catalog.permissions.some((entry) => entry.name === permission.name)).toBe(true);
 
         const evaluator = await createAuthorizationEvaluator({
@@ -530,5 +537,66 @@ describe('src/http/controllers/workflows/authorization/*.ts', () => {
             data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: user.realmId }),
         })).rejects.toThrow();
         expect(await evaluator.compile({ name: permission.name })).toEqual({ verdict: 'deny' });
+    });
+
+    it('denies an inverted binding check over such a grant on the consumer, as the server does', async () => {
+        const user = await suite.dataSource.getRepository(UserEntity).findOneByOrFail({ name: 'admin' });
+        const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
+        const permissionPolicyRepository = suite.dataSource.getRepository(PermissionPolicyEntity);
+        const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);
+
+        const { data: unsupported } = await suite.client.policy.create({ name: randomUUID(), type: 'plan109custom' });
+        const { data: inverted } = await suite.client.policy.create({
+            name: randomUUID(),
+            type: BuiltInPolicyType.PERMISSION_BINDING,
+            invert: true,
+        });
+
+        const create = async (granted: boolean) => {
+            const permission = await permissionRepository.save(permissionRepository.create({ name: randomUUID() }));
+
+            await permissionPolicyRepository.save(permissionPolicyRepository.create({ permissionId: permission.id, policyId: inverted.id }));
+
+            if (granted) {
+                await userPermissionRepository.save(userPermissionRepository.create({
+                    userId: user.id,
+                    userRealmId: user.realmId,
+                    permissionId: permission.id,
+                    permissionRealmId: null,
+                    realmScope: 'any',
+                    policyId: unsupported.id,
+                }));
+            }
+
+            return permission;
+        };
+
+        const held = await create(true);
+        const unheld = await create(false);
+
+        const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
+        const introspection = await suite.client.token.introspect({ token: grant.access_token }, { authorizationHeaderInherit: true });
+        const catalog : AuthorizationCatalog = JSON.parse(JSON.stringify(await suite.client.authorization.get()));
+
+        const evaluator = await createAuthorizationEvaluator({
+            catalog,
+            grants: introspection.permissions,
+            identity: {
+                id: user.id,
+                type: introspection.sub_kind,
+                realmId: introspection.realm_id,
+                realmName: introspection.realm_name,
+            },
+        });
+        const consumer = async (name: string) => evaluator.evaluate({ name })
+            .then(() => true)
+            .catch(() => false);
+        const server = async (id: string) => (await suite.client.permission.check(id)).status === 'success';
+
+        expect(await server(held.id)).toBe(false);
+        expect(await consumer(held.name)).toBe(false);
+
+        expect(await server(unheld.id)).toBe(true);
+        expect(await consumer(unheld.name)).toBe(true);
     });
 });

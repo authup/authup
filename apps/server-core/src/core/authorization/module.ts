@@ -215,12 +215,31 @@ export async function buildAuthorizationCatalog(
     for (const tree of grantPolicies) {
         const ids = await project([tree]);
 
-        if (!Array.isArray(ids)) {
-            ctx.logger?.warn(
-                `Dropped a grant policy${ids.policyId ? ` (${ids.policyId})` : ''} from the authorization catalog: ` +
-                `${ids.message}. The introspection drops every grant of it as well.`,
-            );
+        if (Array.isArray(ids)) {
+            continue;
         }
+
+        // A grant tree this catalog cannot project still travels, as the node no
+        // consumer can project: the server evaluates such a grant as a term that
+        // cannot be evaluated, and a consumer never told about it would settle
+        // an inverted binding check the other way (#3823). Without an id there
+        // is nothing a grant could name, so that tree is dropped.
+        if (ids.policyId) {
+            withheld.add(ids.policyId);
+            policies[ids.policyId] = { type: AUTHORIZATION_POLICY_WITHHELD_TYPE };
+
+            ctx.logger?.warn(
+                `Carried the grant policy ${ids.policyId} in the authorization catalog as withheld: ${ids.message}. ` +
+                'Every consumer reads a grant of it as one that cannot be evaluated until the policy is fixed.',
+            );
+
+            continue;
+        }
+
+        ctx.logger?.warn(
+            `Dropped a grant policy from the authorization catalog: ${ids.message}. ` +
+            'The introspection drops every grant of it as well.',
+        );
     }
 
     permissions.sort(([a], [b]) => compareKeys(a, b));

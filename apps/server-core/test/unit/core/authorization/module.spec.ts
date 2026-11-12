@@ -303,7 +303,7 @@ describe('core/authorization/module', () => {
         expect(ctx.warn).not.toHaveBeenCalled();
     });
 
-    it('drops a grant policy the catalog cannot carry, warns per drop and keeps the rest', async () => {
+    it('carries a grant policy it cannot project as withheld, drops one without an id, and warns for each', async () => {
         const ctx = setup();
 
         ctx.catalogRepository.setDefinitions([bindingDefinition('read')]);
@@ -311,11 +311,25 @@ describe('core/authorization/module', () => {
 
         const catalog = await build(ctx);
 
-        expect(Object.keys(catalog.policies).sort()).toEqual(['policy-default', 'policy-visible']);
+        expect(Object.keys(catalog.policies).sort()).toEqual(['policy-custom', 'policy-default', 'policy-visible']);
+        expect(catalog.policies['policy-custom']).toEqual({ type: AUTHORIZATION_POLICY_WITHHELD_TYPE });
         expect(catalog.permissions.map((permission) => permission.name)).toEqual(['read']);
         expect(ctx.warn).toHaveBeenCalledTimes(2);
         expect(String(ctx.warn.mock.calls[0]![0])).toContain('policy-custom');
         expect(String(ctx.warn.mock.calls[1]![0])).toContain('must carry its id');
+    });
+
+    it('keeps a definition without its policies when a grant names the same tree it cannot project', async () => {
+        const ctx = setup();
+
+        ctx.catalogRepository.setDefinitions([[globalPermission('custom'), [custom]], bindingDefinition('read')]);
+        ctx.catalogRepository.setGrantPolicies([custom]);
+
+        const catalog = await build(ctx);
+
+        expect(catalog.policies['policy-custom']).toEqual({ type: AUTHORIZATION_POLICY_WITHHELD_TYPE });
+        expect(catalog.permissions.find((permission) => permission.name === 'custom')!.policies).toBeNull();
+        expect(catalog.permissions.find((permission) => permission.name === 'read')!.policies).toEqual(['policy-default']);
     });
     // The realm reach of the caller's own read grant, the gate `GET /permissions`
     // and `GET /policies` apply to the same rows. What it removes is the policy
