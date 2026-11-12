@@ -139,7 +139,7 @@ export class AttributesPolicyEvaluator<
                 key === '$regex' &&
                 typeof value === 'string'
             ) {
-                const fragments = value.match(/\/(.*?)\/([a-z]*)?$/i);
+                const fragments = value.match(/^\/(.*)\/([a-z]*)$/i);
 
                 if (fragments && fragments[1] !== undefined) {
                     output[key] = new RegExp(fragments[1], fragments[2] || '');
