@@ -200,7 +200,10 @@ import {
     createAuthorizationSnapshotEvaluator,
 } from '@authup/access';
 
-// where the catalog and the grants are at hand; no identity is needed
+// where the catalog and the grants are at hand; no identity is needed.
+// Build one for an ACTIVE introspection only, as above: the builder reads a
+// missing grant list as an empty one, and it cannot refuse an inactive token
+// the way `createAuthorizationEvaluator` does, since it sees no identity.
 const snapshot = await buildAuthorizationSnapshot({
     catalog,
     grants: introspection.permissions ?? [],
@@ -222,7 +225,9 @@ applies the catalog rules above (a stale grant throws, a definition carried
 with `policies: null` is left out and denies, a duplicate permission namespace
 is refused), so the same catalog, grants and identity answer the same way
 through a snapshot as through `createAuthorizationEvaluator` (for a custom
-policy type, within the limits below).
+policy type, within the limits below). The one difference is an identity
+without a grant list: `createAuthorizationEvaluator` refuses it, while a
+snapshot built without `grants` stores an empty list.
 
 A stored snapshot is untrusted input, and the evaluator treats it that way:
 
@@ -262,9 +267,11 @@ definitions using it deny.
 evaluates a flat list: bindings sharing a name are ORed, and the policies of
 one binding combine under its `decisionStrategy`. When grants are given next
 to definitions sharing a namespace, each grant is evaluated under the first of
-them. Such a list has no grant layer, so a definition carrying a
-`permissionBinding` node (as `system.default` does) denies in it. A list derived from the catalog must go
-through `buildAuthorizationSnapshot`, which keeps both layers.
+them. Such a list has no grant layer: an identity evaluated against it holds
+nothing, so a definition carrying a `permissionBinding` node (as
+`system.default` does) denies in it, and one carrying an inverted
+`permissionBinding` node passes for every identity. A list derived from the
+catalog must go through `buildAuthorizationSnapshot`, which keeps both layers.
 
 ## Catalog and grant contract
 
