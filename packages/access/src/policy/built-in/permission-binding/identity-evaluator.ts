@@ -253,8 +253,8 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
 
             // A grant policy carrying a binding node re-enters this evaluator with the
             // same data, which loads the same grants and evaluates the same tree again,
-            // without bound (issue #3633). The consumer side drops such a grant
-            // (`containsBindingCheck`); the term never passes here so the two agree.
+            // without bound (issue #3633). The consumer side keeps such a grant as
+            // it is, so it reaches this branch there too and the two agree.
             // Like every unevaluable term it still fails for a row out of a pending reach.
             if (containsPermissionBinding(grant.policy)) {
                 unevaluable = true;

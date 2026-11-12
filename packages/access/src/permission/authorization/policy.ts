@@ -108,11 +108,10 @@ export async function projectAuthorizationPolicy(
 
 /**
  * Whether a projected tree evaluates the permission binding at any depth. A
- * grant policy carrying one would re-enter its own permission's grants, so
- * `createAuthorizationEvaluator` drops the grant that names it and evaluates
- * the permission from the rest. Its one caller is that consumer: the tree is
- * legal in a definition, where the binding check is what reach is enforced
- * by, so the producer carries it and only the grant side is refused.
+ * grant policy carrying one would re-enter its own permission's grants, so the
+ * binding evaluator answers such a grant as a term that cannot be evaluated.
+ * The tree is legal in a definition, where the binding check is what reach is
+ * enforced by, so the producer carries it and only the grant side is refused.
  */
 export function containsBindingCheck(policy: AuthorizationPolicy) : boolean {
     if (policy.type === BuiltInPolicyType.PERMISSION_BINDING) {

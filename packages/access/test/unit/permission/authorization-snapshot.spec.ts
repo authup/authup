@@ -20,6 +20,7 @@ import type {
     PermissionPolicyBinding,
 } from '../../../src';
 import {
+    AUTHORIZATION_POLICY_WITHHELD_TYPE,
     AuthorizationCatalogStaleError,
     BuiltInPolicyType,
     PolicyData,
@@ -449,7 +450,7 @@ describe('authorization snapshot', () => {
                 .rejects.toThrow(AuthorizationCatalogStaleError);
         });
 
-        it('leaves out a tombstoned or unprojectable definition and drops its grants', async () => {
+        it('leaves out a tombstoned or unprojectable definition and drops its grants, keeping an unprojectable junction as the marker', async () => {
             const snapshot = await buildAuthorizationSnapshot({
                 catalog: {
                     policies: {
@@ -479,6 +480,15 @@ describe('authorization snapshot', () => {
                         clientId: null,
                     },
                     realmScope: 'any',
+                },
+                {
+                    permission: {
+                        name: 'event_read',
+                        realmId: null,
+                        clientId: null,
+                    },
+                    realmScope: 'own',
+                    policies: [{ type: AUTHORIZATION_POLICY_WITHHELD_TYPE }],
                 },
             ]);
         });
@@ -634,6 +644,96 @@ describe('authorization snapshot', () => {
 
             expect(await allowed(await createAuthorizationSnapshotEvaluator({ snapshot, identity }), { name: 'a' })).toBe(true);
             expect(await allowed(await createAuthorizationSnapshotEvaluator({ snapshot }), { name: 'a' })).toBe(false);
+        });
+    });
+
+    describe('a grant that cannot be evaluated', () => {
+        const policies = {
+            inverted: { type: 'permissionBinding', invert: true },
+            plain: { type: 'permissionBinding' },
+            binding: { type: 'permissionBinding' },
+            nested: { type: 'composite', children: [passes, { type: 'permissionBinding' }] },
+            future: { type: 'plan109future' },
+            withheld: { type: AUTHORIZATION_POLICY_WITHHELD_TYPE },
+        };
+        const junctions = ['binding', 'nested', 'future', 'withheld'];
+
+        async function paths(definitionPolicy: string, grants: ReturnType<typeof grant>[]) {
+            const catalog = {
+                policies,
+                permissions: [definition('d', [definitionPolicy])],
+            };
+            const snapshot = await buildAuthorizationSnapshot({ catalog, grants });
+            const stored = JSON.parse(JSON.stringify(snapshot)) as AuthorizationSnapshot;
+
+            return [
+                await createAuthorizationEvaluator({
+                    catalog, 
+                    grants, 
+                    identity, 
+                }),
+                await createAuthorizationSnapshotEvaluator({ snapshot, identity }),
+                await createAuthorizationSnapshotEvaluator({ snapshot: stored, identity }),
+            ];
+        }
+
+        async function verdictsOf(evaluators: IPermissionEvaluator[]) {
+            const output : boolean[] = [];
+
+            for (const evaluator of evaluators) {
+                output.push(await allowed(evaluator, { name: 'd', data: resource(realmA, true) }));
+                output.push(await allowed(evaluator, { name: 'd' }, 'preEvaluate'));
+            }
+
+            return output;
+        }
+
+        it.each(junctions)('keeps it as a term an inverted binding check cannot pass over (%s)', async (junction) => {
+            expect(await verdictsOf(await paths('inverted', [grant('d', 'any', [junction])])))
+                .toEqual([false, false, false, false, false, false]);
+        });
+
+        it('lets an inverted binding check pass over no grant at all', async () => {
+            expect(await verdictsOf(await paths('inverted', [])))
+                .toEqual([true, true, true, true, true, true]);
+        });
+
+        it.each(junctions)('denies through a plain binding check unless another grant passes (%s)', async (junction) => {
+            expect(await verdictsOf(await paths('plain', [grant('d', 'any', [junction])])))
+                .toEqual([false, false, false, false, false, false]);
+            expect(await verdictsOf(await paths('plain', [grant('d', 'any', [junction]), grant('d', 'any')])))
+                .toEqual([true, true, true, true, true, true]);
+        });
+
+        it('stores the grant with the tree it cannot evaluate, or the withheld marker', async () => {
+            const snapshot = await buildAuthorizationSnapshot({
+                catalog: { policies, permissions: [definition('d', ['plain'])] },
+                grants: junctions.map((junction) => grant('d', 'any', [junction])),
+            });
+
+            expect(snapshot.grants!.map((entry) => entry.policies)).toEqual([
+                [{ type: 'permissionBinding' }],
+                [{ type: 'composite', children: [passes, { type: 'permissionBinding' }] }],
+                [{ type: AUTHORIZATION_POLICY_WITHHELD_TYPE }],
+                [{ type: AUTHORIZATION_POLICY_WITHHELD_TYPE }],
+            ]);
+        });
+
+        it('never evaluates the withheld marker with a caller-supplied evaluator', async () => {
+            const evaluators = {
+                ...PolicyDefaultEvaluators,
+                [AUTHORIZATION_POLICY_WITHHELD_TYPE]: { evaluate: async () => ({ success: true }) },
+            };
+            const catalog = { policies, permissions: [definition('d', ['plain'])] };
+            const grants = [grant('d', 'any', ['future'])];
+            const snapshot = await buildAuthorizationSnapshot({ catalog, grants });
+
+            expect(await allowed(await createAuthorizationEvaluator({
+                catalog, 
+                grants, 
+                identity, 
+            }, { evaluators }), { name: 'd' })).toBe(false);
+            expect(await allowed(await createAuthorizationSnapshotEvaluator({ snapshot, identity }, { evaluators }), { name: 'd' })).toBe(false);
         });
     });
 

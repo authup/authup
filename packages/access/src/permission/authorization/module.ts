@@ -32,7 +32,8 @@ import { normalizeRealmScope } from '../realm-scope';
 import type { RealmScope } from '../realm-scope';
 import type { BasePermission, PermissionPolicyBinding } from '../types';
 import { AuthorizationCatalogStaleError } from './error';
-import { containsBindingCheck, projectAuthorizationPolicy } from './policy';
+import { AUTHORIZATION_POLICY_WITHHELD_TYPE } from './constants';
+import { projectAuthorizationPolicy } from './policy';
 import { parseAuthorizationCheckEvaluatorInput } from './check-schema';
 import { parseAuthorizationEvaluatorInput, parseAuthorizationSnapshotInput } from './schema';
 import { parseAuthorizationSnapshotEvaluatorInput } from './snapshot-schema';
@@ -86,6 +87,16 @@ function toPolicy(tree: AuthorizationPolicy) : BasePolicy {
         ...(typeof invert === 'boolean' ? { invert } : {}),
         ...(children ? { children: children.map((child) => toPolicy(child)) } : {}),
     };
+}
+
+/**
+ * The node a grant tree this copy cannot evaluate is kept as: no evaluator
+ * answers its type (`createBindingEvaluator` removes one a caller registers),
+ * so the grant stays a term that cannot be evaluated. Dropping the grant
+ * instead would let an inverted binding check pass where the server denies.
+ */
+function withheldPolicy() : BasePolicy {
+    return { type: AUTHORIZATION_POLICY_WITHHELD_TYPE };
 }
 
 function toSerializablePolicy(input: BasePolicy) : BasePolicy {
@@ -219,13 +230,12 @@ async function resolveAuthorizationBindings(
         }
 
         const policies : BasePolicy[] = [];
-        let evaluable = true;
 
         for (const id of grant.policies ?? []) {
             if (unevaluable.has(id)) {
-                evaluable = false;
+                policies.push(withheldPolicy());
 
-                break;
+                continue;
             }
 
             const tree = trees.get(id);
@@ -234,17 +244,7 @@ async function resolveAuthorizationBindings(
                 throw new AuthorizationCatalogStaleError(`The catalog does not declare the policy ${id}.`);
             }
 
-            if (containsBindingCheck(tree)) {
-                evaluable = false;
-
-                break;
-            }
-
             policies.push(toPolicy(tree));
-        }
-
-        if (!evaluable) {
-            continue;
         }
 
         bindings.push(toBinding(permission, policies, normalizeRealmScope(grant.realm_scope)));
@@ -264,9 +264,11 @@ async function resolveAuthorizationBindings(
  * refetch the catalog. A definition the server could not project
  * (`policies: null`) or whose tree this copy cannot project under
  * `options.validators` is left out, which denies it, and every grant of it is
- * dropped; so is a grant whose junction tree carries a binding check or does
- * not project. A duplicate permission namespace is refused. `grants` is
- * always present, possibly empty.
+ * dropped. A grant whose junction tree carries a binding check is kept with
+ * that tree, and one whose junction tree does not project is kept with the
+ * withheld node in its place: either is a term that cannot be evaluated, which
+ * an inverted binding check must not read as an absent grant. A duplicate
+ * permission namespace is refused. `grants` is always present, possibly empty.
  *
  * A `Date` in a node's configuration is emitted as its epoch milliseconds: a
  * JSON round trip turns a `Date` into a timestamp string the date policy's
@@ -295,31 +297,44 @@ export async function buildAuthorizationSnapshot(
 }
 
 /**
- * Project every tree of a stored binding again, under the caller's
- * registry. Null when one does not project, or when `bindingCheck` is false
- * and one evaluates the permission binding.
+ * Project every tree of a stored definition again, under the caller's
+ * registry. Null when one does not project: the definition then denies.
  */
-async function reprojectPolicies(
+async function reprojectDefinitionPolicies(
     binding: PermissionPolicyBinding,
     validators: AuthorizationEvaluatorOptions['validators'],
-    bindingCheck: boolean,
 ) : Promise<BasePolicy[] | null> {
     const policies : BasePolicy[] = [];
 
     for (const raw of binding.policies ?? []) {
-        let tree : AuthorizationPolicy;
-
         try {
-            tree = await projectAuthorizationPolicy(raw, validators);
+            policies.push(toPolicy(await projectAuthorizationPolicy(raw, validators)));
         } catch {
             return null;
         }
+    }
 
-        if (!bindingCheck && containsBindingCheck(tree)) {
-            return null;
+    return policies;
+}
+
+/**
+ * Project every tree of a stored grant again. A tree that does not project
+ * becomes the withheld marker, so the grant stays a term that cannot be
+ * evaluated rather than disappearing, which an inverted binding check would
+ * read as "holds no such grant".
+ */
+async function reprojectGrantPolicies(
+    binding: PermissionPolicyBinding,
+    validators: AuthorizationEvaluatorOptions['validators'],
+) : Promise<BasePolicy[]> {
+    const policies : BasePolicy[] = [];
+
+    for (const raw of binding.policies ?? []) {
+        try {
+            policies.push(toPolicy(await projectAuthorizationPolicy(raw, validators)));
+        } catch {
+            policies.push(withheldPolicy());
         }
-
-        policies.push(toPolicy(tree));
     }
 
     return policies;
@@ -334,8 +349,9 @@ async function reprojectPolicies(
  * envelope or a definition carrying `realmScope` throws a `ValidupError`
  * naming the member, and every tree is projected again under
  * `options.validators`. A definition whose tree does not project is dropped,
- * which denies it; a grant whose tree does not project or carries a binding
- * check is dropped, as is a grant naming no definition of the snapshot. A
+ * which denies it; a grant tree that does not project is replaced by the
+ * withheld node, so the grant stays a term that cannot be evaluated, and a
+ * grant naming no definition of the snapshot is dropped. A
  * grant is evaluated under the `permission` of the definition it names, so a
  * stored grant cannot disagree with it on `decisionStrategy`. Duplicate
  * definition namespaces are accepted: they are the flat case's disjunction.
@@ -355,7 +371,7 @@ export async function createAuthorizationSnapshotEvaluator(
     const permissions = new Map<string, BasePermission>();
 
     for (const entry of parsed.snapshot.definitions) {
-        const policies = await reprojectPolicies(entry, options.validators, true);
+        const policies = await reprojectDefinitionPolicies(entry, options.validators);
 
         if (!policies) {
             continue;
@@ -380,11 +396,7 @@ export async function createAuthorizationSnapshotEvaluator(
             continue;
         }
 
-        const policies = await reprojectPolicies(entry, options.validators, false);
-
-        if (!policies) {
-            continue;
-        }
+        const policies = await reprojectGrantPolicies(entry, options.validators);
 
         grants.push(toBinding(permission, policies, entry.realmScope));
     }
@@ -405,7 +417,10 @@ function createBindingEvaluator(
 ) : IPermissionEvaluator {
     const { definitions, grants } = bindings;
 
-    const engine = new PolicyEngine(options.evaluators ?? PolicyDefaultEvaluators);
+    const engine = new PolicyEngine(Object.fromEntries(
+        Object.entries(options.evaluators ?? PolicyDefaultEvaluators)
+            .filter(([type]) => type !== AUTHORIZATION_POLICY_WITHHELD_TYPE),
+    ));
 
     engine.registerEvaluator(
         BuiltInPolicyType.PERMISSION_BINDING,
@@ -525,8 +540,9 @@ function createBindingEvaluator(
  * side, and it is per tree: a policy type the validator registry lacks (a
  * type newer than this package, or a custom one the caller did not register)
  * or a configuration its validator refuses denies the definitions that reference
- * it, exactly as `policies: null` does, and drops a grant that names it,
- * exactly as a binding check does. One such tree never takes the evaluator
+ * it, exactly as `policies: null` does, and keeps a grant that names it as a
+ * term that cannot be evaluated (the withheld node in the tree's place), as
+ * a grant tree carrying a binding check is. One such tree never takes the evaluator
  * down for the permissions that do not use it. A malformed catalog still
  * throws: a duplicate permission namespace is not a data condition.
  *
