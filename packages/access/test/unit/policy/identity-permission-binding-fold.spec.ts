@@ -33,16 +33,17 @@ import {
 // that knows nothing of the evaluator: it enumerates every way the row could
 // still turn out and computes the three-valued value of the node for each.
 
-// in reach whatever the row, out of reach whatever the row, or decided by the row's realm
-type Reach = 'in' | 'out' | 'row';
+// in reach whatever the row, out of reach whatever the row, or decided by the row's
+// realm: the actor's own, or its own and none at all
+type Reach = 'in' | 'out' | 'row' | 'rowOrNull';
 // none, settled true / false, pending, unevaluable, a binding node, and a
 // pending composite that can only still pass or only still fail
 type Policy = 'none' | 't' | 'f' | 'p' | 'q' | 'u' | 'b' | 'pass' | 'fail';
 type Term = { reach: Reach, policy: Policy };
 type Truth = 'T' | 'F' | 'U';
 type Resolution = {
-    // whether the row lies in the actor's own realm
-    own: boolean,
+    // the realm the row lies in: the actor's own, another one, or none
+    realm: 'own' | 'foreign' | 'null',
     // one flag per pending leaf, in term order
     flags: boolean[],
 };
@@ -50,6 +51,11 @@ type Resolution = {
 const ROW_KEY = 'row';
 const OWN_REALM_ID = 'c641912c-21e5-4cb4-84b6-169e2b2bb023';
 const FOREIGN_REALM_ID = '11111111-2222-4333-8444-555555555555';
+const REALM_IDS = {
+    own: OWN_REALM_ID,
+    foreign: FOREIGN_REALM_ID,
+    null: null,
+} as const;
 
 const identity = {
     type: 'user',
@@ -93,7 +99,7 @@ const engine = new PolicyEngine({
     q: { requires: rowEvaluator.requires, evaluate: rowEvaluator.evaluate },
 });
 
-const REACHES : Reach[] = ['in', 'out', 'row'];
+const REACHES : Reach[] = ['in', 'out', 'row', 'rowOrNull'];
 const POLICIES : Policy[] = ['none', 't', 'f', 'p', 'q', 'u', 'b', 'pass', 'fail'];
 const TERMS : Term[] = REACHES.flatMap((reach) => POLICIES.map((policy) => ({ reach, policy })));
 const TERM_LISTS : Term[][] = [
@@ -105,6 +111,7 @@ const SCOPES = {
     in: 'any',
     out: 'none',
     row: 'own',
+    rowOrNull: 'ownOrNull',
 } as const;
 
 function isPending(policy: Policy) : boolean {
@@ -224,7 +231,8 @@ function valueOf(terms: Term[], invert: boolean, resolution: Resolution, realm: 
         let reach = true;
 
         if (realm && term.reach !== 'in') {
-            reach = term.reach === 'row' && resolution.own;
+            reach = (term.reach === 'row' && resolution.realm === 'own') ||
+                (term.reach === 'rowOrNull' && resolution.realm !== 'foreign');
         }
 
         // Kleene AND: out of reach is false whatever the policy
@@ -256,14 +264,14 @@ function buildResolutions(terms: Term[], realm: boolean) : Resolution[] {
         flags = flags.flatMap((prefix) => [true, false].map((flag) => [...prefix, flag]));
     }
 
-    const owns = realm ? [true, false] : [true];
+    const realms : Resolution['realm'][] = realm ? ['own', 'foreign', 'null'] : ['own'];
 
-    return owns.flatMap((own) => flags.map((item) => ({ own, flags: item })));
+    return realms.flatMap((item) => flags.map((flag) => ({ realm: item, flags: flag })));
 }
 
 function buildRow(resolution: Resolution) : Record<string, unknown> {
     return {
-        realmId: resolution.own ? OWN_REALM_ID : FOREIGN_REALM_ID,
+        realmId: REALM_IDS[resolution.realm],
         ...Object.fromEntries(resolution.flags.map((flag, index) => [`f${index}`, flag])),
     };
 }

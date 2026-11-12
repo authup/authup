@@ -393,7 +393,13 @@ describe('src/policy (not evaluable): truth table', () => {
             });
 
             it('holds two levels deep', async () => {
-                for (const mix of CHILD_MIXES) {
+                // a consensus root discards every side, so a leaf that does not
+                // lower pins nothing there its lowering twin does not
+                const mixes = strategy === DecisionStrategy.CONSENSUS ?
+                    CHILD_MIXES.filter((mix) => mix.every((child) => !hasOpaqueLeaf(child))) :
+                    CHILD_MIXES;
+
+                for (const mix of mixes) {
                     await checkTree({
                         strategy,
                         invert,

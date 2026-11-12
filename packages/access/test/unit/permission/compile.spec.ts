@@ -214,8 +214,9 @@ describe('src/permission/evaluator (compile, not evaluable)', () => {
 
         const predicate = test(result.condition);
 
-        for (const row of [{ name: 'guest' }, { name: 'admin' }]) {
-            expect(predicate(row), row.name).toBe(await allows(check, row));
+        // the condition is a negation, so a row without the field counts as well
+        for (const row of [{ name: 'guest' }, { name: 'admin' }, { name: null }, {}]) {
+            expect(predicate(row), JSON.stringify(row)).toBe(await allows(check, row));
         }
     };
 

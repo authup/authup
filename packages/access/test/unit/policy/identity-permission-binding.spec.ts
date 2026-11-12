@@ -203,6 +203,22 @@ describe('identity permission binding compilation', () => {
         expect(junction.pending).toBe(true);
         // no condition => PermissionEvaluator.compile answers `post`, the sound fallback
         expect(junction.condition).toBeUndefined();
+        // and where the grant policy fails is as little known as where it passes
+        expect(junction.failCondition).toBeUndefined();
+
+        // so a negated node has no pass condition either
+        const negated = await build().evaluate(
+            definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, { invert: true }),
+            definePolicyEvaluationContext({
+                data: data(),
+                withConditions: true,
+                realmAttributeName: 'roleRealmId',
+            }),
+        );
+
+        expect(negated.pending).toBe(true);
+        expect(negated.condition).toBeUndefined();
+        expect(negated.failCondition).toBeUndefined();
 
         // …while an ordinary entity read, which names no column, still pushes down
         const entity = await build().evaluate(policy, definePolicyEvaluationContext({
@@ -215,6 +231,61 @@ describe('identity permission binding compilation', () => {
         const predicate = compileFilters(entity.condition! as IFilter | IFilters, { caseSensitive: true });
 
         expect(predicate({ realmId: identity.realmId })).toBeTruthy();
+    });
+});
+
+// The refusal withholds the grant policy's CONDITIONS only. A side the policy can
+// never reach stays never, so a grant policy that can only still fail does not
+// blur where a sibling grant passes.
+describe('identity permission binding on a named realm column: a grant policy that can only still fail', () => {
+    const foreignRealmId = '11111111-2222-4333-8444-555555555555';
+    const failing : PermissionPolicyBinding = {
+        permission,
+        realmScope: 'ownOrNull',
+        policies: [definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+            children: [
+                definePolicyWithType(BuiltInPolicyType.ATTRIBUTES, { query: { name: 'public' } }),
+                { type: 'unregistered' },
+            ],
+        })],
+    };
+    const evaluate = (bindings: PermissionPolicyBinding[]) => new PolicyEngine({
+        ...PolicyDefaultEvaluators,
+        [BuiltInPolicyType.PERMISSION_BINDING]: new IdentityPermissionBindingPolicyEvaluator(),
+    }).evaluate(
+        definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {}),
+        definePolicyEvaluationContext({
+            data: definePolicyData({
+                [BuiltInPolicyType.IDENTITY]: { ...identity, grants: bindings },
+                [BuiltInPolicyType.PERMISSION_BINDING]: { permission, grants: [] },
+            }),
+            withConditions: true,
+            realmAttributeName: 'roleRealmId',
+        }),
+    );
+
+    it('can only still fail by itself, without a condition for where', async () => {
+        const outcome = await evaluate([failing]);
+
+        expect(outcome.pending).toBe(true);
+        expect(outcome.reachable).toEqual('fail');
+        expect(outcome.condition).toBeUndefined();
+        expect(outcome.failCondition).toBeUndefined();
+    });
+
+    it('leaves the reach of a policy-free sibling grant as the pass condition', async () => {
+        const outcome = await evaluate([failing, { permission, realmScope: 'ownOrNull' }]);
+
+        expect(outcome.pending).toBe(true);
+        expect(outcome.reachable).toBeUndefined();
+        expect(outcome.condition).toBeDefined();
+        expect(outcome.failCondition).toBeUndefined();
+
+        const predicate = compileFilters(outcome.condition! as IFilter | IFilters, { caseSensitive: true });
+
+        expect(predicate({ roleRealmId: identity.realmId })).toBe(true);
+        expect(predicate({ roleRealmId: null })).toBe(true);
+        expect(predicate({ roleRealmId: foreignRealmId })).toBe(false);
     });
 });
 
