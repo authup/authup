@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-beta.75](https://github.com/authup/authup/compare/v1.0.0-beta.74...v1.0.0-beta.75) (2026-11-12)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([aedbeca](https://github.com/authup/authup/commit/aedbeca2d6a4ac565e0af465752405204d783845))
+
 ## [1.0.0-beta.74](https://github.com/authup/authup/compare/v1.0.0-beta.73...v1.0.0-beta.74) (2026-11-09)
 
 

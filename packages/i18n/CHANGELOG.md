@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.0-beta.75](https://github.com/authup/authup/compare/v1.0.0-beta.74...v1.0.0-beta.75) (2026-11-12)
+
+
+### Features
+
+* localized event names and scope labels on the device and consent pages ([#3814](https://github.com/authup/authup/issues/3814)) ([48d66df](https://github.com/authup/authup/commit/48d66df3423e9668a3b395c012e034ede83f4152))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/core-kit bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+    * @authup/errors bumped from ^1.0.0-beta.74 to ^1.0.0-beta.75
+
 ## [1.0.0-beta.74](https://github.com/authup/authup/compare/v1.0.0-beta.73...v1.0.0-beta.74) (2026-11-09)
 
 
