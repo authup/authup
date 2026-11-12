@@ -7,6 +7,7 @@
 
 import { ErrorCode } from '@authup/errors';
 import { defineIssueItem } from '@ebec/core';
+import { not } from '@rapiq/core';
 import type {
     IPolicyEvaluator,
     PolicyEvaluationContext,
@@ -160,8 +161,12 @@ export class PolicyEngine implements IPolicyEngine {
                         try {
                             const condition = await evaluator.toCondition(policy, ctx);
 
+                            // The engine lowers this leaf itself, so it knows the
+                            // condition is total on rows: where it does not hold,
+                            // the leaf fails.
                             if (condition) {
                                 result.condition = condition;
+                                result.failCondition = not(condition);
                             }
                         } catch {
                             // not expressible — stays a post-check
@@ -191,15 +196,21 @@ export class PolicyEngine implements IPolicyEngine {
                 };
             }
 
-            // What a pending result can still reach means nothing once it settled,
-            // and a result narrowed that way is not exact, so it carries no condition.
-            if (result.reachable) {
+            // A result an evaluator returned is taken as stated: a side without a
+            // condition is unknown, and the engine never guesses it. It only drops
+            // what contradicts the rest: nothing a pending result carries survives
+            // once it settled, and a side that can not be reached has no condition.
+            if (result.reachable || result.condition || result.failCondition) {
                 const normalized : PolicyEvaluationResult = { ...result };
-
-                delete normalized.condition;
 
                 if (!normalized.pending) {
                     delete normalized.reachable;
+                    delete normalized.condition;
+                    delete normalized.failCondition;
+                } else if (normalized.reachable === 'fail') {
+                    delete normalized.condition;
+                } else if (normalized.reachable === 'pass') {
+                    delete normalized.failCondition;
                 }
 
                 return normalized;

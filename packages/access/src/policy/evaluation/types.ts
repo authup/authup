@@ -28,7 +28,7 @@ export type PolicyEvaluationResult = {
      * malformed without being declared (see {@link IPolicyEvaluator.requires}).
      * Unlike `pending` it will not resolve once more data arrives. Unevaluable always
      * rides on `success: false`, never together with `pending`, and never carries a
-     * `condition`: every consumer treats it as a deny.
+     * `condition` or `failCondition`: every consumer treats it as a deny.
      *
      * Unknown stays unknown: `invert` is never applied to an unevaluable result, so
      * a negated parent can not turn a failure to evaluate into a pass.
@@ -40,23 +40,33 @@ export type PolicyEvaluationResult = {
      * or stay not evaluable, never fail. `fail`: it can fail or stay not evaluable,
      * never pass, so a pre-gate style consumer denies it like a settled false.
      *
-     * Only on pending results, and never next to a `condition`: such a subtree
-     * holds for some rows without failing for the others, so no condition could be
-     * negated by a parent. `invert` swaps the two values instead of touching
-     * `success`.
+     * Only on pending results. It is the fact that survives when nothing lowers: a
+     * result that can only still fail carries no `condition`, one that can only
+     * still pass no `failCondition`. `invert` swaps the two values instead of
+     * touching `success`.
      */
     reachable?: 'pass' | 'fail',
     /**
-     * EXACT condition form of the pending subtree (see
+     * EXACT condition form of the rows the pending subtree PASSES for (see
      * {@link IPolicyEvaluator.toCondition}): a row satisfies the condition iff the
      * pending subtree settles true on that row's attributes, given the current bag.
      * Attached only on pending results, only when the evaluation context requested it
-     * (`withConditions`), and only when the ENTIRE pending subtree is expressible —
-     * a partially expressible tree carries no condition (fail-safe: the consumer
-     * falls back to a per-row post-check). A subtree containing a term that could not
-     * be evaluated is never expressible.
+     * (`withConditions`), and only when that side of the subtree is expressible.
+     * Otherwise the result carries no condition (fail-safe: the consumer falls back
+     * to a per-row post-check). A row it does not hold for either fails or could not
+     * be evaluated; which of the two is what `failCondition` states.
      */
     condition?: ICondition,
+    /**
+     * EXACT condition form of the rows the pending subtree FAILS for: a row
+     * satisfies it iff the subtree settles false on that row's attributes, given the
+     * current bag. Attached under the same terms as `condition`. It is what `invert`
+     * turns into the pass condition of a negated parent, so negation never reads a
+     * row that could not be evaluated as a failure. Absent means unknown, never
+     * "everything else": the engine derives it as the negation of `condition` only
+     * for a leaf it lowers itself through {@link IPolicyEvaluator.toCondition}.
+     */
+    failCondition?: ICondition,
     issues?: Issue[]
 };
 

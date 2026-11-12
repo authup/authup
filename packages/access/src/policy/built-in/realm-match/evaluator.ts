@@ -190,10 +190,11 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
                 if (ctx.withConditions) {
                     const condition = await this.toCondition(value, ctx);
 
+                    // the reach is total on rows: where it does not hold, it fails
                     return {
                         success: false,
                         pending: true,
-                        ...(condition ? { condition } : {}),
+                        ...(condition ? { condition, failCondition: not(condition) } : {}),
                     };
                 }
 

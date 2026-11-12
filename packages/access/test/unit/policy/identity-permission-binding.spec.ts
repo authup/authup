@@ -434,8 +434,14 @@ describe('identity permission binding grant disjunction (not evaluable)', () => 
             expect(outcome.pending).toBe(true);
             expect(outcome.reachable).toEqual('pass');
             expect(outcome.unevaluable).toBeFalsy();
-            // not exact under negation, so nothing stands for it
-            expect(outcome.condition).toBeUndefined();
+            // where it passes is known, where it fails never arises
+            expect(outcome.condition).toBeDefined();
+            expect(outcome.failCondition).toBeUndefined();
+
+            const predicate = compileFilters(outcome.condition! as IFilter | IFilters, { caseSensitive: true });
+
+            expect(predicate({ name: 'public' })).toBe(true);
+            expect(predicate({ name: 'private' })).toBe(false);
 
             const [passes, fails] = await Promise.all([
                 run([unevaluable, pending], false, { name: 'public' }),
@@ -516,7 +522,9 @@ describe('identity permission binding grant disjunction (not evaluable)', () => 
             expect(outcome.success).toBe(false);
             expect(outcome.pending).toBe(true);
             expect(outcome.reachable).toEqual(reachable);
-            expect(outcome.condition).toBeUndefined();
+            // only the side it can still reach is stated
+            expect(!!outcome.condition).toBe(reachable === 'pass');
+            expect(!!outcome.failCondition).toBe(reachable === 'fail');
         });
 
         it('passes an inverted binding node exactly where the unanimous grant policy fails', async () => {
