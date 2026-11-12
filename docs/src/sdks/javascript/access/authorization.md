@@ -268,9 +268,10 @@ evaluates a flat list: bindings sharing a name are ORed, and the policies of
 one binding combine under its `decisionStrategy`. When grants are given next
 to definitions sharing a namespace, each grant is evaluated under the first of
 them. Such a list has no grant layer: an identity evaluated against it holds
-nothing, so a definition carrying a `permissionBinding` node (as
-`system.default` does) denies in it, and one carrying an inverted
-`permissionBinding` node passes for every identity. A list derived from the
+nothing, so a `permissionBinding` node (as `system.default` carries one)
+fails in it, and an inverted `permissionBinding` node passes for every
+identity. What the definition answers follows from that node and the other
+policies it is combined with. A list derived from the
 catalog must go through `buildAuthorizationSnapshot`, which keeps both layers.
 
 ## Catalog and grant contract

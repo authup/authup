@@ -305,6 +305,16 @@ describe('src/permission/evaluator (realm reach at the pre-gate)', () => {
                 }),
             ],
         },
+        {
+            permission: { name: 'not_everywhere' },
+            policies: [
+                definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                    invert: true,
+                    decisionStrategy: DecisionStrategy.UNANIMOUS,
+                    children: [definePolicyWithType(BuiltInPolicyType.REALM_MATCH, { scope: 'any', invert: true })],
+                }),
+            ],
+        },
     ];
 
     const reachEngine = new PolicyEngine(PolicyDefaultEvaluators);
@@ -354,6 +364,14 @@ describe('src/permission/evaluator (realm reach at the pre-gate)', () => {
             .rejects.toBeInstanceOf(PermissionError);
 
         expect(await passes('not_held', 'any', foreignRealmId)).toBe(false);
+    });
+
+    it('should permit an inverted composite over an inverted `any` reach at the pre-gate', async () => {
+        await expect(reachEvaluator.preEvaluate({ name: 'not_everywhere', data: dataFor('own') }))
+            .resolves.toBeUndefined();
+
+        expect(await passes('not_everywhere', 'own', foreignRealmId)).toBe(true);
+        expect(await passes('not_everywhere', 'own', identityData.realmId)).toBe(true);
     });
 
     it('should keep permitting the plain binding check at the pre-gate', async () => {

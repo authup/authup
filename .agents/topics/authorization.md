@@ -517,7 +517,7 @@ Defaults (declared in `app/modules/provisioning/sources/default/module.ts`):
   - realmMatch -> `[IDENTITY]` in scope mode, `[IDENTITY, ATTRIBUTES]` in attribute mode.
     Scope mode without a `realmMatch` key neutral-passes in a full evaluation (the
     resource has no realm) and PENDS at the pre-gate (`ctx.preliminary`, set by
-    `preEvaluate`; `any` still passes): passed there, an inverted ancestor settles a deny
+    `preEvaluate`; an uninverted `any` still passes): passed there, an inverted ancestor settles a deny
     the row's realm overturns. A binding node keeps such a reach unknown on both sides.
 - Composites treat pending children as unknown and settle only when no resolution could
   change the outcome. **`invert` is never applied to a pending result.**
