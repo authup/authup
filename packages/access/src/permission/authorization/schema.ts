@@ -15,6 +15,7 @@ import type {
     AuthorizationCatalog,
     AuthorizationEvaluatorInput,
     AuthorizationGrant,
+    AuthorizationSnapshotInput,
 } from './types';
 
 const id = z.string().min(1);
@@ -92,6 +93,21 @@ export type AuthorizationEvaluatorInputParsed = {
     identity: AuthorizationEvaluatorInput['identity'],
 };
 
+function assertCatalogPoliciesDeclared(catalog: AuthorizationCatalog) : void {
+    for (const [i, definition] of catalog.permissions.entries()) {
+        for (const [j, policyId] of (definition.policies ?? []).entries()) {
+            if (Object.hasOwn(catalog.policies, policyId)) {
+                continue;
+            }
+
+            throw new ValidupError([defineIssueItem({
+                message: `The policy ${policyId} is not declared by the catalog.`,
+                path: ['catalog', 'permissions', i, 'policies', j],
+            })]);
+        }
+    }
+}
+
 /**
  * Validate the evaluator's input, plus the two rules per-key validators
  * cannot express.
@@ -147,23 +163,44 @@ export async function parseAuthorizationEvaluatorInput(
         identity?: AuthorizationEvaluatorInput['identity'],
     };
 
-    for (const [i, definition] of catalog.permissions.entries()) {
-        for (const [j, policyId] of (definition.policies ?? []).entries()) {
-            if (Object.hasOwn(catalog.policies, policyId)) {
-                continue;
-            }
-
-            throw new ValidupError([defineIssueItem({
-                message: `The policy ${policyId} is not declared by the catalog.`,
-                path: ['catalog', 'permissions', i, 'policies', j],
-            })]);
-        }
-    }
+    assertCatalogPoliciesDeclared(catalog);
 
     return {
         catalog,
         grants: grants ?? [],
         identity,
+    };
+}
+
+export type AuthorizationSnapshotInputParsed = {
+    catalog: AuthorizationCatalog,
+    grants: AuthorizationGrant[],
+};
+
+/**
+ * Validate the snapshot builder's input under the catalog rules
+ * `parseAuthorizationEvaluatorInput` applies, detached from the caller's
+ * objects the same way. There is no identity: a snapshot is built before
+ * anyone evaluates it.
+ */
+export async function parseAuthorizationSnapshotInput(
+    input: AuthorizationSnapshotInput,
+) : Promise<AuthorizationSnapshotInputParsed> {
+    const {
+        catalog,
+        grants,
+    } = await validator.run(
+        structuredClone({ catalog: input.catalog, grants: input.grants }) as Record<string, any>,
+    ) as {
+        catalog: AuthorizationCatalog,
+        grants?: AuthorizationGrant[],
+    };
+
+    assertCatalogPoliciesDeclared(catalog);
+
+    return {
+        catalog,
+        grants: grants ?? [],
     };
 }
 

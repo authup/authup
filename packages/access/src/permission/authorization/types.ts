@@ -8,6 +8,7 @@
 import type { DecisionStrategy } from '@authup/kit';
 import type { IdentityPolicyData, PolicyEvaluators, PolicyValidators } from '../../policy';
 import type { RealmScope } from '../realm-scope';
+import type { PermissionPolicyBinding } from '../types';
 import type { AUTHORIZATION_CHECK_GRANTED } from './constants';
 
 /**
@@ -84,6 +85,54 @@ export type AuthorizationEvaluatorInput = {
      * The identity the grants belong to. Omitted for an anonymous caller:
      * no identity data is injected and no grant is bound, so only a
      * definition whose policies need no identity can pass.
+     */
+    identity?: IdentityPolicyData,
+};
+
+/**
+ * The two lists an authorization evaluator is built from, as plain JSON data:
+ * what `buildAuthorizationSnapshot` produces from a catalog and a grant list,
+ * and what `createAuthorizationSnapshotEvaluator` evaluates, so a consumer can
+ * store the pair and evaluate it later without the catalog.
+ *
+ * Read with no `grants` it is also the flat case: every binding of one
+ * permission namespace is a disjunct, and the policies of one binding combine
+ * under its permission's `decisionStrategy`. A definition carrying a binding
+ * check then denies, since no grant can satisfy it; a list taken from a
+ * catalog keeps both layers by going through `buildAuthorizationSnapshot`.
+ */
+export type AuthorizationSnapshot = {
+    /**
+     * One binding per definition: the definition-layer trees. A definition
+     * applies no realm reach, so a `realmScope` here is refused.
+     */
+    definitions: PermissionPolicyBinding[],
+    /**
+     * One binding per introspected grant: its realm reach and junction trees.
+     * Each is evaluated under the `permission` of the definition it names.
+     */
+    grants?: PermissionPolicyBinding[],
+};
+
+export type AuthorizationSnapshotInput = {
+    /**
+     * An `AuthorizationCatalog`, validated by the schema.
+     */
+    catalog: unknown,
+    /**
+     * `AuthorizationGrant[]`, validated by the schema. Defaults to none.
+     */
+    grants?: unknown,
+};
+
+export type AuthorizationSnapshotEvaluatorInput = {
+    /**
+     * An `AuthorizationSnapshot`, validated as untrusted stored data.
+     */
+    snapshot: unknown,
+    /**
+     * The identity the snapshot's grants belong to. Omitted for an anonymous
+     * caller, which a snapshot carrying grants is refused for.
      */
     identity?: IdentityPolicyData,
 };
