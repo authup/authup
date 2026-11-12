@@ -22,6 +22,8 @@ import type {
 import {
     BuiltInPolicyType,
     IdentityPermissionBindingPolicyEvaluator,
+    PermissionEvaluator,
+    PermissionMemoryProvider,
     PolicyDefaultEvaluators,
     PolicyEngine,
     PolicyIssueCode,
@@ -498,6 +500,53 @@ describe('src/policy (not evaluable): sources', () => {
 
         expect(result).toMatchObject({ success: false, unevaluable: true });
         expect(result.pending).toBeFalsy();
+    });
+});
+
+describe('src/policy (not evaluable): a custom evaluator flagging both', () => {
+    const mixedEvaluator : IPolicyEvaluator = {
+        async evaluate(): Promise<PolicyEvaluationResult> {
+            return {
+                success: false,
+                pending: true,
+                unevaluable: true,
+                condition: eq('name', 'admin'),
+            };
+        },
+    };
+
+    const mixedEngine = new PolicyEngine({
+        ...PolicyDefaultEvaluators,
+        mixed: mixedEvaluator,
+    });
+
+    it('is not evaluable without pending or a condition', async () => {
+        const result = await mixedEngine.evaluate(
+            { type: 'mixed' },
+            definePolicyEvaluationContext({ withConditions: true }),
+        );
+
+        expect(result.success).toBe(false);
+        expect(result.unevaluable).toBe(true);
+        expect(result.pending).toBeUndefined();
+        expect(result.condition).toBeUndefined();
+    });
+
+    const permissionEvaluator = new PermissionEvaluator({
+        provider: new PermissionMemoryProvider([
+            { permission: { name: 'mixed' }, policies: [{ type: 'mixed' }] },
+        ]),
+        policyEngine: mixedEngine,
+    });
+
+    it('is refused by the pre-gate', async () => {
+        await expect(permissionEvaluator.preEvaluate({ name: 'mixed' })).rejects.toThrow();
+    });
+
+    it('compiles to deny', async () => {
+        const result = await permissionEvaluator.compile({ name: 'mixed' });
+
+        expect(result.verdict).toEqual('deny');
     });
 });
 

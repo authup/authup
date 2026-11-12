@@ -191,6 +191,17 @@ describe('src/permission/evaluator (compile, not evaluable)', () => {
 
     it('should drop an unevaluable name from the disjunction', async () => {
         expect((await unevaluableEvaluator.compile({ name: 'unregistered' })).verdict).toEqual('deny');
-        expect((await unevaluableEvaluator.compile({ name: ['unregistered', 'affirmative'] })).verdict).toEqual('deny');
+
+        const paired = await unevaluableEvaluator.compile({ name: ['unregistered', 'unanimous'] });
+        const alone = await unevaluableEvaluator.compile({ name: 'unanimous' });
+
+        expect(paired.verdict).toEqual('conditional');
+        expect(alone.verdict).toEqual('conditional');
+
+        if (paired.verdict !== 'conditional' || alone.verdict !== 'conditional') {
+            return;
+        }
+
+        expect(paired.condition).toEqual(alone.condition);
     });
 });

@@ -18,8 +18,10 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
     }
 
     requires() : string[] {
-        // IDENTITY is deliberately NOT declared: a missing identity must stay a
-        // settled deny (fail-closed), never a pending the pre-gate would permit.
+        // IDENTITY is deliberately NOT declared: this evaluator reads no
+        // identity. The identity-aware evaluator reports a missing identity as
+        // not evaluable, which the pre-gate never permits; declared, it would
+        // be a pending the pre-gate permits.
         return [BuiltInPolicyType.PERMISSION_BINDING];
     }
 

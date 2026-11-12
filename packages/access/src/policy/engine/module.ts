@@ -172,13 +172,26 @@ export class PolicyEngine implements IPolicyEngine {
                 }
             }
 
-            return await evaluator.evaluate(policy, {
+            const result = await evaluator.evaluate(policy, {
                 ...ctx,
                 evaluators: {
                     ...this.evaluators,
                     ...(ctx.evaluators || {}),
                 },
             });
+
+            // A result that could not be evaluated never pends and carries
+            // no condition, whatever a custom evaluator reports alongside it:
+            // the pre-gate permits `pending` and `compile` admits a condition.
+            if (result.unevaluable) {
+                return {
+                    success: false,
+                    unevaluable: true,
+                    ...(result.issues ? { issues: result.issues } : {}),
+                };
+            }
+
+            return result;
         } catch (e) {
             issues.push(defineIssueItem({
                 path: [policy.type],
