@@ -86,6 +86,23 @@ in each case, also under an inverted binding check.
 that reads `permissions` as a set of names sees the name of such a grant, as it already sees
 the name of any grant restricted by a junction policy.
 
+### An inverted identity policy must name its types
+
+An `identity` policy without `types` passes every identity, and `invert` does not change
+that. `POST /policies` and an update now answer 400 for such a policy with `invert: true`,
+including an update of an inverted identity policy whose body leaves `types` out (an update
+replaces a policy's options). Stored policies keep evaluating as before.
+
+**Action required:** Send `types` with every update of an inverted identity policy, and review
+stored ones that name none: they restrict nothing.
+
+### A `$regex` string is a slash literal only when it starts and ends as one
+
+`@authup/access` read a `$regex` string containing two slashes as `/pattern/flags` from the
+first slash on, which dropped whatever stood before it. `'^https://example.org/'` is now the
+pattern it spells. The server never stored `$regex`, so this concerns policies an application
+builds for the evaluator itself.
+
 ## v1.0.0-beta.74 (was: next release after v1.0.0-beta.73)
 
 ### `@authup/client-web-kit` normalizes `cookiePath` and skips the shadow cleanup for host cookie functions
