@@ -27,6 +27,24 @@ previous value for up to a minute.
 **Action required:** A deployment on a Redis older than 5, or with an `allkeys-*` eviction
 policy, upgrades Redis or changes the policy before the upgrade.
 
+### The Redis client is ioredis 6
+
+The server talks to Redis through ioredis 6. It negotiates RESP3 on Redis 6 and newer and falls
+back to RESP2 on older servers, and it sends a TCP keepalive every 30 seconds. The read cache's
+connection waits up to about 5 seconds between reconnect attempts instead of 2.
+
+`@authup/server-kit` and `@authup/server-adapter-kit` declare `ioredis` `^6.0.0` as a peer
+dependency and no longer bring their own copy. `@authup/server-kit` exports `RedisValueStore`
+(redis-extension's `ValueStore`) in place of `RedisJsonAdapter`: its value type sits on the
+class, `get(key)` takes none, `set()` resolves a boolean and `get()` rejects on a connection or
+wrong-type error. `RedisCache` and `RedisTokenCache` keep their constructors, and their `get`
+still reads those errors as a miss.
+
+**Action required:** A resource server or application using `@authup/server-kit` or
+`@authup/server-adapter-kit` installs `ioredis` 6 next to it (npm does so for a project that
+has no other ioredis; one pinned to ioredis 5 upgrades it). Code using `RedisJsonAdapter`
+moves to `RedisValueStore`. Deployments of the server need no change.
+
 ## v1.0.0-beta.74 (was: next release after v1.0.0-beta.73)
 
 ### `@authup/client-web-kit` normalizes `cookiePath` and skips the shadow cleanup for host cookie functions
