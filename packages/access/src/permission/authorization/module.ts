@@ -132,6 +132,13 @@ function toBinding(
  * JSON round trip turns a `Date` into a timestamp string the date policy's
  * validator refuses, while every built-in validator taking a `Date` takes the
  * number for the same instant.
+ *
+ * Three limits follow. A top-level `Date` of a projected node is stored as
+ * epoch milliseconds also when the snapshot is never serialized, so a custom
+ * policy type must accept a number wherever it accepts a `Date`. A `Date`
+ * nested deeper in a node's configuration is not converted and does not
+ * survive JSON. A custom validator must be a fixed point of its own output,
+ * since the snapshot evaluator projects a stored tree again.
  */
 export async function buildAuthorizationSnapshot(
     input: AuthorizationSnapshotInput,

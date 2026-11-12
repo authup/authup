@@ -190,7 +190,7 @@ export async function parseAuthorizationSnapshotInput(
         catalog,
         grants,
     } = await validator.run(
-        structuredClone({ catalog: input.catalog, grants: input.grants }) as Record<string, any>,
+        structuredClone({ catalog: input.catalog, grants: input.grants }) as Record<string, unknown>,
     ) as {
         catalog: AuthorizationCatalog,
         grants?: AuthorizationGrant[],

@@ -173,9 +173,9 @@ const cases : ImmutabilityCase[] = [
         data: () => ({
             [BuiltInPolicyType.IDENTITY]: identity,
             [BuiltInPolicyType.ATTRIBUTES]: {
-                realmId, 
-                realmName: 'other', 
-                realm_id: realmId, 
+                realmId,
+                realmName: 'other',
+                realm_id: realmId,
             },
         }),
         // CONSENSUS over the default keys: two matches, one miss
@@ -219,8 +219,8 @@ const cases : ImmutabilityCase[] = [
         }),
         data: () => ({
             [BuiltInPolicyType.ATTRIBUTES]: {
-                name: 'Admin', 
-                tags: 'a', 
+                name: 'Admin',
+                tags: 'a',
                 realmId,
             },
             [BuiltInPolicyType.ATTRIBUTE_NAMES]: ['name'],
@@ -248,9 +248,9 @@ async function evaluateThreeWays(
     }));
 
     return {
-        settled, 
-        missing, 
-        conditions, 
+        settled,
+        missing,
+        conditions,
     };
 }
 
@@ -263,9 +263,9 @@ describe('src/policy/built-in (immutability)', () => {
 
         const engine = new PolicyEngine(PolicyDefaultEvaluators);
         const {
-            settled, 
-            missing, 
-            conditions, 
+            settled,
+            missing,
+            conditions,
         } = await evaluateThreeWays(engine, policy, item.data);
 
         expect(toVerdict(settled), JSON.stringify(settled.issues)).toEqual(item.settled);
@@ -289,9 +289,9 @@ describe('src/policy/built-in (immutability)', () => {
     it('does not write into the frozen policies of an identity grant', async () => {
         const grants : PermissionPolicyBinding[] = [
             {
-                permission, 
-                realmScope: 'any', 
-                policies: [createAttributesPolicy()], 
+                permission,
+                realmScope: 'any',
+                policies: [createAttributesPolicy()],
             },
         ];
         const expectation = structuredClone(grants);

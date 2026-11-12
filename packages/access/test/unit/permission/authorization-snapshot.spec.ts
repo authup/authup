@@ -69,9 +69,9 @@ function grant(name: string, realmScope: string, policies: string[] = []) {
 function binding(name: string, policies?: Policy[], extra: Partial<PermissionPolicyBinding> = {}) : PermissionPolicyBinding {
     return {
         permission: {
-            name, 
-            realmId: null, 
-            clientId: null, 
+            name,
+            realmId: null,
+            clientId: null,
         },
         ...(policies ? { policies } : {}),
         ...extra,
@@ -158,9 +158,9 @@ function parityContexts() : PermissionEvaluationContext[] {
             for (const row of [realmA, realmB, null]) {
                 for (const visible of [true, false]) {
                     contexts.push({
-                        name, 
-                        realmId, 
-                        data: resource(row, visible), 
+                        name,
+                        realmId,
+                        data: resource(row, visible),
                     });
                 }
             }
@@ -191,14 +191,14 @@ describe('authorization snapshot', () => {
 
         for (const input of [
             {
-                catalog: parityCatalog, 
-                grants: parityGrants, 
-                identity, 
+                catalog: parityCatalog,
+                grants: parityGrants,
+                identity,
             },
             {
-                catalog: parityCatalog, 
-                grants: [], 
-                identity, 
+                catalog: parityCatalog,
+                grants: [],
+                identity,
             },
             { catalog: parityCatalog },
         ]) {
@@ -227,16 +227,16 @@ describe('authorization snapshot', () => {
                     children: [fails, { type: 'date', end: '2020-12-31' }],
                 },
                 date: {
-                    type: 'date', 
-                    start: new Date(2020, 0, 1), 
-                    end: new Date(2020, 11, 31), 
+                    type: 'date',
+                    start: new Date(2020, 0, 1),
+                    end: new Date(2020, 11, 31),
                 },
                 identity: passes,
                 realmMatch: { type: 'realmMatch', attributeName: 'realmId' },
                 time: {
-                    type: 'time', 
-                    start: new Date(2020, 0, 1, 9, 0), 
-                    end: new Date(2020, 0, 1, 17, 0), 
+                    type: 'time',
+                    start: new Date(2020, 0, 1, 9, 0),
+                    end: new Date(2020, 0, 1, 17, 0),
                 },
             },
             permissions: [
@@ -254,18 +254,18 @@ describe('authorization snapshot', () => {
         const rows = [
             {
                 [BuiltInPolicyType.ATTRIBUTES]: {
-                    name: 'x', 
-                    visible: true, 
-                    realmId: realmA, 
+                    name: 'x',
+                    visible: true,
+                    realmId: realmA,
                 },
                 [BuiltInPolicyType.DATE]: '2020-06-01',
                 [BuiltInPolicyType.TIME]: new Date(2020, 5, 1, 12, 0),
             },
             {
                 [BuiltInPolicyType.ATTRIBUTES]: {
-                    secret: 'x', 
-                    visible: false, 
-                    realmId: realmB, 
+                    secret: 'x',
+                    visible: false,
+                    realmId: realmB,
                 },
                 [BuiltInPolicyType.DATE]: '2021-06-01',
                 [BuiltInPolicyType.TIME]: new Date(2020, 5, 1, 20, 0),
@@ -291,9 +291,9 @@ describe('authorization snapshot', () => {
         expect(stored).toStrictEqual(snapshot);
 
         const expected = await outcomes(await createAuthorizationEvaluator({
-            catalog, 
-            grants, 
-            identity, 
+            catalog,
+            grants,
+            identity,
         }));
 
         expect(await outcomes(await createAuthorizationSnapshotEvaluator({ snapshot, identity }))).toEqual(expected);
@@ -302,21 +302,21 @@ describe('authorization snapshot', () => {
         // every type both passes and denies on these rows, so the comparison
         // cannot be won by a definition that silently dropped out
         expect(expected).toEqual([
-            true, 
-            false,
-            true, 
-            false,
-            true, 
             true,
-            true, 
             false,
-            true, 
-            false,
-            true, 
             true,
-            true, 
             false,
-            true, 
+            true,
+            true,
+            true,
+            false,
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            true,
             false,
         ]);
     });
@@ -353,26 +353,26 @@ describe('authorization snapshot', () => {
                 definitions: [
                     {
                         permission: {
-                            name: 'event_read', 
-                            realmId: null, 
-                            clientId: null, 
+                            name: 'event_read',
+                            realmId: null,
+                            clientId: null,
                         },
                         policies: [{ type: 'permissionBinding' }],
                     },
                     {
                         permission: {
-                            name: 'open', 
-                            realmId: null, 
-                            clientId: null, 
-                        }, 
+                            name: 'open',
+                            realmId: null,
+                            clientId: null,
+                        },
                     },
                 ],
                 grants: [
                     {
                         permission: {
-                            name: 'event_read', 
-                            realmId: null, 
-                            clientId: null, 
+                            name: 'event_read',
+                            realmId: null,
+                            clientId: null,
                         },
                         realmScope: 'own',
                     },
@@ -418,9 +418,9 @@ describe('authorization snapshot', () => {
             expect(snapshot.grants).toEqual([
                 {
                     permission: {
-                        name: 'event_read', 
-                        realmId: null, 
-                        clientId: null, 
+                        name: 'event_read',
+                        realmId: null,
+                        clientId: null,
                     },
                     realmScope: 'any',
                 },
@@ -506,9 +506,9 @@ describe('authorization snapshot', () => {
         it('evaluates a grant under its definition\'s decision strategy, not its own', async () => {
             const build = (definitionStrategy: 'affirmative' | 'unanimous', grantStrategy: 'affirmative' | 'unanimous') => {
                 const permission = {
-                    name: 'a', 
-                    realmId: null, 
-                    clientId: null, 
+                    name: 'a',
+                    realmId: null,
+                    clientId: null,
                 };
 
                 return createAuthorizationSnapshotEvaluator({
@@ -556,9 +556,9 @@ describe('authorization snapshot', () => {
                 const data = new PolicyData();
 
                 data.set(BuiltInPolicyType.IDENTITY, {
-                    id: identity.id, 
-                    type: 'user', 
-                    realmId: realmA, 
+                    id: identity.id,
+                    type: 'user',
+                    realmId: realmA,
                 });
                 data.setValidated(BuiltInPolicyType.IDENTITY);
 

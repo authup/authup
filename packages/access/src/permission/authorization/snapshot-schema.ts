@@ -69,7 +69,7 @@ export async function parseAuthorizationSnapshot(
         snapshot,
         identity,
     } = await snapshotValidator.run(
-        structuredClone(input) as Record<string, any>,
+        structuredClone(input) as Record<string, unknown>,
     ) as {
         snapshot: AuthorizationSnapshot,
         identity?: AuthorizationSnapshotEvaluatorInput['identity'],
