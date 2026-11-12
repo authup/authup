@@ -75,9 +75,12 @@ which settled outcome it can still reach: `reachable: 'pass'` (it can pass but n
 fail) or `reachable: 'fail'` (it can fail but never pass); without `reachable` both are
 open. It is not evaluable only when no child pends or no settled outcome is left. `invert`
 swaps the two. `preEvaluate` permits a pending result unless `reachable` is
-`'fail'`. A subtree containing a not evaluable term is never lowered to a query, so a
-result with `reachable` carries no condition: `compile` treats `'fail'` as a denial and
-`'pass'` as a per-row check (`post`).
+`'fail'`. For a query, a pending result states the rows it passes for (`condition`) and
+the rows it fails for (`failCondition`); a row in neither could not be evaluated, and
+`invert` swaps the two. So `compile` still answers with one filter when a part that
+cannot be evaluated sits next to one that can: it treats `'fail'` as a denial and uses
+the pass condition otherwise, falling back to a per-row check (`post`) only when that
+side has no condition.
 
 ## Attributes
 
@@ -441,6 +444,11 @@ Guidelines:
   `false`, which an inverted parent would turn into a pass. The engine drops `pending`
   and any `condition` from such a result. Never set `reachable`: the composites derive
   it from their children.
-- **`toCondition` must be exact.** A row satisfies the returned condition if and only
-  if the policy would settle true with that row as its attributes. When in doubt,
-  return `null`: a per-row check is always sound.
+- **`toCondition` must be exact on every row.** A row satisfies the returned condition
+  if and only if the policy would settle true with that row as its attributes. The engine
+  derives the fail side as its negation, so every other row must settle false. When in
+  doubt, return `null`: a per-row check is always sound.
+- **An evaluator that pends by itself states both sides.** A result it returns with
+  `condition` but without `failCondition` has an unknown fail side: the engine does not
+  guess it, so a negating parent falls back to a per-row check. Return `failCondition`
+  as well to keep negation lowered.
