@@ -14,8 +14,10 @@ import { RealmScope } from '../realm-scope';
 import type {
     AuthorizationCatalog,
     AuthorizationEvaluatorInput,
+    AuthorizationEvaluatorInputParsed,
     AuthorizationGrant,
     AuthorizationSnapshotInput,
+    AuthorizationSnapshotInputParsed,
 } from './types';
 
 const id = z.string().min(1);
@@ -86,12 +88,6 @@ export class AuthorizationEvaluatorInputValidator extends Container<Authorizatio
 }
 
 const validator = new AuthorizationEvaluatorInputValidator();
-
-export type AuthorizationEvaluatorInputParsed = {
-    catalog: AuthorizationCatalog,
-    grants: AuthorizationGrant[],
-    identity: AuthorizationEvaluatorInput['identity'],
-};
 
 function assertCatalogPoliciesDeclared(catalog: AuthorizationCatalog) : void {
     for (const [i, definition] of catalog.permissions.entries()) {
@@ -171,11 +167,6 @@ export async function parseAuthorizationEvaluatorInput(
         identity,
     };
 }
-
-export type AuthorizationSnapshotInputParsed = {
-    catalog: AuthorizationCatalog,
-    grants: AuthorizationGrant[],
-};
 
 /**
  * Validate the snapshot builder's input under the catalog rules

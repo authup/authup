@@ -10,7 +10,11 @@ import { createValidator } from '@validup/zod';
 import { Container, ValidupError } from 'validup';
 import { buildPermissionKey } from '../helpers';
 import { authorizationCheckPermissionsSchema, authorizationIdentitySchema } from './schema';
-import type { AuthorizationCheckEvaluatorInput, AuthorizationCheckPermissions } from './types';
+import type {
+    AuthorizationCheckEvaluatorInput,
+    AuthorizationCheckEvaluatorInputParsed,
+    AuthorizationCheckPermissions,
+} from './types';
 
 /**
  * The whole input `createAuthorizationCheckEvaluator` takes: the answer
@@ -28,11 +32,6 @@ export class AuthorizationCheckEvaluatorInputValidator extends Container<Authori
 }
 
 const checkValidator = new AuthorizationCheckEvaluatorInputValidator();
-
-export type AuthorizationCheckEvaluatorInputParsed = {
-    permissions: AuthorizationCheckPermissions,
-    identity: AuthorizationCheckEvaluatorInput['identity'],
-};
 
 /**
  * Validate the check evaluator's input, plus the one rule a per-key validator

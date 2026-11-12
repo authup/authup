@@ -236,3 +236,24 @@ export type AuthorizationCheckEvaluatorInput = {
      */
     identity?: IdentityPolicyData,
 };
+
+export type AuthorizationEvaluatorInputParsed = {
+    catalog: AuthorizationCatalog,
+    grants: AuthorizationGrant[],
+    identity: AuthorizationEvaluatorInput['identity'],
+};
+
+export type AuthorizationSnapshotInputParsed = {
+    catalog: AuthorizationCatalog,
+    grants: AuthorizationGrant[],
+};
+
+export type AuthorizationCheckEvaluatorInputParsed = {
+    permissions: AuthorizationCheckPermissions,
+    identity: AuthorizationCheckEvaluatorInput['identity'],
+};
+
+export type AuthorizationSnapshotEvaluatorInputParsed = {
+    snapshot: AuthorizationSnapshot,
+    identity: AuthorizationSnapshotEvaluatorInput['identity'],
+};

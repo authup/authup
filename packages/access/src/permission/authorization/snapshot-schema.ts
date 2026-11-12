@@ -8,25 +8,13 @@
 import { defineIssueItem } from '@ebec/core';
 import { createValidator } from '@validup/zod';
 import { Container, ValidupError } from 'validup';
-import { z } from 'zod';
-import { isPermissionPolicyBinding } from '../helpers';
-import type { PermissionPolicyBinding } from '../types';
 import { authorizationIdentitySchema } from './schema';
-import type { AuthorizationSnapshot, AuthorizationSnapshotEvaluatorInput } from './types';
-
-/**
- * One binding of a snapshot, checked shallowly: its policy trees are
- * re-projected by the evaluator, under the caller's validator registry.
- */
-export const authorizationSnapshotBindingSchema = z.custom<PermissionPolicyBinding>(
-    (value) => isPermissionPolicyBinding(value),
-    { message: 'The entry is not a permission policy binding.' },
-);
-
-export const authorizationSnapshotSchema = z.object({
-    definitions: z.array(authorizationSnapshotBindingSchema),
-    grants: z.array(authorizationSnapshotBindingSchema).optional(),
-});
+import { AuthorizationSnapshotValidator } from './snapshot-validator';
+import type {
+    AuthorizationSnapshot,
+    AuthorizationSnapshotEvaluatorInput,
+    AuthorizationSnapshotEvaluatorInputParsed,
+} from './types';
 
 /**
  * The whole input `createAuthorizationSnapshotEvaluator` takes: a snapshot,
@@ -36,17 +24,12 @@ export class AuthorizationSnapshotEvaluatorInputValidator extends Container<Auth
     override initialize() {
         super.initialize();
 
-        this.mount('snapshot', createValidator(authorizationSnapshotSchema));
+        this.mount('snapshot', new AuthorizationSnapshotValidator());
         this.mount('identity', createValidator(authorizationIdentitySchema.optional()));
     }
 }
 
 const snapshotValidator = new AuthorizationSnapshotEvaluatorInputValidator();
-
-export type AuthorizationSnapshotEvaluatorInputParsed = {
-    snapshot: AuthorizationSnapshot,
-    identity: AuthorizationSnapshotEvaluatorInput['identity'],
-};
 
 /**
  * Validate the snapshot evaluator's input, plus the two rules per-key

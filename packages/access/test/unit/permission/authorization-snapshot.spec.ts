@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IssueGroup } from '@ebec/core';
 import { createValidator } from '@validup/zod';
 import { Container, isValidupError } from 'validup';
 import { describe, expect, it } from 'vitest';
@@ -506,13 +507,18 @@ describe('authorization snapshot', () => {
 
     describe('evaluator over stored data', () => {
         it('refuses a malformed envelope with the path of the member at fault', async () => {
-            expect((await issuesOf(() => createAuthorizationSnapshotEvaluator({ snapshot: 'x' })))[0]!.path)
-                .toEqual(['snapshot']);
-            expect((await issuesOf(() => createAuthorizationSnapshotEvaluator({ snapshot: { definitions: [binding('a'), { permission: {} }] } })))[0]!.path).toEqual(['snapshot', 'definitions', 1]);
-            expect((await issuesOf(() => createAuthorizationSnapshotEvaluator({
-                snapshot: { definitions: [], grants: [{ permission: { name: 'a' }, realmScope: 'everywhere' }] },
-                identity,
-            })))[0]!.path).toEqual(['snapshot', 'grants', 0]);
+            const leafPaths = async (input: Record<string, unknown>) => {
+                const [group] = await issuesOf(() => createAuthorizationSnapshotEvaluator({ snapshot: input.snapshot, identity }));
+
+                expect(group).toEqual(expect.objectContaining({ type: 'group', path: ['snapshot'] }));
+
+                return (group as IssueGroup).issues.map((issue) => issue.path);
+            };
+
+            expect(await leafPaths({ snapshot: 'x' })).toEqual([['snapshot', 'definitions']]);
+            expect(await leafPaths({ snapshot: { definitions: [binding('a'), { permission: {} }] } }))
+                .toEqual([['snapshot', 'definitions', 1]]);
+            expect(await leafPaths({ snapshot: { definitions: [], grants: [{ permission: { name: 'a' }, realmScope: 'everywhere' }] } })).toEqual([['snapshot', 'grants', 0]]);
         });
 
         it('refuses a realm reach on a definition', async () => {

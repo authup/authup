@@ -13,4 +13,5 @@ export * from './module';
 export * from './policy';
 export * from './schema';
 export * from './snapshot-schema';
+export * from './snapshot-validator';
 export * from './types';
