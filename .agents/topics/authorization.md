@@ -515,6 +515,10 @@ Defaults (declared in `app/modules/provisioning/sources/default/module.ts`):
     missing identity is not evaluable and a scope-restricted bearer (`grants: []`) settles
     false; both fail the pre-gate.
   - realmMatch -> `[IDENTITY]` in scope mode, `[IDENTITY, ATTRIBUTES]` in attribute mode.
+    Scope mode without a `realmMatch` key neutral-passes in a full evaluation (the
+    resource has no realm) and PENDS at the pre-gate (`ctx.preliminary`, set by
+    `preEvaluate`; `any` still passes): passed there, an inverted ancestor settles a deny
+    the row's realm overturns. A binding node keeps such a reach unknown on both sides.
 - Composites treat pending children as unknown and settle only when no resolution could
   change the outcome. **`invert` is never applied to a pending result.**
 - **The third outcome is `unevaluable` (#3817)**, on `success: false`, never with `pending`

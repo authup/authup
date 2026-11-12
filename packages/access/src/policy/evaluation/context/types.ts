@@ -43,6 +43,13 @@ export type PolicyEvaluationContext = {
      */
     readonly realmAttributeName?: string,
     /**
+     * The evaluation runs ahead of the resource (the pre-gate): a resource
+     * realm that is absent may still arrive, so the realm reach pends instead
+     * of neutral-passing. Off for a full evaluation, where an absent resource
+     * realm means the resource has none.
+     */
+    readonly preliminary?: boolean,
+    /**
      * Optional receiver of clock transitions (see {@link PolicyTransitionSink}).
      * Nested evaluations inherit it, since every walk propagates the context by
      * spread.

@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { DecisionStrategy } from '@authup/kit';
-import type { PermissionPolicyBinding } from '../../../src';
+import type { PermissionPolicyBinding, RealmScope } from '../../../src';
 import {
     BuiltInPolicyType,
     IdentityPermissionBindingPolicyEvaluator,
@@ -277,5 +277,95 @@ describe('src/permission/evaluator (not evaluable)', () => {
 
         expect(await allows('nested_affirmative', { name: 'guest' })).toBe(false);
         expect(await allows('nested_affirmative', { name: 'admin' })).toBe(false);
+    });
+});
+
+// The resource realm is data the pre-gate does not have yet. A reach that
+// passed there for want of it is no evaluation, so an inverted ancestor must
+// not settle a deny the row's realm overturns.
+describe('src/permission/evaluator (realm reach at the pre-gate)', () => {
+    const foreignRealmId = 'f1a0c3a4-3c0a-4a43-9f5b-6c1f6b0d6a11';
+
+    const reachDefinitions : PermissionPolicyBinding[] = [
+        {
+            permission: { name: 'not_held' },
+            policies: [definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, { invert: true })],
+        },
+        {
+            permission: { name: 'held' },
+            policies: [definePolicyWithType(BuiltInPolicyType.PERMISSION_BINDING, {})],
+        },
+        {
+            permission: { name: 'out_of_reach' },
+            policies: [
+                definePolicyWithType(BuiltInPolicyType.COMPOSITE, {
+                    invert: true,
+                    decisionStrategy: DecisionStrategy.UNANIMOUS,
+                    children: [definePolicyWithType(BuiltInPolicyType.REALM_MATCH, { scope: 'own' })],
+                }),
+            ],
+        },
+    ];
+
+    const reachEngine = new PolicyEngine(PolicyDefaultEvaluators);
+
+    reachEngine.registerEvaluator(
+        BuiltInPolicyType.PERMISSION_BINDING,
+        new IdentityPermissionBindingPolicyEvaluator(),
+    );
+
+    const reachEvaluator = new PermissionEvaluator({
+        provider: new PermissionMemoryProvider(reachDefinitions),
+        policyEngine: reachEngine,
+    });
+
+    const dataFor = (realmScope: `${RealmScope}`, realm?: string | null) => definePolicyData({
+        [BuiltInPolicyType.IDENTITY]: {
+            ...identityData,
+            grants: ['not_held', 'held'].map((name) => ({ permission: { name }, realmScope })),
+        },
+        ...(typeof realm === 'undefined' ? {} : { [BuiltInPolicyType.REALM_MATCH]: realm }),
+    });
+
+    const passes = async (name: string, realmScope: `${RealmScope}`, realm?: string | null) => {
+        try {
+            await reachEvaluator.evaluate({ name, data: dataFor(realmScope, realm) });
+
+            return true;
+        } catch (e) {
+            if (e instanceof PermissionError) {
+                return false;
+            }
+
+            throw e;
+        }
+    };
+
+    it.each(['not_held', 'out_of_reach'])('should permit %s at the pre-gate, as the full evaluation does for a foreign row', async (name) => {
+        await expect(reachEvaluator.preEvaluate({ name, data: dataFor('own') }))
+            .resolves.toBeUndefined();
+
+        expect(await passes(name, 'own', foreignRealmId)).toBe(true);
+        expect(await passes(name, 'own', identityData.realmId)).toBe(false);
+    });
+
+    it('should still deny an inverted binding check at the pre-gate when the grant reaches every realm', async () => {
+        await expect(reachEvaluator.preEvaluate({ name: 'not_held', data: dataFor('any') }))
+            .rejects.toBeInstanceOf(PermissionError);
+
+        expect(await passes('not_held', 'any', foreignRealmId)).toBe(false);
+    });
+
+    it('should keep permitting the plain binding check at the pre-gate', async () => {
+        await expect(reachEvaluator.preEvaluate({ name: 'held', data: dataFor('own') }))
+            .resolves.toBeUndefined();
+
+        expect(await passes('held', 'own', identityData.realmId)).toBe(true);
+        expect(await passes('held', 'own', foreignRealmId)).toBe(false);
+    });
+
+    it('should keep the neutral pass of a full evaluation without a resource realm', async () => {
+        expect(await passes('held', 'own')).toBe(true);
+        expect(await passes('not_held', 'own')).toBe(false);
     });
 });

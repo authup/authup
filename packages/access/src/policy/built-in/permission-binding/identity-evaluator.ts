@@ -224,11 +224,15 @@ export class IdentityPermissionBindingPolicyEvaluator implements IPolicyEvaluato
             if (realmOutcome.pending) {
                 const scope = normalizeRealmScope(grant.realmScope);
 
-                if (scope === RealmScope.NONE) {
+                if (!ctx.withConditions) {
+                    // The pre-gate: the resource realm has not arrived, so the
+                    // reach is unknown on both sides. `none` is kept unknown as
+                    // well rather than skipped: a resource without a realm
+                    // neutral-passes it in the full evaluation.
+                    reach = readPolicySides(realmOutcome);
+                } else if (scope === RealmScope.NONE) {
                     continue;
-                }
-
-                if (scope !== RealmScope.ANY) {
+                } else if (scope !== RealmScope.ANY) {
                     reach = readPolicySides(realmOutcome);
                 }
             } else if (!realmOutcome.success) {

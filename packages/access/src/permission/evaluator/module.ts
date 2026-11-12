@@ -150,6 +150,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
                     include: options.policiesIncluded,
                     exclude: options.policiesExcluded,
                     transitions: options.transitions,
+                    preliminary: options.pendingPolicies === 'permit',
                     data,
                 }),
             );
