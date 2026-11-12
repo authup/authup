@@ -5,7 +5,7 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
-## Next release (after v1.0.0-beta.74)
+## v1.0.0-beta.75 (was: next release after v1.0.0-beta.74)
 
 ### The read cache opens its own Redis connection
 
