@@ -16,12 +16,14 @@ import {
     isGroupedQuery,
 } from '@rapiq/core';
 import type { IQuery } from '@rapiq/core';
+import { FakePermissionEvaluator } from '@authup/server-test-kit';
 import { describe, expect, it } from 'vitest';
 import { clientSchema } from '../../../../src/core/entities/client/schema.ts';
 import { roleSchema } from '../../../../src/core/entities/role/schema.ts';
 import { userSchema } from '../../../../src/core/entities/user/schema.ts';
 import { decodeQuery, schemaRegistry } from '../../../../src/core/query/index.ts';
 import {
+    RECORD_CHECK_FIELDS,
     ReachCheckField,
     readDefaultFieldNames,
     readResponseAttributeNames,
@@ -53,7 +55,112 @@ describe('core/query/projection', () => {
         );
     });
 
+    describe('RECORD_CHECK_FIELDS', () => {
+        // columns no check may load, whatever a schema allows
+        const NEVER_LOADED = ['secret', 'encryptionKey', 'certificate'];
+
+        it('should name registered schemas only', () => {
+            const names = schemaRegistry.getAll().map((schema) => schema.name);
+
+            expect(Object.keys(RECORD_CHECK_FIELDS).filter((name) => !names.includes(name))).toEqual([]);
+        });
+
+        it.each(schemaRegistry.getAll().map((schema) => [schema.name, schema] as const))(
+            'should declare loadable columns for the %s schema',
+            async (name, schema) => {
+                const declared = RECORD_CHECK_FIELDS[name as keyof typeof RECORD_CHECK_FIELDS] ?? [];
+
+                if (declared.length === 0) {
+                    return;
+                }
+
+                expect(schema.fields.hasDefaults()).toBe(true);
+
+                for (const column of declared) {
+                    expect(schema.fields.allowed).toContain(column);
+                    expect(schema.fields.default).not.toContain(column);
+                    expect(NEVER_LOADED).not.toContain(column);
+                }
+
+                // a gated column takes a verdict from the schema's hook; an
+                // actor without a grant is refused it or handed a condition
+                const evaluator = new FakePermissionEvaluator();
+
+                evaluator.setCompileResult({ verdict: 'deny' });
+
+                const parsed = await decodeQuery(
+                    { fields: declared.map((column) => `+${column}`).join(',') },
+                    { schema, actor: { permissionEvaluator: evaluator } },
+                );
+
+                for (const column of declared) {
+                    const field = parsed.fields.value.find((item) => item.name === column);
+
+                    expect(field).toBeDefined();
+                    expect(field!.condition).toBeUndefined();
+                }
+            },
+        );
+
+        it('should treat the client secret as a gated column', async () => {
+            const evaluator = new FakePermissionEvaluator();
+
+            evaluator.setCompileResult({ verdict: 'deny' });
+
+            const parsed = await decodeQuery(
+                { fields: '+secret' },
+                { schema: clientSchema, actor: { permissionEvaluator: evaluator } },
+            );
+            const field = parsed.fields.value.find((item) => item.name === 'secret');
+
+            expect(!field || !!field.condition).toBe(true);
+        });
+    });
+
     describe('widenSparseRootProjection', () => {
+        it('should load a declared column on an unprojected read', async () => {
+            const parsed = await decodeQuery({}, { schema: userSchema });
+            const widened = widenSparseRootProjection(parsed, userSchema);
+
+            expect(readAddedNames(widened)).toEqual(['email']);
+            expect(readFieldNames(widened).filter((name) => name !== 'email')).toEqual(readFieldNames(parsed));
+            expect(readResponseAttributeNames({ id: 1, email: 'a@example.com' }, widened)).toEqual(['id']);
+        });
+
+        it('should load a declared column next to the defaults on a projected read', async () => {
+            const parsed = await decodeQuery({ fields: 'id' }, { schema: userSchema });
+            const added = readAddedNames(widenSparseRootProjection(parsed, userSchema));
+
+            expect(added).toContain('email');
+            expect(added).toContain('name');
+        });
+
+        it('should leave a requested declared column a response column', async () => {
+            const parsed = await decodeQuery({ fields: 'id,email' }, { schema: userSchema });
+            const widened = widenSparseRootProjection(parsed, userSchema);
+
+            expect(readFieldNames(widened)).toContain('email');
+            expect(readAddedNames(widened)).not.toContain('email');
+            expect(readResponseAttributeNames({ id: 1, email: 'a@example.com' }, widened)).toEqual(['id', 'email']);
+        });
+
+        it('should load no declared column on a grouped query', () => {
+            const grouped = new Query({
+                fields: new Fields([new Field('id')]),
+                groups: new Groups([new Group({
+                    name: 'realmId',
+                    lowering: {
+                        fn: undefined,
+                        field: 'realmId',
+                        args: [],
+                    },
+                })]),
+            });
+
+            expect(isGroupedQuery(grouped)).toBe(true);
+            expect(widenSparseRootProjection(grouped, userSchema)).toBe(grouped);
+        });
+
         it('should load every default column the projection left out', async () => {
             const parsed = await decodeQuery({ fields: 'id' }, { schema: roleSchema });
             const widened = widenSparseRootProjection(parsed, roleSchema);
@@ -83,9 +190,9 @@ describe('core/query/projection', () => {
         });
 
         it('should return a query without a projection as is', async () => {
-            const parsed = await decodeQuery({}, { schema: userSchema });
+            const parsed = await decodeQuery({}, { schema: clientSchema });
 
-            expect(widenSparseRootProjection(parsed, userSchema)).toBe(parsed);
+            expect(widenSparseRootProjection(parsed, clientSchema)).toBe(parsed);
         });
 
         it('should return a projection naming every default column as is', async () => {
@@ -123,7 +230,7 @@ describe('core/query/projection', () => {
             expect(widenSparseRootProjection(grouped, roleSchema)).toBe(grouped);
         });
 
-        it('should never add a column the schema does not default', async () => {
+        it('should never add an undeclared column the schema does not default', async () => {
             const parsed = await decodeQuery({ fields: 'id' }, { schema: clientSchema });
             const widened = widenSparseRootProjection(parsed, clientSchema);
             const names = readFieldNames(widened);
@@ -131,13 +238,6 @@ describe('core/query/projection', () => {
             expect(names).toContain('name');
             expect(names).toContain('realmId');
             expect(names).not.toContain('secret');
-
-            const user = widenSparseRootProjection(
-                await decodeQuery({ fields: 'id' }, { schema: userSchema }),
-                userSchema,
-            );
-
-            expect(readFieldNames(user)).not.toContain('email');
         });
 
         it('should only add root columns', async () => {

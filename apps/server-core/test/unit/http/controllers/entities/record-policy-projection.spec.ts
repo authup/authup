@@ -345,4 +345,176 @@ describe('record policy (field projection)', () => {
             expect(JSON.stringify(data)).not.toContain(secret);
         });
     });
+
+    describe('user policy on a column outside the default row', () => {
+        const nonLowerable = (name: string) => ({
+            name,
+            type: BuiltInPolicyType.ATTRIBUTE_NAMES,
+            invert: true,
+            names: ['aFieldNoEntityCarries'],
+        });
+
+        let withheld: User;
+        let readable: User;
+        let withheldEmail: string;
+        let readableEmail: string;
+
+        let recordReader: HTTPClient;
+        let listReader: HTTPClient;
+        let matchReader: HTTPClient;
+
+        beforeAll(async () => {
+            const withheldInput = createFakeUser({ realmId });
+            const readableInput = createFakeUser({ realmId });
+
+            withheldEmail = withheldInput.email;
+            readableEmail = readableInput.email;
+
+            ({ data: withheld } = await suite.client.user.create(withheldInput));
+            ({ data: readable } = await suite.client.user.create(readableInput));
+
+            recordReader = await createReader('record-policy-projection-email', PermissionName.USER_READ, {
+                name: 'record-policy-projection-email',
+                type: BuiltInPolicyType.ATTRIBUTES,
+                invert: false,
+                query: { email: { $ne: withheldEmail } },
+            });
+
+            listReader = await createReader('record-policy-projection-email-list', PermissionName.USER_READ, {
+                name: 'record-policy-projection-email-list',
+                type: BuiltInPolicyType.COMPOSITE,
+                decisionStrategy: 'unanimous',
+                invert: false,
+                children: [
+                    {
+                        name: 'record-policy-projection-email-list-email',
+                        type: BuiltInPolicyType.ATTRIBUTES,
+                        invert: false,
+                        query: { email: { $ne: withheldEmail } },
+                    },
+                    nonLowerable('record-policy-projection-email-list-names'),
+                ],
+            });
+
+            matchReader = await createReader('record-policy-projection-email-match', PermissionName.USER_READ, {
+                name: 'record-policy-projection-email-match',
+                type: BuiltInPolicyType.COMPOSITE,
+                decisionStrategy: 'unanimous',
+                invert: false,
+                children: [
+                    {
+                        name: 'record-policy-projection-email-match-email',
+                        type: BuiltInPolicyType.ATTRIBUTES,
+                        invert: false,
+                        query: { email: readableEmail },
+                    },
+                    nonLowerable('record-policy-projection-email-match-names'),
+                ],
+            });
+        });
+
+        it('should refuse the record read, unprojected and projected', async () => {
+            await expectClientError(
+                () => recordReader.user.getOne(withheld.id),
+                { status: 403, code: ErrorCode.PERMISSION_EVALUATION_FAILED },
+            );
+
+            await expectClientError(
+                () => recordReader.user.getOne(withheld.id, { fields: ['id', 'name'] }),
+                { status: 403, code: ErrorCode.PERMISSION_EVALUATION_FAILED },
+            );
+        });
+
+        it('should answer a readable record without the column', async () => {
+            const { data: unprojected } = await recordReader.user.getOne(readable.id);
+            const { data: reference } = await suite.client.user.getOne(readable.id);
+
+            expect(unprojected).toEqual(reference);
+            expect(Object.keys(unprojected)).toEqual(Object.keys(reference));
+            expect(unprojected).not.toHaveProperty('email');
+
+            const { data: projected } = await recordReader.user.getOne(readable.id, { fields: ['id', 'name'] });
+
+            expect(projected).toEqual({
+                id: readable.id,
+                name: readable.name,
+                realmId,
+            });
+        });
+
+        it('should withhold the row from a list decided per row, unprojected and projected', async () => {
+            const { data: unprojected } = await listReader.user.getMany({ filters: { name: withheld.name } });
+
+            expect(unprojected).toEqual([]);
+
+            const { data: projected } = await listReader.user.getMany({
+                filters: { name: withheld.name },
+                fields: ['id', 'name'],
+            });
+
+            expect(projected).toEqual([]);
+        });
+
+        it('should answer a readable row of such a list without the column', async () => {
+            const { data: unprojected } = await listReader.user.getMany({ filters: { name: readable.name } });
+            const { data: reference } = await suite.client.user.getMany({ filters: { name: readable.name } });
+
+            expect(unprojected).toHaveLength(1);
+            expect(unprojected).toEqual(reference);
+            expect(Object.keys(unprojected[0]!)).toEqual(Object.keys(reference[0]!));
+            expect(unprojected[0]).not.toHaveProperty('email');
+
+            const { data: projected } = await listReader.user.getMany({
+                filters: { name: readable.name },
+                fields: ['id', 'name'],
+            });
+
+            expect(projected).toEqual([{
+                id: readable.id,
+                name: readable.name,
+                realmId,
+            }]);
+        });
+
+        it('should answer the row a condition on the column matches', async () => {
+            const { data: record } = await matchReader.user.getOne(readable.id);
+
+            expect(record.id).toEqual(readable.id);
+            expect(record).not.toHaveProperty('email');
+
+            const { data: list } = await matchReader.user.getMany({ filters: { name: readable.name } });
+
+            expect(list.map((row) => row.id)).toEqual([readable.id]);
+            expect(list[0]).not.toHaveProperty('email');
+
+            const { data: other } = await matchReader.user.getMany({ filters: { name: withheld.name } });
+
+            expect(other).toEqual([]);
+        });
+
+        it('should answer the column to a read that asks for it', async () => {
+            const { data: record } = await recordReader.user.getOne(readable.id, { fields: ['id', 'email'] });
+
+            expect(record).toEqual({
+                id: readable.id,
+                email: readableEmail,
+                realmId,
+            });
+
+            const { data: list } = await listReader.user.getMany({
+                filters: { name: readable.name },
+                fields: ['id', 'email'],
+            });
+
+            expect(list).toEqual([{
+                id: readable.id,
+                email: readableEmail,
+                realmId,
+            }]);
+
+            const { data: admin } = await suite.client.user.getOne(readable.id, { fields: ['id', 'email'] });
+
+            expect(admin.email).toEqual(readableEmail);
+        });
+    });
 });

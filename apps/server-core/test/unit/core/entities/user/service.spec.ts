@@ -145,8 +145,8 @@ describe('core/entities/user/service', () => {
 
             const loaded = spy.mock.calls[0]![0].fields.value.map((field) => field.name);
 
-            expect([...loaded].sort()).toEqual([...readDefaultFieldNames(userSchema)!].sort());
-            expect(loaded).not.toContain('email');
+            // the default row plus the column declared for the check
+            expect([...loaded].sort()).toEqual([...readDefaultFieldNames(userSchema)!, 'email'].sort());
 
             // the own row is kept without an evaluation
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(1);
@@ -338,7 +338,7 @@ describe('core/entities/user/service', () => {
 
             it('should evaluate the whole row and answer the projection', async () => {
                 const entity = seedUser();
-                const { lastName } = entity;
+                const { lastName, email } = entity;
                 const actor = createAllowAllActor();
                 const evaluated: Record<string, any>[] = [];
 
@@ -354,9 +354,15 @@ describe('core/entities/user/service', () => {
 
                 const loaded = spy.mock.calls[0]![1]!.fields.value.map((field) => field.name);
 
-                expect([...loaded].sort()).toEqual([...readDefaultFieldNames(userSchema)!].sort());
+                // the default row plus the column declared for the check
+                expect([...loaded].sort()).toEqual([...readDefaultFieldNames(userSchema)!, 'email'].sort());
+                expect(evaluated[0]).toHaveProperty('email', email);
+                expect(result).not.toHaveProperty('email');
 
                 const data = actor.permissionEvaluator.evaluateOneOfCalls[0]!.data!;
+
+                expect(data.get<string[]>(BuiltInPolicyType.ATTRIBUTE_NAMES)).not.toContain('email');
+
                 const defaults = readDefaultFieldNames(userSchema)!;
 
                 expect(evaluated).toHaveLength(1);

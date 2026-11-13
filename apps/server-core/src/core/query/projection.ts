@@ -13,6 +13,8 @@ import {
     isGroupedQuery,
 } from '@rapiq/core';
 import type { IQuery, Schema } from '@rapiq/core';
+import { EntityType } from '@authup/core-kit';
+import type { RecordCheckFields } from './types.ts';
 
 /**
  * A column a sparse `fields` projection did not ask for, loaded only so the
@@ -20,6 +22,15 @@ import type { IQuery, Schema } from '@rapiq/core';
  * {@link trimReachCheckFields} once the check ran.
  */
 export class ReachCheckField extends Field {}
+
+/**
+ * The columns a per-row check reads although no unprojected read loads them:
+ * a policy can be written against such a column, so the check must see its
+ * value. Declared one by one, never derived from a schema's allowed list,
+ * which also names columns no check may load (a gated secret, key material).
+ * A schema named here declares its default columns.
+ */
+export const RECORD_CHECK_FIELDS: RecordCheckFields = { [EntityType.USER]: ['email'] };
 
 /**
  * The columns an unprojected join of the schema loads (its defaults, else
@@ -84,10 +95,12 @@ export function trimReachCheckFields(rows: Record<string, any>[], query: IQuery)
 }
 
 /**
- * Widen a sparse root projection to the schema's whole default row, so a
- * per-row check evaluates the row rather than the requested part of it: a
- * column the projection left out would read as null there. The added columns
- * are {@link ReachCheckField}s, removed again after the check. A column in
+ * Widen a root projection to the schema's whole default row plus the columns
+ * {@link RECORD_CHECK_FIELDS} declares for it, so a per-row check evaluates
+ * the row rather than the requested part of it: a column the read left out
+ * would read as null there. An unprojected read carries its default columns
+ * already and gains the declared ones. The added columns are
+ * {@link ReachCheckField}s, removed again after the check. A column in
  * `retain` is one the repository loads for every read and the response
  * carries; it is added as a requested column. A grouped query has no rows to
  * check and is returned as is.
@@ -117,6 +130,12 @@ export function widenSparseRootProjection(
         }
 
         added.push(retain.includes(name) ? new Field(name) : new ReachCheckField(name));
+    }
+
+    for (const name of RECORD_CHECK_FIELDS[schema.name as `${EntityType}`] ?? []) {
+        if (!requested.has(name)) {
+            added.push(new ReachCheckField(name));
+        }
     }
 
     if (added.length === 0) {
