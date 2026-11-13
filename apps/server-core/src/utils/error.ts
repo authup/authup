@@ -13,7 +13,7 @@ import {
     normalizeError,
 } from '@authup/errors';
 import { isHTTPError } from '@ebec/http';
-import { isClientError } from 'hapic';
+import { isClientError, isClientErrorDueTimeout } from 'hapic';
 import {
     AdapterError,
     CodecError,
@@ -32,7 +32,8 @@ import { hasOwnProperty, isObject } from '@authup/kit';
  * 3. validup Issue error               → BAD_REQUEST AuthupError carrying issues
  * 4. rapiq ParseError / CodecError     → BAD_REQUEST AuthupError (client wire query)
  *    rapiq AdapterError (value)        → BAD_REQUEST AuthupError (unbindable operand)
- * 5. hapic ClientError                 → UPSTREAM_ERROR AuthupError (outbound call)
+ * 5. hapic ClientError (timeout)       → UPSTREAM_TIMEOUT AuthupError (outbound call)
+ *    hapic ClientError                 → UPSTREAM_ERROR AuthupError (outbound call)
  * 6. foreign @ebec/http HTTPError      → AuthupError with the closest semantic code
  * 7. driver error w/ a recognised code → ENTITY_CONFLICT, BAD_REQUEST or STORAGE_INSUFFICIENT
  * 8. anything else                     → INTERNAL_ERROR AuthupError
@@ -96,6 +97,14 @@ export function sanitizeError(input: unknown): AuthupError {
      * `describeError` is what carries the detail, into the log only.
      */
     if (isClientError(input)) {
+        if (isClientErrorDueTimeout(input)) {
+            return new AuthupError({
+                code: ErrorCode.UPSTREAM_TIMEOUT,
+                message: 'A request to an upstream service timed out.',
+                stack: input.stack,
+            });
+        }
+
         return new AuthupError({
             code: ErrorCode.UPSTREAM_ERROR,
             message: 'A request to an upstream service failed.',

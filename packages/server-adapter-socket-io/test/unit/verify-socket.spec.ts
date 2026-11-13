@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BearerTokenMalformedError } from '@authup/errors';
+import { BearerTokenMalformedError, UpstreamTimeoutError } from '@authup/errors';
 import type { ITokenVerifier, TokenVerificationData } from '@authup/server-adapter-kit';
 import {
     describe,
@@ -13,7 +13,7 @@ import {
     it,
     vi,
 } from 'vitest';
-import { verifySocket } from '../../src';
+import { createMiddleware, verifySocket } from '../../src';
 import type { Socket } from '../../src';
 
 function createVerifier(impl: ITokenVerifier['verify']): ITokenVerifier {
@@ -142,5 +142,22 @@ describe('verifySocket', () => {
 
         expect(tokenBySocket).not.toHaveBeenCalled();
         expect(verify).toHaveBeenCalledWith('abc', verifyOptions);
+    });
+
+    it('hands an upstream timeout of the verifier to next unchanged', async () => {
+        const error = new UpstreamTimeoutError();
+        const verify = vi.fn(async () => {
+            throw error;
+        });
+        const tokenVerifierHandler = vi.fn();
+        const next = vi.fn();
+
+        const middleware = createMiddleware({ tokenVerifier: createVerifier(verify), tokenVerifierHandler });
+
+        await middleware(createSocket({ token: 'abc' }), next);
+
+        expect(next).toHaveBeenCalledTimes(1);
+        expect(next).toHaveBeenCalledWith(error);
+        expect(tokenVerifierHandler).not.toHaveBeenCalled();
     });
 });

@@ -45,6 +45,7 @@ Contract:
 | Valid `Bearer <token>` and verify ok | resolves with `TokenVerificationData`          |
 | Malformed `Authorization` header     | rejects with `BearerTokenMalformedError`       |
 | `tokenVerifier.verify` rejects       | rejects with the underlying verifier error     |
+| authup does not answer in time       | rejects with `UpstreamTimeoutError`            |
 
 The optional `tokenByRequest` callback runs only when the `Authorization` header is absent. The consumer
 extracts the token from wherever they like (cookie, custom header, query string): the adapter does not parse cookies.
@@ -54,8 +55,9 @@ extracts the token from wherever they like (cookie, custom header, query string)
 Local verification (no `creator`) caches each signing key per realm and key id for 5 minutes, in
 process memory whatever token `cache` is set, since a `CryptoKey` cannot be serialized. An unknown key id is always fetched and failed fetches are never cached, so a key rotation needs
 no restart, and a disabled or deleted key keeps verifying for at most the TTL. Concurrent lookups of one
-key share a single fetch, which fails after 10 seconds (`timeout`) so a stalled request to the auth server
-cannot hold up later verifications. Tune or disable the cache on the `TokenVerifier`:
+key share a single fetch, which fails after 10 seconds (`jwkCache.timeout`) so a stalled request to the auth server
+cannot hold up later verifications. The fetch is also bounded by the verifier's `timeout` (see [Timeouts](#timeouts)),
+so the smaller of the two wins. Tune or disable the cache on the `TokenVerifier`:
 
 ```typescript
 const tokenVerifier = new TokenVerifier({
@@ -94,6 +96,56 @@ other's results. Verifiers sharing a `cacheNamespace` must be configured identic
 Remote verification introspects with the token `creator` mints and keeps it until authup answers
 `401`; it then mints a new one and asks once more. An inactive token is rejected with
 `inactive_token`, a failed introspection with `invalid_token` naming the status authup answered.
+
+## Timeouts
+
+A `TokenVerifier` bounds every request a verification makes, the introspection request and the key
+fetch, by its `timeout` in seconds (default 10). A verification that runs out of time rejects with an
+`UpstreamTimeoutError` (`upstream_timeout`, HTTP 504), never with a `JWTError`, so "authup did not
+answer" is never mistaken for "the token is invalid". A cached key load is bounded by both `timeout`
+and `jwkCache.timeout`, so the smaller one wins: `timeout: 30` with the default key cache still stops
+the load after 10 seconds, and rejects the same way.
+
+Remote verification mints its introspection token with the `creator`'s own client, which the
+verifier's `timeout` does not reach. Set that client's `timeout` too, in milliseconds:
+
+```typescript
+import { createClientTokenCreator } from '@authup/core-http-kit';
+import { isUpstreamTimeoutError } from '@authup/errors';
+import { TokenVerifier } from '@authup/server-adapter-kit';
+import { verifyRequest } from '@authup/server-adapter-web';
+
+const tokenVerifier = new TokenVerifier({
+    baseURL: 'http://localhost:3000/',
+    timeout: 5,
+    creator: createClientTokenCreator(
+        { id: 'my-api', secret: 'my-api-secret' },
+        { client: { baseURL: 'http://localhost:3000/', timeout: 5_000 } },
+    ),
+});
+
+export async function handle(request: Request): Promise<Response> {
+    try {
+        const data = await verifyRequest(request, { tokenVerifier });
+        if (!data) {
+            return new Response(null, { status: 401 });
+        }
+
+        return new Response(`hello ${data.sub}`);
+    } catch (e) {
+        if (isUpstreamTimeoutError(e)) {
+            return new Response(null, { status: 503 });
+        }
+
+        return new Response(null, { status: 401 });
+    }
+}
+```
+
+`verify(token, { signal })` aborts one verification with your own signal: it rejects with the
+signal's reason as is and cancels its introspection request. A key fetch shared with other
+verifications is not cancelled; the aborted call only stops waiting for it. The adapters do not
+pass a signal on their own.
 
 ## Capability tokens
 

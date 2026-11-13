@@ -58,10 +58,11 @@
         "@authup/kit": "^1.0.0-beta.75",
         "@authup/specs": "^1.0.0-beta.75",
         "redis-extension": "^3.0.0",
-        "vouchly": "^0.1.1"
+        "vouchly": "^0.1.2"
     },
     "devDependencies": {
         "@authup/server-kit": "^1.0.0-beta.75",
+        "hapic": "^3.1.0",
         "ioredis": "^6.0.0",
         "jose": "^6.2.13",
         "vitest": "^5.0.3"

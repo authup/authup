@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BearerTokenMalformedError } from '@authup/errors';
+import { BearerTokenMalformedError, UpstreamTimeoutError } from '@authup/errors';
 import type { ITokenVerifier, TokenVerificationData } from '@authup/server-adapter-kit';
 import {
     describe,
@@ -165,5 +165,17 @@ describe('verifyRequest', () => {
         });
 
         expect(verify).toHaveBeenCalledWith('BearerLooksFakeButOpaque', verifyOptions);
+    });
+
+    it('rejects with an upstream timeout of the verifier unchanged', async () => {
+        const error = new UpstreamTimeoutError();
+        const verify = vi.fn(async () => {
+            throw error;
+        });
+
+        await expect(verifyRequest(
+            new Request('http://localhost/', { headers: { authorization: 'Bearer abc' } }),
+            { tokenVerifier: createVerifier(verify) },
+        )).rejects.toBe(error);
     });
 });

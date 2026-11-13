@@ -6,10 +6,10 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { ErrorCode } from '@authup/errors';
+import { ErrorCode, httpStatusFromCode } from '@authup/errors';
 import { NotFoundError } from '@ebec/http';
 import type { Response as HapicResponse, RequestOptions } from 'hapic';
-import { createClientError } from 'hapic';
+import { createClientError, isClientErrorDueTimeout } from 'hapic';
 import { AdapterError } from '@rapiq/core';
 import { describeError, sanitizeError } from '../../../src/utils';
 
@@ -48,6 +48,21 @@ function createUpstreamNetworkError() {
     });
 }
 
+/**
+ * Mirrors a request that ran past its timeout: the transport rejects with
+ * the reason of an AbortSignal.timeout(), a TimeoutError.
+ */
+function createUpstreamTimeoutError() {
+    const error = createClientError({
+        request,
+        error: new DOMException('The operation was aborted due to timeout', 'TimeoutError'),
+    });
+
+    expect(isClientErrorDueTimeout(error)).toBe(true);
+
+    return error;
+}
+
 describe('src/utils/error', () => {
     describe('sanitizeError', () => {
         it('should map an unbindable filter operand to a bad request', () => {
@@ -78,6 +93,15 @@ describe('src/utils/error', () => {
             const error = sanitizeError(createUpstreamNetworkError());
 
             expect(error.code).toEqual(ErrorCode.UPSTREAM_ERROR);
+            expect(httpStatusFromCode(error.code)).toEqual(502);
+        });
+
+        it('should map an upstream call that ran out of time to an upstream timeout', () => {
+            const error = sanitizeError(createUpstreamTimeoutError());
+
+            expect(error.code).toEqual(ErrorCode.UPSTREAM_TIMEOUT);
+            expect(httpStatusFromCode(error.code)).toEqual(504);
+            expect(error.message).not.toContain(UPSTREAM_URL);
         });
 
         it('should not expose the upstream url on an upstream error', () => {

@@ -11,3 +11,5 @@ import { isClientError as isError } from 'hapic';
 export function isClientError(input: unknown) : input is ClientError {
     return isError(input);
 }
+
+export { isClientErrorDueTimeout } from 'hapic';

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IncomingMessage } from 'node:http';
-import { BearerTokenMalformedError } from '@authup/errors';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import { BearerTokenMalformedError, UpstreamTimeoutError } from '@authup/errors';
 import type { ITokenVerifier, TokenVerificationData } from '@authup/server-adapter-kit';
 import {
     describe,
@@ -14,7 +14,7 @@ import {
     it,
     vi,
 } from 'vitest';
-import { verifyRequest } from '../../src';
+import { createMiddleware, verifyRequest } from '../../src';
 
 function createVerifier(impl: ITokenVerifier['verify']): ITokenVerifier {
     return { verify: impl };
@@ -170,5 +170,22 @@ describe('verifyRequest (node)', () => {
         });
 
         expect(verify).toHaveBeenCalledWith('BearerLooksFakeButOpaque', verifyOptions);
+    });
+
+    it('hands an upstream timeout of the verifier to next unchanged', async () => {
+        const error = new UpstreamTimeoutError();
+        const verify = vi.fn(async () => {
+            throw error;
+        });
+        const tokenVerifierHandler = vi.fn();
+        const next = vi.fn();
+
+        const middleware = createMiddleware({ tokenVerifier: createVerifier(verify), tokenVerifierHandler });
+
+        await middleware(createRequest({ authorization: 'Bearer abc' }), {} as ServerResponse, next);
+
+        expect(next).toHaveBeenCalledTimes(1);
+        expect(next).toHaveBeenCalledWith(error);
+        expect(tokenVerifierHandler).not.toHaveBeenCalled();
     });
 });
