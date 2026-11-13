@@ -31,8 +31,11 @@ option set, in three cases:
 - with `jwkCache: false`, a key fetch that takes longer than 10 seconds. That fetch had no
   bound at all before.
 
-The new `timeout` option (seconds) sets the bound of every request a verification makes; a
-cached key load stops at the smaller of `timeout` and `jwkCache.timeout`.
+The new `timeout` option (seconds) sets the bound of the introspection request and of the key
+fetch; a cached key load stops at the smaller of `timeout` and `jwkCache.timeout`. It does not
+reach the client credentials mint of remote mode, which runs on the token creator's own client:
+set that client's `timeout` (milliseconds) as well, or a creator that never answers still holds
+the verification.
 
 **May need action:** an error handler that answers every verification failure with 401 now
 also does so for "authup did not answer in time". Recognize the timeout with
