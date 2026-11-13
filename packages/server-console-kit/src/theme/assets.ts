@@ -114,15 +114,7 @@ export function createThemeAssetsHandler(provider: IThemeProvider) : Handler {
             return null;
         }
 
-        const etag = `W/"${stats.size}-${stats.mtime.getTime()}"`;
-
         event.response.headers.set(HeaderName.CACHE_CONTROL, 'public, max-age=0, must-revalidate');
-
-        if (event.headers.get(HeaderName.IF_NONE_MATCH) === etag) {
-            event.response.status = 304;
-
-            return null;
-        }
 
         const response = await sendFile(event, {
             content: (options) => Readable.toWeb(
