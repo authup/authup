@@ -9,7 +9,7 @@ import{_ as a,o as e,c as i,a0 as n}from"./chunks/framework.UBD2JM-n.js";const k
 <span class="line"><span>    listen 80;</span></span>
 <span class="line"><span></span></span>
 <span class="line"><span>    gzip            on;</span></span>
-<span class="line"><span>    gzip_types      text/plain application/xml text/css application/javascript;</span></span>
+<span class="line"><span>    gzip_types      text/plain application/xml text/css text/javascript application/javascript;</span></span>
 <span class="line"><span>    gzip_min_length 1000;</span></span>
 <span class="line"><span>    </span></span>
 <span class="line"><span>    client_max_body_size 0;</span></span>
