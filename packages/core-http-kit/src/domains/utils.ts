@@ -7,19 +7,36 @@
 
 import type { AuthorizationHeader, RequestBaseOptions } from 'hapic';
 import { stringifyAuthorizationHeader } from 'hapic';
+import type { APIRequestOptions } from './types-base';
 
-export function buildAuthorizationHeaderRequestConfig(
-    options?: { authorizationHeader?: string | AuthorizationHeader },
+/**
+ * The per-request config of a call: only `signal`, `timeout` and an
+ * explicit `authorizationHeader` are taken from the caller's options.
+ */
+export function buildRequestConfig(
+    options?: APIRequestOptions & { authorizationHeader?: string | AuthorizationHeader },
 ) : RequestBaseOptions | undefined {
-    if (!options || !options.authorizationHeader) {
+    if (!options) {
         return undefined;
     }
 
-    return {
-        headers: {
+    const output : RequestBaseOptions = {};
+
+    if (options.signal) {
+        output.signal = options.signal;
+    }
+
+    if (typeof options.timeout !== 'undefined') {
+        output.timeout = options.timeout;
+    }
+
+    if (options.authorizationHeader) {
+        output.headers = {
             Authorization: typeof options.authorizationHeader === 'string' ?
                 options.authorizationHeader :
                 stringifyAuthorizationHeader(options.authorizationHeader),
-        },
-    };
+        };
+    }
+
+    return output;
 }

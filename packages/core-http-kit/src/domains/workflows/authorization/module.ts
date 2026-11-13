@@ -7,7 +7,7 @@
 
 import type { AuthorizationCatalog, AuthorizationCheckPermissions } from '@authup/access';
 import { BaseAPI } from '../../base';
-import { buildAuthorizationHeaderRequestConfig } from '../../utils';
+import { buildRequestConfig } from '../../utils';
 import type {
     AuthorizationCheckPayload,
     AuthorizationCheckResponse,
@@ -17,7 +17,7 @@ import type {
 
 export class AuthorizationAPI extends BaseAPI implements IAuthorizationAPI {
     async get(options?: AuthorizationRequestOptions) : Promise<AuthorizationCatalog> {
-        const response = await this.client.get('authorization', buildAuthorizationHeaderRequestConfig(options));
+        const response = await this.client.get('authorization', buildRequestConfig(options));
 
         return response.data;
     }
@@ -38,7 +38,7 @@ export class AuthorizationAPI extends BaseAPI implements IAuthorizationAPI {
         const response = await this.client.post(
             'authorization/check',
             payload,
-            buildAuthorizationHeaderRequestConfig(options),
+            buildRequestConfig(options),
         );
 
         const maxAge = readCacheControlMaxAge(response.headers.get('cache-control'));

@@ -6,6 +6,7 @@
  */
 
 import type { ClientOptions } from '../client';
+import type { APIRequestOptions } from '../domains';
 
 export type FakeRequest = {
     method: string,
@@ -17,6 +18,11 @@ export type FakeRequest = {
      * assertions (e.g. the MFA-pending ticket riding the challenge calls).
      */
     headers: Record<string, string>,
+    /**
+     * The per-call `signal` and `timeout` the request was sent with; a key
+     * is present only when the caller set it.
+     */
+    options?: APIRequestOptions,
 };
 
 export type FakeHandler = (req: FakeRequest) => unknown | Promise<unknown>;

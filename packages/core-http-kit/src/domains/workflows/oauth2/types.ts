@@ -30,6 +30,7 @@ import type {
     TokenRevokeParameters,
 } from '@hapic/oauth2';
 import type { AuthorizationHeader, Response } from 'hapic';
+import type { APIRequestOptions } from '../../types-base';
 import type { StatusResponseFeatures } from '../status';
 
 /**
@@ -108,7 +109,7 @@ export type DeviceAuthorizationDecisionResponse = {
 
 export type OAuth2TokenRevokeParameters = TokenRevokeParameters;
 export type OAuth2TokenIntrospectParameters = TokenIntrospectParameters;
-export type OAuth2TokenRequestOptions = TokenBaseOptions;
+export type OAuth2TokenRequestOptions = TokenBaseOptions & APIRequestOptions;
 
 export type OAuth2AuthorizeParameters = Partial<AuthorizeParameters>;
 

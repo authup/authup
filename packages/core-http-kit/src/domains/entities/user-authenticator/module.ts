@@ -10,7 +10,7 @@ import { buildQueryString } from '../../../helpers';
 import type { User, UserAuthenticator } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import { buildAuthorizationHeaderRequestConfig } from '../../utils';
+import { buildRequestConfig } from '../../utils';
 import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     IUserAuthenticatorAPI,
@@ -80,7 +80,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
 
         const response = await this.client.get(
             url,
-            buildAuthorizationHeaderRequestConfig(options),
+            buildRequestConfig(options),
         );
 
         return response.data;
@@ -93,7 +93,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
         const response = await this.client.post(
             'authenticators/challenge/send',
             data,
-            buildAuthorizationHeaderRequestConfig(options),
+            buildRequestConfig(options),
         );
 
         return response.data;
@@ -106,7 +106,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
         const response = await this.client.post(
             'authenticators/challenge',
             data,
-            buildAuthorizationHeaderRequestConfig(options),
+            buildRequestConfig(options),
         );
 
         return response.data;

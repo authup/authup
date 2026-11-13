@@ -10,6 +10,7 @@ import type { ObjectLiteral } from '@authup/kit';
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
 import type { ClientOptionsInput, IClient as IBaseClient } from 'hapic';
 import type {
+    APIRequestOptions,
     IAccountAPI,
     IAuthorizationAPI,
     IClientAPI,
@@ -155,11 +156,11 @@ export interface IClient extends IBaseClient {
 
     readonly userRole : IUserRoleAPI;
 
-    getJwks() : Promise<{ keys: OAuth2JsonWebKey[] }>;
+    getJwks(options?: APIRequestOptions) : Promise<{ keys: OAuth2JsonWebKey[] }>;
 
-    getJwk(id: string, realmId?: string) : Promise<OAuth2JsonWebKey>;
+    getJwk(id: string, realmId?: string, options?: APIRequestOptions) : Promise<OAuth2JsonWebKey>;
 
-    getWellKnownOpenIDConfiguration() : Promise<OpenIDProviderMetadata>;
+    getWellKnownOpenIDConfiguration(options?: APIRequestOptions) : Promise<OpenIDProviderMetadata>;
 }
 
 /**
