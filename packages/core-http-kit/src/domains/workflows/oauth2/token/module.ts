@@ -28,7 +28,7 @@ export class OAuth2TokenAPI extends TokenAPI implements IOAuth2TokenAPI {
         }, options);
     }
 
-    async createWithDeviceCode(
+    override async createWithDeviceCode(
         parameters: Omit<OAuth2TokenDeviceCodeGrantParameters, 'grant_type'>,
         options?: OAuth2TokenRequestOptions,
     ) : Promise<OAuth2TokenGrantResponse> {
