@@ -13,12 +13,6 @@ The `attributeNames` policy of `@authup/access` reads the `attributeNames` polic
 (a list of field names) and, without one, the keys of the `attributes` record. With both keys
 present it evaluated the union of the two; it now evaluates the names list alone.
 
-The server evaluates a read per row on the row's whole default columns, whatever `fields=`
-asked for, and hands the policy the names of the fields the response carries. An
-`attributeNames` policy bound to a read permission therefore keeps deciding by the fields a
-reader receives: a denylist on `email` refuses a read that asks for `email` and allows one
-that does not.
-
 **Action required:** A resource server that passes both `attributeNames` and `attributes` to
 its own evaluations and relied on the record's keys being checked as well passes the names it
 wants judged in `attributeNames`.
