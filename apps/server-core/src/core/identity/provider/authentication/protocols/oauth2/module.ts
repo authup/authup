@@ -76,22 +76,15 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
 
     buildRedirectURL(parameters: Partial<AuthorizeParameters> = {}) : string {
         try {
-            const url = new URL(this.client.authorize.buildURL(parameters));
-
             // Ask the upstream to step up rather than merely observing what
             // it returns. Defaulted here rather than at the call sites, so
             // the login and the account-link flow both send it.
-            //
-            // Appended by hand because hapic's buildAuthorizeURL only emits
-            // the keys it knows and silently drops the rest (tada5hi/hapic#1071)
-            // - drop this once `acr_values` is part of AuthorizeParameters.
             const acrValues = buildIdentityProviderAcrValues(this.provider);
 
-            if (acrValues) {
-                url.searchParams.set('acr_values', acrValues);
-            }
-
-            return url.href;
+            return this.client.authorize.buildURL({
+                ...parameters,
+                ...(acrValues ? { acr_values: acrValues } : {}),
+            });
         } catch {
             throw new ValidationError(
                 'The identity provider is misconfigured and has an invalid or missing authorize URL.',

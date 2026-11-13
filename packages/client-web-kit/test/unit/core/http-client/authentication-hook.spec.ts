@@ -36,8 +36,10 @@ function buildApp(handlers: Record<string, FakeHandler> = {}) {
         cookieUnset: noop,
     });
 
+    // a function: the hook rebuilds an instance from its configuration,
+    // which would leave the fake's handlers behind
     installHTTPClientAuthenticationHook(app, {
-        httpClient,
+        httpClient: () => httpClient,
         pinia,
         isServer: true,
     });

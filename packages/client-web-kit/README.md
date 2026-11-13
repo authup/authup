@@ -257,7 +257,7 @@ The second argument of `install(app, options)`:
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `baseURL` | `string` | (required) | URL of the Authup API. |
-| `httpClient` | `IClient \| (() => IClient)` | `new Client({ baseURL })` | The client for each kit consumer: the store, the provided client and the renewal hook's refresh and revoke. A function is called once per consumer; an instance is shared by all of them. Prefer a function returning a NEW client per call: with one instance the renewal hook refreshes on the client it is attached to, which waits on itself when `/token` answers 401. A server render uses a function to keep the base url public while dialing an internal address (`createRebasedTransport`). |
+| `httpClient` | `IClient \| (() => IClient)` | `new Client({ baseURL })` | The client for each kit consumer: the store, the provided client and the renewal hook's refresh and revoke. A function is called once per consumer; an instance is shared by all of them. The renewal hook never refreshes on the client it is attached to: it calls a function again, and for an instance it builds a second client with the same configuration (`toOptions()`: defaults, headers and transport, no hooks). A server render uses a function to keep the base url public while dialing an internal address (`createRebasedTransport`). |
 | `pinia` | `Pinia` | the active Pinia | Pinia instance the store is registered on. |
 | `isServer` | `boolean` | `false` | Set during a server render; disables the background refresh timer. |
 | `components` | `boolean \| string[]` | not registered | Register every entity component globally, or the named ones. |

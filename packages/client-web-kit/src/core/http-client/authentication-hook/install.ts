@@ -5,7 +5,8 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import { ClientAuthenticationHook, ClientAuthenticationHookEventName } from '@authup/core-http-kit';
+import { Client, ClientAuthenticationHook, ClientAuthenticationHookEventName } from '@authup/core-http-kit';
+import type { IClient } from '@authup/core-http-kit';
 import type { App } from 'vue';
 import { storeToRefs } from 'pinia';
 import { hasHTTPClientAuthenticationHook, provideHTTPClientAuthenticationHook } from './singleton';
@@ -28,10 +29,19 @@ export function installHTTPClientAuthenticationHook(
 
     let refreshTokenInUse : string | null = null;
 
-    // A new instance per call unless the host passed one instance: the
-    // refresh must not run on the client the hook is attached to, or a 401
-    // from `/token` waits on the very refresh it belongs to.
-    const buildClient = () => buildHTTPClient(options);
+    // Never the client the hook is attached to: a 401 from `/token` would
+    // wait on the very refresh it belongs to. A client function answers a
+    // new instance per call; one instance is rebuilt from its configuration
+    // (defaults, headers, transport), which carries no hooks.
+    const buildClient = () : IClient => {
+        const { httpClient } = options;
+
+        if (httpClient && typeof httpClient !== 'function') {
+            return new Client(httpClient.toOptions());
+        }
+
+        return buildHTTPClient(options);
+    };
 
     const hook = new ClientAuthenticationHook({
         tokenCreator: () => {

@@ -193,4 +193,13 @@ describe('core/http-client/build', () => {
         expect(await settlesWithin(client.realm.getMany(), 2000)).toEqual('settled');
         expect(urls.some((url) => url.endsWith('/token'))).toBe(true);
     });
+
+    it('settles a 401 from /token without an oauth error body with one client instance', async () => {
+        const { transport, urls } = createUnauthorizedTransport();
+        const { client, hook } = buildApp(transport, { shared: true });
+
+        expect(await settlesWithin(client.realm.getMany(), 2000)).toEqual('settled');
+        expect(await settlesWithin(hook.refresh(), 2000)).toEqual('settled');
+        expect(urls.some((url) => url.endsWith('/token'))).toBe(true);
+    });
 });
