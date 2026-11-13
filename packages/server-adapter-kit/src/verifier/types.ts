@@ -24,10 +24,24 @@ export type TokenVerifyOptions = {
      * verification unless the resolved thumbprint matches `cnf.x5t#S256`.
      */
     certificateThumbprint?: string | (() => string | undefined | Promise<string | undefined>),
+    /**
+     * Aborts this verification: it rejects with the signal's reason and
+     * cancels its introspection request. A key fetch shared with other
+     * verifications is not cancelled.
+     */
+    signal?: AbortSignal,
 };
 
 export type TokenVerifierContext = {
     baseURL: string,
+    /**
+     * Seconds each request of a verification may take: the introspection
+     * request and the key fetch. A verification that runs out of time
+     * rejects with an UpstreamTimeoutError. Must be a finite number above 0
+     * and at most 2147483. Default 10. The client credentials mint of remote
+     * mode is bounded by the timeout of the creator's own client.
+     */
+    timeout?: number,
     /**
      * Mints the client-credentials token remote mode introspects with.
      * Present: every token is verified by introspection (remote mode).

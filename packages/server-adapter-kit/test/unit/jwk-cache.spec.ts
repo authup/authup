@@ -7,7 +7,7 @@
 
 import { Client } from '@authup/core-http-kit';
 import type { OAuth2JsonWebKey } from '@authup/specs';
-import { JWTError } from '@authup/specs';
+import { UpstreamTimeoutError } from '@authup/errors';
 import {
     afterEach,
     beforeAll,
@@ -193,8 +193,8 @@ describe('jwk cache', () => {
 
         const first = verifier.verify(token);
         const joined = verifier.verify(token);
-        const firstSettled = expect(first).rejects.toBeInstanceOf(JWTError);
-        const joinedSettled = expect(joined).rejects.toBeInstanceOf(JWTError);
+        const firstSettled = expect(first).rejects.toBeInstanceOf(UpstreamTimeoutError);
+        const joinedSettled = expect(joined).rejects.toBeInstanceOf(UpstreamTimeoutError);
 
         // the key is requested after the token hash, which settles off the timer queue
         await vi.waitFor(() => expect(getJwk).toHaveBeenCalled());
@@ -218,7 +218,7 @@ describe('jwk cache', () => {
         const verifier = create({ timeout: 5 });
 
         const first = verifier.verify(token);
-        const settled = expect(first).rejects.toBeInstanceOf(JWTError);
+        const settled = expect(first).rejects.toBeInstanceOf(UpstreamTimeoutError);
 
         await vi.waitFor(() => expect(getJwk).toHaveBeenCalled());
         await vi.advanceTimersByTimeAsync(5_000);

@@ -5,15 +5,48 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isClientErrorDueTimeout } from '@authup/core-http-kit';
+import { UpstreamTimeoutError } from '@authup/errors';
+import { isObject } from '@authup/kit';
 import { JWTError, isJWTError } from '@authup/specs';
 import { VouchlyErrorCode, isVouchlyError } from 'vouchly';
 
+const CAUSE_DEPTH_MAX = 10;
+
+function isTimeout(input: unknown) : boolean {
+    let current = input;
+
+    for (let i = 0; i < CAUSE_DEPTH_MAX && isObject(current); i++) {
+        if (isVouchlyError(current) && current.code === VouchlyErrorCode.TIMEOUT) {
+            return true;
+        }
+
+        if (isClientErrorDueTimeout(current)) {
+            return true;
+        }
+
+        current = current.cause;
+    }
+
+    return false;
+}
+
 /**
- * Maps whatever a verification threw onto authup's JWTError, so the adapters
- * keep answering with authup's error codes. A JWTError a key source raised
- * travels as the cause of vouchly's key_unavailable and is surfaced as is.
+ * Maps whatever a verification threw onto the error the adapters answer
+ * with. The caller's own abort is passed on as is, a request that ran out
+ * of time becomes an UpstreamTimeoutError, and everything else a JWTError.
+ * A JWTError a key source raised travels as the cause of vouchly's
+ * key_unavailable and is surfaced as is.
  */
-export function toJWTError(input: unknown) : JWTError {
+export function toVerificationError(input: unknown, signal?: AbortSignal) : Error {
+    if (signal?.aborted && input === signal.reason) {
+        return signal.reason;
+    }
+
+    if (isTimeout(input)) {
+        return new UpstreamTimeoutError({ cause: input });
+    }
+
     if (isJWTError(input)) {
         return input;
     }

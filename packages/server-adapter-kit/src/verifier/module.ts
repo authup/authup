@@ -11,7 +11,7 @@ import { JWTError } from '@authup/specs';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import type { IntrospectionAuthorizationContext, Verifier } from 'vouchly';
 import { createVerifier } from 'vouchly';
-import { toJWTError } from './error';
+import { toVerificationError } from './error';
 import { createAuthupIssuer } from './issuer';
 import type {
     ITokenVerifier,
@@ -96,7 +96,10 @@ export class TokenVerifier implements ITokenVerifier {
             throw new Error('A capability token verifier requires an audience and local verification.');
         }
 
-        this.client = new Client({ baseURL: ctx.baseURL });
+        this.client = new Client({
+            baseURL: ctx.baseURL,
+            ...(typeof ctx.timeout === 'number' ? { timeout: ctx.timeout * 1000 } : {}),
+        });
 
         const remote = !!ctx.creator;
 
@@ -134,6 +137,7 @@ export class TokenVerifier implements ITokenVerifier {
             // disabled signing key and a revoked token until the token's exp.
             cache: ctx.cache ?? false,
             cacheNamespace,
+            ...(typeof ctx.timeout === 'number' ? { timeout: ctx.timeout } : {}),
             ...(remote ? { opaque: 'authup' } : {}),
         });
     }
@@ -142,11 +146,14 @@ export class TokenVerifier implements ITokenVerifier {
         let payload : OAuth2TokenPayload;
 
         try {
-            const result = await this.verifier.verify(token, { certificateThumbprint: options.certificateThumbprint });
+            const result = await this.verifier.verify(token, {
+                certificateThumbprint: options.certificateThumbprint,
+                signal: options.signal,
+            });
 
             payload = result.claims as OAuth2TokenPayload;
         } catch (e) {
-            throw toJWTError(e);
+            throw toVerificationError(e, options.signal);
         }
 
         this.assertNotExpired(payload);
