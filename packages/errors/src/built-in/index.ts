@@ -18,4 +18,5 @@ export * from './internal';
 export * from './login-throttled';
 export * from './mfa-throttled';
 export * from './unauthorized';
+export * from './upstream-timeout';
 export * from './validation';

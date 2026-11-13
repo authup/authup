@@ -12,6 +12,7 @@ export const TranslatorTranslationErrorGerman : NamespaceTranslations<`${ErrorCo
     [ErrorCode.BAD_REQUEST]: 'Die Anfrage konnte nicht verarbeitet werden.',
     [ErrorCode.INTERNAL_ERROR]: 'Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es später erneut.',
     [ErrorCode.UPSTREAM_ERROR]: 'Ein benötigter Dienst hat nicht korrekt geantwortet. Bitte versuche es später erneut.',
+    [ErrorCode.UPSTREAM_TIMEOUT]: 'Ein benötigter Dienst hat nicht rechtzeitig geantwortet. Bitte versuche es später erneut.',
 
     [ErrorCode.HTTP_HEADER_AUTH_TYPE_UNSUPPORTED]: 'Der Typ des Autorisierungs-Headers wird nicht unterstützt.',
     [ErrorCode.HTTP_BEARER_TOKEN_MALFORMED]: 'Das Bearer-Token ist fehlerhaft.',

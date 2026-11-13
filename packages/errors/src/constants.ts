@@ -19,6 +19,13 @@ export enum ErrorCode {
      */
     UPSTREAM_ERROR = 'upstream_error',
 
+    /**
+     * An outbound call to a service this server depends on did not answer
+     * within its bound. Distinct from UPSTREAM_ERROR so a caller can tell
+     * "the dependency is slow" from "the dependency failed".
+     */
+    UPSTREAM_TIMEOUT = 'upstream_timeout',
+
     // HTTP Codes
     HTTP_HEADER_AUTH_TYPE_UNSUPPORTED = 'unsupported_auth_header_type',
     HTTP_BEARER_TOKEN_MALFORMED = 'bearer_token_malformed',
