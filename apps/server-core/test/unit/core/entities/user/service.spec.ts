@@ -183,7 +183,7 @@ describe('core/entities/user/service', () => {
             const result = await service.getMany({}, actor);
 
             expect(result.data).toHaveLength(0);
-            expect(result.meta.total).toBe(0);
+            expect(result.meta.total).toBe(1);
         });
 
         it('should propagate a non-permission failure of the per-record check', async () => {

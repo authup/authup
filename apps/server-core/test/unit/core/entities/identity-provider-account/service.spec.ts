@@ -122,7 +122,7 @@ describe('IdentityProviderAccountService', () => {
             expect(result.meta.total).toEqual(2);
         });
 
-        it('drops rows the per-row evaluation rejects and decrements total', async () => {
+        it('drops rows the per-row evaluation rejects and keeps the candidate total', async () => {
             seedOwn();
             seedForeign();
 
@@ -135,7 +135,7 @@ describe('IdentityProviderAccountService', () => {
             // the own row bypasses evaluation; the foreign row drops
             expect(result.data).toHaveLength(1);
             expect(result.data[0].userId).toEqual(userId);
-            expect(result.meta.total).toEqual(1);
+            expect(result.meta.total).toEqual(2);
         });
     });
 

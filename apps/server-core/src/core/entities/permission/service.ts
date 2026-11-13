@@ -105,7 +105,6 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         }
 
         const data: Permission[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
@@ -118,8 +117,6 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
@@ -130,10 +127,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
         return {
             data,
-            meta: {
-                ...meta,
-                total,
-            },
+            meta,
         };
     }
 

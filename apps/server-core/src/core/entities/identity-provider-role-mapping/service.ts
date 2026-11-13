@@ -93,7 +93,6 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
         }
 
         const data: IdentityProviderRoleMapping[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
@@ -106,15 +105,13 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
             data.push(entity);
         }
 
-        return { data: await redactUnreachedRelations(data, parsed, identityProviderRoleMappingSchema, actor), meta: { ...meta, total } };
+        return { data: await redactUnreachedRelations(data, parsed, identityProviderRoleMappingSchema, actor), meta };
     }
 
     async getOne(

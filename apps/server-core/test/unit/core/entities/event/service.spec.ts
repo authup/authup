@@ -355,7 +355,7 @@ describe('EventService', () => {
             expect(meta.total).toEqual(125);
         });
 
-        it('subtracts rows denied during per-row authorization from the backing total', async () => {
+        it('keeps the backing total when per-row authorization denies rows', async () => {
             const visible = seedForeign();
             const denied = seedForeign();
 
@@ -385,7 +385,7 @@ describe('EventService', () => {
             const { data, meta } = await service.getMany({}, actor);
 
             expect(data.map((row) => row.id)).toEqual([visible.id]);
-            expect(meta.total).toEqual(124);
+            expect(meta.total).toEqual(125);
         });
 
         it('drops rows a privileged actor is not authorized for (realm reach)', async () => {

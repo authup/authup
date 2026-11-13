@@ -78,7 +78,6 @@ export class ScopeService extends AbstractEntityService implements IScopeService
         }
 
         const data: Scope[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
@@ -91,8 +90,6 @@ export class ScopeService extends AbstractEntityService implements IScopeService
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
@@ -103,10 +100,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
 
         return {
             data,
-            meta: {
-                ...meta,
-                total,
-            },
+            meta,
         };
     }
 

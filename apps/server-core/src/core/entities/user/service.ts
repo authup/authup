@@ -116,7 +116,6 @@ export class UserService extends AbstractEntityService implements IUserService {
         } = await this.repository.findMany(scope.query);
 
         const data: User[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             if (
@@ -143,8 +142,6 @@ export class UserService extends AbstractEntityService implements IUserService {
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
@@ -155,10 +152,7 @@ export class UserService extends AbstractEntityService implements IUserService {
 
         return {
             data,
-            meta: {
-                ...meta,
-                total,
-            },
+            meta,
         };
     }
 

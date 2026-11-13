@@ -125,7 +125,6 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         }
 
         const data: Key[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
@@ -138,8 +137,6 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
@@ -151,10 +148,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
 
         return {
             data,
-            meta: {
-                ...meta,
-                total,
-            },
+            meta,
         };
     }
 

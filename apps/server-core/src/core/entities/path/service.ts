@@ -93,7 +93,6 @@ export class PathService extends AbstractEntityService implements IPathService {
         }
 
         const data: Path[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
@@ -106,8 +105,6 @@ export class PathService extends AbstractEntityService implements IPathService {
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
@@ -118,10 +115,7 @@ export class PathService extends AbstractEntityService implements IPathService {
 
         return {
             data,
-            meta: {
-                ...meta,
-                total,
-            },
+            meta,
         };
     }
 

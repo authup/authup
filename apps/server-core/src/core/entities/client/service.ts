@@ -149,7 +149,6 @@ export class ClientService extends AbstractEntityService implements IClientServi
         const { data: entities, meta } = await this.repository.findMany(scope.query);
 
         let data = entities;
-        let { total } = meta;
 
         if (scope.post) {
             data = [];
@@ -165,8 +164,6 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 });
 
                 if (!reached) {
-                    total -= 1;
-
                     continue;
                 }
 
@@ -177,7 +174,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         await redactUnreachedRelations(data, scope.query, clientSchema, actor);
         await Promise.all(data.map((entity) => this.revealSecret(entity)));
 
-        return { data, meta: { ...meta, total } };
+        return { data, meta };
     }
 
     async getOne(

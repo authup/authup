@@ -92,7 +92,6 @@ export class SessionService extends AbstractEntityService implements ISessionSer
         const { data: entities, meta } = await this.repository.findMany(scope.query);
 
         const data: Session[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             if (this.isOwnedBy(entity, actor)) {
@@ -111,8 +110,6 @@ export class SessionService extends AbstractEntityService implements ISessionSer
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
@@ -121,10 +118,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
 
         return {
             data: await redactUnreachedRelations(data, scope.query, sessionSchema, actor),
-            meta: {
-                ...meta,
-                total,
-            },
+            meta,
         };
     }
 

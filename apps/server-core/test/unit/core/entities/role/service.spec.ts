@@ -113,6 +113,54 @@ describe('core/entities/role/service', () => {
             expect(result.data[0]).toEqual(role);
         });
 
+        it('should answer the candidate total on every page of a per-row read', async () => {
+            const roles = repository.seed([
+                createFakeRole({ realmId: randomUUID() }),
+                createFakeRole({ realmId: randomUUID() }),
+                createFakeRole({ realmId: randomUUID() }),
+                createFakeRole({ realmId: randomUUID() }),
+            ]);
+            const denied = new Set([roles[0]!.id, roles[1]!.id]);
+
+            vi.spyOn(repository, 'findMany').mockImplementation(async (query) => {
+                const offset = query.pagination?.offset ?? 0;
+                const limit = query.pagination?.limit ?? roles.length;
+
+                return {
+                    data: roles.slice(offset, offset + limit),
+                    meta: {
+                        total: roles.length,
+                        offset,
+                        limit,
+                    },
+                };
+            });
+
+            const actor = createAllowAllActor();
+
+            actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
+                if (method !== 'evaluateOneOf') {
+                    return;
+                }
+
+                const row = ctx.data!.get<Role>(BuiltInPolicyType.ATTRIBUTES);
+
+                if (row && denied.has(row.id)) {
+                    throw PermissionError.denied('test');
+                }
+            });
+
+            const first = await service.getMany({ page: { limit: 2, offset: 0 } }, actor);
+
+            expect(first.data).toEqual([]);
+            expect(first.meta.total).toBe(4);
+
+            const second = await service.getMany({ page: { limit: 2, offset: 2 } }, actor);
+
+            expect(second.data.map((role) => role.id)).toEqual([roles[2]!.id, roles[3]!.id]);
+            expect(second.meta.total).toBe(4);
+        });
+
         it('should keep the projection of a read the reach decides', async () => {
             repository.seed([createFakeRole({ realmId: randomUUID() })]);
 

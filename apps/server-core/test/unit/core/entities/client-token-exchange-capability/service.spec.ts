@@ -78,7 +78,7 @@ describe('core/entities/client-token-exchange-capability/service', () => {
             await expect(service.getMany({}, createDenyAllActor())).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
-        it('should drop rows out of reach on the per-row branch and correct the total', async () => {
+        it('should drop rows out of reach on the per-row branch and keep the candidate total', async () => {
             const actor = createAllowAllActor();
             const reached = seed();
 
@@ -93,7 +93,7 @@ describe('core/entities/client-token-exchange-capability/service', () => {
             const { data, meta } = await service.getMany({}, actor);
 
             expect(data.map((row) => row.id)).toEqual([reached.id]);
-            expect(meta.total).toEqual(1);
+            expect(meta.total).toEqual(2);
         });
     });
 

@@ -148,7 +148,7 @@ describe('core/entities/client/service', () => {
             const result = await service.getMany({}, actor);
 
             expect(result.data.map((row) => row.name)).toEqual(['own']);
-            expect(result.meta.total).toBe(1);
+            expect(result.meta.total).toBe(2);
         });
 
         it('does not evaluate the secret gate for the default projection (secret unselected)', async () => {

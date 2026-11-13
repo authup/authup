@@ -82,7 +82,6 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
         }
 
         const data: PermissionPolicy[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
@@ -95,15 +94,13 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
             data.push(entity);
         }
 
-        return { data: await redactUnreachedRelations(data, parsed, permissionPolicySchema, actor), meta: { ...meta, total } };
+        return { data: await redactUnreachedRelations(data, parsed, permissionPolicySchema, actor), meta };
     }
 
     async getOne(

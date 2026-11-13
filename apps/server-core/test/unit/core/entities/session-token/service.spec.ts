@@ -72,7 +72,7 @@ describe('core/entities/session-token/service', () => {
             .rejects.toBeInstanceOf(PermissionError);
     });
 
-    it('drops a listed token whose session did not load and decrements the total', async () => {
+    it('drops a listed token whose session did not load and keeps the candidate total', async () => {
         const realmId = randomUUID();
         const loaded = await seedToken(repository, { realmId });
         const orphan = await seedToken(repository);
@@ -83,7 +83,7 @@ describe('core/entities/session-token/service', () => {
         const result = await service.getMany({}, actor);
 
         expect(result.data.map((row) => row.id)).toEqual([loaded.id]);
-        expect(result.meta.total).toEqual(1);
+        expect(result.meta.total).toEqual(2);
 
         const call = actor.permissionEvaluator.evaluateCalls.find(
             (c) => c.name === PermissionName.SESSION_READ,

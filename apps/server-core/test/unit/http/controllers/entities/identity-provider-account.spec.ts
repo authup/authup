@@ -372,7 +372,7 @@ describe('identity-provider-account', () => {
         const foreign = await postReader.get(`identity-provider-accounts?filter[id]=${foreignAccountId}&fields=id`);
 
         expect(foreign.data.data).toHaveLength(0);
-        expect(foreign.data.meta.total).toEqual(0);
+        expect(foreign.data.meta.total).toEqual(1);
     });
 
     it('still lists a user its own rows when the grant reaches no realm', async () => {

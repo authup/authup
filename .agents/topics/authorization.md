@@ -576,8 +576,8 @@ expresses a pending policy as a rapiq `ICondition` over row attributes, opt-in v
 - The binding evaluator composes `and(reach, junctionPolicy)` per grant; a policy-free
   `any` grant settles true (admin fast path, `allow`); `none` reaches nothing.
 - `getMany` consumers: `deny` -> append `inArray('id', [])`; `conditional` ->
-  `appendQueryConditions` (exact pagination and totals); `post` -> per-row `evaluate` +
-  `total -= 1`.
+  `appendQueryConditions` (exact pagination and totals); `post` -> per-row `evaluate`,
+  `meta.total` left as the repository's candidate count.
 - Ownership alternatives compose service-side as `or(<ownership>, compiled.condition)`
   (ownership alone on `deny`): Session/Consent (`sub`+`subKind`), Event
   (`actorId`/`actorType`), User (`id`, user identity only), UserAttribute (`userId`,
@@ -592,10 +592,12 @@ expresses a pending policy as a rapiq `ICondition` over row attributes, opt-in v
 - `FakePermissionEvaluator.compile` defaults to `post`; override via `setCompileResult`.
 
 **The `post` verdict is approximate (#3595).** It fetches one page through the un-gated
-query and drops rows, so `meta.total` is an upper bound and a page may be shorter than
-`limit` (even empty) while later pages hold rows. Consumers must page to the end and not
-show `meta.total` as an accessible count. Ownership-alternative services skip the
-`or(...)` on `post`, widening the fetch further. `SessionTokenService.getMany` has the same
+query and drops rows. `meta.total` stays the candidate count: an upper bound on the
+accessible rows, on the same scale as `offset` and `limit`, so paging by it reaches every
+page; subtracting dropped rows would stop a client before pages that still hold rows. A
+page may be shorter than `limit` (even empty) while later pages hold rows. Consumers must
+page to the end and not show `meta.total` as an accessible count. Ownership-alternative
+services skip the `or(...)` on `post`, widening the fetch further. `SessionTokenService.getMany` has the same
 properties without calling `compile()` (its realm is `session.realmId`, a relation path
 `realmAttributeName` cannot express). Rejected:
 

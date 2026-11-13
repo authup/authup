@@ -80,7 +80,6 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         }
 
         const data: Role[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
@@ -93,8 +92,6 @@ export class RoleService extends AbstractEntityService implements IRoleService {
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
@@ -105,10 +102,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
 
         return {
             data,
-            meta: {
-                ...meta,
-                total,
-            },
+            meta,
         };
     }
 

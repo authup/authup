@@ -105,7 +105,6 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
         }
 
         const data: TrustAnchor[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
@@ -118,8 +117,6 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
@@ -130,10 +127,7 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
 
         return {
             data,
-            meta: {
-                ...meta,
-                total,
-            },
+            meta,
         };
     }
 

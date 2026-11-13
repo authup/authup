@@ -129,7 +129,6 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
         const { data: entities, meta } = await this.repository.findMany(widened, repositoryOptions);
 
         const data: IdentityProviderAccount[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             if (this.isOwnedBy(entity, actor)) {
@@ -148,8 +147,6 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
@@ -158,7 +155,7 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
 
         trimReachCheckFields(data, widened);
 
-        return { data, meta: { ...meta, total } };
+        return { data, meta };
     }
 
     async getOne(

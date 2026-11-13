@@ -170,7 +170,7 @@ describe('SessionService', () => {
             // only the actor's own session survives (owned rows skip the evaluate)
             expect(data).toHaveLength(1);
             expect(data[0].sub).toEqual(userId);
-            expect(meta.total).toEqual(1);
+            expect(meta.total).toEqual(3);
         });
     });
 

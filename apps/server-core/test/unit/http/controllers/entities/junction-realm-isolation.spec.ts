@@ -465,8 +465,8 @@ describe('junction entities (realm isolation)', () => {
             const foreign = await api.getMany({ filters: { id: foreignId }, fields: ['id'] });
 
             expect(foreign.data, name).toHaveLength(0);
-            // the drop loop decrements the total it reports
-            expect(foreign.meta.total, name).toEqual(0);
+            // the drop loop keeps the candidate total
+            expect(foreign.meta.total, name).toEqual(1);
         }
     });
 

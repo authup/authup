@@ -127,7 +127,6 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
         const { data: entities, meta } = await this.repository.findMany(widened, { ...(options.realmId ? { realmId: options.realmId } : {}) });
 
         const data: Consent[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             if (this.isOwnedBy(entity, actor)) {
@@ -146,8 +145,6 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
@@ -158,10 +155,7 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
 
         return {
             data,
-            meta: {
-                ...meta,
-                total,
-            },
+            meta,
         };
     }
 

@@ -92,7 +92,6 @@ export class ClientPermissionService extends JunctionEntityService implements IC
         }
 
         const data: ClientPermission[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
@@ -105,15 +104,13 @@ export class ClientPermissionService extends JunctionEntityService implements IC
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
             data.push(entity);
         }
 
-        return { data: await redactUnreachedRelations(data, parsed, clientPermissionSchema, actor), meta: { ...meta, total } };
+        return { data: await redactUnreachedRelations(data, parsed, clientPermissionSchema, actor), meta };
     }
 
     async getOne(

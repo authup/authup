@@ -88,7 +88,6 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         }
 
         const data: RoleAttribute[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
@@ -105,8 +104,6 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
@@ -115,10 +112,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         return {
             data: await redactUnreachedRelations(data, parsed, roleAttributeSchema, actor),
-            meta: {
-                ...meta,
-                total,
-            },
+            meta,
         };
     }
 

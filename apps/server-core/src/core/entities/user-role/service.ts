@@ -88,7 +88,6 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
         }
 
         const data: UserRole[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
@@ -101,15 +100,13 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
             data.push(entity);
         }
 
-        return { data: await redactUnreachedRelations(data, parsed, userRoleSchema, actor), meta: { ...meta, total } };
+        return { data: await redactUnreachedRelations(data, parsed, userRoleSchema, actor), meta };
     }
 
     async getOne(

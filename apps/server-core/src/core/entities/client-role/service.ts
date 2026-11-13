@@ -88,7 +88,6 @@ export class ClientRoleService extends JunctionEntityService implements IClientR
         }
 
         const data: ClientRole[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
@@ -101,15 +100,13 @@ export class ClientRoleService extends JunctionEntityService implements IClientR
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
             data.push(entity);
         }
 
-        return { data: await redactUnreachedRelations(data, parsed, clientRoleSchema, actor), meta: { ...meta, total } };
+        return { data: await redactUnreachedRelations(data, parsed, clientRoleSchema, actor), meta };
     }
 
     async getOne(

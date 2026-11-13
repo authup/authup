@@ -165,7 +165,6 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
         const { data: entities, meta } = await this.repository.findMany(widened);
 
         const data: SessionToken[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             if (this.isOwnedBy(entity, actor)) {
@@ -182,8 +181,6 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
             );
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
@@ -192,10 +189,7 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
 
         return {
             data: await redactUnreachedRelations(data, widened, sessionTokenSchema, actor),
-            meta: {
-                ...meta,
-                total,
-            },
+            meta,
         };
     }
 

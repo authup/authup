@@ -81,7 +81,6 @@ export class ClientTokenExchangeCapabilityService extends AbstractEntityService 
         }
 
         const data: ClientTokenExchangeCapability[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
@@ -94,8 +93,6 @@ export class ClientTokenExchangeCapabilityService extends AbstractEntityService 
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
@@ -104,7 +101,7 @@ export class ClientTokenExchangeCapabilityService extends AbstractEntityService 
 
         return {
             data: await redactUnreachedRelations(data, parsed, clientTokenExchangeCapabilitySchema, actor),
-            meta: { ...meta, total },
+            meta,
         };
     }
 

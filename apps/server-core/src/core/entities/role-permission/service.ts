@@ -95,7 +95,6 @@ export class RolePermissionService extends JunctionEntityService implements IRol
         }
 
         const data: RolePermission[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
@@ -108,15 +107,13 @@ export class RolePermissionService extends JunctionEntityService implements IRol
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
             data.push(entity);
         }
 
-        return { data: await redactUnreachedRelations(data, parsed, rolePermissionSchema, actor), meta: { ...meta, total } };
+        return { data: await redactUnreachedRelations(data, parsed, rolePermissionSchema, actor), meta };
     }
 
     async getOne(

@@ -93,7 +93,6 @@ export class UserPermissionService extends JunctionEntityService implements IUse
         }
 
         const data: UserPermission[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
@@ -106,15 +105,13 @@ export class UserPermissionService extends JunctionEntityService implements IUse
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
             data.push(entity);
         }
 
-        return { data: await redactUnreachedRelations(data, parsed, userPermissionSchema, actor), meta: { ...meta, total } };
+        return { data: await redactUnreachedRelations(data, parsed, userPermissionSchema, actor), meta };
     }
 
     async getOne(

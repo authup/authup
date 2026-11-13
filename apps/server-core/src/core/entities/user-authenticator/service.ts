@@ -253,7 +253,6 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         );
 
         const data: UserAuthenticator[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             if (this.isOwnedBy(entity, actor)) {
@@ -272,8 +271,6 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
@@ -282,10 +279,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
 
         return {
             data: await redactUnreachedRelations(data, widened, userAuthenticatorSchema, actor),
-            meta: {
-                ...meta,
-                total,
-            },
+            meta,
         };
     }
 

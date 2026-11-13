@@ -226,10 +226,7 @@ export class EventService extends AbstractEntityService implements IEventService
 
         return {
             data,
-            meta: {
-                ...meta,
-                total: meta.total - (entities.length - data.length),
-            },
+            meta,
         };
     }
 

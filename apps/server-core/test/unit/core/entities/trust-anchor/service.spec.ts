@@ -99,7 +99,7 @@ describe('core/entities/trust-anchor/service', () => {
             const result = await service.getMany({}, actor);
 
             expect(result.data).toHaveLength(1);
-            expect(result.meta.total).toEqual(1);
+            expect(result.meta.total).toEqual(2);
         });
     });
 

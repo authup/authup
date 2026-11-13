@@ -90,7 +90,7 @@ describe('core/entities/role-attribute/service', () => {
 
             expect(result.data).toHaveLength(1);
             expect(result.data[0].name).toBe('allowed');
-            expect(result.meta.total).toBe(1);
+            expect(result.meta.total).toBe(2);
         });
 
         it('should throw when actor lacks permission', async () => {

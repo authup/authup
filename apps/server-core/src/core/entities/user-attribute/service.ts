@@ -100,7 +100,6 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         } = await this.repository.findMany(widened);
 
         const data: UserAttribute[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const canRead = await this.canReadUserAttribute(
@@ -111,17 +110,12 @@ export class UserAttributeService extends AbstractEntityService implements IUser
 
             if (canRead) {
                 data.push(entity);
-            } else {
-                total--;
             }
         }
 
         return {
             data: await redactUnreachedRelations(data, widened, userAttributeSchema, actor),
-            meta: {
-                ...meta,
-                total,
-            },
+            meta,
         };
     }
 

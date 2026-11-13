@@ -94,7 +94,6 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         }
 
         const data: Policy[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
@@ -107,8 +106,6 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
@@ -117,10 +114,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
 
         return {
             data: await redactUnreachedRelations(data, scope.query, policySchema, actor),
-            meta: {
-                ...meta,
-                total,
-            },
+            meta,
         };
     }
 
