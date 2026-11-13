@@ -7,6 +7,7 @@
 
 import type { Transporter } from 'nodemailer';
 import type { IMailClient, MailSendOptions } from '../../../../../core/index.ts';
+import { SMTP_SEND_TIMEOUT } from './constants.ts';
 import { createSMTPClient } from './module.ts';
 import type { SMTPOptions } from './types.ts';
 
@@ -30,6 +31,12 @@ export class SMTPMailClientAdapter implements IMailClient {
     }
 
     async send(options: MailSendOptions): Promise<any> {
-        return this.transporter.sendMail(options);
+        // The transport's own timeouts are per phase and idle-based (up to
+        // ten minutes of socket silence), and the workflows await the send
+        // inside the request, so every send gets one overall deadline.
+        return this.transporter.sendMail({
+            ...options,
+            signal: options.signal ?? AbortSignal.timeout(SMTP_SEND_TIMEOUT),
+        });
     }
 }
