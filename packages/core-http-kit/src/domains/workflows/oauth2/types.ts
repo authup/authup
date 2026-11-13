@@ -24,6 +24,7 @@ import type {
     TokenBaseOptions,
     TokenClientCredentialsGrantParameters,
     TokenDeviceCodeGrantParameters,
+    TokenDeviceCodePollParameters,
     TokenGrantParameters,
     TokenIntrospectParameters,
     TokenPasswordGrantParameters,
@@ -65,6 +66,11 @@ export type OAuth2TokenRefreshTokenGrantParameters = TokenRefreshTokenGrantParam
 export type OAuth2TokenDeviceCodeGrantParameters = TokenDeviceCodeGrantParameters & {
     realm_name?: string,
 };
+/**
+ * The device access token request polled until it is approved. It carries
+ * no `realm_name`: @hapic/oauth2 sends only the RFC 8628 parameters.
+ */
+export type OAuth2TokenDeviceCodePollParameters = TokenDeviceCodePollParameters;
 export type OAuth2TokenGrantParameters = TokenGrantParameters | OAuth2TokenDeviceCodeGrantParameters;
 
 /**
@@ -239,6 +245,11 @@ export interface IOAuth2TokenAPI {
 
     createWithDeviceCode(
         parameters: Omit<OAuth2TokenDeviceCodeGrantParameters, 'grant_type'>,
+        options?: OAuth2TokenRequestOptions,
+    ) : Promise<OAuth2TokenGrantResponse>;
+
+    pollWithDeviceCode(
+        parameters: OAuth2TokenDeviceCodePollParameters,
         options?: OAuth2TokenRequestOptions,
     ) : Promise<OAuth2TokenGrantResponse>;
 
