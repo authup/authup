@@ -233,52 +233,113 @@ describe('src/policy/attribute-names', () => {
             expect(outcome.issues![0].code).toEqual(PolicyIssueCode.DATA_INVALID);
         });
 
-        it('should enforce both sources when both are present', async () => {
-            const policy : AttributeNamesPolicy = { names: ['foo'] };
+        it('should let the names list decide alone (allowlist)', async () => {
+            const policy : AttributeNamesPolicy = { names: ['realmId', 'name'] };
 
             let outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
                 data: new PolicyData({
-                    attributeNames: ['foo'],
-                    attributes: { secret: 'x' },
+                    attributeNames: ['realmId'],
+                    attributes: {
+                        realmId: 1,
+                        name: 'admin',
+                        email: 'admin@example.com',
+                    },
                 }),
             }));
 
-            expect(outcome.success).toBeFalsy();
-            expect(outcome.issues![0].path).toEqual(['secret']);
-
-            outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
-                data: new PolicyData({
-                    attributeNames: ['secret'],
-                    attributes: { foo: 'bar' },
-                }),
-            }));
-            expect(outcome.success).toBeFalsy();
-            expect(outcome.issues![0].path).toEqual(['secret']);
+            expect(outcome.success).toBeTruthy();
 
             outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
                 data: new PolicyData({
-                    attributeNames: ['foo'],
-                    attributes: { foo: 'bar' },
+                    attributeNames: ['email'],
+                    attributes: { realmId: 1 },
                 }),
             }));
+            expect(outcome.success).toBeFalsy();
+            expect(outcome.issues).toHaveLength(1);
+            expect(outcome.issues![0].path).toEqual(['email']);
+        });
+
+        it('should let the names list decide alone (denylist)', async () => {
+            const policy : AttributeNamesPolicy = {
+                invert: true,
+                names: ['email'],
+            };
+
+            let outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
+                data: new PolicyData({
+                    attributeNames: ['realmId'],
+                    attributes: { realmId: 1, email: 'admin@example.com' },
+                }),
+            }));
+
+            expect(outcome.success).toBeTruthy();
+
+            outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
+                data: new PolicyData({
+                    attributeNames: ['email'],
+                    attributes: { realmId: 1, email: 'admin@example.com' },
+                }),
+            }));
+            expect(outcome.success).toBeFalsy();
+            expect(outcome.issues).toHaveLength(1);
+        });
+
+        it('should let an empty names list decide alone', async () => {
+            const policy : AttributeNamesPolicy = { names: ['realmId'] };
+
+            const outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
+                data: new PolicyData({
+                    attributeNames: [],
+                    attributes: { email: 'admin@example.com' },
+                }),
+            }));
+
             expect(outcome.success).toBeTruthy();
         });
 
-        it('should deduplicate a name present in both sources', async () => {
+        it('should read the record keys when no names list is given', async () => {
+            const allowlist : AttributeNamesPolicy = { names: ['realmId', 'name'] };
+            const denylist : AttributeNamesPolicy = {
+                invert: true,
+                names: ['email'],
+            };
+
+            let outcome = await evaluator.evaluate(allowlist, definePolicyEvaluationContext({
+                data: new PolicyData({
+                    attributes: {
+                        realmId: 1,
+                        name: 'admin',
+                        email: 'admin@example.com',
+                    },
+                }),
+            }));
+
+            expect(outcome.success).toBeFalsy();
+            expect(outcome.issues![0].path).toEqual(['email']);
+
+            outcome = await evaluator.evaluate(denylist, definePolicyEvaluationContext({ data: new PolicyData({ attributes: { realmId: 1, email: 'admin@example.com' } }) }));
+            expect(outcome.success).toBeFalsy();
+
+            outcome = await evaluator.evaluate(denylist, definePolicyEvaluationContext({ data: new PolicyData({ attributes: { realmId: 1 } }) }));
+            expect(outcome.success).toBeTruthy();
+        });
+
+        it('should fail closed on a malformed names list next to a record', async () => {
             const policy : AttributeNamesPolicy = {
                 invert: true,
-                names: ['secret'],
+                names: ['email'],
             };
 
             const outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
                 data: new PolicyData({
-                    attributeNames: ['secret'],
-                    attributes: { secret: 'x' },
+                    attributeNames: 'realmId',
+                    attributes: { realmId: 1 },
                 }),
             }));
 
             expect(outcome.success).toBeFalsy();
-            expect(outcome.issues).toHaveLength(1);
+            expect(outcome.issues![0].code).toEqual(PolicyIssueCode.DATA_INVALID);
         });
 
         it('should answer both questions with the same policy', async () => {

@@ -25,13 +25,14 @@ export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
 
     async evaluate(value: Record<string, any>, ctx: PolicyEvaluationContext): Promise<PolicyEvaluationResult> {
         // The policy settles against EITHER data key: the ATTRIBUTE_NAMES key carries a
-        // plain projection/fieldset (string[]) — "may this actor project these field
+        // plain list of field names (string[]) — "may this actor project these field
         // names", answerable before any row exists — while the ATTRIBUTES record keeps
-        // its established key semantics. The tri-state lives HERE instead of a
-        // `requires()` declaration: the engine's requires-gate is AND-semantics over the
-        // declared keys, so declaring both would pend every bag carrying only one of
-        // them. Checked before the validator run so gate-style calls with an empty bag
-        // stay cheap.
+        // its established key semantics. The names list decides alone when it is
+        // given; the record's keys are read only without one. The tri-state lives HERE
+        // instead of a `requires()` declaration: the engine's requires-gate is
+        // AND-semantics over the declared keys, so declaring both would pend every bag
+        // carrying only one of them. Checked before the validator run so gate-style
+        // calls with an empty bag stay cheap.
         const hasNames = ctx.data.has(BuiltInPolicyType.ATTRIBUTE_NAMES);
         const hasAttributes = ctx.data.has(BuiltInPolicyType.ATTRIBUTES);
 
@@ -52,10 +53,9 @@ export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
         // todo: catch errors + transform to issue(s)
         const policy = await this.validator.run(value);
 
-        // Conjunctive over the available sources: when both keys are present BOTH are
-        // enforced — a reused bag that carries a projection alongside row attributes can
-        // never weaken an existing record gate. Keys are deduplicated so a name present
-        // in both sources yields one issue.
+        // The names list is authoritative: a caller that loads more of a record than
+        // it hands out names the fields it hands out, and the policy judges those.
+        // The record's keys stand in only when no list is given.
         const keys = new Set<string>();
 
         if (hasNames) {
@@ -83,9 +83,7 @@ export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
             for (const entry of data) {
                 keys.add(entry);
             }
-        }
-
-        if (hasAttributes) {
+        } else {
             const data = await this.attributesEvaluator.accessData(ctx);
 
             if (data) {
