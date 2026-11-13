@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export const HEALTH_LIVENESS_PATH = '/livez';
-export const HEALTH_READINESS_PATH = '/readyz';
+// One definition for every listener: the consoles answer the same two paths.
+export { HEALTH_LIVENESS_PATH, HEALTH_READINESS_PATH } from '@authup/server-console-kit';
 
 export const DATABASE_HEALTH_CHECK_TIMEOUT = 1_000;
 export const DATABASE_HEALTH_CHECK_TTL = 1_000;

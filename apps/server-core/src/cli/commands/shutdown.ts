@@ -8,20 +8,9 @@
 import type { IContainer } from 'eldin';
 import process from 'node:process';
 import { ConfigInjectionKey, HTTPInjectionKey } from '../../app/index.ts';
+import type { ShutdownHandlersOptions } from './types.ts';
 
 const FORCE_EXIT_TIMEOUT_MS = 10_000;
-
-export type ShutdownHandlersOptions = {
-    /**
-     * Runs once, as the first signal arrives and before anything is torn down.
-     */
-    onSignal?: () => void,
-    /**
-     * Milliseconds to keep serving between the signal and the teardown.
-     * default: 0
-     */
-    delay?: number,
-};
 
 /**
  * Terminate a long-running application on SIGINT / SIGTERM.
