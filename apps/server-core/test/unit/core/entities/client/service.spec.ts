@@ -304,6 +304,24 @@ describe('core/entities/client/service', () => {
             expect(result.data[0].secret).toEqual('plain-secret');
         });
 
+        it('should decrypt encrypted secrets requested on their own', async () => {
+            repository.seed([
+                createFakeClient({
+                    name: 'encrypted-client',
+                    secret: await cipher.encrypt('plain-secret', cipherRealmId),
+                    secretEncrypted: true,
+                    secretHashed: false,
+                    realmId: cipherRealmId,
+                }),
+            ]);
+
+            const result = await service.getMany({ fields: 'secret' }, createAllowAllActor());
+
+            expect(result.data).toHaveLength(1);
+            expect(result.data[0].secret).toEqual('plain-secret');
+            expect(result.data[0]).not.toHaveProperty('secretEncrypted');
+        });
+
         it('should not filter entities with hashed secrets', async () => {
             repository.seed([
                 createFakeClient({
@@ -444,6 +462,20 @@ describe('core/entities/client/service', () => {
 
             expect(actor.permissionEvaluator.evaluateOneOfCalls.length).toBeGreaterThan(0);
             expect(result.secret).toEqual('plain-secret');
+        });
+
+        it('should decrypt an encrypted secret requested on its own', async () => {
+            const entity = repository.seed(createFakeClient({
+                secret: await cipher.encrypt('plain-secret', cipherRealmId),
+                secretEncrypted: true,
+                secretHashed: false,
+                realmId: cipherRealmId,
+            }));
+
+            const result = await service.getOne(entity.id, createAllowAllActor(), { fields: 'secret' });
+
+            expect(result.secret).toEqual('plain-secret');
+            expect(result).not.toHaveProperty('secretEncrypted');
         });
 
         it('should answer the row without the secret when its blob cannot be decrypted', async () => {

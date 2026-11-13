@@ -171,8 +171,10 @@ export class ClientService extends AbstractEntityService implements IClientServi
             }
         }
 
-        await redactUnreachedRelations(data, scope.query, clientSchema, actor);
+        // before the trim: the secret is decrypted by the row's encryption
+        // flag, which the read may carry only for the check
         await Promise.all(data.map((entity) => this.revealSecret(entity)));
+        await redactUnreachedRelations(data, scope.query, clientSchema, actor);
 
         return { data, meta };
     }
@@ -229,8 +231,8 @@ export class ClientService extends AbstractEntityService implements IClientServi
             });
         }
 
-        await redactUnreachedRelations([entity], parsed, clientSchema, actor);
         await this.revealSecret(entity);
+        await redactUnreachedRelations([entity], parsed, clientSchema, actor);
 
         return entity;
     }
