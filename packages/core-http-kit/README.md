@@ -95,7 +95,7 @@ if (api && api.getMany) {
 
 ### Cancel or bound a call
 
-Every API method ends with one optional options argument carrying `signal` and `timeout` (milliseconds, overrides the client's `timeout` for this call). Methods that already take options (`client.token.*`, `client.authorization.*`, `client.key.delete`, the authenticator challenge calls) accept the two keys in that object. `client.userInfo.get` does not take them yet.
+Every API method ends with one optional options argument carrying `signal` and `timeout` (milliseconds, overrides the client's `timeout` for this call). Methods that already take options (`client.token.*`, `client.authorization.*`, `client.key.delete`, the authenticator challenge calls) accept the two keys in that object.
 
 ```typescript
 const controller = new AbortController();

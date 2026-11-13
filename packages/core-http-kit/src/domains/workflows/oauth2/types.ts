@@ -272,6 +272,7 @@ export interface IOAuth2AuthorizeAPI {
 export interface IOAuth2UserInfoAPI {
     get<T extends Record<string, any> = Record<string, any>>(
         header?: string | AuthorizationHeader,
+        options?: APIRequestOptions,
     ) : Promise<T>;
 }
 
