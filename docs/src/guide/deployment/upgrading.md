@@ -42,6 +42,37 @@ also does so for "authup did not answer in time". Recognize the timeout with
 `isUpstreamTimeoutError` from `@authup/errors` and answer 503 or 504 instead, so a client
 does not discard a token that may well be valid.
 
+### The kit refreshes a token on a client of its own
+
+`install()` of `@authup/client-web-kit` accepts `httpClient` as one instance or as a function
+returning one. Given one instance, the renewal hook ran the token refresh on that instance; it
+now runs it on a client rebuilt from the instance's configuration (defaults, headers,
+transport). That copy carries none of the instance's hooks and is a plain `Client`, not a
+subclass.
+
+**May need action:** a host whose own hooks (retry, logging) must see the refresh request, and
+a test that answers the refresh from a fake client, pass `httpClient` as a function.
+
+### A mail has 30 seconds to be handed to the mail server
+
+Every SMTP send ends after 30 seconds. The registration, password recovery and email code
+requests wait for the send, and until now only the idle timeouts of the connection bounded it.
+
+**May need action:** a relay that takes longer than that to accept a message fails these
+requests. As with any other failed send, a registration is rolled back.
+
+### Console scripts are served as `text/javascript`
+
+The consoles answer `.js` and `.mjs` files with `text/javascript` instead
+of `application/javascript`.
+
+**Action required:** a reverse proxy that names the content types it compresses or caches
+lists `text/javascript` as well, for example in nginx:
+
+```nginx
+gzip_types text/plain application/xml text/css text/javascript application/javascript;
+```
+
 ## v1.0.0-beta.75 (was: next release after v1.0.0-beta.74)
 
 ### The read cache opens its own Redis connection

@@ -69,3 +69,17 @@ The option is not test-only: any pre-configured `Client` (custom retry policy,
 internal network base URL) can be injected the same way. The authentication
 hook (token refresh on 401) is attached to injected clients too. It is simply
 inert on a fake that never produces error responses.
+
+The hook never refreshes on the client it is attached to. It rebuilds an
+injected instance from its configuration (defaults, headers, transport), and
+that copy carries neither the instance's hooks nor a fake's handlers. A test
+that exercises the refresh passes a function instead, which the hook calls
+for a client of its own:
+
+```typescript
+install(app, {
+    baseURL: 'http://localhost:3000',
+    httpClient: () => createFakeClient({ handlers: { /* ... */ } }),
+    pinia,
+});
+```

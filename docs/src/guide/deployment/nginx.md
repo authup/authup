@@ -29,7 +29,7 @@ server {
     listen 80;
 
     gzip            on;
-    gzip_types      text/plain application/xml text/css application/javascript;
+    gzip_types      text/plain application/xml text/css text/javascript application/javascript;
     gzip_min_length 1000;
     
     client_max_body_size 0;
