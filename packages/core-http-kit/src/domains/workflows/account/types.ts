@@ -6,6 +6,7 @@
  */
 
 import type { OAuth2TokenIntrospectionResponse } from '@authup/specs';
+import type { APIRequestOptions } from '../../types-base';
 
 /**
  * The account console's own session surface (plan 088).
@@ -23,11 +24,11 @@ export interface IAccountAPI {
      * A request carrying no (or a dead) cookie answers `{ active: false }`
      * rather than failing.
      */
-    getSession() : Promise<OAuth2TokenIntrospectionResponse>;
+    getSession(options?: APIRequestOptions) : Promise<OAuth2TokenIntrospectionResponse>;
 
     /**
      * Sign out: the server drops the credential, revokes the session and
      * clears the cookie.
      */
-    deleteSession() : Promise<void>;
+    deleteSession(options?: APIRequestOptions) : Promise<void>;
 }

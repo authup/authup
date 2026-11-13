@@ -30,6 +30,7 @@ import type {
     TokenRevokeParameters,
 } from '@hapic/oauth2';
 import type { AuthorizationHeader, Response } from 'hapic';
+import type { APIRequestOptions } from '../../types-base';
 import type { StatusResponseFeatures } from '../status';
 
 /**
@@ -108,7 +109,7 @@ export type DeviceAuthorizationDecisionResponse = {
 
 export type OAuth2TokenRevokeParameters = TokenRevokeParameters;
 export type OAuth2TokenIntrospectParameters = TokenIntrospectParameters;
-export type OAuth2TokenRequestOptions = TokenBaseOptions;
+export type OAuth2TokenRequestOptions = TokenBaseOptions & APIRequestOptions;
 
 export type OAuth2AuthorizeParameters = Partial<AuthorizeParameters>;
 
@@ -263,9 +264,9 @@ export interface IOAuth2TokenAPI {
 export interface IOAuth2AuthorizeAPI {
     buildURL(parameters?: OAuth2AuthorizeParameters) : string;
 
-    getInfo(query?: string | Record<string, any>) : Promise<AuthorizeInfo>;
+    getInfo(query?: string | Record<string, any>, options?: APIRequestOptions) : Promise<AuthorizeInfo>;
 
-    confirm(data: OAuth2AuthorizationCodeRequest) : Promise<{ url: string }>;
+    confirm(data: OAuth2AuthorizationCodeRequest, options?: APIRequestOptions) : Promise<{ url: string }>;
 }
 
 export interface IOAuth2UserInfoAPI {
@@ -285,9 +286,9 @@ export interface IOAuth2DeviceAuthorizationAPI {
         options?: OAuth2TokenRequestOptions,
     ) : Promise<OAuth2DeviceAuthorizationResponse>;
 
-    lookup(data: DeviceAuthorizationVerifyPayload) : Promise<DeviceAuthorizationInfo>;
+    lookup(data: DeviceAuthorizationVerifyPayload, options?: APIRequestOptions) : Promise<DeviceAuthorizationInfo>;
 
-    approve(data: DeviceAuthorizationVerifyPayload) : Promise<DeviceAuthorizationDecisionResponse>;
+    approve(data: DeviceAuthorizationVerifyPayload, options?: APIRequestOptions) : Promise<DeviceAuthorizationDecisionResponse>;
 
-    deny(data: DeviceAuthorizationVerifyPayload) : Promise<DeviceAuthorizationDecisionResponse>;
+    deny(data: DeviceAuthorizationVerifyPayload, options?: APIRequestOptions) : Promise<DeviceAuthorizationDecisionResponse>;
 }

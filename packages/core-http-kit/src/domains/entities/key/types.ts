@@ -8,7 +8,7 @@
 import type { EntityQueryInput } from '../../../helpers';
 import type { Key } from '@authup/core-kit';
 import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
 // Mirrors `KeyValidator` mounts in @authup/core-kit. Without material
 // (decryptionKey) the server GENERATES a key; with it, the material is
@@ -18,7 +18,7 @@ export type KeyCreatePayload = Pick<Key, 'use'> &
     Partial<Pick<Key, 'name' | 'priority' | 'status' | 'signatureAlgorithm' | 'realmId' | 'decryptionKey' | 'encryptionKey' | 'certificate'>>;
 export type KeyUpdatePayload = Partial<Pick<Key, 'name' | 'priority' | 'status'>>;
 
-export type KeyDeleteOptions = {
+export type KeyDeleteOptions = APIRequestOptions & {
     /**
      * Delete an enc key even while encrypted secrets still reference it
      * (crypto-shreds them). Without it the server rejects with 409 +
@@ -28,13 +28,13 @@ export type KeyDeleteOptions = {
 };
 
 export interface IKeyAPI extends IEntitySchemaAPI, IEntityStatsAPI<Key> {
-    getMany(data?: EntityQueryInput<Key>): Promise<EntityCollectionResponse<Key>>;
+    getMany(data?: EntityQueryInput<Key>, options?: APIRequestOptions): Promise<EntityCollectionResponse<Key>>;
 
-    getOne(id: Key['id'], record?: EntityQueryInput<Key>): Promise<EntityRecordResponse<Key>>;
+    getOne(id: Key['id'], record?: EntityQueryInput<Key>, options?: APIRequestOptions): Promise<EntityRecordResponse<Key>>;
 
-    create(data: KeyCreatePayload): Promise<EntityRecordResponse<Key>>;
+    create(data: KeyCreatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<Key>>;
 
-    update(id: Key['id'], data: KeyUpdatePayload): Promise<EntityRecordResponse<Key>>;
+    update(id: Key['id'], data: KeyUpdatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<Key>>;
 
     delete(id: Key['id'], options?: KeyDeleteOptions): Promise<EntityRecordResponse<Key>>;
 }

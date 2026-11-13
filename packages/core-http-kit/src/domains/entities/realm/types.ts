@@ -7,10 +7,11 @@
 
 import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
 import type {
+    APIRequestOptions,
     DomainEntityID,
     EntityRecordMeta,
-    EntityRecordResponse,
-    IEntityAPI,
+    EntityRecordResponse, 
+    IEntityAPI, 
 } from '../../types-base';
 import type { EntityQueryInput } from '../../../helpers';
 
@@ -41,7 +42,7 @@ export type RealmRecordResponse = EntityRecordResponse<Realm, RealmRecordMeta>;
 
 export interface IRealmAPI extends IEntityAPI<Realm, RealmCreatePayload, RealmUpdatePayload>,
     IEntitySchemaAPI, IEntityStatsAPI<Realm> {
-    getOne(id: DomainEntityID<Realm>, record?: EntityQueryInput<Realm>) : Promise<RealmRecordResponse>;
+    getOne(id: DomainEntityID<Realm>, record?: EntityQueryInput<Realm>, options?: APIRequestOptions) : Promise<RealmRecordResponse>;
 
-    createOrUpdate(idOrName: string, data: RealmSavePayload) : Promise<EntityRecordResponse<Realm>>;
+    createOrUpdate(idOrName: string, data: RealmSavePayload, options?: APIRequestOptions) : Promise<EntityRecordResponse<Realm>>;
 }

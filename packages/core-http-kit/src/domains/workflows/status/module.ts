@@ -7,10 +7,12 @@
 
 import { BaseAPI } from '../../base';
 import type { IStatusAPI, StatusResponse } from './types';
+import type { APIRequestOptions } from '../../types-base';
+import { buildRequestConfig } from '../../utils';
 
 export class StatusAPI extends BaseAPI implements IStatusAPI {
-    async get(): Promise<StatusResponse> {
-        const response = await this.client.get('');
+    async get(options?: APIRequestOptions): Promise<StatusResponse> {
+        const response = await this.client.get('', buildRequestConfig(options));
 
         return response.data;
     }

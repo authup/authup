@@ -35,7 +35,8 @@ option is invoked (default: an empty collection response,
 `{ data: [], meta: { total: 0 } }`).
 
 Every dispatched request is recorded on `client.requests` (in order), for
-call-shape assertions.
+call-shape assertions. A request's `options` holds the per-call `signal` and
+`timeout` it was sent with, each key only when the caller set it.
 
 ### Caveats
 

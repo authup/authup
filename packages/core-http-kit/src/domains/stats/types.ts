@@ -7,6 +7,7 @@
 
 import type { ObjectLiteral } from '@authup/kit';
 import type { QueryBuildInput, SchemaDescription } from '@rapiq/core';
+import type { APIRequestOptions } from '../types-base';
 import type { SchemaResponseMeta } from '../workflows/schema/types';
 
 export type StatsBucketUnit = 'hour' | 'day' | 'month';
@@ -83,12 +84,12 @@ export interface IEntityStatsAPI<
     G extends Record<string, any> = Record<string, unknown>,
     M extends Record<string, any> = Record<string, unknown>,
 > {
-    getStats(query?: EntityStatsQuery<T>): Promise<EntityStatsResponse<G, M>>;
+    getStats(query?: EntityStatsQuery<T>, options?: APIRequestOptions): Promise<EntityStatsResponse<G, M>>;
 }
 
 /**
  * The schema facet of an entity API (`GET /<entity>/@schema`).
  */
 export interface IEntitySchemaAPI {
-    getSchema(): Promise<EntitySchemaResponse>;
+    getSchema(options?: APIRequestOptions): Promise<EntitySchemaResponse>;
 }

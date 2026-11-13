@@ -6,7 +6,7 @@
  */
 
 import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
-import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
+import type { APIRequestOptions, EntityRecordResponse, IEntityAPI } from '../../types-base';
 
 import type { Role } from '@authup/core-kit';
 
@@ -18,5 +18,5 @@ export type RoleSavePayload = RoleCreatePayload;
 
 export interface IRoleAPI extends IEntityAPI<Role, RoleCreatePayload, RoleUpdatePayload>,
     IEntitySchemaAPI, IEntityStatsAPI<Role> {
-    createOrUpdate(idOrName: string, data: RoleSavePayload) : Promise<EntityRecordResponse<Role>>;
+    createOrUpdate(idOrName: string, data: RoleSavePayload, options?: APIRequestOptions) : Promise<EntityRecordResponse<Role>>;
 }

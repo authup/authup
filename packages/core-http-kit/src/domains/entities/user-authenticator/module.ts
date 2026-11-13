@@ -10,8 +10,8 @@ import { buildQueryString } from '../../../helpers';
 import type { User, UserAuthenticator } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import { buildAuthorizationHeaderRequestConfig } from '../../utils';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import { buildRequestConfig } from '../../utils';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     IUserAuthenticatorAPI,
     UserAuthenticatorChallengeRequestOptions,
@@ -28,8 +28,9 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
     async getMany(
         userId: User['id'] | string,
         data?: EntityQueryInput<UserAuthenticator>,
+        options?: APIRequestOptions,
     ): Promise<EntityCollectionResponse<UserAuthenticator>> {
-        const response = await this.client.get(`users/${userId}/authenticators${buildQueryString(data)}`);
+        const response = await this.client.get(`users/${userId}/authenticators${buildQueryString(data)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -37,8 +38,9 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
     async getOne(
         userId: User['id'] | string,
         id: UserAuthenticator['id'],
+        options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<UserAuthenticator>> {
-        const response = await this.client.get(`users/${userId}/authenticators/${id}`);
+        const response = await this.client.get(`users/${userId}/authenticators/${id}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -46,8 +48,9 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
     async enroll(
         userId: User['id'] | string,
         data: UserAuthenticatorCreatePayload,
+        options?: APIRequestOptions,
     ): Promise<UserAuthenticatorEnrollResponse> {
-        const response = await this.client.post(`users/${userId}/authenticators`, nullifyEmptyObjectProperties(data));
+        const response = await this.client.post(`users/${userId}/authenticators`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
@@ -56,8 +59,9 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
         userId: User['id'] | string,
         id: UserAuthenticator['id'],
         data: UserAuthenticatorConfirmPayload,
+        options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<UserAuthenticator>> {
-        const response = await this.client.post(`users/${userId}/authenticators/${id}/confirm`, data);
+        const response = await this.client.post(`users/${userId}/authenticators/${id}/confirm`, data, buildRequestConfig(options));
 
         return response.data;
     }
@@ -65,8 +69,9 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
     async delete(
         userId: User['id'] | string,
         id: UserAuthenticator['id'],
+        options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<UserAuthenticator>> {
-        const response = await this.client.delete(`users/${userId}/authenticators/${id}`);
+        const response = await this.client.delete(`users/${userId}/authenticators/${id}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -80,7 +85,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
 
         const response = await this.client.get(
             url,
-            buildAuthorizationHeaderRequestConfig(options),
+            buildRequestConfig(options),
         );
 
         return response.data;
@@ -93,7 +98,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
         const response = await this.client.post(
             'authenticators/challenge/send',
             data,
-            buildAuthorizationHeaderRequestConfig(options),
+            buildRequestConfig(options),
         );
 
         return response.data;
@@ -106,7 +111,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
         const response = await this.client.post(
             'authenticators/challenge',
             data,
-            buildAuthorizationHeaderRequestConfig(options),
+            buildRequestConfig(options),
         );
 
         return response.data;

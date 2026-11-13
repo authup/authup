@@ -6,7 +6,7 @@
  */
 
 import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
-import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
+import type { APIRequestOptions, EntityRecordResponse, IEntityAPI } from '../../types-base';
 
 import type { IdentityProvider, IdentityProviderAccount, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
@@ -62,13 +62,17 @@ export interface IIdentityProviderAPI extends IEntityAPI<IdentityProvider, Ident
      * (`invalid_request`).
      */
     getAuthorizeUri(id: IdentityProvider['id'], options?: IdentityProviderAuthorizeUriOptions) : string;
-    createOrUpdate(idOrName: string, data: IdentityProviderSavePayload) : Promise<EntityRecordResponse<IdentityProvider>>;
-    createLinkRequest(id: IdentityProvider['id']) : Promise<IdentityProviderLinkRequestResponse>;
-    confirmLinkRequest(id: IdentityProvider['id'], handle: string) : Promise<EntityRecordResponse<IdentityProviderAccount>>;
+    createOrUpdate(
+        idOrName: string,
+        data: IdentityProviderSavePayload,
+        options?: APIRequestOptions,
+    ) : Promise<EntityRecordResponse<IdentityProvider>>;
+    createLinkRequest(id: IdentityProvider['id'], options?: APIRequestOptions) : Promise<IdentityProviderLinkRequestResponse>;
+    confirmLinkRequest(id: IdentityProvider['id'], handle: string, options?: APIRequestOptions) : Promise<EntityRecordResponse<IdentityProviderAccount>>;
     /**
      * Completes a federated login the provider callback established. The
      * pending login rides a cookie, so this carries no payload and only works
      * from the browser that started it.
      */
-    completeLogin(id: IdentityProvider['id']) : Promise<OAuth2TokenGrantResponse>;
+    completeLogin(id: IdentityProvider['id'], options?: APIRequestOptions) : Promise<OAuth2TokenGrantResponse>;
 }

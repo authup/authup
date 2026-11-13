@@ -66,6 +66,16 @@ export class FakeClient extends Client {
             headers[key.toLowerCase()] = value;
         });
 
+        const options : FakeRequest['options'] = {};
+
+        if (config.signal) {
+            options.signal = config.signal;
+        }
+
+        if (typeof config.timeout !== 'undefined') {
+            options.timeout = config.timeout;
+        }
+
         const request : FakeRequest = {
             method,
             url,
@@ -76,6 +86,7 @@ export class FakeClient extends Client {
                 config.body,
             params: match ? match.params : {},
             headers,
+            options,
         };
 
         this.requests.push(request);

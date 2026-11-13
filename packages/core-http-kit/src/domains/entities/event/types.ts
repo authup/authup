@@ -18,7 +18,7 @@ import type {
     IEntitySchemaAPI,
     IEntityStatsAPI,
 } from '../../stats';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
 export type EventStatsQuery = EntityStatsQuery<Event>;
 
@@ -80,7 +80,7 @@ export type EventStatsResponse = {
  */
 export interface IEventAPI extends IEntitySchemaAPI,
     IEntityStatsAPI<Event, EventStatsGroups, EventStatsMetaExtra> {
-    getMany(data?: EntityQueryInput<Event>): Promise<EntityCollectionResponse<Event>>;
+    getMany(data?: EntityQueryInput<Event>, options?: APIRequestOptions): Promise<EntityCollectionResponse<Event>>;
 
-    getOne(id: Event['id'], record?: EntityQueryInput<Event>): Promise<EntityRecordResponse<Event>>;
+    getOne(id: Event['id'], record?: EntityQueryInput<Event>, options?: APIRequestOptions): Promise<EntityRecordResponse<Event>>;
 }

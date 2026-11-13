@@ -12,53 +12,54 @@ import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import { buildStatsURL } from '../../stats';
 import type { EntitySchemaResponse, EntityStatsQuery, EntityStatsResponse } from '../../stats';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     IRoleAPI,
     RoleCreatePayload,
     RoleSavePayload,
     RoleUpdatePayload,
 } from './types';
+import { buildRequestConfig } from '../../utils';
 
 export class RoleAPI extends BaseAPI implements IRoleAPI {
-    async getStats(query: EntityStatsQuery<Role> = {}): Promise<EntityStatsResponse> {
-        const response = await this.client.get(buildStatsURL('roles', query));
+    async getStats(query: EntityStatsQuery<Role> = {}, options?: APIRequestOptions): Promise<EntityStatsResponse> {
+        const response = await this.client.get(buildStatsURL('roles', query), buildRequestConfig(options));
 
         return response.data;
     }
 
-    async getSchema(): Promise<EntitySchemaResponse> {
-        const response = await this.client.get('roles/@schema');
+    async getSchema(options?: APIRequestOptions): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('roles/@schema', buildRequestConfig(options));
 
         return response.data;
     }
 
-    async getMany(data?: EntityQueryInput<Role>): Promise<EntityCollectionResponse<Role>> {
-        const response = await this.client.get(`roles${buildQueryString(data)}`);
+    async getMany(data?: EntityQueryInput<Role>, options?: APIRequestOptions): Promise<EntityCollectionResponse<Role>> {
+        const response = await this.client.get(`roles${buildQueryString(data)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
-    async getOne(roleId: Role['id'], record?: EntityQueryInput<Role>): Promise<EntityRecordResponse<Role>> {
-        const response = await this.client.get(`roles/${roleId}${buildQueryString(record)}`);
+    async getOne(roleId: Role['id'], record?: EntityQueryInput<Role>, options?: APIRequestOptions): Promise<EntityRecordResponse<Role>> {
+        const response = await this.client.get(`roles/${roleId}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
-    async delete(roleId: Role['id']): Promise<EntityRecordResponse<Role>> {
-        const response = await this.client.delete(`roles/${roleId}`);
+    async delete(roleId: Role['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<Role>> {
+        const response = await this.client.delete(`roles/${roleId}`, buildRequestConfig(options));
 
         return response.data;
     }
 
-    async create(data: RoleCreatePayload): Promise<EntityRecordResponse<Role>> {
-        const response = await this.client.post('roles', nullifyEmptyObjectProperties(data));
+    async create(data: RoleCreatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<Role>> {
+        const response = await this.client.post('roles', nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
 
-    async update(id: Role['id'], data: RoleUpdatePayload): Promise<EntityRecordResponse<Role>> {
-        const response = await this.client.post(`roles/${id}`, nullifyEmptyObjectProperties(data));
+    async update(id: Role['id'], data: RoleUpdatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<Role>> {
+        const response = await this.client.post(`roles/${id}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
@@ -66,8 +67,9 @@ export class RoleAPI extends BaseAPI implements IRoleAPI {
     async createOrUpdate(
         idOrName: string,
         data: RoleSavePayload,
+        options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<Role>> {
-        const response = await this.client.put(`roles/${idOrName}`, nullifyEmptyObjectProperties(data));
+        const response = await this.client.put(`roles/${idOrName}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }

@@ -6,7 +6,7 @@
  */
 
 import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type { EntityQueryInput } from '../../../helpers';
 
 import type { BuiltInPolicies } from '@authup/access';
@@ -41,23 +41,31 @@ export type BuiltInPolicyUpdatePayload<
 export interface IPolicyAPI extends IEntitySchemaAPI, IEntityStatsAPI<Policy> {
     getMany<OUTPUT extends PolicyResponse = PolicyResponse>(
         data?: EntityQueryInput<Policy & { parentId?: string | null }>,
+        options?: APIRequestOptions,
     ) : Promise<EntityCollectionResponse<OUTPUT>>;
-    delete<OUTPUT extends PolicyResponse = PolicyResponse>(id: Policy['id']) : Promise<EntityRecordResponse<OUTPUT>>;
-    getOne<OUTPUT extends PolicyResponse = PolicyResponse>(id: Policy['id'], record?: EntityQueryInput<Policy>) : Promise<EntityRecordResponse<OUTPUT>>;
-    getOneExpanded<OUTPUT extends PolicyResponse = PolicyResponse>(id: Policy['id'], record?: EntityQueryInput<Policy>) : Promise<EntityRecordResponse<OUTPUT>>;
+    delete<OUTPUT extends PolicyResponse = PolicyResponse>(id: Policy['id'], options?: APIRequestOptions) : Promise<EntityRecordResponse<OUTPUT>>;
+    getOne<OUTPUT extends PolicyResponse = PolicyResponse>(id: Policy['id'], record?: EntityQueryInput<Policy>, options?: APIRequestOptions) : Promise<EntityRecordResponse<OUTPUT>>;
+    getOneExpanded<OUTPUT extends PolicyResponse = PolicyResponse>(id: Policy['id'], record?: EntityQueryInput<Policy>, options?: APIRequestOptions) : Promise<EntityRecordResponse<OUTPUT>>;
     create<INPUT extends PolicyCreatePayload = PolicyCreatePayload, OUTPUT extends PolicyResponse = PolicyResponse>(
         data: INPUT,
+        options?: APIRequestOptions,
     ) : Promise<EntityRecordResponse<OUTPUT>>;
-    createBuiltIn(data: BuiltInPolicyCreatePayload) : Promise<EntityRecordResponse<BuiltInPolicyResponse>>;
+    createBuiltIn(data: BuiltInPolicyCreatePayload, options?: APIRequestOptions) : Promise<EntityRecordResponse<BuiltInPolicyResponse>>;
     update<INPUT extends PolicyUpdatePayload = PolicyUpdatePayload, OUTPUT extends PolicyResponse = PolicyResponse>(
         id: Policy['id'],
         data: INPUT,
+        options?: APIRequestOptions,
     ) : Promise<EntityRecordResponse<OUTPUT>>;
-    updateBuiltIn(id: Policy['id'], data: BuiltInPolicyUpdatePayload) : Promise<EntityRecordResponse<BuiltInPolicyResponse>>;
+    updateBuiltIn(id: Policy['id'], data: BuiltInPolicyUpdatePayload, options?: APIRequestOptions) : Promise<EntityRecordResponse<BuiltInPolicyResponse>>;
     createOrUpdate<INPUT extends PolicyCreatePayload = PolicyCreatePayload, OUTPUT extends PolicyResponse = PolicyResponse>(
         idOrName: string,
         data: INPUT,
+        options?: APIRequestOptions,
     ) : Promise<EntityRecordResponse<OUTPUT>>;
-    createOrUpdateBuiltin(idOrName: string, data: BuiltInPolicyCreatePayload) : Promise<EntityRecordResponse<BuiltInPolicyResponse>>;
-    check(idOrName: string, data?: Record<string, any>) : Promise<PolicyAPICheckResponse>;
+    createOrUpdateBuiltin(
+        idOrName: string,
+        data: BuiltInPolicyCreatePayload,
+        options?: APIRequestOptions,
+    ) : Promise<EntityRecordResponse<BuiltInPolicyResponse>>;
+    check(idOrName: string, data?: Record<string, any>, options?: APIRequestOptions) : Promise<PolicyAPICheckResponse>;
 }

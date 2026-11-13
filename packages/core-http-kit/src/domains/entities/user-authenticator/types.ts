@@ -9,7 +9,7 @@ import type { AuthorizationHeader } from 'hapic';
 import type { EntityQueryInput } from '../../../helpers';
 import type { User, UserAuthenticator, UserAuthenticatorKind } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
 export type UserAuthenticatorCreatePayload = {
     kind: `${UserAuthenticatorKind}`,
@@ -85,7 +85,7 @@ export type UserAuthenticatorChallengeVerifyResponse = {
  * ticket rides as an explicit bearer override (the client instance holds
  * no session yet during a fresh login).
  */
-export type UserAuthenticatorChallengeRequestOptions = {
+export type UserAuthenticatorChallengeRequestOptions = APIRequestOptions & {
     authorizationHeader?: string | AuthorizationHeader,
     /**
      * The `acr_values` of the authorization request being satisfied. Only the
@@ -100,28 +100,33 @@ export type UserAuthenticatorChallengeRequestOptions = {
 export interface IUserAuthenticatorAPI {
     getMany(
         userId: User['id'] | string,
-        data?: EntityQueryInput<UserAuthenticator>
+        data?: EntityQueryInput<UserAuthenticator>,
+        options?: APIRequestOptions,
     ): Promise<EntityCollectionResponse<UserAuthenticator>>;
 
     getOne(
         userId: User['id'] | string,
-        id: UserAuthenticator['id']
+        id: UserAuthenticator['id'],
+        options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<UserAuthenticator>>;
 
     enroll(
         userId: User['id'] | string,
-        data: UserAuthenticatorCreatePayload
+        data: UserAuthenticatorCreatePayload,
+        options?: APIRequestOptions,
     ): Promise<UserAuthenticatorEnrollResponse>;
 
     confirm(
         userId: User['id'] | string,
         id: UserAuthenticator['id'],
-        data: UserAuthenticatorConfirmPayload
+        data: UserAuthenticatorConfirmPayload,
+        options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<UserAuthenticator>>;
 
     delete(
         userId: User['id'] | string,
-        id: UserAuthenticator['id']
+        id: UserAuthenticator['id'],
+        options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<UserAuthenticator>>;
 
     challenge(

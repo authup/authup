@@ -6,7 +6,7 @@
  */
 
 import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
-import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
+import type { APIRequestOptions, EntityRecordResponse, IEntityAPI } from '../../types-base';
 
 import type { User } from '@authup/core-kit';
 
@@ -56,9 +56,9 @@ export type PasswordResetResponse = {
 
 export interface IUserAPI extends IEntityAPI<User, UserCreatePayload, UserUpdatePayload>,
     IEntitySchemaAPI, IEntityStatsAPI<User> {
-    createOrUpdate(idOrName: string, data: UserSavePayload) : Promise<EntityRecordResponse<User>>;
-    activate(token: string) : Promise<ActivateResponse>;
-    register(data: RegisterPayload) : Promise<RegisterResponse>;
-    passwordForgot(data: PasswordForgotPayload) : Promise<PasswordForgotResponse>;
-    passwordReset(data: PasswordResetPayload) : Promise<PasswordResetResponse>;
+    createOrUpdate(idOrName: string, data: UserSavePayload, options?: APIRequestOptions) : Promise<EntityRecordResponse<User>>;
+    activate(token: string, options?: APIRequestOptions) : Promise<ActivateResponse>;
+    register(data: RegisterPayload, options?: APIRequestOptions) : Promise<RegisterResponse>;
+    passwordForgot(data: PasswordForgotPayload, options?: APIRequestOptions) : Promise<PasswordForgotResponse>;
+    passwordReset(data: PasswordResetPayload, options?: APIRequestOptions) : Promise<PasswordResetResponse>;
 }

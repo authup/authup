@@ -12,53 +12,54 @@ import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import { buildStatsURL } from '../../stats';
 import type { EntitySchemaResponse, EntityStatsQuery, EntityStatsResponse } from '../../stats';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     IScopeAPI,
     ScopeCreatePayload,
     ScopeSavePayload,
     ScopeUpdatePayload,
 } from './types';
+import { buildRequestConfig } from '../../utils';
 
 export class ScopeAPI extends BaseAPI implements IScopeAPI {
-    async getStats(query: EntityStatsQuery<Scope> = {}): Promise<EntityStatsResponse> {
-        const response = await this.client.get(buildStatsURL('scopes', query));
+    async getStats(query: EntityStatsQuery<Scope> = {}, options?: APIRequestOptions): Promise<EntityStatsResponse> {
+        const response = await this.client.get(buildStatsURL('scopes', query), buildRequestConfig(options));
 
         return response.data;
     }
 
-    async getSchema(): Promise<EntitySchemaResponse> {
-        const response = await this.client.get('scopes/@schema');
+    async getSchema(options?: APIRequestOptions): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('scopes/@schema', buildRequestConfig(options));
 
         return response.data;
     }
 
-    async getMany(data?: EntityQueryInput<Scope>): Promise<EntityCollectionResponse<Scope>> {
-        const response = await this.client.get(`scopes${buildQueryString(data)}`);
+    async getMany(data?: EntityQueryInput<Scope>, options?: APIRequestOptions): Promise<EntityCollectionResponse<Scope>> {
+        const response = await this.client.get(`scopes${buildQueryString(data)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
-    async getOne(id: Scope['id'], record?: EntityQueryInput<Scope>): Promise<EntityRecordResponse<Scope>> {
-        const response = await this.client.get(`scopes/${id}${buildQueryString(record)}`);
+    async getOne(id: Scope['id'], record?: EntityQueryInput<Scope>, options?: APIRequestOptions): Promise<EntityRecordResponse<Scope>> {
+        const response = await this.client.get(`scopes/${id}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
-    async delete(id: Scope['id']): Promise<EntityRecordResponse<Scope>> {
-        const response = await this.client.delete(`scopes/${id}`);
+    async delete(id: Scope['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<Scope>> {
+        const response = await this.client.delete(`scopes/${id}`, buildRequestConfig(options));
 
         return response.data;
     }
 
-    async create(data: ScopeCreatePayload): Promise<EntityRecordResponse<Scope>> {
-        const response = await this.client.post('scopes', nullifyEmptyObjectProperties(data));
+    async create(data: ScopeCreatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<Scope>> {
+        const response = await this.client.post('scopes', nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
 
-    async update(id: Scope['id'], data: ScopeUpdatePayload): Promise<EntityRecordResponse<Scope>> {
-        const response = await this.client.post(`scopes/${id}`, nullifyEmptyObjectProperties(data));
+    async update(id: Scope['id'], data: ScopeUpdatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<Scope>> {
+        const response = await this.client.post(`scopes/${id}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
@@ -66,8 +67,9 @@ export class ScopeAPI extends BaseAPI implements IScopeAPI {
     async createOrUpdate(
         idOrName: string,
         data: ScopeSavePayload,
+        options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<Scope>> {
-        const response = await this.client.put(`scopes/${idOrName}`, nullifyEmptyObjectProperties(data));
+        const response = await this.client.put(`scopes/${idOrName}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }

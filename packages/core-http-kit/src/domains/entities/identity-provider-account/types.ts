@@ -8,12 +8,15 @@
 import type { EntityQueryInput } from '../../../helpers';
 import type { IdentityProviderAccount } from '@authup/core-kit';
 import type { IEntitySchemaAPI } from '../../stats';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
 export interface IIdentityProviderAccountAPI extends IEntitySchemaAPI {
-    getMany(data?: EntityQueryInput<IdentityProviderAccount>): Promise<EntityCollectionResponse<IdentityProviderAccount>>;
+    getMany(
+        data?: EntityQueryInput<IdentityProviderAccount>,
+        options?: APIRequestOptions,
+    ): Promise<EntityCollectionResponse<IdentityProviderAccount>>;
 
-    getOne(id: IdentityProviderAccount['id'], record?: EntityQueryInput<IdentityProviderAccount>): Promise<EntityRecordResponse<IdentityProviderAccount>>;
+    getOne(id: IdentityProviderAccount['id'], record?: EntityQueryInput<IdentityProviderAccount>, options?: APIRequestOptions): Promise<EntityRecordResponse<IdentityProviderAccount>>;
 
-    delete(id: IdentityProviderAccount['id']): Promise<EntityRecordResponse<IdentityProviderAccount>>;
+    delete(id: IdentityProviderAccount['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<IdentityProviderAccount>>;
 }

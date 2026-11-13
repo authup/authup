@@ -8,20 +8,20 @@
 import type { TrustAnchor } from '@authup/core-kit';
 import type { EntityQueryInput } from '../../../helpers';
 import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
 export type TrustAnchorCreatePayload = Pick<TrustAnchor, 'name' | 'certificate'> &
     Partial<Pick<TrustAnchor, 'enabled' | 'realmId'>>;
 export type TrustAnchorUpdatePayload = Partial<Pick<TrustAnchor, 'name' | 'enabled'>>;
 
 export interface ITrustAnchorAPI extends IEntitySchemaAPI, IEntityStatsAPI<TrustAnchor> {
-    getMany(data?: EntityQueryInput<TrustAnchor>): Promise<EntityCollectionResponse<TrustAnchor>>;
+    getMany(data?: EntityQueryInput<TrustAnchor>, options?: APIRequestOptions): Promise<EntityCollectionResponse<TrustAnchor>>;
 
-    getOne(id: TrustAnchor['id'], record?: EntityQueryInput<TrustAnchor>): Promise<EntityRecordResponse<TrustAnchor>>;
+    getOne(id: TrustAnchor['id'], record?: EntityQueryInput<TrustAnchor>, options?: APIRequestOptions): Promise<EntityRecordResponse<TrustAnchor>>;
 
-    create(data: TrustAnchorCreatePayload): Promise<EntityRecordResponse<TrustAnchor>>;
+    create(data: TrustAnchorCreatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<TrustAnchor>>;
 
-    update(id: TrustAnchor['id'], data: TrustAnchorUpdatePayload): Promise<EntityRecordResponse<TrustAnchor>>;
+    update(id: TrustAnchor['id'], data: TrustAnchorUpdatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<TrustAnchor>>;
 
-    delete(id: TrustAnchor['id']): Promise<EntityRecordResponse<TrustAnchor>>;
+    delete(id: TrustAnchor['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<TrustAnchor>>;
 }

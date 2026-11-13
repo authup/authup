@@ -12,7 +12,7 @@ import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import { buildStatsURL } from '../../stats';
 import type { EntitySchemaResponse, EntityStatsQuery, EntityStatsResponse } from '../../stats';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     IRealmAPI,
     RealmCreatePayload,
@@ -20,46 +20,47 @@ import type {
     RealmSavePayload,
     RealmUpdatePayload,
 } from './types';
+import { buildRequestConfig } from '../../utils';
 
 export class RealmAPI extends BaseAPI implements IRealmAPI {
-    async getStats(query: EntityStatsQuery<Realm> = {}): Promise<EntityStatsResponse> {
-        const response = await this.client.get(buildStatsURL('realms', query));
+    async getStats(query: EntityStatsQuery<Realm> = {}, options?: APIRequestOptions): Promise<EntityStatsResponse> {
+        const response = await this.client.get(buildStatsURL('realms', query), buildRequestConfig(options));
 
         return response.data;
     }
 
-    async getSchema(): Promise<EntitySchemaResponse> {
-        const response = await this.client.get('realms/@schema');
+    async getSchema(options?: APIRequestOptions): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('realms/@schema', buildRequestConfig(options));
 
         return response.data;
     }
 
-    async getMany(data?: EntityQueryInput<Realm>): Promise<EntityCollectionResponse<Realm>> {
-        const response = await this.client.get(`realms${buildQueryString(data)}`);
+    async getMany(data?: EntityQueryInput<Realm>, options?: APIRequestOptions): Promise<EntityCollectionResponse<Realm>> {
+        const response = await this.client.get(`realms${buildQueryString(data)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
-    async getOne(id: Realm['id'], record?: EntityQueryInput<Realm>): Promise<RealmRecordResponse> {
-        const response = await this.client.get(`realms/${id}${buildQueryString(record)}`);
+    async getOne(id: Realm['id'], record?: EntityQueryInput<Realm>, options?: APIRequestOptions): Promise<RealmRecordResponse> {
+        const response = await this.client.get(`realms/${id}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
-    async delete(id: Realm['id']): Promise<EntityRecordResponse<Realm>> {
-        const response = await this.client.delete(`realms/${id}`);
+    async delete(id: Realm['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<Realm>> {
+        const response = await this.client.delete(`realms/${id}`, buildRequestConfig(options));
 
         return response.data;
     }
 
-    async create(data: RealmCreatePayload): Promise<EntityRecordResponse<Realm>> {
-        const response = await this.client.post('realms', nullifyEmptyObjectProperties(data));
+    async create(data: RealmCreatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<Realm>> {
+        const response = await this.client.post('realms', nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
 
-    async update(realmId: Realm['id'], data: RealmUpdatePayload): Promise<EntityRecordResponse<Realm>> {
-        const response = await this.client.post(`realms/${realmId}`, nullifyEmptyObjectProperties(data));
+    async update(realmId: Realm['id'], data: RealmUpdatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<Realm>> {
+        const response = await this.client.post(`realms/${realmId}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
@@ -67,8 +68,9 @@ export class RealmAPI extends BaseAPI implements IRealmAPI {
     async createOrUpdate(
         idOrName: string,
         data: RealmSavePayload,
+        options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<Realm>> {
-        const response = await this.client.put(`realms/${idOrName}`, nullifyEmptyObjectProperties(data));
+        const response = await this.client.put(`realms/${idOrName}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }

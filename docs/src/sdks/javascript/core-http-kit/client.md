@@ -111,6 +111,38 @@ console.log(response);
 // }
 ```
 
+## Cancellation & Timeouts
+
+Every method of every sub-API, plus `getJwks`, `getJwk` and
+`getWellKnownOpenIDConfiguration`, takes one optional options argument as its
+last parameter: `signal` aborts the call, `timeout` (milliseconds) bounds it
+and overrides the client's own `timeout` for this call. Where a method already
+takes an options object (`client.token.*`, `client.authorization.*`,
+`client.key.delete`, the authenticator challenge calls), the two keys ride in
+that same object. `client.userInfo.get` is the one exception.
+
+```typescript
+import { Client, isClientErrorDueTimeout } from '@authup/core-http-kit';
+
+const client = new Client({ baseURL: 'http://127.0.0.1:3000/', timeout: 10_000 });
+
+const controller = new AbortController();
+
+try {
+    const { data } = await client.role.getMany(
+        { pagination: { limit: 10 } },
+        { signal: controller.signal, timeout: 2_000 },
+    );
+} catch (e) {
+    if (isClientErrorDueTimeout(e)) {
+        // the call ran past 2 seconds
+    }
+}
+```
+
+An aborted call rejects with a client error whose `code` is `ECONNABORTED`, a
+timed-out one with `ETIMEDOUT`.
+
 ## Query Capability Discovery
 
 The grammar of the five query parameters, and the vocabulary each entity

@@ -12,7 +12,7 @@ import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import { buildStatsURL } from '../../stats';
 import type { EntitySchemaResponse, EntityStatsQuery, EntityStatsResponse } from '../../stats';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     BuiltInPolicyCreatePayload,
     BuiltInPolicyResponse,
@@ -23,48 +23,49 @@ import type {
     PolicyResponse,
     PolicyUpdatePayload,
 } from './types';
+import { buildRequestConfig } from '../../utils';
 
 export class PolicyAPI extends BaseAPI implements IPolicyAPI {
-    async getStats(query: EntityStatsQuery<Policy> = {}): Promise<EntityStatsResponse> {
-        const response = await this.client.get(buildStatsURL('policies', query));
+    async getStats(query: EntityStatsQuery<Policy> = {}, options?: APIRequestOptions): Promise<EntityStatsResponse> {
+        const response = await this.client.get(buildStatsURL('policies', query), buildRequestConfig(options));
 
         return response.data;
     }
 
-    async getSchema(): Promise<EntitySchemaResponse> {
-        const response = await this.client.get('policies/@schema');
+    async getSchema(options?: APIRequestOptions): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('policies/@schema', buildRequestConfig(options));
 
         return response.data;
     }
 
     async getMany<
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(data?: EntityQueryInput<Policy & { parentId?: string | null }>): Promise<EntityCollectionResponse<OUTPUT>> {
-        const response = await this.client.get(`policies${buildQueryString(data)}`);
+    >(data?: EntityQueryInput<Policy & { parentId?: string | null }>, options?: APIRequestOptions): Promise<EntityCollectionResponse<OUTPUT>> {
+        const response = await this.client.get(`policies${buildQueryString(data)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async delete<
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(id: Policy['id']): Promise<EntityRecordResponse<OUTPUT>> {
-        const response = await this.client.delete(`policies/${id}`);
+    >(id: Policy['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<OUTPUT>> {
+        const response = await this.client.delete(`policies/${id}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async getOne<
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(id: Policy['id'], record?: EntityQueryInput<Policy>) : Promise<EntityRecordResponse<OUTPUT>> {
-        const response = await this.client.get(`policies/${id}${buildQueryString(record)}`);
+    >(id: Policy['id'], record?: EntityQueryInput<Policy>, options?: APIRequestOptions) : Promise<EntityRecordResponse<OUTPUT>> {
+        const response = await this.client.get(`policies/${id}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async getOneExpanded<
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(id: Policy['id'], record?: EntityQueryInput<Policy>) : Promise<EntityRecordResponse<OUTPUT>> {
-        const response = await this.client.get(`policies/${id}/expanded${buildQueryString(record)}`);
+    >(id: Policy['id'], record?: EntityQueryInput<Policy>, options?: APIRequestOptions) : Promise<EntityRecordResponse<OUTPUT>> {
+        const response = await this.client.get(`policies/${id}/expanded${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -72,23 +73,24 @@ export class PolicyAPI extends BaseAPI implements IPolicyAPI {
     async create<
         INPUT extends PolicyCreatePayload = PolicyCreatePayload,
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(data: INPUT): Promise<EntityRecordResponse<OUTPUT>> {
-        const response = await this.client.post('policies', nullifyEmptyObjectProperties(data));
+    >(data: INPUT, options?: APIRequestOptions): Promise<EntityRecordResponse<OUTPUT>> {
+        const response = await this.client.post('policies', nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
 
     async createBuiltIn(
         data: BuiltInPolicyCreatePayload,
+        options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<BuiltInPolicyResponse>> {
-        return this.create(data);
+        return this.create(data, options);
     }
 
     async update<
         INPUT extends PolicyUpdatePayload = PolicyUpdatePayload,
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(id: Policy['id'], data: INPUT): Promise<EntityRecordResponse<OUTPUT>> {
-        const response = await this.client.post(`policies/${id}`, nullifyEmptyObjectProperties(data));
+    >(id: Policy['id'], data: INPUT, options?: APIRequestOptions): Promise<EntityRecordResponse<OUTPUT>> {
+        const response = await this.client.post(`policies/${id}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
@@ -96,8 +98,9 @@ export class PolicyAPI extends BaseAPI implements IPolicyAPI {
     async updateBuiltIn(
         id: Policy['id'],
         data: BuiltInPolicyUpdatePayload,
+        options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<BuiltInPolicyResponse>> {
-        return this.update(id, data);
+        return this.update(id, data, options);
     }
 
     async createOrUpdate<
@@ -106,8 +109,9 @@ export class PolicyAPI extends BaseAPI implements IPolicyAPI {
     >(
         idOrName: string,
         data: INPUT,
+        options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<OUTPUT>> {
-        const response = await this.client.put(`policies/${idOrName}`, nullifyEmptyObjectProperties(data));
+        const response = await this.client.put(`policies/${idOrName}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
@@ -115,17 +119,20 @@ export class PolicyAPI extends BaseAPI implements IPolicyAPI {
     async createOrUpdateBuiltin(
         idOrName: string,
         data: BuiltInPolicyCreatePayload,
+        options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<BuiltInPolicyResponse>> {
-        return this.createOrUpdate(idOrName, data);
+        return this.createOrUpdate(idOrName, data, options);
     }
 
     async check(
         idOrName: string,
         data: Record<string, any> = {},
+        options?: APIRequestOptions,
     ) : Promise<PolicyAPICheckResponse> {
         const response = await this.client.post(
             `policies/${idOrName}/check`,
             nullifyEmptyObjectProperties(data),
+            buildRequestConfig(options),
         );
 
         return response.data;

@@ -8,15 +8,17 @@
 import type { OAuth2TokenIntrospectionResponse } from '@authup/specs';
 import { BaseAPI } from '../../base';
 import type { IAccountAPI } from './types';
+import type { APIRequestOptions } from '../../types-base';
+import { buildRequestConfig } from '../../utils';
 
 export class AccountAPI extends BaseAPI implements IAccountAPI {
-    async getSession(): Promise<OAuth2TokenIntrospectionResponse> {
-        const response = await this.client.get('sessions/@me/introspect');
+    async getSession(options?: APIRequestOptions): Promise<OAuth2TokenIntrospectionResponse> {
+        const response = await this.client.get('sessions/@me/introspect', buildRequestConfig(options));
 
         return response.data;
     }
 
-    async deleteSession(): Promise<void> {
-        await this.client.delete('sessions/@me');
+    async deleteSession(options?: APIRequestOptions): Promise<void> {
+        await this.client.delete('sessions/@me', buildRequestConfig(options));
     }
 }

@@ -46,7 +46,8 @@ import {
     UserPermissionAPI,
     UserRoleAPI,
 } from '../domains';
-import type { OAuth2APIOptions } from '../domains';
+import type { APIRequestOptions, OAuth2APIOptions } from '../domains';
+import { buildRequestConfig } from '../domains/utils';
 import type { ClientOptions, IClient } from './type';
 
 export class Client extends BaseClient implements IClient {
@@ -222,21 +223,24 @@ export class Client extends BaseClient implements IClient {
         }));
     }
 
-    async getJwks() : Promise<{ keys: OAuth2JsonWebKey[] }> {
-        const response = await this.get('jwks');
+    async getJwks(options?: APIRequestOptions) : Promise<{ keys: OAuth2JsonWebKey[] }> {
+        const response = await this.get('jwks', buildRequestConfig(options));
 
         return response.data;
     }
 
-    async getJwk(id: string, realmId?: string) : Promise<OAuth2JsonWebKey> {
+    async getJwk(id: string, realmId?: string, options?: APIRequestOptions) : Promise<OAuth2JsonWebKey> {
         const path = `jwks/${encodeURIComponent(id)}`;
-        const response = await this.get(realmId ? `realms/${encodeURIComponent(realmId)}/${path}` : path);
+        const response = await this.get(
+            realmId ? `realms/${encodeURIComponent(realmId)}/${path}` : path,
+            buildRequestConfig(options),
+        );
 
         return response.data;
     }
 
-    async getWellKnownOpenIDConfiguration() : Promise<OpenIDProviderMetadata> {
-        const response = await this.get('/.well-known/openid-configuration');
+    async getWellKnownOpenIDConfiguration(options?: APIRequestOptions) : Promise<OpenIDProviderMetadata> {
+        const response = await this.get('/.well-known/openid-configuration', buildRequestConfig(options));
 
         return response.data;
     }

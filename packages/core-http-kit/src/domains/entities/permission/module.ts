@@ -12,7 +12,7 @@ import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import { buildStatsURL } from '../../stats';
 import type { EntitySchemaResponse, EntityStatsQuery, EntityStatsResponse } from '../../stats';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     IPermissionAPI,
     PermissionAPICheckResponse,
@@ -20,46 +20,47 @@ import type {
     PermissionSavePayload,
     PermissionUpdatePayload,
 } from './types';
+import { buildRequestConfig } from '../../utils';
 
 export class PermissionAPI extends BaseAPI implements IPermissionAPI {
-    async getStats(query: EntityStatsQuery<Permission> = {}): Promise<EntityStatsResponse> {
-        const response = await this.client.get(buildStatsURL('permissions', query));
+    async getStats(query: EntityStatsQuery<Permission> = {}, options?: APIRequestOptions): Promise<EntityStatsResponse> {
+        const response = await this.client.get(buildStatsURL('permissions', query), buildRequestConfig(options));
 
         return response.data;
     }
 
-    async getSchema(): Promise<EntitySchemaResponse> {
-        const response = await this.client.get('permissions/@schema');
+    async getSchema(options?: APIRequestOptions): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('permissions/@schema', buildRequestConfig(options));
 
         return response.data;
     }
 
-    async getMany(data?: EntityQueryInput<Permission>): Promise<EntityCollectionResponse<Permission>> {
-        const response = await this.client.get(`permissions${buildQueryString(data)}`);
+    async getMany(data?: EntityQueryInput<Permission>, options?: APIRequestOptions): Promise<EntityCollectionResponse<Permission>> {
+        const response = await this.client.get(`permissions${buildQueryString(data)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
-    async delete(id: Permission['id']): Promise<EntityRecordResponse<Permission>> {
-        const response = await this.client.delete(`permissions/${id}`);
+    async delete(id: Permission['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<Permission>> {
+        const response = await this.client.delete(`permissions/${id}`, buildRequestConfig(options));
 
         return response.data;
     }
 
-    async getOne(id: Permission['id'], record?: EntityQueryInput<Permission>): Promise<EntityRecordResponse<Permission>> {
-        const response = await this.client.get(`permissions/${id}${buildQueryString(record)}`);
+    async getOne(id: Permission['id'], record?: EntityQueryInput<Permission>, options?: APIRequestOptions): Promise<EntityRecordResponse<Permission>> {
+        const response = await this.client.get(`permissions/${id}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
-    async create(data: PermissionCreatePayload): Promise<EntityRecordResponse<Permission>> {
-        const response = await this.client.post('permissions', nullifyEmptyObjectProperties(data));
+    async create(data: PermissionCreatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<Permission>> {
+        const response = await this.client.post('permissions', nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
 
-    async update(id: Permission['id'], data: PermissionUpdatePayload): Promise<EntityRecordResponse<Permission>> {
-        const response = await this.client.post(`permissions/${id}`, nullifyEmptyObjectProperties(data));
+    async update(id: Permission['id'], data: PermissionUpdatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<Permission>> {
+        const response = await this.client.post(`permissions/${id}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
@@ -67,8 +68,9 @@ export class PermissionAPI extends BaseAPI implements IPermissionAPI {
     async createOrUpdate(
         idOrName: string,
         data: PermissionSavePayload,
+        options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<Permission>> {
-        const response = await this.client.put(`permissions/${idOrName}`, nullifyEmptyObjectProperties(data));
+        const response = await this.client.put(`permissions/${idOrName}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
@@ -76,10 +78,12 @@ export class PermissionAPI extends BaseAPI implements IPermissionAPI {
     async check(
         idOrName: string,
         data: Record<string, any> = {},
+        options?: APIRequestOptions,
     ) : Promise<PermissionAPICheckResponse> {
         const response = await this.client.post(
             `permissions/${idOrName}/check`,
             nullifyEmptyObjectProperties(data),
+            buildRequestConfig(options),
         );
 
         return response.data;
