@@ -50,6 +50,12 @@ export class HTTPModule<C extends Config = Config> implements IModule {
             port: config.port,
             hostname: config.host,
             silent: true,
+            // Whoever starts the application owns the stop signal. srvx's
+            // own handler would close the listener the moment the signal
+            // arrives, which is exactly when a draining console must keep
+            // answering (`GET /readyz` with 503, and the requests still
+            // routed here).
+            gracefulShutdown: false,
         });
 
         await server.ready();

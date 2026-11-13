@@ -11,6 +11,7 @@ import type {
     DatabaseHealthCheckOptions,
     HealthCheck,
     HealthReport,
+    HealthReportObserver,
     ShutdownState,
 } from './types.ts';
 
@@ -101,5 +102,30 @@ export function createShutdownHealthCheck(state: ShutdownState): HealthCheck {
     return {
         name: 'shutdown',
         run: () => !state.active,
+    };
+}
+
+/**
+ * Calls back when the set of failing checks changes, with their names (empty
+ * once every check passes again). A probe arrives every few seconds, so
+ * reporting each failing one would flood the log for as long as an outage
+ * lasts.
+ */
+export function createHealthChangeObserver(onChange: (failing: string[]) => void): HealthReportObserver {
+    let previous = '';
+
+    return (report) => {
+        const failing = report.checks
+            .filter((check) => !check.ok)
+            .map((check) => check.name);
+
+        const current = failing.join(',');
+
+        if (current === previous) {
+            return;
+        }
+
+        previous = current;
+        onChange(failing);
     };
 }

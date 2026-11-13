@@ -73,7 +73,7 @@ export function registerShutdownHandlers(
 
 /**
  * The drain of an application serving the API: the signal flips its
- * readiness route to 503 and `core.shutdownDelay` holds the teardown back.
+ * readiness route to 503 and `shutdownDelay` holds the teardown back.
  */
 export function buildShutdownHandlersOptions(container: IContainer) : ShutdownHandlersOptions {
     const config = container.resolve(ConfigInjectionKey);

@@ -153,16 +153,23 @@ listener, no API.
   outage into a total one. `mountHealthRoutes` runs BEFORE
   `middleware.mountBefore`, so a probe is never logged, rate limited or
   authenticated, and the routes are not controllers, so they stay out of the
-  OpenAPI document. The consoles' pair is constant (`mountHealthRoutes` of
-  `@authup/server-console-kit`); the auth console does not check `apiUrl`.
+  OpenAPI document. A console's pair (`mountHealthRoutes` of
+  `@authup/server-console-kit`) checks no dependency, and the auth console
+  deliberately does not check `apiUrl`; its `/readyz` fails only while
+  draining.
 - Neither path answers during boot: the listener binds after migrations and
   provisioning. Binding early was rejected (`HTTPModule` needs the database
   through authentication, identity and OAuth2), so the orchestrator's startup
   probe is the guard against a kill during a boot migration.
-- Drain: `registerShutdownHandlers(app, buildShutdownHandlersOptions(container))`
-  flips `HTTPInjectionKey.ShutdownState` on the first signal and holds the
-  teardown back for `core.shutdownDelay` seconds (default 0); the force-exit
-  timeout starts after the delay.
+- Drain: the first signal flips `/readyz` to 503 and the teardown waits for
+  the root key `shutdownDelay` (seconds, default 0, one key for every
+  listener); the force-exit timeout starts after the delay. server-core:
+  `buildShutdownHandlersOptions(container)` over
+  `HTTPInjectionKey.ShutdownState`. Consoles: `buildShutdownOptions` of the
+  console kit, whose state is keyed by the app instance (a `WeakMap`), so two
+  consoles in one process never share one. The worker does not drain. The
+  kit's `serve` passes `gracefulShutdown: false` like server-core's: srvx's
+  default handler closes the listener on the signal, before the drain.
 - `WorkerHealthModule` (`app/modules/components/health.ts`): bare
   `node:http`. `/readyz` answers 503 while any component is overdue
   (`COMPONENT_OVERDUE_AFTER` 5 min without success, unless a pass is running

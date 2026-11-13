@@ -14,6 +14,7 @@ import {
 } from 'vitest';
 import {
     createDatabaseHealthCheck,
+    createHealthChangeObserver,
     createShutdownHealthCheck,
     runHealthChecks,
 } from '../../../../../src/app/modules/http/health';
@@ -122,5 +123,28 @@ describe('app/modules/http/health', () => {
 
         expect(await check.run()).toBeFalsy();
         expect(query).toHaveBeenCalledTimes(2);
+    });
+
+    it('should report a change of the failing checks once, not every report', () => {
+        const onChange = vi.fn();
+        const observe = createHealthChangeObserver(onChange);
+
+        const healthy = { healthy: true, checks: [{ name: 'database', ok: true }, { name: 'shutdown', ok: true }] };
+        const databaseDown = { healthy: false, checks: [{ name: 'database', ok: false }, { name: 'shutdown', ok: true }] };
+        const bothDown = { healthy: false, checks: [{ name: 'database', ok: false }, { name: 'shutdown', ok: false }] };
+
+        observe(healthy);
+        observe(healthy);
+        expect(onChange).not.toHaveBeenCalled();
+
+        observe(databaseDown);
+        observe(databaseDown);
+        observe(databaseDown);
+        expect(onChange.mock.calls).toEqual([[['database']]]);
+
+        observe(bothDown);
+        observe(healthy);
+        observe(healthy);
+        expect(onChange.mock.calls).toEqual([[['database']], [['database', 'shutdown']], [[]]]);
     });
 });

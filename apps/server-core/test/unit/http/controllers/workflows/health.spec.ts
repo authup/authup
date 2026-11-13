@@ -13,18 +13,38 @@ import {
     it,
     vi,
 } from 'vitest';
+import type { Logger } from '@authup/server-kit';
+import { createNoopLogger } from '@authup/server-kit';
 import {
     DATABASE_HEALTH_CHECK_TTL,
     DatabaseInjectionKey,
     HTTPInjectionKey,
+    LoggerInjectionKey,
 } from '../../../../../src/index.ts';
 import { createTestApplication } from '../../../../app';
 import { httpRequest } from '../../../../utils';
 
 describe('src/app/modules/http/health', () => {
     const suite = createTestApplication();
+    const logLines : string[] = [];
 
     beforeAll(async () => {
+        const logger = createNoopLogger();
+
+        logger.warn = ((message: unknown) => {
+            logLines.push(`warn: ${String(message)}`);
+
+            return logger;
+        }) as Logger['warn'];
+
+        logger.info = ((message: unknown) => {
+            logLines.push(`info: ${String(message)}`);
+
+            return logger;
+        }) as Logger['info'];
+
+        suite.container.register(LoggerInjectionKey, { useValue: logger });
+
         await suite.setup();
     });
 
@@ -65,6 +85,11 @@ describe('src/app/modules/http/health', () => {
 
             expect((await httpRequest(suite, 'HEAD', '/readyz')).status).toEqual(503);
             expect((await httpRequest(suite, 'GET', '/livez')).status).toEqual(200);
+
+            // logged once for the outage, not once per probe
+            expect(logLines.filter((line) => line.includes('/readyz'))).toEqual([
+                'warn: Not ready, GET /readyz answers 503. Failing checks: database.',
+            ]);
         } finally {
             query.mockRestore();
         }
@@ -85,6 +110,9 @@ describe('src/app/modules/http/health', () => {
                 { name: 'shutdown', ok: true },
             ],
         });
+
+        expect(logLines.filter((line) => line.includes('/readyz')).at(-1))
+            .toEqual('info: Ready again, GET /readyz answers 200.');
     });
 
     it('should answer ahead of the authorization middleware', async () => {

@@ -12,6 +12,7 @@ import {
     defineSchema,
     readEnvArray,
     readEnvBoolOrString,
+    readEnvInt,
     readEnvString,
 } from '@authup/server-config-kit';
 import { z } from 'zod';
@@ -63,6 +64,13 @@ export const ROOT_SCHEMA = defineSchema<RootConfig, 'publicUrl' | 'internalUrl' 
         path: DEFAULT_HOST_PATH,
         env: EnvironmentVariable.HOST,
         readEnv: readEnvString,
+    },
+    shutdownDelay: {
+        type: z.number().nonnegative(),
+        default: 0,
+        description: 'Seconds every listener this deployment starts (server-core and each console service) keeps serving after SIGTERM or SIGINT while `GET /readyz` answers 503, so a load balancer can stop routing to the process before it closes. Zero closes at once.',
+        env: EnvironmentVariable.SHUTDOWN_DELAY,
+        readEnv: readEnvInt,
     },
     publicUrl: {
         type: z.url(),

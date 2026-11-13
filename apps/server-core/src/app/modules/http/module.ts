@@ -17,7 +17,12 @@ import { NoopAuthFlowMetrics } from '../../../core/index.ts';
 import { ModuleName } from '../constants.ts';
 import type { HTTPServer } from './constants.ts';
 import { HTTPInjectionKey } from './constants.ts';
-import { createDatabaseHealthCheck, createShutdownHealthCheck, mountHealthRoutes } from './health/index.ts';
+import {
+    createDatabaseHealthCheck,
+    createHealthChangeObserver,
+    createShutdownHealthCheck,
+    mountHealthRoutes,
+} from './health/index.ts';
 import type { HealthCheck, ShutdownState } from './health/index.ts';
 import { DatabaseInjectionKey } from '../database/index.ts';
 import type { IContainer } from 'eldin';
@@ -152,7 +157,21 @@ export class HTTPModule implements IModule {
 
         readiness.push(createShutdownHealthCheck(shutdown));
 
-        mountHealthRoutes(app, { liveness: [], readiness });
+        const logger = container.resolve(LoggerInjectionKey);
+
+        mountHealthRoutes(app, {
+            liveness: [],
+            readiness,
+            onReadiness: createHealthChangeObserver((failing) => {
+                if (failing.length > 0) {
+                    logger.warn(`Not ready, GET /readyz answers 503. Failing checks: ${failing.join(', ')}.`);
+
+                    return;
+                }
+
+                logger.info('Ready again, GET /readyz answers 200.');
+            }),
+        });
     }
 
     /**

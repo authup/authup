@@ -30,7 +30,7 @@ so do not probe it.
 |------|---------------------|----------------------|
 | API (`authup start`, `authup start core`) | never | the database does not answer within one second, or the process received its stop signal |
 | Worker (`authup start worker`) | a sweep is hung (one pass running for more than 30 minutes) | a sweep is overdue (five minutes without a completed pass) or hung |
-| Consoles (`authup start console`) | never | never |
+| Consoles (`authup start console`) | never | the process received its stop signal |
 
 `/livez` deliberately checks no dependency. A database outage is not fixed by
 a restart, and a liveness probe that fails on it would restart every replica
@@ -41,7 +41,8 @@ it would take all of them out of rotation at once. A Redis outage is logged
 instead.
 
 A console reports no dependency of its own. When the API is unreachable, the
-page renders that error; the console itself can still serve.
+page renders that error; the console itself can still serve. Its `/readyz`
+fails only while it drains.
 
 The database result is reused for one second, so probing more often than that
 does not add load.
@@ -64,11 +65,12 @@ Running migrations as their own step (`authup migration run`, with
 
 ## During shutdown
 
-On `SIGTERM` or `SIGINT` the API's `/readyz` answers 503 at once. By default
-the listener closes right after. Set `core.shutdownDelay` (env
+On `SIGTERM` or `SIGINT`, `/readyz` of the API and of a console answers 503 at
+once. By default the listener closes right after. Set `shutdownDelay` (env
 `SHUTDOWN_DELAY`, seconds) to keep serving for that long first, so a load
 balancer notices the 503 and stops routing to the process before its socket
-closes:
+closes. One key covers every listener of the deployment; the worker serves no
+traffic and ignores it.
 
 ```dotenv
 SHUTDOWN_DELAY=5

@@ -94,14 +94,6 @@ export type CoreConfig = {
      */
     migrationEnabled: boolean,
 
-    /**
-     * Seconds the listener keeps serving after SIGTERM or SIGINT while
-     * `GET /readyz` answers 503, so a load balancer can stop routing to this
-     * process before it closes. Zero closes at once.
-     * default: 0
-     */
-    shutdownDelay: number,
-
     // ----------------------------------------------------
 
     /**

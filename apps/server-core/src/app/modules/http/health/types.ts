@@ -45,7 +45,14 @@ export type DatabaseHealthCheckOptions = {
     ttl?: number,
 };
 
+export type HealthReportObserver = (report: HealthReport) => void;
+
 export type HealthRoutesOptions = {
     liveness: HealthCheck[],
     readiness: HealthCheck[],
+    /**
+     * Receives every readiness report. A probe is not logged per request, so
+     * this is where a failing check reaches the server log.
+     */
+    onReadiness?: HealthReportObserver,
 };

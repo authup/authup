@@ -93,7 +93,7 @@ describe('cli/commands/shutdown', () => {
         expect(teardown).not.toHaveBeenCalled();
     });
 
-    it('should flip the shutdown state and read the delay from core.shutdownDelay', () => {
+    it('should flip the shutdown state and read the delay from shutdownDelay', () => {
         const container = new Container();
         const state : ShutdownState = { active: false };
 

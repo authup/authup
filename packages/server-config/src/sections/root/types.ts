@@ -64,6 +64,14 @@ export type RootConfig = {
     defaultHost: string,
 
     /**
+     * Seconds every listener of the deployment keeps serving after SIGTERM
+     * or SIGINT while `GET /readyz` answers 503, so a load balancer can stop
+     * routing to the process before it closes. Zero closes at once.
+     * default: 0
+     */
+    shutdownDelay: number,
+
+    /**
      * Application environment (e.g. 'production').
      * default: 'development'
      */

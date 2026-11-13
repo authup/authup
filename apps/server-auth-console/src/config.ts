@@ -91,6 +91,7 @@ export async function resolveConfig(
         apiInternalUrl: values.internalUrl,
         port: values.port,
         host: values.host,
+        shutdownDelay: values.shutdownDelay,
         distPath: values.path,
         theme: values.theme,
     };

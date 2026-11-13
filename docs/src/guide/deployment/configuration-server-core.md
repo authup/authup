@@ -128,6 +128,16 @@ export default {
      */
     trustedOrigins: ['https://app.example.com'],
 
+    /**
+     * Seconds every listener (the API and each console service) keeps
+     * serving after SIGTERM or SIGINT while `GET /readyz` answers 503, so a
+     * load balancer can stop routing to the process before it closes. Zero
+     * closes at once.
+     * env: SHUTDOWN_DELAY
+     * default: 0
+     */
+    shutdownDelay: 0,
+
     theme: {
         /**
          * EXPERIMENTAL (may change in a minor release; see the Theming guide).
@@ -305,15 +315,6 @@ export default {
          * default: true
          */
         migrationEnabled: true,
-
-        /**
-         * Seconds the listener keeps serving after SIGTERM or SIGINT while
-         * `GET /readyz` answers 503, so a load balancer can stop routing to
-         * this process before it closes. Zero closes at once.
-         * env: SHUTDOWN_DELAY
-         * default: 0
-         */
-        shutdownDelay: 0,
 
         /**
          * Application port number.
@@ -746,6 +747,7 @@ export default {
 # yaml-language-server: $schema=https://authup.org/schema/config.json
 env: production
 publicUrl: http://localhost:3000
+shutdownDelay: 0
 trustedOrigins:
   - https://app.example.com
 
@@ -768,7 +770,6 @@ core:
     enabled: true
     port: 0
   migrationEnabled: true
-  shutdownDelay: 0
   port: 3000
   host: 0.0.0.0
   mtlsPublicUrl: https://mtls.example.com
