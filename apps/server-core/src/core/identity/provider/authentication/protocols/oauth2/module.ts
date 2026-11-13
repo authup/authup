@@ -26,8 +26,10 @@ import type {
 } from './types.ts';
 
 /**
- * Bound on the optional userinfo enrichment. Short by design: the caller is
- * a browser sitting on a redirect, and the login proceeds without it.
+ * Bound on the optional userinfo enrichment, in milliseconds. Short by
+ * design: the caller is a browser sitting on a redirect, and the login
+ * proceeds without it. The request is aborted at the bound, so an endpoint
+ * that accepts the connection and never answers holds nothing open.
  */
 const USERINFO_TIMEOUT = 5000;
 
@@ -183,10 +185,10 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
             // the guard is load-bearing: the client carries no baseURL, so
             // hapic's `/userinfo` default would be a relative fetch URL
             try {
-                const userInfo = await this.withTimeout(this.client.userInfo.get({
+                const userInfo = await this.client.userInfo.get({
                     type: 'Bearer',
                     token: input.access_token,
-                }));
+                }, { timeout: USERINFO_TIMEOUT });
 
                 // OIDC Core 5.3.2: a userinfo response whose `sub` does not
                 // match the token's MUST NOT be used. Without this a
@@ -210,23 +212,6 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
         }
 
         return claims;
-    }
-
-    /**
-     * hapic passes no `signal` to `fetch`, so an endpoint that accepts the
-     * connection and never answers would hold the login for undici's 300s
-     * headers timeout. Enrichment must not outlast the request it enriches.
-     */
-    protected withTimeout<T>(promise: Promise<T>) : Promise<T> {
-        return Promise.race([
-            promise,
-            new Promise<T>((_resolve, reject) => {
-                setTimeout(
-                    () => reject(new Error(`the request exceeded ${USERINFO_TIMEOUT}ms`)),
-                    USERINFO_TIMEOUT,
-                ).unref();
-            }),
-        ]);
     }
 
     protected async buildIdentityWithTokenGrantResponse(input: TokenGrantResponse) : Promise<IdentityProviderIdentity> {
