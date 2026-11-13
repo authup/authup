@@ -167,7 +167,9 @@ policy-data source is available:
 - the `attributeNames` data key: a plain list of attribute names (a projection / fieldset)
 - the `attributes` data key: the keys of an attribute record
 
-When both keys are present, both are enforced; when neither is present, the policy stays
+When the `attributeNames` key is present, it decides alone: the keys of the `attributes`
+record are read only when no names list is given. A caller that loads more of a record than
+it hands out names the fields it hands out. When neither key is present, the policy stays
 pending.
 
 **`Config`**

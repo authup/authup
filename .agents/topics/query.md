@@ -53,6 +53,13 @@ and decoding, adapters only execute.
   verdict but `allow`, `decodeQuery` widens a sparse `fields[relation]` to
   the target's default columns (`ReachCheckField`, `core/query/projection.ts`,
   trimmed after the check): an unprojected column reads as null to a policy.
+  The ROOT row gets the same wherever it is evaluated per row:
+  `widenSparseRootProjection` (via `scopeReadQuery`'s `schema` on a `post`
+  verdict, or called by the service) loads the schema's default columns, never
+  an allowed-only one (`secret`, `email`), and never on a grouped query. The
+  service names the response keys with `readResponseAttributeNames` and trims
+  (`trimReachCheckFields`, also run by `redactUnreachedRelations`). `retain`
+  lists the columns the repository force-selects, which stay in the response.
   A joined row still without `realmId` is dropped. A new
   read exposing a gated relation must call it.
 - A decode without `actor` is a SYSTEM decode and runs unrestricted. Every

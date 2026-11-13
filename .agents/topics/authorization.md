@@ -509,8 +509,13 @@ Defaults (declared in `app/modules/provisioning/sources/default/module.ts`):
   `{ success: false, pending: true }` instead of evaluating missing data. Built-ins:
   - identity -> `[IDENTITY]`; attributes -> `[ATTRIBUTES]`; date/time/composite -> none.
   - attributeNames -> none, reports pending itself (#3321): it settles against EITHER its
-    own `ATTRIBUTE_NAMES` key (a projection list) or the `ATTRIBUTES` record (both
-    enforced when both present); the engine gate is AND-only.
+    own `ATTRIBUTE_NAMES` key (a names list) or the `ATTRIBUTES` record's keys. The list
+    decides alone when given; the record's keys are read only without one. The engine
+    gate is AND-only.
+  - A per-row read check (a list's `post` loop, the user and client record reads) hands
+    `ATTRIBUTES` the row's whole default columns, whatever `fields=` asked for, and
+    `ATTRIBUTE_NAMES` the keys the response carries (topics/query.md). Judging the
+    loaded columns instead would turn a field-level read gate into all-or-nothing.
   - permissionBinding -> `[PERMISSION_BINDING]`; IDENTITY deliberately NOT declared, so a
     missing identity is not evaluable and a scope-restricted bearer (`grants: []`) settles
     false; both fail the pre-gate.
