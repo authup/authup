@@ -285,4 +285,64 @@ describe('record policy (field projection)', () => {
             });
         });
     });
+
+    describe('client list with the secret requested', () => {
+        const secret = 'record-policy-projection-stored-secret';
+
+        let reader: HTTPClient;
+        let target: Client;
+
+        beforeAll(async () => {
+            ({ data: target } = await suite.client.client.create({
+                ...createFakeClient(),
+                realmId,
+                secret,
+                secretHashed: false,
+                secretEncrypted: false,
+            }));
+
+            // the second child cannot be lowered, so the list is decided per
+            // row and the secret gate has no permission leg to stand on
+            reader = await createReader('record-policy-projection-client-secret', PermissionName.CLIENT_READ, {
+                name: 'record-policy-projection-client-secret',
+                type: BuiltInPolicyType.COMPOSITE,
+                decisionStrategy: 'unanimous',
+                invert: false,
+                children: [
+                    {
+                        name: 'record-policy-projection-client-secret-name',
+                        type: BuiltInPolicyType.ATTRIBUTES,
+                        invert: false,
+                        query: { name: { $ne: 'a-name-no-client-carries' } },
+                    },
+                    {
+                        name: 'record-policy-projection-client-secret-names',
+                        type: BuiltInPolicyType.ATTRIBUTE_NAMES,
+                        invert: true,
+                        names: ['aFieldNoEntityCarries'],
+                    },
+                ],
+            });
+        });
+
+        it('should show the secret to a reader the gate admits', async () => {
+            const { data } = await suite.client.client.getMany({
+                filters: { id: target.id },
+                fields: ['id', 'secret'],
+            });
+
+            expect(data).toHaveLength(1);
+            expect(data[0]!.secret).toEqual(secret);
+        });
+
+        it('should withhold the secret and answer no column beyond the projection', async () => {
+            const { data } = await reader.client.getMany({
+                filters: { id: target.id },
+                fields: ['id', 'secret'],
+            });
+
+            expect(data).toEqual([{ id: target.id, realmId }]);
+            expect(JSON.stringify(data)).not.toContain(secret);
+        });
+    });
 });
