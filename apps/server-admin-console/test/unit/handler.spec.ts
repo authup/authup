@@ -59,6 +59,16 @@ describe('createHandler', () => {
         expect(response.status).toEqual(200);
     });
 
+    it('should answer /livez and /readyz', async () => {
+        for (const path of ['/livez', '/readyz']) {
+            const response = await fetch(`${baseURL}${path}`);
+
+            expect(response.status).toEqual(200);
+            expect(response.headers.get('cache-control')).toEqual('no-store');
+            expect(await response.json()).toEqual({ healthy: true, checks: [] });
+        }
+    });
+
     it('should serve the shell with the runtime configuration injected', async () => {
         const response = await fetch(`${baseURL}/`);
 

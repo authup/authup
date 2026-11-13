@@ -106,6 +106,13 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
             env: EnvironmentVariable.MIGRATION_ENABLED,
             readEnv: readEnvBoolStrict,
         },
+        shutdownDelay: {
+            type: nonNegativeNumberType,
+            default: 0,
+            description: 'Seconds the listener keeps serving after SIGTERM or SIGINT while `GET /readyz` answers 503, so a load balancer can stop routing to this process before it closes. Zero closes at once.',
+            env: EnvironmentVariable.SHUTDOWN_DELAY,
+            readEnv: readEnvInt,
+        },
 
         port: {
             type: nonNegativeNumberType,

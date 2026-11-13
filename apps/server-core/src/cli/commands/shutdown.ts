@@ -5,9 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IContainer } from 'eldin';
 import process from 'node:process';
+import { ConfigInjectionKey, HTTPInjectionKey } from '../../app/index.ts';
 
 const FORCE_EXIT_TIMEOUT_MS = 10_000;
+
+export type ShutdownHandlersOptions = {
+    /**
+     * Runs once, as the first signal arrives and before anything is torn down.
+     */
+    onSignal?: () => void,
+    /**
+     * Milliseconds to keep serving between the signal and the teardown.
+     * default: 0
+     */
+    delay?: number,
+};
 
 /**
  * Terminate a long-running application on SIGINT / SIGTERM.
@@ -20,8 +34,16 @@ const FORCE_EXIT_TIMEOUT_MS = 10_000;
  * Typed structurally rather than against orkos' `IApplication`: a console
  * role owns listeners rather than a module graph, and teardown is the whole
  * of what this needs.
+ *
+ * `onSignal` runs as the first signal arrives and `delay` (milliseconds)
+ * holds the teardown back afterwards: the listener keeps serving while its
+ * readiness route already answers 503, so a load balancer stops routing
+ * here before the socket closes. The force timeout starts after the delay.
  */
-export function registerShutdownHandlers(app: { teardown(): Promise<unknown> }) : void {
+export function registerShutdownHandlers(
+    app: { teardown(): Promise<unknown> },
+    options: ShutdownHandlersOptions = {},
+) : void {
     let shuttingDown = false;
     const shutdown = async (signal: NodeJS.Signals) => {
         if (shuttingDown) {
@@ -29,6 +51,16 @@ export function registerShutdownHandlers(app: { teardown(): Promise<unknown> }) 
         }
 
         shuttingDown = true;
+
+        if (options.onSignal) {
+            options.onSignal();
+        }
+
+        if (options.delay && options.delay > 0) {
+            await new Promise<void>((resolve) => {
+                setTimeout(resolve, options.delay);
+            });
+        }
 
         const force = setTimeout(() => {
             process.stderr.write(`\n${signal} teardown timed out after ${FORCE_EXIT_TIMEOUT_MS}ms — forcing exit.\n`);
@@ -48,4 +80,22 @@ export function registerShutdownHandlers(app: { teardown(): Promise<unknown> }) 
 
     process.on('SIGINT', shutdown);
     process.on('SIGTERM', shutdown);
+}
+
+/**
+ * The drain of an application serving the API: the signal flips its
+ * readiness route to 503 and `core.shutdownDelay` holds the teardown back.
+ */
+export function buildShutdownHandlersOptions(container: IContainer) : ShutdownHandlersOptions {
+    const config = container.resolve(ConfigInjectionKey);
+    const state = container.tryResolve(HTTPInjectionKey.ShutdownState);
+
+    return {
+        delay: config.shutdownDelay * 1_000,
+        onSignal: () => {
+            if (state.success) {
+                state.data.active = true;
+            }
+        },
+    };
 }

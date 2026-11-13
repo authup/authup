@@ -407,7 +407,8 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
     });
 
     try {
-        await waitUntilReady(`${name}/server-core`, SERVER_URL, child);
+        await waitUntilReady(`${name}/server-core`, `${SERVER_URL}readyz`, child);
+        await waitUntilReady(`${name}/server-core`, `${SERVER_URL}livez`, child);
 
         // All three consoles are RUNTIME dependencies of server-core, resolved
         // out of node_modules and served from their built dist. Probing the
@@ -600,8 +601,8 @@ async function executeSplitScenario() {
     });
 
     try {
-        await waitUntilReady('split/core', SERVER_URL, api);
-        await waitUntilReady('split/console', throughProxy('auth', '/healthy'), consoles);
+        await waitUntilReady('split/core', `${SERVER_URL}readyz`, api);
+        await waitUntilReady('split/console', throughProxy('auth', '/readyz'), consoles);
 
         // The shed: every console page is a 404 on the API now. A shell
         // answered here would mean both sides serve it, with whichever

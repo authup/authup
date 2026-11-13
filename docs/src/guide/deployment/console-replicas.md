@@ -66,7 +66,7 @@ Two rules, in this order:
    port. Everything outside `/console` goes to the API set.
 
 A console service serves its handler at the ROOT of its own listener (`/`,
-`/assets/**`, `/theme/**`, `/healthy`) while the browser addresses it under the
+`/assets/**`, `/theme/**`, `/livez`, `/readyz`) while the browser addresses it under the
 console's public path, so **the proxy must strip that prefix**.
 
 Nginx, with one upstream per listener:
@@ -228,7 +228,8 @@ deployment keeps one database file per container, the same caveat the
 
 The image's own `HEALTHCHECK` probes the port `PORT` names (`3000` by
 default), which a console container does not bind. Override it per console
-listener; each answers `GET /healthy` on its own port.
+listener; each answers `GET /livez` and `GET /readyz` on its own port (and
+`GET /healthy`, which predates them). See [Health endpoints](./health.md).
 
 ## Docker Compose
 
@@ -264,7 +265,7 @@ services:
         # Probe the auth console: it cannot be disabled, so it is always
         # listening (3020 by default, AUTH_CONSOLE_PORT).
         healthcheck:
-            test: ["CMD", "wget", "--spider", "--proxy", "off", "http://127.0.0.1:3020/healthy"]
+            test: ["CMD", "wget", "--spider", "--proxy", "off", "http://127.0.0.1:3020/readyz"]
             interval: 10s
 ```
 

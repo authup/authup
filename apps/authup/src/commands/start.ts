@@ -14,6 +14,7 @@ import {
     CLI_CONFIG_ARGS,
     ConfigModule,
     HTTPModule,
+    buildShutdownHandlersOptions,
     createApplication,
     createWorkerApplication,
     readConfig,
@@ -180,7 +181,7 @@ export function defineCLIStartCommand(configFs: ConfigReadFsOptions = {}) {
 
                     await app.teardown();
                 },
-            });
+            }, buildShutdownHandlersOptions(app.container));
         },
     });
 }

@@ -203,6 +203,7 @@ describe('app/modules/components', () => {
             lastSuccessAt: '2026-01-01T00:00:30.000Z',
             runningSince: null,
             overdue: false,
+            hung: false,
         }]);
 
         // the database goes away after boot: every tick fails and is retried
@@ -221,6 +222,7 @@ describe('app/modules/components', () => {
             lastSuccessAt: '2026-01-01T00:00:30.000Z',
             runningSince: null,
             overdue: true,
+            hung: false,
         });
 
         // one successful tick brings it back
@@ -253,11 +255,13 @@ describe('app/modules/components', () => {
         await vi.advanceTimersByTimeAsync(6 * 60_000);
         expect(module.getHealth()).toEqual({
             healthy: false,
+            hung: false,
             components: [{
                 name: 'oauth2-cleaner',
                 lastSuccessAt: null,
                 runningSince: null,
                 overdue: true,
+                hung: false,
             }],
         });
 
@@ -286,18 +290,22 @@ describe('app/modules/components', () => {
         await vi.advanceTimersByTimeAsync(10 * 60_000);
         expect(module.getHealth()).toEqual({
             healthy: true,
+            hung: false,
             components: [{
                 name: 'oauth2-cleaner',
                 lastSuccessAt: '2026-01-01T00:00:30.000Z',
                 runningSince: '2026-01-01T00:01:00.000Z',
                 overdue: false,
+                hung: false,
             }],
         });
 
         // past the hang ceiling it is overdue, even though it is still running
         await vi.advanceTimersByTimeAsync(25 * 60_000);
         expect(module.getHealth().healthy).toBeFalsy();
+        expect(module.getHealth().hung).toBeTruthy();
         expect(module.getHealth().components[0].overdue).toBeTruthy();
+        expect(module.getHealth().components[0].hung).toBeTruthy();
 
         pass.resolve([]);
         await module.teardown(container);

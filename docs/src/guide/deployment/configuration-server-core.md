@@ -287,7 +287,7 @@ export default {
              * The port of the worker's health listener in worker mode
              * (`authup start worker`). 0 means unset: it inherits `port`.
              * Set it only when the worker shares a host with another role;
-             * the image healthcheck and `authup healthcheck` probe `port`.
+             * the image healthcheck and `authup healthcheck` probe `/readyz` on `port`.
              * env: WORKER_PORT
              * default: 0
              */
@@ -305,6 +305,15 @@ export default {
          * default: true
          */
         migrationEnabled: true,
+
+        /**
+         * Seconds the listener keeps serving after SIGTERM or SIGINT while
+         * `GET /readyz` answers 503, so a load balancer can stop routing to
+         * this process before it closes. Zero closes at once.
+         * env: SHUTDOWN_DELAY
+         * default: 0
+         */
+        shutdownDelay: 0,
 
         /**
          * Application port number.
@@ -759,6 +768,7 @@ core:
     enabled: true
     port: 0
   migrationEnabled: true
+  shutdownDelay: 0
   port: 3000
   host: 0.0.0.0
   mtlsPublicUrl: https://mtls.example.com
@@ -806,6 +816,7 @@ THEME_FRAGMENTS_ENABLED=false
 WORKER_ENABLED=true
 WORKER_PORT=0
 MIGRATION_ENABLED=true
+SHUTDOWN_DELAY=0
 PORT=3000
 HOST=0.0.0.0
 PUBLIC_URL=http://localhost:3000

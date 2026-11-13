@@ -14,3 +14,6 @@
 export const LOCALE_COOKIE = 'vc-locale';
 
 export const COLOR_MODE_COOKIE = 'vc-color-mode';
+
+export const HEALTH_LIVENESS_PATH = '/livez';
+export const HEALTH_READINESS_PATH = '/readyz';

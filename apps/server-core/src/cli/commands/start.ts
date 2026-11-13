@@ -9,7 +9,7 @@ import { defineCommand } from 'citty';
 import type { Config } from '../../app/index.ts';
 import { createApplication } from '../../app/index.ts';
 import { createCLIConfigModule } from './config.ts';
-import { registerShutdownHandlers } from './shutdown.ts';
+import { buildShutdownHandlersOptions, registerShutdownHandlers } from './shutdown.ts';
 import type { ConfigReadFsOptions } from '@authup/server-config';
 
 export function defineCLIStartCommand(
@@ -22,7 +22,7 @@ export function defineCLIStartCommand(
 
             await app.setup();
 
-            registerShutdownHandlers(app);
+            registerShutdownHandlers(app, buildShutdownHandlersOptions(app.container));
         },
     });
 }

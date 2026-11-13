@@ -13,6 +13,7 @@ import {
     createThemeAssetsHandler,
     createThemeProvider,
     defineStaticConsole,
+    mountHealthRoutes,
 } from '@authup/server-console-kit';
 import { createHandler as createAssetsHandler } from '@routup/assets';
 import { basic } from '@routup/basic';
@@ -92,6 +93,8 @@ export async function createHandler(
         path: HEALTH_PATH,
         fn: () => ({ status: 'ok' }),
     }));
+
+    mountHealthRoutes(app);
 
     const basePath = getURLBasePath(config.url);
     const appOrigins = buildAppOrigins(config);

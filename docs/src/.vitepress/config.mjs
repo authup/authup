@@ -301,6 +301,15 @@ export default defineConfig({
                     ],
                 },
                 {
+                    text: 'Health',
+                    items: [
+                        {
+                            text: 'Endpoints',
+                            link: '/guide/deployment/health',
+                        },
+                    ],
+                },
+                {
                     text: 'Console Replicas',
                     items: [
                         {

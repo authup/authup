@@ -160,8 +160,9 @@ export class ComponentsModule implements IModule {
         const components = this.registry.map((entry) => {
             const { lastSuccessAt, runningSince } = entry.component.status();
 
+            const hung = typeof runningSince === 'number' && now - runningSince > COMPONENT_HUNG_AFTER;
             const overdue = typeof runningSince === 'number' ?
-                now - runningSince > COMPONENT_HUNG_AFTER :
+                hung :
                 now - (lastSuccessAt ?? this.startedAt ?? now) > COMPONENT_OVERDUE_AFTER;
 
             return {
@@ -169,11 +170,13 @@ export class ComponentsModule implements IModule {
                 lastSuccessAt: toISO(lastSuccessAt),
                 runningSince: toISO(runningSince),
                 overdue,
+                hung,
             };
         });
 
         return {
             healthy: typeof this.startedAt === 'number' && components.every((component) => !component.overdue),
+            hung: components.some((component) => component.hung),
             components,
         };
     }

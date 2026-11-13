@@ -17,6 +17,9 @@ import { NoopAuthFlowMetrics } from '../../../core/index.ts';
 import { ModuleName } from '../constants.ts';
 import type { HTTPServer } from './constants.ts';
 import { HTTPInjectionKey } from './constants.ts';
+import { createDatabaseHealthCheck, createShutdownHealthCheck, mountHealthRoutes } from './health/index.ts';
+import type { HealthCheck, ShutdownState } from './health/index.ts';
+import { DatabaseInjectionKey } from '../database/index.ts';
 import type { IContainer } from 'eldin';
 import { MetricsInjectionKey, PromAuthFlowMetrics } from '../metrics/index.ts';
 import { HTTPControllerModule, HTTPMiddlewareModule } from './modules/index.ts';
@@ -93,6 +96,8 @@ export class HTTPModule implements IModule {
         this.registerInternalHttpClient(container);
         this.registerMetrics(container);
 
+        this.mountHealth(app, container);
+
         await this.middleware.mountBefore(app, container);
 
         await this.controller.mount(app, container);
@@ -127,6 +132,28 @@ export class HTTPModule implements IModule {
     }
 
     // ----------------------------------------------------
+
+    /**
+     * The readiness checks: the database answers, and the process is not
+     * shutting down. Liveness has none, so a dependency outage never
+     * restarts the process.
+     */
+    protected mountHealth(app: IApp, container: IContainer): void {
+        const shutdown : ShutdownState = { active: false };
+
+        container.register(HTTPInjectionKey.ShutdownState, { useValue: shutdown });
+
+        const readiness : HealthCheck[] = [];
+        const dataSource = container.tryResolve(DatabaseInjectionKey.DataSource);
+
+        if (dataSource.success) {
+            readiness.push(createDatabaseHealthCheck(dataSource.data));
+        }
+
+        readiness.push(createShutdownHealthCheck(shutdown));
+
+        mountHealthRoutes(app, { liveness: [], readiness });
+    }
 
     /**
      * Default HTTP client for this server's calls to its own API: dispatches
@@ -196,6 +223,7 @@ export class HTTPModule implements IModule {
         }
 
         container.unregister(MetricsInjectionKey);
+        container.unregister(HTTPInjectionKey.ShutdownState);
 
         if (!this.instance) {
             return;

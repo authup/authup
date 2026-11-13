@@ -166,7 +166,7 @@ $ authup migration run
 $ authup migration status
 $ authup migration revert
 
-# probe the running API
+# probe GET /readyz of the running API
 $ authup healthcheck
 ```
 
