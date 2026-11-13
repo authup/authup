@@ -17,6 +17,28 @@ present it evaluated the union of the two; it now evaluates the names list alone
 its own evaluations and relied on the record's keys being checked as well passes the names it
 wants judged in `attributeNames`.
 
+### A verification that runs out of time is no longer an invalid token
+
+A `TokenVerifier` from `@authup/server-adapter-kit` (and with it the node, web and socket.io
+adapters) that runs out of time rejects with an `UpstreamTimeoutError` (`upstream_timeout`,
+HTTP 504) instead of a `JWTError` (`invalid_token`, HTTP 401). This applies without any new
+option set, in three cases:
+
+- a cached key load in local mode that takes longer than `jwkCache.timeout` (10 seconds by
+  default);
+- an introspection request in remote mode that takes longer than its bound (10 seconds by
+  default), which was reported as a failed introspection;
+- with `jwkCache: false`, a key fetch that takes longer than 10 seconds. That fetch had no
+  bound at all before.
+
+The new `timeout` option (seconds) sets the bound of every request a verification makes; a
+cached key load stops at the smaller of `timeout` and `jwkCache.timeout`.
+
+**May need action:** an error handler that answers every verification failure with 401 now
+also does so for "authup did not answer in time". Recognize the timeout with
+`isUpstreamTimeoutError` from `@authup/errors` and answer 503 or 504 instead, so a client
+does not discard a token that may well be valid.
+
 ## v1.0.0-beta.75 (was: next release after v1.0.0-beta.74)
 
 ### The read cache opens its own Redis connection

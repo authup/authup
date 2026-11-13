@@ -146,7 +146,7 @@ try {
 }
 ```
 
-`timeout` bounds every request a verification makes: the introspection request and, in local mode, the key fetch. A verification that runs out of time throws an `UpstreamTimeoutError` (`upstream_timeout`, HTTP 504), never a `JWTError`, so it cannot be mistaken for an invalid token. Without `timeout` each request may take 10 seconds.
+`timeout` bounds every request a verification makes: the introspection request and, in local mode, the key fetch. A verification that runs out of time throws an `UpstreamTimeoutError` (`upstream_timeout`, HTTP 504), never a `JWTError`, so it cannot be mistaken for an invalid token. Without `timeout` each request may take 10 seconds. A cached key load is bounded by `jwkCache.timeout` as well, so the smaller of the two wins: `timeout: 30` with the default key cache still stops the load after 10 seconds.
 
 The client credentials mint of remote mode runs on the creator's own client, so the verifier's `timeout` does not reach it: set the creator client's `timeout` (in milliseconds) as well.
 
@@ -169,12 +169,12 @@ It throws `BearerTokenMalformedError` (`bearer_token_malformed`, HTTP 401) for a
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `baseURL` | `string` | (required) | Base URL of the Authup API |
-| `timeout` | `number` | `10` | Seconds each request of a verification may take (introspection, key fetch). A finite number above 0 and at most 2147483, otherwise the constructor throws. Running out of time throws `UpstreamTimeoutError` |
+| `timeout` | `number` | `10` | Seconds each request of a verification may take (introspection, key fetch). A finite number above 0 and at most 2147483, otherwise the constructor throws. A cached key load also stops at `jwkCache.timeout`, whichever is smaller. Running out of time throws `UpstreamTimeoutError` |
 | `creator` | `TokenCreator` | `undefined` | Switches to remote mode: mints the token the introspection call authenticates with |
 | `cache` | `ITokenCache \| false` | `undefined` | Caches verified results; without it every call verifies again |
 | `cacheNamespace` | `string` | `authup:<local\|remote>:<baseURL>` | Separates the entries of verifiers sharing one cache. Only verifiers with the same configuration may share a namespace |
 | `maxRemoteCacheTTL` | `number` | remaining token lifetime | Upper bound in seconds for caching a remote result |
-| `jwkCache` | `{ ttl?, timeout? } \| false` | `{ ttl: 300, timeout: 10 }` | Signing key cache for local mode, held in process memory. `ttl` is seconds a key stays cached (`0` stores nothing), `timeout` the seconds a key fetch may take. `false` fetches the key on every verification |
+| `jwkCache` | `{ ttl?, timeout? } \| false` | `{ ttl: 300, timeout: 10 }` | Signing key cache for local mode, held in process memory. `ttl` is seconds a key stays cached (`0` stores nothing), `timeout` the seconds a cached key load may take. The fetch inside the load is also bounded by the verifier's `timeout`, so the smaller of the two wins. `false` fetches the key on every verification |
 
 `verify(token, options)`:
 

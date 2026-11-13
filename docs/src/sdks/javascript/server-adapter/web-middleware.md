@@ -55,8 +55,9 @@ extracts the token from wherever they like (cookie, custom header, query string)
 Local verification (no `creator`) caches each signing key per realm and key id for 5 minutes, in
 process memory whatever token `cache` is set, since a `CryptoKey` cannot be serialized. An unknown key id is always fetched and failed fetches are never cached, so a key rotation needs
 no restart, and a disabled or deleted key keeps verifying for at most the TTL. Concurrent lookups of one
-key share a single fetch, which fails after 10 seconds (`timeout`) so a stalled request to the auth server
-cannot hold up later verifications. Tune or disable the cache on the `TokenVerifier`:
+key share a single fetch, which fails after 10 seconds (`jwkCache.timeout`) so a stalled request to the auth server
+cannot hold up later verifications. The fetch is also bounded by the verifier's `timeout` (see [Timeouts](#timeouts)),
+so the smaller of the two wins. Tune or disable the cache on the `TokenVerifier`:
 
 ```typescript
 const tokenVerifier = new TokenVerifier({
@@ -101,8 +102,9 @@ Remote verification introspects with the token `creator` mints and keeps it unti
 A `TokenVerifier` bounds every request a verification makes, the introspection request and the key
 fetch, by its `timeout` in seconds (default 10). A verification that runs out of time rejects with an
 `UpstreamTimeoutError` (`upstream_timeout`, HTTP 504), never with a `JWTError`, so "authup did not
-answer" is never mistaken for "the token is invalid". A key fetch past `jwkCache.timeout` rejects the
-same way.
+answer" is never mistaken for "the token is invalid". A cached key load is bounded by both `timeout`
+and `jwkCache.timeout`, so the smaller one wins: `timeout: 30` with the default key cache still stops
+the load after 10 seconds, and rejects the same way.
 
 Remote verification mints its introspection token with the `creator`'s own client, which the
 verifier's `timeout` does not reach. Set that client's `timeout` too, in milliseconds:
