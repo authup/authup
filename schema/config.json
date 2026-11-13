@@ -18,6 +18,13 @@
             "default": "0.0.0.0",
             "x-authup-env": "HOST"
         },
+        "shutdownDelay": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Seconds every listener this deployment starts (server-core and each console service) keeps serving after SIGTERM or SIGINT while `GET /readyz` answers 503, so a load balancer can stop routing to the process before it closes. Zero closes at once.",
+            "default": 0,
+            "x-authup-env": "SHUTDOWN_DELAY"
+        },
         "publicUrl": {
             "type": "string",
             "format": "uri",
