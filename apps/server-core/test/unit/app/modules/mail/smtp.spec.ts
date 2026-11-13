@@ -14,13 +14,21 @@ import {
 } from 'vitest';
 import { SMTPMailClientAdapter } from '../../../../../src/app/modules/mail/adapter/smtp/smtp.ts';
 
-const { createTransport } = vi.hoisted(() => ({ createTransport: vi.fn((_options: Record<string, any>) => ({})) }));
+const { createTransport, sendMail } = vi.hoisted(() => {
+    const sendMail = vi.fn(async (_options: Record<string, any>) => undefined);
+
+    return {
+        sendMail,
+        createTransport: vi.fn((_options: Record<string, any>) => ({ sendMail })),
+    };
+});
 
 vi.mock('nodemailer', () => ({ createTransport }));
 
 describe('app/modules/mail/smtp', () => {
     beforeEach(() => {
         createTransport.mockClear();
+        sendMail.mockClear();
     });
 
     it('should verify the server certificate for an object configuration', () => {
@@ -53,5 +61,25 @@ describe('app/modules/mail/smtp', () => {
             url: 'smtps://relay.example.com',
             tls: { rejectUnauthorized: false },
         });
+    });
+
+    it('should bound a send with a deadline of its own', async () => {
+        const adapter = new SMTPMailClientAdapter(true);
+
+        await adapter.send({ to: 'peter@example.com', subject: 'foo' });
+
+        expect(sendMail).toHaveBeenCalledTimes(1);
+        expect(sendMail.mock.calls[0][0]).toMatchObject({ to: 'peter@example.com', subject: 'foo' });
+        expect(sendMail.mock.calls[0][0].signal).toBeInstanceOf(AbortSignal);
+        expect(sendMail.mock.calls[0][0].signal.aborted).toBe(false);
+    });
+
+    it('should keep the signal of the caller', async () => {
+        const adapter = new SMTPMailClientAdapter(true);
+        const controller = new AbortController();
+
+        await adapter.send({ to: 'peter@example.com', signal: controller.signal });
+
+        expect(sendMail.mock.calls[0][0].signal).toBe(controller.signal);
     });
 });

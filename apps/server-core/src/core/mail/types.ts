@@ -18,6 +18,9 @@ export type MailSendOptions = {
     subject?: string,
     text?: string,
     html?: string,
+    // Ends the send when it aborts. A client supplies its own deadline
+    // when none is given.
+    signal?: AbortSignal,
 };
 
 export interface IMailClient {
