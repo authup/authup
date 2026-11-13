@@ -95,7 +95,7 @@ if (api && api.getMany) {
 
 ### Cancel or bound a call
 
-Every API method ends with one optional options argument carrying `signal` and `timeout` (milliseconds, overrides the client's `timeout` for this call). Methods that already take options (`client.token.*`, `client.authorization.*`, `client.key.delete`, the authenticator challenge calls) accept the two keys in that object. `client.userInfo.get` does not take them yet.
+Every API method ends with one optional options argument carrying `signal` and `timeout` (milliseconds, overrides the client's `timeout` for this call). Methods that already take options (`client.token.*`, `client.authorization.*`, `client.key.delete`, the authenticator challenge calls) accept the two keys in that object.
 
 ```typescript
 const controller = new AbortController();
@@ -128,7 +128,8 @@ client.setAuthorizationHeader({ type: 'Bearer', token: grant.access_token });
 | `createWithClientCredentials({ client_id, client_secret })` | `client_credentials` |
 | `createWithRefreshToken({ refresh_token })` | `refresh_token` |
 | `createWithAuthorizationCode({ code, redirect_uri, code_verifier? })` | `authorization_code` |
-| `createWithDeviceCode({ device_code, client_id? })` | `urn:ietf:params:oauth:grant-type:device_code` |
+| `createWithDeviceCode({ device_code, client_id?, realm_id?, realm_name? })` | `urn:ietf:params:oauth:grant-type:device_code` |
+| `pollWithDeviceCode({ device_code, client_id?, interval?, expires_in? })` | the same grant, polled until approved |
 | `introspect({ token })` | `POST /token/introspect` |
 | `revoke({ token })` | `POST /token/revoke` |
 
@@ -164,28 +165,16 @@ hook.attach(client);
 A device without a browser asks for a code, shows it, and polls:
 
 ```typescript
-import { isClientError } from '@authup/core-http-kit';
-
 const device = await client.deviceAuthorization.create({ client_id: '<client id>', scope: 'openid' });
 console.log(`Open ${device.verification_uri_complete}`);
 
-async function poll(interval: number) {
-    await new Promise((resolve) => { setTimeout(resolve, interval * 1000); });
-    try {
-        return await client.token.createWithDeviceCode({
-            device_code: device.device_code,
-            client_id: '<client id>',
-        });
-    } catch (e) {
-        const error = isClientError(e) ? e.response?.data?.error : undefined;
-        if (error === 'authorization_pending') return poll(interval);
-        if (error === 'slow_down') return poll(interval + 5);
-        throw e;
-    }
-}
-
-const grant = await poll(device.interval);
+const grant = await client.token.pollWithDeviceCode({
+    ...device,
+    client_id: '<client id>',
+});
 ```
+
+`pollWithDeviceCode` (from `@hapic/oauth2`) waits the response's `interval` before each request, keeps polling on `authorization_pending`, adds five seconds on `slow_down`, and rejects with the last pending error once `expires_in` has run out. It sends only `device_code`, `client_id`, `client_secret` and `realm_id`: a client named by name outside the master realm needs `createWithDeviceCode` with `realm_name` instead.
 
 `client.deviceAuthorization.lookup / approve / deny({ user_code })` are the calls of the page that approves the code; they ride the client's own bearer.
 

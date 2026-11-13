@@ -119,7 +119,7 @@ last parameter: `signal` aborts the call, `timeout` (milliseconds) bounds it
 and overrides the client's own `timeout` for this call. Where a method already
 takes an options object (`client.token.*`, `client.authorization.*`,
 `client.key.delete`, the authenticator challenge calls), the two keys ride in
-that same object. `client.userInfo.get` is the one exception.
+that same object.
 
 ```typescript
 import { Client, isClientErrorDueTimeout } from '@authup/core-http-kit';

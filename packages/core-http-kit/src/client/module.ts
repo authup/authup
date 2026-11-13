@@ -128,6 +128,7 @@ export class Client extends BaseClient implements IClient {
 
         const options : OAuth2APIOptions = {
             authorizationEndpoint: 'authorize',
+            deviceAuthorizationEndpoint: 'device_authorization',
             introspectionEndpoint: 'token/introspect',
             tokenEndpoint: 'token',
             userinfoEndpoint: 'userinfo',
@@ -167,7 +168,10 @@ export class Client extends BaseClient implements IClient {
 
         this.consent = new ConsentAPI({ client: this });
 
-        this.deviceAuthorization = new OAuth2DeviceAuthorizationAPI({ client: this });
+        this.deviceAuthorization = new OAuth2DeviceAuthorizationAPI({
+            client: this,
+            options,
+        });
 
         this.event = new EventAPI({ client: this });
 

@@ -86,7 +86,9 @@ describe('src/domains/workflows/oauth2/device-authorization', () => {
 
         const headers = readHeaders(request);
 
-        expect(headers.get('content-type')).toEqual('application/x-www-form-urlencoded');
+        // the token api's header: @hapic/oauth2 runs the client's default
+        // request transformer after its own, as for every client.token call
+        expect(headers.get('content-type')).toEqual('application/x-www-form-urlencoded;charset=utf-8');
         expect(headers.get('accept')).toEqual('application/json');
 
         expect(readForm(request)).toEqual({

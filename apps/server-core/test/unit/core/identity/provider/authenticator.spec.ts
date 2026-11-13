@@ -4,7 +4,12 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import { describe, expect, it } from 'vitest';
+import {
+    describe,
+    expect,
+    it,
+    vi,
+} from 'vitest';
 import type {
     IdentityProviderAttributeMapping,
     OAuth2IdentityProvider,
@@ -15,6 +20,8 @@ import { IdentityProviderProtocol } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
 import { ValidationError, isValidationError } from '@authup/errors';
 import type { TokenGrantResponse } from '@hapic/oauth2';
+import { OAuth2Client } from '@hapic/oauth2';
+import { MemoryTransport } from 'hapic';
 import type { IIdentityProviderAccountManager, IdentityProviderIdentity } from '../../../../../src/core';
 import {
     IdentityProviderAttributeMapper,
@@ -101,6 +108,13 @@ class TestableAuthenticator extends IdentityProviderOAuth2Authenticator {
 
     failUserInfo(error: Error) {
         this.client.userInfo.get = () => Promise.reject(error);
+    }
+
+    useTransport(transport: MemoryTransport) {
+        this.client = new OAuth2Client({
+            options: this.client.options,
+            request: { transport },
+        });
     }
 }
 
@@ -422,5 +436,51 @@ describe('IdentityProviderOAuth2Authenticator (identity build)', () => {
         } as TokenGrantResponse);
 
         expect(identity.attributeCandidates?.name?.[2]).toEqual('id-token-user');
+    });
+
+    it('should abort a userinfo request that outlasts its timeout and degrade', async () => {
+        // the request signal is hapic's AbortSignal.timeout(), replaced so
+        // the timeout fires on demand instead of after five real seconds
+        const timer = new AbortController();
+        const timeout = vi.spyOn(AbortSignal, 'timeout').mockReturnValue(timer.signal);
+
+        try {
+            const transport = new MemoryTransport({
+                fetch: (request) => new Promise((_resolve, reject) => {
+                    const { signal } = request;
+
+                    if (!signal) {
+                        reject(new Error('The userinfo request carries no signal.'));
+
+                        return;
+                    }
+
+                    signal.addEventListener('abort', () => reject(signal.reason), { once: true });
+                }),
+            });
+
+            const authenticator = createTestableAuthenticator({ userInfoUrl: 'https://idp.example.com/userinfo' });
+
+            authenticator.useTransport(transport);
+
+            const promise = authenticator.buildIdentity({
+                access_token: ACCESS_TOKEN,
+                id_token: encodeToken({ name: 'id-token-user' }),
+            } as TokenGrantResponse);
+
+            await vi.waitFor(() => expect(transport.requests).toHaveLength(1));
+
+            expect(timeout).toHaveBeenCalledWith(5000);
+
+            timer.abort(new DOMException('The operation timed out.', 'TimeoutError'));
+
+            const identity = await promise;
+
+            expect(transport.requests[0].url).toEqual('https://idp.example.com/userinfo');
+            expect(transport.requests[0].signal?.aborted).toBe(true);
+            expect(identity.attributeCandidates?.name?.[2]).toEqual('id-token-user');
+        } finally {
+            timeout.mockRestore();
+        }
     });
 });

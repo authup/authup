@@ -9,7 +9,7 @@ import { EntityType } from '@authup/core-kit';
 import type { TransportRequest } from 'hapic';
 import { ErrorCode, MemoryTransport, isClientError } from 'hapic';
 import { describe, expect, it } from 'vitest';
-import type { APIRequestOptions } from '../../src';
+import type { APIRequestOptions, IClient } from '../../src';
 import { Client, isClientErrorDueTimeout } from '../../src';
 import { createFakeClient } from '../../src/testing';
 
@@ -81,10 +81,12 @@ const METHODS : Record<string, MethodTable> = {
         createWithPassword: (o) => [{ username: 'admin', password: 'start123' }, o],
         createWithAuthorizationCode: (o) => [{ code: 'code', redirect_uri: 'https://app.test/cb' }, o],
         createWithDeviceCode: (o) => [{ device_code: 'dc' }, o],
+        pollWithDeviceCode: (o) => [{ device_code: 'dc', interval: 0.001 }, o],
         create: (o) => [{ grant_type: 'client_credentials' }, o],
         revoke: (o) => [{ token: 'tok' }, o],
         introspect: (o) => [{ token: 'tok' }, o],
     },
+    userInfo: { get: (o) => [undefined, o] },
     user: {
         activate: (o) => ['token', o],
         register: (o) => [{}, o],
@@ -116,8 +118,8 @@ const IGNORED : Record<string, Record<string, string>> = {
         buildRequestOptions: 'a @hapic/oauth2 helper, sends nothing',
         buildRequestTransformers: 'a @hapic/oauth2 helper, sends nothing',
         buildURLSearchParams: 'a @hapic/oauth2 helper, sends nothing',
+        pickDeviceCodeGrantParameters: 'a @hapic/oauth2 helper, sends nothing',
     },
-    userInfo: { get: '@hapic/oauth2 UserInfoAPI.get takes no request options' },
 };
 
 /**
@@ -334,6 +336,15 @@ describe('per-call request options', () => {
             expect(isClientErrorDueTimeout(error)).toBe(true);
         },
     );
+
+    it('should accept the options on userInfo.get through the client contract', async () => {
+        const client : IClient = createClient(createStalledTransport());
+
+        const error = await client.userInfo.get('token', { timeout: 10 })
+            .catch((e: unknown) => e);
+
+        expect(isClientErrorDueTimeout(error)).toBe(true);
+    });
 
     it('should record the options with the request on the fake client', async () => {
         const client = createFakeClient();

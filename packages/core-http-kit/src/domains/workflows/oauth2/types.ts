@@ -12,17 +12,18 @@ import type {
     Scope,
 } from '@authup/core-kit';
 import type {
-    OAuth2TokenGrant,
     OAuth2TokenGrantResponse,
     OAuth2TokenIntrospectionResponse,
 } from '@authup/specs';
 import type {
     AuthorizeParameters,
     ClientAuthenticationParameters,
+    DeviceAuthorizationParameters,
     Options,
     TokenAuthorizationCodeGrantParameters,
     TokenBaseOptions,
     TokenClientCredentialsGrantParameters,
+    TokenDeviceCodeGrantParameters,
     TokenGrantParameters,
     TokenIntrospectParameters,
     TokenPasswordGrantParameters,
@@ -57,24 +58,20 @@ export type OAuth2TokenPasswordGrantParameters = TokenPasswordGrantParameters & 
 export type OAuth2TokenAuthorizationCodeGrantParameters = TokenAuthorizationCodeGrantParameters;
 export type OAuth2TokenRefreshTokenGrantParameters = TokenRefreshTokenGrantParameters;
 /**
- * The RFC 8628 device access token request (§3.4). hapic's grant union
- * is closed, so it is declared here and widens `OAuth2TokenGrantParameters`.
+ * The RFC 8628 device access token request (§3.4) plus authup's
+ * `realm_name` hint, which resolves a client named by name in that realm.
+ * It rides as an extra form field, like `otp` on the password grant.
  */
-export type OAuth2TokenDeviceCodeGrantParameters = {
-    grant_type: `${OAuth2TokenGrant.DEVICE_CODE}`,
-    device_code: string,
-    client_id?: string,
-    client_secret?: string,
-    realm_id?: string,
+export type OAuth2TokenDeviceCodeGrantParameters = TokenDeviceCodeGrantParameters & {
     realm_name?: string,
 };
 export type OAuth2TokenGrantParameters = TokenGrantParameters | OAuth2TokenDeviceCodeGrantParameters;
 
-export type OAuth2DeviceAuthorizationParameters = {
-    client_id?: string,
-    client_secret?: string,
-    scope?: string | string[],
-    realm_id?: string,
+/**
+ * The RFC 8628 device authorization request (§3.1) plus the same
+ * `realm_name` hint.
+ */
+export type OAuth2DeviceAuthorizationParameters = DeviceAuthorizationParameters & {
     realm_name?: string,
 };
 
@@ -272,6 +269,7 @@ export interface IOAuth2AuthorizeAPI {
 export interface IOAuth2UserInfoAPI {
     get<T extends Record<string, any> = Record<string, any>>(
         header?: string | AuthorizationHeader,
+        options?: APIRequestOptions,
     ) : Promise<T>;
 }
 
