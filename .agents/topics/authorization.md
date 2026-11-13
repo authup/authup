@@ -596,7 +596,9 @@ query and drops rows. `meta.total` stays the candidate count: an upper bound on 
 accessible rows, on the same scale as `offset` and `limit`, so paging by it reaches every
 page; subtracting dropped rows would stop a client before pages that still hold rows. A
 page may be shorter than `limit` (even empty) while later pages hold rows. Consumers must
-page to the end and not show `meta.total` as an accessible count. Ownership-alternative
+page to the end and not show `meta.total` as an accessible count. The total and the page
+shape also tell a caller that candidate rows it cannot read match its filter, so `post` is
+a fallback, not a boundary: only a gate that runs as a condition hides them. Ownership-alternative
 services skip the `or(...)` on `post`, widening the fetch further. `SessionTokenService.getMany` has the same
 properties without calling `compile()` (its realm is `session.realmId`, a relation path
 `realmAttributeName` cannot express). Rejected:
