@@ -20,7 +20,13 @@ import { buildErrorMessageForAttribute } from 'validup';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { IUserAttributeRepository, IUserAttributeService } from './types.ts';
-import { appendQueryConditions, decodeQuery, redactUnreachedRelations } from '../../query/index.ts';
+import {
+    appendQueryConditions,
+    decodeQuery,
+    readResponseAttributeNames,
+    redactUnreachedRelations,
+    widenSparseRootProjection,
+} from '../../query/index.ts';
 import { assertPreferenceValue } from './preferences.ts';
 import { userAttributeSchema } from './schema.ts';
 import { EntityAttributeValidator } from '../attribute/index.ts';
@@ -86,16 +92,22 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             return { ...result, data: await redactUnreachedRelations(result.data, scoped, userAttributeSchema, actor) };
         }
 
+        // the rows are evaluated one by one, each on its whole default row
+        const widened = widenSparseRootProjection(parsed, userAttributeSchema, ['realmId', 'userId']);
         const {
             data: entities,
             meta,
-        } = await this.repository.findMany(parsed);
+        } = await this.repository.findMany(widened);
 
         const data: UserAttribute[] = [];
         let { total } = meta;
 
         for (const entity of entities) {
-            const canRead = await this.canReadUserAttribute(actor, entity);
+            const canRead = await this.canReadUserAttribute(
+                actor,
+                entity,
+                readResponseAttributeNames(entity, widened),
+            );
 
             if (canRead) {
                 data.push(entity);
@@ -105,7 +117,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         }
 
         return {
-            data: await redactUnreachedRelations(data, parsed, userAttributeSchema, actor),
+            data: await redactUnreachedRelations(data, widened, userAttributeSchema, actor),
             meta: {
                 ...meta,
                 total,
@@ -347,6 +359,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
     private async canReadUserAttribute(
         actor: ActorContext,
         entity: UserAttribute,
+        attributeNames?: string[],
     ): Promise<boolean> {
         const isMe = actor.identity &&
             actor.identity.type === 'user' &&
@@ -359,7 +372,10 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         return reachesRecord(actor.permissionEvaluator, {
             name: PermissionName.USER_UPDATE,
             realm: entity.realmId,
-            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+            data: {
+                [BuiltInPolicyType.ATTRIBUTES]: entity,
+                ...(attributeNames ? { [BuiltInPolicyType.ATTRIBUTE_NAMES]: attributeNames } : {}),
+            },
         });
     }
 }

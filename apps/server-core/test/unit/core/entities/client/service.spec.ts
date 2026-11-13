@@ -28,7 +28,9 @@ import {
     vi,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
+import { clientSchema } from '../../../../../src/core/entities/client/schema.ts';
 import { ClientService } from '../../../../../src/core/entities/client/service.ts';
+import { readDefaultFieldNames } from '../../../../../src/core/query/index.ts';
 import {
     FakePermissionEvaluator,
     createAllowAllActor,
@@ -235,6 +237,45 @@ describe('core/entities/client/service', () => {
             expect(byName.get('safe')).toHaveProperty('secret', null);
             expect(byName.get('plain-covered')).toHaveProperty('secret', 'mysecret');
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
+        });
+
+        it('should evaluate the whole row of a projected read without loading the secret', async () => {
+            const [client] = repository.seed([
+                createFakeClient({
+                    name: 'projected',
+                    secret: 'mysecret',
+                    secretEncrypted: false,
+                    secretHashed: false,
+                    realmId: randomUUID(),
+                }),
+            ]);
+
+            const actor = createAllowAllActor();
+            const spy = vi.spyOn(repository, 'findMany');
+
+            const result = await service.getMany({ fields: 'id' }, actor);
+
+            const loaded = spy.mock.calls[0]![0].fields.value.map((field) => field.name);
+
+            expect([...loaded].sort()).toEqual([...readDefaultFieldNames(clientSchema)!].sort());
+            expect(loaded).not.toContain('secret');
+
+            const data = actor.permissionEvaluator.evaluateOneOfCalls[0]!.data!;
+
+            expect(data.get<Client>(BuiltInPolicyType.ATTRIBUTES).name).toEqual(client.name);
+
+            // the fake repository answers a row with every seeded property;
+            // of the columns a read loads, only the requested ones are named
+            const defaults = readDefaultFieldNames(clientSchema)!;
+            const names = data.get<string[]>(BuiltInPolicyType.ATTRIBUTE_NAMES);
+
+            expect(names.filter((name) => defaults.includes(name)).sort())
+                .toEqual(['id', 'realmId']);
+
+            expect(result.data).toHaveLength(1);
+            expect(result.data[0]).not.toHaveProperty('name');
+            expect(result.data[0]).toHaveProperty('id', client.id);
+            expect(result.data[0]).toHaveProperty('realmId', client.realmId);
         });
 
         it('should decrypt encrypted secrets that survived the projection gate', async () => {

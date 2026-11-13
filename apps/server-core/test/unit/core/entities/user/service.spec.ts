@@ -22,7 +22,9 @@ import {
     vi,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
+import { userSchema } from '../../../../../src/core/entities/user/schema.ts';
 import { UserService } from '../../../../../src/core/entities/user/service.ts';
+import { readDefaultFieldNames } from '../../../../../src/core/query/index.ts';
 import {
     FakePermissionEvaluator,
     createAllowAllActor,
@@ -110,6 +112,45 @@ describe('core/entities/user/service', () => {
 
             expect(result.data).toHaveLength(1);
             expect(result.data[0].id).toBe(selfUser.id);
+        });
+
+        it('should evaluate the whole row of a projected read and answer the projection', async () => {
+            const [selfUser, other] = repository.seed([
+                createFakeUser({ name: 'self', realmId: randomUUID() }),
+                createFakeUser({ name: 'other', realmId: randomUUID() }),
+            ]);
+
+            const actor = createSelfActor(selfUser.id);
+            const spy = vi.spyOn(repository, 'findMany');
+
+            const result = await service.getMany({ fields: 'displayName' }, actor);
+
+            const loaded = spy.mock.calls[0]![0].fields.value.map((field) => field.name);
+
+            expect([...loaded].sort()).toEqual([...readDefaultFieldNames(userSchema)!].sort());
+            expect(loaded).not.toContain('email');
+
+            // the own row is kept without an evaluation
+            expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(1);
+
+            const data = actor.permissionEvaluator.evaluateOneOfCalls[0]!.data!;
+
+            expect(data.get<User>(BuiltInPolicyType.ATTRIBUTES).name).toEqual(other.name);
+
+            // the fake repository answers a row with every seeded property;
+            // of the columns a read loads, only the requested ones are named
+            const defaults = readDefaultFieldNames(userSchema)!;
+            const names = data.get<string[]>(BuiltInPolicyType.ATTRIBUTE_NAMES);
+
+            expect(names.filter((name) => defaults.includes(name)).sort())
+                .toEqual(['displayName', 'id', 'realmId']);
+
+            expect(result.data).toHaveLength(2);
+
+            for (const row of result.data) {
+                expect(Object.keys(row).filter((name) => defaults.includes(name)).sort())
+                    .toEqual(['displayName', 'id', 'realmId']);
+            }
         });
 
         it('should filter out other users on per-record permission failure', async () => {

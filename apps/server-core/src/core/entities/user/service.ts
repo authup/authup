@@ -28,7 +28,12 @@ import type { ISessionManager } from '../../authentication/session/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import { UserCredentialsService } from '../../authentication/credential/entities/user/module.ts';
 import type { IUserRepository, IUserService } from './types.ts';
-import { decodeQuery, scopeReadQuery } from '../../query/index.ts';
+import {
+    decodeQuery,
+    readResponseAttributeNames,
+    scopeReadQuery,
+    trimReachCheckFields,
+} from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { userSchema } from './schema.ts';
 import { assertRowUnchanged, retryOnStaleRow } from '../stale-row/index.ts';
@@ -83,6 +88,8 @@ export class UserService extends AbstractEntityService implements IUserService {
             ownership: actor.identity && actor.identity.type === 'user' ?
                 eq('id', actor.identity.data.id) :
                 null,
+            schema: userSchema,
+            retain: ['id'],
         });
     }
 
@@ -105,7 +112,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         const {
             data: entities,
             meta,
-        } = await this.repository.findMany(parsed);
+        } = await this.repository.findMany(scope.query);
 
         const data: User[] = [];
         let { total } = meta;
@@ -128,7 +135,10 @@ export class UserService extends AbstractEntityService implements IUserService {
                     PermissionName.USER_DELETE,
                 ],
                 realm: entity.realmId,
-                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+                data: {
+                    [BuiltInPolicyType.ATTRIBUTES]: entity,
+                    [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, scope.query),
+                },
             });
 
             if (!reached) {
@@ -139,6 +149,8 @@ export class UserService extends AbstractEntityService implements IUserService {
 
             data.push(entity);
         }
+
+        trimReachCheckFields(data, scope.query);
 
         return {
             data,

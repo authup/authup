@@ -16,10 +16,13 @@ import {
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
+import { roleSchema } from '../../../../../src/core/entities/role/schema.ts';
 import { RoleService } from '../../../../../src/core/entities/role/service.ts';
+import { readDefaultFieldNames } from '../../../../../src/core/query/index.ts';
 import { FakeRealmRepository } from '../realm/fake-repository.ts';
 import { readEvaluatedRecordRealms } from '../../helpers/index.ts';
 import { FakeRoleRepository } from './fake-repository.ts';
@@ -56,6 +59,59 @@ describe('core/entities/role/service', () => {
 
             expect(result.data).toHaveLength(2);
             expect(result.meta.total).toBe(2);
+        });
+
+        it('should evaluate the whole row of a projected read and answer the projection', async () => {
+            const [role] = repository.seed([createFakeRole({ realmId: randomUUID() })]);
+            const actor = createAllowAllActor();
+            const spy = vi.spyOn(repository, 'findMany');
+
+            const result = await service.getMany({ fields: 'id,description' }, actor);
+
+            const query = spy.mock.calls[0]![0];
+            const loaded = query.fields.value.map((field) => field.name);
+
+            expect([...loaded].sort()).toEqual([...readDefaultFieldNames(roleSchema)!].sort());
+
+            expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(1);
+
+            const data = actor.permissionEvaluator.evaluateOneOfCalls[0]!.data!;
+            const attributes = data.get<Role>(BuiltInPolicyType.ATTRIBUTES);
+
+            expect(attributes.name).toEqual(role.name);
+            expect(attributes.displayName).toEqual(role.displayName);
+            expect([...data.get<string[]>(BuiltInPolicyType.ATTRIBUTE_NAMES)].sort())
+                .toEqual(['description', 'id', 'realmId']);
+
+            expect(result.data).toHaveLength(1);
+            expect(Object.keys(result.data[0]!).sort()).toEqual(['description', 'id', 'realmId']);
+        });
+
+        it('should name every column of an unprojected read', async () => {
+            const [role] = repository.seed([createFakeRole({ realmId: randomUUID() })]);
+            const actor = createAllowAllActor();
+
+            const result = await service.getMany({}, actor);
+
+            const data = actor.permissionEvaluator.evaluateOneOfCalls[0]!.data!;
+
+            expect([...data.get<string[]>(BuiltInPolicyType.ATTRIBUTE_NAMES)].sort())
+                .toEqual(Object.keys(role).sort());
+            expect(result.data[0]).toEqual(role);
+        });
+
+        it('should keep the projection of a read the reach decides', async () => {
+            repository.seed([createFakeRole({ realmId: randomUUID() })]);
+
+            const actor = createAllowAllActor();
+
+            actor.permissionEvaluator.setCompileResult({ verdict: 'allow' });
+
+            const spy = vi.spyOn(repository, 'findMany');
+
+            await service.getMany({ fields: 'id,description' }, actor);
+
+            expect(spy.mock.calls[0]![0].fields.value.map((field) => field.name)).toEqual(['id', 'description']);
         });
 
         it('should call preCheckOneOf with read/update/delete permissions', async () => {

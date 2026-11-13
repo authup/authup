@@ -97,7 +97,13 @@ import type {
     UserAuthenticatorWebauthnParameters,
 } from './types.ts';
 import type { WebauthnContext } from './webauthn.ts';
-import { appendQueryConditions, decodeQuery, redactUnreachedRelations } from '../../query/index.ts';
+import {
+    appendQueryConditions,
+    decodeQuery,
+    readResponseAttributeNames,
+    redactUnreachedRelations,
+    widenSparseRootProjection,
+} from '../../query/index.ts';
 import { userAuthenticatorSchema } from './schema.ts';
 
 type EmailCodeState = {
@@ -239,8 +245,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             };
         }
 
+        // the rows are evaluated one by one, each on its whole default row
+        const widened = widenSparseRootProjection(parsed, userAuthenticatorSchema, ['realmId', 'userId']);
         const { data: entities, meta } = await this.repository.findMany(
-            parsed,
+            widened,
             findManyOptions,
         );
 
@@ -257,7 +265,10 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
             const reached = await reachesRecord(actor.permissionEvaluator, {
                 name: PermissionName.USER_AUTHENTICATOR_READ,
                 realm: entity.realmId,
-                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+                data: {
+                    [BuiltInPolicyType.ATTRIBUTES]: entity,
+                    [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, widened),
+                },
             });
 
             if (!reached) {
@@ -270,7 +281,7 @@ export class UserAuthenticatorService extends AbstractEntityService implements I
         }
 
         return {
-            data: await redactUnreachedRelations(data, parsed, userAuthenticatorSchema, actor),
+            data: await redactUnreachedRelations(data, widened, userAuthenticatorSchema, actor),
             meta: {
                 ...meta,
                 total,

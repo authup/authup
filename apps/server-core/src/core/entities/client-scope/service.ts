@@ -19,7 +19,13 @@ import type { ClientScope } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
 import type { IClientScopeRepository, IClientScopeService } from './types.ts';
-import { appendQueryConditions, decodeQuery, redactUnreachedRelations } from '../../query/index.ts';
+import {
+    appendQueryConditions,
+    decodeQuery,
+    readResponseAttributeNames,
+    redactUnreachedRelations,
+    widenSparseRootProjection,
+} from '../../query/index.ts';
 import { clientScopeSchema } from './schema.ts';
 
 const READ_PERMISSION_NAMES = [
@@ -65,6 +71,9 @@ export class ClientScopeService extends JunctionEntityService implements IClient
             parsed = appendQueryConditions(parsed, inArray('id', []));
         } else if (compiled.verdict === 'conditional') {
             parsed = appendQueryConditions(parsed, compiled.condition);
+        } else if (compiled.verdict === 'post') {
+            // the rows are evaluated one by one, each on its whole default row
+            parsed = widenSparseRootProjection(parsed, clientScopeSchema, [this.ownerRealmKey]);
         }
 
         const { data: entities, meta } = await this.repository.findMany(parsed);
@@ -80,7 +89,10 @@ export class ClientScopeService extends JunctionEntityService implements IClient
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
                 name: READ_PERMISSION_NAMES,
                 realm: this.junctionResourceRealm(entity),
-                data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
+                data: {
+                    [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
+                    [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, parsed),
+                },
             });
 
             if (!reached) {

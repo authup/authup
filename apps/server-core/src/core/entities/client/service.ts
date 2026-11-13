@@ -38,7 +38,12 @@ import { isRealmCipherBlob, isRealmCipherBlobError } from '../../key/index.ts';
 import type { IRealmCipher } from '../../key/index.ts';
 import type { ClientSecretRotateResult, IClientRepository, IClientService } from './types.ts';
 import { CLIENT_READ_PERMISSIONS } from './constants.ts';
-import { decodeQuery, redactUnreachedRelations, scopeReadQuery } from '../../query/index.ts';
+import {
+    decodeQuery,
+    readResponseAttributeNames,
+    redactUnreachedRelations,
+    scopeReadQuery,
+} from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { assertTokenExchangeAuthority } from '../client-token-exchange-capability/helpers.ts';
 import type { IClientTokenExchangeCapabilityRepository } from '../client-token-exchange-capability/types.ts';
@@ -124,7 +129,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
-        return scopeReadQuery(query, actor, { names: CLIENT_READ_PERMISSIONS });
+        return scopeReadQuery(query, actor, { names: CLIENT_READ_PERMISSIONS, schema: clientSchema });
     }
 
     async getMany(
@@ -152,7 +157,10 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
                     name: CLIENT_READ_PERMISSIONS,
                     realm: entity.realmId,
-                    data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+                    data: {
+                        [BuiltInPolicyType.ATTRIBUTES]: entity,
+                        [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, scope.query),
+                    },
                 });
 
                 if (!reached) {

@@ -33,7 +33,12 @@ import type { IRolePermissionRepository } from '../role-permission/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { IPermissionRepository, IPermissionService } from './types.ts';
 import { applyOwningClientRealm, findClientOwnedRowForSave } from '../client/owner-realm.ts';
-import { decodeQuery, scopeReadQuery } from '../../query/index.ts';
+import {
+    decodeQuery,
+    readResponseAttributeNames,
+    scopeReadQuery,
+    trimReachCheckFields,
+} from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { permissionSchema } from './schema.ts';
 import { REALM_ADMIN_EXCLUDED_PERMISSIONS, REALM_ADMIN_OWN_REACH_PERMISSIONS } from './constants.ts';
@@ -80,7 +85,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
-        return scopeReadQuery(query, actor, { names: PERMISSION_NAMES });
+        return scopeReadQuery(query, actor, { names: PERMISSION_NAMES, schema: permissionSchema });
     }
 
     async getMany(
@@ -106,7 +111,10 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
                 name: PERMISSION_NAMES,
                 realm: entity.realmId,
-                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+                data: {
+                    [BuiltInPolicyType.ATTRIBUTES]: entity,
+                    [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, scope.query),
+                },
             });
 
             if (!reached) {
@@ -117,6 +125,8 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
             data.push(entity);
         }
+
+        trimReachCheckFields(data, scope.query);
 
         return {
             data,

@@ -28,7 +28,13 @@ import type {
     IConsentRepository,
     IConsentService,
 } from './types.ts';
-import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
+import {
+    appendQueryConditions,
+    decodeQuery,
+    readResponseAttributeNames,
+    trimReachCheckFields,
+    widenSparseRootProjection,
+} from '../../query/index.ts';
 import { consentSchema } from './schema.ts';
 
 export type ConsentServiceContext = {
@@ -116,7 +122,9 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
             return this.repository.findMany(scoped, { ...(options.realmId ? { realmId: options.realmId } : {}) });
         }
 
-        const { data: entities, meta } = await this.repository.findMany(parsed, { ...(options.realmId ? { realmId: options.realmId } : {}) });
+        // the rows are evaluated one by one, each on its whole default row
+        const widened = widenSparseRootProjection(parsed, consentSchema, ['realmId', 'sub', 'subKind']);
+        const { data: entities, meta } = await this.repository.findMany(widened, { ...(options.realmId ? { realmId: options.realmId } : {}) });
 
         const data: Consent[] = [];
         let { total } = meta;
@@ -131,7 +139,10 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
             const reached = await reachesRecord(actor.permissionEvaluator, {
                 name: PermissionName.CONSENT_READ,
                 realm: entity.realmId,
-                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+                data: {
+                    [BuiltInPolicyType.ATTRIBUTES]: entity,
+                    [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, widened),
+                },
             });
 
             if (!reached) {
@@ -142,6 +153,8 @@ export class ConsentService extends AbstractEntityService implements IConsentSer
 
             data.push(entity);
         }
+
+        trimReachCheckFields(data, widened);
 
         return {
             data,

@@ -23,11 +23,12 @@ import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/serve
 import type { ISessionManager, ISessionRepository } from '../../authentication/index.ts';
 import { SESSION_FILTER_KEYS } from '../../authentication/index.ts';
 import type { ISessionService, SessionDeleteManyOptions, SessionDeleteManyResult } from './types.ts';
-import { 
-    appendQueryConditions, 
-    decodeQuery, 
-    redactUnreachedRelations, 
-    scopeReadQuery, 
+import {
+    appendQueryConditions,
+    decodeQuery,
+    readResponseAttributeNames,
+    redactUnreachedRelations,
+    scopeReadQuery,
 } from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { sessionSchema } from './schema.ts';
@@ -65,6 +66,8 @@ export class SessionService extends AbstractEntityService implements ISessionSer
                 and(eq('sub', actor.identity.data.id), eq('subKind', actor.identity.type)) :
                 null,
             selfService: true,
+            schema: sessionSchema,
+            retain: ['sub', 'subKind'],
         });
     }
 
@@ -86,7 +89,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
             return { ...result, data: await redactUnreachedRelations(result.data, scope.query, sessionSchema, actor) };
         }
 
-        const { data: entities, meta } = await this.repository.findMany(parsed);
+        const { data: entities, meta } = await this.repository.findMany(scope.query);
 
         const data: Session[] = [];
         let { total } = meta;
@@ -101,7 +104,10 @@ export class SessionService extends AbstractEntityService implements ISessionSer
             const reached = await reachesRecord(actor.permissionEvaluator, {
                 name: PermissionName.SESSION_READ,
                 realm: entity.realmId,
-                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+                data: {
+                    [BuiltInPolicyType.ATTRIBUTES]: entity,
+                    [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, scope.query),
+                },
             });
 
             if (!reached) {
@@ -114,7 +120,7 @@ export class SessionService extends AbstractEntityService implements ISessionSer
         }
 
         return {
-            data: await redactUnreachedRelations(data, parsed, sessionSchema, actor),
+            data: await redactUnreachedRelations(data, scope.query, sessionSchema, actor),
             meta: {
                 ...meta,
                 total,

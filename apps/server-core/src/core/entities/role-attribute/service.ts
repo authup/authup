@@ -20,7 +20,13 @@ import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/serv
 import { AbstractEntityService } from '@authup/server-kit';
 import { buildErrorMessageForAttribute } from 'validup';
 import type { IRoleAttributeRepository, IRoleAttributeService } from './types.ts';
-import { appendQueryConditions, decodeQuery, redactUnreachedRelations } from '../../query/index.ts';
+import {
+    appendQueryConditions,
+    decodeQuery,
+    readResponseAttributeNames,
+    redactUnreachedRelations,
+    widenSparseRootProjection,
+} from '../../query/index.ts';
 import { roleAttributeSchema } from './schema.ts';
 import { EntityAttributeValidator } from '../attribute/index.ts';
 
@@ -67,6 +73,9 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             parsed = appendQueryConditions(parsed, inArray('id', []));
         } else if (compiled.verdict === 'conditional') {
             parsed = appendQueryConditions(parsed, compiled.condition);
+        } else if (compiled.verdict === 'post') {
+            // the rows are evaluated one by one, each on its whole default row
+            parsed = widenSparseRootProjection(parsed, roleAttributeSchema, ['realmId']);
         }
 
         const {
@@ -89,7 +98,10 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
                     PermissionName.ROLE_DELETE,
                 ],
                 realm: entity.realmId,
-                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+                data: {
+                    [BuiltInPolicyType.ATTRIBUTES]: entity,
+                    [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, parsed),
+                },
             });
 
             if (!reached) {
