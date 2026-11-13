@@ -121,6 +121,7 @@ const data = await verifySocket(socket, {
 ## Notes
 
 - **Verification happens once, at connection.** A token that expires or is revoked later does not disconnect the socket. Disconnect long-lived sockets yourself when `data.exp` passes.
+- **A timeout is not an invalid token.** When authup does not answer within the verifier's `timeout`, the verifier's `UpstreamTimeoutError` (`upstream_timeout`) reaches `next(error)` unchanged, so the connection is refused with it. Tell it apart from an invalid token with `isUpstreamTimeoutError` from `@authup/errors`.
 - **Only an exact `Bearer ` prefix is stripped.** Send the bare token, or `Bearer <token>` with that casing; any other prefix is handed to the verifier as part of the token and fails.
 
 ## License

@@ -116,6 +116,42 @@ const bound = await verifier.verify(token, {
 
 A token carrying `cnf` (RFC 8705) fails unless `certificateThumbprint` resolves to the SHA-256 DER thumbprint in `cnf.x5t#S256`. The provider is only called for such tokens, and the check runs on every call, cached results included.
 
+### Timeouts and aborts
+
+```typescript
+import { createClientTokenCreator } from '@authup/core-http-kit';
+import { isUpstreamTimeoutError } from '@authup/errors';
+import { TokenVerifier } from '@authup/server-adapter-kit';
+
+const verifier = new TokenVerifier({
+    baseURL: 'https://auth.example.com',
+    // seconds each introspection request and key fetch may take
+    timeout: 5,
+    creator: createClientTokenCreator(
+        { id: process.env.AUTHUP_CLIENT_ID ?? '', secret: process.env.AUTHUP_CLIENT_SECRET ?? '' },
+        // milliseconds the client credentials mint may take
+        { client: { baseURL: 'https://auth.example.com', timeout: 5_000 } },
+    ),
+});
+
+try {
+    const data = await verifier.verify(token, { signal: request.signal });
+} catch (e) {
+    if (isUpstreamTimeoutError(e)) {
+        // authup did not answer in time: the token was not judged
+        return new Response(null, { status: 503 });
+    }
+
+    throw e;
+}
+```
+
+`timeout` bounds every request a verification makes: the introspection request and, in local mode, the key fetch. A verification that runs out of time throws an `UpstreamTimeoutError` (`upstream_timeout`, HTTP 504), never a `JWTError`, so it cannot be mistaken for an invalid token. Without `timeout` each request may take 10 seconds.
+
+The client credentials mint of remote mode runs on the creator's own client, so the verifier's `timeout` does not reach it: set the creator client's `timeout` (in milliseconds) as well.
+
+A `signal` passed to `verify` aborts that verification: it rejects with the signal's reason as is and cancels its introspection request. A key fetch shared with other verifications is not cancelled; the aborted call only stops waiting for it.
+
 ### Parse the Authorization header
 
 ```typescript
@@ -133,6 +169,7 @@ It throws `BearerTokenMalformedError` (`bearer_token_malformed`, HTTP 401) for a
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `baseURL` | `string` | (required) | Base URL of the Authup API |
+| `timeout` | `number` | `10` | Seconds each request of a verification may take (introspection, key fetch). A finite number above 0 and at most 2147483, otherwise the constructor throws. Running out of time throws `UpstreamTimeoutError` |
 | `creator` | `TokenCreator` | `undefined` | Switches to remote mode: mints the token the introspection call authenticates with |
 | `cache` | `ITokenCache \| false` | `undefined` | Caches verified results; without it every call verifies again |
 | `cacheNamespace` | `string` | `authup:<local\|remote>:<baseURL>` | Separates the entries of verifiers sharing one cache. Only verifiers with the same configuration may share a namespace |
@@ -144,6 +181,7 @@ It throws `BearerTokenMalformedError` (`bearer_token_malformed`, HTTP 401) for a
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `certificateThumbprint` | `string \| () => string \| undefined \| Promise<string \| undefined>` | `undefined` | Thumbprint of the presented client certificate, or a lazy provider for it |
+| `signal` | `AbortSignal` | `undefined` | Aborts this verification; it rejects with the signal's reason |
 
 ## API
 
@@ -161,7 +199,7 @@ It throws `BearerTokenMalformedError` (`bearer_token_malformed`, HTTP 401) for a
 ## Notes
 
 - **Local mode does not see revocations.** A token whose session was revoked keeps verifying until it expires, and a disabled signing key keeps verifying until its cache entry expires (5 minutes by default). Use remote mode, or a short `jwkCache.ttl`, where that matters.
-- **Errors are `JWTError`s.** A bad signature, missing claim or wrong kind throws `invalid_token`, an expired token `expired_token`, an inactive one `inactive_token`. In remote mode every other failure is `invalid_token`; the server's own error code is not passed through.
+- **Errors are `JWTError`s, except a timeout or an abort.** A bad signature, missing claim or wrong kind throws `invalid_token`, an expired token `expired_token`, an inactive one `inactive_token`. In remote mode every other failure is `invalid_token`; the server's own error code is not passed through. A request that ran out of time throws `UpstreamTimeoutError` (`isUpstreamTimeoutError` from `@authup/errors`), and an aborted call rejects with the signal's reason.
 - **Results are copies.** `verify` returns a clone, so mutating it never changes a cached entry.
 - **Kind-less tokens pass.** Only a present `kind` other than `access_token` is rejected.
 

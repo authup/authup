@@ -90,6 +90,8 @@ creator's own client need no grant.
 
 Local verification (no `creator`) caches the signing keys it fetches; see [Key caching](web-middleware.md#key-caching).
 
+A verification that runs out of time reaches `next(error)` as an `UpstreamTimeoutError`, never a `JWTError`; see [Timeouts](web-middleware.md#timeouts).
+
 ## verifyRequest primitive
 
 If you need direct control over the response (for example to short-circuit unauthenticated requests with a custom

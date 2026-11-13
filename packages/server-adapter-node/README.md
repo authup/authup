@@ -141,6 +141,7 @@ const middleware = createMiddleware({
 
 - **Only `Bearer` is accepted in the header.** A `Basic` or other scheme in `Authorization` is an error, not a missing token, so `tokenByRequest` is not consulted for it.
 - **Errors carry their codes.** A malformed header throws `BearerTokenMalformedError` (`bearer_token_malformed`); a failed verification throws a `JWTError` (`invalid_token`, `expired_token`, `inactive_token`). Both map to HTTP 401.
+- **A timeout is not an invalid token.** When authup does not answer within the verifier's `timeout`, the verifier's `UpstreamTimeoutError` (`upstream_timeout`, HTTP 504) reaches `next(error)` unchanged. Recognize it in your error handler with `isUpstreamTimeoutError` from `@authup/errors` and answer 503 or 504 instead of 401.
 - **A certificate-bound token without a thumbprint fails.** Behind a TLS-terminating proxy, read the forwarded certificate in `certificateThumbprintByRequest`.
 
 ## License

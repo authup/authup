@@ -59,6 +59,8 @@ creator's own client need no grant.
 
 Local verification (no `creator`) caches the signing keys it fetches; see [Key caching](web-middleware.md#key-caching).
 
+A verification that runs out of time reaches `next(error)` as an `UpstreamTimeoutError`, never a `JWTError`; see [Timeouts](web-middleware.md#timeouts).
+
 The middleware also tolerates `Bearer <token>` formatted values (the prefix is stripped via
 `extractBearerToken`); bare tokens are passed through unchanged.
 

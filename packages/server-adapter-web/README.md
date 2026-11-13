@@ -45,16 +45,21 @@ npm install @authup/server-adapter-web @authup/server-adapter-kit
 ### Fetch handler
 
 ```typescript
+import { isUpstreamTimeoutError } from '@authup/errors';
 import { TokenVerifier } from '@authup/server-adapter-kit';
 import { verifyRequest } from '@authup/server-adapter-web';
 
-const tokenVerifier = new TokenVerifier({ baseURL: 'https://auth.example.com' });
+const tokenVerifier = new TokenVerifier({ baseURL: 'https://auth.example.com', timeout: 5 });
 
 export async function handle(request: Request): Promise<Response> {
     let data;
     try {
         data = await verifyRequest(request, { tokenVerifier });
-    } catch {
+    } catch (e) {
+        if (isUpstreamTimeoutError(e)) {
+            return new Response('authup did not answer in time', { status: 503 });
+        }
+
         return new Response('invalid token', { status: 401 });
     }
 
@@ -123,6 +128,7 @@ const data = await verifyRequest(request, {
 
 - **Only `Bearer` is accepted in the header.** A `Basic` or other scheme in `Authorization` throws `BearerTokenMalformedError` (`bearer_token_malformed`), and `tokenByRequest` is not consulted.
 - **Verification errors are `JWTError`s** (`invalid_token`, `expired_token`, `inactive_token`). All of them, and the malformed header, map to HTTP 401.
+- **A timeout is not an invalid token.** When authup does not answer within the verifier's `timeout`, `verifyRequest` throws the verifier's `UpstreamTimeoutError` (`upstream_timeout`, HTTP 504) unchanged. Recognize it with `isUpstreamTimeoutError` from `@authup/errors` and answer 503 or 504 instead of 401.
 - **A query string token is logged by proxies.** Prefer a header or a cookie for `tokenByRequest` where you can.
 
 ## License
