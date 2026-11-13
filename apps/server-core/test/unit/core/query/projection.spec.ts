@@ -20,7 +20,7 @@ import { describe, expect, it } from 'vitest';
 import { clientSchema } from '../../../../src/core/entities/client/schema.ts';
 import { roleSchema } from '../../../../src/core/entities/role/schema.ts';
 import { userSchema } from '../../../../src/core/entities/user/schema.ts';
-import { decodeQuery } from '../../../../src/core/query/index.ts';
+import { decodeQuery, schemaRegistry } from '../../../../src/core/query/index.ts';
 import {
     ReachCheckField,
     readDefaultFieldNames,
@@ -40,6 +40,19 @@ function readAddedNames(query: IQuery): string[] {
 }
 
 describe('core/query/projection', () => {
+    describe('readDefaultFieldNames', () => {
+        // a schema enumerating no column would skip the widening unnoticed
+        it.each(schemaRegistry.getAll().map((schema) => [schema.name, schema] as const))(
+            'should enumerate the columns of the %s schema',
+            (_name, schema) => {
+                const names = readDefaultFieldNames(schema);
+
+                expect(names).toBeDefined();
+                expect(names!.length).toBeGreaterThan(0);
+            },
+        );
+    });
+
     describe('widenSparseRootProjection', () => {
         it('should load every default column the projection left out', async () => {
             const parsed = await decodeQuery({ fields: 'id' }, { schema: roleSchema });
