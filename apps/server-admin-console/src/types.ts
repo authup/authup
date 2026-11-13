@@ -72,6 +72,11 @@ export type Config = {
     port: number,
     host: string,
     /**
+     * Seconds to keep serving after the stop signal while `GET /readyz`
+     * answers 503.
+     */
+    shutdownDelay?: number,
+    /**
      * A substituted console package to serve instead of the resolved
      * `@authup/client-admin-console`. Empty resolves the package through the
      * node_modules walk.

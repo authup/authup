@@ -319,6 +319,7 @@ describe('buildSchemaJSONSchema(SCHEMA)', () => {
             'publicUrl',
             'redis',
             'rootPath',
+            'shutdownDelay',
             'smtp',
             'theme',
             'trustedOrigins',

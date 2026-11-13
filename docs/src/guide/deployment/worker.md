@@ -65,26 +65,37 @@ scheduled work at all, so scaling them up and down never affects retention.
 
 ## Health
 
-The worker answers `GET /` (and `HEAD /`) on its own port with a JSON report
-of its sweeps, and every other path with 404. There is no routing and no
-authentication behind it.
+The worker answers `GET /readyz` and `GET /livez` (and `HEAD`) on its own port,
+and every other path with 404. There is no routing and no authentication
+behind it. `/readyz` carries a JSON report of its sweeps:
 
 ```json
 {
     "healthy": true,
+    "checks": [
+        { "name": "components", "ok": true }
+    ],
     "components": [
-        { "name": "oauth2-cleaner", "lastSuccessAt": "2026-09-25T10:00:00.000Z", "runningSince": null, "overdue": false }
+        { "name": "oauth2-cleaner", "lastSuccessAt": "2026-09-25T10:00:00.000Z", "runningSince": null, "overdue": false, "hung": false }
     ]
 }
 ```
 
-The status is 200 while every sweep has completed a pass within the last five
+`GET /` answers what `/readyz` answers. It is deprecated and will be removed
+in v1.0.0.
+
+`/readyz` is 200 while every sweep has completed a pass within the last five
 minutes, and 503 once one has not (five missed one-minute ticks, counted from
 startup until the first success). A sweep that keeps failing, for example
 because the database is unreachable, turns the worker unhealthy. A pass that
 is still running (`runningSince`) counts as progress for up to 30 minutes, so a
 large drain after lowering a retention window does not read as a failure,
 while a pass that never returns still does.
+
+`/livez` is 503 only for that last case, a pass that has been running for more
+than 30 minutes. A restart is the remedy for a hung pass and no help for an
+unreachable database, so an overdue sweep fails `/readyz` alone. See
+[Health endpoints](./health.md).
 
 The port is `core.worker.port` (env `WORKER_PORT`), bound on `core.host`.
 Unset, it is the same port as `core.port` (env `PORT`), which is what the
@@ -160,8 +171,8 @@ the database and Redis settings the API has and add the command. The image
 healthcheck works unchanged, since it probes the worker's health listener.
 Plain Compose only reports an unhealthy container; under Docker Swarm or an
 autoheal container, which replace unhealthy ones, a database outage would
-restart the worker in a loop, so disable the healthcheck there for the reason
-the Kubernetes section gives.
+restart the worker in a loop, so point the healthcheck at `/livez` there for
+the reason the Kubernetes section gives.
 
 ```yaml
 version: '3.8'
@@ -221,23 +232,35 @@ The same split, with the migration step as its own object:
 - The API `Deployment`, with `WORKER_ENABLED=false` and
   `MIGRATION_ENABLED=false`. Any number of replicas.
 - The worker `Deployment`, `replicas: 1`, command
-  `start worker`, with an `httpGet` readiness probe on `/` at the worker port
-  and no liveness probe.
+  `start worker`, with an `httpGet` readiness probe on `/readyz` and a
+  startup and a liveness probe on `/livez` at the worker port.
   Give it `WORKER_ENABLED=true` when it shares the API's `ConfigMap`, which
   sets that key to false.
 
 ```yaml
+startupProbe:
+    httpGet:
+        path: /livez
+        port: 3000
+    periodSeconds: 5
+    failureThreshold: 24
 readinessProbe:
     httpGet:
-        path: /
+        path: /readyz
+        port: 3000
+    periodSeconds: 30
+livenessProbe:
+    httpGet:
+        path: /livez
         port: 3000
     periodSeconds: 30
 ```
 
-Use the health endpoint for readiness, not liveness. Its most likely 503 is a
-database the sweeps cannot reach, which a restart does not fix: as a liveness
-probe it would put the pod into a restart loop for as long as the database is
-down. As a readiness probe it marks the worker not ready, which surfaces the
-failure without killing the process, and the sweeps resume on the next tick
-once the database is back. A process that dies is restarted by the kubelet
-regardless.
+Never use `/readyz` for liveness. Its most likely 503 is a database the sweeps
+cannot reach, which a restart does not fix: as a liveness probe it would put
+the pod into a restart loop for as long as the database is down. As a
+readiness probe it marks the worker not ready, which surfaces the failure
+without killing the process, and the sweeps resume on the next tick once the
+database is back. `/livez` fails only for a hung pass, where a restart is what
+helps. The startup probe keeps liveness from being evaluated before the
+listener is up, which happens only after the worker verified the schema.

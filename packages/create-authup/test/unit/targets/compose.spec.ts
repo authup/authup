@@ -235,7 +235,7 @@ describe('renderCompose', () => {
         expect(console).toContain('    command: start console');
         expect(console).toContain('- "PUBLIC_URL=https://auth.example.com"');
         expect(console).toContain('- "INTERNAL_URL=http://authup:3000"');
-        expect(console).toContain('      test: ["CMD", "wget", "--spider", "--proxy", "off", "http://127.0.0.1:3020/healthy"]\n      interval: 10s\n');
+        expect(console).toContain('      test: ["CMD", "wget", "--spider", "--proxy", "off", "http://127.0.0.1:3020/readyz"]\n      interval: 10s\n');
         expect(console).not.toContain('DB_');
         expect(console).not.toContain('REDIS');
         expect(console).not.toContain('ports');

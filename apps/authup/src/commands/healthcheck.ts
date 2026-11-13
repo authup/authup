@@ -18,9 +18,15 @@ import {
 } from '@authup/server-config-kit';
 import { buildInternalUrl } from '../console/api-url.ts';
 
+/**
+ * Readiness, not liveness: `depends_on: service_healthy` and an operator
+ * running the command both ask whether the process can serve.
+ */
+const HEALTH_PATH = '/readyz';
+
 export function defineCLIHealthCheckCommand(options: ConfigReadFsOptions<AuthupConfig> = {}) {
     return defineCommand({
-        meta: { name: 'healthcheck', description: 'Probe the listener on core.port (the API, or the worker health listener) and exit non-zero when it does not answer.' },
+        meta: { name: 'healthcheck', description: 'Probe GET /readyz on core.port (the API, or a worker whose health listener inherits that port) and exit non-zero when it does not answer 200.' },
         async setup() {
             const { tree } = await readConfigFileTree(options);
             const config = mergeSchemaData<AuthupConfig>(
@@ -38,7 +44,7 @@ export function defineCLIHealthCheckCommand(options: ConfigReadFsOptions<AuthupC
             // spelled here, and a wildcard bind is looped back the way the
             // composed roles reach their own listener.
             const healthCheck = http.request(
-                buildInternalUrl(config.core.host || config.defaultHost, config.core.port),
+                new URL(HEALTH_PATH, buildInternalUrl(config.core.host || config.defaultHost, config.core.port)),
                 { timeout: 2000 },
                 (res) => {
                     if (res.statusCode === 200) {

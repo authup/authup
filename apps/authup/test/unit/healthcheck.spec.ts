@@ -29,6 +29,7 @@ import { createCLIEntryPointCommand } from '../../src/module.ts';
 type ProbeTarget = {
     host: string,
     port: string,
+    path: string,
 };
 
 async function probe(directory: string) : Promise<ProbeTarget> {
@@ -45,12 +46,20 @@ async function probe(directory: string) : Promise<ProbeTarget> {
         if (typeof target === 'string' || target instanceof URL) {
             const url = new URL(target);
 
-            return { host: url.hostname, port: url.port };
+            return {
+                host: url.hostname, 
+                port: url.port, 
+                path: url.pathname, 
+            };
         }
 
         const options = target as unknown as { host?: string, port?: number };
 
-        return { host: options.host ?? '', port: String(options.port ?? '') };
+        return {
+            host: options.host ?? '', 
+            port: String(options.port ?? ''), 
+            path: '', 
+        };
     } finally {
         request.mockRestore();
     }
@@ -76,7 +85,11 @@ describe('defineCLIHealthCheckCommand', () => {
             'host: 10.0.0.5\ncore:\n  port: 4000\n',
         );
 
-        expect(await probe(directory)).toEqual({ host: '10.0.0.5', port: '4000' });
+        expect(await probe(directory)).toEqual({
+            host: '10.0.0.5', 
+            port: '4000', 
+            path: '/readyz', 
+        });
     });
 
     it('should honour HOST from the environment', async () => {

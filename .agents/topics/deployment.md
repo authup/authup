@@ -113,7 +113,7 @@ the same ORIGIN, whichever process answers.
   `ENV` defaults (so `-e PORT=` wins). No state directory: only
   `PROVISIONING_DIRECTORY_PATH=/etc/authup/provisioning` (read) and
   `LOG_DIRECTORY_PATH=/var/log/authup` (written). The `HEALTHCHECK` probes
-  `PORT`, which fits every role but `start console`, which overrides it.
+  `/readyz` on `PORT`, which fits every role but `start console`, which overrides it.
 - Each console is its own runnable SERVICE: `createApplication` over
   `@authup/server-console-kit`, started by both `authup start console` and the
   `authup-<name>-console` bin, so the two cannot diverge. server-core imports
@@ -144,12 +144,39 @@ listener, no API.
   (`app/modules/database/migration.ts`) fails the boot when the chain is
   behind. Its no-migrations (sqlite) branch must fall through to
   `synchronizeDatabaseSchema`, or a sqlite worker has no schema.
+- **Every listener answers `/livez` and `/readyz` (#3841).** `/livez` checks
+  no dependency, ever: a database outage is not fixed by a restart, and a
+  liveness failure on one restarts every replica in a loop. The API's
+  `/readyz` checks the database (`SELECT 1`, 1s timeout, result reused for 1s
+  since the route is anonymous) and the shutdown state. Redis is deliberately
+  not a check: it is shared by every replica, so failing on it turns a partial
+  outage into a total one. `mountHealthRoutes` runs BEFORE
+  `middleware.mountBefore`, so a probe is never logged, rate limited or
+  authenticated, and the routes are not controllers, so they stay out of the
+  OpenAPI document. A console's pair (`mountHealthRoutes` of
+  `@authup/server-console-kit`) checks no dependency, and the auth console
+  deliberately does not check `apiUrl`; its `/readyz` fails only while
+  draining.
+- Neither path answers during boot: the listener binds after migrations and
+  provisioning. Binding early was rejected (`HTTPModule` needs the database
+  through authentication, identity and OAuth2), so the orchestrator's startup
+  probe is the guard against a kill during a boot migration.
+- Drain: the first signal flips `/readyz` to 503 and the teardown waits for
+  the root key `shutdownDelay` (seconds, default 0, one key for every
+  listener); the force-exit timeout starts after the delay. server-core:
+  `buildShutdownHandlersOptions(container)` over
+  `HTTPInjectionKey.ShutdownState`. Consoles: `buildShutdownOptions` of the
+  console kit, whose state is keyed by the app instance (a `WeakMap`), so two
+  consoles in one process never share one. The worker does not drain. The
+  kit's `serve` passes `gracefulShutdown: false` like server-core's: srvx's
+  default handler closes the listener on the signal, before the drain.
 - `WorkerHealthModule` (`app/modules/components/health.ts`): bare
-  `node:http`, `GET`/`HEAD /` answer 200 or 503 while any component is
-  overdue (`COMPONENT_OVERDUE_AFTER` 5 min without success, unless a pass is
-  running and younger than `COMPONENT_HUNG_AFTER` 30 min). Binds
-  `core.worker.port`, which defaults to `core.port`. A database outage answers
-  503, so in Kubernetes it is a readiness probe, never liveness.
+  `node:http`. `/readyz` answers 503 while any component is overdue
+  (`COMPONENT_OVERDUE_AFTER` 5 min without success, unless a pass is running
+  and younger than `COMPONENT_HUNG_AFTER` 30 min); `/livez` only while one is
+  hung past that ceiling, the one state a restart remedies. `GET /` is a
+  deprecated alias of `/readyz`, removed in v1.0.0. Binds `core.worker.port`,
+  which defaults to `core.port`.
 - Components are hubwire `defineScheduledComponent` (`noOverlap`). `stop()`
   does not wait for a running pass, so teardown awaits each `settled?.()`
   before the database module tears down.

@@ -7,6 +7,24 @@ either requires operator action or deliberately changes behavior.
 
 ## Next release (after v1.0.0-beta.75)
 
+### Health moves to `/livez` and `/readyz`
+
+Every listener (API, worker, consoles) answers `GET /livez` and `GET /readyz`; see
+[Health endpoints](./health.md). Three things change for an existing deployment:
+
+- **The image `HEALTHCHECK` and `authup healthcheck` request `/readyz`** instead of `/`. On the
+  API that fails while the database is unreachable, which `/` never did. Plain Docker and
+  Compose only report it; Docker Swarm and autoheal containers restart an unhealthy container,
+  so override the healthcheck with one against `/livez` there.
+- **The worker's report gained a `checks` list**, and each component a `hung` flag. `healthy`
+  and `components` are unchanged.
+- **The worker's `GET /` is deprecated.** It answers what `/readyz` answers and will be removed
+  in v1.0.0.
+
+**Action required:** Point API probes at `/readyz` (readiness) and `/livez` (liveness, startup)
+instead of `/`. Point worker probes at `/readyz`, and add a liveness probe on `/livez` if a
+hung sweep should restart the worker. A console's `/healthy` keeps working.
+
 ### An `attributeNames` policy judges the names list when one is given
 
 The `attributeNames` policy of `@authup/access` reads the `attributeNames` policy data key

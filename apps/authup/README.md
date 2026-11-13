@@ -99,7 +99,7 @@ authup migration status    # list applied and pending migrations
 ### Check a deployment
 
 ```shell
-authup healthcheck         # exit 0 when the listener on core.port answers, 1 otherwise
+authup healthcheck         # exit 0 when GET /readyz on core.port answers 200, 1 otherwise
 authup config validate     # report what does not hold in authup.yml and the environment
 authup config schema       # print the JSON Schema of authup.yml
 ```

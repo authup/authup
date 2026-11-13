@@ -87,6 +87,20 @@ describe('createHandler', () => {
         expect(response.status).toEqual(200);
     });
 
+    it('should answer /livez and /readyz', async () => {
+        const live = await fetch(`${baseURL}/livez`);
+
+        expect(live.status).toEqual(200);
+        expect(live.headers.get('cache-control')).toEqual('no-store');
+        expect(await live.json()).toEqual({ healthy: true, checks: [] });
+
+        const ready = await fetch(`${baseURL}/readyz`);
+
+        expect(ready.status).toEqual(200);
+        expect(ready.headers.get('cache-control')).toEqual('no-store');
+        expect(await ready.json()).toEqual({ healthy: true, checks: [{ name: 'shutdown', ok: true }] });
+    });
+
     it('should render the logout page with no backend', async () => {
         const response = await fetch(`${baseURL}/logout`);
 

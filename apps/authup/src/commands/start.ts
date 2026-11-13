@@ -9,11 +9,12 @@ import { createApplication as createAccountConsoleApplication } from '@authup/se
 import { createApplication as createAdminConsoleApplication } from '@authup/server-admin-console';
 import { createApplication as createAuthConsoleApplication } from '@authup/server-auth-console';
 import type { ConfigReadFsOptions } from '@authup/server-config';
-import { InjectionKey } from '@authup/server-console-kit';
+import { InjectionKey, buildShutdownOptions as buildConsoleShutdownOptions } from '@authup/server-console-kit';
 import {
     CLI_CONFIG_ARGS,
     ConfigModule,
     HTTPModule,
+    buildShutdownHandlersOptions,
     createApplication,
     createWorkerApplication,
     readConfig,
@@ -180,7 +181,7 @@ export function defineCLIStartCommand(configFs: ConfigReadFsOptions = {}) {
 
                     await app.teardown();
                 },
-            });
+            }, buildShutdownHandlersOptions(app.container));
         },
     });
 }
@@ -260,5 +261,5 @@ async function startConsoles(configFs: ConfigReadFsOptions, selected?: ConsoleNa
         teardown: async () => {
             await Promise.all(applications.map((application) => application.teardown()));
         },
-    });
+    }, buildConsoleShutdownOptions(applications));
 }

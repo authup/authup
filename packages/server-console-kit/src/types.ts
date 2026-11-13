@@ -111,3 +111,11 @@ export type StaticConsole = {
     resolveDistPath(): string | undefined,
     serve(event: IAppEvent, options: StaticConsoleServeOptions): Promise<string>,
 };
+
+/**
+ * Set once the process received its termination signal; the readiness route
+ * reads it.
+ */
+export type ShutdownState = {
+    active: boolean,
+};

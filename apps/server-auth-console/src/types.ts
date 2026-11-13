@@ -82,6 +82,11 @@ export type Config = {
     port: number,
     host: string,
     /**
+     * Seconds to keep serving after the stop signal while `GET /readyz`
+     * answers 503.
+     */
+    shutdownDelay?: number,
+    /**
      * A substituted console package to render instead of the resolved
      * `@authup/client-auth-console` (the `AUTH_CONSOLE_PATH` seam).
      */

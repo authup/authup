@@ -407,7 +407,8 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
     });
 
     try {
-        await waitUntilReady(`${name}/server-core`, SERVER_URL, child);
+        await waitUntilReady(`${name}/server-core`, `${SERVER_URL}readyz`, child);
+        await waitUntilReady(`${name}/server-core`, `${SERVER_URL}livez`, child);
 
         // All three consoles are RUNTIME dependencies of server-core, resolved
         // out of node_modules and served from their built dist. Probing the
@@ -585,6 +586,8 @@ async function executeSplitScenario() {
         AUTH_CONSOLE_PORT: String(CONSOLE_PORTS.auth),
         ADMIN_CONSOLE_PORT: String(CONSOLE_PORTS.admin),
         ACCOUNT_CONSOLE_PORT: String(CONSOLE_PORTS.account),
+        // long enough to observe the drain below, on both processes
+        SHUTDOWN_DELAY: '2',
     };
 
     const api = spawn(process.execPath, [cliEntry, 'start', 'core', configArg], {
@@ -600,8 +603,8 @@ async function executeSplitScenario() {
     });
 
     try {
-        await waitUntilReady('split/core', SERVER_URL, api);
-        await waitUntilReady('split/console', throughProxy('auth', '/healthy'), consoles);
+        await waitUntilReady('split/core', `${SERVER_URL}readyz`, api);
+        await waitUntilReady('split/console', throughProxy('auth', '/readyz'), consoles);
 
         // The shed: every console page is a 404 on the API now. A shell
         // answered here would mean both sides serve it, with whichever
@@ -677,6 +680,22 @@ async function executeSplitScenario() {
         log('split: sending SIGTERM to both processes.');
         api.kill('SIGTERM');
         consoles.kill('SIGTERM');
+
+        // Both keep serving for SHUTDOWN_DELAY while reporting not ready, so a
+        // load balancer stops routing to them before the socket closes. A
+        // listener that closes on the signal answers nothing here.
+        await sleep(500);
+
+        for (const [name, base] of [['split/core', SERVER_URL], ['split/console', throughProxy('auth', '/')]]) {
+            const ready = await probe(`${base}readyz`);
+            const live = await probe(`${base}livez`);
+
+            if (ready !== 503 || live !== 200) {
+                throw fail(`${name}: draining, /readyz answered ${ready} and /livez ${live}, expected 503 and 200.`);
+            }
+        }
+
+        log('split: both processes report not ready while they drain.');
 
         const apiExit = await waitForExit(api, EXIT_TIMEOUT_MS);
 

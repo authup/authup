@@ -128,6 +128,16 @@ export default {
      */
     trustedOrigins: ['https://app.example.com'],
 
+    /**
+     * Seconds every listener (the API and each console service) keeps
+     * serving after SIGTERM or SIGINT while `GET /readyz` answers 503, so a
+     * load balancer can stop routing to the process before it closes. Zero
+     * closes at once.
+     * env: SHUTDOWN_DELAY
+     * default: 0
+     */
+    shutdownDelay: 0,
+
     theme: {
         /**
          * EXPERIMENTAL (may change in a minor release; see the Theming guide).
@@ -287,7 +297,7 @@ export default {
              * The port of the worker's health listener in worker mode
              * (`authup start worker`). 0 means unset: it inherits `port`.
              * Set it only when the worker shares a host with another role;
-             * the image healthcheck and `authup healthcheck` probe `port`.
+             * the image healthcheck and `authup healthcheck` probe `/readyz` on `port`.
              * env: WORKER_PORT
              * default: 0
              */
@@ -737,6 +747,7 @@ export default {
 # yaml-language-server: $schema=https://authup.org/schema/config.json
 env: production
 publicUrl: http://localhost:3000
+shutdownDelay: 0
 trustedOrigins:
   - https://app.example.com
 
@@ -806,6 +817,7 @@ THEME_FRAGMENTS_ENABLED=false
 WORKER_ENABLED=true
 WORKER_PORT=0
 MIGRATION_ENABLED=true
+SHUTDOWN_DELAY=0
 PORT=3000
 HOST=0.0.0.0
 PUBLIC_URL=http://localhost:3000

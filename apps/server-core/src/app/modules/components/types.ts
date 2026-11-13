@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { HealthReport } from '../http/health/types.ts';
+
 export type ComponentsModuleOptions = {
     /**
      * Refuse to boot when `core.worker.enabled` is false instead of skipping
@@ -23,9 +25,18 @@ export type ComponentHealth = {
     /** ISO timestamp the pass in flight started at, null while idle. */
     runningSince: string | null,
     overdue: boolean,
+    /** A pass has been running longer than COMPONENT_HUNG_AFTER. */
+    hung: boolean,
 };
 
 export type ComponentsHealth = {
     healthy: boolean,
+    /** At least one component is hung, which only a restart remedies. */
+    hung: boolean,
     components: ComponentHealth[],
+};
+
+export type WorkerHealthReport = HealthReport & {
+    /** Per-component detail, on the readiness answer only. */
+    components?: ComponentHealth[],
 };

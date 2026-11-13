@@ -9,6 +9,7 @@ import type { IClient } from '@authup/core-http-kit';
 import { TypedToken } from 'eldin';
 import type { serve } from 'routup/node';
 import type { IApp } from 'routup';
+import type { ShutdownState } from './health/types.ts';
 
 export type HTTPServer = ReturnType<typeof serve>;
 
@@ -16,6 +17,7 @@ export const HTTPInjectionKey : {
     App: TypedToken<IApp>,
     Server: TypedToken<HTTPServer>,
     InternalHttpClient: TypedToken<IClient>,
+    ShutdownState: TypedToken<ShutdownState>,
 } = {
     App: new TypedToken<IApp>('IApp'),
     Server: new TypedToken<HTTPServer>('Server'),
@@ -32,4 +34,9 @@ export const HTTPInjectionKey : {
      * concurrent renders would leak tokens between sessions.
      */
     InternalHttpClient: new TypedToken<IClient>('InternalHttpClient'),
+    /**
+     * Flipped by the shutdown handlers when the termination signal arrives;
+     * `GET /readyz` answers 503 from then on.
+     */
+    ShutdownState: new TypedToken<ShutdownState>('ShutdownState'),
 } as const;

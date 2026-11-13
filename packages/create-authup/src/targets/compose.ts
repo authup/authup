@@ -259,7 +259,7 @@ export function renderCompose(answers: Answers, version: string): Rendered {
                 '# the image probes the API port, which this process never opens; the auth',
                 '# console cannot be disabled, so it is always listening (3020 by default)',
                 ...block('healthcheck', [
-                    'test: ["CMD", "wget", "--spider", "--proxy", "off", "http://127.0.0.1:3020/healthy"]',
+                    'test: ["CMD", "wget", "--spider", "--proxy", "off", "http://127.0.0.1:3020/readyz"]',
                     'interval: 10s',
                 ]),
                 'command: start console',

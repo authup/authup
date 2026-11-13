@@ -27,6 +27,12 @@ export type HTTPServer = {
 export type Config = {
     port: number,
     host: string,
+    /**
+     * Seconds to keep serving after the stop signal while `GET /readyz`
+     * answers 503. Optional, so a caller composing a config by hand need
+     * not name it.
+     */
+    shutdownDelay?: number,
     theme: {
         directoryPath: string,
         fragmentsEnabled: boolean,
@@ -67,4 +73,15 @@ export type CreateApplicationContext<C extends Config = Config> = HTTPModuleCont
      * before the caller has said where to look.
      */
     config: C | ConfigFactory<C>,
+};
+
+export type ShutdownOptions = {
+    /**
+     * Milliseconds to keep serving between the signal and the teardown.
+     */
+    delay: number,
+    /**
+     * Run as the signal arrives, before anything is torn down.
+     */
+    onSignal: () => void,
 };

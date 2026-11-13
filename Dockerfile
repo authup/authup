@@ -31,7 +31,7 @@ EXPOSE 3000
 # container binds the console ports instead, so that role overrides this check
 # in its own deployment (see docs/src/guide/deployment/console-replicas.md).
 HEALTHCHECK --interval=10s --timeout=5s --retries=10 --start-period=5s \
-    CMD wget --spider --proxy off http://127.0.0.1:${PORT}/ || exit 1
+    CMD wget --spider --proxy off http://127.0.0.1:${PORT}/readyz || exit 1
 
 ENTRYPOINT ["/bin/sh", "./entrypoint.sh"]
 CMD ["start"]

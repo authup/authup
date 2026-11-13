@@ -6,6 +6,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { buildShutdownOptions } from '@authup/server-console-kit';
 import process from 'node:process';
 import { createApplication } from './application';
 
@@ -19,8 +20,18 @@ const application = createApplication();
 
 await application.setup();
 
-const shutdown = () => application.teardown()
-    .then(() => process.exit(0), () => process.exit(1));
+const { delay, onSignal } = buildShutdownOptions([application]);
+
+const shutdown = () => {
+    // `GET /readyz` answers 503 from here on; the listener keeps serving
+    // for `shutdownDelay`, so a load balancer stops routing here first.
+    onSignal();
+
+    setTimeout(() => {
+        application.teardown()
+            .then(() => process.exit(0), () => process.exit(1));
+    }, delay);
+};
 
 process.once('SIGINT', shutdown);
 process.once('SIGTERM', shutdown);

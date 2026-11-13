@@ -93,6 +93,7 @@ export async function resolveConfig(
         enabled: values.enabled,
         port: values.port,
         host: values.host,
+        shutdownDelay: values.shutdownDelay,
         distPath: values.path,
         theme: values.theme,
     };

@@ -12,12 +12,20 @@ import type { IModule, ModuleDependency } from 'orkos';
 import { ConfigInjectionKey } from '../config/index.ts';
 import { ModuleName } from '../constants.ts';
 import { LoggerInjectionKey } from '../logger/index.ts';
+import { HEALTH_LIVENESS_PATH, HEALTH_READINESS_PATH } from '../http/health/constants.ts';
 import { ComponentsInjectionKey } from './constants.ts';
+import type { WorkerHealthReport } from './types.ts';
 
 /**
- * The worker role's only listener: `GET /` (and `HEAD /`, which the image
- * healthcheck's `wget --spider` sends) answers the components' health, 200
- * or 503, and every other request 404. No routing, no authentication.
+ * The worker role's only listener, `GET` and `HEAD` alike (the image
+ * healthcheck's `wget --spider` sends `HEAD`), 200 or 503:
+ *
+ * - `/readyz` fails while a component is overdue or hung.
+ * - `/livez` fails while a component is hung, which only a restart remedies.
+ *   An overdue one (a database outage) is not helped by a restart.
+ * - `/` answers what `/readyz` answers. Deprecated, removed in v1.0.0.
+ *
+ * Every other request answers 404. No routing, no authentication.
  *
  * It takes the HTTP slot, so the worker composition still has one module per
  * concern, and binds `core.worker.port` on `core.host`.
@@ -46,17 +54,36 @@ export class WorkerHealthModule implements IModule {
         const server = createServer((req, res) => {
             const path = (req.url || '').split('?')[0];
 
-            if (path !== '/' || (req.method !== 'GET' && req.method !== 'HEAD')) {
+            const liveness = path === HEALTH_LIVENESS_PATH;
+
+            if (
+                (!liveness && path !== HEALTH_READINESS_PATH && path !== '/') ||
+                (req.method !== 'GET' && req.method !== 'HEAD')
+            ) {
                 res.statusCode = 404;
                 res.end();
 
                 return;
             }
 
-            const health = components.success ? components.data.getHealth() : { healthy: true, components: [] };
-            const body = JSON.stringify(health);
+            const health = components.success ?
+                components.data.getHealth() :
+                {
+                    healthy: true, 
+                    hung: false, 
+                    components: [], 
+                };
 
-            res.statusCode = health.healthy ? 200 : 503;
+            const healthy = liveness ? !health.hung : health.healthy;
+            const report : WorkerHealthReport = { healthy, checks: [{ name: 'components', ok: healthy }] };
+
+            if (!liveness) {
+                report.components = health.components;
+            }
+
+            const body = JSON.stringify(report);
+
+            res.statusCode = healthy ? 200 : 503;
             res.setHeader('content-type', 'application/json');
             res.setHeader('content-length', Buffer.byteLength(body));
             res.setHeader('cache-control', 'no-store');

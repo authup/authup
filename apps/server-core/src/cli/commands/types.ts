@@ -13,3 +13,15 @@ export type CLIConfigArgs = {
 export type CLIMigrationCommandOptions = {
     generate?: boolean,
 };
+
+export type ShutdownHandlersOptions = {
+    /**
+     * Runs once, as the first signal arrives and before anything is torn down.
+     */
+    onSignal?: () => void,
+    /**
+     * Milliseconds to keep serving between the signal and the teardown.
+     * default: 0
+     */
+    delay?: number,
+};

@@ -6,4 +6,5 @@
  */
 
 export * from './constants.ts';
+export * from './health/index.ts';
 export * from './module.ts';
