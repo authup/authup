@@ -233,11 +233,17 @@ The same split, with the migration step as its own object:
   `MIGRATION_ENABLED=false`. Any number of replicas.
 - The worker `Deployment`, `replicas: 1`, command
   `start worker`, with an `httpGet` readiness probe on `/readyz` and a
-  liveness probe on `/livez` at the worker port.
+  startup and a liveness probe on `/livez` at the worker port.
   Give it `WORKER_ENABLED=true` when it shares the API's `ConfigMap`, which
   sets that key to false.
 
 ```yaml
+startupProbe:
+    httpGet:
+        path: /livez
+        port: 3000
+    periodSeconds: 5
+    failureThreshold: 24
 readinessProbe:
     httpGet:
         path: /readyz
@@ -256,4 +262,5 @@ the pod into a restart loop for as long as the database is down. As a
 readiness probe it marks the worker not ready, which surfaces the failure
 without killing the process, and the sweeps resume on the next tick once the
 database is back. `/livez` fails only for a hung pass, where a restart is what
-helps.
+helps. The startup probe keeps liveness from being evaluated before the
+listener is up, which happens only after the worker verified the schema.

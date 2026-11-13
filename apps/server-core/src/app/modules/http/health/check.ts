@@ -43,18 +43,38 @@ export function createDatabaseHealthCheck(
     let pending : Promise<boolean> | undefined;
     let last : { ok: boolean, at: number } | undefined;
 
-    const ping = () => new Promise<boolean>((resolve) => {
-        const timer = setTimeout(() => resolve(false), timeout);
+    // Tracked apart from the bounded answer: a query that outlives the
+    // timeout still holds its connection, so no second one is issued until
+    // it settles. Probes during a stall would otherwise pile queries onto
+    // the pool for as long as the stall lasts.
+    let query : Promise<boolean> | undefined;
 
-        timer.unref();
+    const ping = () => {
+        if (!query) {
+            const started = Promise.try(() => dataSource.query('SELECT 1'))
+                .then(() => true, () => false)
+                .finally(() => {
+                    if (query === started) {
+                        query = undefined;
+                    }
+                });
 
-        Promise.try(() => dataSource.query('SELECT 1'))
-            .then(() => true, () => false)
-            .then((ok) => {
+            query = started;
+        }
+
+        const current = query;
+
+        return new Promise<boolean>((resolve) => {
+            const timer = setTimeout(() => resolve(false), timeout);
+
+            timer.unref();
+
+            current.then((ok) => {
                 clearTimeout(timer);
                 resolve(ok);
             });
-    });
+        });
+    };
 
     return {
         name: 'database',

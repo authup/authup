@@ -26,7 +26,7 @@ const HEALTH_PATH = '/readyz';
 
 export function defineCLIHealthCheckCommand(options: ConfigReadFsOptions<AuthupConfig> = {}) {
     return defineCommand({
-        meta: { name: 'healthcheck', description: 'Probe GET /readyz on core.port (the API, or the worker health listener) and exit non-zero when it does not answer 200.' },
+        meta: { name: 'healthcheck', description: 'Probe GET /readyz on core.port (the API, or a worker whose health listener inherits that port) and exit non-zero when it does not answer 200.' },
         async setup() {
             const { tree } = await readConfigFileTree(options);
             const config = mergeSchemaData<AuthupConfig>(

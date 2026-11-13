@@ -52,8 +52,10 @@ The listener binds last, after database migrations and provisioning, so
 neither path answers while the process boots. Give an orchestrator a startup
 window that covers your longest migration:
 
-- Kubernetes: a `startupProbe` on `/readyz` whose `failureThreshold` times
-  `periodSeconds` exceeds it. Liveness is not evaluated until it passes.
+- Kubernetes: a `startupProbe` on `/livez` whose `failureThreshold` times
+  `periodSeconds` exceeds it. Liveness is not evaluated until it passes. Use
+  `/livez`, not `/readyz`: once the listener is up, a database outage must
+  not count against the startup window and restart the pod.
 - Docker: the image `HEALTHCHECK` allows ten retries ten seconds apart.
 
 Running migrations as their own step (`authup migration run`, with
@@ -84,7 +86,7 @@ Compose). A second signal during the delay exits immediately.
 ```yaml
 startupProbe:
     httpGet:
-        path: /readyz
+        path: /livez
         port: 3000
     periodSeconds: 5
     failureThreshold: 60

@@ -77,6 +77,35 @@ describe('app/modules/http/health', () => {
         expect(await result).toBeFalsy();
     });
 
+    it('should not issue another query while a timed-out one is still outstanding', async () => {
+        vi.useFakeTimers();
+
+        const stalled = Promise.withResolvers<unknown>();
+        const query = vi.fn().mockReturnValue(stalled.promise);
+        const check = createDatabaseHealthCheck({ query }, { timeout: 1_000, ttl: 1_000 });
+
+        for (let i = 0; i < 5; i++) {
+            const result = check.run();
+
+            await vi.advanceTimersByTimeAsync(1_000);
+            expect(await result).toBeFalsy();
+
+            // past the ttl, so the next probe is not served from the cache
+            await vi.advanceTimersByTimeAsync(1_001);
+        }
+
+        expect(query).toHaveBeenCalledTimes(1);
+
+        // once it settles, the next probe pings again
+        stalled.resolve([]);
+        await vi.advanceTimersByTimeAsync(1_001);
+
+        query.mockResolvedValue([]);
+
+        expect(await check.run()).toBeTruthy();
+        expect(query).toHaveBeenCalledTimes(2);
+    });
+
     it('should run one query for concurrent probes and reuse the result within the ttl', async () => {
         vi.useFakeTimers();
 

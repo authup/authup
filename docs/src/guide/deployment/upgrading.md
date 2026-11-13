@@ -21,7 +21,7 @@ Every listener (API, worker, consoles) answers `GET /livez` and `GET /readyz`; s
 - **The worker's `GET /` is deprecated.** It answers what `/readyz` answers and will be removed
   in v1.0.0.
 
-**Action required:** Point API probes at `/readyz` (readiness, startup) and `/livez` (liveness)
+**Action required:** Point API probes at `/readyz` (readiness) and `/livez` (liveness, startup)
 instead of `/`. Point worker probes at `/readyz`, and add a liveness probe on `/livez` if a
 hung sweep should restart the worker. A console's `/healthy` keeps working.
 
