@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-beta.76](https://github.com/authup/authup/compare/v1.0.0-beta.75...v1.0.0-beta.76) (2026-11-13)
+
+
+### Features
+
+* bound and abort client calls and token verification ([#3834](https://github.com/authup/authup/issues/3834)) ([9a6efdc](https://github.com/authup/authup/commit/9a6efdc02895c14c9a8994d3da71fec7cc6fd3b4))
+
 ## [1.0.0-beta.75](https://github.com/authup/authup/compare/v1.0.0-beta.74...v1.0.0-beta.75) (2026-11-12)
 
 

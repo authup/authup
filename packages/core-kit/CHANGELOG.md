@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.0.0-beta.76](https://github.com/authup/authup/compare/v1.0.0-beta.75...v1.0.0-beta.76) (2026-11-13)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([bea871f](https://github.com/authup/authup/commit/bea871f21bd2c5ec6517e1e15171a9bf7b9d425a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+    * @authup/kit bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+    * @authup/specs bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+
 ## [1.0.0-beta.75](https://github.com/authup/authup/compare/v1.0.0-beta.74...v1.0.0-beta.75) (2026-11-12)
 
 

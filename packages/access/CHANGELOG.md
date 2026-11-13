@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.0-beta.76](https://github.com/authup/authup/compare/v1.0.0-beta.75...v1.0.0-beta.76) (2026-11-13)
+
+
+### Bug Fixes
+
+* **server-core:** evaluate record policies on the full row and keep the candidate total ([#3832](https://github.com/authup/authup/issues/3832)) ([18043b7](https://github.com/authup/authup/commit/18043b725b82d78be4d55cedb73634cab7bad8a2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+    * @authup/kit bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+
 ## [1.0.0-beta.75](https://github.com/authup/authup/compare/v1.0.0-beta.74...v1.0.0-beta.75) (2026-11-12)
 
 
