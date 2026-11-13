@@ -93,6 +93,21 @@ if (api && api.getMany) {
 }
 ```
 
+### Cancel or bound a call
+
+Every API method ends with one optional options argument carrying `signal` and `timeout` (milliseconds, overrides the client's `timeout` for this call). Methods that already take options (`client.token.*`, `client.authorization.*`, `client.key.delete`, the authenticator challenge calls) accept the two keys in that object. `client.userInfo.get` does not take them yet.
+
+```typescript
+const controller = new AbortController();
+
+const { data: roles } = await client.role.getMany(
+    { pagination: { limit: 10 } },
+    { signal: controller.signal, timeout: 2_000 },
+);
+```
+
+An aborted call rejects with `code` `ECONNABORTED`, a timed-out one with `ETIMEDOUT` (`isClientErrorDueTimeout(e)`).
+
 ### Obtain a token
 
 `client.token` wraps the `/token` endpoint:
@@ -201,7 +216,7 @@ const fake = createFakeClient({
 });
 
 const { data } = await fake.user.getOne('1');
-// fake.requests lists every request: method, url, body, params, headers
+// fake.requests lists every request: method, url, body, params, headers, options (signal, timeout)
 ```
 
 - Handler keys are `'<METHOD> <path>'` with `:param` segments, or `'*'` as a catch-all.
@@ -232,6 +247,7 @@ const { data } = await fake.user.getOne('1');
 | `pickEntityAPI` | function | Resolve a sub-API by `EntityType` string |
 | `EntityAPIDispatch`, `ClientEntityAPIKey` | type | The per-verb optional surface `pickEntityAPI` returns, and the keys it accepts |
 | `EntityRecordResponse`, `EntityCollectionResponse` | type | The `{ data, meta }` response shapes |
+| `APIRequestOptions` | type | `{ signal?, timeout? }`, the trailing argument of every API method |
 | `EntityStatsQuery`, `EntityStatsResponse`, `buildStatsURL` | type, function | The `@stats` read |
 | `EntityQueryInput`, `buildQueryString` | type, function | The query input of every read and its URL serialization |
 | `UserAPI`, `RoleAPI`, `OAuth2TokenAPI`, `AuthorizationAPI`, ... | class | The sub-APIs, each with an `I*API` interface and `*CreatePayload` / `*UpdatePayload` types |
