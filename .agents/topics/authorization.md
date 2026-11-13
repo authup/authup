@@ -513,7 +513,8 @@ Defaults (declared in `app/modules/provisioning/sources/default/module.ts`):
     decides alone when given; the record's keys are read only without one. The engine
     gate is AND-only.
   - A per-row read check (a list's `post` loop, the user and client record reads) hands
-    `ATTRIBUTES` the row's whole default columns, whatever `fields=` asked for, and
+    `ATTRIBUTES` the row's whole default columns plus the columns its schema declares for
+    the check (`RECORD_CHECK_FIELDS`, the user's `email`), whatever `fields=` asked for, and
     `ATTRIBUTE_NAMES` the keys the response carries (topics/query.md). Judging the
     loaded columns instead would turn a field-level read gate into all-or-nothing.
   - permissionBinding -> `[PERMISSION_BINDING]`; IDENTITY deliberately NOT declared, so a
