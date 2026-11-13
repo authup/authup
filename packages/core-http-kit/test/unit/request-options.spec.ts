@@ -81,6 +81,7 @@ const METHODS : Record<string, MethodTable> = {
         createWithPassword: (o) => [{ username: 'admin', password: 'start123' }, o],
         createWithAuthorizationCode: (o) => [{ code: 'code', redirect_uri: 'https://app.test/cb' }, o],
         createWithDeviceCode: (o) => [{ device_code: 'dc' }, o],
+        pollWithDeviceCode: (o) => [{ device_code: 'dc', interval: 0.001 }, o],
         create: (o) => [{ grant_type: 'client_credentials' }, o],
         revoke: (o) => [{ token: 'tok' }, o],
         introspect: (o) => [{ token: 'tok' }, o],
@@ -116,6 +117,7 @@ const IGNORED : Record<string, Record<string, string>> = {
         buildRequestOptions: 'a @hapic/oauth2 helper, sends nothing',
         buildRequestTransformers: 'a @hapic/oauth2 helper, sends nothing',
         buildURLSearchParams: 'a @hapic/oauth2 helper, sends nothing',
+        pickDeviceCodeGrantParameters: 'a @hapic/oauth2 helper, sends nothing',
     },
     userInfo: { get: '@hapic/oauth2 UserInfoAPI.get takes no request options' },
 };
