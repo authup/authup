@@ -251,6 +251,14 @@ describe('core/entities/client/service', () => {
             ]);
 
             const actor = createAllowAllActor();
+            const evaluated: Record<string, any>[] = [];
+
+            actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
+                if (method === 'evaluateOneOf') {
+                    evaluated.push({ ...ctx.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES) });
+                }
+            });
+
             const spy = vi.spyOn(repository, 'findMany');
 
             const result = await service.getMany({ fields: 'id' }, actor);
@@ -262,7 +270,8 @@ describe('core/entities/client/service', () => {
 
             const data = actor.permissionEvaluator.evaluateOneOfCalls[0]!.data!;
 
-            expect(data.get<Client>(BuiltInPolicyType.ATTRIBUTES).name).toEqual(client.name);
+            expect(evaluated).toHaveLength(1);
+            expect(evaluated[0]).toHaveProperty('name', 'projected');
 
             // the fake repository answers a row with every seeded property;
             // of the columns a read loads, only the requested ones are named
@@ -316,6 +325,37 @@ describe('core/entities/client/service', () => {
     });
 
     describe('getOne', () => {
+        it('should evaluate the whole row of a projected read and answer the projection', async () => {
+            const entity = repository.seed(createFakeClient({ name: 'projected-record', realmId: randomUUID() }));
+            const actor = createAllowAllActor();
+            const evaluated: Record<string, any>[] = [];
+
+            actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
+                if (method === 'evaluateOneOf') {
+                    evaluated.push({ ...ctx.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES) });
+                }
+            });
+
+            const spy = vi.spyOn(repository, 'findOne');
+
+            const result = await service.getOne(entity.id, actor, { fields: 'displayName' });
+
+            const loaded = spy.mock.calls[0]![1]!.fields.value.map((field) => field.name);
+
+            expect([...loaded].sort()).toEqual([...readDefaultFieldNames(clientSchema)!].sort());
+            expect(loaded).not.toContain('secret');
+
+            const data = actor.permissionEvaluator.evaluateOneOfCalls[0]!.data!;
+            const defaults = readDefaultFieldNames(clientSchema)!;
+
+            expect(evaluated).toHaveLength(1);
+            expect(evaluated[0]).toHaveProperty('name', 'projected-record');
+            expect(data.get<string[]>(BuiltInPolicyType.ATTRIBUTE_NAMES).filter((item) => defaults.includes(item)).sort())
+                .toEqual(['displayName', 'id', 'realmId']);
+            expect(Object.keys(result).filter((item) => defaults.includes(item)).sort())
+                .toEqual(['displayName', 'id', 'realmId']);
+        });
+
         it('should return entity by id', async () => {
             const entity = repository.seed(createFakeClient({ name: 'test-client' }));
             const result = await service.getOne(entity.id, createAllowAllActor());

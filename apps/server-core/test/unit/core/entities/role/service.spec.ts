@@ -62,8 +62,21 @@ describe('core/entities/role/service', () => {
         });
 
         it('should evaluate the whole row of a projected read and answer the projection', async () => {
-            const [role] = repository.seed([createFakeRole({ realmId: randomUUID() })]);
+            repository.seed([createFakeRole({
+                name: 'projected', 
+                displayName: 'Projected', 
+                realmId: randomUUID(), 
+            })]);
+
             const actor = createAllowAllActor();
+            const evaluated: Record<string, any>[] = [];
+
+            actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
+                if (method === 'evaluateOneOf') {
+                    evaluated.push({ ...ctx.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES) });
+                }
+            });
+
             const spy = vi.spyOn(repository, 'findMany');
 
             const result = await service.getMany({ fields: 'id,description' }, actor);
@@ -76,10 +89,10 @@ describe('core/entities/role/service', () => {
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(1);
 
             const data = actor.permissionEvaluator.evaluateOneOfCalls[0]!.data!;
-            const attributes = data.get<Role>(BuiltInPolicyType.ATTRIBUTES);
 
-            expect(attributes.name).toEqual(role.name);
-            expect(attributes.displayName).toEqual(role.displayName);
+            expect(evaluated).toHaveLength(1);
+            expect(evaluated[0]).toHaveProperty('name', 'projected');
+            expect(evaluated[0]).toHaveProperty('displayName', 'Projected');
             expect([...data.get<string[]>(BuiltInPolicyType.ATTRIBUTE_NAMES)].sort())
                 .toEqual(['description', 'id', 'realmId']);
 

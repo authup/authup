@@ -33,6 +33,7 @@ import {
     readResponseAttributeNames,
     scopeReadQuery,
     trimReachCheckFields,
+    widenSparseRootProjection,
 } from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { userSchema } from './schema.ts';
@@ -184,15 +185,18 @@ export class UserService extends AbstractEntityService implements IUserService {
             await actor.permissionEvaluator.preEvaluateOneOf({ name: permissionNames });
         }
 
-        const entity = await this.repository.findOne(
-            idOrName,
+        // the record check below reads the whole default row, also when the
+        // key turns out not to name the actor's own row
+        const parsed = widenSparseRootProjection(
             await decodeQuery(query, {
                 schema: userSchema,
                 parameters: ['fields', 'relations'],
                 actor,
             }),
-            realmId,
+            userSchema,
+            ['realmId', 'id'],
         );
+        const entity = await this.repository.findOne(idOrName, parsed, realmId);
 
         if (!entity) {
             throw new EntityNotFoundError();
@@ -207,9 +211,14 @@ export class UserService extends AbstractEntityService implements IUserService {
             await evaluateRecordOneOf(actor.permissionEvaluator, {
                 name: permissionNames,
                 realm: entity.realmId,
-                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+                data: {
+                    [BuiltInPolicyType.ATTRIBUTES]: entity,
+                    [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, parsed),
+                },
             });
         }
+
+        trimReachCheckFields([entity], parsed);
 
         return entity;
     }

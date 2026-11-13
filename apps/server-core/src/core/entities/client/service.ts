@@ -43,6 +43,7 @@ import {
     readResponseAttributeNames,
     redactUnreachedRelations,
     scopeReadQuery,
+    widenSparseRootProjection,
 } from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { assertTokenExchangeAuthority } from '../client-token-exchange-capability/helpers.ts';
@@ -196,11 +197,17 @@ export class ClientService extends AbstractEntityService implements IClientServi
             await actor.permissionEvaluator.preEvaluateOneOf({ name: CLIENT_READ_PERMISSIONS });
         }
 
-        const parsed = await decodeQuery(query, {
-            schema: clientSchema,
-            parameters: ['fields', 'relations'],
-            actor,
-        });
+        // the record check below reads the whole default row, also when the
+        // key turns out not to name the actor's own row
+        const parsed = widenSparseRootProjection(
+            await decodeQuery(query, {
+                schema: clientSchema,
+                parameters: ['fields', 'relations'],
+                actor,
+            }),
+            clientSchema,
+            ['realmId', 'id'],
+        );
         const entity = await this.repository.findOne(idOrName, parsed, realmId);
 
         if (!entity) {
@@ -218,7 +225,10 @@ export class ClientService extends AbstractEntityService implements IClientServi
             await evaluateRecordOneOf(actor.permissionEvaluator, {
                 name: CLIENT_READ_PERMISSIONS,
                 realm: entity.realmId,
-                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+                data: {
+                    [BuiltInPolicyType.ATTRIBUTES]: entity,
+                    [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, parsed),
+                },
             });
         }
 

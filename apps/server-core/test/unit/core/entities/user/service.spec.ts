@@ -11,7 +11,17 @@ import {
     PermissionName,
 } from '@authup/core-kit';
 import type { Realm, User } from '@authup/core-kit';
-import { BuiltInPolicyType, PermissionError } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    PermissionError,
+    PermissionEvaluator,
+    PermissionMemoryProvider,
+    PolicyDefaultEvaluators,
+    PolicyEngine,
+    RealmScope,
+    definePolicyWithType,
+} from '@authup/access';
+import type { ActorContext } from '@authup/server-kit';
 import { eq } from '@rapiq/core';
 import { applyQuery } from '@rapiq/adapter-memory';
 import {
@@ -121,6 +131,14 @@ describe('core/entities/user/service', () => {
             ]);
 
             const actor = createSelfActor(selfUser.id);
+            const evaluated: Record<string, any>[] = [];
+
+            actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
+                if (method === 'evaluateOneOf') {
+                    evaluated.push({ ...ctx.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES) });
+                }
+            });
+
             const spy = vi.spyOn(repository, 'findMany');
 
             const result = await service.getMany({ fields: 'displayName' }, actor);
@@ -135,7 +153,9 @@ describe('core/entities/user/service', () => {
 
             const data = actor.permissionEvaluator.evaluateOneOfCalls[0]!.data!;
 
-            expect(data.get<User>(BuiltInPolicyType.ATTRIBUTES).name).toEqual(other.name);
+            expect(evaluated).toHaveLength(1);
+            expect(evaluated[0]).toHaveProperty('id', other.id);
+            expect(evaluated[0]).toHaveProperty('name', 'other');
 
             // the fake repository answers a row with every seeded property;
             // of the columns a read loads, only the requested ones are named
@@ -272,6 +292,92 @@ describe('core/entities/user/service', () => {
             const result = await service.getOne(userName, actor);
 
             expect(result.id).toBe(entity.id);
+        });
+
+        describe('field projection', () => {
+            // a read grant that withholds one column
+            const buildActor = (): ActorContext => ({
+                permissionEvaluator: new PermissionEvaluator({
+                    provider: new PermissionMemoryProvider([{
+                        permission: { name: PermissionName.USER_READ },
+                        realmScope: RealmScope.ANY,
+                        policies: [
+                            definePolicyWithType(BuiltInPolicyType.ATTRIBUTE_NAMES, {
+                                invert: true,
+                                names: ['lastName'],
+                            }),
+                        ],
+                    }]),
+                    policyEngine: new PolicyEngine(PolicyDefaultEvaluators),
+                }),
+            });
+
+            const seedUser = () => repository.seed(createFakeUser({ realmId: randomUUID() }));
+
+            it('should judge the fields a read answers, not the columns it loads', async () => {
+                const entity = seedUser();
+                const result = await service.getOne(entity.id, buildActor(), { fields: 'id,name' });
+
+                expect(result.id).toEqual(entity.id);
+                expect(result).not.toHaveProperty('lastName');
+            });
+
+            it('should refuse a read that asks for a withheld field', async () => {
+                const entity = seedUser();
+
+                await expect(service.getOne(entity.id, buildActor(), { fields: 'id,lastName' }))
+                    .rejects.toMatchObject({ code: ErrorCode.PERMISSION_EVALUATION_FAILED });
+            });
+
+            it('should refuse an unprojected read of a row carrying a withheld field', async () => {
+                const entity = seedUser();
+
+                await expect(service.getOne(entity.id, buildActor()))
+                    .rejects.toMatchObject({ code: ErrorCode.PERMISSION_EVALUATION_FAILED });
+            });
+
+            it('should evaluate the whole row and answer the projection', async () => {
+                const entity = seedUser();
+                const { lastName } = entity;
+                const actor = createAllowAllActor();
+                const evaluated: Record<string, any>[] = [];
+
+                actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
+                    if (method === 'evaluateOneOf') {
+                        evaluated.push({ ...ctx.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES) });
+                    }
+                });
+
+                const spy = vi.spyOn(repository, 'findOne');
+
+                const result = await service.getOne(entity.id, actor, { fields: 'displayName' });
+
+                const loaded = spy.mock.calls[0]![1]!.fields.value.map((field) => field.name);
+
+                expect([...loaded].sort()).toEqual([...readDefaultFieldNames(userSchema)!].sort());
+
+                const data = actor.permissionEvaluator.evaluateOneOfCalls[0]!.data!;
+                const defaults = readDefaultFieldNames(userSchema)!;
+
+                expect(evaluated).toHaveLength(1);
+                expect(evaluated[0]).toHaveProperty('lastName', lastName);
+                expect(data.get<string[]>(BuiltInPolicyType.ATTRIBUTE_NAMES).filter((name) => defaults.includes(name)).sort())
+                    .toEqual(['displayName', 'id', 'realmId']);
+                expect(Object.keys(result).filter((name) => defaults.includes(name)).sort())
+                    .toEqual(['displayName', 'id', 'realmId']);
+            });
+
+            it('should answer the projection of the own row', async () => {
+                const entity = seedUser();
+                const actor = createSelfActor(entity.id);
+
+                const result = await service.getOne(entity.id, actor, { fields: 'displayName' });
+                const defaults = readDefaultFieldNames(userSchema)!;
+
+                expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
+                expect(Object.keys(result).filter((name) => defaults.includes(name)).sort())
+                    .toEqual(['displayName', 'id', 'realmId']);
+            });
         });
 
         it('should require permission for non-self access', async () => {

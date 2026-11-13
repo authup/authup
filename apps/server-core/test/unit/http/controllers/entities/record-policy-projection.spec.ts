@@ -7,8 +7,9 @@
 
 import { BuiltInPolicyType, RealmScope } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
-import type { Role } from '@authup/core-kit';
+import type { Client, Role, User } from '@authup/core-kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
+import { ErrorCode } from '@authup/errors';
 import {
     afterAll,
     beforeAll,
@@ -17,7 +18,12 @@ import {
     it,
 } from 'vitest';
 import { createTestApplication } from '../../../../app';
-import { createFakeClient, createFakeRole, createFakeUser } from '../../../../utils';
+import {
+    createFakeClient,
+    createFakeRole,
+    createFakeUser,
+    expectClientError,
+} from '../../../../utils';
 
 /**
  * A record policy is evaluated on the row, whatever part of it the request
@@ -190,6 +196,93 @@ describe('record policy (field projection)', () => {
                 userId,
                 userRealmId: realmId,
             }]);
+        });
+    });
+
+    describe('user record', () => {
+        let reader: HTTPClient;
+        let withheld: User;
+        let readable: User;
+
+        beforeAll(async () => {
+            ({ data: withheld } = await suite.client.user.create({ ...createFakeUser(), realmId }));
+            ({ data: readable } = await suite.client.user.create({ ...createFakeUser(), realmId }));
+
+            reader = await createReader('record-policy-projection-user', PermissionName.USER_READ, {
+                name: 'record-policy-projection-user',
+                type: BuiltInPolicyType.ATTRIBUTES,
+                invert: false,
+                query: { name: { $ne: withheld.name } },
+            });
+        });
+
+        it('should refuse an unprojected and a projected read alike', async () => {
+            await expectClientError(
+                () => reader.user.getOne(withheld.id),
+                { status: 403, code: ErrorCode.PERMISSION_EVALUATION_FAILED },
+            );
+
+            await expectClientError(
+                () => reader.user.getOne(withheld.id, { fields: ['id', 'displayName'] }),
+                { status: 403, code: ErrorCode.PERMISSION_EVALUATION_FAILED },
+            );
+        });
+
+        it('should answer a readable row with the requested projection', async () => {
+            const { data } = await reader.user.getOne(readable.id, { fields: ['id', 'displayName'] });
+
+            expect(data).toEqual({
+                id: readable.id,
+                displayName: readable.displayName,
+                realmId,
+            });
+        });
+
+        it('should answer an unprojected read with the default row', async () => {
+            const { data } = await reader.user.getOne(readable.id);
+
+            expect(data.name).toEqual(readable.name);
+            expect(data).not.toHaveProperty('email');
+        });
+    });
+
+    describe('client record', () => {
+        let reader: HTTPClient;
+        let withheld: Client;
+        let readable: Client;
+
+        beforeAll(async () => {
+            ({ data: withheld } = await suite.client.client.create({ ...createFakeClient(), realmId }));
+            ({ data: readable } = await suite.client.client.create({ ...createFakeClient(), realmId }));
+
+            reader = await createReader('record-policy-projection-client', PermissionName.CLIENT_READ, {
+                name: 'record-policy-projection-client',
+                type: BuiltInPolicyType.ATTRIBUTES,
+                invert: false,
+                query: { name: { $ne: withheld.name } },
+            });
+        });
+
+        it('should refuse an unprojected and a projected read alike', async () => {
+            await expectClientError(
+                () => reader.client.getOne(withheld.id),
+                { status: 403, code: ErrorCode.PERMISSION_EVALUATION_FAILED },
+            );
+
+            await expectClientError(
+                () => reader.client.getOne(withheld.id, { fields: ['id', 'displayName'] }),
+                { status: 403, code: ErrorCode.PERMISSION_EVALUATION_FAILED },
+            );
+        });
+
+        it('should answer a readable row with the requested projection', async () => {
+            const { data } = await reader.client.getOne(readable.id, { fields: ['id', 'displayName'] });
+
+            expect(data).toEqual({
+                id: readable.id,
+                displayName: readable.displayName,
+                realmId,
+            });
         });
     });
 });
