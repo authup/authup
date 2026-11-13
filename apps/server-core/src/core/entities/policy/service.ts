@@ -30,7 +30,12 @@ import type { IRealmRepository } from '../realm/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import { PolicyAttributesValidator } from './attributes-validator.ts';
 import type { IPolicyRepository, IPolicyService } from './types.ts';
-import { decodeQuery, redactUnreachedRelations, scopeReadQuery } from '../../query/index.ts';
+import {
+    decodeQuery,
+    readResponseAttributeNames,
+    redactUnreachedRelations,
+    scopeReadQuery,
+} from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { policySchema } from './schema.ts';
 import { StaleRowSignal, assertRowUnchanged, retryOnStaleRow } from '../stale-row/index.ts';
@@ -69,7 +74,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
-        return scopeReadQuery(query, actor, { names: PERMISSION_NAMES });
+        return scopeReadQuery(query, actor, { names: PERMISSION_NAMES, schema: policySchema });
     }
 
     async getMany(
@@ -89,18 +94,18 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         }
 
         const data: Policy[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
                 name: PERMISSION_NAMES,
                 realm: entity.realmId,
-                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+                data: {
+                    [BuiltInPolicyType.ATTRIBUTES]: entity,
+                    [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, scope.query),
+                },
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
@@ -108,11 +113,8 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         }
 
         return {
-            data: await redactUnreachedRelations(data, parsed, policySchema, actor),
-            meta: {
-                ...meta,
-                total,
-            },
+            data: await redactUnreachedRelations(data, scope.query, policySchema, actor),
+            meta,
         };
     }
 

@@ -6,9 +6,16 @@
  */
 
 import type { ObjectLiteral, Parameter, Schema } from '@rapiq/core';
+import type { EntityType } from '@authup/core-kit';
 import type { ActorContext } from '@authup/server-kit';
 
 export type QueryParameter = `${Parameter}`;
+
+/**
+ * Per schema name, the columns outside the default row a per-row check
+ * loads next to it.
+ */
+export type RecordCheckFields = Partial<Record<`${EntityType}`, string[]>>;
 
 /**
  * Caller context threaded through the decode into every schema

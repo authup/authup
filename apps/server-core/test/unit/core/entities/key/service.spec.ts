@@ -108,7 +108,7 @@ describe('core/entities/key/service', () => {
             const result = await service.getMany({}, actor);
 
             expect(result.data).toHaveLength(1);
-            expect(result.meta.total).toEqual(1);
+            expect(result.meta.total).toEqual(2);
         });
 
         it('propagates a non-permission failure of the per-row realm gate', async () => {

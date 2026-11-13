@@ -24,7 +24,7 @@ import type {
     IEventRepository,
     IEventService,
 } from './types.ts';
-import { decodeQuery } from '../../query/index.ts';
+import { decodeQuery, readResponseAttributeNames, trimReachCheckFields } from '../../query/index.ts';
 import { eventSchema } from './schema.ts';
 import type { ReadScope } from '../../query/scope.ts';
 import { scopeReadQuery } from '../../query/scope.ts';
@@ -170,6 +170,8 @@ export class EventService extends AbstractEntityService implements IEventService
                 and(eq('actorId', actor.identity.data.id), eq('actorType', actor.identity.type)) :
                 null,
             selfService: true,
+            schema: eventSchema,
+            retain: ['actorId', 'actorType'],
         });
     }
 
@@ -192,7 +194,7 @@ export class EventService extends AbstractEntityService implements IEventService
         }
 
         const visibility = await this.resolveReadVisibility(actor);
-        const { data: entities, meta } = await this.repository.findMany(parsed, {
+        const { data: entities, meta } = await this.repository.findMany(scope.query, {
             ...realm,
             ...(visibility ? { visibility } : {}),
         });
@@ -209,7 +211,10 @@ export class EventService extends AbstractEntityService implements IEventService
             const reached = await reachesRecord(actor.permissionEvaluator, {
                 name: PermissionName.EVENT_READ,
                 realm: entity.realmId,
-                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+                data: {
+                    [BuiltInPolicyType.ATTRIBUTES]: entity,
+                    [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, scope.query),
+                },
             });
 
             if (reached) {
@@ -217,12 +222,11 @@ export class EventService extends AbstractEntityService implements IEventService
             }
         }
 
+        trimReachCheckFields(data, scope.query);
+
         return {
             data,
-            meta: {
-                ...meta,
-                total: meta.total - (entities.length - data.length),
-            },
+            meta,
         };
     }
 

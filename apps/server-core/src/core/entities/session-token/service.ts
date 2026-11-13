@@ -28,7 +28,13 @@ import type { Session, SessionToken } from '@authup/core-kit';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IOAuth2TokenRepository, ISessionTokenRepository  } from '../../oauth2/index.ts';
-import { appendQueryConditions, decodeQuery, redactUnreachedRelations } from '../../query/index.ts';
+import {
+    appendQueryConditions,
+    decodeQuery,
+    readResponseAttributeNames,
+    redactUnreachedRelations,
+    widenSparseRootProjection,
+} from '../../query/index.ts';
 import { sessionTokenSchema } from './schema.ts';
 import type { ISessionTokenService, SessionTokenDeleteManyResult } from './types.ts';
 
@@ -82,6 +88,7 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
         actor: ActorContext,
         name: `${PermissionName}`,
         entity: SessionToken,
+        attributeNames?: string[],
     ): Promise<void> {
         const session = entity.session as Session | undefined;
 
@@ -92,7 +99,10 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
         await evaluateRecord(actor.permissionEvaluator, {
             name,
             realm: session.realmId,
-            data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+            data: {
+                [BuiltInPolicyType.ATTRIBUTES]: entity,
+                ...(attributeNames ? { [BuiltInPolicyType.ATTRIBUTE_NAMES]: attributeNames } : {}),
+            },
         });
     }
 
@@ -101,9 +111,10 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
         actor: ActorContext,
         name: `${PermissionName}`,
         entity: SessionToken,
+        attributeNames?: string[],
     ): Promise<boolean> {
         try {
-            await this.evaluateToken(actor, name, entity);
+            await this.evaluateToken(actor, name, entity, attributeNames);
 
             return true;
         } catch (e) {
@@ -149,10 +160,11 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
             return { ...result, data: await redactUnreachedRelations(result.data, scoped, sessionTokenSchema, actor) };
         }
 
-        const { data: entities, meta } = await this.repository.findMany(parsed);
+        // the rows are evaluated one by one, each on its whole default row
+        const widened = widenSparseRootProjection(parsed, sessionTokenSchema);
+        const { data: entities, meta } = await this.repository.findMany(widened);
 
         const data: SessionToken[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             if (this.isOwnedBy(entity, actor)) {
@@ -161,9 +173,14 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
                 continue;
             }
 
-            if (!await this.reachesToken(actor, PermissionName.SESSION_READ, entity)) {
-                total -= 1;
+            const reached = await this.reachesToken(
+                actor,
+                PermissionName.SESSION_READ,
+                entity,
+                readResponseAttributeNames(entity, widened),
+            );
 
+            if (!reached) {
                 continue;
             }
 
@@ -171,11 +188,8 @@ export class SessionTokenService extends AbstractEntityService implements ISessi
         }
 
         return {
-            data: await redactUnreachedRelations(data, parsed, sessionTokenSchema, actor),
-            meta: {
-                ...meta,
-                total,
-            },
+            data: await redactUnreachedRelations(data, widened, sessionTokenSchema, actor),
+            meta,
         };
     }
 

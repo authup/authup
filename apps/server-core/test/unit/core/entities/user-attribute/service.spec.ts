@@ -111,7 +111,7 @@ describe('core/entities/user-attribute/service', () => {
 
             expect(result.data).toHaveLength(1);
             expect(result.data[0].name).toBe('mine');
-            expect(result.meta.total).toBe(1);
+            expect(result.meta.total).toBe(2);
         });
 
         it('should throw when actor lacks permission', async () => {

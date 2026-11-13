@@ -361,7 +361,7 @@ describe('ConsentService', () => {
             expect(data).toHaveLength(2);
             expect(data.some((consent) => consent.sub === userId)).toBe(true);
             expect(data.some((consent) => consent.id === foreign.id)).toBe(true);
-            expect(meta.total).toEqual(2);
+            expect(meta.total).toEqual(3);
         });
     });
 

@@ -25,7 +25,12 @@ import type { IRealmRepository } from '../realm/types.ts';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { IRoleRepository, IRoleService } from './types.ts';
 import { applyOwningClientRealm, findClientOwnedRowForSave } from '../client/owner-realm.ts';
-import { decodeQuery, scopeReadQuery } from '../../query/index.ts';
+import {
+    decodeQuery,
+    readResponseAttributeNames,
+    scopeReadQuery,
+    trimReachCheckFields,
+} from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { roleSchema } from './schema.ts';
 
@@ -55,7 +60,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
-        return scopeReadQuery(query, actor, { names: PERMISSION_NAMES });
+        return scopeReadQuery(query, actor, { names: PERMISSION_NAMES, schema: roleSchema });
     }
 
     async getMany(
@@ -75,30 +80,29 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         }
 
         const data: Role[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
                 name: PERMISSION_NAMES,
                 realm: entity.realmId,
-                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+                data: {
+                    [BuiltInPolicyType.ATTRIBUTES]: entity,
+                    [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, scope.query),
+                },
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
             data.push(entity);
         }
 
+        trimReachCheckFields(data, scope.query);
+
         return {
             data,
-            meta: {
-                ...meta,
-                total,
-            },
+            meta,
         };
     }
 

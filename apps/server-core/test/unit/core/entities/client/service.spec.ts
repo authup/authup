@@ -28,7 +28,9 @@ import {
     vi,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
+import { clientSchema } from '../../../../../src/core/entities/client/schema.ts';
 import { ClientService } from '../../../../../src/core/entities/client/service.ts';
+import { readDefaultFieldNames } from '../../../../../src/core/query/index.ts';
 import {
     FakePermissionEvaluator,
     createAllowAllActor,
@@ -146,7 +148,7 @@ describe('core/entities/client/service', () => {
             const result = await service.getMany({}, actor);
 
             expect(result.data.map((row) => row.name)).toEqual(['own']);
-            expect(result.meta.total).toBe(1);
+            expect(result.meta.total).toBe(2);
         });
 
         it('does not evaluate the secret gate for the default projection (secret unselected)', async () => {
@@ -237,6 +239,54 @@ describe('core/entities/client/service', () => {
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
 
+        it('should evaluate the whole row of a projected read without loading the secret', async () => {
+            const [client] = repository.seed([
+                createFakeClient({
+                    name: 'projected',
+                    secret: 'mysecret',
+                    secretEncrypted: false,
+                    secretHashed: false,
+                    realmId: randomUUID(),
+                }),
+            ]);
+
+            const actor = createAllowAllActor();
+            const evaluated: Record<string, any>[] = [];
+
+            actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
+                if (method === 'evaluateOneOf') {
+                    evaluated.push({ ...ctx.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES) });
+                }
+            });
+
+            const spy = vi.spyOn(repository, 'findMany');
+
+            const result = await service.getMany({ fields: 'id' }, actor);
+
+            const loaded = spy.mock.calls[0]![0].fields.value.map((field) => field.name);
+
+            expect([...loaded].sort()).toEqual([...readDefaultFieldNames(clientSchema)!].sort());
+            expect(loaded).not.toContain('secret');
+
+            const data = actor.permissionEvaluator.evaluateOneOfCalls[0]!.data!;
+
+            expect(evaluated).toHaveLength(1);
+            expect(evaluated[0]).toHaveProperty('name', 'projected');
+
+            // the fake repository answers a row with every seeded property;
+            // of the columns a read loads, only the requested ones are named
+            const defaults = readDefaultFieldNames(clientSchema)!;
+            const names = data.get<string[]>(BuiltInPolicyType.ATTRIBUTE_NAMES);
+
+            expect(names.filter((name) => defaults.includes(name)).sort())
+                .toEqual(['id', 'realmId']);
+
+            expect(result.data).toHaveLength(1);
+            expect(result.data[0]).not.toHaveProperty('name');
+            expect(result.data[0]).toHaveProperty('id', client.id);
+            expect(result.data[0]).toHaveProperty('realmId', client.realmId);
+        });
+
         it('should decrypt encrypted secrets that survived the projection gate', async () => {
             repository.seed([
                 createFakeClient({
@@ -252,6 +302,24 @@ describe('core/entities/client/service', () => {
 
             expect(result.data).toHaveLength(1);
             expect(result.data[0].secret).toEqual('plain-secret');
+        });
+
+        it('should decrypt encrypted secrets requested on their own', async () => {
+            repository.seed([
+                createFakeClient({
+                    name: 'encrypted-client',
+                    secret: await cipher.encrypt('plain-secret', cipherRealmId),
+                    secretEncrypted: true,
+                    secretHashed: false,
+                    realmId: cipherRealmId,
+                }),
+            ]);
+
+            const result = await service.getMany({ fields: 'secret' }, createAllowAllActor());
+
+            expect(result.data).toHaveLength(1);
+            expect(result.data[0].secret).toEqual('plain-secret');
+            expect(result.data[0]).not.toHaveProperty('secretEncrypted');
         });
 
         it('should not filter entities with hashed secrets', async () => {
@@ -275,6 +343,37 @@ describe('core/entities/client/service', () => {
     });
 
     describe('getOne', () => {
+        it('should evaluate the whole row of a projected read and answer the projection', async () => {
+            const entity = repository.seed(createFakeClient({ name: 'projected-record', realmId: randomUUID() }));
+            const actor = createAllowAllActor();
+            const evaluated: Record<string, any>[] = [];
+
+            actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
+                if (method === 'evaluateOneOf') {
+                    evaluated.push({ ...ctx.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES) });
+                }
+            });
+
+            const spy = vi.spyOn(repository, 'findOne');
+
+            const result = await service.getOne(entity.id, actor, { fields: 'displayName' });
+
+            const loaded = spy.mock.calls[0]![1]!.fields.value.map((field) => field.name);
+
+            expect([...loaded].sort()).toEqual([...readDefaultFieldNames(clientSchema)!].sort());
+            expect(loaded).not.toContain('secret');
+
+            const data = actor.permissionEvaluator.evaluateOneOfCalls[0]!.data!;
+            const defaults = readDefaultFieldNames(clientSchema)!;
+
+            expect(evaluated).toHaveLength(1);
+            expect(evaluated[0]).toHaveProperty('name', 'projected-record');
+            expect(data.get<string[]>(BuiltInPolicyType.ATTRIBUTE_NAMES).filter((item) => defaults.includes(item)).sort())
+                .toEqual(['displayName', 'id', 'realmId']);
+            expect(Object.keys(result).filter((item) => defaults.includes(item)).sort())
+                .toEqual(['displayName', 'id', 'realmId']);
+        });
+
         it('should return entity by id', async () => {
             const entity = repository.seed(createFakeClient({ name: 'test-client' }));
             const result = await service.getOne(entity.id, createAllowAllActor());
@@ -363,6 +462,20 @@ describe('core/entities/client/service', () => {
 
             expect(actor.permissionEvaluator.evaluateOneOfCalls.length).toBeGreaterThan(0);
             expect(result.secret).toEqual('plain-secret');
+        });
+
+        it('should decrypt an encrypted secret requested on its own', async () => {
+            const entity = repository.seed(createFakeClient({
+                secret: await cipher.encrypt('plain-secret', cipherRealmId),
+                secretEncrypted: true,
+                secretHashed: false,
+                realmId: cipherRealmId,
+            }));
+
+            const result = await service.getOne(entity.id, createAllowAllActor(), { fields: 'secret' });
+
+            expect(result.secret).toEqual('plain-secret');
+            expect(result).not.toHaveProperty('secretEncrypted');
         });
 
         it('should answer the row without the secret when its blob cannot be decrypted', async () => {

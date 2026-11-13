@@ -509,8 +509,14 @@ Defaults (declared in `app/modules/provisioning/sources/default/module.ts`):
   `{ success: false, pending: true }` instead of evaluating missing data. Built-ins:
   - identity -> `[IDENTITY]`; attributes -> `[ATTRIBUTES]`; date/time/composite -> none.
   - attributeNames -> none, reports pending itself (#3321): it settles against EITHER its
-    own `ATTRIBUTE_NAMES` key (a projection list) or the `ATTRIBUTES` record (both
-    enforced when both present); the engine gate is AND-only.
+    own `ATTRIBUTE_NAMES` key (a names list) or the `ATTRIBUTES` record's keys. The list
+    decides alone when given; the record's keys are read only without one. The engine
+    gate is AND-only.
+  - A per-row read check (a list's `post` loop, the user and client record reads) hands
+    `ATTRIBUTES` the row's whole default columns plus the columns its schema declares for
+    the check (`RECORD_CHECK_FIELDS`, the user's `email`), whatever `fields=` asked for, and
+    `ATTRIBUTE_NAMES` the keys the response carries (topics/query.md). Judging the
+    loaded columns instead would turn a field-level read gate into all-or-nothing.
   - permissionBinding -> `[PERMISSION_BINDING]`; IDENTITY deliberately NOT declared, so a
     missing identity is not evaluable and a scope-restricted bearer (`grants: []`) settles
     false; both fail the pre-gate.
@@ -571,8 +577,8 @@ expresses a pending policy as a rapiq `ICondition` over row attributes, opt-in v
 - The binding evaluator composes `and(reach, junctionPolicy)` per grant; a policy-free
   `any` grant settles true (admin fast path, `allow`); `none` reaches nothing.
 - `getMany` consumers: `deny` -> append `inArray('id', [])`; `conditional` ->
-  `appendQueryConditions` (exact pagination and totals); `post` -> per-row `evaluate` +
-  `total -= 1`.
+  `appendQueryConditions` (exact pagination and totals); `post` -> per-row `evaluate`,
+  `meta.total` left as the repository's candidate count.
 - Ownership alternatives compose service-side as `or(<ownership>, compiled.condition)`
   (ownership alone on `deny`): Session/Consent (`sub`+`subKind`), Event
   (`actorId`/`actorType`), User (`id`, user identity only), UserAttribute (`userId`,
@@ -587,10 +593,14 @@ expresses a pending policy as a rapiq `ICondition` over row attributes, opt-in v
 - `FakePermissionEvaluator.compile` defaults to `post`; override via `setCompileResult`.
 
 **The `post` verdict is approximate (#3595).** It fetches one page through the un-gated
-query and drops rows, so `meta.total` is an upper bound and a page may be shorter than
-`limit` (even empty) while later pages hold rows. Consumers must page to the end and not
-show `meta.total` as an accessible count. Ownership-alternative services skip the
-`or(...)` on `post`, widening the fetch further. `SessionTokenService.getMany` has the same
+query and drops rows. `meta.total` stays the candidate count: an upper bound on the
+accessible rows, on the same scale as `offset` and `limit`, so paging by it reaches every
+page; subtracting dropped rows would stop a client before pages that still hold rows. A
+page may be shorter than `limit` (even empty) while later pages hold rows. Consumers must
+page to the end and not show `meta.total` as an accessible count. The total and the page
+shape also tell a caller that candidate rows it cannot read match its filter, so `post` is
+a fallback, not a boundary: only a gate that runs as a condition hides them. Ownership-alternative
+services skip the `or(...)` on `post`, widening the fetch further. `SessionTokenService.getMany` has the same
 properties without calling `compile()` (its realm is `session.realmId`, a relation path
 `realmAttributeName` cannot express). Rejected:
 

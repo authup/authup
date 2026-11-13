@@ -5,6 +5,18 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
+## Next release (after v1.0.0-beta.75)
+
+### An `attributeNames` policy judges the names list when one is given
+
+The `attributeNames` policy of `@authup/access` reads the `attributeNames` policy data key
+(a list of field names) and, without one, the keys of the `attributes` record. With both keys
+present it evaluated the union of the two; it now evaluates the names list alone.
+
+**Action required:** A resource server that passes both `attributeNames` and `attributes` to
+its own evaluations and relied on the record's keys being checked as well passes the names it
+wants judged in `attributeNames`.
+
 ## v1.0.0-beta.75 (was: next release after v1.0.0-beta.74)
 
 ### The read cache opens its own Redis connection

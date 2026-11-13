@@ -467,8 +467,8 @@ describe('global-capable entities (realm isolation)', () => {
             const response = await run();
 
             expect(response.data, name).toHaveLength(0);
-            // the drop loop decrements the total it reports
-            expect(response.meta.total, name).toEqual(0);
+            // the drop loop keeps the candidate total
+            expect(response.meta.total, name).toEqual(1);
         }
     });
 

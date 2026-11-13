@@ -7,8 +7,9 @@
 
 import type { ActorContext } from '@authup/server-kit';
 import { inArray, or } from '@rapiq/core';
-import type { ICondition, IQuery } from '@rapiq/core';
+import type { ICondition, IQuery, Schema } from '@rapiq/core';
 import { appendQueryConditions } from './module.ts';
+import { widenSparseRootProjection } from './projection.ts';
 
 export type ReadScopeOptions = {
     /**
@@ -34,12 +35,25 @@ export type ReadScopeOptions = {
      * The row's realm column when it is not `realmId`.
      */
     realmAttributeName?: string,
+    /**
+     * The schema of the rows. With it a `post` verdict answers a query whose
+     * sparse projection is widened to the whole default row
+     * (`widenSparseRootProjection`), since the caller evaluates each row; the
+     * caller trims the rows it returns (`trimReachCheckFields`).
+     */
+    schema?: Schema<any>,
+    /**
+     * The columns besides the realm column the repository loads for every
+     * read. They stay in the response of a widened read.
+     */
+    retain?: string[],
 };
 
 /**
  * A read query with the actor's reach applied. `post` means the reach did
  * not lower: the query is returned unscoped and the caller decides, a list
- * by evaluating each row, a grouped count by narrowing to the ownership term
+ * by evaluating each row (on its whole default row when the gate was given
+ * the schema), a grouped count by narrowing to the ownership term
  * (`narrowReadScope`).
  */
 export type ReadScope = {
@@ -119,7 +133,12 @@ export async function scopeReadQuery(
             };
         default:
             return {
-                query,
+                query: options.schema ?
+                    widenSparseRootProjection(query, options.schema, [
+                        options.realmAttributeName ?? 'realmId',
+                        ...(options.retain ?? []),
+                    ]) :
+                    query,
                 post: true,
                 ownership,
             };

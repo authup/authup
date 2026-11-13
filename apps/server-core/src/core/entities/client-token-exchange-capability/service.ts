@@ -22,7 +22,13 @@ import { ValidatorGroup } from '@authup/kit';
 import { inArray } from '@rapiq/core';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
 import { AbstractEntityService } from '@authup/server-kit';
-import { appendQueryConditions, decodeQuery, redactUnreachedRelations } from '../../query/index.ts';
+import {
+    appendQueryConditions,
+    decodeQuery,
+    readResponseAttributeNames,
+    redactUnreachedRelations,
+    widenSparseRootProjection,
+} from '../../query/index.ts';
 import { assertRowUnchanged, retryOnStaleRow } from '../stale-row/index.ts';
 import { assertCapabilitySubjectRealmReach } from './helpers.ts';
 import { clientTokenExchangeCapabilitySchema } from './schema.ts';
@@ -63,6 +69,9 @@ export class ClientTokenExchangeCapabilityService extends AbstractEntityService 
             parsed = appendQueryConditions(parsed, inArray('id', []));
         } else if (compiled.verdict === 'conditional') {
             parsed = appendQueryConditions(parsed, compiled.condition);
+        } else if (compiled.verdict === 'post') {
+            // the rows are evaluated one by one, each on its whole default row
+            parsed = widenSparseRootProjection(parsed, clientTokenExchangeCapabilitySchema, ['realmId']);
         }
 
         const { data: entities, meta } = await this.repository.findMany(parsed);
@@ -72,18 +81,18 @@ export class ClientTokenExchangeCapabilityService extends AbstractEntityService 
         }
 
         const data: ClientTokenExchangeCapability[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
                 name: READ_PERMISSION_NAMES,
                 realm: entity.realmId,
-                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+                data: {
+                    [BuiltInPolicyType.ATTRIBUTES]: entity,
+                    [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, parsed),
+                },
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
@@ -92,7 +101,7 @@ export class ClientTokenExchangeCapabilityService extends AbstractEntityService 
 
         return {
             data: await redactUnreachedRelations(data, parsed, clientTokenExchangeCapabilitySchema, actor),
-            meta: { ...meta, total },
+            meta,
         };
     }
 

@@ -38,7 +38,13 @@ import { isRealmCipherBlob, isRealmCipherBlobError } from '../../key/index.ts';
 import type { IRealmCipher } from '../../key/index.ts';
 import type { ClientSecretRotateResult, IClientRepository, IClientService } from './types.ts';
 import { CLIENT_READ_PERMISSIONS } from './constants.ts';
-import { decodeQuery, redactUnreachedRelations, scopeReadQuery } from '../../query/index.ts';
+import {
+    decodeQuery,
+    readResponseAttributeNames,
+    redactUnreachedRelations,
+    scopeReadQuery,
+    widenSparseRootProjection,
+} from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { assertTokenExchangeAuthority } from '../client-token-exchange-capability/helpers.ts';
 import type { IClientTokenExchangeCapabilityRepository } from '../client-token-exchange-capability/types.ts';
@@ -124,7 +130,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
-        return scopeReadQuery(query, actor, { names: CLIENT_READ_PERMISSIONS });
+        return scopeReadQuery(query, actor, { names: CLIENT_READ_PERMISSIONS, schema: clientSchema });
     }
 
     async getMany(
@@ -143,7 +149,6 @@ export class ClientService extends AbstractEntityService implements IClientServi
         const { data: entities, meta } = await this.repository.findMany(scope.query);
 
         let data = entities;
-        let { total } = meta;
 
         if (scope.post) {
             data = [];
@@ -152,12 +157,13 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
                     name: CLIENT_READ_PERMISSIONS,
                     realm: entity.realmId,
-                    data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+                    data: {
+                        [BuiltInPolicyType.ATTRIBUTES]: entity,
+                        [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, scope.query),
+                    },
                 });
 
                 if (!reached) {
-                    total -= 1;
-
                     continue;
                 }
 
@@ -165,10 +171,12 @@ export class ClientService extends AbstractEntityService implements IClientServi
             }
         }
 
-        await redactUnreachedRelations(data, scope.query, clientSchema, actor);
+        // before the trim: the secret is decrypted by the row's encryption
+        // flag, which the read may carry only for the check
         await Promise.all(data.map((entity) => this.revealSecret(entity)));
+        await redactUnreachedRelations(data, scope.query, clientSchema, actor);
 
-        return { data, meta: { ...meta, total } };
+        return { data, meta };
     }
 
     async getOne(
@@ -188,11 +196,17 @@ export class ClientService extends AbstractEntityService implements IClientServi
             await actor.permissionEvaluator.preEvaluateOneOf({ name: CLIENT_READ_PERMISSIONS });
         }
 
-        const parsed = await decodeQuery(query, {
-            schema: clientSchema,
-            parameters: ['fields', 'relations'],
-            actor,
-        });
+        // the record check below reads the whole default row, also when the
+        // key turns out not to name the actor's own row
+        const parsed = widenSparseRootProjection(
+            await decodeQuery(query, {
+                schema: clientSchema,
+                parameters: ['fields', 'relations'],
+                actor,
+            }),
+            clientSchema,
+            ['realmId', 'id'],
+        );
         const entity = await this.repository.findOne(idOrName, parsed, realmId);
 
         if (!entity) {
@@ -210,12 +224,15 @@ export class ClientService extends AbstractEntityService implements IClientServi
             await evaluateRecordOneOf(actor.permissionEvaluator, {
                 name: CLIENT_READ_PERMISSIONS,
                 realm: entity.realmId,
-                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+                data: {
+                    [BuiltInPolicyType.ATTRIBUTES]: entity,
+                    [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, parsed),
+                },
             });
         }
 
-        await redactUnreachedRelations([entity], parsed, clientSchema, actor);
         await this.revealSecret(entity);
+        await redactUnreachedRelations([entity], parsed, clientSchema, actor);
 
         return entity;
     }

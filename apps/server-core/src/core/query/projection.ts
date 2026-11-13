@@ -5,16 +5,32 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isObject } from '@authup/kit';
-import { Field } from '@rapiq/core';
+import { flattenObject, isObject } from '@authup/kit';
+import {
+    Field,
+    Fields,
+    Query,
+    isGroupedQuery,
+} from '@rapiq/core';
 import type { IQuery, Schema } from '@rapiq/core';
+import { EntityType } from '@authup/core-kit';
+import type { RecordCheckFields } from './types.ts';
 
 /**
- * A relation column a sparse `fields[relation]` projection did not ask for,
- * loaded only so the per-row reach check of that relation sees the whole
- * row. Removed again by {@link trimReachCheckFields} once the check ran.
+ * A column a sparse `fields` projection did not ask for, loaded only so the
+ * per-row check of its row sees the whole row. Removed again by
+ * {@link trimReachCheckFields} once the check ran.
  */
 export class ReachCheckField extends Field {}
+
+/**
+ * The columns a per-row check reads although no unprojected read loads them:
+ * a policy can be written against such a column, so the check must see its
+ * value. Declared one by one, never derived from a schema's allowed list,
+ * which also names columns no check may load (a gated secret, key material).
+ * A schema named here declares its default columns.
+ */
+export const RECORD_CHECK_FIELDS: RecordCheckFields = { [EntityType.USER]: ['email'] };
 
 /**
  * The columns an unprojected join of the schema loads (its defaults, else
@@ -76,4 +92,85 @@ export function trimReachCheckFields(rows: Record<string, any>[], query: IQuery)
 
         trimPath(rows, segments, column);
     }
+}
+
+/**
+ * Widen a root projection to the schema's whole default row plus the columns
+ * {@link RECORD_CHECK_FIELDS} declares for it, so a per-row check evaluates
+ * the row rather than the requested part of it: a column the read left out
+ * would read as null there. An unprojected read carries its default columns
+ * already and gains the declared ones. The added columns are
+ * {@link ReachCheckField}s, removed again after the check. A column in
+ * `retain` is one the repository loads for every read and the response
+ * carries; it is added as a requested column. A grouped query has no rows to
+ * check and is returned as is.
+ */
+export function widenSparseRootProjection(
+    query: IQuery,
+    schema: Schema<any>,
+    retain: string[] = [],
+): IQuery {
+    if (!query.fields || query.fields.value.length === 0 || isGroupedQuery(query)) {
+        return query;
+    }
+
+    const requested = new Set<string>();
+
+    for (const field of query.fields.value) {
+        if (!field.name.includes('.')) {
+            requested.add(field.name);
+        }
+    }
+
+    const added: Field[] = [];
+
+    for (const name of readDefaultFieldNames(schema) ?? []) {
+        if (requested.has(name)) {
+            continue;
+        }
+
+        added.push(retain.includes(name) ? new Field(name) : new ReachCheckField(name));
+    }
+
+    for (const name of RECORD_CHECK_FIELDS[schema.name as `${EntityType}`] ?? []) {
+        if (!requested.has(name)) {
+            added.push(new ReachCheckField(name));
+        }
+    }
+
+    if (added.length === 0) {
+        return query;
+    }
+
+    return new Query({
+        fields: new Fields([...query.fields.value, ...added]),
+        filters: query.filters,
+        relations: query.relations,
+        pagination: query.pagination,
+        sorts: query.sorts,
+        groups: query.groups,
+        aggregates: query.aggregates,
+    });
+}
+
+/**
+ * The attribute names of the row as the response carries it: its flattened
+ * keys without the {@link ReachCheckField} columns of the query.
+ */
+export function readResponseAttributeNames(row: Record<string, any>, query: IQuery): string[] {
+    const names = Object.keys(flattenObject(row));
+
+    if (!query.fields) {
+        return names;
+    }
+
+    const added = query.fields.value
+        .filter((field) => field instanceof ReachCheckField)
+        .map((field) => field.name);
+
+    if (added.length === 0) {
+        return names;
+    }
+
+    return names.filter((name) => added.every((item) => !(name === item || name.startsWith(`${item}.`))));
 }

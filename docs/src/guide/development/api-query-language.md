@@ -135,8 +135,12 @@ was not readable would be unusable for a caller whose permissions vary by row.
 `page[limit]` and `page[offset]`. A limit above the entity's maximum is
 **clamped, not rejected**, so a client asking for 5000 rows receives the
 maximum and has to page. The response's `meta.total` is the count before
-pagination, and it is exact: authorization runs as a `WHERE` clause rather than
-as a post-filter wherever it can be expressed as one.
+pagination, and it is exact wherever authorization can run as a `WHERE` clause.
+Where a policy cannot be expressed as one, the rows of a page are checked one by
+one and `meta.total` stays the count of candidate rows: an upper bound on what
+the caller may read, on the same scale as `page[offset]`. A page may then hold
+fewer rows than the limit, or none, while later pages still hold rows, so page
+until `page[offset]` passes `meta.total`.
 
 ## Grouped reads: group and aggregate
 

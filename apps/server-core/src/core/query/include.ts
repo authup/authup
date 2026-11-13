@@ -181,8 +181,10 @@ function collectRelationPaths(query: IQuery): string[] {
  * actor's own identity, while a conditional or non-lowerable verdict
  * evaluates each distinct joined row once. The parent row stays: its own
  * gate already passed. Dotted filter and sort keys through such a relation
- * are pruned at decode time (`pruneUnreachedRelationKeys`). Call it on every
- * read that answers a caller with a decoded query.
+ * are pruned at decode time (`pruneUnreachedRelationKeys`). The columns a
+ * check loaded beyond the requested projection are removed last, those of
+ * the rows themselves included. Call it on every read that answers a caller
+ * with a decoded query.
  */
 export async function redactUnreachedRelations<T extends Record<string, any>>(
     rows: T[],
@@ -190,16 +192,18 @@ export async function redactUnreachedRelations<T extends Record<string, any>>(
     schema: Schema<any>,
     actor: ActorContext,
 ): Promise<T[]> {
-    const paths = collectRelationPaths(query);
-
-    if (paths.length === 0 || rows.length === 0) {
+    if (rows.length === 0) {
         return rows;
     }
 
-    await redactLevel(rows, paths, schema, actor, {
-        compiled: new Map(),
-        rows: new Map(),
-    });
+    const paths = collectRelationPaths(query);
+
+    if (paths.length > 0) {
+        await redactLevel(rows, paths, schema, actor, {
+            compiled: new Map(),
+            rows: new Map(),
+        });
+    }
 
     trimReachCheckFields(rows, query);
 

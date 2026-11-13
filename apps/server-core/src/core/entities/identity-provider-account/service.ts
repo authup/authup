@@ -18,7 +18,13 @@ import {
 import { AbstractEntityService } from '@authup/server-kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
 import { eq, inArray, or } from '@rapiq/core';
-import { appendQueryConditions, decodeQuery } from '../../query/index.ts';
+import {
+    appendQueryConditions,
+    decodeQuery,
+    readResponseAttributeNames,
+    trimReachCheckFields,
+    widenSparseRootProjection,
+} from '../../query/index.ts';
 import type { IUserIdentityRepository } from '../../identity/entities/user/types.ts';
 import type { EventRequestContext, IEventService } from '../event/index.ts';
 import { IdentityProviderAccountUnlinkBlockedError } from './error.ts';
@@ -118,10 +124,11 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
             return this.repository.findMany(scoped, repositoryOptions);
         }
 
-        const { data: entities, meta } = await this.repository.findMany(parsed, repositoryOptions);
+        // the rows are evaluated one by one, each on its whole default row
+        const widened = widenSparseRootProjection(parsed, identityProviderAccountSchema, ['userRealmId', 'userId']);
+        const { data: entities, meta } = await this.repository.findMany(widened, repositoryOptions);
 
         const data: IdentityProviderAccount[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             if (this.isOwnedBy(entity, actor)) {
@@ -133,19 +140,22 @@ export class IdentityProviderAccountService extends AbstractEntityService implem
             const reached = await reachesRecord(actor.permissionEvaluator, {
                 name: PermissionName.IDENTITY_PROVIDER_ACCOUNT_READ,
                 realm: entity.userRealmId,
-                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+                data: {
+                    [BuiltInPolicyType.ATTRIBUTES]: entity,
+                    [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, widened),
+                },
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
             data.push(entity);
         }
 
-        return { data, meta: { ...meta, total } };
+        trimReachCheckFields(data, widened);
+
+        return { data, meta };
     }
 
     async getOne(

@@ -22,7 +22,13 @@ import { applyJunctionCreateGrant, buildJunctionUpdateData } from '../../identit
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
 import type { IClientPermissionRepository, IClientPermissionService } from './types.ts';
-import { appendQueryConditions, decodeQuery, redactUnreachedRelations } from '../../query/index.ts';
+import {
+    appendQueryConditions,
+    decodeQuery,
+    readResponseAttributeNames,
+    redactUnreachedRelations,
+    widenSparseRootProjection,
+} from '../../query/index.ts';
 import { clientPermissionSchema } from './schema.ts';
 
 const READ_PERMISSION_NAMES = [
@@ -74,6 +80,9 @@ export class ClientPermissionService extends JunctionEntityService implements IC
             parsed = appendQueryConditions(parsed, inArray('id', []));
         } else if (compiled.verdict === 'conditional') {
             parsed = appendQueryConditions(parsed, compiled.condition);
+        } else if (compiled.verdict === 'post') {
+            // the rows are evaluated one by one, each on its whole default row
+            parsed = widenSparseRootProjection(parsed, clientPermissionSchema, [this.ownerRealmKey]);
         }
 
         const { data: entities, meta } = await this.repository.findMany(parsed);
@@ -83,25 +92,25 @@ export class ClientPermissionService extends JunctionEntityService implements IC
         }
 
         const data: ClientPermission[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
                 name: READ_PERMISSION_NAMES,
                 realm: this.junctionResourceRealm(entity),
-                data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
+                data: {
+                    [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
+                    [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, parsed),
+                },
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
             data.push(entity);
         }
 
-        return { data: await redactUnreachedRelations(data, parsed, clientPermissionSchema, actor), meta: { ...meta, total } };
+        return { data: await redactUnreachedRelations(data, parsed, clientPermissionSchema, actor), meta };
     }
 
     async getOne(

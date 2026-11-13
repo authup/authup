@@ -11,6 +11,7 @@ export * from './filters.ts';
 export * from './hash.ts';
 export * from './include.ts';
 export * from './module.ts';
+export * from './projection.ts';
 export * from './reach.ts';
 export * from './relations.ts';
 export * from './scope.ts';

@@ -25,7 +25,13 @@ import { AbstractEntityService } from '@authup/server-kit';
 import type { IRealmRepository } from '../realm/types.ts';
 import type { IPathRepository, IPathService, PathReadOptions } from './types.ts';
 import { assertPathBounds, buildPathForParent } from './helpers.ts';
-import { appendQueryConditions, decodeQuery, scopeReadQuery } from '../../query/index.ts';
+import {
+    appendQueryConditions,
+    decodeQuery,
+    readResponseAttributeNames,
+    scopeReadQuery,
+    trimReachCheckFields,
+} from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { pathSchema } from './schema.ts';
 import { StaleRowSignal, assertRowUnchanged, retryOnStaleRow } from '../stale-row/index.ts';
@@ -56,7 +62,7 @@ export class PathService extends AbstractEntityService implements IPathService {
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
-        return scopeReadQuery(query, actor, { names: PERMISSION_NAMES });
+        return scopeReadQuery(query, actor, { names: PERMISSION_NAMES, schema: pathSchema });
     }
 
     async getMany(
@@ -87,30 +93,29 @@ export class PathService extends AbstractEntityService implements IPathService {
         }
 
         const data: Path[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
                 name: PERMISSION_NAMES,
                 realm: entity.realmId,
-                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+                data: {
+                    [BuiltInPolicyType.ATTRIBUTES]: entity,
+                    [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, scope.query),
+                },
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
             data.push(entity);
         }
 
+        trimReachCheckFields(data, scope.query);
+
         return {
             data,
-            meta: {
-                ...meta,
-                total,
-            },
+            meta,
         };
     }
 

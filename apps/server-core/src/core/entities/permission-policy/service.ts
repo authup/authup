@@ -19,7 +19,13 @@ import type { PermissionPolicy } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
 import type { IPermissionPolicyRepository, IPermissionPolicyService } from './types.ts';
-import { appendQueryConditions, decodeQuery, redactUnreachedRelations } from '../../query/index.ts';
+import {
+    appendQueryConditions,
+    decodeQuery,
+    readResponseAttributeNames,
+    redactUnreachedRelations,
+    widenSparseRootProjection,
+} from '../../query/index.ts';
 import { permissionPolicySchema } from './schema.ts';
 import { isRealmReachable } from '../realm/helpers.ts';
 
@@ -64,6 +70,9 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
             parsed = appendQueryConditions(parsed, inArray('id', []));
         } else if (compiled.verdict === 'conditional') {
             parsed = appendQueryConditions(parsed, compiled.condition);
+        } else if (compiled.verdict === 'post') {
+            // the rows are evaluated one by one, each on its whole default row
+            parsed = widenSparseRootProjection(parsed, permissionPolicySchema, [this.ownerRealmKey]);
         }
 
         const { data: entities, meta } = await this.repository.findMany(parsed);
@@ -73,25 +82,25 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
         }
 
         const data: PermissionPolicy[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
                 name: READ_PERMISSION_NAMES,
                 realm: this.junctionResourceRealm(entity),
-                data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
+                data: {
+                    [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
+                    [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, parsed),
+                },
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
             data.push(entity);
         }
 
-        return { data: await redactUnreachedRelations(data, parsed, permissionPolicySchema, actor), meta: { ...meta, total } };
+        return { data: await redactUnreachedRelations(data, parsed, permissionPolicySchema, actor), meta };
     }
 
     async getOne(

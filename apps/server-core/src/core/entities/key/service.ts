@@ -49,7 +49,13 @@ import type {
     KeyDeleteOptions,
     KeyServiceReadOptions,
 } from './types.ts';
-import { appendQueryConditions, decodeQuery, scopeReadQuery } from '../../query/index.ts';
+import {
+    appendQueryConditions,
+    decodeQuery,
+    readResponseAttributeNames,
+    scopeReadQuery,
+    trimReachCheckFields,
+} from '../../query/index.ts';
 import type { ReadScope } from '../../query/index.ts';
 import { keySchema } from './schema.ts';
 
@@ -87,7 +93,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
-        return scopeReadQuery(query, actor, { names: PERMISSION_NAMES });
+        return scopeReadQuery(query, actor, { names: PERMISSION_NAMES, schema: keySchema });
     }
 
     async getMany(
@@ -119,18 +125,18 @@ export class KeyService extends AbstractEntityService implements IKeyService {
         }
 
         const data: Key[] = [];
-        let { total } = meta;
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
                 name: PERMISSION_NAMES,
                 realm: entity.realmId,
-                data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
+                data: {
+                    [BuiltInPolicyType.ATTRIBUTES]: entity,
+                    [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, scope.query),
+                },
             });
 
             if (!reached) {
-                total -= 1;
-
                 continue;
             }
 
@@ -138,12 +144,11 @@ export class KeyService extends AbstractEntityService implements IKeyService {
             data.push(entity);
         }
 
+        trimReachCheckFields(data, scope.query);
+
         return {
             data,
-            meta: {
-                ...meta,
-                total,
-            },
+            meta,
         };
     }
 

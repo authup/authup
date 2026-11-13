@@ -11,7 +11,17 @@ import {
     PermissionName,
 } from '@authup/core-kit';
 import type { Realm, User } from '@authup/core-kit';
-import { BuiltInPolicyType, PermissionError } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    PermissionError,
+    PermissionEvaluator,
+    PermissionMemoryProvider,
+    PolicyDefaultEvaluators,
+    PolicyEngine,
+    RealmScope,
+    definePolicyWithType,
+} from '@authup/access';
+import type { ActorContext } from '@authup/server-kit';
 import { eq } from '@rapiq/core';
 import { applyQuery } from '@rapiq/adapter-memory';
 import {
@@ -22,7 +32,9 @@ import {
     vi,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
+import { userSchema } from '../../../../../src/core/entities/user/schema.ts';
 import { UserService } from '../../../../../src/core/entities/user/service.ts';
+import { readDefaultFieldNames } from '../../../../../src/core/query/index.ts';
 import {
     FakePermissionEvaluator,
     createAllowAllActor,
@@ -112,6 +124,55 @@ describe('core/entities/user/service', () => {
             expect(result.data[0].id).toBe(selfUser.id);
         });
 
+        it('should evaluate the whole row of a projected read and answer the projection', async () => {
+            const [selfUser, other] = repository.seed([
+                createFakeUser({ name: 'self', realmId: randomUUID() }),
+                createFakeUser({ name: 'other', realmId: randomUUID() }),
+            ]);
+
+            const actor = createSelfActor(selfUser.id);
+            const evaluated: Record<string, any>[] = [];
+
+            actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
+                if (method === 'evaluateOneOf') {
+                    evaluated.push({ ...ctx.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES) });
+                }
+            });
+
+            const spy = vi.spyOn(repository, 'findMany');
+
+            const result = await service.getMany({ fields: 'displayName' }, actor);
+
+            const loaded = spy.mock.calls[0]![0].fields.value.map((field) => field.name);
+
+            // the default row plus the column declared for the check
+            expect([...loaded].sort()).toEqual([...readDefaultFieldNames(userSchema)!, 'email'].sort());
+
+            // the own row is kept without an evaluation
+            expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(1);
+
+            const data = actor.permissionEvaluator.evaluateOneOfCalls[0]!.data!;
+
+            expect(evaluated).toHaveLength(1);
+            expect(evaluated[0]).toHaveProperty('id', other.id);
+            expect(evaluated[0]).toHaveProperty('name', 'other');
+
+            // the fake repository answers a row with every seeded property;
+            // of the columns a read loads, only the requested ones are named
+            const defaults = readDefaultFieldNames(userSchema)!;
+            const names = data.get<string[]>(BuiltInPolicyType.ATTRIBUTE_NAMES);
+
+            expect(names.filter((name) => defaults.includes(name)).sort())
+                .toEqual(['displayName', 'id', 'realmId']);
+
+            expect(result.data).toHaveLength(2);
+
+            for (const row of result.data) {
+                expect(Object.keys(row).filter((name) => defaults.includes(name)).sort())
+                    .toEqual(['displayName', 'id', 'realmId']);
+            }
+        });
+
         it('should filter out other users on per-record permission failure', async () => {
             repository.seed([createFakeUser({ name: 'other' })]);
 
@@ -122,7 +183,7 @@ describe('core/entities/user/service', () => {
             const result = await service.getMany({}, actor);
 
             expect(result.data).toHaveLength(0);
-            expect(result.meta.total).toBe(0);
+            expect(result.meta.total).toBe(1);
         });
 
         it('should propagate a non-permission failure of the per-record check', async () => {
@@ -231,6 +292,98 @@ describe('core/entities/user/service', () => {
             const result = await service.getOne(userName, actor);
 
             expect(result.id).toBe(entity.id);
+        });
+
+        describe('field projection', () => {
+            // a read grant that withholds one column
+            const buildActor = (): ActorContext => ({
+                permissionEvaluator: new PermissionEvaluator({
+                    provider: new PermissionMemoryProvider([{
+                        permission: { name: PermissionName.USER_READ },
+                        realmScope: RealmScope.ANY,
+                        policies: [
+                            definePolicyWithType(BuiltInPolicyType.ATTRIBUTE_NAMES, {
+                                invert: true,
+                                names: ['lastName'],
+                            }),
+                        ],
+                    }]),
+                    policyEngine: new PolicyEngine(PolicyDefaultEvaluators),
+                }),
+            });
+
+            const seedUser = () => repository.seed(createFakeUser({ realmId: randomUUID() }));
+
+            it('should judge the fields a read answers, not the columns it loads', async () => {
+                const entity = seedUser();
+                const result = await service.getOne(entity.id, buildActor(), { fields: 'id,name' });
+
+                expect(result.id).toEqual(entity.id);
+                expect(result).not.toHaveProperty('lastName');
+            });
+
+            it('should refuse a read that asks for a withheld field', async () => {
+                const entity = seedUser();
+
+                await expect(service.getOne(entity.id, buildActor(), { fields: 'id,lastName' }))
+                    .rejects.toMatchObject({ code: ErrorCode.PERMISSION_EVALUATION_FAILED });
+            });
+
+            it('should refuse an unprojected read of a row carrying a withheld field', async () => {
+                const entity = seedUser();
+
+                await expect(service.getOne(entity.id, buildActor()))
+                    .rejects.toMatchObject({ code: ErrorCode.PERMISSION_EVALUATION_FAILED });
+            });
+
+            it('should evaluate the whole row and answer the projection', async () => {
+                const entity = seedUser();
+                const { lastName, email } = entity;
+                const actor = createAllowAllActor();
+                const evaluated: Record<string, any>[] = [];
+
+                actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
+                    if (method === 'evaluateOneOf') {
+                        evaluated.push({ ...ctx.data!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES) });
+                    }
+                });
+
+                const spy = vi.spyOn(repository, 'findOne');
+
+                const result = await service.getOne(entity.id, actor, { fields: 'displayName' });
+
+                const loaded = spy.mock.calls[0]![1]!.fields.value.map((field) => field.name);
+
+                // the default row plus the column declared for the check
+                expect([...loaded].sort()).toEqual([...readDefaultFieldNames(userSchema)!, 'email'].sort());
+                expect(evaluated[0]).toHaveProperty('email', email);
+                expect(result).not.toHaveProperty('email');
+
+                const data = actor.permissionEvaluator.evaluateOneOfCalls[0]!.data!;
+
+                expect(data.get<string[]>(BuiltInPolicyType.ATTRIBUTE_NAMES)).not.toContain('email');
+
+                const defaults = readDefaultFieldNames(userSchema)!;
+
+                expect(evaluated).toHaveLength(1);
+                expect(evaluated[0]).toHaveProperty('lastName', lastName);
+                expect(data.get<string[]>(BuiltInPolicyType.ATTRIBUTE_NAMES).filter((name) => defaults.includes(name)).sort())
+                    .toEqual(['displayName', 'id', 'realmId']);
+                expect(Object.keys(result).filter((name) => defaults.includes(name)).sort())
+                    .toEqual(['displayName', 'id', 'realmId']);
+            });
+
+            it('should answer the projection of the own row', async () => {
+                const entity = seedUser();
+                const actor = createSelfActor(entity.id);
+
+                const result = await service.getOne(entity.id, actor, { fields: 'displayName' });
+                const defaults = readDefaultFieldNames(userSchema)!;
+
+                expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
+                expect(Object.keys(result).filter((name) => defaults.includes(name)).sort())
+                    .toEqual(['displayName', 'id', 'realmId']);
+            });
         });
 
         it('should require permission for non-self access', async () => {
