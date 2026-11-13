@@ -1,5 +1,39 @@
 # Change Log
 
+## [1.0.0-beta.76](https://github.com/authup/authup/compare/v1.0.0-beta.75...v1.0.0-beta.76) (2026-11-13)
+
+
+### Features
+
+* answer /livez and /readyz on every listener ([#3842](https://github.com/authup/authup/issues/3842)) ([5f0f568](https://github.com/authup/authup/commit/5f0f56807809ce3a8dad16c211838b982dbec1f8))
+* bound and abort client calls and token verification ([#3834](https://github.com/authup/authup/issues/3834)) ([9a6efdc](https://github.com/authup/authup/commit/9a6efdc02895c14c9a8994d3da71fec7cc6fd3b4))
+
+
+### Bug Fixes
+
+* **deps:** bump routup and typeorm, adopt nodemailer send signal ([#3839](https://github.com/authup/authup/issues/3839)) ([cb7981b](https://github.com/authup/authup/commit/cb7981bf67beddca12f836c44fed44201388cf1a))
+* **deps:** bump the minorandpatch group across 1 directory with 38 updates ([#3837](https://github.com/authup/authup/issues/3837)) ([ec11818](https://github.com/authup/authup/commit/ec11818f5d5cd6aa35bc3a1948e8173fce4027e4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-http-kit bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+    * @authup/core-kit bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+    * @authup/errors bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+    * @authup/kit bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+    * @authup/server-account-console bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+    * @authup/server-admin-console bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+    * @authup/server-auth-console bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+    * @authup/server-config bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+    * @authup/server-config-kit bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+    * @authup/server-console-kit bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+    * @authup/server-core bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+    * @authup/specs bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+  * devDependencies
+    * @authup/client-auth-console bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+
 ## [1.0.0-beta.75](https://github.com/authup/authup/compare/v1.0.0-beta.74...v1.0.0-beta.75) (2026-11-12)
 
 

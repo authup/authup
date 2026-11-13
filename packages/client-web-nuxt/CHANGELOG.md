@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.0.0-beta.76](https://github.com/authup/authup/compare/v1.0.0-beta.75...v1.0.0-beta.76) (2026-11-13)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 38 updates ([#3837](https://github.com/authup/authup/issues/3837)) ([ec11818](https://github.com/authup/authup/commit/ec11818f5d5cd6aa35bc3a1948e8173fce4027e4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+    * @authup/client-web-kit bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+    * @authup/core-http-kit bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+    * @authup/kit bumped from ^1.0.0-beta.75 to ^1.0.0-beta.76
+
 ## [1.0.0-beta.75](https://github.com/authup/authup/compare/v1.0.0-beta.74...v1.0.0-beta.75) (2026-11-12)
 
 
