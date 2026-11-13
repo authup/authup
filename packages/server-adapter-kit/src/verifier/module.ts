@@ -11,6 +11,7 @@ import { JWTError } from '@authup/specs';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import type { IntrospectionAuthorizationContext, Verifier } from 'vouchly';
 import { createVerifier } from 'vouchly';
+import { TOKEN_VERIFIER_TIMEOUT_DEFAULT } from './constants';
 import { toVerificationError } from './error';
 import { createAuthupIssuer } from './issuer';
 import type {
@@ -98,7 +99,7 @@ export class TokenVerifier implements ITokenVerifier {
 
         this.client = new Client({
             baseURL: ctx.baseURL,
-            ...(typeof ctx.timeout === 'number' ? { timeout: ctx.timeout * 1000 } : {}),
+            timeout: (ctx.timeout ?? TOKEN_VERIFIER_TIMEOUT_DEFAULT) * 1000,
         });
 
         const remote = !!ctx.creator;
@@ -137,7 +138,7 @@ export class TokenVerifier implements ITokenVerifier {
             // disabled signing key and a revoked token until the token's exp.
             cache: ctx.cache ?? false,
             cacheNamespace,
-            ...(typeof ctx.timeout === 'number' ? { timeout: ctx.timeout } : {}),
+            timeout: ctx.timeout ?? TOKEN_VERIFIER_TIMEOUT_DEFAULT,
             ...(remote ? { opaque: 'authup' } : {}),
         });
     }

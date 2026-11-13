@@ -38,9 +38,9 @@ function isTimeout(input: unknown) : boolean {
  * A JWTError a key source raised travels as the cause of vouchly's
  * key_unavailable and is surfaced as is.
  */
-export function toVerificationError(input: unknown, signal?: AbortSignal) : Error {
+export function toVerificationError(input: unknown, signal?: AbortSignal) : unknown {
     if (signal?.aborted && input === signal.reason) {
-        return signal.reason;
+        return input;
     }
 
     if (isTimeout(input)) {

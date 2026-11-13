@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client } from '@authup/core-http-kit';
+import { Client, createClientTokenCreator } from '@authup/core-http-kit';
 import { isUpstreamTimeoutError } from '@authup/errors';
 import { isJWTError } from '@authup/specs';
 import type { TransportRequest } from 'hapic';
@@ -54,8 +54,14 @@ const { getJwk } = Client.prototype;
  * Answers every key fetch of a verifier's client through a transport that
  * never answers, with the options that client was configured with.
  */
-function useStalledClient() : MemoryTransport {
-    const transport = new MemoryTransport({ fetch: (request: TransportRequest) => stall(request.signal) });
+function useStalledClient(onDispatch?: () => void) : MemoryTransport {
+    const transport = new MemoryTransport({
+        fetch: (request: TransportRequest) => {
+            onDispatch?.();
+
+            return stall(request.signal);
+        },
+    });
 
     vitest.spyOn(Client.prototype, 'getJwk').mockImplementation(function (this: Client, id: string, realmId?: string) {
         return getJwk.call(new Client({ ...this.toOptions(), transport }), id, realmId);
@@ -74,6 +80,7 @@ describe('verifier timeout', () => {
     });
 
     afterEach(() => {
+        vitest.useRealTimers();
         vitest.unstubAllGlobals();
         vitest.restoreAllMocks();
     });
@@ -108,6 +115,75 @@ describe('verifier timeout', () => {
         const error = await verifier.verify(token).catch((e: unknown) => e);
 
         expect(transport.requests.length).toEqual(1);
+        expect(isUpstreamTimeoutError(error)).toBe(true);
+        expect(isJWTError(error)).toBe(false);
+    });
+
+    it('bounds a key fetch by 10 seconds when no timeout is set', async () => {
+        vitest.useFakeTimers();
+
+        // AbortSignal.timeout runs on a timer the fake clock does not own
+        vitest.spyOn(AbortSignal, 'timeout').mockImplementation((ms: number) => {
+            const controller = new AbortController();
+
+            setTimeout(() => controller.abort(new DOMException('The operation timed out.', 'TimeoutError')), ms);
+
+            return controller.signal;
+        });
+
+        const verifier = new TokenVerifier({
+            baseURL: BASE_URL,
+            jwkCache: false,
+        });
+
+        let dispatchedAt = 0;
+        const transport = useStalledClient(() => {
+            dispatchedAt = Date.now();
+        });
+
+        let settled = false;
+        const pending = verifier.verify(token)
+            .catch((e: unknown) => e)
+            .finally(() => {
+                settled = true;
+            });
+
+        await vitest.waitFor(() => expect(transport.requests.length).toEqual(1));
+        await vitest.advanceTimersByTimeAsync(dispatchedAt + 9_990 - Date.now());
+
+        expect(settled).toBe(false);
+
+        await vitest.advanceTimersByTimeAsync(20);
+
+        const error = await pending;
+
+        expect(isUpstreamTimeoutError(error)).toBe(true);
+    });
+
+    it('reports a client credentials mint that does not answer in time as an upstream timeout', async () => {
+        const fetchMock = vitest.fn(async () => new Response(JSON.stringify(TokenPayload), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+        }));
+
+        vitest.stubGlobal('fetch', fetchMock);
+
+        const creator = createClientTokenCreator({ id: 'system', secret: 'start123' }, {
+            client: {
+                baseURL: BASE_URL,
+                timeout: 20,
+                transport: new MemoryTransport({ fetch: (request: TransportRequest) => stall(request.signal) }),
+            },
+        });
+
+        const verifier = new TokenVerifier({
+            baseURL: BASE_URL,
+            creator,
+        });
+
+        const error = await verifier.verify(token).catch((e: unknown) => e);
+
+        expect(fetchMock).not.toHaveBeenCalled();
         expect(isUpstreamTimeoutError(error)).toBe(true);
         expect(isJWTError(error)).toBe(false);
     });

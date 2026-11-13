@@ -53,8 +53,7 @@ describe('toVerificationError', () => {
 
         expect(output).toBeInstanceOf(JWTError);
         expect(isVouchlyError(output)).toBe(false);
-        expect(output).toMatchObject({ code: ErrorCode.JWT_INVALID });
-        expect(output.message).toEqual(`message of ${code}`);
+        expect(output).toMatchObject({ code: ErrorCode.JWT_INVALID, message: `message of ${code}` });
     });
 
     it('unwraps a JWTError a key source raised', () => {
@@ -90,7 +89,7 @@ describe('toVerificationError', () => {
 
         expect(isUpstreamTimeoutError(output)).toBe(true);
         expect(isJWTError(output)).toBe(false);
-        expect(output.cause).toBe(input);
+        expect(output).toMatchObject({ cause: input });
     });
 
     it('maps a client timeout wrapped by the key loader onto an upstream timeout', async () => {

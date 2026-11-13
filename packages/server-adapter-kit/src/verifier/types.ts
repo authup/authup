@@ -38,8 +38,10 @@ export type TokenVerifierContext = {
      * Seconds each request of a verification may take: the introspection
      * request and the key fetch. A verification that runs out of time
      * rejects with an UpstreamTimeoutError. Must be a finite number above 0
-     * and at most 2147483. Default 10. The client credentials mint of remote
-     * mode is bounded by the timeout of the creator's own client.
+     * and at most 2147483. Default TOKEN_VERIFIER_TIMEOUT_DEFAULT (10). A
+     * cached key load is also bounded by jwkCache.timeout; the smaller of
+     * the two wins. The client credentials mint of remote mode is bounded
+     * by the timeout of the creator's own client.
      */
     timeout?: number,
     /**
@@ -76,8 +78,9 @@ export type TokenVerifierContext = {
          */
         ttl?: number,
         /**
-         * Seconds a key fetch may take before it fails and the next
-         * lookup starts a fresh one. Default 10.
+         * Seconds a cached key load may take before it fails and the next
+         * lookup starts a fresh one. Default 10. The key fetch inside it is
+         * also bounded by timeout; the smaller of the two wins.
          */
         timeout?: number,
     } | false,

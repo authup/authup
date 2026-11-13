@@ -93,6 +93,7 @@ describe('src/utils/error', () => {
             const error = sanitizeError(createUpstreamNetworkError());
 
             expect(error.code).toEqual(ErrorCode.UPSTREAM_ERROR);
+            expect(httpStatusFromCode(error.code)).toEqual(502);
         });
 
         it('should map an upstream call that ran out of time to an upstream timeout', () => {
@@ -101,12 +102,6 @@ describe('src/utils/error', () => {
             expect(error.code).toEqual(ErrorCode.UPSTREAM_TIMEOUT);
             expect(httpStatusFromCode(error.code)).toEqual(504);
             expect(error.message).not.toContain(UPSTREAM_URL);
-        });
-
-        it('should keep an upstream failure that is no timeout a bad gateway', () => {
-            const error = sanitizeError(createUpstreamNetworkError());
-
-            expect(httpStatusFromCode(error.code)).toEqual(502);
         });
 
         it('should not expose the upstream url on an upstream error', () => {
