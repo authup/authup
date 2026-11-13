@@ -6,7 +6,7 @@
  */
 
 import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
-import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
+import type { APIRequestOptions, EntityRecordResponse, IEntityAPI } from '../../types-base';
 
 import type { Scope } from '@authup/core-kit';
 
@@ -18,5 +18,5 @@ export type ScopeSavePayload = ScopeCreatePayload;
 
 export interface IScopeAPI extends IEntityAPI<Scope, ScopeCreatePayload, ScopeUpdatePayload>,
     IEntitySchemaAPI, IEntityStatsAPI<Scope> {
-    createOrUpdate(idOrName: string, data: ScopeSavePayload) : Promise<EntityRecordResponse<Scope>>;
+    createOrUpdate(idOrName: string, data: ScopeSavePayload, options?: APIRequestOptions) : Promise<EntityRecordResponse<Scope>>;
 }

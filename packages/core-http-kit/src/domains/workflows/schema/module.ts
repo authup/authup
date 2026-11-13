@@ -7,10 +7,12 @@
 
 import { BaseAPI } from '../../base';
 import type { ISchemaAPI, SchemaCollectionResponse } from './types';
+import type { APIRequestOptions } from '../../types-base';
+import { buildRequestConfig } from '../../utils';
 
 export class SchemaAPI extends BaseAPI implements ISchemaAPI {
-    async getMany(): Promise<SchemaCollectionResponse> {
-        const response = await this.client.get('schemas');
+    async getMany(options?: APIRequestOptions): Promise<SchemaCollectionResponse> {
+        const response = await this.client.get('schemas', buildRequestConfig(options));
 
         return response.data;
     }

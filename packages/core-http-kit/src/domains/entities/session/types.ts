@@ -8,18 +8,18 @@
 import type { EntityQueryInput } from '../../../helpers';
 import type { Session } from '@authup/core-kit';
 import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
 export type SessionDeleteManyResponse = {
     count: number,
 };
 
 export interface ISessionAPI extends IEntitySchemaAPI, IEntityStatsAPI<Session> {
-    getMany(data?: EntityQueryInput<Session>): Promise<EntityCollectionResponse<Session>>;
+    getMany(data?: EntityQueryInput<Session>, options?: APIRequestOptions): Promise<EntityCollectionResponse<Session>>;
 
-    getOne(id: Session['id'], record?: EntityQueryInput<Session>): Promise<EntityRecordResponse<Session>>;
+    getOne(id: Session['id'], record?: EntityQueryInput<Session>, options?: APIRequestOptions): Promise<EntityRecordResponse<Session>>;
 
-    delete(id: Session['id']): Promise<EntityRecordResponse<Session>>;
+    delete(id: Session['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<Session>>;
 
     /**
      * Revoke sessions in bulk (mirrors `getMany`'s query shape).
@@ -31,5 +31,5 @@ export interface ISessionAPI extends IEntitySchemaAPI, IEntityStatsAPI<Session> 
      *   `SESSION_DELETE` + per-session realm reach). `filter[userId]` accepts a
      *   comma list to target multiple subjects at once.
      */
-    deleteMany(data?: EntityQueryInput<Session>): Promise<SessionDeleteManyResponse>;
+    deleteMany(data?: EntityQueryInput<Session>, options?: APIRequestOptions): Promise<SessionDeleteManyResponse>;
 }

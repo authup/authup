@@ -17,6 +17,8 @@ import type {
     OAuth2DeviceAuthorizationResponse,
     OAuth2TokenRequestOptions,
 } from '../types';
+import type { APIRequestOptions } from '../../../types-base';
+import { buildRequestConfig } from '../../../utils';
 
 function buildURLSearchParams(parameters: OAuth2DeviceAuthorizationParameters) : URLSearchParams {
     const output = new URLSearchParams();
@@ -96,26 +98,28 @@ export class OAuth2DeviceAuthorizationAPI extends BaseAPI implements IOAuth2Devi
             {
                 transform: createRequestTransformer(parameters, options),
                 headers: { [HeaderName.ACCEPT]: 'application/json' },
+                signal: options.signal,
+                timeout: options.timeout,
             },
         );
 
         return response.data;
     }
 
-    async lookup(data: DeviceAuthorizationVerifyPayload) : Promise<DeviceAuthorizationInfo> {
-        const response = await this.client.post('device_authorization/lookup', data);
+    async lookup(data: DeviceAuthorizationVerifyPayload, options?: APIRequestOptions) : Promise<DeviceAuthorizationInfo> {
+        const response = await this.client.post('device_authorization/lookup', data, buildRequestConfig(options));
 
         return response.data;
     }
 
-    async approve(data: DeviceAuthorizationVerifyPayload) : Promise<DeviceAuthorizationDecisionResponse> {
-        const response = await this.client.post('device_authorization/approve', data);
+    async approve(data: DeviceAuthorizationVerifyPayload, options?: APIRequestOptions) : Promise<DeviceAuthorizationDecisionResponse> {
+        const response = await this.client.post('device_authorization/approve', data, buildRequestConfig(options));
 
         return response.data;
     }
 
-    async deny(data: DeviceAuthorizationVerifyPayload) : Promise<DeviceAuthorizationDecisionResponse> {
-        const response = await this.client.post('device_authorization/deny', data);
+    async deny(data: DeviceAuthorizationVerifyPayload, options?: APIRequestOptions) : Promise<DeviceAuthorizationDecisionResponse> {
+        const response = await this.client.post('device_authorization/deny', data, buildRequestConfig(options));
 
         return response.data;
     }

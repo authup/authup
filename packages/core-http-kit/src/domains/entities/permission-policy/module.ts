@@ -10,39 +10,40 @@ import { buildQueryString } from '../../../helpers';
 import type { PermissionPolicy } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
 import type { EntitySchemaResponse } from '../../stats';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     IPermissionPolicyAPI,
     PermissionPolicyCreatePayload,
 } from './types';
+import { buildRequestConfig } from '../../utils';
 
 export class PermissionPolicyAPI extends BaseAPI implements IPermissionPolicyAPI {
-    async getSchema(): Promise<EntitySchemaResponse> {
-        const response = await this.client.get('permission-policies/@schema');
+    async getSchema(options?: APIRequestOptions): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('permission-policies/@schema', buildRequestConfig(options));
 
         return response.data;
     }
 
-    async getMany(data?: EntityQueryInput<PermissionPolicy>) : Promise<EntityCollectionResponse<PermissionPolicy>> {
-        const response = await this.client.get(`permission-policies${buildQueryString(data)}`);
+    async getMany(data?: EntityQueryInput<PermissionPolicy>, options?: APIRequestOptions) : Promise<EntityCollectionResponse<PermissionPolicy>> {
+        const response = await this.client.get(`permission-policies${buildQueryString(data)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
-    async getOne(id: PermissionPolicy['id'], record?: EntityQueryInput<PermissionPolicy>) : Promise<EntityRecordResponse<PermissionPolicy>> {
-        const response = await this.client.get(`permission-policies/${id}${buildQueryString(record)}`);
+    async getOne(id: PermissionPolicy['id'], record?: EntityQueryInput<PermissionPolicy>, options?: APIRequestOptions) : Promise<EntityRecordResponse<PermissionPolicy>> {
+        const response = await this.client.get(`permission-policies/${id}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
-    async delete(id: PermissionPolicy['id']) : Promise<EntityRecordResponse<PermissionPolicy>> {
-        const response = await this.client.delete(`permission-policies/${id}`);
+    async delete(id: PermissionPolicy['id'], options?: APIRequestOptions) : Promise<EntityRecordResponse<PermissionPolicy>> {
+        const response = await this.client.delete(`permission-policies/${id}`, buildRequestConfig(options));
 
         return response.data;
     }
 
-    async create(data: PermissionPolicyCreatePayload) : Promise<EntityRecordResponse<PermissionPolicy>> {
-        const response = await this.client.post('permission-policies', data);
+    async create(data: PermissionPolicyCreatePayload, options?: APIRequestOptions) : Promise<EntityRecordResponse<PermissionPolicy>> {
+        const response = await this.client.post('permission-policies', data, buildRequestConfig(options));
 
         return response.data;
     }

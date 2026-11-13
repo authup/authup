@@ -28,13 +28,13 @@ export type KeyDeleteOptions = APIRequestOptions & {
 };
 
 export interface IKeyAPI extends IEntitySchemaAPI, IEntityStatsAPI<Key> {
-    getMany(data?: EntityQueryInput<Key>): Promise<EntityCollectionResponse<Key>>;
+    getMany(data?: EntityQueryInput<Key>, options?: APIRequestOptions): Promise<EntityCollectionResponse<Key>>;
 
-    getOne(id: Key['id'], record?: EntityQueryInput<Key>): Promise<EntityRecordResponse<Key>>;
+    getOne(id: Key['id'], record?: EntityQueryInput<Key>, options?: APIRequestOptions): Promise<EntityRecordResponse<Key>>;
 
-    create(data: KeyCreatePayload): Promise<EntityRecordResponse<Key>>;
+    create(data: KeyCreatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<Key>>;
 
-    update(id: Key['id'], data: KeyUpdatePayload): Promise<EntityRecordResponse<Key>>;
+    update(id: Key['id'], data: KeyUpdatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<Key>>;
 
     delete(id: Key['id'], options?: KeyDeleteOptions): Promise<EntityRecordResponse<Key>>;
 }

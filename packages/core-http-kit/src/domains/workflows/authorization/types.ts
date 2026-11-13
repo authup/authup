@@ -13,8 +13,9 @@ import type {
     AuthorizationCheckTargetRealms,
 } from '@authup/access';
 import type { AuthorizationHeader } from 'hapic';
+import type { APIRequestOptions } from '../../types-base';
 
-export type AuthorizationRequestOptions = {
+export type AuthorizationRequestOptions = APIRequestOptions & {
     /**
      * Read the catalog with another credential than the client's own, the way
      * the kit store hands over the access token it is staging a session for.

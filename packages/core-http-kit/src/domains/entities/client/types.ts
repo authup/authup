@@ -6,7 +6,7 @@
  */
 
 import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
-import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
+import type { APIRequestOptions, EntityRecordResponse, IEntityAPI } from '../../types-base';
 
 import type { Client, ClientSecretRotatePayload } from '@authup/core-kit';
 
@@ -49,7 +49,7 @@ export type ClientSecretRotateResponse = EntityRecordResponse<Client, ClientSecr
 
 export interface IClientAPI extends IEntityAPI<Client, ClientCreatePayload, ClientUpdatePayload>,
     IEntitySchemaAPI, IEntityStatsAPI<Client> {
-    createOrUpdate(idOrName: string, data: ClientSavePayload) : Promise<EntityRecordResponse<Client>>;
+    createOrUpdate(idOrName: string, data: ClientSavePayload, options?: APIRequestOptions) : Promise<EntityRecordResponse<Client>>;
 
-    rotateSecret(id: Client['id'], data?: ClientSecretRotatePayload) : Promise<ClientSecretRotateResponse>;
+    rotateSecret(id: Client['id'], data?: ClientSecretRotatePayload, options?: APIRequestOptions) : Promise<ClientSecretRotateResponse>;
 }

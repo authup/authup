@@ -8,12 +8,12 @@
 import type { EntityQueryInput } from '../../../helpers';
 import type { Consent } from '@authup/core-kit';
 import type { IEntitySchemaAPI } from '../../stats';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
 export interface IConsentAPI extends IEntitySchemaAPI {
-    getMany(data?: EntityQueryInput<Consent>): Promise<EntityCollectionResponse<Consent>>;
+    getMany(data?: EntityQueryInput<Consent>, options?: APIRequestOptions): Promise<EntityCollectionResponse<Consent>>;
 
-    getOne(id: Consent['id'], record?: EntityQueryInput<Consent>): Promise<EntityRecordResponse<Consent>>;
+    getOne(id: Consent['id'], record?: EntityQueryInput<Consent>, options?: APIRequestOptions): Promise<EntityRecordResponse<Consent>>;
 
-    delete(id: Consent['id']): Promise<EntityRecordResponse<Consent>>;
+    delete(id: Consent['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<Consent>>;
 }

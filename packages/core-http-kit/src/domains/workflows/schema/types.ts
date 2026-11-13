@@ -6,6 +6,7 @@
  */
 
 import type { Parameter, SchemaDescription } from '@rapiq/core';
+import type { APIRequestOptions } from '../../types-base';
 
 export type SchemaResponseMeta = {
     /**
@@ -43,5 +44,5 @@ export type SchemaCollectionResponse = {
 };
 
 export interface ISchemaAPI {
-    getMany() : Promise<SchemaCollectionResponse>;
+    getMany(options?: APIRequestOptions) : Promise<SchemaCollectionResponse>;
 }

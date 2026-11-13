@@ -11,30 +11,31 @@ import type { Event } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
 import { buildStatsURL } from '../../stats';
 import type { EntitySchemaResponse } from '../../stats';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type { EventStatsQuery, EventStatsResponse, IEventAPI } from './types';
+import { buildRequestConfig } from '../../utils';
 
 export class EventAPI extends BaseAPI implements IEventAPI {
-    async getStats(query: EventStatsQuery = {}): Promise<EventStatsResponse> {
-        const response = await this.client.get(buildStatsURL<Event>('events', query));
+    async getStats(query: EventStatsQuery = {}, options?: APIRequestOptions): Promise<EventStatsResponse> {
+        const response = await this.client.get(buildStatsURL<Event>('events', query), buildRequestConfig(options));
 
         return response.data;
     }
 
-    async getSchema(): Promise<EntitySchemaResponse> {
-        const response = await this.client.get('events/@schema');
+    async getSchema(options?: APIRequestOptions): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('events/@schema', buildRequestConfig(options));
 
         return response.data;
     }
 
-    async getMany(data?: EntityQueryInput<Event>): Promise<EntityCollectionResponse<Event>> {
-        const response = await this.client.get(`events${buildQueryString(data)}`);
+    async getMany(data?: EntityQueryInput<Event>, options?: APIRequestOptions): Promise<EntityCollectionResponse<Event>> {
+        const response = await this.client.get(`events${buildQueryString(data)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
-    async getOne(id: Event['id'], record?: EntityQueryInput<Event>): Promise<EntityRecordResponse<Event>> {
-        const response = await this.client.get(`events/${id}${buildQueryString(record)}`);
+    async getOne(id: Event['id'], record?: EntityQueryInput<Event>, options?: APIRequestOptions): Promise<EntityRecordResponse<Event>> {
+        const response = await this.client.get(`events/${id}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }

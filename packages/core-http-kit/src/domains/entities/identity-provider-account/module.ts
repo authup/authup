@@ -10,18 +10,22 @@ import { buildQueryString } from '../../../helpers';
 import type { IdentityProviderAccount } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
 import type { EntitySchemaResponse } from '../../stats';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type { IIdentityProviderAccountAPI } from './types';
+import { buildRequestConfig } from '../../utils';
 
 export class IdentityProviderAccountAPI extends BaseAPI implements IIdentityProviderAccountAPI {
-    async getSchema(): Promise<EntitySchemaResponse> {
-        const response = await this.client.get('identity-provider-accounts/@schema');
+    async getSchema(options?: APIRequestOptions): Promise<EntitySchemaResponse> {
+        const response = await this.client.get('identity-provider-accounts/@schema', buildRequestConfig(options));
 
         return response.data;
     }
 
-    async getMany(data?: EntityQueryInput<IdentityProviderAccount>): Promise<EntityCollectionResponse<IdentityProviderAccount>> {
-        const response = await this.client.get(`identity-provider-accounts${buildQueryString(data)}`);
+    async getMany(
+        data?: EntityQueryInput<IdentityProviderAccount>,
+        options?: APIRequestOptions,
+    ): Promise<EntityCollectionResponse<IdentityProviderAccount>> {
+        const response = await this.client.get(`identity-provider-accounts${buildQueryString(data)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -29,14 +33,15 @@ export class IdentityProviderAccountAPI extends BaseAPI implements IIdentityProv
     async getOne(
         id: IdentityProviderAccount['id'],
         record?: EntityQueryInput<IdentityProviderAccount>,
+        options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<IdentityProviderAccount>> {
-        const response = await this.client.get(`identity-provider-accounts/${id}${buildQueryString(record)}`);
+        const response = await this.client.get(`identity-provider-accounts/${id}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
-    async delete(id: IdentityProviderAccount['id']): Promise<EntityRecordResponse<IdentityProviderAccount>> {
-        const response = await this.client.delete(`identity-provider-accounts/${id}`);
+    async delete(id: IdentityProviderAccount['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<IdentityProviderAccount>> {
+        const response = await this.client.delete(`identity-provider-accounts/${id}`, buildRequestConfig(options));
 
         return response.data;
     }

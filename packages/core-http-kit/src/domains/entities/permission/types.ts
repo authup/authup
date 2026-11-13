@@ -6,7 +6,7 @@
  */
 
 import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
-import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
+import type { APIRequestOptions, EntityRecordResponse, IEntityAPI } from '../../types-base';
 
 import type { Permission } from '@authup/core-kit';
 
@@ -23,6 +23,6 @@ export type PermissionSavePayload = PermissionCreatePayload;
 
 export interface IPermissionAPI extends IEntityAPI<Permission, PermissionCreatePayload, PermissionUpdatePayload>,
     IEntitySchemaAPI, IEntityStatsAPI<Permission> {
-    createOrUpdate(idOrName: string, data: PermissionSavePayload) : Promise<EntityRecordResponse<Permission>>;
-    check(idOrName: string, data?: Record<string, any>) : Promise<PermissionAPICheckResponse>;
+    createOrUpdate(idOrName: string, data: PermissionSavePayload, options?: APIRequestOptions) : Promise<EntityRecordResponse<Permission>>;
+    check(idOrName: string, data?: Record<string, any>, options?: APIRequestOptions) : Promise<PermissionAPICheckResponse>;
 }

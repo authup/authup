@@ -8,7 +8,7 @@
 import type { EntityQueryInput } from '../../../helpers';
 import type { SessionToken } from '@authup/core-kit';
 import type { IEntitySchemaAPI } from '../../stats';
-import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
 export type SessionTokenDeleteManyResponse = {
     count: number,
@@ -24,18 +24,19 @@ export interface ISessionTokenAPI extends IEntitySchemaAPI {
      * `sessions`' own `clientId` cannot, since that names only the client that
      * first authorized on the row.
      */
-    getMany(data?: EntityQueryInput<SessionToken>): Promise<EntityCollectionResponse<SessionToken>>;
+    getMany(data?: EntityQueryInput<SessionToken>, options?: APIRequestOptions): Promise<EntityCollectionResponse<SessionToken>>;
 
     getOne(
         id: SessionToken['id'],
-        record?: EntityQueryInput<SessionToken>
+        record?: EntityQueryInput<SessionToken>,
+        options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<SessionToken>>;
 
     /**
      * Revoke one token by its jti. The row is stamped and the jti is
      * blocklisted; the row is not removed.
      */
-    delete(id: SessionToken['id']): Promise<EntityRecordResponse<SessionToken>>;
+    delete(id: SessionToken['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<SessionToken>>;
 
     /**
      * Revoke every token matching the query.
@@ -45,5 +46,5 @@ export interface ISessionTokenAPI extends IEntitySchemaAPI {
      * filter (`id`, `sessionId` or `clientId`) is REQUIRED — an unscoped call
      * is rejected rather than revoking everything.
      */
-    deleteMany(data: EntityQueryInput<SessionToken>): Promise<SessionTokenDeleteManyResponse>;
+    deleteMany(data: EntityQueryInput<SessionToken>, options?: APIRequestOptions): Promise<SessionTokenDeleteManyResponse>;
 }

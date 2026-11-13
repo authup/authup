@@ -1,4 +1,4 @@
-/*
+import type { APIRequestOptions } from '../../types-base';/*
  * Copyright (c) 2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
@@ -45,5 +45,5 @@ export type StatusResponse = {
 };
 
 export interface IStatusAPI {
-    get() : Promise<StatusResponse>;
+    get(options?: APIRequestOptions) : Promise<StatusResponse>;
 }

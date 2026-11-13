@@ -9,6 +9,8 @@ import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { AuthorizeAPI } from '@hapic/oauth2';
 import { nullifyEmptyObjectProperties } from '../../../../utils';
 import type { AuthorizeInfo, IOAuth2AuthorizeAPI } from '../types';
+import type { APIRequestOptions } from '../../../types-base';
+import { buildRequestConfig } from '../../../utils';
 
 export class OAuth2AuthorizeAPI extends AuthorizeAPI implements IOAuth2AuthorizeAPI {
     /**
@@ -25,6 +27,7 @@ export class OAuth2AuthorizeAPI extends AuthorizeAPI implements IOAuth2Authorize
      */
     async getInfo(
         query?: string | Record<string, any>,
+        options?: APIRequestOptions,
     ) : Promise<AuthorizeInfo> {
         let search : string;
 
@@ -48,17 +51,19 @@ export class OAuth2AuthorizeAPI extends AuthorizeAPI implements IOAuth2Authorize
             search = params.toString();
         }
 
-        const response = await this.client.get(`authorize/info${search ? `?${search}` : ''}`);
+        const response = await this.client.get(`authorize/info${search ? `?${search}` : ''}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async confirm(
         data: OAuth2AuthorizationCodeRequest,
+        options?: APIRequestOptions,
     ) : Promise<{ url: string }> {
         const response = await this.client.post(
             'authorize',
             nullifyEmptyObjectProperties(data),
+            buildRequestConfig(options),
         );
 
         return response.data;
