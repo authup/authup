@@ -5,7 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { describe, expect, it } from 'vitest';
+import {
+    afterEach,
+    beforeEach,
+    describe,
+    expect,
+    it,
+    vi,
+} from 'vitest';
 import { DecisionStrategy } from '@authup/kit';
 import type {
     PermissionPolicyBinding,
@@ -255,6 +262,16 @@ async function evaluateThreeWays(
 }
 
 describe('src/policy/built-in (immutability)', () => {
+    beforeEach(() => {
+        vi.useFakeTimers();
+        // Missing time data falls back to the clock, which must be inside the policy window.
+        vi.setSystemTime(new Date(2026, 5, 1, 12));
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
     it.each(cases)('$name does not write into a frozen policy', async (item) => {
         const policy = item.policy();
         const expectation = structuredClone(policy);
