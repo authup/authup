@@ -80,7 +80,7 @@
     "devDependencies": {
         "@ilingo/validup-vue": "^1.2.2",
         "@ilingo/vue": "^6.1.1",
-        "@rapiq/adapter-memory": "^2.4.0",
+        "@rapiq/adapter-memory": "^2.4.1",
         "@types/node": "^26.6.6",
         "@validup/vue": "^2.0.1",
         "@vitejs/plugin-vue": "^6.0.10",
