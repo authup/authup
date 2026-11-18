@@ -41,7 +41,7 @@
         "smob": "^1.6.1"
     },
     "devDependencies": {
-        "@nuxt/module-builder": "^1.0.3",
+        "@nuxt/module-builder": "^1.0.4",
         "@nuxt/schema": "^4.6.4",
         "@pinia/nuxt": "^1.0.3",
         "cross-env": "^10.1.0",
@@ -53,7 +53,7 @@
         "strip-literal": "^4.0.0",
         "vitest": "^5.0.3",
         "vue": "^3.5.45",
-        "vue-router": "^5.4.0"
+        "vue-router": "^5.5.1"
     },
     "peerDependencies": {
         "@pinia/nuxt": "*",

@@ -61,7 +61,7 @@
         "@authup/server-console-kit": "^1.0.0-beta.76",
         "@authup/server-core": "^1.0.0-beta.76",
         "@authup/specs": "^1.0.0-beta.76",
-        "@rapiq/codec-url": "^2.4.0",
+        "@rapiq/codec-url": "^2.4.1",
         "@rapiq/core": "^2.4.1",
         "@validup/zod": "^2.0.2",
         "citty": "^0.2.2",
@@ -79,12 +79,12 @@
     },
     "devDependencies": {
         "@authup/client-auth-console": "^1.0.0-beta.76",
-        "@routup/basic": "^3.0.2",
-        "better-sqlite3": "^13.0.3",
+        "@routup/basic": "^3.0.3",
+        "better-sqlite3": "^13.2.0",
         "cross-env": "^10.1.0",
         "get-port-please": "^3.2.0",
         "ts-node": "^10.8.2",
-        "vite": "^8.3.7",
+        "vite": "^8.3.8",
         "vitest": "^5.0.3"
     },
     "optionalDependencies": {
