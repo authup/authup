@@ -8,8 +8,11 @@
 import type { LabelTransformer, OptionsInput } from '@routup/prometheus';
 import { prometheus } from '@routup/prometheus';
 import type { IApp } from 'routup';
+import { defineCoreHandler } from 'routup';
 
 const PATH_LABEL_UNMATCHED = '/{unmatched}';
+
+const ROUTING_REACHED_KEY = 'authup:prometheus:routing-reached';
 
 /**
  * The `path` label must stay bounded: labeling by the raw request path lets
@@ -21,8 +24,11 @@ const PATH_LABEL_UNMATCHED = '/{unmatched}';
  * This transformer relabels the requests no method-bound route handled but
  * that fall under a method-less mount (`/docs`, a console handler's mount
  * under `authup start`) as `<mount>/**`, so dashboards keep one series per
- * mount. Only parameter-free mounts qualify, so the label set stays the set
- * of mount paths. They are read from the router's route table at the first
+ * mount. Only a request that reached routing qualifies
+ * (`registerPrometheusRoutingMarker`): one a global middleware refused (a
+ * 401, a 429) stays unmatched even when its path lies under a mount. Only
+ * parameter-free mounts qualify, so the label set stays the set of mount
+ * paths. They are read from the router's route table at the first
  * request: every mount is registered before `listen`, while this plugin is
  * installed before any of them.
  */
@@ -30,7 +36,7 @@ export function createMountPathLabelTransformer(router: IApp): LabelTransformer 
     let mounts : string[] | undefined;
 
     return (labels, event) => {
-        if (event.route) {
+        if (event.route || !event.store[ROUTING_REACHED_KEY]) {
             return;
         }
 
@@ -51,6 +57,19 @@ export function createMountPathLabelTransformer(router: IApp): LabelTransformer 
             labels.path = `${mount}/**`;
         }
     };
+}
+
+/**
+ * Marks a request as having passed every global middleware that can refuse
+ * it. Registered after the last of them and before the mounts, so the mount
+ * label is given only to requests a mount could have answered.
+ */
+export function registerPrometheusRoutingMarker(router: IApp) {
+    router.use(defineCoreHandler((event) => {
+        event.store[ROUTING_REACHED_KEY] = true;
+
+        return event.next();
+    }));
 }
 
 export function registerPrometheusMiddleware(router: IApp, input?: OptionsInput) {

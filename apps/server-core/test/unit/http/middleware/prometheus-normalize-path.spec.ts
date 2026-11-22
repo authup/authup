@@ -12,7 +12,10 @@ import {
     expect,
     it,
 } from 'vitest';
-import { registerPrometheusMiddleware } from '../../../../src/adapters/http/middleware/built-in/prometheus.ts';
+import {
+    registerPrometheusMiddleware,
+    registerPrometheusRoutingMarker,
+} from '../../../../src/adapters/http/middleware/built-in/prometheus.ts';
 
 const ID = '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d';
 
@@ -25,6 +28,17 @@ function createRouter(registry: Registry): App {
 
     // installed first, like the middleware module does
     registerPrometheusMiddleware(router, { registry, uptime: false });
+
+    // a global middleware refusing before routing, like the rate limit
+    router.use(defineCoreHandler((event) => {
+        if (event.headers.get('x-refuse')) {
+            return new Response(null, { status: 429 });
+        }
+
+        return event.next();
+    }));
+
+    registerPrometheusRoutingMarker(router);
 
     const users = new App();
 
@@ -53,8 +67,8 @@ describe('http/middleware/prometheus/path-label', () => {
         router = createRouter(registry);
     });
 
-    async function request(method: string, path: string) {
-        await router.fetch(new Request(`http://localhost${path}`, { method }));
+    async function request(method: string, path: string, headers?: Record<string, string>) {
+        await router.fetch(new Request(`http://localhost${path}`, { method, headers }));
     }
 
     async function readPathLabels() : Promise<string[]> {
@@ -112,5 +126,12 @@ describe('http/middleware/prometheus/path-label', () => {
             '/docs/**',
             '/{unmatched}',
         ]);
+    });
+
+    it('should keep a request refused before routing unmatched under a mount', async () => {
+        await request('GET', '/docs/swagger-ui.css', { 'x-refuse': '1' });
+        await request('GET', `/users/${ID}`, { 'x-refuse': '1' });
+
+        expect(await readPathLabels()).toEqual(['/{unmatched}']);
     });
 });
