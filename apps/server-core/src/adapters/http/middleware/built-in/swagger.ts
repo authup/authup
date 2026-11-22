@@ -112,7 +112,7 @@ export function createSwaggerMiddleware(input: SwaggerMiddlewareOptions) : Plugi
             //
             // `csp` derives `connect-src` from the document's servers and
             // the `baseURL`, so "Try it out" reaches the API and nothing
-            // else. A caller's own `csp` / `securityHeaders` wins.
+            // else.
             try {
                 swaggerUI(document, {
                     csp: true,

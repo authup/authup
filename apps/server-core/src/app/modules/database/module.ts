@@ -35,10 +35,10 @@ import { useRequestEventContext } from '../../../adapters/http/request/index.ts'
 import { EventRepositoryAdapter } from './repositories/index.ts';
 import { validateEntitySchemas } from './repositories/schema-validation.ts';
 import { verifySchemaOrSynchronize } from './migration.ts';
+import { describeError } from '../../../utils/index.ts';
 import {
     TAGGED_CACHE_ERROR_LOG_INTERVAL,
     TaggedCacheInjectionKey,
-    describeTaggedCacheError,
     throttle,
 } from '../cache/index.ts';
 import { QUERY_CACHE_SCOPED_VALUE_NORMALIZER, QueryCache, resolveCacheSchemaName } from './cache/index.ts';
@@ -267,7 +267,7 @@ export class DatabaseModule implements IModule {
                 resolveSchemaName: resolveCacheSchemaName,
                 // every commit on a tracked table reports while Redis is down.
                 onError: throttle((error: unknown) => {
-                    logger.warn(describeTaggedCacheError(error, 'The cache invalidation failed'));
+                    logger.warn(describeError(error, 'The cache invalidation failed.'));
                 }, TAGGED_CACHE_ERROR_LOG_INTERVAL),
             }));
         }

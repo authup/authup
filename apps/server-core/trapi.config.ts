@@ -372,6 +372,15 @@ const FILTER_REJECTED_RESPONSE : Response = {
 };
 
 /**
+ * The decorators preset, resolved from this package. Named bare, `@trapi/core`
+ * resolves it from its OWN location, the workspace root, so wherever npm
+ * nests `@routup/decorators` under this package the generate either cannot
+ * find it or loads another copy, which silently drops what a newer preset
+ * handles (`@DStatus`).
+ */
+const DECORATORS_PRESET = fileURLToPath(import.meta.resolve('@routup/decorators/preset'));
+
+/**
  * Carries the `@DQuerySchema` marker (`src/adapters/http/decorators/`) onto
  * the emitted operation: the `x-query-schema` extension a reader follows into
  * the registry map, and the query parameters that vocabulary allows.
@@ -391,15 +400,6 @@ const FILTER_REJECTED_RESPONSE : Response = {
  * four of its members carrying no schema, so the marker's own type cannot rule
  * them out.
  */
-/**
- * The decorators preset, resolved from this package. Named bare, `@trapi/core`
- * resolves it from its OWN location, the workspace root, so wherever npm
- * nests `@routup/decorators` under this package the generate either cannot
- * find it or loads another copy, which silently drops what a newer preset
- * handles (`@DStatus`).
- */
-const DECORATORS_PRESET = fileURLToPath(import.meta.resolve('@routup/decorators/preset'));
-
 const querySchemaHandler = method({
     match: { name: 'DQuerySchema', on: 'method' },
     apply: (ctx, draft) => {

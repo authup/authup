@@ -9,7 +9,8 @@ import { MemoryCache, RedisCache } from '@authup/server-kit';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import { CacheInjectionKey, TaggedCacheInjectionKey } from './constants.ts';
-import { TAGGED_CACHE_ERROR_LOG_INTERVAL, createTaggedCache, describeTaggedCacheError } from './tagged/index.ts';
+import { describeError } from '../../../utils/index.ts';
+import { TAGGED_CACHE_ERROR_LOG_INTERVAL, createTaggedCache } from './tagged/index.ts';
 import { throttle } from './throttle.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 import { LoggerInjectionKey } from '../logger/index.ts';
@@ -36,7 +37,7 @@ export class CacheModule implements IModule {
             const logger = container.tryResolve(LoggerInjectionKey);
 
             if (logger.success) {
-                logger.data.warn(describeTaggedCacheError(error, 'The tagged cache failed'));
+                logger.data.warn(describeError(error, 'The tagged cache failed.'));
             }
         }, TAGGED_CACHE_ERROR_LOG_INTERVAL);
 

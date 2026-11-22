@@ -77,7 +77,9 @@ import {
 } from '../../domains/index.ts';
 import { DIST_PATH, SRC_PATH } from '../../../../path.ts';
 
-const NO_DATABASE_CONFIGURED = 'No database is configured. Set DB_TYPE to "postgres" or "mysql", together with DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD and DB_DATABASE.';
+const DATABASE_TYPE_HINT = 'Set DB_TYPE to "postgres" or "mysql", together with DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD and DB_DATABASE.';
+
+const NO_DATABASE_CONFIGURED = `No database is configured. ${DATABASE_TYPE_HINT}`;
 
 export class DataSourceOptionsBuilder {
     buildWithEnv() {
@@ -103,14 +105,14 @@ export class DataSourceOptionsBuilder {
         }
 
         // The default answers "nothing is configured", never a half-written
-        // configuration: a `DB_HOST` or `DB_DATABASE` left without a `DB_TYPE`
+        // configuration: a non-empty `DB_HOST` or `DB_DATABASE` left without a `DB_TYPE`
         // would otherwise redirect every write to a local file, silently
         // outside production.
         try {
             assertEnvDataSourceOptions();
         } catch (e) {
             if (e instanceof OptionsError) {
-                throw new AuthupError(`${NO_DATABASE_CONFIGURED} ${e.message}`);
+                throw new AuthupError(`${e.message} ${DATABASE_TYPE_HINT}`);
             }
 
             throw e;
