@@ -70,7 +70,7 @@
         "hapic": "^3.1.0",
         "orkos": "^1.1.1",
         "reflect-metadata": "^0.2.2",
-        "routup": "^6.4.0",
+        "routup": "^6.5.0",
         "validup": "^2.0.1",
         "zod": "^4.6.7"
     },
@@ -79,7 +79,7 @@
     },
     "devDependencies": {
         "@authup/client-auth-console": "^1.0.0-beta.76",
-        "@routup/basic": "^3.0.3",
+        "@routup/basic": "^3.1.0",
         "better-sqlite3": "^13.2.0",
         "cross-env": "^10.1.0",
         "get-port-please": "^3.2.0",
