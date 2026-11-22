@@ -6,7 +6,7 @@
  */
 
 import { ErrorCode } from '@authup/errors';
-import type { NamespaceTranslations } from '../../types';
+import type { NamespaceTranslations } from '../../types.ts';
 
 export const TranslatorTranslationErrorGerman : NamespaceTranslations<`${ErrorCode}`> = {
     [ErrorCode.BAD_REQUEST]: 'Die Anfrage konnte nicht verarbeitet werden.',

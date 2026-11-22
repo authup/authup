@@ -7,10 +7,10 @@
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import { IdentityProviderProtocol } from '../constants';
-import { IdentityProviderEnrollmentAttributesValidator } from '../enrollment';
-import { getIdentityProviderProtocolForPreset } from '../preset';
-import type { OAuth2IdentityProvider } from './types';
+import { IdentityProviderProtocol } from '../constants.ts';
+import { IdentityProviderEnrollmentAttributesValidator } from '../enrollment/index.ts';
+import { getIdentityProviderProtocolForPreset } from '../preset/index.ts';
+import type { OAuth2IdentityProvider } from './types.ts';
 
 export class IdentityProviderOAuth2PresetAttributesValidator extends Container<OAuth2IdentityProvider> {
     protected override initialize() {

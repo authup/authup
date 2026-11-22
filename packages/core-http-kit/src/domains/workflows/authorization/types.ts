@@ -13,7 +13,7 @@ import type {
     AuthorizationCheckTargetRealms,
 } from '@authup/access';
 import type { AuthorizationHeader } from 'hapic';
-import type { APIRequestOptions } from '../../types-base';
+import type { APIRequestOptions } from '../../types-base.ts';
 
 export type AuthorizationRequestOptions = APIRequestOptions & {
     /**

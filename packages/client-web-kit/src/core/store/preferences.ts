@@ -10,8 +10,8 @@ import { OAuth2SubKind } from '@authup/specs';
 import type { OAuth2TokenIntrospectionResponse } from '@authup/specs';
 import type { Ref } from 'vue';
 import { watch } from 'vue';
-import { COLOR_MODE_UNSET, LOCALE_UNSET } from '../cookie';
-import type { StorePreferenceSyncContext } from './types';
+import { COLOR_MODE_UNSET, LOCALE_UNSET } from '../cookie.ts';
+import type { StorePreferenceSyncContext } from './types.ts';
 
 /**
  * How long a switcher may keep moving before its value goes up, so a rapid

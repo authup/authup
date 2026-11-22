@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './extract';
-export * from './sign';
-export * from './types';
-export * from './verify';
+export * from './extract.ts';
+export * from './sign/index.ts';
+export * from './types.ts';
+export * from './verify/index.ts';

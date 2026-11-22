@@ -6,12 +6,12 @@
  */
 
 import { flattenObject } from '@authup/kit';
-import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
-import type { PolicyIssue } from '../../issue';
-import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
-import { AttributeNamesPolicyValidator } from './validator';
-import { AttributesPolicyEvaluator } from '../attributes';
-import { BuiltInPolicyType } from '../constants';
+import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation/index.ts';
+import type { PolicyIssue } from '../../issue/index.ts';
+import { PolicyIssueCode, definePolicyIssueItem } from '../../issue/index.ts';
+import { AttributeNamesPolicyValidator } from './validator.ts';
+import { AttributesPolicyEvaluator } from '../attributes/index.ts';
+import { BuiltInPolicyType } from '../constants.ts';
 
 export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
     protected validator : AttributeNamesPolicyValidator;

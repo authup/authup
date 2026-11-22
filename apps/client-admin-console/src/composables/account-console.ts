@@ -7,7 +7,7 @@
 
 /* global window */
 
-import { injectAdminConsoleConfig } from '../di';
+import { injectAdminConsoleConfig } from '../di.ts';
 
 /**
  * Build a link into the account console, the self-service surface served on

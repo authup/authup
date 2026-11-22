@@ -16,8 +16,8 @@ import {
     CLIENT_TOKEN_EXCHANGE_CAPABILITY_VALUE_MAX_LENGTH,
     CLIENT_TOKEN_EXCHANGE_MAX_AGE,
     ClientTokenExchangeRealmScope,
-} from './constants';
-import type { ClientTokenExchangeCapability } from './entity';
+} from './constants.ts';
+import type { ClientTokenExchangeCapability } from './entity.ts';
 
 function isValidEntry(entry: string) : boolean {
     const segments = entry.split(':');

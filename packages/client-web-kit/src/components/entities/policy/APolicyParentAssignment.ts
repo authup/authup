@@ -9,12 +9,12 @@ import { EntityType } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Policy } from '@authup/core-kit';
-import type { EntityManager } from '../../utility';
+import type { EntityManager } from '../../utility/index.ts';
 import {
     defineEntityManager,
     defineEntityVEmitOptions,
     renderToggleButton,
-} from '../../utility';
+} from '../../utility/index.ts';
 
 export const APolicyParentAssignment = defineComponent({
     props: {

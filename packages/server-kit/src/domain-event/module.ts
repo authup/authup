@@ -7,12 +7,12 @@
 
 import { buildEventFullName } from '@authup/core-realtime-kit';
 import type { EventPayload } from '@authup/core-realtime-kit';
-import type { Logger } from '../logger';
+import type { Logger } from '../logger/index.ts';
 import type {
     DomainEventPublishContext,
     IDomainEventHandler,
     IDomainEventPublisher,
-} from './types';
+} from './types.ts';
 
 export type DomainEventPublisherContext = {
     logger?: Logger

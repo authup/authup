@@ -6,7 +6,7 @@
  */
 
 import { PermissionName } from '@authup/core-kit';
-import type { NamespaceTranslations } from '../../types';
+import type { NamespaceTranslations } from '../../types.ts';
 
 export const TranslatorTranslationPermissionSpanish : NamespaceTranslations<`${PermissionName}`> = {
     [PermissionName.CLIENT_CREATE]: 'Crear clientes',

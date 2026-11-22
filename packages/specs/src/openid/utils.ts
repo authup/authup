@@ -6,7 +6,7 @@
  */
 
 import { isObject } from '@authup/kit';
-import type { OpenIDProviderMetadata } from './type';
+import type { OpenIDProviderMetadata } from './type.ts';
 
 export function isOpenIDProviderMetadata(input: unknown) : input is OpenIDProviderMetadata {
     return isObject(input) &&

@@ -49,11 +49,11 @@ import './tailwind.css';
 import 'virtual:nuxt-icon-bundle/register';
 
 import VApp from './App.vue';
-import { installChunkLoadRecovery } from './chunk-recovery';
-import { resolveAdminConsoleConfig } from './config';
-import { provideAdminConsoleConfig } from './di';
-import { createRoutingGuard } from './guard';
-import { createAdminConsoleRouter } from './router';
+import { installChunkLoadRecovery } from './chunk-recovery.ts';
+import { resolveAdminConsoleConfig } from './config.ts';
+import { provideAdminConsoleConfig } from './di.ts';
+import { createRoutingGuard } from './guard.ts';
+import { createAdminConsoleRouter } from './router.ts';
 
 const config = resolveAdminConsoleConfig();
 

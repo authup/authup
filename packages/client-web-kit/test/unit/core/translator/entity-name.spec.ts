@@ -15,8 +15,8 @@ import {
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h } from 'vue';
-import { injectTranslatorLocale, useEntityNameTranslator } from '../../../../src';
-import { mountKitComponent } from '../../../utils';
+import { injectTranslatorLocale, useEntityNameTranslator } from '../../../../src/index.ts';
+import { mountKitComponent } from '../../../utils/index.ts';
 
 const component = defineComponent({
     setup() {

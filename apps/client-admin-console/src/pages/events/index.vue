@@ -7,10 +7,10 @@ import {
 import { useTranslations, useTranslationsForNamespace } from '@authup/client-web-kit';
 import { VCIcon } from '@vuecs/icon';
 import { VCBreadcrumb } from '@vuecs/navigation';
-import { LayoutSection } from '../../config/layout';
+import { LayoutSection } from '../../config/layout/index.ts';
 import { defineComponent } from 'vue';
-import { useSectionBreadcrumb } from '../../composables/breadcrumb';
-import { useErrorToast } from '../../composables/error';
+import { useSectionBreadcrumb } from '../../composables/breadcrumb.ts';
+import { useErrorToast } from '../../composables/error.ts';
 
 export default defineComponent({
     components: { VCBreadcrumb, VCIcon },

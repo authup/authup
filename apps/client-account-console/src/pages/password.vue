@@ -18,7 +18,7 @@ import {
 } from '@authup/i18n';
 import { storeToRefs } from 'pinia';
 import { defineComponent } from 'vue';
-import { useAccountToasts } from './utils';
+import { useAccountToasts } from './utils.ts';
 
 export default defineComponent({
     components: { AUserPasswordForm },

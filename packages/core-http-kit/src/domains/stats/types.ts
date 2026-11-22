@@ -7,8 +7,8 @@
 
 import type { ObjectLiteral } from '@authup/kit';
 import type { QueryBuildInput, SchemaDescription } from '@rapiq/core';
-import type { APIRequestOptions } from '../types-base';
-import type { SchemaResponseMeta } from '../workflows/schema/types';
+import type { APIRequestOptions } from '../types-base.ts';
+import type { SchemaResponseMeta } from '../workflows/schema/types.ts';
 
 export type StatsBucketUnit = 'hour' | 'day' | 'month';
 

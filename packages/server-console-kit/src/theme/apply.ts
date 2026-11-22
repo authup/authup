@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { injectHeadContent, removeFaviconLinks, stampDocumentTitle } from '../html';
-import { escapeHtml } from './contract/index';
-import type { IThemeProvider } from './types';
+import { injectHeadContent, removeFaviconLinks, stampDocumentTitle } from '../html.ts';
+import { escapeHtml } from './contract/index.ts';
+import type { IThemeProvider } from './types.ts';
 
 /**
  * Apply the operator theme to a rendered console shell. A no-op when

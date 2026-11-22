@@ -11,7 +11,7 @@ import type { LinkProps } from '@vuecs/link';
 import { VCLink } from '@vuecs/link';
 import { VCIcon } from '@vuecs/icon';
 import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { useTranslations } from '../../core';
+import { useTranslations } from '../../core/index.ts';
 
 // Shared "‹ Back to login" affordance for the auth workflow forms. Renders
 // nothing unless a link is supplied, so callers can pass an optional prop

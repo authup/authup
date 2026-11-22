@@ -18,7 +18,7 @@ import {
 } from '@authup/i18n';
 import { VCAlert } from '@vuecs/elements';
 import { VCIcon } from '@vuecs/icon';
-import { injectHTTPClient, useTranslations } from '../../../core';
+import { injectHTTPClient, useTranslations } from '../../../core/index.ts';
 
 export default defineComponent({
     components: { VCAlert, VCIcon },

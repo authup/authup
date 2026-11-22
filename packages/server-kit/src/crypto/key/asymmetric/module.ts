@@ -8,17 +8,17 @@
 import { base64ToArrayBuffer } from '@authup/kit';
 import { JWTAlgorithm } from '@authup/specs';
 import { subtle } from 'uncrypto';
-import { BaseKey } from '../base';
-import { CryptoAsymmetricAlgorithm } from './constants';
-import type { AsymmetricKeyImportContext } from './types';
+import { BaseKey } from '../base.ts';
+import { CryptoAsymmetricAlgorithm } from './constants.ts';
+import type { AsymmetricKeyImportContext } from './types.ts';
 import {
     decodePemToPKCS8,
     decodePemToSpki,
     encodePKCS8ToPEM,
     encodeSPKIToPem,
-} from './helpers';
-import { getKeyUsagesForAsymmetricAlgorithm } from './key-usages';
-import { normalizeAsymmetricKeyImportOptions } from './normalize';
+} from './helpers/index.ts';
+import { getKeyUsagesForAsymmetricAlgorithm } from './key-usages.ts';
+import { normalizeAsymmetricKeyImportOptions } from './normalize.ts';
 
 export class AsymmetricKey extends BaseKey {
     async toPem(): Promise<string> {

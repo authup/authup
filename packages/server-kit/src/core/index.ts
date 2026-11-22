@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './actor';
-export * from './junction-service';
-export * from './service';
-export * from './types';
+export * from './actor/index.ts';
+export * from './junction-service.ts';
+export * from './service.ts';
+export * from './types.ts';

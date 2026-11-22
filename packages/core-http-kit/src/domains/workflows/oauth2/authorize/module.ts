@@ -7,10 +7,10 @@
 
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { AuthorizeAPI } from '@hapic/oauth2';
-import { nullifyEmptyObjectProperties } from '../../../../utils';
-import type { AuthorizeInfo, IOAuth2AuthorizeAPI } from '../types';
-import type { APIRequestOptions } from '../../../types-base';
-import { buildRequestConfig } from '../../../utils';
+import { nullifyEmptyObjectProperties } from '../../../../utils/index.ts';
+import type { AuthorizeInfo, IOAuth2AuthorizeAPI } from '../types.ts';
+import type { APIRequestOptions } from '../../../types-base.ts';
+import { buildRequestConfig } from '../../../utils.ts';
 
 export class OAuth2AuthorizeAPI extends AuthorizeAPI implements IOAuth2AuthorizeAPI {
     /**

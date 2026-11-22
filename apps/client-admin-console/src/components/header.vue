@@ -18,9 +18,9 @@ import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
 import { storeToRefs } from 'pinia';
 import { computed, defineComponent, ref } from 'vue';
-import { useAccountConsoleURL } from '../composables/account-console';
-import { LayoutTopNavigation } from '../config/layout';
-import LogoSVG from './svg/LogoSVG';
+import { useAccountConsoleURL } from '../composables/account-console.ts';
+import { LayoutTopNavigation } from '../config/layout/index.ts';
+import LogoSVG from './svg/LogoSVG.ts';
 
 export default defineComponent({
     components: {

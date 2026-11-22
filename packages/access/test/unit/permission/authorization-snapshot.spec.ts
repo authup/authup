@@ -18,7 +18,7 @@ import type {
     PermissionCompileContext,
     PermissionEvaluationContext,
     PermissionPolicyBinding,
-} from '../../../src';
+} from '../../../src/index.ts';
 import {
     AUTHORIZATION_POLICY_WITHHELD_TYPE,
     AuthorizationCatalogStaleError,
@@ -30,7 +30,7 @@ import {
     createAuthorizationEvaluator,
     createAuthorizationSnapshotEvaluator,
     isPermissionError,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 class StampPolicyValidator extends Container<{ at: Date }> {
     override initialize() {

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AttributesPolicy } from './types';
+import type { AttributesPolicy } from './types.ts';
 
 export function defineAttributesPolicy<
     T extends Record<string, any> = Record<string, any>,

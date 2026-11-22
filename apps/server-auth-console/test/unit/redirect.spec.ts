@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { sanitizeRelativeRedirect } from '../../src/redirect';
+import { sanitizeRelativeRedirect } from '../../src/redirect.ts';
 
 describe('sanitizeRelativeRedirect', () => {
     it('should accept a simple rooted path', () => {

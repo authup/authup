@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ClientOptions } from '../client';
-import type { APIRequestOptions } from '../domains';
+import type { ClientOptions } from '../client/index.ts';
+import type { APIRequestOptions } from '../domains/index.ts';
 
 export type FakeRequest = {
     method: string,

@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { aggregatePermissionPolicyBindings, buildPermissionKey } from '../helpers';
-import type { PermissionPolicyBinding, PermissionPolicyBindingAggregated } from '../types';
-import type { IPermissionProvider, PermissionGetOptions } from './types';
+import { aggregatePermissionPolicyBindings, buildPermissionKey } from '../helpers/index.ts';
+import type { PermissionPolicyBinding, PermissionPolicyBindingAggregated } from '../types.ts';
+import type { IPermissionProvider, PermissionGetOptions } from './types.ts';
 
 export class PermissionMemoryProvider implements IPermissionProvider {
     protected items : Record<string, PermissionPolicyBindingAggregated> = {};

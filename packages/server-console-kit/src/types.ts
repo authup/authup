@@ -6,7 +6,7 @@
  */
 
 import type { IAppEvent } from 'routup';
-import type { IThemeProvider } from './theme/index';
+import type { IThemeProvider } from './theme/index.ts';
 
 export type UIClientPreferences = {
     locale?: string,

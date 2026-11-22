@@ -5,18 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './content-action';
-export * from './form-input-list';
-export * from './pagination';
-export * from './entity';
-export * from './title';
-export * from './search';
-export * from './toggle-button';
-export * from './ALanguageSwitcherDropdown';
+export * from './content-action/index.ts';
+export * from './form-input-list/index.ts';
+export * from './pagination/index.ts';
+export * from './entity/index.ts';
+export * from './title/index.ts';
+export * from './search/index.ts';
+export * from './toggle-button/index.ts';
+export * from './ALanguageSwitcherDropdown.ts';
 
-export * from './types';
+export * from './types.ts';
 
-export { AFormSubmit } from './AFormSubmit';
+export { AFormSubmit } from './AFormSubmit.ts';
 export { default as AAccountShell } from './AAccountShell.vue';
 export { default as AAuthApp } from './AAuthApp.vue';
 export { default as AAuthShell } from './AAuthShell.vue';

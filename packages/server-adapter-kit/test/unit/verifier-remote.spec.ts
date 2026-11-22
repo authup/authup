@@ -19,10 +19,10 @@ import {
 } from 'vitest';
 import type { ITokenCache, TokenCacheEntry } from 'vouchly';
 import { isVouchlyError } from 'vouchly';
-import type { TokenVerifierContext } from '../../src';
-import { TokenVerifier } from '../../src';
-import { INTROSPECTION_ENDPOINT, TokenPayload } from '../data/token';
-import { Faker } from '../utils';
+import type { TokenVerifierContext } from '../../src/index.ts';
+import { TokenVerifier } from '../../src/index.ts';
+import { INTROSPECTION_ENDPOINT, TokenPayload } from '../data/token.ts';
+import { Faker } from '../utils/index.ts';
 
 const BASE_URL = 'http://localhost:3001';
 

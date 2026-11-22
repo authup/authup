@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
-import { maybeInvertPolicyOutcome } from '../../helpers';
+import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation/index.ts';
+import { maybeInvertPolicyOutcome } from '../../helpers/index.ts';
 import { BuiltInPolicyType } from '../constants.ts';
-import type { DatePolicy } from './types';
-import { DatePolicyValidator } from './validator';
+import type { DatePolicy } from './types.ts';
+import { DatePolicyValidator } from './validator.ts';
 
 function isBound(value: Date | string | number | null | undefined) : value is Date | string | number {
     return value !== undefined && value !== null;

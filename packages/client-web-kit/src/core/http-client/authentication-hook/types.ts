@@ -5,7 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import type { HTTPClientBuildOptions } from '../types';
+import type { HTTPClientBuildOptions } from '../types.ts';
 import type { Pinia } from 'pinia';
 
 export type HTTPClientAuthenticationHookInstallOptions = HTTPClientBuildOptions & {

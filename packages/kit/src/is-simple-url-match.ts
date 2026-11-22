@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isSimpleMatch } from './is-simple-match';
+import { isSimpleMatch } from './is-simple-match.ts';
 
 /**
  * Reduce a URL to the form a browser would navigate to.

@@ -7,10 +7,10 @@
 
 import type { ManagerOptions, Socket } from 'socket.io-client';
 import { Manager } from 'socket.io-client';
-import type { CTSEvents, DefaultEvents, STCEvents } from '../../types';
-import { cleanDoubleSlashes } from '../../utils';
-import type { ClientManagerContext, ClientManagerTokenFn } from './types';
-import { isDisconnectDescription, toClientManagerTokenAsyncFn } from './utils';
+import type { CTSEvents, DefaultEvents, STCEvents } from '../../types.ts';
+import { cleanDoubleSlashes } from '../../utils/index.ts';
+import type { ClientManagerContext, ClientManagerTokenFn } from './types.ts';
+import { isDisconnectDescription, toClientManagerTokenAsyncFn } from './utils.ts';
 
 export class ClientManager<
     ListenEvents extends DefaultEvents = STCEvents,

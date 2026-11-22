@@ -12,8 +12,8 @@ import {
     getRequestStringParam,
     getRequestStringParamOrFail,
     useRequestParamID,
-} from '../../../../../src/adapters/http/request';
-import { createFakeEvent } from './fake-event';
+} from '../../../../../src/adapters/http/request/index.ts';
+import { createFakeEvent } from './fake-event.ts';
 
 const UUID = '4f4d3b3e-1a2b-4c3d-8e9f-0a1b2c3d4e5f';
 

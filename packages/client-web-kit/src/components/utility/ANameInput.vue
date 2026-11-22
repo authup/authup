@@ -11,7 +11,7 @@ import { computed, defineComponent } from 'vue';
 import { VCFormInput } from '@vuecs/forms';
 import { VCIcon } from '@vuecs/icon';
 import { TranslatorTranslationActionKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { useTranslations } from '../../core';
+import { useTranslations } from '../../core/index.ts';
 
 /**
  * Name input with an attached "regenerate" button rendered inside the

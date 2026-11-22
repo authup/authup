@@ -6,12 +6,12 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { AuthorizationCheckPermissions, IdentityPolicyData } from '../../../src';
+import type { AuthorizationCheckPermissions, IdentityPolicyData } from '../../../src/index.ts';
 import {
     BuiltInPolicyType,
     createAuthorizationCheckEvaluator,
     definePolicyData,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 const REALM_ID = '2e0d4d2a-1b25-4a2a-9a9f-5a29b1a67b21';
 const REALM_NAME = 'tenant';

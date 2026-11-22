@@ -10,10 +10,10 @@ import { createValidator } from '@validup/zod';
 import { Container, ValidupError, isValidupError } from 'validup';
 import { z } from 'zod';
 import { isObject } from '@authup/kit';
-import type { PolicyValidators } from '../../policy';
-import { BuiltInPolicyType, PolicyDefaultValidators } from '../../policy';
-import { AUTHORIZATION_POLICY_WITHHELD_TYPE } from './constants';
-import type { AuthorizationPolicy } from './types';
+import type { PolicyValidators } from '../../policy/index.ts';
+import { BuiltInPolicyType, PolicyDefaultValidators } from '../../policy/index.ts';
+import { AUTHORIZATION_POLICY_WITHHELD_TYPE } from './constants.ts';
+import type { AuthorizationPolicy } from './types.ts';
 
 type AuthorizationPolicyHead = {
     type: string,

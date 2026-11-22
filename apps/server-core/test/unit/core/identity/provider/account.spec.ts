@@ -21,13 +21,13 @@ import type { OAuth2IdentityProvider, Realm, User } from '@authup/core-kit';
 import { IdentityProviderProtocol, buildUserFakeEmail } from '@authup/core-kit';
 import { EntityConflictError, ErrorCode } from '@authup/errors';
 import { createNanoID } from '@authup/kit';
-import type { IdentityProviderAccountManagerContext, IdentityProviderIdentity } from '../../../../../src/core';
+import type { IdentityProviderAccountManagerContext, IdentityProviderIdentity } from '../../../../../src/core/index.ts';
 import {
     IdentityProviderAccountManager,
     IdentityProviderAttributeMapper,
     IdentityProviderPermissionMapper,
     IdentityProviderRoleMapper,
-} from '../../../../../src/core';
+} from '../../../../../src/core/index.ts';
 import { IdentityProviderEnrollmentDeniedError } from '../../../../../src/core/identity/provider/account/enrollment-error.ts';
 import type {
     IOAuth2AccessPolicyEvaluator,
@@ -54,10 +54,10 @@ import {
     UserPermissionEntity,
     UserRepository,
     UserRoleEntity,
-} from '../../../../../src';
-import { RealmRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/realm/repository';
+} from '../../../../../src/index.ts';
+import { RealmRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/realm/repository.ts';
 import { DatabaseInjectionKey } from '../../../../../src/app/index.ts';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 
 describe('core/identity/provider/account', () => {
     const suite = createTestApplication();

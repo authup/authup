@@ -17,8 +17,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { serve } from 'routup/node';
 import { App, defineCoreHandler } from 'routup';
-import { createHandler, resolveConfig } from '../../src';
-import type { Config } from '../../src';
+import { createHandler, resolveConfig } from '../../src/index.ts';
+import type { Config } from '../../src/index.ts';
 
 const SHELL = '<!doctype html><html><head><!--preload-links--></head><body><div id="app"><!--app-html--></div></body></html>';
 

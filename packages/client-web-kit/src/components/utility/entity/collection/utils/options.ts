@@ -6,7 +6,7 @@
  */
 
 import { merge } from 'smob';
-import type { EntityCollectionRenderOptions, EntityCollectionVProps } from '../types';
+import type { EntityCollectionRenderOptions, EntityCollectionVProps } from '../types.ts';
 
 function mergeListOption<T extends boolean | Record<string, any> | undefined>(
     primary: T,

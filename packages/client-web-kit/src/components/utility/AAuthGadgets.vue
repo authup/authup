@@ -7,7 +7,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import AColorModeSwitcher from './AColorModeSwitcher.vue';
-import { ALanguageSwitcherDropdown } from './ALanguageSwitcherDropdown';
+import { ALanguageSwitcherDropdown } from './ALanguageSwitcherDropdown.ts';
 
 // Top-right control cluster shared by every auth surface (the admin console's
 // auth layout + the embedded SSR app + the account console): color mode

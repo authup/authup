@@ -13,8 +13,8 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
-import { createFakeRealm } from '../../../../utils';
+import { createTestApplication } from '../../../../app/index.ts';
+import { createFakeRealm } from '../../../../utils/index.ts';
 
 // A rename locks the folder, its resolved parent and its descendants, so a
 // parent rename and a child rename take those rows in opposite orders. Only

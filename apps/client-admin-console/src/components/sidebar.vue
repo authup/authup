@@ -20,7 +20,7 @@ import {
 import { VCIcon } from '@vuecs/icon';
 import { storeToRefs } from 'pinia';
 import { computed, defineComponent } from 'vue';
-import { Navigation } from '../config/layout';
+import { Navigation } from '../config/layout/index.ts';
 
 export default defineComponent({
     components: { ITranslateT, VCIcon },

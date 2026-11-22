@@ -12,8 +12,8 @@ import vuecs from '@vuecs/core';
 import { createPinia } from 'pinia';
 import type { Component } from 'vue';
 import { createSSRApp, h } from 'vue';
-import { install } from '../../src/module';
-import type { Options } from '../../src/types';
+import { install } from '../../src/module.ts';
+import type { Options } from '../../src/types.ts';
 
 const noop = () => undefined;
 

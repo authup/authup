@@ -12,7 +12,7 @@ import {
     TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { assignFormProperties, useTranslations } from '../../../core';
+import { assignFormProperties, useTranslations } from '../../../core/index.ts';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
@@ -24,7 +24,7 @@ import {
 } from 'vue';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { VCIcon } from '@vuecs/icon';
-import { onChange, useUpdatedAt } from '../../../composables';
+import { onChange, useUpdatedAt } from '../../../composables/index.ts';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({

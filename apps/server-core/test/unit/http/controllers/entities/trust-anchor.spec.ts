@@ -14,8 +14,8 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
-import { expectClientError } from '../../../../utils';
+import { createTestApplication } from '../../../../app/index.ts';
+import { expectClientError } from '../../../../utils/index.ts';
 
 const CA_CERTIFICATE = readFileSync(
     new URL('../../../../data/certificates/certificate.pem', import.meta.url),

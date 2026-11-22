@@ -32,8 +32,8 @@ import {
     TaggedCacheInjectionKey,
 } from '../../../../../src/app/index.ts';
 import { ClientIdentityRepository, UserIdentityRepository } from '../../../../../src/app/modules/identity/index.ts';
-import { createTestApplication } from '../../../../app';
-import { createFakeClient, createFakeRealm, createFakeUser } from '../../../../utils';
+import { createTestApplication } from '../../../../app/index.ts';
+import { createFakeClient, createFakeRealm, createFakeUser } from '../../../../utils/index.ts';
 
 describe('app/modules/identity/repositories (principal cache, #3688)', () => {
     const suite = createTestApplication();

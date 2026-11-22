@@ -12,7 +12,7 @@ import { defineComponent } from 'vue';
 import {
     defineEntityManager,
     defineEntityVEmitOptions,
-} from '../../utility';
+} from '../../utility/index.ts';
 import AToggleButton from '../../utility/toggle-button/AToggleButton.vue';
 
 export default defineComponent({

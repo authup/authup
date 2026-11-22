@@ -7,8 +7,8 @@
 
 import type { IContainer } from 'eldin';
 import type { IModule } from 'orkos';
-import { InjectionKey, ModuleName } from './constants';
-import type { Config, ConfigFactory } from './types';
+import { InjectionKey, ModuleName } from './constants.ts';
+import type { Config, ConfigFactory } from './types.ts';
 
 /**
  * A console's own configuration, resolved once and shared with every module

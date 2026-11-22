@@ -12,7 +12,7 @@ import {
     Client,
     createClientTokenCreator,
     isClientErrorDueTimeout,
-} from '../../src';
+} from '../../src/index.ts';
 
 function createStalledTransport() : MemoryTransport {
     return new MemoryTransport({

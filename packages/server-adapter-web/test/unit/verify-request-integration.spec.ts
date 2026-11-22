@@ -17,8 +17,8 @@ import {
     it,
     vi,
 } from 'vitest';
-import { verifyRequest } from '../../src';
-import { Signer } from '../utils/signer';
+import { verifyRequest } from '../../src/index.ts';
+import { Signer } from '../utils/signer.ts';
 
 const sub = 'a1f4c2e3-6b7d-4e8f-9a0b-1c2d3e4f5a6b';
 const realm_id = 'b2a5d3f4-7c8e-4f9a-8b1c-2d3e4f5a6b7c';

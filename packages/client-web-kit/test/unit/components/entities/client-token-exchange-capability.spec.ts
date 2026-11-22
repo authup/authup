@@ -12,11 +12,11 @@ import { buildEventFullName } from '@authup/core-realtime-kit';
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h, provide } from 'vue';
-import { AClientTokenExchangeCapabilities } from '../../../../src/components/entities/client-token-exchange-capability';
+import { AClientTokenExchangeCapabilities } from '../../../../src/components/entities/client-token-exchange-capability/index.ts';
 import AClientTokenExchangeCapabilityForm from '../../../../src/components/entities/client-token-exchange-capability/AClientTokenExchangeCapabilityForm.vue';
-import { AFormSubmit } from '../../../../src/components/utility';
-import { SocketClientSymbol } from '../../../../src/core/socket-manager';
-import { mountKitComponent } from '../../../utils';
+import { AFormSubmit } from '../../../../src/components/utility/index.ts';
+import { SocketClientSymbol } from '../../../../src/core/socket-manager/index.ts';
+import { mountKitComponent } from '../../../utils/index.ts';
 
 const CLIENT_ID = '3f5a1c2e-7d4b-4e8a-9c0f-1a2b3c4d5e6f';
 const CAPABILITY_ID = '7c9e6679-7425-40de-944b-e07fc1f90ae7';

@@ -6,7 +6,7 @@
  */
 
 import { IdentityProviderProtocol } from '@authup/core-kit';
-import type { IdentityProviderProtocolElement } from './type';
+import type { IdentityProviderProtocolElement } from './type.ts';
 
 const elements = {
     [IdentityProviderProtocol.OAUTH2]: {

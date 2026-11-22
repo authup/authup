@@ -17,8 +17,8 @@ import { KeyStatus } from '@authup/core-kit';
 import { signToken } from '@authup/server-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { JWKType, JWKUse, OAuth2TokenKind } from '@authup/specs';
-import { createTestApplication } from '../../../../../app';
-import { httpRequest } from '../../../../../utils';
+import { createTestApplication } from '../../../../../app/index.ts';
+import { httpRequest } from '../../../../../utils/index.ts';
 
 /**
  * A token is only verified with a key of the realm its payload names: the

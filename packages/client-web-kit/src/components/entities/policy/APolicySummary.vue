@@ -16,7 +16,7 @@ import {
     TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { useEntityNameTranslator, useTranslations } from '../../../core';
+import { useEntityNameTranslator, useTranslations } from '../../../core/index.ts';
 import APolicyTypeBadge from './APolicyTypeBadge.vue';
 
 export default defineComponent({

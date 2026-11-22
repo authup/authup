@@ -18,13 +18,13 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     createFakeClient,
     createFakeRealm,
     createFakeUser,
     expectClientError,
-} from '../../../../utils';
+} from '../../../../utils/index.ts';
 
 describe('client token exchange capabilities', () => {
     const suite = createTestApplication();

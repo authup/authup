@@ -7,8 +7,8 @@
 
 import type { IdentityProviderPreset } from '@authup/core-kit';
 import { defineComponent } from 'vue';
-import { getIdentityProviderPresetElement } from './preset';
-import { hasNormalizedSlot, normalizeSlot } from '../../../core';
+import { getIdentityProviderPresetElement } from './preset/index.ts';
+import { hasNormalizedSlot, normalizeSlot } from '../../../core/index.ts';
 
 export const AIdentityProviderPreset = defineComponent({
     props: {

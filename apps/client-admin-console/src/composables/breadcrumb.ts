@@ -17,8 +17,8 @@ import type { BreadcrumbItem, NavigationItem } from '@vuecs/navigation';
 import type { ComputedRef } from 'vue';
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
-import type { LayoutSection } from '../config/layout';
-import { LayoutSections, buildSectionURLs } from '../config/layout';
+import type { LayoutSection } from '../config/layout/index.ts';
+import { LayoutSections, buildSectionURLs } from '../config/layout/index.ts';
 
 const HOME_URL = '/';
 const HOME_ICON = 'fa6-solid:house';

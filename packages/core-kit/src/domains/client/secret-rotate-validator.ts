@@ -8,8 +8,8 @@
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import { ClientSecretMode } from './constants';
-import type { ClientSecretRotatePayload } from './types';
+import { ClientSecretMode } from './constants.ts';
+import type { ClientSecretRotatePayload } from './types.ts';
 
 export class ClientSecretRotateValidator extends Container<ClientSecretRotatePayload> {
     protected initialize() {

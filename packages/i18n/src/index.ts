@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './catalogs';
-export * from './constants';
-export * from './error';
-export * from './locales';
-export * from './types';
+export * from './catalogs/index.ts';
+export * from './constants.ts';
+export * from './error.ts';
+export * from './locales.ts';
+export * from './types.ts';

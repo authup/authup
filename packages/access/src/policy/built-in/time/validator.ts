@@ -8,8 +8,8 @@
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import type { TimePolicy } from './types';
-import { TimePolicyInterval } from './constants';
+import type { TimePolicy } from './types.ts';
+import { TimePolicyInterval } from './constants.ts';
 
 export class TimePolicyValidator extends Container<TimePolicy> {
     override initialize() {

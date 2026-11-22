@@ -14,7 +14,7 @@ import {
     TranslatorTranslationCommonKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { useTranslationsForNamespace } from '../../../core';
+import { useTranslationsForNamespace } from '../../../core/index.ts';
 import APolicyTypeBadge from './APolicyTypeBadge.vue';
 import APolicyDetailNav from './APolicyDetailNav.vue';
 

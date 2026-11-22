@@ -15,7 +15,7 @@ import {
     rankEventStats,
     sumEventStats,
     sumStats,
-} from '../../src/components/dashboard/stats';
+} from '../../src/components/dashboard/stats.ts';
 
 function row(createdAt: string, name: `${EventName}`, count: number, scope: `${EventScope}` = EventScope.OAUTH2): EventStatsRow {
     return {

@@ -8,8 +8,8 @@
 import { PermissionName } from '@authup/core-kit';
 import type { RouteRecordRaw, Router } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
-import { LayoutKey } from './config/layout';
-import { TOKEN_EXCHANGE_CAPABILITY_ACCESS_PERMISSIONS } from './config/permissions';
+import { LayoutKey } from './config/layout/index.ts';
+import { TOKEN_EXCHANGE_CAPABILITY_ACCESS_PERMISSIONS } from './config/permissions.ts';
 
 declare module 'vue-router' {
     interface RouteMeta {

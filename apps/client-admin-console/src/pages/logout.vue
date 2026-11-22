@@ -3,7 +3,7 @@
 import { buildEndSessionURL, injectStore } from '@authup/client-web-kit';
 import { defineComponent, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { injectAdminConsoleConfig } from '../di';
+import { injectAdminConsoleConfig } from '../di.ts';
 
 export default defineComponent({
     setup() {

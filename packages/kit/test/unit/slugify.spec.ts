@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { slugify } from '../../src';
+import { slugify } from '../../src/index.ts';
 
 describe('slugify', () => {
     it('lowercases and hyphenates non-alphanumeric runs', () => {

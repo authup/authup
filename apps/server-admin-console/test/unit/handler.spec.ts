@@ -13,7 +13,7 @@ import {
     it,
 } from 'vitest';
 import { serve } from 'routup/node';
-import { createHandler } from '../../src';
+import { createHandler } from '../../src/index.ts';
 
 /**
  * The service serves the BUILT `@authup/client-admin-console` bundle, so this

@@ -32,7 +32,7 @@ import { VCTimeago } from '@vuecs/timeago';
 import { useAlertDialog } from '@vuecs/overlays';
 import { computed, defineComponent, ref } from 'vue';
 import PageError from '../components/PageError.vue';
-import { useAccountToasts, usePageError } from './utils';
+import { useAccountToasts, usePageError } from './utils.ts';
 
 // One line on purpose: Tailwind's scanner must see the arbitrary-value
 // candidate unbroken to generate the utility.

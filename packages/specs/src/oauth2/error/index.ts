@@ -5,17 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './access-denied';
-export * from './client';
-export * from './client-unauthorized';
-export * from './device-authorization';
-export * from './grant';
-export * from './grant-type';
-export * from './login-required';
-export * from './mfa-required';
-export * from './module';
-export * from './request';
-export * from './response-type';
-export * from './scope';
-export * from './server';
-export * from './target';
+export * from './access-denied.ts';
+export * from './client.ts';
+export * from './client-unauthorized.ts';
+export * from './device-authorization.ts';
+export * from './grant.ts';
+export * from './grant-type.ts';
+export * from './login-required.ts';
+export * from './mfa-required.ts';
+export * from './module.ts';
+export * from './request.ts';
+export * from './response-type.ts';
+export * from './scope.ts';
+export * from './server.ts';
+export * from './target.ts';

@@ -23,9 +23,9 @@ import {
     createFakeOAuth2IdentityProvider,
     createFakeRealm,
     httpRequest,
-} from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
-import { ConfigInjectionKey } from '../../../../../../src/app/modules/config/constants';
+} from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
+import { ConfigInjectionKey } from '../../../../../../src/app/modules/config/constants.ts';
 
 const REDIRECT_URI = 'https://example.com/login/callback';
 const CODE_VERIFIER = 'aVeryLongCodeVerifierValueUsedByThePublicClient1234567890';

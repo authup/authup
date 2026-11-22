@@ -40,7 +40,7 @@ import './tailwind.css';
 import 'virtual:nuxt-icon-bundle/register';
 
 import type { Router } from 'vue-router';
-import { resolveBasePath } from './base-path';
+import { resolveBasePath } from './base-path.ts';
 import Activate from './pages/activate.vue';
 import Authorize from './pages/authorize.vue';
 import Device from './pages/device.vue';
@@ -50,8 +50,8 @@ import PasswordForgot from './pages/password-forgot.vue';
 import PasswordReset from './pages/password-reset.vue';
 import Register from './pages/register.vue';
 import VApp from './App.vue';
-import { providePayload } from './di';
-import type { HydrationPayload } from './contract';
+import { providePayload } from './di.ts';
+import type { HydrationPayload } from './contract.ts';
 
 export type CreateAppOptions = {
     httpClient?: IClient,

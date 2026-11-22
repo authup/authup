@@ -16,7 +16,7 @@ import {
     TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { DEFAULT_BUTTON_SIZE, assignFormProperties, useTranslations } from '../../../core';
+import { DEFAULT_BUTTON_SIZE, assignFormProperties, useTranslations } from '../../../core/index.ts';
 import { z } from 'zod';
 import type { PropType } from 'vue';
 import { defineComponent, reactive, ref } from 'vue';
@@ -30,7 +30,7 @@ import { IFieldValidation } from '@ilingo/validup-vue';
 import {
     defineEntityManager,
     defineEntityVEmitOptions,
-} from '../../utility';
+} from '../../utility/index.ts';
 
 // Inline attribute-only validator. `@authup/core-kit`'s
 // `IdentityProviderRoleMappingValidator` does cover these three keys

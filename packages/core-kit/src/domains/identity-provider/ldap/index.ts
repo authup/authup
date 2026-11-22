@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './check';
-export * from './types';
-export * from './validator';
+export * from './check.ts';
+export * from './types.ts';
+export * from './validator.ts';

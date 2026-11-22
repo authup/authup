@@ -8,8 +8,8 @@
 import { PermissionName } from '@authup/core-kit';
 import type { RouteRecordRaw } from 'vue-router';
 import { describe, expect, it } from 'vitest';
-import { LayoutKey } from '../../src/config/layout';
-import { routes } from '../../src/router';
+import { LayoutKey } from '../../src/config/layout/index.ts';
+import { routes } from '../../src/router.ts';
 
 function walk(records: RouteRecordRaw[], prefix = '') : { path: string, permissions: string[] }[] {
     return records.flatMap((record) => {

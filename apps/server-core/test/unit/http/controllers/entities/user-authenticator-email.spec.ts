@@ -14,10 +14,10 @@ import {
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import { UserAuthenticatorKind } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
-import { MailInjectionKey } from '../../../../../src/app';
+import { MailInjectionKey } from '../../../../../src/app/index.ts';
 import { FakeMailClient } from '../../../core/helpers/index.ts';
-import { createFakeUser, expectClientError } from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+import { createFakeUser, expectClientError } from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 describe('src/http/controllers/user-authenticator (email otp)', () => {
     const mailClient = new FakeMailClient();

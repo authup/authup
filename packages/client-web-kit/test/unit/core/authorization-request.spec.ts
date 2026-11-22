@@ -11,7 +11,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { buildAuthorizeURL } from '../../../src';
+import { buildAuthorizeURL } from '../../../src/index.ts';
 
 const CONTEXT = {
     baseURL: 'https://auth.example.com',

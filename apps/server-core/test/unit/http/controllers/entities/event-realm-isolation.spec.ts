@@ -14,8 +14,8 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
-import { createFakeClient, createFakeRealm, createFakeUser } from '../../../../utils';
+import { createTestApplication } from '../../../../app/index.ts';
+import { createFakeClient, createFakeRealm, createFakeUser } from '../../../../utils/index.ts';
 
 /**
  * Wave-2 regression (mirrors the wave-0 field-projection suite): an own-scoped

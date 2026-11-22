@@ -16,14 +16,14 @@ import { ScopeName, UserAuthenticatorKind } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
 import { OAuth2AuthorizationResponseType, OAuth2ErrorCode } from '@authup/specs';
 import { Secret, TOTP } from 'otpauth';
-import { generateOAuth2CodeVerifier } from '../../../../../../src/core';
+import { generateOAuth2CodeVerifier } from '../../../../../../src/core/index.ts';
 import {
     createFakeClient,
     createFakeUser,
     expectClientError,
     httpRequest,
-} from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+} from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 
 describe('src/http/controllers/token (password grant + authorize MFA)', () => {
     const suite = createTestApplication({

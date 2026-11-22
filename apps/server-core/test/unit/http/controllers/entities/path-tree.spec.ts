@@ -15,12 +15,12 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     createFakeRealm,
     createFakeUser,
     expectClientError,
-} from '../../../../utils';
+} from '../../../../utils/index.ts';
 
 describe('http/controllers/path (tree)', () => {
     const suite = createTestApplication();

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createNanoID } from './nanoid';
+import { createNanoID } from './nanoid.ts';
 
 const SECRET_ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_!.';
 const SECRET_LENGTH = 32;

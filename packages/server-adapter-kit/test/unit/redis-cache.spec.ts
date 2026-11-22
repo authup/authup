@@ -14,7 +14,7 @@ import {
     vi,
 } from 'vitest';
 import type { TokenCacheEntry } from 'vouchly';
-import { RedisTokenCache } from '../../src';
+import { RedisTokenCache } from '../../src/index.ts';
 
 const entry : TokenCacheEntry = {
     claims: { sub: 'user', exp: 1 },

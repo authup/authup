@@ -10,7 +10,7 @@ import { EntityType } from '@authup/core-kit';
 import { VCIcon } from '@vuecs/icon';
 import type { PropType } from 'vue';
 import { computed, defineComponent } from 'vue';
-import { useEntityNameTranslator } from '../../../core';
+import { useEntityNameTranslator } from '../../../core/index.ts';
 
 export default defineComponent({
     components: { VCIcon },

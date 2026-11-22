@@ -6,4 +6,4 @@
  */
 
 export { default as AContentAction } from './AContentAction.vue';
-export * from './types';
+export * from './types.ts';

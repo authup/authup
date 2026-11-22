@@ -10,33 +10,33 @@ import { InternalError } from '@authup/errors';
 import { buildIssuesForZodError } from '@validup/zod';
 import { ValidupError } from 'validup';
 import { z } from 'zod';
-import type { BasePolicy, IdentityPolicyData } from '../../policy';
+import type { BasePolicy, IdentityPolicyData } from '../../policy/index.ts';
 import {
     BuiltInPolicyType,
     IdentityPermissionBindingPolicyEvaluator,
     PolicyData,
     PolicyDefaultEvaluators,
     PolicyEngine,
-} from '../../policy';
+} from '../../policy/index.ts';
 import type {
     IPermissionEvaluator,
     PermissionCompileContext,
     PermissionCompileResult,
     PermissionEvaluationContext,
-} from '../evaluator';
-import { PermissionEvaluator } from '../evaluator';
-import { PermissionError } from '../error';
-import { buildPermissionKey } from '../helpers';
-import { PermissionMemoryProvider } from '../provider';
-import { normalizeRealmScope } from '../realm-scope';
-import type { RealmScope } from '../realm-scope';
-import type { BasePermission, PermissionPolicyBinding } from '../types';
-import { AuthorizationCatalogStaleError } from './error';
-import { AUTHORIZATION_POLICY_WITHHELD_TYPE } from './constants';
-import { projectAuthorizationPolicy, projectAuthorizationPolicyPartially } from './policy';
-import { parseAuthorizationCheckEvaluatorInput } from './check-schema';
-import { parseAuthorizationEvaluatorInput, parseAuthorizationSnapshotInput } from './schema';
-import { parseAuthorizationSnapshotEvaluatorInput } from './snapshot-schema';
+} from '../evaluator/index.ts';
+import { PermissionEvaluator } from '../evaluator/index.ts';
+import { PermissionError } from '../error/index.ts';
+import { buildPermissionKey } from '../helpers/index.ts';
+import { PermissionMemoryProvider } from '../provider/index.ts';
+import { normalizeRealmScope } from '../realm-scope/index.ts';
+import type { RealmScope } from '../realm-scope/index.ts';
+import type { BasePermission, PermissionPolicyBinding } from '../types.ts';
+import { AuthorizationCatalogStaleError } from './error.ts';
+import { AUTHORIZATION_POLICY_WITHHELD_TYPE } from './constants.ts';
+import { projectAuthorizationPolicy, projectAuthorizationPolicyPartially } from './policy.ts';
+import { parseAuthorizationCheckEvaluatorInput } from './check-schema.ts';
+import { parseAuthorizationEvaluatorInput, parseAuthorizationSnapshotInput } from './schema.ts';
+import { parseAuthorizationSnapshotEvaluatorInput } from './snapshot-schema.ts';
 import type {
     AuthorizationCatalog,
     AuthorizationCheckEvaluatorInput,
@@ -47,7 +47,7 @@ import type {
     AuthorizationSnapshot,
     AuthorizationSnapshotEvaluatorInput,
     AuthorizationSnapshotInput,
-} from './types';
+} from './types.ts';
 
 /**
  * Every value `realmScopeMatches` decides, and nothing it would have to guess

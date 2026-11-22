@@ -19,7 +19,7 @@ import {
     TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { injectHTTPClient, useTranslations, wrapFnWithBusyState } from '../../../core';
+import { injectHTTPClient, useTranslations, wrapFnWithBusyState } from '../../../core/index.ts';
 import { createValidator } from '@validup/zod';
 import {
     Container,
@@ -28,7 +28,7 @@ import {
 import type { Validator } from 'validup';
 import { defineIssueItem } from '@ebec/core';
 import { z } from 'zod';
-import { AFormSubmit } from '../../utility';
+import { AFormSubmit } from '../../utility/index.ts';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
 // Cross-field equality between `password` and `passwordRepeat` — runs

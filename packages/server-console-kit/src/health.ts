@@ -7,8 +7,8 @@
 
 import type { IApp, IAppEvent } from 'routup';
 import { defineCoreHandler } from 'routup';
-import { HEALTH_LIVENESS_PATH, HEALTH_READINESS_PATH } from './constants';
-import type { ShutdownState } from './types';
+import { HEALTH_LIVENESS_PATH, HEALTH_READINESS_PATH } from './constants.ts';
+import type { ShutdownState } from './types.ts';
 
 /**
  * Keyed by the app the routes were mounted on, so two consoles in one

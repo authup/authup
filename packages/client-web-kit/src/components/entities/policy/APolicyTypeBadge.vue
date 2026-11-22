@@ -12,8 +12,8 @@ import {
     TranslatorTranslationClientKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { useTranslationsForNamespace } from '../../../core';
-import { POLICY_TYPE_TRANSLATION_KEYS } from './policy-type';
+import { useTranslationsForNamespace } from '../../../core/index.ts';
+import { POLICY_TYPE_TRANSLATION_KEYS } from './policy-type.ts';
 
 export default defineComponent({
     components: { VCBadge },

@@ -10,7 +10,7 @@ import { ValidatorGroup } from '@authup/kit';
 import { describe, expect, it } from 'vitest';
 import type { ValidupError } from 'validup';
 import { isValidupError } from 'validup';
-import { RootProvisioningValidator } from '../../../../../src/core/provisioning/entities';
+import { RootProvisioningValidator } from '../../../../../src/core/provisioning/entities/index.ts';
 
 const validator = new RootProvisioningValidator();
 const run = (data: Record<string, any>) => validator.run(data, { group: ValidatorGroup.PROVISIONING });

@@ -35,15 +35,15 @@ import {
     watch,
 } from 'vue';
 import { useRoute } from 'vue-router';
-import { readPathDeleteImpact } from '../../../composables/path-delete';
+import { readPathDeleteImpact } from '../../../composables/path-delete.ts';
 import {
     PATH_SCOPE_QUERY_KEY,
     buildPathCollectionFilters,
     readPathScopeQuery,
     reloadCollection,
-} from '../../../composables/path-scope';
+} from '../../../composables/path-scope.ts';
 import EntityActivity from '../../../components/stats/EntityActivity.vue';
-import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
+import type { EntityStatsLoadFn } from '../../../composables/entity-stats.ts';
 
 export default defineComponent({
     components: {

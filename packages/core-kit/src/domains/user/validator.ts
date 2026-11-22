@@ -9,10 +9,10 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
 import { ValidatorGroup } from '@authup/kit';
-import { USER_PASSWORD_MAX_LENGTH, USER_PASSWORD_MIN_LENGTH } from './constants';
-import type { User } from './entity';
-import type { UserValidatorOptions } from './types';
-import { isUserNameValid } from './utils';
+import { USER_PASSWORD_MAX_LENGTH, USER_PASSWORD_MIN_LENGTH } from './constants.ts';
+import type { User } from './entity.ts';
+import type { UserValidatorOptions } from './types.ts';
+import { isUserNameValid } from './utils.ts';
 
 export class UserValidator extends Container<User> {
     declare protected options: UserValidatorOptions;

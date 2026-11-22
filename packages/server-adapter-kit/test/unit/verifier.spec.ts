@@ -16,15 +16,15 @@ import {
     vitest,
 } from 'vitest';
 import { Client } from '@authup/core-http-kit';
-import { MemoryTokenCache, TokenVerifier } from '../../src';
+import { MemoryTokenCache, TokenVerifier } from '../../src/index.ts';
 import {
     BoundTokenID,
     BoundTokenPayload,
     TokenCertificateThumbprint,
     TokenPayload,
     introspectToken,
-} from '../data/token';
-import { FAKER_KEY_ID, Faker, readCachedClaims } from '../utils';
+} from '../data/token.ts';
+import { FAKER_KEY_ID, Faker, readCachedClaims } from '../utils/index.ts';
 
 const LOCAL_NAMESPACE = 'authup:local:http://localhost:3001';
 const REMOTE_NAMESPACE = 'authup:remote:http://localhost:3001';

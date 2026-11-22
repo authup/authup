@@ -11,7 +11,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import type { BasePolicy } from '../../../src';
+import type { BasePolicy } from '../../../src/index.ts';
 import { DecisionStrategy } from '@authup/kit';
 import {
     BuiltInPolicyType,
@@ -20,7 +20,7 @@ import {
     defineAttributesPolicy,
     definePolicyEvaluationContext,
     definePolicyWithType,
-} from '../../../src';
+} from '../../../src/index.ts';
 import { PolicyDefaultEvaluators } from '../../../src/policy/constants.ts';
 
 type User = {

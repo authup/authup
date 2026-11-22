@@ -5,17 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EntityQueryInput } from '../../../helpers';
-import { buildQueryString } from '../../../helpers';
+import type { EntityQueryInput } from '../../../helpers/index.ts';
+import { buildQueryString } from '../../../helpers/index.ts';
 import type { IdentityProvider, IdentityProviderAccount } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { buildIdentityProviderAuthorizePath } from '@authup/core-kit';
 import { base64URLEncode } from '@authup/kit';
-import { cleanDoubleSlashes, nullifyEmptyObjectProperties } from '../../../utils';
-import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
-import { BaseAPI } from '../../base';
-import { buildStatsURL } from '../../stats';
-import type { EntitySchemaResponse, EntityStatsQuery, EntityStatsResponse } from '../../stats';
+import { cleanDoubleSlashes, nullifyEmptyObjectProperties } from '../../../utils/index.ts';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base.ts';
+import { BaseAPI } from '../../base.ts';
+import { buildStatsURL } from '../../stats/index.ts';
+import type { EntitySchemaResponse, EntityStatsQuery, EntityStatsResponse } from '../../stats/index.ts';
 import type {
     IIdentityProviderAPI,
     IdentityProviderAuthorizeUriOptions,
@@ -24,8 +24,8 @@ import type {
     IdentityProviderLinkRequestResponse,
     IdentityProviderSavePayload,
     IdentityProviderUpdatePayload,
-} from './types';
-import { buildRequestConfig } from '../../utils';
+} from './types.ts';
+import { buildRequestConfig } from '../../utils.ts';
 
 export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI {
     async getStats(query: EntityStatsQuery<IdentityProvider> = {}, options?: APIRequestOptions): Promise<EntityStatsResponse> {

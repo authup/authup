@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { DecisionStrategy } from '@authup/kit';
-import type { PermissionPolicyBinding, RealmScope } from '../../../src';
+import type { PermissionPolicyBinding, RealmScope } from '../../../src/index.ts';
 import {
     BuiltInPolicyType,
     IdentityPermissionBindingPolicyEvaluator,
@@ -18,7 +18,7 @@ import {
     PolicyEngine,
     definePolicyData,
     definePolicyWithType,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 const identityData = {
     type: 'user',

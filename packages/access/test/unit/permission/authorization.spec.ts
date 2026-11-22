@@ -11,7 +11,7 @@ import { Container, isValidupError  } from 'validup';
 import { describe, expect, it } from 'vitest';
 import { createValidator } from '@validup/zod';
 import { z } from 'zod';
-import type { AuthorizationEvaluatorInput, IPolicyEvaluator, IdentityPolicyData } from '../../../src';
+import type { AuthorizationEvaluatorInput, IPolicyEvaluator, IdentityPolicyData } from '../../../src/index.ts';
 import {
     AuthorizationCatalogStaleError,
     BuiltInPolicyType,
@@ -21,7 +21,7 @@ import {
     createAuthorizationEvaluator,
     isPermissionError,
     realmScopeMatches,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 class WeekdayPolicyValidator extends Container<{ weekday: number }> {
     override initialize() {

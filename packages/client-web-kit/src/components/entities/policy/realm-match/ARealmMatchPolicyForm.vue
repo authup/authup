@@ -7,11 +7,11 @@ import {
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import { ITranslateT } from '@ilingo/vue';
-import { assignFormProperties, useTranslationsForNamespace } from '../../../../core';
+import { assignFormProperties, useTranslationsForNamespace } from '../../../../core/index.ts';
 import type { Policy } from '@authup/core-kit';
 import { VCFormGroup, VCFormSwitch } from '@vuecs/forms';
 import type { RealmMatchPolicy } from '@authup/access';
-import { onChange, useUpdatedAt } from '../../../../composables';
+import { onChange, useUpdatedAt } from '../../../../composables/index.ts';
 import AFormInputList from '../../../utility/form-input-list/AFormInputList.vue';
 import { IFieldValidation } from '@ilingo/validup-vue';
 

@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './constants';
-export * from './helper';
-export * from './module';
-export * from './rebase';
-export * from './registry';
-export * from './type';
+export * from './constants.ts';
+export * from './helper.ts';
+export * from './module.ts';
+export * from './rebase.ts';
+export * from './registry.ts';
+export * from './type.ts';

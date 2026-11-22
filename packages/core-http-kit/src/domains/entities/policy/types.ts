@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
-import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
-import type { EntityQueryInput } from '../../../helpers';
+import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats/index.ts';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base.ts';
+import type { EntityQueryInput } from '../../../helpers/index.ts';
 
 import type { BuiltInPolicies } from '@authup/access';
 import type { Policy } from '@authup/core-kit';

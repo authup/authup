@@ -14,13 +14,13 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     createFakeClient,
     createFakeRealm,
     createFakeUser,
     expectClientError,
-} from '../../../../utils';
+} from '../../../../utils/index.ts';
 
 /**
  * Left to the database cascades, a delete reaching filed users and clients

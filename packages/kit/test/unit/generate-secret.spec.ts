@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { generateSecret } from '../../src';
+import { generateSecret } from '../../src/index.ts';
 
 describe('generateSecret', () => {
     it('produces a 32-char secret from the expected charset', () => {

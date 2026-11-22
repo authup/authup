@@ -7,9 +7,9 @@
 
 import { arrayBufferToBase64, base64ToArrayBuffer } from '@authup/kit';
 import { getRandomValues, subtle } from 'uncrypto';
-import { SymmetricAlgorithm } from '../key/symmetric/constants';
-import { getKeyUsagesForSymmetricAlgorithm } from '../key/symmetric/key-usages';
-import type { ISymmetricCipher } from './types';
+import { SymmetricAlgorithm } from '../key/symmetric/constants.ts';
+import { getKeyUsagesForSymmetricAlgorithm } from '../key/symmetric/key-usages.ts';
+import type { ISymmetricCipher } from './types.ts';
 
 const IV_BYTE_LENGTH = 12;
 const KEY_BYTE_LENGTH = 32;

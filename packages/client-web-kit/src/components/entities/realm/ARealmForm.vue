@@ -8,7 +8,7 @@
 import { ValidatorGroup, generateName } from '@authup/kit';
 import { useValidup } from '@validup/vue';
 import { TranslatorTranslationEntityKey, TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { assignFormProperties, useTranslations } from '../../../core';
+import { assignFormProperties, useTranslations } from '../../../core/index.ts';
 import type { PropType } from 'vue';
 import {
     computed,
@@ -21,14 +21,14 @@ import {
 import type { Realm } from '@authup/core-kit';
 import { EntityType, REALM_MASTER_NAME, RealmValidator } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput, VCFormTextarea } from '@vuecs/forms';
-import { useIsEditing, useUpdatedAt } from '../../../composables';
+import { useIsEditing, useUpdatedAt } from '../../../composables/index.ts';
 import { IFieldValidation } from '@ilingo/validup-vue';
 import {
     AFormSubmit,
     ANameInput,
     defineEntityManager,
     defineEntityVEmitOptions,
-} from '../../utility';
+} from '../../utility/index.ts';
 
 export default defineComponent({
     components: {

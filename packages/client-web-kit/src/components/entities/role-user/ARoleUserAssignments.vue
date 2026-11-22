@@ -7,8 +7,8 @@
 
 <script lang="ts">
 import { computed, defineComponent } from 'vue';
-import { AUserRoleAssignment } from '../user-role';
-import { AUsers } from '../user/AUsers';
+import { AUserRoleAssignment } from '../user-role/index.ts';
+import { AUsers } from '../user/AUsers.ts';
 
 export default defineComponent({
     components: { AUsers, AUserRoleAssignment },

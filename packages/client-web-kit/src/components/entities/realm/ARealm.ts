@@ -9,12 +9,12 @@ import { EntityType } from '@authup/core-kit';
 import type { Realm } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { EntityVSlots } from '../../utility';
+import type { EntityVSlots } from '../../utility/index.ts';
 import {
     defineEntityManager,
     defineEntityVEmitOptions,
     defineEntityVProps,
-} from '../../utility';
+} from '../../utility/index.ts';
 
 export const ARealm = defineComponent({
     props: defineEntityVProps<Realm>(),

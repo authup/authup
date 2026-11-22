@@ -11,8 +11,8 @@ import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
 import { computed, defineComponent } from 'vue';
 import { useRoute } from 'vue-router';
-import { DEFAULT_BUTTON_SIZE, useTranslations } from '../../../core';
-import type { ContentActionMode } from './types';
+import { DEFAULT_BUTTON_SIZE, useTranslations } from '../../../core/index.ts';
+import type { ContentActionMode } from './types.ts';
 
 // Route-aware action for a page title row: "Add" while the overview route is
 // active, "Back" while the add route is active. Any other route renders

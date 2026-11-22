@@ -6,8 +6,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { JWTClaims } from '../../../src';
-import { getJWTClaimByPattern } from '../../../src';
+import type { JWTClaims } from '../../../src/index.ts';
+import { getJWTClaimByPattern } from '../../../src/index.ts';
 
 const claims : JWTClaims = {
     iss: 'https://google.de',

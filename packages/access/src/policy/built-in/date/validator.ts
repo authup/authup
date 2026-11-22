@@ -8,7 +8,7 @@
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import type { DatePolicy } from './types';
+import type { DatePolicy } from './types.ts';
 
 export class DatePolicyValidator extends Container<DatePolicy> {
     override initialize() {

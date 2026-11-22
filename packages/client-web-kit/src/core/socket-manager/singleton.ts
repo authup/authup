@@ -7,8 +7,8 @@
 
 import type { App } from 'vue';
 import type { ClientManager } from '@authup/core-realtime-kit';
-import { inject } from '../inject';
-import { provide } from '../provide';
+import { inject } from '../inject.ts';
+import { provide } from '../provide.ts';
 
 export const SocketClientSymbol = Symbol.for('AuthupSocketManager');
 

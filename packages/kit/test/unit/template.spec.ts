@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { template } from '../../src';
+import { template } from '../../src/index.ts';
 
 describe('src/template', () => {
     it('should substitute a known key and leave an unknown one', () => {

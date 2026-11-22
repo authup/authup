@@ -18,9 +18,9 @@ import {
     it,
     vitest,
 } from 'vitest';
-import { TokenVerifier } from '../../src';
-import { TokenPayload } from '../data/token';
-import { Faker } from '../utils';
+import { TokenVerifier } from '../../src/index.ts';
+import { TokenPayload } from '../data/token.ts';
+import { Faker } from '../utils/index.ts';
 
 const BASE_URL = 'http://localhost:3001';
 

@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProviderBaseMapping } from '../identity-provider';
-import type { Role } from '../role';
-import type { Realm } from '../realm';
+import type { IdentityProviderBaseMapping } from '../identity-provider/index.ts';
+import type { Role } from '../role/index.ts';
+import type { Realm } from '../realm/index.ts';
 
 export interface IdentityProviderRoleMapping extends IdentityProviderBaseMapping {
     id: string;

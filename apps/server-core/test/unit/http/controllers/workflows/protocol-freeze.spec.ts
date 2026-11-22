@@ -13,8 +13,8 @@ import {
 } from 'vitest';
 import { REALM_MASTER_NAME } from '@authup/core-kit';
 import { OAuth2TokenKind } from '@authup/specs';
-import { createFakeUser, httpRequest } from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+import { createFakeUser, httpRequest } from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 function decodeJwtPayload(token: string): Record<string, any> {
     return JSON.parse(new TextDecoder().decode(Uint8Array.fromBase64(token.split('.')[1], { alphabet: 'base64url' })));

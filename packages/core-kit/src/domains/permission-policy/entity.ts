@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Permission } from '../permission';
-import type { Policy } from '../policy';
-import type { Realm } from '../realm';
+import type { Permission } from '../permission/index.ts';
+import type { Policy } from '../policy/index.ts';
+import type { Realm } from '../realm/index.ts';
 
 export interface PermissionPolicy {
     id: string;

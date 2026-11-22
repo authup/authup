@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { CryptoAsymmetricAlgorithm } from './constants';
+import { CryptoAsymmetricAlgorithm } from './constants.ts';
 
 export function isAsymmetricAlgorithm(input: string) : input is CryptoAsymmetricAlgorithm {
     return (Object.values(CryptoAsymmetricAlgorithm) as string[]).includes(input);

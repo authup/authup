@@ -21,8 +21,8 @@ import {
     HTTPInjectionKey,
     LoggerInjectionKey,
 } from '../../../../../src/index.ts';
-import { createTestApplication } from '../../../../app';
-import { httpRequest } from '../../../../utils';
+import { createTestApplication } from '../../../../app/index.ts';
+import { httpRequest } from '../../../../utils/index.ts';
 
 describe('src/app/modules/http/health', () => {
     const suite = createTestApplication();

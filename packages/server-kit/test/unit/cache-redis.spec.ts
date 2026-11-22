@@ -13,7 +13,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { RedisCache } from '../../src';
+import { RedisCache } from '../../src/index.ts';
 
 // Bounded connection so this suite SKIPS (rather than hangs) when no redis is
 // reachable — CI without the compose stack, a laptop with docker down, etc.

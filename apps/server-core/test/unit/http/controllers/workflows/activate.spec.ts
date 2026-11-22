@@ -12,11 +12,11 @@ import {
     expect,
     it,
 } from 'vitest';
-import { MailInjectionKey } from '../../../../../src/app';
+import { MailInjectionKey } from '../../../../../src/app/index.ts';
 import { UserEntity } from '../../../../../src/adapters/database/domains/user/entity.ts';
 import { FakeMailClient } from '../../../core/helpers/index.ts';
-import { createFakeUser, expectClientError } from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+import { createFakeUser, expectClientError } from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 describe('http/controller/activate', () => {
     const suite = createTestApplication({

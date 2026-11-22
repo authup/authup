@@ -16,10 +16,10 @@ import {
     it,
     vi,
 } from 'vitest';
-import { CLI_CONFIG_ARGS, assertNoStrayPositionals } from '../../../src/cli/commands/config';
-import { defineCLIMigrationCommand } from '../../../src/cli/commands/migration';
-import { createCLIEntryPointCommand } from '../../../src/cli/module';
-import { PACKAGE_PATH } from '../../../src/path';
+import { CLI_CONFIG_ARGS, assertNoStrayPositionals } from '../../../src/cli/commands/config.ts';
+import { defineCLIMigrationCommand } from '../../../src/cli/commands/migration.ts';
+import { createCLIEntryPointCommand } from '../../../src/cli/module.ts';
+import { PACKAGE_PATH } from '../../../src/path.ts';
 
 // A regressed operation guard must fail here, not against a database.
 vi.mock('typeorm-extension', async (importOriginal) => ({

@@ -10,8 +10,8 @@ import type { FakeHandler } from '@authup/core-http-kit/testing';
 import { createPinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import { createApp, h } from 'vue';
-import { injectHTTPClientAuthenticationHook, installHTTPClientAuthenticationHook } from '../../../../src/core/http-client';
-import { injectStore, installStore } from '../../../../src/core/store';
+import { injectHTTPClientAuthenticationHook, installHTTPClientAuthenticationHook } from '../../../../src/core/http-client/index.ts';
+import { injectStore, installStore } from '../../../../src/core/store/index.ts';
 
 const noop = () => undefined;
 

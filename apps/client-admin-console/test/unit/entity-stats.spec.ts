@@ -21,13 +21,13 @@ import type {
     EntityStats,
     EntityStatsResponseLike,
     EntityStatsWindowEntry,
-} from '../../src/composables/entity-stats';
+} from '../../src/composables/entity-stats.ts';
 import {
     ENTITY_STATS_WINDOWS,
     buildStatsWindowStart,
     isStatsWindowCovered,
     useEntityStats,
-} from '../../src/composables/entity-stats';
+} from '../../src/composables/entity-stats.ts';
 
 const REALM_ID = '4f0f6f2c-4a0b-4f4a-9a3f-4b7d4b4a1f11';
 const OTHER_REALM_ID = '9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d';

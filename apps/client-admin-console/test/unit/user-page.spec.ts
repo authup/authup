@@ -8,8 +8,8 @@
 import { defineComponent, h } from 'vue';
 import type { RouteRecordRaw } from 'vue-router';
 import { describe, expect, it } from 'vitest';
-import { routes } from '../../src/router';
-import { mountPage } from '../utils';
+import { routes } from '../../src/router.ts';
+import { mountPage } from '../utils/index.ts';
 
 const USER_ID = '0b5c8f3e-1d2a-4c6b-9e7f-8a9b0c1d2e3f';
 

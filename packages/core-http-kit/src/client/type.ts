@@ -50,7 +50,7 @@ import type {
     IUserAuthenticatorAPI,
     IUserPermissionAPI,
     IUserRoleAPI,
-} from '../domains';
+} from '../domains/index.ts';
 
 export type ClientOptions = ClientOptionsInput;
 

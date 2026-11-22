@@ -21,7 +21,7 @@ import type { GetContext, IIlingo } from 'ilingo';
 import type { ObjectLiteral } from 'validup';
 import type { Ref } from 'vue';
 import { computed, ref, unref } from 'vue';
-import { injectHydrationStore, useHydratedValue } from '../hydration';
+import { injectHydrationStore, useHydratedValue } from '../hydration/index.ts';
 
 export function injectTranslatorLocale(): Ref<string> {
     return injectLocale();

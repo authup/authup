@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import { describe, expect, it } from 'vitest';
-import { UserValidator, isUserNameValid } from '../../../src';
+import { UserValidator, isUserNameValid } from '../../../src/index.ts';
 
 describe('src/domains/user', () => {
     it('should not be a valid user name ("bot" in name)', () => {

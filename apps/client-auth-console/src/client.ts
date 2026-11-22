@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createApp } from './app';
-import { getWindowPayload } from './window';
+import { createApp } from './app.ts';
+import { getWindowPayload } from './window.ts';
 
 const payload = getWindowPayload();
 const {

@@ -6,8 +6,8 @@
  */
 
 import { matchesInstanceof } from '@authup/errors';
-import type { AuthorizationCatalogStaleError } from './error';
-import { AUTHORIZATION_CATALOG_STALE_ERROR_INSTANCE } from './error';
+import type { AuthorizationCatalogStaleError } from './error.ts';
+import { AUTHORIZATION_CATALOG_STALE_ERROR_INSTANCE } from './error.ts';
 
 /**
  * Marker-only: the error carries no code of its own, and it never crosses a

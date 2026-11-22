@@ -43,9 +43,9 @@ import {
     watchEffect,
 } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { injectAccountConsoleConfig } from '../di';
-import { saveAccountConsoleRef, useAccountConsoleRef } from '../ref';
-import { useAccountToasts } from './utils';
+import { injectAccountConsoleConfig } from '../di.ts';
+import { saveAccountConsoleRef, useAccountConsoleRef } from '../ref.ts';
+import { useAccountToasts } from './utils.ts';
 
 export default defineComponent({
     components: {

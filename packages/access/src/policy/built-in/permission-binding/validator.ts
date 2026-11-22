@@ -8,7 +8,7 @@
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import type { PermissionBindingPolicy } from './types';
+import type { PermissionBindingPolicy } from './types.ts';
 
 export class PermissionBindingPolicyValidator extends Container<PermissionBindingPolicy> {
     override initialize() {

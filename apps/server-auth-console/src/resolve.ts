@@ -8,7 +8,7 @@
 import { locateUpSync } from 'locter';
 import fs from 'node:fs';
 import path from 'node:path';
-import { PACKAGE_PATH } from './path';
+import { PACKAGE_PATH } from './path.ts';
 
 /**
  * Locate the auth console package: a substituted one (config `distPath`)

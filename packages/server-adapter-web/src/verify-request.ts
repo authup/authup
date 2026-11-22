@@ -7,7 +7,7 @@
 
 import { extractBearerToken } from '@authup/server-adapter-kit';
 import type { TokenVerificationData } from '@authup/server-adapter-kit';
-import type { VerifyRequestOptions } from './types';
+import type { VerifyRequestOptions } from './types.ts';
 
 export async function verifyRequest(
     request: Request,

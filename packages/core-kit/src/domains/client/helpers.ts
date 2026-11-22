@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { NameValidOptions } from '../../helpers';
-import { isNameValid } from '../../helpers';
-import { CLIENT_CERTIFICATE_URI_PREFIX, ClientAuthMethod, ClientSecretMode } from './constants';
-import type { Client } from './entity';
+import type { NameValidOptions } from '../../helpers/index.ts';
+import { isNameValid } from '../../helpers/index.ts';
+import { CLIENT_CERTIFICATE_URI_PREFIX, ClientAuthMethod, ClientSecretMode } from './constants.ts';
+import type { Client } from './entity.ts';
 
 export function isClientNameValid(name: string, options: NameValidOptions = {}) : boolean {
     return isNameValid(name, options);

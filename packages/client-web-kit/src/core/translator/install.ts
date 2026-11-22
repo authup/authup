@@ -10,7 +10,7 @@ import { MemoryStore } from 'ilingo';
 import { install as installIlingoVue } from '@ilingo/vue';
 import { install as installIlingoValidup } from '@ilingo/validup-vue';
 import type { App } from 'vue';
-import type { TranslatorInstallOptions } from './types';
+import type { TranslatorInstallOptions } from './types.ts';
 
 /**
  * Three-stage install:

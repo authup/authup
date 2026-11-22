@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EntityQueryInput } from '../../../helpers';
-import { buildQueryString } from '../../../helpers';
+import type { EntityQueryInput } from '../../../helpers/index.ts';
+import { buildQueryString } from '../../../helpers/index.ts';
 import type { Client } from '@authup/core-kit';
-import { nullifyEmptyObjectProperties } from '../../../utils';
-import { BaseAPI } from '../../base';
-import { buildStatsURL } from '../../stats';
-import type { EntitySchemaResponse, EntityStatsQuery, EntityStatsResponse } from '../../stats';
-import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import { nullifyEmptyObjectProperties } from '../../../utils/index.ts';
+import { BaseAPI } from '../../base.ts';
+import { buildStatsURL } from '../../stats/index.ts';
+import type { EntitySchemaResponse, EntityStatsQuery, EntityStatsResponse } from '../../stats/index.ts';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base.ts';
 import type {
     ClientCreatePayload,
     ClientSavePayload,
@@ -20,8 +20,8 @@ import type {
     ClientSecretRotateResponse,
     ClientUpdatePayload,
     IClientAPI,
-} from './types';
-import { buildRequestConfig } from '../../utils';
+} from './types.ts';
+import { buildRequestConfig } from '../../utils.ts';
 
 export class ClientAPI extends BaseAPI implements IClientAPI {
     async getStats(query: EntityStatsQuery<Client> = {}, options?: APIRequestOptions): Promise<EntityStatsResponse> {

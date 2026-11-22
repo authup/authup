@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './collection';
-export * from './record';
-export * from './picker';
-export * from './socket';
+export * from './collection/index.ts';
+export * from './record/index.ts';
+export * from './picker/index.ts';
+export * from './socket/index.ts';
 
-export { AEntityDelete } from './AEntityDelete';
+export { AEntityDelete } from './AEntityDelete.ts';

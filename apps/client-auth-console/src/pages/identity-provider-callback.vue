@@ -10,8 +10,8 @@ import { AAuthShell, useTranslation } from '@authup/client-web-kit';
 import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { VCButton } from '@vuecs/button';
 import { computed, defineComponent, onMounted } from 'vue';
-import type { IdentityProviderCallbackPayload } from '../contract';
-import { injectPayload } from '../di';
+import type { IdentityProviderCallbackPayload } from '../contract.ts';
+import { injectPayload } from '../di.ts';
 
 /**
  * Interstitial for a federated login whose verified redirect_uri is not

@@ -7,7 +7,7 @@
 
 import type { BreadcrumbItem } from '@vuecs/navigation';
 import { describe, expect, it } from 'vitest';
-import { buildEntityBreadcrumb, buildPathAncestors } from '../../src/composables/breadcrumb';
+import { buildEntityBreadcrumb, buildPathAncestors } from '../../src/composables/breadcrumb.ts';
 
 const PATH_ID = '4f0f6f2c-4a0b-4f4a-9a3f-4b7d4b4a1f11';
 

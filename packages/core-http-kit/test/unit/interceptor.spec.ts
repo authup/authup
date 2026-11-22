@@ -10,7 +10,7 @@ import {
     Client,
     ClientAuthenticationHook,
     getClientRequestRetryState,
-} from '../../src';
+} from '../../src/index.ts';
 import { createUserTokenCreator } from '../../src/token-creator/presets/index.ts';
 
 describe('src/interceptor/utils', () => {

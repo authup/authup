@@ -31,7 +31,7 @@ import {
 } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import PageError from '../components/PageError.vue';
-import { useAccountToasts, usePageError } from './utils';
+import { useAccountToasts, usePageError } from './utils.ts';
 
 export default defineComponent({
     components: {

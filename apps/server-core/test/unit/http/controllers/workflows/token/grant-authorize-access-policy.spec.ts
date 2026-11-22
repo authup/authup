@@ -22,14 +22,14 @@ import {
     OAuth2TokenGrant,
 } from '@authup/specs';
 import { ClientEntity } from '../../../../../../src/adapters/database/domains/client/entity.ts';
-import { generateOAuth2CodeVerifier } from '../../../../../../src/core';
+import { generateOAuth2CodeVerifier } from '../../../../../../src/core/index.ts';
 import {
     createFakeClient,
     createFakeRealm,
     createFakeUser,
     expectClientError,
-} from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+} from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 
 // Application access policy (plan 052), /token backstop: a code minted BEFORE
 // the policy was attached (or outside authorize()) must not redeem. The denial

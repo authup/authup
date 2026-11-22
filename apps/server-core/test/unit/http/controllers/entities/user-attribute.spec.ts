@@ -15,8 +15,8 @@ import {
 import { RealmScope } from '@authup/access';
 import type { User, UserAttribute } from '@authup/core-kit';
 import { PermissionName, REALM_MASTER_NAME } from '@authup/core-kit';
-import { createTestApplication } from '../../../../app';
-import { createFakeUser, createFakeUserAttribute, httpRequest } from '../../../../utils';
+import { createTestApplication } from '../../../../app/index.ts';
+import { createFakeUser, createFakeUserAttribute, httpRequest } from '../../../../utils/index.ts';
 
 describe('src/http/controllers/user-attribute', () => {
     const suite = createTestApplication();

@@ -6,8 +6,8 @@
  */
 
 import { Client } from '@authup/core-http-kit';
-import type { HTTPServer } from '../../src/app';
-import { HTTPInjectionKey } from '../../src/app';
+import type { HTTPServer } from '../../src/app/index.ts';
+import { HTTPInjectionKey } from '../../src/app/index.ts';
 import { TestApplication } from './module.ts';
 
 export class TestHTTPApplication extends TestApplication {

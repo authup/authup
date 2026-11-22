@@ -20,7 +20,7 @@ import {
     saveAccountConsoleRef,
     setAccountConsoleRef,
     useAccountConsoleRef,
-} from '../../src/ref';
+} from '../../src/ref.ts';
 
 describe('account console ref stash', () => {
     beforeEach(() => {

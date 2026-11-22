@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { QueryFiltersInput } from '../../../../core';
+import type { QueryFiltersInput } from '../../../../core/index.ts';
 import { defineQuery } from '@rapiq/core';
 import {
     type PropType,
@@ -18,8 +18,8 @@ import {
     TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { useTranslations } from '../../../../core';
-import { onChange, useUpdatedAt } from '../../../../composables';
+import { useTranslations } from '../../../../core/index.ts';
+import { onChange, useUpdatedAt } from '../../../../composables/index.ts';
 import APolicyPicker from '../APolicyPicker.vue';
 import { VCAlert } from '@vuecs/elements';
 import { IFieldValidation } from '@ilingo/validup-vue';

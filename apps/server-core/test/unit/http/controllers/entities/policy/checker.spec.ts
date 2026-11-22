@@ -16,9 +16,9 @@ import { BuiltInPolicyType, SystemPolicyName } from '@authup/access';
 import { Client } from '@authup/core-http-kit';
 import { PermissionName } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
-import { PolicyRepository } from '../../../../../../src';
-import { createTestApplication } from '../../../../../app';
-import { createFakeUser, createScopeRestrictedClient, expectClientError } from '../../../../../utils';
+import { PolicyRepository } from '../../../../../../src/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
+import { createFakeUser, createScopeRestrictedClient, expectClientError } from '../../../../../utils/index.ts';
 
 // Service-level coverage of the DB-backed policy-checker lives in
 // test/unit/core/identity/policy/checker.spec.ts. The HTTP tests below

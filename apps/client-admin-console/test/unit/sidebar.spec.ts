@@ -32,7 +32,7 @@ vi.mock('@authup/client-web-kit', () => ({
     useTranslationsForNamespace: () => reactive({}),
 }));
 
-vi.mock('../../src/config/layout', () => ({
+vi.mock('../../src/config/layout/index.ts', () => ({
     Navigation: class {
         getSideItems() {
             return Promise.resolve([]);

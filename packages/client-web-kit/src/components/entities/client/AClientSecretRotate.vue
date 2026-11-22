@@ -37,8 +37,8 @@ import {
     reactive,
     ref,
 } from 'vue';
-import { extractErrorContext, injectHTTPClient, useTranslations } from '../../../core';
-import { ASecretInput } from '../../utility';
+import { extractErrorContext, injectHTTPClient, useTranslations } from '../../../core/index.ts';
+import { ASecretInput } from '../../utility/index.ts';
 
 /**
  * Rotates a client's secret through `POST /clients/:id/secret`, the one

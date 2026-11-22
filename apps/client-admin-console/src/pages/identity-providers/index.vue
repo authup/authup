@@ -15,11 +15,11 @@ import {
 } from '@authup/client-web-kit';
 import { VCIcon } from '@vuecs/icon';
 import { VCBreadcrumb } from '@vuecs/navigation';
-import { LayoutSection, buildSectionURLs } from '../../config/layout';
+import { LayoutSection, buildSectionURLs } from '../../config/layout/index.ts';
 import { defineComponent } from 'vue';
-import { useSectionBreadcrumb } from '../../composables/breadcrumb';
-import { useErrorToast } from '../../composables/error';
-import { useToast } from '../../composables/toast';
+import { useSectionBreadcrumb } from '../../composables/breadcrumb.ts';
+import { useErrorToast } from '../../composables/error.ts';
+import { useToast } from '../../composables/toast.ts';
 
 export default defineComponent({
     components: {

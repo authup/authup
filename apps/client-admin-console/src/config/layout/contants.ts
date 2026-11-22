@@ -11,9 +11,9 @@ import {
     TranslatorTranslationAppKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import type { LayoutSection } from './sections';
-import { LayoutSections } from './sections';
-import type { NavigationItemMeta } from './types';
+import type { LayoutSection } from './sections.ts';
+import { LayoutSections } from './sections.ts';
+import type { NavigationItemMeta } from './types.ts';
 
 export enum LayoutKey {
     REQUIRED_LOGGED_IN = 'requireLoggedIn',

@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './constants';
-export * from './create';
-export * from './dispatcher';
-export * from './install';
-export * from './permission-evaluator';
-export * from './types';
-export * from './singleton';
-export * from './utils';
+export * from './constants.ts';
+export * from './create.ts';
+export * from './dispatcher/index.ts';
+export * from './install.ts';
+export * from './permission-evaluator.ts';
+export * from './types.ts';
+export * from './singleton.ts';
+export * from './utils.ts';

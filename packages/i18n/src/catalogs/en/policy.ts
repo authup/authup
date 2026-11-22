@@ -6,7 +6,7 @@
  */
 
 import { SystemPolicyName } from '@authup/access';
-import type { NamespaceTranslations, SystemPolicyNameValue } from '../../types';
+import type { NamespaceTranslations, SystemPolicyNameValue } from '../../types.ts';
 
 export const TranslatorTranslationPolicyEnglish : NamespaceTranslations<SystemPolicyNameValue> = {
     [SystemPolicyName.DEFAULT]: 'Default policy',

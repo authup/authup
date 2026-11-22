@@ -19,10 +19,10 @@ import { VCLink } from '@vuecs/link';
 import { VCBreadcrumb } from '@vuecs/navigation';
 import type { Ref } from 'vue';
 import { computed, defineComponent, ref } from 'vue';
-import { buildRecordHeading } from '../../../composables/record';
-import { LayoutSection } from '../../../config/layout';
+import { buildRecordHeading } from '../../../composables/record.ts';
+import { LayoutSection } from '../../../config/layout/index.ts';
 import { useRoute, useRouter } from 'vue-router';
-import { buildEntityBreadcrumb, useSectionBreadcrumb } from '../../../composables/breadcrumb';
+import { buildEntityBreadcrumb, useSectionBreadcrumb } from '../../../composables/breadcrumb.ts';
 
 export default defineComponent({
     components: {

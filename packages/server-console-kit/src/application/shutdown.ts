@@ -6,9 +6,9 @@
  */
 
 import type { Application } from 'orkos';
-import { markShuttingDown } from '../health';
-import { InjectionKey } from './constants';
-import type { ShutdownOptions } from './types';
+import { markShuttingDown } from '../health.ts';
+import { InjectionKey } from './constants.ts';
+import type { ShutdownOptions } from './types.ts';
 
 /**
  * The drain of one or more console applications sharing a process: the

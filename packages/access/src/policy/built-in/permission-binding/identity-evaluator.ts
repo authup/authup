@@ -6,20 +6,20 @@
  */
 
 import type { Issue } from '@ebec/core';
-import type { PermissionPolicyBinding, PermissionPolicyBindingAggregated } from '../../../permission/types';
-import { aggregatePermissionPolicyBindings } from '../../../permission/helpers';
-import { RealmScope, normalizeRealmScope } from '../../../permission/realm-scope';
-import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
-import { PolicyEngine } from '../../engine';
-import type { PolicyWithType } from '../../types';
-import { maybeInvertPolicyOutcome } from '../../helpers';
-import { PolicyError, isPolicyError } from '../../error';
-import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
-import { BuiltInPolicyType } from '../constants';
-import { IdentityPolicyEvaluator } from '../identity';
-import type { IdentityPolicyData } from '../identity';
-import { RealmMatchPolicyEvaluator } from '../realm-match';
-import type { PolicySide, PolicySides } from '../../side';
+import type { PermissionPolicyBinding, PermissionPolicyBindingAggregated } from '../../../permission/types.ts';
+import { aggregatePermissionPolicyBindings } from '../../../permission/helpers/index.ts';
+import { RealmScope, normalizeRealmScope } from '../../../permission/realm-scope/index.ts';
+import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation/index.ts';
+import { PolicyEngine } from '../../engine/index.ts';
+import type { PolicyWithType } from '../../types.ts';
+import { maybeInvertPolicyOutcome } from '../../helpers/index.ts';
+import { PolicyError, isPolicyError } from '../../error/index.ts';
+import { PolicyIssueCode, definePolicyIssueItem } from '../../issue/index.ts';
+import { BuiltInPolicyType } from '../constants.ts';
+import { IdentityPolicyEvaluator } from '../identity/index.ts';
+import type { IdentityPolicyData } from '../identity/index.ts';
+import { RealmMatchPolicyEvaluator } from '../realm-match/index.ts';
+import type { PolicySide, PolicySides } from '../../side/index.ts';
 import {
     POLICY_SIDE_ALWAYS,
     POLICY_SIDE_NEVER,
@@ -29,8 +29,8 @@ import {
     invertPolicySides,
     readPolicySides,
     writePolicySides,
-} from '../../side';
-import { PermissionBindingPolicyValidator } from './validator';
+} from '../../side/index.ts';
+import { PermissionBindingPolicyValidator } from './validator.ts';
 
 function containsPermissionBinding(policy: PolicyWithType) : boolean {
     if (policy.type === BuiltInPolicyType.PERMISSION_BINDING) {

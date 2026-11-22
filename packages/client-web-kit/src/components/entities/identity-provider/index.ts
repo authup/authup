@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { AIdentityProvider } from './AIdentityProvider';
+export { AIdentityProvider } from './AIdentityProvider.ts';
 export { default as AIdentityProviderForm } from './AIdentityProviderForm.vue';
 export { default as AIdentityProviderOAuth2Form } from './AIdentityProviderOAuth2Form.vue';
 export { default as AIdentityProviderLdapForm } from './AIdentityProviderLdapForm.vue';
-export { AIdentityProviders } from './AIdentityProviders';
-export { AIdentityProviderPreset } from './AIdentityProviderPreset';
-export { AIdentityProviderProtocol } from './AIdentityProviderProtocol';
+export { AIdentityProviders } from './AIdentityProviders.ts';
+export { AIdentityProviderPreset } from './AIdentityProviderPreset.ts';
+export { AIdentityProviderProtocol } from './AIdentityProviderProtocol.ts';
 export { default as AIdentityProviderIcon } from './AIdentityProviderIcon.vue';

@@ -9,7 +9,7 @@ import { pickRecord } from '@authup/kit';
 import type { Permission } from '@authup/core-kit';
 import type { IPermissionPolicyRepository } from '../../../entities/permission-policy/types.ts';
 import type { IPermissionRepository, IPolicyRepository } from '../../../entities/index.ts';
-import type { PermissionProvisioningEntity } from '../../entities/permission';
+import type { PermissionProvisioningEntity } from '../../entities/permission/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { PermissionProvisioningSynchronizerContext } from './types.ts';

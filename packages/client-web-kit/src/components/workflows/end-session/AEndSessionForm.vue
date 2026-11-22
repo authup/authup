@@ -16,7 +16,7 @@ import {
     onMounted,
     ref,
 } from 'vue';
-import { injectStore, useTranslation } from '../../../core';
+import { injectStore, useTranslation } from '../../../core/index.ts';
 
 export default defineComponent({
     components: { VCButton, VCIcon },

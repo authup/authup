@@ -17,9 +17,9 @@ import { ScopeName, UserAuthenticatorKind } from '@authup/core-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
 import { Secret, TOTP } from 'otpauth';
-import { generateOAuth2CodeVerifier } from '../../../../../../src/core';
-import { createFakeClient, createFakeUser, httpRequest } from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+import { generateOAuth2CodeVerifier } from '../../../../../../src/core/index.ts';
+import { createFakeClient, createFakeUser, httpRequest } from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 
 function decodeJwtPayload(token: string): OAuth2TokenPayload {
     const [, payload] = token.split('.');

@@ -34,15 +34,15 @@ import {
     injectStore,
     storeToRefs,
     useTranslations,
-} from '../../../core';
-import { useIsEditing, useUpdatedAt } from '../../../composables';
+} from '../../../core/index.ts';
+import { useIsEditing, useUpdatedAt } from '../../../composables/index.ts';
 import {
     AFormSubmit,
     ANameInput,
     defineEntityManager,
     defineEntityVEmitOptions,
-} from '../../utility';
-import { ARealmPicker } from '../realm';
+} from '../../utility/index.ts';
+import { ARealmPicker } from '../realm/index.ts';
 
 export default defineComponent({
     components: {

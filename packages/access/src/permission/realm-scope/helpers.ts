@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { REALM_SCOPE_ORDER, RealmScope } from './constants';
+import { REALM_SCOPE_ORDER, RealmScope } from './constants.ts';
 
 /**
  * Coerce an arbitrary value to a RealmScope, defaulting to `own` for missing /

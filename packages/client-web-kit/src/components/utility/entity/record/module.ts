@@ -24,7 +24,7 @@ import {
 } from '@rapiq/core';
 import { defineDataRecord } from '@vuecs/data';
 import type { DataRecordLoadResult } from '@vuecs/data';
-import { normalizeQueryInput } from '../../../../core/query';
+import { normalizeQueryInput } from '../../../../core/query/index.ts';
 import { isObject } from 'smob';
 import type { Ref, VNodeChild } from 'vue';
 import {
@@ -34,18 +34,18 @@ import {
     toRef,
     watch,
 } from 'vue';
-import { hasNormalizedSlot, injectHTTPClient, normalizeSlot } from '../../../../core';
-import type { EntitySocketManager, EntitySocketManagerCreateContext } from '../socket';
-import { defineEntitySocketManager } from '../socket';
-import { EntityRecordError } from './error';
+import { hasNormalizedSlot, injectHTTPClient, normalizeSlot } from '../../../../core/index.ts';
+import type { EntitySocketManager, EntitySocketManagerCreateContext } from '../socket/index.ts';
+import { defineEntitySocketManager } from '../socket/index.ts';
+import { EntityRecordError } from './error.ts';
 import type {
     EntityID,
     EntityManager,
     EntityManagerCreateContext,
     ResourceManagerRenderFn,
     ResourceManagerResolveContext,
-} from './types';
-import { buildEntityVSlotProps } from './helpers';
+} from './types.ts';
+import { buildEntityVSlotProps } from './helpers.ts';
 
 type EntityRecordMeta = {
     /**

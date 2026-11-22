@@ -30,7 +30,7 @@ import {
     useTranslation,
     useTranslations,
     useTranslationsForNamespace,
-} from '../../../core';
+} from '../../../core/index.ts';
 import AuthorizeScopes from './AuthorizeScopes.vue';
 import AuthorizeText from './AuthorizeText.vue';
 

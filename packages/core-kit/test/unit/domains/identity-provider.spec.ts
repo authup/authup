@@ -6,13 +6,13 @@
  */
 import type { IContainer } from 'validup';
 import { describe, expect, it } from 'vitest';
-import type { IdentityProviderEnrollmentAttributes } from '../../../src';
+import type { IdentityProviderEnrollmentAttributes } from '../../../src/index.ts';
 import {
     IdentityProviderAttributesValidator,
     IdentityProviderLDAPAttributesValidator,
     IdentityProviderOAuth2AttributesValidator,
     IdentityProviderOAuth2PresetAttributesValidator,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 const VALIDATORS = [
     ['attributes', () => new IdentityProviderOAuth2AttributesValidator({ pathsToInclude: ['requiredAmr', 'requiredAcr'] })],

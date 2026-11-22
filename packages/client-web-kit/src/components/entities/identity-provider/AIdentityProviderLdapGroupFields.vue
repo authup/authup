@@ -7,13 +7,13 @@
 <script lang="ts">
 import type { IdentityProvider, LdapIdentityProvider } from '@authup/core-kit';
 import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { assignFormProperties, useTranslations } from '../../../core';
+import { assignFormProperties, useTranslations } from '../../../core/index.ts';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
-import { onChange, useUpdatedAt } from '../../../composables';
+import { onChange, useUpdatedAt } from '../../../composables/index.ts';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({

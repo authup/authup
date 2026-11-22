@@ -38,13 +38,13 @@ import {
     UserRoleRepositoryAdapter,
 } from '../../../../../src/app/index.ts';
 import { UserRoleService } from '../../../../../src/core/index.ts';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     createFakeClient,
     createFakePermission,
     createFakeRole,
     createFakeUser,
-} from '../../../../utils';
+} from '../../../../utils/index.ts';
 
 describe('app/modules/database/repositories grant lists (#3688)', () => {
     const suite = createTestApplication();

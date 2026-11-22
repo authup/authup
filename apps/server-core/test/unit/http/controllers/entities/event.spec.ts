@@ -14,8 +14,8 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
-import { createFakeUser, expectClientError, httpRequest } from '../../../../utils';
+import { createTestApplication } from '../../../../app/index.ts';
+import { createFakeUser, expectClientError, httpRequest } from '../../../../utils/index.ts';
 
 describe('src/http/controllers/entities/event', () => {
     const suite = createTestApplication();

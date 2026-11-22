@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TranslatorTranslationMailKey } from '../../constants';
-import type { NamespaceTranslations } from '../../types';
+import { TranslatorTranslationMailKey } from '../../constants.ts';
+import type { NamespaceTranslations } from '../../types.ts';
 
 export const TranslatorTranslationMailFrench : NamespaceTranslations<`${TranslatorTranslationMailKey}`> = {
     [TranslatorTranslationMailKey.CODE]: 'Code',

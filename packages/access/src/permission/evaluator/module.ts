@@ -11,7 +11,7 @@ import { ErrorCode } from '@authup/errors';
 import type { Issue } from '@ebec/core';
 import { defineIssueItem } from '@ebec/core';
 import { DecisionStrategy } from '@authup/kit';
-import type { BasePolicy, CompositePolicy, IPolicyEngine } from '../../policy';
+import type { BasePolicy, CompositePolicy, IPolicyEngine } from '../../policy/index.ts';
 import {
     BuiltInPolicyType,
     PolicyData,
@@ -19,9 +19,9 @@ import {
     PolicyEngine,
     definePolicyEvaluationContext,
     definePolicyIssueGroup,
-} from '../../policy';
-import { PermissionError } from '../error';
-import type { IPermissionProvider } from '../provider';
+} from '../../policy/index.ts';
+import { PermissionError } from '../error/index.ts';
+import type { IPermissionProvider } from '../provider/index.ts';
 
 import type { PermissionPolicyBindingAggregated } from '../types.ts';
 import type {

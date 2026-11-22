@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { BuiltInPolicyType, PolicyData, definePolicyData } from '../../../src';
+import { BuiltInPolicyType, PolicyData, definePolicyData } from '../../../src/index.ts';
 
 describe('src/policy/input', () => {
     it('builds a PolicyData carrying the well-known keys', () => {

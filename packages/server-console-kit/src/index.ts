@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './application/index';
-export * from './assets';
-export * from './constants';
-export * from './health';
-export * from './html';
-export * from './static-console';
-export * from './theme/index';
-export * from './types';
+export * from './application/index.ts';
+export * from './assets.ts';
+export * from './constants.ts';
+export * from './health.ts';
+export * from './html.ts';
+export * from './static-console.ts';
+export * from './theme/index.ts';
+export * from './types.ts';
 

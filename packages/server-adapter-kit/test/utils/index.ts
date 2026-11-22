@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './faker';
-export * from './cache';
+export * from './faker.ts';
+export * from './cache.ts';

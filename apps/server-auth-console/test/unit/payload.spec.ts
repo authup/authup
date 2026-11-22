@@ -9,7 +9,7 @@ import type { Client } from '@authup/core-http-kit';
 import { basic } from '@routup/basic';
 import { App, defineCoreHandler } from 'routup';
 import { describe, expect, it } from 'vitest';
-import { createFeaturesReader, readRenderCookies } from '../../src/payload';
+import { createFeaturesReader, readRenderCookies } from '../../src/payload.ts';
 
 const FEATURES = {
     registration: true,

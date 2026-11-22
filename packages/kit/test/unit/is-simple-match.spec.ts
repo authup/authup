@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { isSimpleMatch } from '../../src';
+import { isSimpleMatch } from '../../src/index.ts';
 
 describe('is-simple-match', () => {
     it('should match equal string', () => {

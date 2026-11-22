@@ -7,8 +7,8 @@
 
 import { MemoryTransport } from 'hapic';
 import { describe, expect, it } from 'vitest';
-import { Client } from '../../src';
-import { createFakeClient } from '../../src/testing';
+import { Client } from '../../src/index.ts';
+import { createFakeClient } from '../../src/testing/index.ts';
 
 const catalog = {
     policies: { binding: { type: 'permissionBinding' } },

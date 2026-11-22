@@ -20,14 +20,14 @@ import {
 } from 'vitest';
 import type { Ref } from 'vue';
 import { defineComponent, h, watch } from 'vue';
-import { createPermissionCheckerReactiveFn } from '../../../../src/core/permission-check';
-import { StoreAuthStatus, createStore, createStoreDispatcher } from '../../../../src/core/store';
+import { createPermissionCheckerReactiveFn } from '../../../../src/core/permission-check/index.ts';
+import { StoreAuthStatus, createStore, createStoreDispatcher } from '../../../../src/core/store/index.ts';
 import {
     AUTHORIZATION_REALM,
     AUTHORIZATION_SUBJECT,
     buildAuthorizationCheck,
     buildAuthorizationGrants,
-} from '../../../utils/authorization';
+} from '../../../utils/authorization.ts';
 
 const INTROSPECTION = {
     active: true,

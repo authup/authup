@@ -10,7 +10,7 @@ import { Container } from 'validup';
 import { z } from 'zod';
 import { ValidatorGroup } from '@authup/kit';
 import { JWKUse, JWTAlgorithm } from '@authup/specs';
-import { KeyStatus } from './constants';
+import { KeyStatus } from './constants.ts';
 import type { Key } from './type.ts';
 import { isKeyNameValid } from './utils.ts';
 

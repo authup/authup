@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './duplicate-slashes';
-export * from './object-property';
+export * from './duplicate-slashes.ts';
+export * from './object-property.ts';

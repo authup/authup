@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { slugify } from './slugify';
+import { slugify } from './slugify.ts';
 
 const ADJECTIVES = [
     'agile amber ancient autumn azure blithe bold brave bright brisk calm clever',

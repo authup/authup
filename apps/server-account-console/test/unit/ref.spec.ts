@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { resolveRef } from '../../src/ref';
+import { resolveRef } from '../../src/ref.ts';
 
 const TRUSTED = ['https://admin.example.com', 'http://localhost:3000'];
 

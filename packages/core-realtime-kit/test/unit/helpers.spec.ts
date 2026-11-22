@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import { describe, expect, it } from 'vitest';
-import { isEventCallback, isEventTarget } from '../../src';
+import { isEventCallback, isEventTarget } from '../../src/index.ts';
 
 describe('src/helpers', () => {
     it('should detect event target', () => {

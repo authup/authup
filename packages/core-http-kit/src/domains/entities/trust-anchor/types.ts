@@ -6,9 +6,9 @@
  */
 
 import type { TrustAnchor } from '@authup/core-kit';
-import type { EntityQueryInput } from '../../../helpers';
-import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
-import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityQueryInput } from '../../../helpers/index.ts';
+import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats/index.ts';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base.ts';
 
 export type TrustAnchorCreatePayload = Pick<TrustAnchor, 'name' | 'certificate'> &
     Partial<Pick<TrustAnchor, 'enabled' | 'realmId'>>;

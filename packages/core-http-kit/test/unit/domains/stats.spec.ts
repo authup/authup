@@ -10,8 +10,8 @@ import type { EntityTypeMap, Event } from '@authup/core-kit';
 import { createURLCodec } from '@rapiq/codec-url';
 import { gte } from '@rapiq/core';
 import { describe, expect, it } from 'vitest';
-import { buildStatsURL, pickEntityAPI } from '../../../src';
-import { createFakeClient } from '../../../src/testing';
+import { buildStatsURL, pickEntityAPI } from '../../../src/index.ts';
+import { createFakeClient } from '../../../src/testing/index.ts';
 
 const STATS_ENTITY_TYPES = [
     EntityType.CLIENT,

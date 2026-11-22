@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EventFullName } from './types';
+import type { EventFullName } from './types.ts';
 
 export function buildEventFullName<
     ENTITY extends string,

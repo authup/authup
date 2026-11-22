@@ -6,7 +6,7 @@
  */
 
 import { ErrorCode, isAuthupError, matchesInstanceof } from '@authup/errors';
-import { PERMISSION_ERROR_INSTANCE, type PermissionError } from './module';
+import { PERMISSION_ERROR_INSTANCE, type PermissionError } from './module.ts';
 
 export function isPermissionError(input: unknown): input is PermissionError {
     if (matchesInstanceof(input, PERMISSION_ERROR_INSTANCE)) {

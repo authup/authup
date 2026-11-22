@@ -11,8 +11,8 @@ import vuecs from '@vuecs/core';
 import { createPinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import AAccountPrompt from '../../../../src/components/workflows/authorize/AAccountPrompt.vue';
-import { install } from '../../../../src/module';
-import type { Options } from '../../../../src/types';
+import { install } from '../../../../src/module.ts';
+import type { Options } from '../../../../src/types.ts';
 
 const noop = () => undefined;
 

@@ -7,7 +7,7 @@
 
 import { expandPath, getPathInfo } from 'pathtrace';
 import { isEqual } from 'smob';
-import type { JWTClaims } from './types';
+import type { JWTClaims } from './types.ts';
 
 /**
  * Return all matching claim values by certain conditions.

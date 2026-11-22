@@ -4,13 +4,13 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import { hasNormalizedSlot, normalizeSlot } from '../../../core';
+import { hasNormalizedSlot, normalizeSlot } from '../../../core/index.ts';
 import type { VNodeChild } from 'vue';
 import { h } from 'vue';
 import { VCFormInput } from '@vuecs/forms';
 import { VCIcon } from '@vuecs/icon';
-import { ListSearchSlotName } from './constants';
-import type { SearchOptionsInput } from './type';
+import { ListSearchSlotName } from './constants.ts';
+import type { SearchOptionsInput } from './type.ts';
 
 type Fn = (...args: any[]) => Promise<any> | any;
 function debounce<T extends Fn>(func: T, timeout = 200) {

@@ -19,9 +19,9 @@ import {
 } from 'vitest';
 import type { Ref } from 'vue';
 import { defineComponent, h } from 'vue';
-import { createPermissionCheckerReactiveFn, createPermissionCheckerReactiveStateFn } from '../../../../src/core/permission-check';
-import type { Store } from '../../../../src/core/store';
-import { createStore, createStoreDispatcher } from '../../../../src/core/store';
+import { createPermissionCheckerReactiveFn, createPermissionCheckerReactiveStateFn } from '../../../../src/core/permission-check/index.ts';
+import type { Store } from '../../../../src/core/store/index.ts';
+import { createStore, createStoreDispatcher } from '../../../../src/core/store/index.ts';
 
 function buildStore() : Store {
     const pinia = createPinia();

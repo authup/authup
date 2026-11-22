@@ -37,9 +37,9 @@ import {
     ref,
     watch,
 } from 'vue';
-import { reloadCollection, usePathScope } from '../../../composables/path-scope';
+import { reloadCollection, usePathScope } from '../../../composables/path-scope.ts';
 import EntityActivity from '../../../components/stats/EntityActivity.vue';
-import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
+import type { EntityStatsLoadFn } from '../../../composables/entity-stats.ts';
 
 export default defineComponent({
     components: {

@@ -8,7 +8,7 @@
 import type { Client } from '@authup/core-http-kit';
 import { ErrorCode } from '@authup/errors';
 import { describe, expect, it } from 'vitest';
-import { createSessionForwardingGuard } from '../../src';
+import { createSessionForwardingGuard } from '../../src/index.ts';
 
 type ErrorHook = (err: unknown) => unknown;
 

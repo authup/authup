@@ -12,10 +12,10 @@ import { PermissionName } from '@authup/core-kit';
 import type { PermissionEvaluationContext } from '@authup/access';
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h } from 'vue';
-import { useHydratedValue, usePermissionCheck, useTranslation } from '../../../src';
-import { createFakeHydrationStore } from '../../utils/hydration';
-import { ASYNC_ONLY_TRANSLATION, withAsyncOnlyTranslator } from '../../utils/ilingo';
-import { renderKitComponent } from '../../utils/ssr';
+import { useHydratedValue, usePermissionCheck, useTranslation } from '../../../src/index.ts';
+import { createFakeHydrationStore } from '../../utils/hydration.ts';
+import { ASYNC_ONLY_TRANSLATION, withAsyncOnlyTranslator } from '../../utils/ilingo.ts';
+import { renderKitComponent } from '../../utils/ssr.ts';
 
 const translated = defineComponent({
     setup() {

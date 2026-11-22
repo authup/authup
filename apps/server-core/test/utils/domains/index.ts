@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './client';
-export * from './identity-provider';
-export * from './path';
-export * from './permission';
-export * from './realm';
-export * from './role';
-export * from './scope';
-export * from './user';
+export * from './client.ts';
+export * from './identity-provider.ts';
+export * from './path.ts';
+export * from './permission.ts';
+export * from './realm.ts';
+export * from './role.ts';
+export * from './scope.ts';
+export * from './user.ts';
 export * from './role-attribute.ts';
 export * from './user-attribute.ts';

@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { resolveConfig } from '../../src';
+import { resolveConfig } from '../../src/index.ts';
 
 describe('resolveConfig', () => {
     /**

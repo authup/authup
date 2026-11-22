@@ -17,14 +17,14 @@ import type { AuthorizationCheckPermissions } from '@authup/access';
 import { BuiltInPolicyType, RealmScope } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
 import { OAuth2TokenKind } from '@authup/specs';
-import { OAuth2InjectionToken } from '../../../../../src/app/modules/oauth2/constants';
-import { createTestApplication } from '../../../../app';
+import { OAuth2InjectionToken } from '../../../../../src/app/modules/oauth2/constants.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     createFakePermission,
     createFakeRealm,
     createFakeUser,
     httpRequest,
-} from '../../../../utils';
+} from '../../../../utils/index.ts';
 
 function entryOf(result: AuthorizationCheckPermissions, name: string) {
     return result.find((item) => item.name === name);

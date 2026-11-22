@@ -1,4 +1,4 @@
-import type { APIRequestOptions } from '../../types-base';/*
+import type { APIRequestOptions } from '../../types-base.ts';/*
  * Copyright (c) 2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,

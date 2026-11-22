@@ -24,9 +24,9 @@ import {
     createFakeOAuth2IdentityProvider,
     createFakeRealm,
     httpRequest,
-} from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
-import { ConfigInjectionKey } from '../../../../../../src/app/modules/config/constants';
+} from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
+import { ConfigInjectionKey } from '../../../../../../src/app/modules/config/constants.ts';
 
 const REDIRECT_URI = 'https://example.com/login/callback';
 const encode = (input: Record<string, any>) => Buffer.from(JSON.stringify(input)).toBase64({ alphabet: 'base64url', omitPadding: true });

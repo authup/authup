@@ -9,8 +9,8 @@ import { getClientErrorCode } from '@authup/core-http-kit';
 import type { Client } from '@authup/core-http-kit';
 import { ErrorCode } from '@authup/errors';
 import { isObject } from '@authup/kit';
-import { SESSION_FORWARDING_REJECTED_MAX, SESSION_FORWARDING_WINDOW } from './constants';
-import type { SessionForwardingGuard, SessionForwardingGuardOptions } from './types';
+import { SESSION_FORWARDING_REJECTED_MAX, SESSION_FORWARDING_WINDOW } from './constants.ts';
+import type { SessionForwardingGuard, SessionForwardingGuardOptions } from './types.ts';
 
 /**
  * Whether the API refused a forwarded bearer as a credential nobody issued.

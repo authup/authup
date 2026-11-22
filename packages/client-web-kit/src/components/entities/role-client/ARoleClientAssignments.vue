@@ -7,8 +7,8 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { AClients } from '../client';
-import { AClientRoleAssignment } from '../client-role';
+import { AClients } from '../client/index.ts';
+import { AClientRoleAssignment } from '../client-role/index.ts';
 
 export default defineComponent({
     components: { AClients, AClientRoleAssignment },

@@ -8,8 +8,8 @@
 import type { UserAuthenticatorChallengeResponse } from '@authup/core-http-kit';
 import { ErrorCode } from '@authup/errors';
 import { computed, shallowRef } from 'vue';
-import { extractErrorContext, injectHTTPClient } from '../../../core';
-import type { AuthenticatorStepUp, AuthenticatorStepUpAttempt, AuthenticatorStepUpResult } from './types';
+import { extractErrorContext, injectHTTPClient } from '../../../core/index.ts';
+import type { AuthenticatorStepUp, AuthenticatorStepUpAttempt, AuthenticatorStepUpResult } from './types.ts';
 
 /**
  * Own-factor management requires a session that passed a challenge once the

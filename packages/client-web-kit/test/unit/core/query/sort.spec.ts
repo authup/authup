@@ -7,7 +7,7 @@
 
 import { Sorts, defineSorts } from '@rapiq/core';
 import { describe, expect, it } from 'vitest';
-import { isQuerySortedDescByDate } from '../../../../src/core/query';
+import { isQuerySortedDescByDate } from '../../../../src/core/query/index.ts';
 
 describe('isQuerySortedDescByDate', () => {
     it('detects a descending date sort', () => {

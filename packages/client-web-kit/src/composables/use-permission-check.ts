@@ -7,8 +7,8 @@
 
 import type { PermissionEvaluationContext } from '@authup/access';
 import type { Ref } from 'vue';
-import type { PermissionCheckState } from '../core';
-import { createPermissionCheckerReactiveFn, createPermissionCheckerReactiveStateFn } from '../core';
+import type { PermissionCheckState } from '../core/index.ts';
+import { createPermissionCheckerReactiveFn, createPermissionCheckerReactiveStateFn } from '../core/index.ts';
 
 /**
  * A bare `name` checks the global definition. A definition a realm or a

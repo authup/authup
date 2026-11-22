@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
-import { createApp } from '../../src/app';
+import { createApp } from '../../src/app.ts';
 
 /**
  * The SSR-cleanliness guard (plan 101 D2).

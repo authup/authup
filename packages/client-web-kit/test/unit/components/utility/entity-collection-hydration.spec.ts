@@ -15,9 +15,9 @@ import {
     defineEntityCollectionManager,
     defineEntityCollectionVEmitOptions,
     defineEntityCollectionVProps,
-} from '../../../../src/components/utility';
-import { createFakeHydrationStore } from '../../../utils/hydration';
-import { renderKitComponent } from '../../../utils/ssr';
+} from '../../../../src/components/utility/index.ts';
+import { createFakeHydrationStore } from '../../../utils/hydration.ts';
+import { renderKitComponent } from '../../../utils/ssr.ts';
 
 // entity type plus the serialized query the initial load sends, so the
 // server render and the hydrating client derive the same key

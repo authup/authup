@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EntityQueryInput } from '../../../helpers';
+import type { EntityQueryInput } from '../../../helpers/index.ts';
 import type {
     Event,
     EventName,
@@ -17,8 +17,8 @@ import type {
     EntityStatsRow,
     IEntitySchemaAPI,
     IEntityStatsAPI,
-} from '../../stats';
-import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+} from '../../stats/index.ts';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base.ts';
 
 export type EventStatsQuery = EntityStatsQuery<Event>;
 

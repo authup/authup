@@ -26,11 +26,11 @@ import {
     RealmRepositoryAdapter,
     UserRepository,
     UserRepositoryAdapter,
-} from '../../../../../src';
-import { ClientService, ClientTokenExchangeCapabilityService, UserService } from '../../../../../src/core';
+} from '../../../../../src/index.ts';
+import { ClientService, ClientTokenExchangeCapabilityService, UserService } from '../../../../../src/core/index.ts';
 import { FakeClientTokenExchangeCapabilityRepository } from '../../../core/entities/client-token-exchange-capability/fake-repository.ts';
-import { createTestApplication } from '../../../../app';
-import { createFakeClient, createFakeUser } from '../../../../utils';
+import { createTestApplication } from '../../../../app/index.ts';
+import { createFakeClient, createFakeUser } from '../../../../utils/index.ts';
 
 // Two concurrent saves of one row (#3526). The locked read-modify-write only
 // exists on mysql and postgres: the sqlite fallback is the unlocked

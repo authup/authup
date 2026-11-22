@@ -9,7 +9,7 @@ import { MemoryTransport } from 'hapic';
 import type { MemoryTransportFetch, TransportRequest } from 'hapic';
 import { OAuth2TokenGrant } from '@authup/specs';
 import { describe, expect, it } from 'vitest';
-import { Client } from '../../src';
+import { Client } from '../../src/index.ts';
 
 const DEVICE_AUTHORIZATION_RESPONSE = {
     device_code: 'a'.repeat(64),

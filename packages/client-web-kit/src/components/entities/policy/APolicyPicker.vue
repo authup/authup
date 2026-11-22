@@ -7,13 +7,13 @@
 
 <script lang="ts">
 import type { Policy } from '@authup/core-kit';
-import { SlotName } from '../../../core';
+import { SlotName } from '../../../core/index.ts';
 import type { SlotsType } from 'vue';
 import { defineComponent, h } from 'vue';
-import { defineEntityPicker, defineEntityPickerVEmitOptions, defineEntityPickerVProps } from '../../utility';
-import type { EntityPickerVSlots } from '../../utility';
-import { APolicies } from './APolicies';
-import { APolicyParentAssignment } from './APolicyParentAssignment';
+import { defineEntityPicker, defineEntityPickerVEmitOptions, defineEntityPickerVProps } from '../../utility/index.ts';
+import type { EntityPickerVSlots } from '../../utility/index.ts';
+import { APolicies } from './APolicies.ts';
+import { APolicyParentAssignment } from './APolicyParentAssignment.ts';
 
 export default defineComponent({
     props: {

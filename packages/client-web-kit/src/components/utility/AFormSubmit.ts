@@ -10,7 +10,7 @@ import { defineComponent, h } from 'vue';
 import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
 import { useSubmitButton } from '@vuecs/forms';
-import { DEFAULT_BUTTON_SIZE } from '../../core';
+import { DEFAULT_BUTTON_SIZE } from '../../core/index.ts';
 
 /**
  * Submit button for entity forms. Reactive label / icon / color swap

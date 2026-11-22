@@ -13,8 +13,8 @@ import {
     it,
     vi,
 } from 'vitest';
-import { createMiddleware, verifySocket } from '../../src';
-import type { Socket } from '../../src';
+import { createMiddleware, verifySocket } from '../../src/index.ts';
+import type { Socket } from '../../src/index.ts';
 
 function createVerifier(impl: ITokenVerifier['verify']): ITokenVerifier {
     return { verify: impl };

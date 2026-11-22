@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EntityListQueryInput } from '../../../../../core';
+import type { EntityListQueryInput } from '../../../../../core/index.ts';
 import type { PropType } from 'vue';
 import type {
     EntityCollectionVEmitOptions,
@@ -14,7 +14,7 @@ import type {
     ListHeaderOptions,
     ListLoadingOptions,
     ListNoMoreOptions,
-} from '../types';
+} from '../types.ts';
 
 export function defineEntityCollectionVEmitOptions<T>() : EntityCollectionVEmitOptions<T> {
     return {

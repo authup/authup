@@ -23,7 +23,7 @@ import {
     schemaRegistry,
 } from '../../../src/core/index.ts';
 import { DIST_PATH } from '../../../src/path.ts';
-import { createTestApplication } from '../../app';
+import { createTestApplication } from '../../app/index.ts';
 
 const DOCUMENT_PATH = path.join(DIST_PATH, 'swagger.json');
 

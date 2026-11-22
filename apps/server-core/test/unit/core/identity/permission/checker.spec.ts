@@ -21,7 +21,7 @@ import { createNanoID } from '@authup/kit';
 import { createAllowAllActor } from '@authup/server-test-kit';
 import type { ActorContext } from '@authup/server-kit';
 import type { IAppEvent } from 'routup';
-import type { UserEntity } from '../../../../../src';
+import type { UserEntity } from '../../../../../src/index.ts';
 import {
     PermissionEntity,
     PermissionPolicyEntity,
@@ -29,9 +29,9 @@ import {
     RealmEntity,
     UserPermissionEntity,
     UserRepository,
-} from '../../../../../src';
-import { PermissionCheckerService, PolicyEngine } from '../../../../../src/core';
-import type { IIdentityPermissionProvider } from '../../../../../src/core';
+} from '../../../../../src/index.ts';
+import { PermissionCheckerService, PolicyEngine } from '../../../../../src/core/index.ts';
+import type { IIdentityPermissionProvider } from '../../../../../src/core/index.ts';
 import { IdentityInjectionKey } from '../../../../../src/app/modules/identity/index.ts';
 import { PermissionDatabaseProvider } from '../../../../../src/app/modules/database/repositories/permission-provider/module.ts';
 import { DatabaseInjectionKey } from '../../../../../src/app/index.ts';
@@ -43,8 +43,8 @@ import {
     setRequestIdentity,
     setRequestScopes,
     useRequestPolicyGrants,
-} from '../../../../../src/adapters/http/request';
-import { createTestApplication } from '../../../../app';
+} from '../../../../../src/adapters/http/request/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 describe('core/identity/permission/checker', () => {
     const suite = createTestApplication();

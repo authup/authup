@@ -8,8 +8,8 @@
 import type { IContainer } from 'eldin';
 import type { IModule } from 'orkos';
 import { serve } from 'routup/node';
-import { InjectionKey, ModuleName } from './constants';
-import type { Config, HTTPModuleContext, HTTPServer } from './types';
+import { InjectionKey, ModuleName } from './constants.ts';
+import type { Config, HTTPModuleContext, HTTPServer } from './types.ts';
 
 /**
  * The console's listener: build the handler, serve it, close it.

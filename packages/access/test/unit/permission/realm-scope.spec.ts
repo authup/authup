@@ -13,7 +13,7 @@ import {
     minRealmScope,
     normalizeRealmScope,
     realmScopeMatches,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 describe('src/permission/realm-scope', () => {
     describe('normalizeRealmScope', () => {

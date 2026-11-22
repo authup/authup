@@ -8,8 +8,8 @@
 import { randomUUID } from 'node:crypto';
 import { Client } from '@authup/core-http-kit';
 import { OAuth2TokenKind } from '@authup/specs';
-import { OAuth2InjectionToken } from '../../src/app/modules/oauth2/constants';
-import type { TestHTTPApplication } from '../app';
+import { OAuth2InjectionToken } from '../../src/app/modules/oauth2/constants.ts';
+import type { TestHTTPApplication } from '../app/index.ts';
 
 /**
  * A client bearing the admin's own access token re-signed with `scope`, which

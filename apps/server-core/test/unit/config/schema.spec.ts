@@ -15,9 +15,9 @@ import {
     EnvironmentVariable,
     ROOT_SCHEMA,
 } from '@authup/server-config';
-import { normalizeConfig } from '../../../src/app/modules/config/read';
-import type { Config } from '../../../src/app/modules/config/types';
-import { CONFIG_SCHEMA } from '../../../src';
+import { normalizeConfig } from '../../../src/app/modules/config/read.ts';
+import type { Config } from '../../../src/app/modules/config/types.ts';
+import { CONFIG_SCHEMA } from '../../../src/index.ts';
 
 const CONFIG_KEYS = Object.keys(CONFIG_SCHEMA) as (keyof Config)[];
 

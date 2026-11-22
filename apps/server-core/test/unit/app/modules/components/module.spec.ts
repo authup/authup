@@ -16,13 +16,13 @@ import {
     it,
     vi,
 } from 'vitest';
-import { CacheInjectionKey } from '../../../../../src/app/modules/cache';
-import { ComponentsModule } from '../../../../../src/app/modules/components';
-import type { Config } from '../../../../../src/app/modules/config';
-import { ConfigInjectionKey } from '../../../../../src/app/modules/config';
-import { normalizeConfig } from '../../../../../src/app/modules/config/read';
-import { DatabaseInjectionKey } from '../../../../../src/app/modules/database';
-import { LoggerInjectionKey } from '../../../../../src/app/modules/logger';
+import { CacheInjectionKey } from '../../../../../src/app/modules/cache/index.ts';
+import { ComponentsModule } from '../../../../../src/app/modules/components/index.ts';
+import type { Config } from '../../../../../src/app/modules/config/index.ts';
+import { ConfigInjectionKey } from '../../../../../src/app/modules/config/index.ts';
+import { normalizeConfig } from '../../../../../src/app/modules/config/read.ts';
+import { DatabaseInjectionKey } from '../../../../../src/app/modules/database/index.ts';
+import { LoggerInjectionKey } from '../../../../../src/app/modules/logger/index.ts';
 
 const flushMicrotasks = async () => {
     for (let i = 0; i < 20; i++) {

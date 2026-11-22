@@ -8,7 +8,7 @@
 import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { VCAlert } from '@vuecs/elements';
 import { defineComponent } from 'vue';
-import { useTranslations } from '../../core';
+import { useTranslations } from '../../core/index.ts';
 
 // Shared "this workflow is disabled" notice rendered by the SSR auth
 // workflow pages (register, activate, password-forgot, password-reset)

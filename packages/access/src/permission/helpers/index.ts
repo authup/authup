@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './aggregate';
-export * from './check';
-export * from './equal';
-export * from './grant';
-export * from './key';
+export * from './aggregate.ts';
+export * from './check.ts';
+export * from './equal.ts';
+export * from './grant.ts';
+export * from './key.ts';

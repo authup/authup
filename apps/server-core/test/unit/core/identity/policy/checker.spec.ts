@@ -18,19 +18,19 @@ import { EntityNotFoundError } from '@authup/errors';
 import { createNanoID } from '@authup/kit';
 import { createAllowAllActor } from '@authup/server-test-kit';
 import type { ActorContext } from '@authup/server-kit';
-import type { UserEntity } from '../../../../../src';
+import type { UserEntity } from '../../../../../src/index.ts';
 import {
     PolicyRepository,
     RealmEntity,
     UserRepository,
-} from '../../../../../src';
-import { PolicyCheckerService } from '../../../../../src/core';
-import type { IIdentityPermissionProvider } from '../../../../../src/core';
+} from '../../../../../src/index.ts';
+import { PolicyCheckerService } from '../../../../../src/core/index.ts';
+import type { IIdentityPermissionProvider } from '../../../../../src/core/index.ts';
 import { IdentityInjectionKey } from '../../../../../src/app/modules/identity/index.ts';
 import { PolicyRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/policy/repository.ts';
 import { RealmRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/realm/repository.ts';
 import { DatabaseInjectionKey } from '../../../../../src/app/index.ts';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 
 describe('core/identity/policy/checker', () => {
     const suite = createTestApplication();

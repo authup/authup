@@ -16,7 +16,7 @@ import {
     vi,
 } from 'vitest';
 import { ref } from 'vue';
-import { createStore, createStoreDispatcher } from '../../../../src/core/store';
+import { createStore, createStoreDispatcher } from '../../../../src/core/store/index.ts';
 
 // The debounce the store applies before a change goes up.
 const WRITE_DELAY = 300;

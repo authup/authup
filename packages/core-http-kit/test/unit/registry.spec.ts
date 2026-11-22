@@ -6,8 +6,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { Client, pickEntityAPI } from '../../src';
-import { FakeClient } from '../../src/testing';
+import { Client, pickEntityAPI } from '../../src/index.ts';
+import { FakeClient } from '../../src/testing/index.ts';
 
 describe('client/registry', () => {
     const client = new Client({ baseURL: 'http://localhost:3010' });

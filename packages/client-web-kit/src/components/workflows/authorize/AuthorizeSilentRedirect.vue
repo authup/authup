@@ -8,7 +8,7 @@
 /* global window */
 import { TranslatorTranslationCommonKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { defineComponent, onMounted } from 'vue';
-import { useTranslation } from '../../../core';
+import { useTranslation } from '../../../core/index.ts';
 import AuthorizeText from './AuthorizeText.vue';
 
 /**

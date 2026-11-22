@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client } from '../client';
-import type { Realm } from '../realm';
-import type { User } from '../user';
-import type { SessionAuthMethod } from './constants';
+import type { Client } from '../client/index.ts';
+import type { Realm } from '../realm/index.ts';
+import type { User } from '../user/index.ts';
+import type { SessionAuthMethod } from './constants.ts';
 
 export interface Session {
     /**

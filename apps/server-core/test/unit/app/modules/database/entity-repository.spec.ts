@@ -35,7 +35,7 @@ import {
     UserRepositoryAdapter,
     UserRoleRepositoryAdapter,
 } from '../../../../../src/app/modules/database/repositories/index.ts';
-import { createTestDatabaseApplication } from '../../../../app';
+import { createTestDatabaseApplication } from '../../../../app/index.ts';
 
 describe('app/modules/database/repositories/entity', () => {
     const suite = createTestDatabaseApplication();

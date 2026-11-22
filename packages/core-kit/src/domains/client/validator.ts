@@ -9,9 +9,9 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
 import { ValidatorGroup, isSafeRedirectURLScheme, patternHasGlobstarInAuthority } from '@authup/kit';
-import type { Client } from './entity';
-import { isClientNameValid } from './helpers';
-import { ClientAuthMethod, ClientTokenBindingMethod } from './constants';
+import type { Client } from './entity.ts';
+import { isClientNameValid } from './helpers.ts';
+import { ClientAuthMethod, ClientTokenBindingMethod } from './constants.ts';
 
 /**
  * Schema for a comma separated list of redirect patterns.

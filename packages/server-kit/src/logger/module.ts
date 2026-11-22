@@ -9,7 +9,7 @@ import path from 'node:path';
 import process from 'node:process';
 import type { LoggerOptions } from 'winston';
 import { createLogger as create, format, transports } from 'winston';
-import type { Logger, LoggerCreateContext } from './types';
+import type { Logger, LoggerCreateContext } from './types.ts';
 
 export function createNoopLogger() : Logger {
     return create({ silent: true });

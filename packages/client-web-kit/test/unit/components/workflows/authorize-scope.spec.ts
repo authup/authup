@@ -9,7 +9,7 @@ import type { Scope } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import { describe, expect, it } from 'vitest';
 import AuthorizeScope from '../../../../src/components/workflows/authorize/AuthorizeScope.vue';
-import { mountKitComponent } from '../../../utils';
+import { mountKitComponent } from '../../../utils/index.ts';
 
 const now = new Date(0).toISOString();
 

@@ -12,9 +12,9 @@ import {
     expect,
     it,
 } from 'vitest';
-import { ConfigInjectionKey } from '../../../../src/app';
-import { createTestApplication } from '../../../app';
-import { httpRequest } from '../../../utils';
+import { ConfigInjectionKey } from '../../../../src/app/index.ts';
+import { createTestApplication } from '../../../app/index.ts';
+import { httpRequest } from '../../../utils/index.ts';
 
 const FOREIGN_ORIGIN = 'https://app.example.com';
 

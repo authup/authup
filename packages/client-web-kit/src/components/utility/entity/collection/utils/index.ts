@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './component';
-export * from './options';
-export * from './search';
+export * from './component.ts';
+export * from './options.ts';
+export * from './search.ts';

@@ -6,7 +6,7 @@
  */
 
 import type { ContainerOptions } from 'validup';
-import type { User } from './entity';
+import type { User } from './entity.ts';
 
 export type UserValidatorOptions = ContainerOptions<User> & {
     passwordMinLength?: number,

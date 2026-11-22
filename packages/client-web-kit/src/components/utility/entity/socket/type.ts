@@ -8,7 +8,7 @@
 import type { EventRecord } from '@authup/core-kit';
 import type { EventFullName, EventNameSuffix, STCEventContext } from '@authup/core-realtime-kit';
 import type { MaybeRef } from 'vue';
-import type { EntityID } from '../record';
+import type { EntityID } from '../record/index.ts';
 
 export type EntitySocketManagerCreateContext<
     TYPE extends string,

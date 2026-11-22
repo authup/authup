@@ -10,7 +10,7 @@ import { deserializeOAuth2Scope } from '@authup/specs';
 import type { PropType } from 'vue';
 import { computed, defineComponent, ref } from 'vue';
 import { ITranslateT } from '@ilingo/vue';
-import { injectHTTPClient } from '../../../core';
+import { injectHTTPClient } from '../../../core/index.ts';
 import AuthorizeScope from './AuthorizeScope.vue';
 
 export default defineComponent({

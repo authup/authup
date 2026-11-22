@@ -19,11 +19,11 @@ import {
     stringifyAuthorizationHeader,
     unsetHeader,
 } from 'hapic';
-import { getClientErrorCode, getClientOAuth2ErrorCode } from '../helpers';
-import type { TokenCreator } from '../token-creator';
-import { ClientAuthenticationHookEventName } from './constants';
-import type { ClientAuthenticationHookEvents, ClientAuthenticationHookOptions } from './types';
-import { getClientRequestRetryState } from './utils';
+import { getClientErrorCode, getClientOAuth2ErrorCode } from '../helpers/index.ts';
+import type { TokenCreator } from '../token-creator/index.ts';
+import { ClientAuthenticationHookEventName } from './constants.ts';
+import type { ClientAuthenticationHookEvents, ClientAuthenticationHookOptions } from './types.ts';
+import { getClientRequestRetryState } from './utils.ts';
 
 const HOOK_SYMBOL = Symbol.for('ClientResponseHook');
 

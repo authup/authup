@@ -6,7 +6,7 @@
  */
 
 import { EntityType } from '@authup/core-kit';
-import { SlotName } from '../../../../core';
+import { SlotName } from '../../../../core/index.ts';
 
 /**
  * The field every entity's free-text search matches against.

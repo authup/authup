@@ -17,18 +17,17 @@ import {
     vi,
 } from 'vitest';
 import { resetEnv } from 'typeorm-extension';
-import { readConfig } from '../../../src/app/modules/config/read.ts';
-import { normalizeConfig } from '../../../src/app/modules/config/read';
+import { normalizeConfig, readConfig  } from '../../../src/app/modules/config/read.ts';
 import {
     expandToOrigins,
     inspectConfigFile,
     readConfigRawFromEnv,
     readConfigRawFromFS,
 } from '@authup/server-config';
-import { getAppOrigins } from '../../../src/app/modules/config/app-origins';
-import { parseConfig } from '../../../src/app/modules/config/parse';
-import { CONFIG_SCHEMA } from '../../../src/app/modules/config/constants';
-import type { Config } from '../../../src/app/modules/config/types';
+import { getAppOrigins } from '../../../src/app/modules/config/app-origins.ts';
+import { parseConfig } from '../../../src/app/modules/config/parse.ts';
+import { CONFIG_SCHEMA } from '../../../src/app/modules/config/constants.ts';
+import type { Config } from '../../../src/app/modules/config/types.ts';
 
 describe('src/config/*.ts', () => {
     describe('getAppOrigins', () => {

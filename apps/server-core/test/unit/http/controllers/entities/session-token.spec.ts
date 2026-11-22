@@ -16,15 +16,15 @@ import {
     expect,
     it,
 } from 'vitest';
-import { SessionTokenEntity } from '../../../../../src/adapters/database/domains';
-import { generateOAuth2CodeVerifier } from '../../../../../src/core';
-import { createTestApplication } from '../../../../app';
+import { SessionTokenEntity } from '../../../../../src/adapters/database/domains/index.ts';
+import { generateOAuth2CodeVerifier } from '../../../../../src/core/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     createFakeClient,
     createFakeUser,
     expectClientError,
     httpRequest,
-} from '../../../../utils';
+} from '../../../../utils/index.ts';
 
 const REDIRECT_URI = 'https://example.com/redirect';
 

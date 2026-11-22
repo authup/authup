@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
-import { maybeInvertPolicyOutcome } from '../../helpers';
-import { BuiltInPolicyType } from '../constants';
-import { isIntervalForDayOfMonth, isIntervalForDayOfWeek, isIntervalForDayOfYear } from './helpers';
-import type { TimePolicy } from './types';
-import { TimePolicyValidator } from './validator';
+import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation/index.ts';
+import { maybeInvertPolicyOutcome } from '../../helpers/index.ts';
+import { BuiltInPolicyType } from '../constants.ts';
+import { isIntervalForDayOfMonth, isIntervalForDayOfWeek, isIntervalForDayOfYear } from './helpers.ts';
+import type { TimePolicy } from './types.ts';
+import { TimePolicyValidator } from './validator.ts';
 
 const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/;
 

@@ -11,7 +11,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { readConfigFromEnv, resolveConfig } from '../../src';
+import { readConfigFromEnv, resolveConfig } from '../../src/index.ts';
 
 const KEYS = [
     'PUBLIC_URL',

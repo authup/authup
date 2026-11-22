@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Path } from '../path';
-import type { Policy } from '../policy';
-import type { Realm } from '../realm';
-import type { ClientAuthMethod, ClientTokenBindingMethod } from './constants';
+import type { Path } from '../path/index.ts';
+import type { Policy } from '../policy/index.ts';
+import type { Realm } from '../realm/index.ts';
+import type { ClientAuthMethod, ClientTokenBindingMethod } from './constants.ts';
 
 export interface Client {
     id: string,

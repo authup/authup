@@ -15,14 +15,14 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     createFakeClient,
     createFakeRealm,
     createFakeRole,
     createFakeUser,
-} from '../../../../utils';
-import { createFakeTimePolicy } from '../../../../utils/domains/policy';
+} from '../../../../utils/index.ts';
+import { createFakeTimePolicy } from '../../../../utils/domains/policy.ts';
 
 /**
  * The relations read gate decides whether the actor may join a relation's

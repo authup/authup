@@ -13,7 +13,7 @@ import { EntityType } from '@authup/core-kit';
 import { VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import type { PropType } from 'vue';
 import { computed, defineComponent, ref } from 'vue';
-import { injectAdminConsoleConfig } from '../../../di';
+import { injectAdminConsoleConfig } from '../../../di.ts';
 
 export default defineComponent({
     components: {

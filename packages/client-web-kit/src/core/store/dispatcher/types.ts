@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { RealmMinimal, UserMinimal } from '../types';
+import type { RealmMinimal, UserMinimal } from '../types.ts';
 import type { EventEmitter } from '@posva/event-emitter';
-import type { StoreDispatcherEventName } from './constants';
+import type { StoreDispatcherEventName } from './constants.ts';
 
 export type StoreDispatcherEvents = {
     [StoreDispatcherEventName.SESSION_EXPIRED]: [],

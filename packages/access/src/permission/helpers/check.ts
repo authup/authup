@@ -6,8 +6,8 @@
  */
 
 import { DecisionStrategy, isObject } from '@authup/kit';
-import { RealmScope } from '../realm-scope';
-import type { PermissionPolicyBinding } from '../types';
+import { RealmScope } from '../realm-scope/index.ts';
+import type { PermissionPolicyBinding } from '../types.ts';
 
 const DECISION_STRATEGIES : unknown[] = Object.values(DecisionStrategy);
 const REALM_SCOPES : unknown[] = Object.values(RealmScope);

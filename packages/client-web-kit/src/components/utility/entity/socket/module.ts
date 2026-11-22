@@ -25,9 +25,9 @@ import {
     onUnmounted,
     watch,
 } from 'vue';
-import { injectStore, storeToRefs } from '../../../../core/store';
-import type { EntitySocketManager, EntitySocketManagerCreateContext } from './type';
-import { injectSocketManager, isSocketManagerUsable } from '../../../../core/socket-manager';
+import { injectStore, storeToRefs } from '../../../../core/store/index.ts';
+import type { EntitySocketManager, EntitySocketManagerCreateContext } from './type.ts';
+import { injectSocketManager, isSocketManagerUsable } from '../../../../core/socket-manager/index.ts';
 
 function create<
     TYPE extends string,

@@ -17,8 +17,8 @@ import {
     createFakeRealm,
     createFakeUser,
     expectClientError,
-} from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+} from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 
 describe('src/http/controllers/token', () => {
     const suite = createTestApplication();

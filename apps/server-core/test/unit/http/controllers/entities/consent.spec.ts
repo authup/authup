@@ -16,15 +16,15 @@ import type { Client, Realm, User } from '@authup/core-kit';
 import { CLIENT_ADMIN_CONSOLE_NAME, IdentityType, ScopeName } from '@authup/core-kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
-import { generateOAuth2CodeVerifier } from '../../../../../src/core';
+import { generateOAuth2CodeVerifier } from '../../../../../src/core/index.ts';
 import {
     createFakeClient,
     createFakeRealm,
     createFakeUser,
     expectClientError,
     httpRequest,
-} from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+} from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 describe('consent', () => {
     const suite = createTestApplication();

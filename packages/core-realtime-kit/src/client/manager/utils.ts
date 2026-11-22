@@ -6,8 +6,8 @@
  */
 
 import { isObject } from '@authup/kit';
-import type { DisconnectDescription } from '../../types';
-import type { ClientManagerTokenFn } from './types';
+import type { DisconnectDescription } from '../../types.ts';
+import type { ClientManagerTokenFn } from './types.ts';
 
 export function toClientManagerTokenAsyncFn(input?: string | ClientManagerTokenFn) {
     if (typeof input === 'undefined') {

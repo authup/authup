@@ -6,9 +6,9 @@
  */
 
 import { subtle } from 'uncrypto';
-import { getKeyUsagesForAsymmetricAlgorithm } from './key-usages';
-import { normalizeAsymmetricKeyPairCreateOptions } from './normalize';
-import type { AsymmetricKeyPairCreateOptionsInput } from './types';
+import { getKeyUsagesForAsymmetricAlgorithm } from './key-usages.ts';
+import { normalizeAsymmetricKeyPairCreateOptions } from './normalize.ts';
+import type { AsymmetricKeyPairCreateOptionsInput } from './types.ts';
 
 export async function createAsymmetricKeyPair(options: AsymmetricKeyPairCreateOptionsInput) : Promise<CryptoKeyPair> {
     const optionsNormalized = normalizeAsymmetricKeyPairCreateOptions(options);

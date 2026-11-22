@@ -5,15 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './attribute-names';
-export * from './attributes';
-export * from './composite';
-export * from './date';
-export * from './identity';
-export * from './permission-binding';
-export * from './realm-match';
-export * from './time';
+export * from './attribute-names/index.ts';
+export * from './attributes/index.ts';
+export * from './composite/index.ts';
+export * from './date/index.ts';
+export * from './identity/index.ts';
+export * from './permission-binding/index.ts';
+export * from './realm-match/index.ts';
+export * from './time/index.ts';
 
-export * from './constants';
-export * from './define';
-export * from './types';
+export * from './constants.ts';
+export * from './define.ts';
+export * from './types.ts';

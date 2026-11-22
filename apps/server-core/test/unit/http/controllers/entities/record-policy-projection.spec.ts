@@ -17,13 +17,13 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     createFakeClient,
     createFakeRole,
     createFakeUser,
     expectClientError,
-} from '../../../../utils';
+} from '../../../../utils/index.ts';
 
 /**
  * A record policy is evaluated on the row, whatever part of it the request

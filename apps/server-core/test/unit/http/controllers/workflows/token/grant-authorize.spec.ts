@@ -22,15 +22,15 @@ import {
 } from '@authup/specs';
 import { ErrorCode } from '@authup/errors';
 import { isClientError } from 'hapic';
-import { buildOAuth2CodeChallenge, generateOAuth2CodeVerifier } from '../../../../../../src/core';
+import { buildOAuth2CodeChallenge, generateOAuth2CodeVerifier } from '../../../../../../src/core/index.ts';
 import {
     createFakeClient,
     createFakeRealm,
     createFakeUser,
     expectClientError,
     httpRequest,
-} from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+} from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 import { CacheInjectionKey } from '../../../../../../src/app/index.ts';
 
 describe('grant-authorize', () => {

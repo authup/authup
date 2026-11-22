@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { SymmetricAlgorithm } from './constants';
+import { SymmetricAlgorithm } from './constants.ts';
 
 export function getKeyUsagesForSymmetricAlgorithm(name: string) : KeyUsage[] {
     /**

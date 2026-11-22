@@ -6,14 +6,14 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { TimePolicy } from '../../../src';
+import type { TimePolicy } from '../../../src/index.ts';
 import {
     BuiltInPolicyType,
     PolicyData,
     TimePolicyEvaluator,
     TimePolicyValidator,
     definePolicyEvaluationContext,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 describe('src/policy/time', () => {
     it('should restrict', async () => {

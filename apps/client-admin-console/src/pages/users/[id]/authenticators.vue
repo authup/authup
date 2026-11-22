@@ -3,7 +3,7 @@ import type { User } from '@authup/core-kit';
 import { AUserAuthenticators } from '@authup/client-web-kit';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
-import { useErrorToast } from '../../../composables/error';
+import { useErrorToast } from '../../../composables/error.ts';
 
 export default defineComponent({
     components: { AUserAuthenticators },

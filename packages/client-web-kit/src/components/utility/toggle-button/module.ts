@@ -9,7 +9,7 @@ import { h } from 'vue';
 import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
-import { DEFAULT_BUTTON_SIZE } from '../../../core';
+import { DEFAULT_BUTTON_SIZE } from '../../../core/index.ts';
 
 type ToggleButtonOptions = {
     value: boolean,

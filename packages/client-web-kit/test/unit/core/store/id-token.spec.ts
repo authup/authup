@@ -7,8 +7,8 @@
 
 import { createFakeClient } from '@authup/core-http-kit/testing';
 import { describe, expect, it } from 'vitest';
-import { createStore, createStoreDispatcher } from '../../../../src/core/store';
-import { AUTHORIZATION_SUBJECT, buildAuthorizationCatalog } from '../../../utils/authorization';
+import { createStore, createStoreDispatcher } from '../../../../src/core/store/index.ts';
+import { AUTHORIZATION_SUBJECT, buildAuthorizationCatalog } from '../../../utils/authorization.ts';
 
 function buildStore() {
     const httpClient = createFakeClient({

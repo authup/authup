@@ -17,7 +17,7 @@ import {
     VCDropdownMenuItem,
     VCDropdownMenuTrigger,
 } from '@vuecs/overlays';
-import { useLocaleControl } from '../../core';
+import { useLocaleControl } from '../../core/index.ts';
 
 // Active locale keeps the primary fill while keyboard/pointer focus moves
 // over it — the `data-[highlighted]` pair overrides the theme item's neutral

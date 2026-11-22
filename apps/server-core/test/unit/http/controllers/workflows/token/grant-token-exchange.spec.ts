@@ -34,14 +34,14 @@ import {
     vi,
 } from 'vitest';
 import { MetricsInjectionKey } from '../../../../../../src/app/modules/metrics/index.ts';
-import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants';
-import { createTestApplication } from '../../../../../app';
+import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 import {
     createFakeClient,
     createFakeRealm,
     createFakeUser,
     httpRequest,
-} from '../../../../../utils';
+} from '../../../../../utils/index.ts';
 
 const CAP = 'bucket:b-1:read,write';
 const AUDIENCE = 'storage';

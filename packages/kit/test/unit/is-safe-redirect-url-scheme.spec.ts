@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { isSafeRedirectURLScheme } from '../../src';
+import { isSafeRedirectURLScheme } from '../../src/index.ts';
 
 describe('is-safe-redirect-url-scheme', () => {
     it.each([

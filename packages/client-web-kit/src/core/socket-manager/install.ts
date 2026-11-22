@@ -9,8 +9,8 @@ import { ClientManager } from '@authup/core-realtime-kit';
 import type { Pinia } from 'pinia';
 import type { App } from 'vue';
 import { ref } from 'vue';
-import { injectStoreFactory, storeToRefs } from '../store';
-import { provideSocketManager } from './singleton';
+import { injectStoreFactory, storeToRefs } from '../store/index.ts';
+import { provideSocketManager } from './singleton.ts';
 
 export type SocketManagerInstallOptions = {
     pinia?: Pinia,

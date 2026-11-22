@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { SlotName, hasNormalizedSlot, normalizeSlot  } from '../../../../core';
+import { SlotName, hasNormalizedSlot, normalizeSlot  } from '../../../../core/index.ts';
 import type { PropType, Ref, VNodeChild } from 'vue';
 import {
     computed,
@@ -15,12 +15,12 @@ import {
     toRef,
     watch,
 } from 'vue';
-import { APagination } from '../../pagination';
-import { renderToggleButton } from '../../toggle-button';
-import type { EntityCollectionVSlots } from '../collection';
-import { defineEntityCollectionVEmitOptions, defineEntityCollectionVProps } from '../collection';
-import { ASearch } from '../../search';
-import type { EntityPickerContext, EntityPickerVEmitOptions, RecordWithID } from './types';
+import { APagination } from '../../pagination/index.ts';
+import { renderToggleButton } from '../../toggle-button/index.ts';
+import type { EntityCollectionVSlots } from '../collection/index.ts';
+import { defineEntityCollectionVEmitOptions, defineEntityCollectionVProps } from '../collection/index.ts';
+import { ASearch } from '../../search/index.ts';
+import type { EntityPickerContext, EntityPickerVEmitOptions, RecordWithID } from './types.ts';
 
 export function defineEntityPickerVEmitOptions<T>() : EntityPickerVEmitOptions<T> {
     return {

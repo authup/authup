@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { NameValidOptions } from '../../helpers';
-import { isNameValid } from '../../helpers';
+import type { NameValidOptions } from '../../helpers/index.ts';
+import { isNameValid } from '../../helpers/index.ts';
 
 export function buildIdentityProviderAuthorizeCallbackPath(id: string | number) {
     return `/identity-providers/${id}/authorize-in`;

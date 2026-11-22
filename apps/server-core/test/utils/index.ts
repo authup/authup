@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './assertions';
-export * from './cookie-jar';
-export * from './domains';
-export * from './http';
-export * from './properties';
-export * from './token';
+export * from './assertions.ts';
+export * from './cookie-jar.ts';
+export * from './domains/index.ts';
+export * from './http.ts';
+export * from './properties.ts';
+export * from './token.ts';

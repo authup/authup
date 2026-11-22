@@ -13,8 +13,8 @@ import {
     it,
 } from 'vitest';
 import { EqualityFilter } from 'ldapjs';
-import type { ILdapClient } from '../../../../src/core';
-import { createLdapTestClient, createLdapTestUserAccount, dropLdapTestUserAccount } from './helpers';
+import type { ILdapClient } from '../../../../src/core/index.ts';
+import { createLdapTestClient, createLdapTestUserAccount, dropLdapTestUserAccount } from './helpers.ts';
 
 describe('adapters/ldap', () => {
     let client : ILdapClient;

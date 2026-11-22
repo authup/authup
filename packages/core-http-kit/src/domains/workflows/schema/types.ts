@@ -6,7 +6,7 @@
  */
 
 import type { Parameter, SchemaDescription } from '@rapiq/core';
-import type { APIRequestOptions } from '../../types-base';
+import type { APIRequestOptions } from '../../types-base.ts';
 
 export type SchemaResponseMeta = {
     /**

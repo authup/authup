@@ -17,14 +17,14 @@ import { RealmScope } from '@authup/access';
 import { Client } from '@authup/core-http-kit';
 import { PermissionName } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
-import { PermissionEntity } from '../../../../../../src';
-import { createTestApplication } from '../../../../../app';
+import { PermissionEntity } from '../../../../../../src/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 import {
     createFakeRealm,
     createFakeUser,
     createScopeRestrictedClient,
     expectClientError,
-} from '../../../../../utils';
+} from '../../../../../utils/index.ts';
 
 // Service-level coverage of the DB-backed permission-checker lives in
 // test/unit/core/identity/permission/checker.spec.ts. The HTTP tests below

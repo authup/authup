@@ -6,12 +6,12 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { IdentityPolicyData } from '../../../src';
+import type { IdentityPolicyData } from '../../../src/index.ts';
 import {
     buildPermissionKey,
     createAuthorizationSnapshotEvaluator,
     isPermissionError,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 const realmId = 'c641912c-21e5-4cb4-84b6-169e2b2bb023';
 const clientId = 'c641912c-21e5-4cb4-84b6-169e2b2bb025';

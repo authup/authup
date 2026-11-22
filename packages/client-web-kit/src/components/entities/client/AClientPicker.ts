@@ -12,9 +12,9 @@ import {
     defineEntityPicker,
     defineEntityPickerVEmitOptions,
     defineEntityPickerVProps,
-} from '../../utility/entity/picker/module';
-import type { EntityPickerVSlots } from '../../utility/entity/picker/types';
-import { AClients } from './AClients';
+} from '../../utility/entity/picker/module.ts';
+import type { EntityPickerVSlots } from '../../utility/entity/picker/types.ts';
+import { AClients } from './AClients.ts';
 
 export const AClientPicker = defineComponent({
     props: defineEntityPickerVProps<Client>(),

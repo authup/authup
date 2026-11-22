@@ -21,7 +21,7 @@ import {
     ref,
     watch,
 } from 'vue';
-import { buildPathTreeExpansion, useTranslation } from '../../../core';
+import { buildPathTreeExpansion, useTranslation } from '../../../core/index.ts';
 
 export default defineComponent({
     props: {

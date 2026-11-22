@@ -6,7 +6,7 @@
  */
 
 import { UserInfoAPI } from '@hapic/oauth2';
-import type { IOAuth2UserInfoAPI } from '../types';
+import type { IOAuth2UserInfoAPI } from '../types.ts';
 
 export class OAuth2UserInfoAPI extends UserInfoAPI implements IOAuth2UserInfoAPI {
 

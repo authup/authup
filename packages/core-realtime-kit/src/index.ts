@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './client';
-export * from './event';
-export * from './helpers';
-export * from './types';
+export * from './client/index.ts';
+export * from './event/index.ts';
+export * from './helpers.ts';
+export * from './types.ts';

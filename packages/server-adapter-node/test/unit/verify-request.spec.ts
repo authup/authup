@@ -14,7 +14,7 @@ import {
     it,
     vi,
 } from 'vitest';
-import { createMiddleware, verifyRequest } from '../../src';
+import { createMiddleware, verifyRequest } from '../../src/index.ts';
 
 function createVerifier(impl: ITokenVerifier['verify']): ITokenVerifier {
     return { verify: impl };

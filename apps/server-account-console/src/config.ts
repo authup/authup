@@ -22,7 +22,7 @@ import {
 } from '@authup/server-config-kit';
 import { Container } from 'validup';
 import type { CoreConfig, EnvironmentVariable } from '@authup/server-config';
-import type { Config, ConfigInput } from './types';
+import type { Config, ConfigInput } from './types.ts';
 
 /**
  * The keys this service reads, SELECTED out of the document schema by name.

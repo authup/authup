@@ -8,11 +8,11 @@
 import { base64ToArrayBuffer } from '@authup/kit';
 import { JWTAlgorithm } from '@authup/specs';
 import { subtle } from 'uncrypto';
-import { BaseKey } from '../base';
-import { SymmetricAlgorithm } from './constants';
-import { getKeyUsagesForSymmetricAlgorithm } from './key-usages';
-import { normalizeSymmetricKeyImportOptions } from './normalize';
-import type { SymmetricKeyImportContext, SymmetricKeyImportOptions } from './types';
+import { BaseKey } from '../base.ts';
+import { SymmetricAlgorithm } from './constants.ts';
+import { getKeyUsagesForSymmetricAlgorithm } from './key-usages.ts';
+import { normalizeSymmetricKeyImportOptions } from './normalize.ts';
+import type { SymmetricKeyImportContext, SymmetricKeyImportOptions } from './types.ts';
 
 export class SymmetricKey extends BaseKey {
     static async fromBase64(

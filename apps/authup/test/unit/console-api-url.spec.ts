@@ -7,8 +7,8 @@
 
 import { describe, expect, it } from 'vitest';
 import { resolveConfig as resolveAuthConsoleConfig } from '@authup/server-auth-console';
-import { applyInternalApiUrl, buildInternalUrl } from '../../src/console/api-url';
-import type { ConsoleConfigs } from '../../src/console/types';
+import { applyInternalApiUrl, buildInternalUrl } from '../../src/console/api-url.ts';
+import type { ConsoleConfigs } from '../../src/console/types.ts';
 
 /**
  * The regression behind #3550: the auth console is the one console that

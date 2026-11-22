@@ -6,10 +6,10 @@
  */
 
 import type { OAuth2TokenIntrospectionResponse } from '@authup/specs';
-import { BaseAPI } from '../../base';
-import type { IAccountAPI } from './types';
-import type { APIRequestOptions } from '../../types-base';
-import { buildRequestConfig } from '../../utils';
+import { BaseAPI } from '../../base.ts';
+import type { IAccountAPI } from './types.ts';
+import type { APIRequestOptions } from '../../types-base.ts';
+import { buildRequestConfig } from '../../utils.ts';
 
 export class AccountAPI extends BaseAPI implements IAccountAPI {
     async getSession(options?: APIRequestOptions): Promise<OAuth2TokenIntrospectionResponse> {

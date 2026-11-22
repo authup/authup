@@ -6,7 +6,7 @@
  */
 
 import { useErrorTranslator } from '@authup/client-web-kit';
-import { useToast } from './toast';
+import { useToast } from './toast.ts';
 
 /**
  * Sibling of `useToast()` for errors: returns `{ show }`, where

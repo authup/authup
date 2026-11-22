@@ -32,8 +32,8 @@ import {
     expectClientError,
     expectPropertiesEqualToSrc,
     httpRequest,
-} from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+} from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 
 describe('src/http/controllers/identity-provider', () => {
     const suite = createTestApplication();

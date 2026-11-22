@@ -12,9 +12,9 @@ import {
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import { VCButton } from '@vuecs/button';
-import { useTranslations } from '../../../core';
+import { useTranslations } from '../../../core/index.ts';
 import AMfaChallengeForm from '../../workflows/mfa/AMfaChallengeForm.vue';
-import type { AuthenticatorStepUp } from './types';
+import type { AuthenticatorStepUp } from './types.ts';
 
 /**
  * Renders the challenge a pending {@link AuthenticatorStepUp} owes, with a

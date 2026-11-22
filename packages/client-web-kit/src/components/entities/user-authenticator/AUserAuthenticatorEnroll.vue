@@ -25,10 +25,10 @@ import { VCButton } from '@vuecs/button';
 import { VCAlert } from '@vuecs/elements';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { VCIcon } from '@vuecs/icon';
-import { extractErrorContext, injectHTTPClient, useTranslations } from '../../../core';
+import { extractErrorContext, injectHTTPClient, useTranslations } from '../../../core/index.ts';
 import AUserAuthenticatorStepUp from './AUserAuthenticatorStepUp.vue';
-import { USER_AUTHENTICATOR_KIND_ICONS } from './constants';
-import { useAuthenticatorStepUp } from './step-up';
+import { USER_AUTHENTICATOR_KIND_ICONS } from './constants.ts';
+import { useAuthenticatorStepUp } from './step-up.ts';
 
 export default defineComponent({
     components: {

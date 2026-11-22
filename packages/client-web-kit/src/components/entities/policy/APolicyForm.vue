@@ -14,9 +14,9 @@ import {
     TranslatorTranslationCommonKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { useIsEditing } from '../../../composables';
-import { extractValidupResultsFromChild, injectHTTPClient, useTranslationsForNamespace } from '../../../core';
-import { AFormSubmit, defineEntityManager } from '../../utility';
+import { useIsEditing } from '../../../composables/index.ts';
+import { extractValidupResultsFromChild, injectHTTPClient, useTranslationsForNamespace } from '../../../core/index.ts';
+import { AFormSubmit, defineEntityManager } from '../../utility/index.ts';
 import APolicyBasicForm from './APolicyBasicForm.vue';
 import APolicyTypePicker from './APolicyTypePicker.vue';
 import AAttributeNamesPolicyForm from './attribute-names/AAttributeNamesPolicyForm.vue';

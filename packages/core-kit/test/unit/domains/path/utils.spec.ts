@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { isPathValid, joinPath, splitPath } from '../../../../src';
+import { isPathValid, joinPath, splitPath } from '../../../../src/index.ts';
 
 describe('domains/path/utils', () => {
     it('should accept a canonical slash path', () => {

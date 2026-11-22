@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { RootProvisioningEntity } from '../../../src';
+import type { RootProvisioningEntity } from '../../../src/index.ts';
 
 const DATA : RootProvisioningEntity = {
     policies: [

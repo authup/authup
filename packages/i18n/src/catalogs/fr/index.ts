@@ -5,16 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './action';
-export * from './app';
-export * from './client';
-export * from './common';
-export * from './entity';
-export * from './error';
-export * from './event';
-export * from './field';
-export * from './mail';
-export * from './permission';
-export * from './policy';
-export * from './scope';
-export * from './vuecs';
+export * from './action.ts';
+export * from './app.ts';
+export * from './client.ts';
+export * from './common.ts';
+export * from './entity.ts';
+export * from './error.ts';
+export * from './event.ts';
+export * from './field.ts';
+export * from './mail.ts';
+export * from './permission.ts';
+export * from './policy.ts';
+export * from './scope.ts';
+export * from './vuecs.ts';

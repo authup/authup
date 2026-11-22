@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EntityQueryInput } from '../../../helpers';
+import type { EntityQueryInput } from '../../../helpers/index.ts';
 import type { SessionToken } from '@authup/core-kit';
-import type { IEntitySchemaAPI } from '../../stats';
-import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { IEntitySchemaAPI } from '../../stats/index.ts';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base.ts';
 
 export type SessionTokenDeleteManyResponse = {
     count: number,

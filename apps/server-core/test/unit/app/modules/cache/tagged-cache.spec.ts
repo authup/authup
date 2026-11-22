@@ -25,11 +25,11 @@ import {
     createTaggedCache,
     createTaggedCacheClient,
     throttle,
-} from '../../../../../src/app/modules/cache';
-import type { TaggedCacheClientCreateInput } from '../../../../../src/app/modules/cache';
-import { ConfigInjectionKey } from '../../../../../src/app/modules/config';
-import { normalizeConfig } from '../../../../../src/app/modules/config/read';
-import { LoggerInjectionKey } from '../../../../../src/app/modules/logger';
+} from '../../../../../src/app/modules/cache/index.ts';
+import type { TaggedCacheClientCreateInput } from '../../../../../src/app/modules/cache/index.ts';
+import { ConfigInjectionKey } from '../../../../../src/app/modules/config/index.ts';
+import { normalizeConfig } from '../../../../../src/app/modules/config/read.ts';
+import { LoggerInjectionKey } from '../../../../../src/app/modules/logger/index.ts';
 import { buildTestRedisOptions } from '../../../../app/redis.ts';
 
 describe('app/modules/cache/tagged', () => {

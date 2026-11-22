@@ -20,8 +20,8 @@ import {
     ConfigModule,
     DefaultProvisioningSource,
     ProvisionerModule,
-} from '../../../../../../src';
-import type { Config } from '../../../../../../src';
+} from '../../../../../../src/index.ts';
+import type { Config } from '../../../../../../src/index.ts';
 import { normalizeConfig } from '../../../../../../src/app/modules/config/read.ts';
 import { readConfigRawFromEnv } from '@authup/server-config';
 import { CONFIG_SCHEMA } from '../../../../../../src/app/modules/config/constants.ts';
@@ -31,8 +31,8 @@ import {
     createFakeOAuth2IdentityProvider,
     createFakeRealm,
     httpRequest,
-} from '../../../../../utils';
-import { buildTestRedisOptions, createTestApplication, createTestDatabaseModuleForSecondaryInstance } from '../../../../../app';
+} from '../../../../../utils/index.ts';
+import { buildTestRedisOptions, createTestApplication, createTestDatabaseModuleForSecondaryInstance } from '../../../../../app/index.ts';
 
 /**
  * Two REAL authup instances, each with its own database: a downstream one that

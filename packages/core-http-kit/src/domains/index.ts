@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './entities';
-export * from './stats';
-export * from './workflows';
+export * from './entities/index.ts';
+export * from './stats/index.ts';
+export * from './workflows/index.ts';
 
-export * from './base';
-export * from './types-base';
+export * from './base.ts';
+export * from './types-base.ts';

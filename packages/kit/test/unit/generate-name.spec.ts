@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { generateName } from '../../src';
+import { generateName } from '../../src/index.ts';
 
 describe('generateName', () => {
     it('produces a readable, url-friendly name with a hex suffix', () => {

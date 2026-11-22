@@ -18,16 +18,16 @@ import type { IdentityProvider, Realm, User } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
 import { Client as HTTPClient } from '@authup/core-http-kit';
-import { generateOAuth2CodeVerifier } from '../../../../../src/core';
-import { IdentityProviderAccountEntity, UserEntity } from '../../../../../src/adapters/database/domains';
+import { generateOAuth2CodeVerifier } from '../../../../../src/core/index.ts';
+import { IdentityProviderAccountEntity, UserEntity } from '../../../../../src/adapters/database/domains/index.ts';
 import {
     createFakeClient,
     createFakeOAuth2IdentityProvider,
     createFakeRealm,
     createFakeUser,
     expectClientError,
-} from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+} from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 describe('identity-provider-account', () => {
     const suite = createTestApplication();

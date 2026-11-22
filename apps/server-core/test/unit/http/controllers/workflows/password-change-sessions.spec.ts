@@ -14,8 +14,8 @@ import {
 } from 'vitest';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import { PermissionName } from '@authup/core-kit';
-import { createFakeUser, httpRequest } from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+import { createFakeUser, httpRequest } from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 describe('password change ends the other sessions', () => {
     const suite = createTestApplication();

@@ -8,7 +8,7 @@
 import type { ObjectLiteral } from '@authup/kit';
 import type { SchemaDescription } from '@rapiq/core';
 import type { RequestBaseOptions, Response } from 'hapic';
-import type { EntityQueryInput } from '../helpers';
+import type { EntityQueryInput } from '../helpers/index.ts';
 
 /**
  * Response-scoped extras of an entity-record response. `schema` is the

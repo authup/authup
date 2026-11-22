@@ -7,8 +7,8 @@
 
 import { TypedToken } from 'eldin';
 import type { IApp } from 'routup';
-import type { IThemeProvider } from '../theme/index';
-import type { Config, HTTPServer } from './types';
+import type { IThemeProvider } from '../theme/index.ts';
+import type { Config, HTTPServer } from './types.ts';
 
 export enum ModuleName {
     CONFIG = 'config',

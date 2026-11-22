@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { MemoryCache } from '../../src';
+import { MemoryCache } from '../../src/index.ts';
 
 describe('src/cache/adapters/memory', () => {
     describe('add (set-if-absent)', () => {

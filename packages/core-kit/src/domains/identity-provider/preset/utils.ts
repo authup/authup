@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IdentityProviderProtocol } from '../constants';
-import { IdentityProviderPreset } from './constants';
+import { IdentityProviderProtocol } from '../constants.ts';
+import { IdentityProviderPreset } from './constants.ts';
 
 export function getIdentityProviderProtocolForPreset(
     id: string,

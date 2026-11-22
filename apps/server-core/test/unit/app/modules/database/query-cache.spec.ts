@@ -46,15 +46,15 @@ import {
     createTestApplication,
     createTestDatabaseApplication,
     createTestDatabaseModuleForSuite,
-} from '../../../../app';
+} from '../../../../app/index.ts';
 import {
     createFakeClient,
     createFakePermission,
     createFakeRealm,
     createFakeRole,
     createFakeUser,
-} from '../../../../utils';
-import { createFakeTimePolicy } from '../../../../utils/domains/policy';
+} from '../../../../utils/index.ts';
+import { createFakeTimePolicy } from '../../../../utils/domains/policy.ts';
 import type { Logger } from '@authup/server-kit';
 import { DomainEventPublisher, createNoopLogger } from '@authup/server-kit';
 import { LoggerInjectionKey } from '../../../../../src/app/modules/logger/index.ts';

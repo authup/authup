@@ -13,7 +13,7 @@ import type {
     ClientEntityAPIRegistry,
     EntityAPIDispatch,
     IClient,
-} from './type';
+} from './type.ts';
 
 /**
  * Resolve the client sub-API serving the given entity type, or

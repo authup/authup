@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { buildShadowingCookiePaths, normalizeCookiePath } from '../../../../src/core/store/cookie-path';
+import { buildShadowingCookiePaths, normalizeCookiePath } from '../../../../src/core/store/cookie-path.ts';
 
 describe('core/store/cookie-path', () => {
     it.each([

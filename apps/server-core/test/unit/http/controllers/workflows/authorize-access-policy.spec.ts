@@ -18,14 +18,14 @@ import { IdentityType, ScopeName } from '@authup/core-kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import { OAuth2AuthorizationResponseType, OAuth2ErrorCode } from '@authup/specs';
 import { ClientEntity } from '../../../../../src/adapters/database/domains/client/entity.ts';
-import { generateOAuth2CodeVerifier } from '../../../../../src/core';
+import { generateOAuth2CodeVerifier } from '../../../../../src/core/index.ts';
 import {
     createFakeClient,
     createFakeRealm,
     createFakeUser,
     expectClientError,
-} from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+} from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 describe('http/controllers/workflows/authorize (access policy, plan 052)', () => {
     const suite = createTestApplication();

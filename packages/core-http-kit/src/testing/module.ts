@@ -11,14 +11,14 @@ import type {
     Response as ResponseInterface,
     ResponseType,
 } from 'hapic';
-import { Client } from '../client';
-import { matchRoute } from './matcher';
+import { Client } from '../client/index.ts';
+import { matchRoute } from './matcher.ts';
 import type {
     FakeClientOptions,
     FakeHandler,
     FakeHandlerMap,
     FakeRequest,
-} from './types';
+} from './types.ts';
 
 const defaultFallback : FakeHandler = () => ({ data: [], meta: { total: 0 } });
 

@@ -17,8 +17,8 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
-import { createFakeClient, expectClientError } from '../../../../utils';
+import { createTestApplication } from '../../../../app/index.ts';
+import { createFakeClient, expectClientError } from '../../../../utils/index.ts';
 
 /**
  * Regression (issue #3654), end to end through the real policy engine: a

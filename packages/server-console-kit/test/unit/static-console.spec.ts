@@ -15,7 +15,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { defineStaticConsole } from '../../src';
+import { defineStaticConsole } from '../../src/index.ts';
 
 const SHELL = '<!doctype html><html><head></head><body><div id="app"></div><!--test-config--></body></html>';
 

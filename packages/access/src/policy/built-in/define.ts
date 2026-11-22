@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyWithType } from '../types';
-import type { BuiltInPolicyTypeMap } from './types';
+import type { PolicyWithType } from '../types.ts';
+import type { BuiltInPolicyTypeMap } from './types.ts';
 
 export function definePolicyWithType<
     K extends keyof BuiltInPolicyTypeMap,

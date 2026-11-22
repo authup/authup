@@ -8,17 +8,17 @@
 import type { SSRContext } from 'vue/server-renderer';
 import { renderToString } from 'vue/server-renderer';
 import { basename } from 'node:path';
-import { createApp } from './app';
-import { createWindowPayloadHTML } from './window';
-import type { RenderContext, RenderResult } from './contract';
+import { createApp } from './app.ts';
+import { createWindowPayloadHTML } from './window.ts';
+import type { RenderContext, RenderResult } from './contract.ts';
 
-export type { RenderContext, RenderResult } from './contract';
+export type { RenderContext, RenderResult } from './contract.ts';
 
 /**
  * Re-exported as a VALUE so the host can assert it against the contract it
  * compiles against. Any package substituted for this one must export it.
  */
-export { CONTRACT_VERSION } from './contract';
+export { CONTRACT_VERSION } from './contract.ts';
 
 export async function render(ctx: RenderContext) : Promise<RenderResult> {
     const {

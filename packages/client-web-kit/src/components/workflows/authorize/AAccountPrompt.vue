@@ -9,7 +9,7 @@ import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
 import { computed, defineComponent } from 'vue';
-import { useTranslation } from '../../../core';
+import { useTranslation } from '../../../core/index.ts';
 
 export default defineComponent({
     components: { VCButton, VCIcon },

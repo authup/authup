@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { isHttpURL } from '../../src/pages/utils';
+import { isHttpURL } from '../../src/pages/utils.ts';
 
 // The Applications page renders a client's `baseUrl` as a link, and the value
 // is admin-entered configuration, so only an absolute http(s) URL may become

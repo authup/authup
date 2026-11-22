@@ -6,13 +6,13 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { RealmMatchPolicy } from '../../../src';
+import type { RealmMatchPolicy } from '../../../src/index.ts';
 import {
     BuiltInPolicyType,
     PolicyData,
     RealmMatchPolicyEvaluator,
     definePolicyEvaluationContext,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 describe('src/policy/attribute-realm', () => {
     it('should permit by matching realm', async () => {

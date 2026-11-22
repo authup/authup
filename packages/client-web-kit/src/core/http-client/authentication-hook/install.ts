@@ -9,10 +9,10 @@ import { Client, ClientAuthenticationHook, ClientAuthenticationHookEventName } f
 import type { IClient } from '@authup/core-http-kit';
 import type { App } from 'vue';
 import { storeToRefs } from 'pinia';
-import { hasHTTPClientAuthenticationHook, provideHTTPClientAuthenticationHook } from './singleton';
-import { StoreDispatcherEventName, injectStoreDispatcher, injectStoreFactory } from '../../store';
-import { buildHTTPClient } from '../build';
-import type { HTTPClientAuthenticationHookInstallOptions } from './types';
+import { hasHTTPClientAuthenticationHook, provideHTTPClientAuthenticationHook } from './singleton.ts';
+import { StoreDispatcherEventName, injectStoreDispatcher, injectStoreFactory } from '../../store/index.ts';
+import { buildHTTPClient } from '../build.ts';
+import type { HTTPClientAuthenticationHookInstallOptions } from './types.ts';
 
 export function installHTTPClientAuthenticationHook(
     app: App,

@@ -18,7 +18,7 @@ import {
 import { RealmEntity } from '../../../../../src/adapters/database/domains/index.ts';
 import { RealmRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/index.ts';
 import { DatabaseInjectionKey } from '../../../../../src/app/index.ts';
-import { createTestDatabaseApplication } from '../../../../app';
+import { createTestDatabaseApplication } from '../../../../app/index.ts';
 
 describe('app/modules/database/repositories/realm', () => {
     const suite = createTestDatabaseApplication();

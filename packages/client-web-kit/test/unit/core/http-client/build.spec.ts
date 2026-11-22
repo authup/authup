@@ -16,8 +16,8 @@ import {
     injectHTTPClientAuthenticationHook,
     installHTTPClient,
     installHTTPClientAuthenticationHook,
-} from '../../../../src/core/http-client';
-import { injectStore, installStore } from '../../../../src/core/store';
+} from '../../../../src/core/http-client/index.ts';
+import { injectStore, installStore } from '../../../../src/core/store/index.ts';
 
 const noop = () => undefined;
 

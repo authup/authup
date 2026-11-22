@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EntityQueryInput } from '../../../helpers';
-import { buildQueryString } from '../../../helpers';
+import type { EntityQueryInput } from '../../../helpers/index.ts';
+import { buildQueryString } from '../../../helpers/index.ts';
 import type { Consent } from '@authup/core-kit';
-import { BaseAPI } from '../../base';
-import type { EntitySchemaResponse } from '../../stats';
-import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
-import type { IConsentAPI } from './types';
-import { buildRequestConfig } from '../../utils';
+import { BaseAPI } from '../../base.ts';
+import type { EntitySchemaResponse } from '../../stats/index.ts';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base.ts';
+import type { IConsentAPI } from './types.ts';
+import { buildRequestConfig } from '../../utils.ts';
 
 export class ConsentAPI extends BaseAPI implements IConsentAPI {
     async getSchema(options?: APIRequestOptions): Promise<EntitySchemaResponse> {

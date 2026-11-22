@@ -17,9 +17,9 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
-import { createFakeClient, expectClientError } from '../../../../utils';
-import { createFakeTimePolicy } from '../../../../utils/domains/policy';
+import { createTestApplication } from '../../../../app/index.ts';
+import { createFakeClient, expectClientError } from '../../../../utils/index.ts';
+import { createFakeTimePolicy } from '../../../../utils/domains/policy.ts';
 
 describe('http/controllers/client (self-manage)', () => {
     const suite = createTestApplication();

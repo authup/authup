@@ -31,7 +31,7 @@ import {
 } from '@rapiq/core';
 import { defineDataCollection } from '@vuecs/data';
 import type { DataCollectionLoadResult, DataCollectionSnapshot, DataLoadOutcome } from '@vuecs/data';
-import type { EntityListQueryInput } from '../../../../core';
+import type { EntityListQueryInput } from '../../../../core/index.ts';
 import type { VNodeChild } from 'vue';
 import {
     Fragment,
@@ -41,20 +41,20 @@ import {
     onServerPrefetch,
     unref,
 } from 'vue';
-import { EntityCollectionSlotName } from './constants';
+import { EntityCollectionSlotName } from './constants.ts';
 import { isObject } from 'smob';
-import { boolableToObject } from '../../../../utils';
-import { injectHTTPClient } from '../../../../core/http-client';
-import { injectHydrationStore } from '../../../../core/hydration';
-import { useEntityNameSearch, useEntityNameTranslator } from '../../../../core/translator';
-import type { EntityNamed } from '../../../../core/translator';
-import { defineEntitySocketManager } from '../socket';
-import type { EntitySocketManagerCreateContext } from '../socket';
+import { boolableToObject } from '../../../../utils/index.ts';
+import { injectHTTPClient } from '../../../../core/http-client/index.ts';
+import { injectHydrationStore } from '../../../../core/hydration/index.ts';
+import { useEntityNameSearch, useEntityNameTranslator } from '../../../../core/translator/index.ts';
+import type { EntityNamed } from '../../../../core/translator/index.ts';
+import { defineEntitySocketManager } from '../socket/index.ts';
+import type { EntitySocketManagerCreateContext } from '../socket/index.ts';
 import {
     isCondition,
     isQuerySortedDescByDate,
     normalizeQueryInput,
-} from '../../../../core/query';
+} from '../../../../core/query/index.ts';
 import type {
     EntityCollectionHydrationSnapshot,
     EntityCollectionManager,
@@ -67,11 +67,11 @@ import type {
     ListMeta,
     ListNoMoreOptions,
     ListSlotProps,
-} from './types';
+} from './types.ts';
 import {
     buildEntitySearchCondition,
     mergeEntityCollectionRenderOptions,
-} from './utils';
+} from './utils/index.ts';
 import { isError } from '@authup/errors';
 
 type Entity<A> = A extends Record<string, any> ? A : never;

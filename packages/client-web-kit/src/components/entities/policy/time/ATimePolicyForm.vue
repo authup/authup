@@ -8,7 +8,7 @@ import {
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { assignFormProperties, useTranslations } from '../../../../core';
+import { assignFormProperties, useTranslations } from '../../../../core/index.ts';
 import type { Policy } from '@authup/core-kit';
 import type { FormOption } from '@vuecs/forms';
 import { VCFormGroup, VCFormInput, VCFormSelect } from '@vuecs/forms';
@@ -19,7 +19,7 @@ import {
     isIntervalForDayOfYear,
 } from '@authup/access';
 import type { TimePolicy } from '@authup/access';
-import { onChange, useUpdatedAt } from '../../../../composables';
+import { onChange, useUpdatedAt } from '../../../../composables/index.ts';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({

@@ -12,7 +12,7 @@ import type {
     PolicyEvaluationResult,
     PolicyInput,
     PolicyWithType,
-} from '../../../src';
+} from '../../../src/index.ts';
 import {
     BuiltInPolicyType,
     IdentityPermissionBindingPolicyEvaluator,
@@ -22,7 +22,7 @@ import {
     definePolicyData,
     definePolicyEvaluationContext,
     definePolicyWithType,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 type Verdict = 'pass' | 'deny' | 'pending';
 

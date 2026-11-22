@@ -19,11 +19,11 @@ import {
     vi,
 } from 'vitest';
 import AUserAuthenticatorEnroll from '../../../../src/components/entities/user-authenticator/AUserAuthenticatorEnroll.vue';
-import { ADeviceVerifyForm } from '../../../../src/components/workflows/device';
-import { ALoginForm } from '../../../../src/components/workflows/login';
+import { ADeviceVerifyForm } from '../../../../src/components/workflows/device/index.ts';
+import { ALoginForm } from '../../../../src/components/workflows/login/index.ts';
 import AMfaChallengeForm from '../../../../src/components/workflows/mfa/AMfaChallengeForm.vue';
-import { StoreAuthStatus, injectStore } from '../../../../src/core';
-import { mountKitComponent } from '../../../utils';
+import { StoreAuthStatus, injectStore } from '../../../../src/core/index.ts';
+import { mountKitComponent } from '../../../utils/index.ts';
 
 // The locally registered VCIcon would otherwise fetch every unregistered
 // icon from the iconify API, which happy-dom aborts at teardown.

@@ -14,8 +14,8 @@ import {
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { defineComponent } from 'vue';
-import { useBasePath } from '../base-path';
-import { injectPayload } from '../di';
+import { useBasePath } from '../base-path.ts';
+import { injectPayload } from '../di.ts';
 
 export default defineComponent({
     components: {

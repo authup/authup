@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TranslatorTranslationActionKey } from '../../constants';
-import type { NamespaceTranslations } from '../../types';
+import { TranslatorTranslationActionKey } from '../../constants.ts';
+import type { NamespaceTranslations } from '../../types.ts';
 
 export const TranslatorTranslationActionGerman : NamespaceTranslations<`${TranslatorTranslationActionKey}`> = {
     [TranslatorTranslationActionKey.ADD]: 'Hinzufügen',

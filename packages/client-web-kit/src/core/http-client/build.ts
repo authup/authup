@@ -7,7 +7,7 @@
 
 import { Client } from '@authup/core-http-kit';
 import type { IClient } from '@authup/core-http-kit';
-import type { HTTPClientBuildOptions } from './types';
+import type { HTTPClientBuildOptions } from './types.ts';
 
 /**
  * A client for one kit consumer (the store, the provided client, the hook's

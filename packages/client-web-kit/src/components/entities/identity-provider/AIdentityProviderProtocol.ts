@@ -7,8 +7,8 @@
 
 import type { IdentityProviderProtocol } from '@authup/core-kit';
 import { defineComponent } from 'vue';
-import { hasNormalizedSlot, normalizeSlot } from '../../../core';
-import { getIdentityProviderProtocolElement } from './protocol';
+import { hasNormalizedSlot, normalizeSlot } from '../../../core/index.ts';
+import { getIdentityProviderProtocolElement } from './protocol/index.ts';
 
 export const AIdentityProviderProtocol = defineComponent({
     props: {

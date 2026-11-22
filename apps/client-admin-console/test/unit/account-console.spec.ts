@@ -7,9 +7,9 @@
 
 import { createApp, h } from 'vue';
 import { describe, expect, it } from 'vitest';
-import { useAccountConsoleURL } from '../../src/composables/account-console';
-import { resolveAdminConsoleConfig } from '../../src/config';
-import { provideAdminConsoleConfig } from '../../src/di';
+import { useAccountConsoleURL } from '../../src/composables/account-console.ts';
+import { resolveAdminConsoleConfig } from '../../src/config.ts';
+import { provideAdminConsoleConfig } from '../../src/di.ts';
 
 describe('useAccountConsoleURL', () => {
     it('uses the relocated account console and encodes the admin return reference', () => {

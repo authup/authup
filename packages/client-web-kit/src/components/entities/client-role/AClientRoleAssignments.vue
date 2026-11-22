@@ -9,7 +9,7 @@
 import type { Role } from '@authup/core-kit';
 import { defineQuery } from '@rapiq/core';
 import { computed, defineComponent } from 'vue';
-import { ARoles } from '../role';
+import { ARoles } from '../role/index.ts';
 import AClientRoleAssignment from './AClientRoleAssignment.vue';
 
 export default defineComponent({

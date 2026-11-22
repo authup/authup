@@ -18,9 +18,9 @@ import {
     expect,
     it,
 } from 'vitest';
-import { ConfigInjectionKey } from '../../../../../src/app';
-import { SESSION_COOKIE } from '../../../../../src/core';
-import { createTestApplication } from '../../../../app';
+import { ConfigInjectionKey } from '../../../../../src/app/index.ts';
+import { SESSION_COOKIE } from '../../../../../src/core/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     TestCookieJar,
     createFakeClient,
@@ -28,7 +28,7 @@ import {
     createFakeRole,
     createFakeUser,
     httpRequest,
-} from '../../../../utils';
+} from '../../../../utils/index.ts';
 
 /**
  * A user's client-owned grants apply only through that client's tokens

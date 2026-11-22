@@ -13,10 +13,10 @@ import {
     expect,
     it,
 } from 'vitest';
-import { HTTPInjectionKey } from '../../../../../src/app';
-import { createTestApplication } from '../../../../app';
-import type { TestHTTPApplication } from '../../../../app';
-import { httpRequest } from '../../../../utils';
+import { HTTPInjectionKey } from '../../../../../src/app/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
+import type { TestHTTPApplication } from '../../../../app/index.ts';
+import { httpRequest } from '../../../../utils/index.ts';
 
 /**
  * The theming guide tells an operator to open one specific /authorize URL to

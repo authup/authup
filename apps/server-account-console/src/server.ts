@@ -6,8 +6,8 @@
  */
 
 import { App } from 'routup';
-import { createHandler } from './handler';
-import type { Config } from './types';
+import { createHandler } from './handler.ts';
+import type { Config } from './types.ts';
 
 /**
  * The standalone service: the same handler the CLI mounts in process, behind

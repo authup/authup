@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './ATrustAnchor';
-export * from './ATrustAnchors';
+export * from './ATrustAnchor.ts';
+export * from './ATrustAnchors.ts';
 
 export { default as ATrustAnchorForm } from './ATrustAnchorForm.vue';

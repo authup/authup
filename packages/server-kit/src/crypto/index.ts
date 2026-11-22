@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './hash';
-export * from './key';
-export * from './json-web-token';
-export * from './symmetric-cipher';
+export * from './hash/index.ts';
+export * from './key/index.ts';
+export * from './json-web-token/index.ts';
+export * from './symmetric-cipher/index.ts';

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IEntitySchemaAPI } from '../../stats';
-import type { IEntityAPI } from '../../types-base';
+import type { IEntitySchemaAPI } from '../../stats/index.ts';
+import type { IEntityAPI } from '../../types-base.ts';
 
 import type { ClientTokenExchangeCapability } from '@authup/core-kit';
 

@@ -7,8 +7,8 @@
 
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
-import { AEntityDelete } from '../../../../src/components/utility/entity';
-import { mountKitComponent } from '../../../utils';
+import { AEntityDelete } from '../../../../src/components/utility/entity/index.ts';
+import { mountKitComponent } from '../../../utils/index.ts';
 
 const deleteRequests = (requests: { method: string, url: string }[]) => requests.filter(
     (request) => request.method === 'DELETE',

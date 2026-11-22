@@ -9,10 +9,10 @@ import { BuiltInPolicyType, SystemPolicyName } from '@authup/access';
 import type { Policy } from '@authup/core-kit';
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
-import { APermissionPolicyBindingButton } from '../../../../../src/components/entities/permission-policy-binding';
+import { APermissionPolicyBindingButton } from '../../../../../src/components/entities/permission-policy-binding/index.ts';
 import APermissionPolicyAssignments from '../../../../../src/components/entities/permission-policy/APermissionPolicyAssignments.vue';
 import APolicySummary from '../../../../../src/components/entities/policy/APolicySummary.vue';
-import { mountKitComponent } from '../../../../utils';
+import { mountKitComponent } from '../../../../utils/index.ts';
 
 const now = new Date(0).toISOString();
 

@@ -6,8 +6,8 @@
  */
 
 import { createClient } from 'redis-extension';
-import { isRedisClient } from './check';
-import type { RedisClient, RedisClientOptions } from './module';
+import { isRedisClient } from './check.ts';
+import type { RedisClient, RedisClientOptions } from './module.ts';
 
 export type RedisClientCreateInput = string | boolean | RedisClient | RedisClientOptions;
 

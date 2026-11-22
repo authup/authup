@@ -1,2 +1,2 @@
-export * from './entity';
-export * from './validator';
+export * from './entity.ts';
+export * from './validator.ts';

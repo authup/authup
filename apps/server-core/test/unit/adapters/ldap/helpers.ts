@@ -6,8 +6,8 @@
  */
 
 import { inject } from 'vitest';
-import { LdapClient } from '../../../../src/adapters/shared/ldap';
-import type { ILdapClient } from '../../../../src/core';
+import { LdapClient } from '../../../../src/adapters/shared/ldap/index.ts';
+import type { ILdapClient } from '../../../../src/core/index.ts';
 
 // Spec files run in parallel workers against ONE shared OpenLDAP container —
 // every spec must use its own account name or a sibling's afterAll drop

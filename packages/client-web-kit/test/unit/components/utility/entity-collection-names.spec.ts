@@ -15,8 +15,8 @@ import {
     defineEntityCollectionManager,
     defineEntityCollectionVEmitOptions,
     defineEntityCollectionVProps,
-} from '../../../../src/components/utility';
-import { mountKitComponent } from '../../../utils';
+} from '../../../../src/components/utility/index.ts';
+import { mountKitComponent } from '../../../utils/index.ts';
 
 function mountScopeCollection(data: Partial<Scope>[] = []) {
     const component = defineComponent({

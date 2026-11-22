@@ -3,9 +3,9 @@ import { IdentityProviderPreset, IdentityProviderProtocol } from '@authup/core-k
 import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { defineComponent } from 'vue';
 import { VCIcon } from '@vuecs/icon';
-import { useTranslations } from '../../../core';
-import { AIdentityProviderPreset } from './AIdentityProviderPreset';
-import { AIdentityProviderProtocol } from './AIdentityProviderProtocol';
+import { useTranslations } from '../../../core/index.ts';
+import { AIdentityProviderPreset } from './AIdentityProviderPreset.ts';
+import { AIdentityProviderProtocol } from './AIdentityProviderProtocol.ts';
 
 export default defineComponent({
     components: {

@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './contants';
-export * from './module';
-export * from './sections';
+export * from './contants.ts';
+export * from './module.ts';
+export * from './sections.ts';

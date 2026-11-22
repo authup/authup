@@ -7,7 +7,7 @@
 
 import { BearerTokenMalformedError, ErrorCode } from '@authup/errors';
 import { describe, expect, it } from 'vitest';
-import { extractBearerToken } from '../../src';
+import { extractBearerToken } from '../../src/index.ts';
 
 describe('extractBearerToken', () => {
     it('should return the token for a well-formed Bearer header', () => {

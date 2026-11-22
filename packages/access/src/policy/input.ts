@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BuiltInPolicyType } from './built-in/constants';
-import type { IdentityPolicyData } from './built-in/identity/types';
-import { PolicyData } from './data';
+import type { BuiltInPolicyType } from './built-in/constants.ts';
+import type { IdentityPolicyData } from './built-in/identity/types.ts';
+import { PolicyData } from './data.ts';
 
 /**
  * Typed seed for a permission evaluation's {@link PolicyData} bag.

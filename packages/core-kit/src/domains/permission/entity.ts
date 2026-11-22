@@ -6,9 +6,9 @@
  */
 
 import type { DecisionStrategy } from '@authup/kit';
-import type { Client } from '../client';
-import type { Policy } from '../policy';
-import type { Realm } from '../realm';
+import type { Client } from '../client/index.ts';
+import type { Policy } from '../policy/index.ts';
+import type { Realm } from '../realm/index.ts';
 import type { RealmScopeValue } from './constants.ts';
 
 export interface PermissionRelation {

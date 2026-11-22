@@ -12,9 +12,9 @@ import {
     defineEntityPicker,
     defineEntityPickerVEmitOptions,
     defineEntityPickerVProps,
-} from '../../utility/entity/picker/module';
-import type { EntityPickerVSlots } from '../../utility/entity/picker/types';
-import { ARealms } from './ARealms';
+} from '../../utility/entity/picker/module.ts';
+import type { EntityPickerVSlots } from '../../utility/entity/picker/types.ts';
+import { ARealms } from './ARealms.ts';
 
 export const ARealmPicker = defineComponent({
     props: defineEntityPickerVProps<Realm>(),

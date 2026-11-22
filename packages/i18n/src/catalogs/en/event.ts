@@ -6,7 +6,7 @@
  */
 
 import { EventName } from '@authup/core-kit';
-import type { NamespaceTranslations } from '../../types';
+import type { NamespaceTranslations } from '../../types.ts';
 
 export const TranslatorTranslationEventEnglish : NamespaceTranslations<`${EventName}`> = {
     [EventName.LOGIN]: 'Sign-in',

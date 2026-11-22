@@ -7,8 +7,8 @@
 
 import type { TransportRequest } from 'hapic';
 import { describe, expect, it } from 'vitest';
-import { Client, ClientAuthenticationHook } from '../../src';
-import type { ClientOptions } from '../../src';
+import { Client, ClientAuthenticationHook } from '../../src/index.ts';
+import type { ClientOptions } from '../../src/index.ts';
 
 type Transport = NonNullable<ClientOptions['transport']>;
 

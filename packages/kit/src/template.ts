@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { hasOwnProperty } from './has-own-property';
+import { hasOwnProperty } from './has-own-property.ts';
 
 export function template(
     str: string,

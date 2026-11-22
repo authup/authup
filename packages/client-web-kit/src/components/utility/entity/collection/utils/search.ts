@@ -14,8 +14,8 @@ import {
     inArray,
     or,
 } from '@rapiq/core';
-import { isEntityNameVocabularyClosed } from '../../../../../core/translator/entity-name';
-import { ENTITY_SEARCH_FIELDS, ENTITY_SEARCH_FIELD_DEFAULT } from '../constants';
+import { isEntityNameVocabularyClosed } from '../../../../../core/translator/entity-name.ts';
+import { ENTITY_SEARCH_FIELDS, ENTITY_SEARCH_FIELD_DEFAULT } from '../constants.ts';
 
 /**
  * The condition a bare search string becomes when a collection declares no

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ConsoleLogger } from '../types';
-import type { ThemeManifest } from './contract/index';
+import type { ConsoleLogger } from '../types.ts';
+import type { ThemeManifest } from './contract/index.ts';
 
 export type ThemeProviderContext = {
     /**

@@ -6,8 +6,8 @@
  */
 
 import { getCurrentInstance, onServerPrefetch } from 'vue';
-import { injectHydrationStore } from './singleton';
-import type { HydratedValueContext } from './types';
+import { injectHydrationStore } from './singleton.ts';
+import type { HydratedValueContext } from './types.ts';
 
 export function isServerRuntime() : boolean {
     return typeof window === 'undefined';

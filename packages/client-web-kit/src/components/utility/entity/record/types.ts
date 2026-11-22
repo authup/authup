@@ -6,7 +6,7 @@
  */
 
 import type { ICondition } from '@rapiq/core';
-import type { EntityListQueryInput, QueryFieldsInput, QueryFiltersInput } from '../../../../core';
+import type { EntityListQueryInput, QueryFieldsInput, QueryFiltersInput } from '../../../../core/index.ts';
 import type {
     MaybeRef,
     Ref,
@@ -14,7 +14,7 @@ import type {
     SlotsType,
     VNodeChild,
 } from 'vue';
-import type { EntitySocketManagerCreateContext } from '../socket';
+import type { EntitySocketManagerCreateContext } from '../socket/index.ts';
 
 type EntityWithID = {
     [key: string]: any,

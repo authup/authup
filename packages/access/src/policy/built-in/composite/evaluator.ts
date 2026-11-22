@@ -7,12 +7,12 @@
 
 import { defineIssueGroup } from '@ebec/core';
 import { DecisionStrategy } from '@authup/kit';
-import { PolicyEngine } from '../../engine';
-import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
-import { maybeInvertPolicyOutcome } from '../../helpers';
-import type { PolicyIssue } from '../../issue';
-import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
-import type { PolicySide, PolicySides } from '../../side';
+import { PolicyEngine } from '../../engine/index.ts';
+import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation/index.ts';
+import { maybeInvertPolicyOutcome } from '../../helpers/index.ts';
+import type { PolicyIssue } from '../../issue/index.ts';
+import { PolicyIssueCode, definePolicyIssueItem } from '../../issue/index.ts';
+import type { PolicySide, PolicySides } from '../../side/index.ts';
 import {
     POLICY_SIDE_ALWAYS,
     POLICY_SIDE_NEVER,
@@ -22,8 +22,8 @@ import {
     invertPolicySides,
     readPolicySides,
     writePolicySides,
-} from '../../side';
-import { CompositePolicyValidator } from './validator';
+} from '../../side/index.ts';
+import { CompositePolicyValidator } from './validator.ts';
 
 export class CompositePolicyEvaluator implements IPolicyEvaluator {
     protected validator : CompositePolicyValidator;

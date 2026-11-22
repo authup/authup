@@ -5,15 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EntityQueryInput } from '../../../helpers';
-import { buildQueryString } from '../../../helpers';
+import type { EntityQueryInput } from '../../../helpers/index.ts';
+import { buildQueryString } from '../../../helpers/index.ts';
 import type { Session } from '@authup/core-kit';
-import { BaseAPI } from '../../base';
-import { buildStatsURL } from '../../stats';
-import type { EntitySchemaResponse, EntityStatsQuery, EntityStatsResponse } from '../../stats';
-import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
-import type { ISessionAPI, SessionDeleteManyResponse } from './types';
-import { buildRequestConfig } from '../../utils';
+import { BaseAPI } from '../../base.ts';
+import { buildStatsURL } from '../../stats/index.ts';
+import type { EntitySchemaResponse, EntityStatsQuery, EntityStatsResponse } from '../../stats/index.ts';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base.ts';
+import type { ISessionAPI, SessionDeleteManyResponse } from './types.ts';
+import { buildRequestConfig } from '../../utils.ts';
 
 export class SessionAPI extends BaseAPI implements ISessionAPI {
     async getStats(query: EntityStatsQuery<Session> = {}, options?: APIRequestOptions): Promise<EntityStatsResponse> {

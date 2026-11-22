@@ -14,13 +14,13 @@ import type {
     CookieOptions,
     CookieSetFn,
     CookieUnsetFn,
-} from '../../types';
-import { STORE_ID } from './constants';
-import { buildShadowingCookiePaths, normalizeCookiePath } from './cookie-path';
-import { createStore } from './create';
-import { StoreDispatcherEventName, createStoreDispatcher, provideStoreDispatcher } from './dispatcher';
-import { hasStoreFactory, provideStoreFactory } from './singleton';
-import type { StoreInstallOptions } from './types';
+} from '../../types.ts';
+import { STORE_ID } from './constants.ts';
+import { buildShadowingCookiePaths, normalizeCookiePath } from './cookie-path.ts';
+import { createStore } from './create.ts';
+import { StoreDispatcherEventName, createStoreDispatcher, provideStoreDispatcher } from './dispatcher/index.ts';
+import { hasStoreFactory, provideStoreFactory } from './singleton.ts';
+import type { StoreInstallOptions } from './types.ts';
 
 export function installStore(app: App, options: StoreInstallOptions = {}) {
     if (hasStoreFactory(app)) {

@@ -29,11 +29,11 @@ import {
     VCModalTitle,
     useAlertDialog,
 } from '@vuecs/overlays';
-import { extractErrorContext, injectHTTPClient, useTranslations } from '../../../core';
+import { extractErrorContext, injectHTTPClient, useTranslations } from '../../../core/index.ts';
 import AUserAuthenticatorEnroll from './AUserAuthenticatorEnroll.vue';
 import AUserAuthenticatorStepUp from './AUserAuthenticatorStepUp.vue';
-import { USER_AUTHENTICATOR_KIND_ICONS } from './constants';
-import { useAuthenticatorStepUp } from './step-up';
+import { USER_AUTHENTICATOR_KIND_ICONS } from './constants.ts';
+import { useAuthenticatorStepUp } from './step-up.ts';
 
 export default defineComponent({
     components: {

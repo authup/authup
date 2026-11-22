@@ -8,7 +8,7 @@
 /* global window */
 import { defineComponent, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { useAccountConsoleURL } from '../../composables/account-console';
+import { useAccountConsoleURL } from '../../composables/account-console.ts';
 
 // Self-service moved to the account console, served by server-core on the
 // IdP origin. This stub keeps the sidebar entry and old bookmarks working

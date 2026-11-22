@@ -6,12 +6,12 @@
  */
 import type { Realm } from '@authup/core-kit';
 import type { ClientProvisioningEntity } from '../client/index.ts';
-import type { PathProvisioningEntity } from '../path';
-import type { PermissionProvisioningEntity } from '../permission';
-import type { RoleProvisioningEntity } from '../role';
-import type { ScopeProvisioningEntity } from '../scope';
+import type { PathProvisioningEntity } from '../path/index.ts';
+import type { PermissionProvisioningEntity } from '../permission/index.ts';
+import type { RoleProvisioningEntity } from '../role/index.ts';
+import type { ScopeProvisioningEntity } from '../scope/index.ts';
 import type { BaseProvisioningEntity } from '../types.ts';
-import type { UserProvisioningEntity } from '../user';
+import type { UserProvisioningEntity } from '../user/index.ts';
 
 export type RealmProvisioningRelations = {
     users?: UserProvisioningEntity[],

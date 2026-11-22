@@ -5,18 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EntityQueryInput } from '../../../helpers';
-import { buildQueryString } from '../../../helpers';
+import type { EntityQueryInput } from '../../../helpers/index.ts';
+import { buildQueryString } from '../../../helpers/index.ts';
 import type { ClientPermission } from '@authup/core-kit';
-import { BaseAPI } from '../../base';
-import type { EntitySchemaResponse } from '../../stats';
-import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import { BaseAPI } from '../../base.ts';
+import type { EntitySchemaResponse } from '../../stats/index.ts';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base.ts';
 import type {
     ClientPermissionCreatePayload,
     ClientPermissionUpdatePayload,
     IClientPermissionAPI,
-} from './types';
-import { buildRequestConfig } from '../../utils';
+} from './types.ts';
+import { buildRequestConfig } from '../../utils.ts';
 
 export class ClientPermissionAPI extends BaseAPI implements IClientPermissionAPI {
     async getSchema(options?: APIRequestOptions): Promise<EntitySchemaResponse> {

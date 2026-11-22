@@ -15,7 +15,7 @@ import { describe, expect, it } from 'vitest';
 import type { Router } from 'vue-router';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import AContentAction from '../../../../src/components/utility/content-action/AContentAction.vue';
-import { install } from '../../../../src/module';
+import { install } from '../../../../src/module.ts';
 
 const noop = () => undefined;
 

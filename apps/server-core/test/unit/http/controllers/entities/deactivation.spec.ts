@@ -19,8 +19,8 @@ import {
     createFakeUser,
     expectClientError,
     httpRequest,
-} from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+} from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 describe('deactivation ends existing access', () => {
     const suite = createTestApplication();

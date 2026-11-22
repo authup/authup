@@ -11,7 +11,7 @@ import { NotFoundError } from '@ebec/http';
 import type { Response as HapicResponse, RequestOptions } from 'hapic';
 import { createClientError, isClientErrorDueTimeout } from 'hapic';
 import { AdapterError } from '@rapiq/core';
-import { describeError, sanitizeError } from '../../../src/utils';
+import { describeError, sanitizeError } from '../../../src/utils/index.ts';
 
 const UPSTREAM_URL = 'https://upstream.test/token';
 

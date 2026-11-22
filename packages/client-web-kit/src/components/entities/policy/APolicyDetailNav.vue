@@ -12,7 +12,7 @@ import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
 import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { DEFAULT_BUTTON_SIZE, useTranslation } from '../../../core';
+import { DEFAULT_BUTTON_SIZE, useTranslation } from '../../../core/index.ts';
 
 export default defineComponent({
     components: { VCButton, VCIcon },

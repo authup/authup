@@ -6,8 +6,8 @@
  */
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { Middleware, MiddlewareOptions, Next } from './types';
-import { verifyRequest } from './verify-request';
+import type { Middleware, MiddlewareOptions, Next } from './types.ts';
+import { verifyRequest } from './verify-request.ts';
 
 export function createMiddleware(context: MiddlewareOptions): Middleware {
     return async (req: IncomingMessage, _res: ServerResponse, next: Next) => {

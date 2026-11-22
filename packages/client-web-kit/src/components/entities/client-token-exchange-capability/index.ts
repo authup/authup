@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { AClientTokenExchangeCapabilities } from './AClientTokenExchangeCapabilities';
+export { AClientTokenExchangeCapabilities } from './AClientTokenExchangeCapabilities.ts';
 export { default as AClientTokenExchangeCapabilityForm } from './AClientTokenExchangeCapabilityForm.vue';

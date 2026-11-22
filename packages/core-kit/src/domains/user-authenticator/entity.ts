@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Realm } from '../realm';
-import type { User } from '../user';
-import type { UserAuthenticatorKind } from './constants';
+import type { Realm } from '../realm/index.ts';
+import type { User } from '../user/index.ts';
+import type { UserAuthenticatorKind } from './constants.ts';
 
 export interface UserAuthenticator {
     /**

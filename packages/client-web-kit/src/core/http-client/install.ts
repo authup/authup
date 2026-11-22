@@ -6,10 +6,10 @@
  */
 
 import type { App } from 'vue';
-import { buildHTTPClient } from './build';
-import { hasHTTPClient, provideHTTPClient } from './singleton';
-import type { HTTPClientInstallOptions } from './types';
-import { injectHTTPClientAuthenticationHook } from './authentication-hook';
+import { buildHTTPClient } from './build.ts';
+import { hasHTTPClient, provideHTTPClient } from './singleton.ts';
+import type { HTTPClientInstallOptions } from './types.ts';
+import { injectHTTPClientAuthenticationHook } from './authentication-hook/index.ts';
 
 export function installHTTPClient(app: App, options: HTTPClientInstallOptions = {}) {
     if (hasHTTPClient(app)) {

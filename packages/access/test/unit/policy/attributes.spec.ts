@@ -11,8 +11,8 @@ import {
     AttributesPolicyValidator,
     PolicyData,
     definePolicyEvaluationContext,
-} from '../../../src';
-import type { AttributesPolicy } from '../../../src';
+} from '../../../src/index.ts';
+import type { AttributesPolicy } from '../../../src/index.ts';
 
 type User = {
     name: string,

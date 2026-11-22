@@ -6,7 +6,7 @@
  */
 
 import { isObject } from '@authup/kit';
-import type { ErrorContext } from './types';
+import type { ErrorContext } from './types.ts';
 
 /**
  * Pull the structured `{ code, data, message, issues, status }` out of whatever

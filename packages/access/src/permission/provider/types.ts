@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionPolicyBindingAggregated } from '../types';
+import type { PermissionPolicyBindingAggregated } from '../types.ts';
 
 export type PermissionGetOptions = {
     name: string,

@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './matcher';
-export * from './module';
-export * from './types';
+export * from './matcher.ts';
+export * from './module.ts';
+export * from './types.ts';

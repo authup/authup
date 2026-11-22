@@ -7,7 +7,7 @@
 <script lang="ts">
 import { AAuthApp, createColorMode } from '@authup/client-web-kit';
 import { defineComponent } from 'vue';
-import { injectPayload } from './di';
+import { injectPayload } from './di.ts';
 
 export default defineComponent({
     components: { AAuthApp },

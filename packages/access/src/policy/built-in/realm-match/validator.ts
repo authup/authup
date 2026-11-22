@@ -9,8 +9,8 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
 import { DecisionStrategy } from '@authup/kit';
-import { RealmScope } from '../../../permission/realm-scope';
-import type { RealmMatchPolicy } from './types';
+import { RealmScope } from '../../../permission/realm-scope/index.ts';
+import type { RealmMatchPolicy } from './types.ts';
 
 export class RealmMatchPolicyValidator extends Container<RealmMatchPolicy> {
     override initialize() {

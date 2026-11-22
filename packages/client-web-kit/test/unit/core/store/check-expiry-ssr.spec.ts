@@ -14,13 +14,13 @@ import {
     it,
     vi,
 } from 'vitest';
-import { createStore, createStoreDispatcher } from '../../../../src/core/store';
+import { createStore, createStoreDispatcher } from '../../../../src/core/store/index.ts';
 import {
     AUTHORIZATION_REALM,
     AUTHORIZATION_SUBJECT,
     buildAuthorizationCheck,
     buildAuthorizationGrants,
-} from '../../../utils/authorization';
+} from '../../../utils/authorization.ts';
 
 describe('core/store (check expiry, server render)', () => {
     afterEach(() => {

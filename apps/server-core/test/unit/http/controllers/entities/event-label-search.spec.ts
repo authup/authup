@@ -18,7 +18,7 @@ import {
     inArray,
     or,
 } from '@rapiq/core';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 
 describe('src/http/controllers/event (label search branch)', () => {
     const suite = createTestApplication();

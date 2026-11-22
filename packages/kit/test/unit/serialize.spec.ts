@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { deserialize, serialize } from '../../src';
+import { deserialize, serialize } from '../../src/index.ts';
 
 describe('serialize', () => {
     it.each([

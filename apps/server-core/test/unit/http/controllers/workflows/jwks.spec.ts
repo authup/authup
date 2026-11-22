@@ -11,7 +11,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 
 describe('src/http/controllers/auth/jwks/*.ts', () => {
     const suite = createTestApplication();

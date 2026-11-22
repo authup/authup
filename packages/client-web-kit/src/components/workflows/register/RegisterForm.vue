@@ -27,8 +27,8 @@ import { VCAlert } from '@vuecs/elements';
 import { VCFormGroup, VCFormInput, useSubmitButton } from '@vuecs/forms';
 import type { LinkProps } from '@vuecs/link';
 import { IFieldValidation } from '@ilingo/validup-vue';
-import { injectHTTPClient, useTranslations, wrapFnWithBusyState } from '../../../core';
-import { AAuthBackLink } from '../../utility';
+import { injectHTTPClient, useTranslations, wrapFnWithBusyState } from '../../../core/index.ts';
+import { AAuthBackLink } from '../../utility/index.ts';
 import ActivateForm from './ActivateForm.vue';
 
 // Permissive client-side shape on purpose — the server's

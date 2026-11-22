@@ -7,4 +7,4 @@
 
 export { MemoryTokenCache } from 'vouchly';
 export type { ITokenCache, TokenCacheEntry } from 'vouchly';
-export * from './redis';
+export * from './redis.ts';

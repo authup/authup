@@ -47,8 +47,8 @@ import './tailwind.css';
 import 'virtual:nuxt-icon-bundle/register';
 
 import VApp from './App.vue';
-import { resolveAccountConsoleConfig } from './config';
-import { provideAccountConsoleConfig } from './di';
+import { resolveAccountConsoleConfig } from './config.ts';
+import { provideAccountConsoleConfig } from './di.ts';
 import AccountShell from './pages/index.vue';
 import Applications from './pages/applications.vue';
 import Authenticators from './pages/authenticators.vue';
@@ -56,7 +56,7 @@ import ConnectedAccounts from './pages/connected-accounts.vue';
 import Overview from './pages/overview.vue';
 import Password from './pages/password.vue';
 import Sessions from './pages/sessions.vue';
-import { loadAccountConsoleRef, setAccountConsoleRef } from './ref';
+import { loadAccountConsoleRef, setAccountConsoleRef } from './ref.ts';
 
 const config = resolveAccountConsoleConfig();
 

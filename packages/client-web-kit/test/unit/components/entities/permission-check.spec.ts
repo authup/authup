@@ -18,9 +18,9 @@ import {
     vi,
 } from 'vitest';
 import { h } from 'vue';
-import { APermissionCheck } from '../../../../src/components/entities/permission';
-import { install } from '../../../../src/module';
-import type { Options } from '../../../../src/types';
+import { APermissionCheck } from '../../../../src/components/entities/permission/index.ts';
+import { install } from '../../../../src/module.ts';
+import type { Options } from '../../../../src/types.ts';
 
 const noop = () => undefined;
 

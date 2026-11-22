@@ -6,7 +6,7 @@
  */
 
 import { ErrorCode, isAuthupError, matchesInstanceof } from '@authup/errors';
-import { POLICY_ERROR_INSTANCE, type PolicyError } from './module';
+import { POLICY_ERROR_INSTANCE, type PolicyError } from './module.ts';
 
 export function isPolicyError(input: unknown): input is PolicyError {
     if (matchesInstanceof(input, POLICY_ERROR_INSTANCE)) {

@@ -19,7 +19,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createAssetPathGuard, isAssetRequestPathSafe } from '../../src';
+import { createAssetPathGuard, isAssetRequestPathSafe } from '../../src/index.ts';
 
 const DIRECTORY = path.resolve('/srv/console/dist/assets');
 

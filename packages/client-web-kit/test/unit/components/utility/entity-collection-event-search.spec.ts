@@ -15,9 +15,9 @@ import {
     defineEntityCollectionManager,
     defineEntityCollectionVEmitOptions,
     defineEntityCollectionVProps,
-} from '../../../../src/components/utility';
-import { injectTranslatorLocale } from '../../../../src';
-import { mountKitComponent } from '../../../utils';
+} from '../../../../src/components/utility/index.ts';
+import { injectTranslatorLocale } from '../../../../src/index.ts';
+import { mountKitComponent } from '../../../utils/index.ts';
 
 function mountEventCollection(locale: string) {
     const component = defineComponent({

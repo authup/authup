@@ -9,7 +9,7 @@ import type { IdentityProvider } from '@authup/core-kit';
 import { IdentityProviderValidator } from '@authup/core-kit';
 import { ValidatorGroup, generateName } from '@authup/kit';
 import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { assignFormProperties, useTranslations } from '../../../core';
+import { assignFormProperties, useTranslations } from '../../../core/index.ts';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
 import {
@@ -19,9 +19,9 @@ import {
     useId,
 } from 'vue';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
-import { onChange, useIsEditing, useUpdatedAt } from '../../../composables';
+import { onChange, useIsEditing, useUpdatedAt } from '../../../composables/index.ts';
 import { IFieldValidation } from '@ilingo/validup-vue';
-import { ANameInput } from '../../utility';
+import { ANameInput } from '../../utility/index.ts';
 
 export default defineComponent({
     components: {

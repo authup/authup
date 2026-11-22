@@ -7,8 +7,8 @@
 
 import type { IClient } from '@authup/core-http-kit';
 import type { App } from 'vue';
-import { inject } from '../inject';
-import { provide } from '../provide';
+import { inject } from '../inject.ts';
+import { provide } from '../provide.ts';
 
 export const HTTPClientSymbol = Symbol.for('AuthupHTTPClient');
 

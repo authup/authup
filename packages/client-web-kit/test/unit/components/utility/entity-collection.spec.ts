@@ -15,15 +15,15 @@ import {
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import { defineComponent } from 'vue';
-import type { EntityCollectionManagerCreateContext } from '../../../../src/components/utility';
+import type { EntityCollectionManagerCreateContext } from '../../../../src/components/utility/index.ts';
 import {
     defineEntityCollectionManager,
     defineEntityCollectionVEmitOptions,
     defineEntityCollectionVProps,
-} from '../../../../src/components/utility';
-import type { Options } from '../../../../src/types';
-import { mountKitComponent } from '../../../utils';
-import { createFakeHydrationStore } from '../../../utils/hydration';
+} from '../../../../src/components/utility/index.ts';
+import type { Options } from '../../../../src/types.ts';
+import { mountKitComponent } from '../../../utils/index.ts';
+import { createFakeHydrationStore } from '../../../utils/hydration.ts';
 
 type ManagerContextOverrides = Partial<Omit<
     EntityCollectionManagerCreateContext<'role', Role>,

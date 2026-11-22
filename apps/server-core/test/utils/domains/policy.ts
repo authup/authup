@@ -8,7 +8,7 @@
 import type { TimePolicy } from '@authup/access';
 import { BuiltInPolicyType } from '@authup/access';
 import { faker } from '@faker-js/faker';
-import type { PolicyEntity } from '../../../src';
+import type { PolicyEntity } from '../../../src/index.ts';
 
 type TimePolicyExtended = TimePolicy & PolicyEntity & {
     parentId?: string

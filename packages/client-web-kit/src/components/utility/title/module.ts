@@ -6,9 +6,9 @@
  */
 import type { VNodeChild } from 'vue';
 import { h, resolveComponent } from 'vue';
-import { hasNormalizedSlot, normalizeSlot } from '../../../core';
-import { TitleSlotName } from './constants';
-import type { TitleOptions } from './type';
+import { hasNormalizedSlot, normalizeSlot } from '../../../core/index.ts';
+import { TitleSlotName } from './constants.ts';
+import type { TitleOptions } from './type.ts';
 
 export function buildTitle(
     ctx: TitleOptions,

@@ -17,17 +17,17 @@ import {
     expect,
     it,
 } from 'vitest';
-import type { Config } from '../../../../../../src';
-import { ConfigInjectionKey } from '../../../../../../src/app';
-import { DatabaseInjectionKey } from '../../../../../../src/app/modules/database';
+import type { Config } from '../../../../../../src/index.ts';
+import { ConfigInjectionKey } from '../../../../../../src/app/index.ts';
+import { DatabaseInjectionKey } from '../../../../../../src/app/modules/database/index.ts';
 import { SessionEntity } from '../../../../../../src/adapters/database/domains/session/entity.ts';
 import {
     CONSOLE_LOGIN_COOKIE,
     SESSION_COOKIE,
     hashSessionSecret,
-} from '../../../../../../src/core';
-import { createTestApplication } from '../../../../../app';
-import { TestCookieJar, createFakeUser, httpRequest } from '../../../../../utils';
+} from '../../../../../../src/core/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
+import { TestCookieJar, createFakeUser, httpRequest } from '../../../../../utils/index.ts';
 
 /**
  * The console session credential end to end (plan 088): the server-side kick,

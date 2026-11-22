@@ -7,7 +7,7 @@
 
 import type { App } from 'vue';
 import { inject, provide } from 'vue';
-import type { AdminConsoleConfig } from './config';
+import type { AdminConsoleConfig } from './config.ts';
 
 const sym = Symbol.for('AdminConsoleConfig');
 

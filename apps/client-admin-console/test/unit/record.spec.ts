@@ -6,8 +6,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { RecordNamed } from '../../src/composables/record';
-import { buildRecordHeading } from '../../src/composables/record';
+import type { RecordNamed } from '../../src/composables/record.ts';
+import { buildRecordHeading } from '../../src/composables/record.ts';
 
 const ID = '4f0f6f2c-4a0b-4f4a-9a3f-4b7d4b4a1f11';
 

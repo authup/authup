@@ -6,8 +6,8 @@
  */
 
 import { definePlural } from 'ilingo';
-import { TranslatorTranslationEntityKey } from '../../constants';
-import type { NamespaceTranslations } from '../../types';
+import { TranslatorTranslationEntityKey } from '../../constants.ts';
+import type { NamespaceTranslations } from '../../types.ts';
 
 export const TranslatorTranslationEntityEnglish : NamespaceTranslations<`${TranslatorTranslationEntityKey}`> = {
     [TranslatorTranslationEntityKey.CLIENT]: definePlural({ one: 'Client', other: 'Clients' }),

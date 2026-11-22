@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { CryptoAsymmetricAlgorithm } from './constants';
+import type { CryptoAsymmetricAlgorithm } from './constants.ts';
 
 export type RSAKeyPairCreateOptions = RsaHashedKeyGenParams & {
     name: CryptoAsymmetricAlgorithm.RSA_OAEP |

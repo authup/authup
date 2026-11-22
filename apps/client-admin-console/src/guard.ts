@@ -16,9 +16,9 @@ import {
 } from '@authup/client-web-kit';
 import { hasOwnProperty, omitRecord } from '@authup/kit';
 import type { RouteLocationNormalized, RouteLocationRaw } from 'vue-router';
-import type { AdminConsoleConfig } from './config';
-import { LayoutKey } from './config/layout';
-import { loadLoginRedirect, resolveLoginRedirect } from './redirect';
+import type { AdminConsoleConfig } from './config.ts';
+import { LayoutKey } from './config/layout/index.ts';
+import { loadLoginRedirect, resolveLoginRedirect } from './redirect.ts';
 
 export type RoutingGuardContext = {
     store: Store,

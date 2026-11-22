@@ -12,9 +12,9 @@ import { computed, defineComponent } from 'vue';
 import {
     defineEntityManager,
     defineEntityVEmitOptions,
-} from '../../utility';
+} from '../../utility/index.ts';
 import AToggleButton from '../../utility/toggle-button/AToggleButton.vue';
-import { APermissionPolicyBindingButton } from '../permission-policy-binding';
+import { APermissionPolicyBindingButton } from '../permission-policy-binding/index.ts';
 
 export default defineComponent({
     components: { AToggleButton, APermissionPolicyBindingButton },

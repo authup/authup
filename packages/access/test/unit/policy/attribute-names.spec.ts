@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { AttributeNamesPolicy } from '../../../src';
+import type { AttributeNamesPolicy } from '../../../src/index.ts';
 import {
     AttributeNamesPolicyEvaluator,
     AttributeNamesPolicyValidator,
@@ -16,7 +16,7 @@ import {
     PolicyIssueCode,
     definePolicyEvaluationContext,
     definePolicyWithType,
-} from '../../../src';
+} from '../../../src/index.ts';
 import { PolicyDefaultEvaluators } from '../../../src/policy/constants.ts';
 
 const evaluator = new AttributeNamesPolicyEvaluator();

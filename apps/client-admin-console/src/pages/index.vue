@@ -36,13 +36,13 @@ import {
     rankEventStats,
     sumEventStats,
     sumStats,
-} from '../components/dashboard/stats';
-import { LayoutSection, LayoutSections } from '../config/layout';
-import type { EntityStats, EntityStatsLoadFn } from '../composables/entity-stats';
-import { ENTITY_STATS_WINDOWS, useEntityStats } from '../composables/entity-stats';
-import { useEventStats } from '../composables/event-stats';
+} from '../components/dashboard/stats.ts';
+import { LayoutSection, LayoutSections } from '../config/layout/index.ts';
+import type { EntityStats, EntityStatsLoadFn } from '../composables/entity-stats.ts';
+import { ENTITY_STATS_WINDOWS, useEntityStats } from '../composables/entity-stats.ts';
+import { useEventStats } from '../composables/event-stats.ts';
 import StatsWindowSwitch from '../components/stats/StatsWindowSwitch.vue';
-import { useErrorToast } from '../composables/error';
+import { useErrorToast } from '../composables/error.ts';
 
 const RANK_LIMIT = 10;
 

@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { createFakeClient } from '../../src/testing';
+import { createFakeClient } from '../../src/testing/index.ts';
 
 async function resolveEndpoints(baseURL: string) {
     const client = createFakeClient({

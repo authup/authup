@@ -31,19 +31,19 @@ import {
     extractValidupResultsFromChild,
     injectHTTPClient,
     useTranslations,
-} from '../../../core';
-import { onChange, useIsEditing } from '../../../composables';
+} from '../../../core/index.ts';
+import { onChange, useIsEditing } from '../../../composables/index.ts';
 import {
     AFormSubmit,
     defineEntityManager,
     defineEntityVEmitOptions,
-} from '../../utility';
+} from '../../utility/index.ts';
 import AIdentityProviderBasicFields from './AIdentityProviderBasicFields.vue';
 import AIdentityProviderEnrollmentFields from './AIdentityProviderEnrollmentFields.vue';
 import AIdentityProviderOAuth2ClientFields from './AIdentityProviderOAuth2ClientFields.vue';
 import AIdentityProviderOAuth2EndpointFields from './AIdentityProviderOAuth2EndpointFields.vue';
-import { AIdentityProviderPreset } from './AIdentityProviderPreset';
-import { AIdentityProviderProtocol } from './AIdentityProviderProtocol';
+import { AIdentityProviderPreset } from './AIdentityProviderPreset.ts';
+import { AIdentityProviderProtocol } from './AIdentityProviderProtocol.ts';
 
 export default defineComponent({
     components: {

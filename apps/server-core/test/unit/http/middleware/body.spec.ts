@@ -14,8 +14,8 @@ import {
     it,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
-import { createTestApplication } from '../../../app';
-import { httpRequest } from '../../../utils';
+import { createTestApplication } from '../../../app/index.ts';
+import { httpRequest } from '../../../utils/index.ts';
 
 async function expectBodyRefused(response: Response) {
     expect(response.status).toEqual(400);

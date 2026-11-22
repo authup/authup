@@ -11,8 +11,8 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import { defineComponent, h, ref } from 'vue';
 import { describe, expect, it } from 'vitest';
-import type { PathScope } from '../../src/composables/path-scope';
-import { usePathScope } from '../../src/composables/path-scope';
+import type { PathScope } from '../../src/composables/path-scope.ts';
+import { usePathScope } from '../../src/composables/path-scope.ts';
 
 const REALM_ID = 'ed64e8c9-5ba2-4a23-86ca-64a38563696a';
 

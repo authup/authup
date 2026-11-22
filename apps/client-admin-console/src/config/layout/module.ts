@@ -10,8 +10,8 @@ import type { IdentityPolicyData } from '@authup/access';
 import { BuiltInPolicyType, definePolicyData } from '@authup/access';
 import type { NavigationItem } from '@vuecs/navigation';
 
-import { LayoutSideDefaultNavigation } from './contants';
-import type { NavigationItemMeta, NavigationTranslate } from './types';
+import { LayoutSideDefaultNavigation } from './contants.ts';
+import type { NavigationItemMeta, NavigationTranslate } from './types.ts';
 
 export class Navigation {
     protected store: Store;

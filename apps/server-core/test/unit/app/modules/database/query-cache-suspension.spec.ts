@@ -37,8 +37,8 @@ import {
     TestApplication,
     createTestDatabaseApplication,
     createTestDatabaseModuleForSuite,
-} from '../../../../app';
-import { createFakeRole } from '../../../../utils';
+} from '../../../../app/index.ts';
+import { createFakeRole } from '../../../../utils/index.ts';
 
 type FailingTaggedCache = {
     cache: ITaggedCache,

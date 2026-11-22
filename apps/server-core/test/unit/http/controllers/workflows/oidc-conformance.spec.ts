@@ -22,9 +22,9 @@ import {
 import {
     buildOAuth2CodeChallenge,
     generateOAuth2CodeVerifier,
-} from '../../../../../src/core';
-import { createFakeClient, createFakeUser } from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+} from '../../../../../src/core/index.ts';
+import { createFakeClient, createFakeUser } from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 // base64url-safe JWT payload decode (atob chokes on -/_).
 function decodeJwtPayload(token: string): Record<string, any> {

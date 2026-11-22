@@ -8,7 +8,7 @@
 import type { GetContextReactive } from '@ilingo/vue';
 import type { Ref } from 'vue';
 import { reactive } from 'vue';
-import { useTranslation } from './singleton';
+import { useTranslation } from './singleton.ts';
 
 /**
  * One entry of a {@see useTranslations} batch. Carries a full ilingo

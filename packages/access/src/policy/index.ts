@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './engine';
-export * from './evaluation';
-export * from './error';
-export * from './issue';
-export * from './helpers';
-export * from './built-in';
-export * from './types';
+export * from './engine/index.ts';
+export * from './evaluation/index.ts';
+export * from './error/index.ts';
+export * from './issue/index.ts';
+export * from './helpers/index.ts';
+export * from './built-in/index.ts';
+export * from './types.ts';
 
 export * from './constants.ts';
 export * from './data.ts';

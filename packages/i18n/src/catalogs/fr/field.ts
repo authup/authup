@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TranslatorTranslationFieldKey } from '../../constants';
-import type { NamespaceTranslations } from '../../types';
+import { TranslatorTranslationFieldKey } from '../../constants.ts';
+import type { NamespaceTranslations } from '../../types.ts';
 
 export const TranslatorTranslationFieldFrench : NamespaceTranslations<`${TranslatorTranslationFieldKey}`> = {
     [TranslatorTranslationFieldKey.NAME]: 'Nom',

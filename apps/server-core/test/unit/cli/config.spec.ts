@@ -17,13 +17,13 @@ import {
     it,
 } from 'vitest';
 import type { ConfigReadFsOptions } from '@authup/server-config';
-import type { Config } from '../../../src/app/index';
-import { ConfigInjectionKey } from '../../../src/app/index';
+import type { Config } from '../../../src/app/index.ts';
+import { ConfigInjectionKey } from '../../../src/app/index.ts';
 import {
     applyCLIConfigArgs,
     createCLIConfigModule,
     describeConfigError,
-} from '../../../src/cli/commands/config';
+} from '../../../src/cli/commands/config.ts';
 
 describe('src/cli/commands/config', () => {
     describe('applyCLIConfigArgs', () => {

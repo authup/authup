@@ -7,7 +7,7 @@
 
 <script lang="ts">
 import { computed, defineComponent } from 'vue';
-import { AScopes } from '../scope';
+import { AScopes } from '../scope/index.ts';
 import AClientScopeAssignment from './AClientScopeAssignment.vue';
 
 export default defineComponent({

@@ -14,8 +14,8 @@ import {
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { Server } from 'socket.io';
-import { ClientManager } from '../../src';
-import type { CTSEvents, STCEvents, STSEvents } from '../../src';
+import { ClientManager } from '../../src/index.ts';
+import type { CTSEvents, STCEvents, STSEvents } from '../../src/index.ts';
 
 describe('src/manager', () => {
     let server : Server<CTSEvents, STCEvents, STSEvents>;

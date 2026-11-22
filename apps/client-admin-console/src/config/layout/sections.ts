@@ -9,7 +9,7 @@ import {
     TranslatorTranslationEntityKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import type { NavigationItemTranslation } from './types';
+import type { NavigationItemTranslation } from './types.ts';
 
 /**
  * The entity sections that own a top-level route group

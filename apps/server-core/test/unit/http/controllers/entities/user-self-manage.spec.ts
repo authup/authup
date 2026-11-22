@@ -17,8 +17,8 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
-import { createFakeUser, expectClientError } from '../../../../utils';
+import { createTestApplication } from '../../../../app/index.ts';
+import { createFakeUser, expectClientError } from '../../../../utils/index.ts';
 
 describe('http/controllers/user (self-manage)', () => {
     const suite = createTestApplication();

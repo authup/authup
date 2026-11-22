@@ -7,8 +7,8 @@
 
 <script lang="ts">
 import { computed, defineComponent } from 'vue';
-import { AClients } from '../client';
-import { AClientPermissionAssignment } from '../client-permission';
+import { AClients } from '../client/index.ts';
+import { AClientPermissionAssignment } from '../client-permission/index.ts';
 
 export default defineComponent({
     components: { AClients, AClientPermissionAssignment },

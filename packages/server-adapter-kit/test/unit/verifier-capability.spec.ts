@@ -16,9 +16,9 @@ import {
     it,
     vitest,
 } from 'vitest';
-import { MemoryTokenCache, TokenVerifier } from '../../src';
-import { TokenPayload } from '../data/token';
-import { Faker } from '../utils';
+import { MemoryTokenCache, TokenVerifier } from '../../src/index.ts';
+import { TokenPayload } from '../data/token.ts';
+import { Faker } from '../utils/index.ts';
 
 const BASE_URL = 'http://localhost:3001';
 const AUDIENCE = 'storage';

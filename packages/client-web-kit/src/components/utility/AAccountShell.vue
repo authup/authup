@@ -14,8 +14,8 @@ import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
 import type { PropType } from 'vue';
 import { computed, defineComponent } from 'vue';
-import { useTranslations } from '../../core';
-import type { AAccountShellNavItem } from './types';
+import { useTranslations } from '../../core/index.ts';
+import type { AAccountShellNavItem } from './types.ts';
 
 // The account console's content chrome: brand + nav tabs + content card.
 // Identity/session controls (user chip, sign-out) deliberately do NOT live

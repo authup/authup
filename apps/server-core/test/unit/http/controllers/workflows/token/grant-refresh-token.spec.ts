@@ -21,8 +21,8 @@ import {
     createFakeUser,
     expectClientError,
     httpRequest,
-} from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+} from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 
 const BROWSER_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)';
 // what a server-side refresh looks like: undici's default UA

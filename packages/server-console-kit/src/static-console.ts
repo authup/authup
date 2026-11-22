@@ -17,13 +17,13 @@ import {
     replaceTemplateMarker,
     serializeInlineScriptJSON,
     stampHtmlAttributes,
-} from './html';
-import { applyTheme } from './theme/index';
+} from './html.ts';
+import { applyTheme } from './theme/index.ts';
 import type {
     StaticConsole,
     StaticConsoleDefinition,
     StaticConsoleServeOptions,
-} from './types';
+} from './types.ts';
 
 /**
  * A console shipped as a static SPA bundle (the account console, the admin

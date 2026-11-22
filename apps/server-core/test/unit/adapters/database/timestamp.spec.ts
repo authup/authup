@@ -12,7 +12,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { RealmEntity, UserEntity } from '../../../../src';
+import { RealmEntity, UserEntity } from '../../../../src/index.ts';
 import { createFakeRealm, createFakeUser } from '../../../utils/index.ts';
 import { createTestApplication } from '../../../app/index.ts';
 

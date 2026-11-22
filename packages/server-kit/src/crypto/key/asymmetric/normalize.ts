@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { CryptoAsymmetricAlgorithm } from './constants';
+import { CryptoAsymmetricAlgorithm } from './constants.ts';
 import type {
     AsymmetricKeyImportOptionsInput,
     AsymmetricKeyPairCreateOptions,
     AsymmetricKeyPairCreateOptionsInput,
     AsymmetricKeyPairImportOptions,
-} from './types';
+} from './types.ts';
 
 export function normalizeAsymmetricKeyPairCreateOptions(
     options: AsymmetricKeyPairCreateOptionsInput,

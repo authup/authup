@@ -12,7 +12,7 @@ import {
     createPermissionCheckerReactiveFn,
     hasNormalizedSlot,
     normalizeSlot,
-} from '../../../core';
+} from '../../../core/index.ts';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 

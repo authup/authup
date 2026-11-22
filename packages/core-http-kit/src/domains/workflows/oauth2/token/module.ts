@@ -15,7 +15,7 @@ import type {
     OAuth2TokenGrantParameters,
     OAuth2TokenPasswordGrantParameters,
     OAuth2TokenRequestOptions,
-} from '../types';
+} from '../types.ts';
 
 export class OAuth2TokenAPI extends TokenAPI implements IOAuth2TokenAPI {
     override async createWithPassword(

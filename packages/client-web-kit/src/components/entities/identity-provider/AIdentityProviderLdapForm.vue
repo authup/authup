@@ -22,20 +22,20 @@ import {
     reactive,
     ref,
 } from 'vue';
-import { useIsEditing } from '../../../composables';
-import { extractValidupResultsFromChild, useTranslations } from '../../../core';
+import { useIsEditing } from '../../../composables/index.ts';
+import { extractValidupResultsFromChild, useTranslations } from '../../../core/index.ts';
 import {
     AFormSubmit,
     defineEntityManager,
     defineEntityVEmitOptions,
-} from '../../utility';
+} from '../../utility/index.ts';
 import AIdentityProviderBasicFields from './AIdentityProviderBasicFields.vue';
 import AIdentityProviderEnrollmentFields from './AIdentityProviderEnrollmentFields.vue';
 import AIdentityProviderLdapConnectionFields from './AIdentityProviderLdapConnectionFields.vue';
 import AIdentityProviderLdapCredentialsFields from './AIdentityProviderLdapCredentialsFields.vue';
 import AIdentityProviderLdapGroupFields from './AIdentityProviderLdapGroupFields.vue';
 import AIdentityProviderLdapUserFields from './AIdentityProviderLdapUserFields.vue';
-import { AIdentityProviderProtocol } from './AIdentityProviderProtocol';
+import { AIdentityProviderProtocol } from './AIdentityProviderProtocol.ts';
 
 export default defineComponent({
     components: {

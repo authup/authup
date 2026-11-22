@@ -18,7 +18,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { DIST_PATH } from '../../../src/path';
+import { DIST_PATH } from '../../../src/path.ts';
 
 const execFileAsync = promisify(execFile);
 

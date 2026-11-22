@@ -23,8 +23,8 @@ import {
     EnvironmentVariable,
     SCHEMA,
     expandToOrigins,
-} from '../../src';
-import type { AuthupConfig } from '../../src';
+} from '../../src/index.ts';
+import type { AuthupConfig } from '../../src/index.ts';
 
 type Declaration = {
     /** the dotted key of the config VALUE, e.g. `core.port` */

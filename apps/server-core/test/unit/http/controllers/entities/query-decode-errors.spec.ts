@@ -12,8 +12,8 @@ import {
     it,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
-import { httpRequest } from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+import { httpRequest } from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 // A rapiq decode failure is client input, not a server fault: the wire
 // query is request-controlled, so a ParseError must surface as 400

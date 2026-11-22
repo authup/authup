@@ -26,7 +26,7 @@ import {
     injectStore,
     useTranslations,
     useTranslator,
-} from '../../../core';
+} from '../../../core/index.ts';
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
@@ -38,8 +38,8 @@ import { VCFormGroup, VCFormInput, useSubmitButton } from '@vuecs/forms';
 import type { LinkProps } from '@vuecs/link';
 import { VCLink } from '@vuecs/link';
 import type { UserAuthenticatorChallengeVerifyResponse } from '@authup/core-http-kit';
-import { AIdentityProviderIcon, AIdentityProviders, ARealmPicker } from '../../entities';
-import { APagination, ATitle } from '../../utility';
+import { AIdentityProviderIcon, AIdentityProviders, ARealmPicker } from '../../entities/index.ts';
+import { APagination, ATitle } from '../../utility/index.ts';
 import AMfaChallengeForm from '../mfa/AMfaChallengeForm.vue';
 import { IFieldValidation } from '@ilingo/validup-vue';
 

@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { isSimpleMatch, isSimpleURLMatch, patternHasGlobstarInAuthority } from '../../src';
+import { isSimpleMatch, isSimpleURLMatch, patternHasGlobstarInAuthority } from '../../src/index.ts';
 
 describe('is-simple-url-match', () => {
     // isSimpleMatch knows exactly one boundary, `/`, but a URL authority also

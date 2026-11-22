@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { NameValidOptions } from '../../helpers';
+import type { NameValidOptions } from '../../helpers/index.ts';
 import { AuthupError } from '@authup/errors';
 
 export function isPermissionNameValid(name: string, options: NameValidOptions = {}) : boolean {

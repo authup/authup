@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BasePolicy } from '../../types';
+import type { BasePolicy } from '../../types.ts';
 
 export interface AttributeNamesPolicy extends BasePolicy {
     names: string[],

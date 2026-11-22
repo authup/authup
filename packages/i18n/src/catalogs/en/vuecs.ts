@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TranslatorTranslationVuecsKey } from '../../constants';
-import type { NamespaceTranslations } from '../../types';
+import { TranslatorTranslationVuecsKey } from '../../constants.ts';
+import type { NamespaceTranslations } from '../../types.ts';
 
 export const TranslatorTranslationVuecsEnglish : NamespaceTranslations<`${TranslatorTranslationVuecsKey}`> = { [TranslatorTranslationVuecsKey.NO_MORE]: 'No more {{name}} available' };

@@ -10,7 +10,7 @@ import { describe, expect, it } from 'vitest';
 import type { VueWrapper } from '@vue/test-utils';
 import { flushPromises } from '@vue/test-utils';
 import APathTree from '../../../../src/components/entities/path/APathTree.vue';
-import { mountKitComponent } from '../../../utils';
+import { mountKitComponent } from '../../../utils/index.ts';
 
 function buildPath(path: string) : Path {
     return {

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BasePolicy } from '../../types';
-import type { TimePolicyInterval } from './constants';
+import type { BasePolicy } from '../../types.ts';
+import type { TimePolicyInterval } from './constants.ts';
 
 export interface TimePolicy extends BasePolicy {
     /**

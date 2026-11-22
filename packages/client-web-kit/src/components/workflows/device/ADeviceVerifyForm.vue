@@ -37,7 +37,7 @@ import {
     useTranslation,
     useTranslations,
     wrapFnWithBusyState,
-} from '../../../core';
+} from '../../../core/index.ts';
 import AUserAuthenticatorEnroll from '../../entities/user-authenticator/AUserAuthenticatorEnroll.vue';
 import AuthorizeScope from '../authorize/AuthorizeScope.vue';
 import AuthorizeText from '../authorize/AuthorizeText.vue';

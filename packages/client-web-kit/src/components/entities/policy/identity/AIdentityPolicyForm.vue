@@ -9,8 +9,8 @@ import {
     TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { useTranslationsForNamespace } from '../../../../core';
-import { onChange, useUpdatedAt } from '../../../../composables';
+import { useTranslationsForNamespace } from '../../../../core/index.ts';
+import { onChange, useUpdatedAt } from '../../../../composables/index.ts';
 import AFormInputList from '../../../utility/form-input-list/AFormInputList.vue';
 
 export default defineComponent({

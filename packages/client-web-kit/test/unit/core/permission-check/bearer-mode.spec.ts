@@ -13,15 +13,15 @@ import { createPinia, defineStore } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import type { Ref } from 'vue';
 import { defineComponent, h } from 'vue';
-import { createPermissionCheckerReactiveFn } from '../../../../src/core/permission-check';
-import type { Store } from '../../../../src/core/store';
-import { StoreAuthStatus, createStore, createStoreDispatcher } from '../../../../src/core/store';
+import { createPermissionCheckerReactiveFn } from '../../../../src/core/permission-check/index.ts';
+import type { Store } from '../../../../src/core/store/index.ts';
+import { StoreAuthStatus, createStore, createStoreDispatcher } from '../../../../src/core/store/index.ts';
 import {
     AUTHORIZATION_REALM,
     AUTHORIZATION_SUBJECT,
     buildAuthorizationCheck,
     buildAuthorizationGrants,
-} from '../../../utils/authorization';
+} from '../../../utils/authorization.ts';
 
 /**
  * The other half of the loggedIn -> status swap: a bearer-mode login must

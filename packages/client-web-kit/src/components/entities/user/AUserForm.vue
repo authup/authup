@@ -20,7 +20,7 @@ import {
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import { defineQuery } from '@rapiq/core';
-import { assignFormProperties, useTranslations, useTranslationsForNamespace } from '../../../core';
+import { assignFormProperties, useTranslations, useTranslationsForNamespace } from '../../../core/index.ts';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
 import {
@@ -32,16 +32,16 @@ import {
     watch,
 } from 'vue';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
-import { useIsEditing, useUpdatedAt } from '../../../composables';
+import { useIsEditing, useUpdatedAt } from '../../../composables/index.ts';
 import {
     AFormSubmit,
     ANameInput,
     AToggleButton,
     defineEntityManager,
     defineEntityVEmitOptions,
-} from '../../utility';
-import { APathPicker } from '../path';
-import { ARealms } from '../realm';
+} from '../../utility/index.ts';
+import { APathPicker } from '../path/index.ts';
+import { ARealms } from '../realm/index.ts';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
 // `User` carries an extra-attributes index signature, and @validup/vue's

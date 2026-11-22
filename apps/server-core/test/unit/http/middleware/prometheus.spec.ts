@@ -11,8 +11,8 @@ import {
     expect,
     it,
 } from 'vitest';
-import { httpRequest } from '../../../utils';
-import { createTestApplication } from '../../../app';
+import { httpRequest } from '../../../utils/index.ts';
+import { createTestApplication } from '../../../app/index.ts';
 
 describe('http/middleware/prometheus', () => {
     const suite = createTestApplication({

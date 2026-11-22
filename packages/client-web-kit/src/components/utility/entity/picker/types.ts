@@ -10,7 +10,7 @@ import type {
     EntityCollectionVEmitOptions,
     EntityCollectionVProps,
     EntityCollectionVSlots,
-} from '../collection';
+} from '../collection/index.ts';
 
 export type RecordWithID = {
     id: string,

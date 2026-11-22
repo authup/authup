@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TranslatorTranslationClientKey } from '../../constants';
-import type { NamespaceTranslations } from '../../types';
+import { TranslatorTranslationClientKey } from '../../constants.ts';
+import type { NamespaceTranslations } from '../../types.ts';
 
 export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${TranslatorTranslationClientKey}`> = {
     [TranslatorTranslationClientKey.NAME_HINT]: 'Something users will recognize and trust',

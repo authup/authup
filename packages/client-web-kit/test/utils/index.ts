@@ -13,10 +13,10 @@ import vuecs from '@vuecs/core';
 import installOverlays from '@vuecs/overlays';
 import installTree from '@vuecs/tree';
 import { createPinia } from 'pinia';
-import { ALoginForm } from '../../src/components/workflows/login';
-import { install } from '../../src/module';
-import type { Options } from '../../src/types';
-import { AUTHORIZATION_SUBJECT, buildAuthorizationCatalog } from './authorization';
+import { ALoginForm } from '../../src/components/workflows/login/index.ts';
+import { install } from '../../src/module.ts';
+import type { Options } from '../../src/types.ts';
+import { AUTHORIZATION_SUBJECT, buildAuthorizationCatalog } from './authorization.ts';
 
 const noop = () => undefined;
 

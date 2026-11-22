@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { MiddlewareOptions, Next, Socket } from './types';
-import { verifySocket } from './verify-socket';
+import type { MiddlewareOptions, Next, Socket } from './types.ts';
+import { verifySocket } from './verify-socket.ts';
 
 export function createMiddleware(context: MiddlewareOptions) {
     return async (socket: Socket, next: Next) => {

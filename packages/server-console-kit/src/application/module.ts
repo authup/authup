@@ -6,10 +6,10 @@
  */
 
 import { Application } from 'orkos';
-import { ConfigModule } from './config';
-import { HTTPModule } from './http';
-import { ThemeModule } from './theme';
-import type { Config, CreateApplicationContext } from './types';
+import { ConfigModule } from './config.ts';
+import { HTTPModule } from './http.ts';
+import { ThemeModule } from './theme.ts';
+import type { Config, CreateApplicationContext } from './types.ts';
 
 /**
  * A console as an APPLICATION: a module graph with its own configuration,

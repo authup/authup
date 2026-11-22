@@ -7,9 +7,9 @@
 
 import type { Pinia } from 'pinia';
 import type { App } from 'vue';
-import { inject } from '../inject';
-import { provide } from '../provide';
-import type { Store, StoreDefinition } from './types';
+import { inject } from '../inject.ts';
+import { provide } from '../provide.ts';
+import type { Store, StoreDefinition } from './types.ts';
 
 const sym = Symbol.for('AuthupStore');
 

@@ -7,8 +7,8 @@
 
 <script lang="ts">
 import { computed, defineComponent } from 'vue';
-import { AUserPermissionAssignment } from '../user-permission';
-import { AUsers } from '../user';
+import { AUserPermissionAssignment } from '../user-permission/index.ts';
+import { AUsers } from '../user/index.ts';
 
 export default defineComponent({
     components: { AUsers, AUserPermissionAssignment },

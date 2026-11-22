@@ -23,7 +23,7 @@ import {
     RealmMatchPolicyValidator,
     TimePolicyEvaluator,
     TimePolicyValidator,
-} from './built-in';
+} from './built-in/index.ts';
 import type { PolicyValidators } from './types.ts';
 
 export const PolicyDefaultEvaluators = {

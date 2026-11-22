@@ -6,8 +6,8 @@
  */
 
 import type { JWKType, JWKUse, JWTAlgorithm } from '@authup/specs';
-import type { Realm } from '../realm';
-import type { KeyStatus } from './constants';
+import type { Realm } from '../realm/index.ts';
+import type { KeyStatus } from './constants.ts';
 
 export interface Key {
     id: string,

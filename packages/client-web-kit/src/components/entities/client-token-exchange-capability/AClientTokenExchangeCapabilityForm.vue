@@ -25,9 +25,9 @@ import {
     reactive,
     watch,
 } from 'vue';
-import { useIsEditing, useUpdatedAt } from '../../../composables';
-import { assignFormProperties, useTranslationsForNamespace } from '../../../core';
-import { AFormSubmit, defineEntityManager, defineEntityVEmitOptions } from '../../utility';
+import { useIsEditing, useUpdatedAt } from '../../../composables/index.ts';
+import { assignFormProperties, useTranslationsForNamespace } from '../../../core/index.ts';
+import { AFormSubmit, defineEntityManager, defineEntityVEmitOptions } from '../../utility/index.ts';
 
 const LIFETIME_DEFAULT = 3600;
 

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './identity-evaluator';
-export * from './module';
-export * from './types';
-export * from './validator';
+export * from './identity-evaluator.ts';
+export * from './module.ts';
+export * from './types.ts';
+export * from './validator.ts';

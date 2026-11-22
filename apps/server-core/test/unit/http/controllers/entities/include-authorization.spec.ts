@@ -15,13 +15,13 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     createFakeClient,
     createFakePermission,
     createFakeRole,
     createFakeUser,
-} from '../../../../utils';
+} from '../../../../utils/index.ts';
 
 describe('http/controllers (include authorization)', () => {
     const suite = createTestApplication();

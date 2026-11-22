@@ -14,8 +14,8 @@ import {
     expect,
     it,
 } from 'vitest';
-import { ThemeProvider } from '../../src/theme/index';
-import { THEME_MANIFEST_REVALIDATE_INTERVAL } from '../../src/theme/constants';
+import { ThemeProvider } from '../../src/theme/index.ts';
+import { THEME_MANIFEST_REVALIDATE_INTERVAL } from '../../src/theme/constants.ts';
 
 const roots : string[] = [];
 

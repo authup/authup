@@ -25,9 +25,9 @@ import {
     vitest,
 } from 'vitest';
 import { isVouchlyError } from 'vouchly';
-import { TokenVerifier } from '../../src';
-import { TokenPayload } from '../data/token';
-import { FAKER_KEY_ID, Faker } from '../utils';
+import { TokenVerifier } from '../../src/index.ts';
+import { TokenPayload } from '../data/token.ts';
+import { FAKER_KEY_ID, Faker } from '../utils/index.ts';
 
 function encodeSegment(input: Record<string, any>) : string {
     return base64url.encode(JSON.stringify(input));

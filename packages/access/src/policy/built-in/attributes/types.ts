@@ -6,7 +6,7 @@
  */
 
 import type { MongoFiltersParserInput } from '@rapiq/parser-mongo';
-import type { BasePolicy } from '../../types';
+import type { BasePolicy } from '../../types.ts';
 
 export type AttributesPolicyQuery<
     T extends Record<string, any> = Record<string, any>,

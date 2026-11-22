@@ -28,9 +28,9 @@ import {
     UserEntity,
     UserPermissionEntity,
 } from '../../../../../src/adapters/database/domains/index.ts';
-import { createTestApplication } from '../../../../app';
-import { createFakeClient, createFakeRole } from '../../../../utils';
-import { createFakeTimePolicy } from '../../../../utils/domains/policy';
+import { createTestApplication } from '../../../../app/index.ts';
+import { createFakeClient, createFakeRole } from '../../../../utils/index.ts';
+import { createFakeTimePolicy } from '../../../../utils/domains/policy.ts';
 
 describe('app/modules/database/repositories/permission-provider (definitions)', () => {
     const suite = createTestApplication();

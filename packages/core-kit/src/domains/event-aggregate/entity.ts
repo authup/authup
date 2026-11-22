@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EventScope } from '../event';
-import type { Realm } from '../realm';
+import type { EventScope } from '../event/index.ts';
+import type { Realm } from '../realm/index.ts';
 
 /**
  * Daily count of security events per (realm, scope, name, refType).

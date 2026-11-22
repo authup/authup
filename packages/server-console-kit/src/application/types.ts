@@ -6,7 +6,7 @@
  */
 
 import type { IApp } from 'routup';
-import type { IThemeProvider } from '../theme/index';
+import type { IThemeProvider } from '../theme/index.ts';
 
 /**
  * Structural rather than `ReturnType<typeof serve>`: that type reaches into

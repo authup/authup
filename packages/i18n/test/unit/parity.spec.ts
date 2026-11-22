@@ -22,7 +22,7 @@ import {
     TranslatorTranslationMailKey,
     TranslatorTranslationNamespace,
     TranslatorTranslationVuecsKey,
-} from '../../src';
+} from '../../src/index.ts';
 
 /**
  * Canonical key set per namespace — the single source of truth every

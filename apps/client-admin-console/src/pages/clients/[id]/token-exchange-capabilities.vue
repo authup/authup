@@ -28,7 +28,7 @@ import {
 import type { TableColumn } from '@vuecs/table';
 import type { PropType } from 'vue';
 import { computed, defineComponent, ref } from 'vue';
-import { TOKEN_EXCHANGE_CAPABILITY_ACCESS_PERMISSIONS } from '../../../config/permissions';
+import { TOKEN_EXCHANGE_CAPABILITY_ACCESS_PERMISSIONS } from '../../../config/permissions.ts';
 
 export default defineComponent({
     components: {

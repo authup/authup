@@ -16,9 +16,9 @@ import { BuiltInPolicyType } from '@authup/access';
 import type { DataSource } from 'typeorm';
 import { PolicyRepository } from '../../../../../../src/adapters/database/domains/index.ts';
 import { DatabaseInjectionKey } from '../../../../../../src/app/index.ts';
-import { createTestApplication } from '../../../../../app';
-import { expectClientError } from '../../../../../utils';
-import { createFakeTimePolicy } from '../../../../../utils/domains/policy';
+import { createTestApplication } from '../../../../../app/index.ts';
+import { expectClientError } from '../../../../../utils/index.ts';
+import { createFakeTimePolicy } from '../../../../../utils/domains/policy.ts';
 
 describe('src/http/controllers/policy', () => {
     const suite = createTestApplication();

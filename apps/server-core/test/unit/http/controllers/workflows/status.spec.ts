@@ -13,7 +13,7 @@ import {
 } from 'vitest';
 import type { Config } from '../../../../../src/index.ts';
 import { ConfigInjectionKey } from '../../../../../src/index.ts';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 
 describe('src/http/controllers/workflows/status/*.ts', () => {
     const suite = createTestApplication();

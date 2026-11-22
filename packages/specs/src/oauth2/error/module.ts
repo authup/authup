@@ -11,7 +11,7 @@ import {
     markInstanceof,
 } from '@authup/errors';
 import type { AuthupErrorInput, AuthupErrorOptions } from '@authup/errors';
-import { OAuth2ErrorCode } from '../constants';
+import { OAuth2ErrorCode } from '../constants.ts';
 
 export const OAUTH2_ERROR_INSTANCE = Symbol.for('@authup/specs/OAuth2Error');
 

@@ -13,8 +13,8 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../../app';
-import { createFakeRealm, createFakeUser, httpRequest } from '../../../../../utils';
+import { createTestApplication } from '../../../../../app/index.ts';
+import { createFakeRealm, createFakeUser, httpRequest } from '../../../../../utils/index.ts';
 
 const THRESHOLD = 3;
 const WINDOW_SECONDS = 900;

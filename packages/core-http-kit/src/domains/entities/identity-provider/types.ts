@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
-import type { APIRequestOptions, EntityRecordResponse, IEntityAPI } from '../../types-base';
+import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats/index.ts';
+import type { APIRequestOptions, EntityRecordResponse, IEntityAPI } from '../../types-base.ts';
 
 import type { IdentityProvider, IdentityProviderAccount, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';

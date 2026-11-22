@@ -13,7 +13,7 @@ import {
     it,
     vi,
 } from 'vitest';
-import { installChunkLoadRecovery } from '../../src/chunk-recovery';
+import { installChunkLoadRecovery } from '../../src/chunk-recovery.ts';
 
 function createChunkLoadError() {
     return new TypeError('Failed to fetch dynamically imported module: http://localhost/assets/users-abc123.js');

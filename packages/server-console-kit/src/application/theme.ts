@@ -8,10 +8,10 @@
 import type { IContainer } from 'eldin';
 import fs from 'node:fs';
 import type { IModule } from 'orkos';
-import { ThemeProvider } from '../theme/index';
-import type { IThemeProvider } from '../theme/index';
-import { InjectionKey, ModuleName } from './constants';
-import type { Config } from './types';
+import { ThemeProvider } from '../theme/index.ts';
+import type { IThemeProvider } from '../theme/index.ts';
+import { InjectionKey, ModuleName } from './constants.ts';
+import type { Config } from './types.ts';
 
 /**
  * The operator theme, if one is configured.

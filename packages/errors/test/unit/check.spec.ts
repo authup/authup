@@ -25,7 +25,7 @@ import {
     isUnauthorizedError,
     isValidationError,
     serializeError,
-} from '../../src';
+} from '../../src/index.ts';
 
 const roundtrip = (input: unknown) => JSON.parse(JSON.stringify(input));
 

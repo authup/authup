@@ -16,8 +16,8 @@ import {
     createFakeRealm,
     createFakeUser,
     httpRequest,
-} from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+} from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 
 function decodePayload(token: string) : Record<string, any> {
     return JSON.parse(new TextDecoder().decode(Uint8Array.fromBase64(token.split('.')[1], { alphabet: 'base64url' })));

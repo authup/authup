@@ -30,7 +30,7 @@ import type { TableColumn } from '@vuecs/table';
 import { VCTimeago } from '@vuecs/timeago';
 import { computed, defineComponent } from 'vue';
 import EntityActivity from '../../../components/stats/EntityActivity.vue';
-import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
+import type { EntityStatsLoadFn } from '../../../composables/entity-stats.ts';
 
 // VCTable deliberately stays globally registered — its generic component
 // signature is not assignable to the Options-API `components: {}` slot

@@ -30,10 +30,10 @@ import { VCIcon } from '@vuecs/icon';
 import { VCBreadcrumb } from '@vuecs/navigation';
 import type { Ref } from 'vue';
 import { computed, defineComponent, ref } from 'vue';
-import { LayoutSection } from '../../../config/layout';
+import { LayoutSection } from '../../../config/layout/index.ts';
 import { useRoute, useRouter } from 'vue-router';
-import { buildEntityBreadcrumb, useSectionBreadcrumb } from '../../../composables/breadcrumb';
-import { useErrorToast } from '../../../composables/error';
+import { buildEntityBreadcrumb, useSectionBreadcrumb } from '../../../composables/breadcrumb.ts';
+import { useErrorToast } from '../../../composables/error.ts';
 
 export default defineComponent({
     components: {

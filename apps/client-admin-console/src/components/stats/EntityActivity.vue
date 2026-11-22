@@ -19,8 +19,8 @@ import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@au
 import { storeToRefs } from 'pinia';
 import type { PropType } from 'vue';
 import { computed, defineComponent, ref } from 'vue';
-import type { EntityStatsLoadFn, EntityStatsWindow } from '../../composables/entity-stats';
-import { ENTITY_STATS_WINDOWS, useEntityStats } from '../../composables/entity-stats';
+import type { EntityStatsLoadFn, EntityStatsWindow } from '../../composables/entity-stats.ts';
+import { ENTITY_STATS_WINDOWS, useEntityStats } from '../../composables/entity-stats.ts';
 import StatsWindowSwitch from './StatsWindowSwitch.vue';
 
 type Box = {

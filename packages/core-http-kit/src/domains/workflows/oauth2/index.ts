@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './authorize';
-export * from './device-authorization';
-export * from './token';
-export * from './user-info';
-export * from './types';
+export * from './authorize/index.ts';
+export * from './device-authorization/index.ts';
+export * from './token/index.ts';
+export * from './user-info/index.ts';
+export * from './types.ts';

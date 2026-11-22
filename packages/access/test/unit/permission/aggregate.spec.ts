@@ -7,8 +7,8 @@
 
 import { describe, expect, it } from 'vitest';
 import { DecisionStrategy } from '@authup/kit';
-import type { PermissionPolicyBinding } from '../../../src';
-import { BuiltInPolicyType, RealmScope, aggregatePermissionPolicyBindings } from '../../../src';
+import type { PermissionPolicyBinding } from '../../../src/index.ts';
+import { BuiltInPolicyType, RealmScope, aggregatePermissionPolicyBindings } from '../../../src/index.ts';
 
 describe('src/permission/helpers/aggregate', () => {
     it('emits one grant for a single binding, coercing a missing scope to own', () => {

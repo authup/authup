@@ -9,8 +9,8 @@ import { createFakeClient } from '@authup/core-http-kit/testing';
 import type { FakeClient } from '@authup/core-http-kit/testing';
 import { describe, expect, it } from 'vitest';
 import type { User } from '@authup/core-kit';
-import { createStore, createStoreDispatcher } from '../../../../src/core/store';
-import { buildAuthorizationCatalog } from '../../../utils/authorization';
+import { createStore, createStoreDispatcher } from '../../../../src/core/store/index.ts';
+import { buildAuthorizationCatalog } from '../../../utils/authorization.ts';
 
 const TOKEN_SUBJECT = 'user-1';
 

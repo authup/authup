@@ -11,16 +11,16 @@ import { JWTError } from '@authup/specs';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import type { IntrospectionAuthorizationContext, Verifier } from 'vouchly';
 import { createVerifier } from 'vouchly';
-import { TOKEN_VERIFIER_TIMEOUT_DEFAULT } from './constants';
-import { toVerificationError } from './error';
-import { createAuthupIssuer } from './issuer';
+import { TOKEN_VERIFIER_TIMEOUT_DEFAULT } from './constants.ts';
+import { toVerificationError } from './error.ts';
+import { createAuthupIssuer } from './issuer.ts';
 import type {
     ITokenVerifier,
     TokenVerificationData,
     TokenVerificationDataInput,
     TokenVerifierContext,
     TokenVerifyOptions,
-} from './types';
+} from './types.ts';
 
 /**
  * The Authorization header remote mode introspects with: the token the

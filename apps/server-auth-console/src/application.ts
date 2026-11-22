@@ -8,9 +8,9 @@
 import { createApplication as createConsoleApplication } from '@authup/server-console-kit';
 import type { CreateApplicationContext } from '@authup/server-console-kit';
 import type { Application } from 'orkos';
-import { readConfigFromEnv } from './config';
-import { createHandler } from './handler';
-import type { Config } from './types';
+import { readConfigFromEnv } from './config.ts';
+import { createHandler } from './handler.ts';
+import type { Config } from './types.ts';
 
 /**
  * This console as a runnable service: its own module graph, its own

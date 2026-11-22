@@ -24,9 +24,9 @@ import {
 } from '@authup/core-kit';
 import { base64URLEncode } from '@authup/kit';
 import { OAuth2ErrorCode } from '@authup/specs';
-import { ConfigInjectionKey } from '../../../../../../src/app/modules/config/constants';
-import { createFakeClient, createFakeOAuth2IdentityProvider, httpRequest } from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+import { ConfigInjectionKey } from '../../../../../../src/app/modules/config/constants.ts';
+import { createFakeClient, createFakeOAuth2IdentityProvider, httpRequest } from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 
 function buildFakeAccessToken(claims: Record<string, unknown>): string {
     const header = Buffer.from(JSON.stringify({

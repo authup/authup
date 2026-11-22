@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionPolicyBinding } from '../../../permission/types';
-import type { BasePolicy } from '../../types';
+import type { PermissionPolicyBinding } from '../../../permission/types.ts';
+import type { BasePolicy } from '../../types.ts';
 
 export interface IdentityPolicy extends BasePolicy {
     /**

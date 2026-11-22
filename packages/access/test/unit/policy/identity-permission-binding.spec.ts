@@ -8,7 +8,7 @@
 import { compileFilters } from '@rapiq/adapter-memory';
 import type { IFilter, IFilters } from '@rapiq/core';
 import { describe, expect, it } from 'vitest';
-import type { PermissionPolicyBinding, PolicyWithType } from '../../../src';
+import type { PermissionPolicyBinding, PolicyWithType } from '../../../src/index.ts';
 import {
     BuiltInPolicyType,
     IdentityPermissionBindingPolicyEvaluator,
@@ -18,7 +18,7 @@ import {
     definePolicyData,
     definePolicyEvaluationContext,
     definePolicyWithType,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 const identity = {
     type: 'user',

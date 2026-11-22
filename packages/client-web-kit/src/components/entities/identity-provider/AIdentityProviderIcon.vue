@@ -10,8 +10,8 @@ import type { IdentityProvider } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 import { VCIcon } from '@vuecs/icon';
-import { AIdentityProviderPreset } from './AIdentityProviderPreset';
-import { AIdentityProviderProtocol } from './AIdentityProviderProtocol';
+import { AIdentityProviderPreset } from './AIdentityProviderPreset.ts';
+import { AIdentityProviderProtocol } from './AIdentityProviderProtocol.ts';
 
 export default defineComponent({
     components: {

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TranslatorTranslationAppKey } from '../../constants';
-import type { NamespaceTranslations } from '../../types';
+import { TranslatorTranslationAppKey } from '../../constants.ts';
+import type { NamespaceTranslations } from '../../types.ts';
 
 export const TranslatorTranslationAppGerman : NamespaceTranslations<`${TranslatorTranslationAppKey}`> = {
     [TranslatorTranslationAppKey.HOME]: 'Startseite',

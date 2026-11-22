@@ -8,13 +8,13 @@
 import { defineIssueItem } from '@ebec/core';
 import { createValidator } from '@validup/zod';
 import { Container, ValidupError } from 'validup';
-import { authorizationIdentitySchema } from './schema';
-import { AuthorizationSnapshotValidator } from './snapshot-validator';
+import { authorizationIdentitySchema } from './schema.ts';
+import { AuthorizationSnapshotValidator } from './snapshot-validator.ts';
 import type {
     AuthorizationSnapshot,
     AuthorizationSnapshotEvaluatorInput,
     AuthorizationSnapshotEvaluatorInputParsed,
-} from './types';
+} from './types.ts';
 
 /**
  * The whole input `createAuthorizationSnapshotEvaluator` takes: a snapshot,

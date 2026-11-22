@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './config';
-export * from './constants';
-export * from './http';
-export * from './module';
-export * from './shutdown';
-export * from './theme';
-export * from './types';
+export * from './config.ts';
+export * from './constants.ts';
+export * from './http.ts';
+export * from './module.ts';
+export * from './shutdown.ts';
+export * from './theme.ts';
+export * from './types.ts';

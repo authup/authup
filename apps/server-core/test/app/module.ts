@@ -7,7 +7,7 @@
 
 import type { DataSource } from 'typeorm';
 import { Application } from 'orkos';
-import { DatabaseInjectionKey } from '../../src/app';
+import { DatabaseInjectionKey } from '../../src/app/index.ts';
 
 export class TestApplication extends Application {
     get dataSource(): DataSource {

@@ -11,12 +11,12 @@ import type { Predicate } from '@rapiq/adapter-memory';
 import { compileFilters } from '@rapiq/adapter-memory';
 import { MongoFiltersParser } from '@rapiq/parser-mongo';
 import { isObject } from '@authup/kit';
-import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
-import { maybeInvertPolicyOutcome } from '../../helpers';
-import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
+import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation/index.ts';
+import { maybeInvertPolicyOutcome } from '../../helpers/index.ts';
+import { PolicyIssueCode, definePolicyIssueItem } from '../../issue/index.ts';
 import { BuiltInPolicyType } from '../constants.ts';
-import type { AttributesPolicy } from './types';
-import { AttributesPolicyValidator } from './validator';
+import type { AttributesPolicy } from './types.ts';
+import { AttributesPolicyValidator } from './validator.ts';
 
 export class AttributesPolicyEvaluator<
     T extends Record<string, any> = Record<string, any>,

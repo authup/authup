@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { ErrorCode, httpStatusFromCode } from '../../src';
+import { ErrorCode, httpStatusFromCode } from '../../src/index.ts';
 
 describe('src/status', () => {
     it('should serve an upstream failure as a bad gateway', () => {

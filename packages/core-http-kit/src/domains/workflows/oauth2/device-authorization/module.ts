@@ -14,9 +14,9 @@ import type {
     OAuth2DeviceAuthorizationParameters,
     OAuth2DeviceAuthorizationResponse,
     OAuth2TokenRequestOptions,
-} from '../types';
-import type { APIRequestOptions } from '../../../types-base';
-import { buildRequestConfig } from '../../../utils';
+} from '../types.ts';
+import type { APIRequestOptions } from '../../../types-base.ts';
+import { buildRequestConfig } from '../../../utils.ts';
 
 export class OAuth2DeviceAuthorizationAPI extends DeviceAuthorizationAPI implements IOAuth2DeviceAuthorizationAPI {
     override async create(

@@ -13,7 +13,7 @@ import {
     startsWith,
 } from '@rapiq/core';
 import { describe, expect, it } from 'vitest';
-import { buildPathScopeCondition, buildPathTreeExpansion } from '../../../src/core';
+import { buildPathScopeCondition, buildPathTreeExpansion } from '../../../src/core/index.ts';
 
 /** The condition as a row predicate, the way an adapter lowers it. */
 const predicate = (path: string) => compileFilters(

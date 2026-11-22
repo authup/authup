@@ -17,10 +17,10 @@ import {
     it,
     vi,
 } from 'vitest';
-import { LayoutKey } from '../../src/config/layout';
-import { createRoutingGuard } from '../../src/guard';
-import { LOGIN_REDIRECT_STORAGE_KEY, saveLoginRedirect } from '../../src/redirect';
-import { routes } from '../../src/router';
+import { LayoutKey } from '../../src/config/layout/index.ts';
+import { createRoutingGuard } from '../../src/guard.ts';
+import { LOGIN_REDIRECT_STORAGE_KEY, saveLoginRedirect } from '../../src/redirect.ts';
+import { routes } from '../../src/router.ts';
 
 type StoreStub = {
     status: ReturnType<typeof ref<StoreAuthStatus>>,

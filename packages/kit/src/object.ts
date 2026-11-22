@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ObjectLiteral } from './types';
+import type { ObjectLiteral } from './types.ts';
 
 export function isObject(input: unknown) : input is Record<string, any> {
     return !!input &&

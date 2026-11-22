@@ -16,10 +16,10 @@ import {
 import type { OpenIDProviderMetadata } from '@authup/specs';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { useValidup } from '@validup/vue';
-import { assignFormProperties, useTranslations } from '../../../core';
+import { assignFormProperties, useTranslations } from '../../../core/index.ts';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
-import { onChange, useUpdatedAt } from '../../../composables';
+import { onChange, useUpdatedAt } from '../../../composables/index.ts';
 import AIdentityProviderOAuth2Discovery from './AIdentityProviderOAuth2Discovery.vue';
 import { IFieldValidation } from '@ilingo/validup-vue';
 

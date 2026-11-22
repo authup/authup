@@ -16,7 +16,7 @@ import type {
     KeySourceContext,
 } from 'vouchly';
 import { cachedKeys } from 'vouchly';
-import type { TokenVerifierContext } from './types';
+import type { TokenVerifierContext } from './types.ts';
 
 type AuthupIssuerContext = {
     client: Client,

@@ -9,7 +9,7 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
 import { ValidatorGroup } from '@authup/kit';
-import { REALM_SCOPE } from '../permission';
+import { REALM_SCOPE } from '../permission/index.ts';
 import type { RolePermission } from './entity.ts';
 
 export class RolePermissionValidator extends Container<

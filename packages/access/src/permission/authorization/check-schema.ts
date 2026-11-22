@@ -8,13 +8,13 @@
 import { defineIssueItem } from '@ebec/core';
 import { createValidator } from '@validup/zod';
 import { Container, ValidupError } from 'validup';
-import { buildPermissionKey } from '../helpers';
-import { authorizationCheckPermissionsSchema, authorizationIdentitySchema } from './schema';
+import { buildPermissionKey } from '../helpers/index.ts';
+import { authorizationCheckPermissionsSchema, authorizationIdentitySchema } from './schema.ts';
 import type {
     AuthorizationCheckEvaluatorInput,
     AuthorizationCheckEvaluatorInputParsed,
     AuthorizationCheckPermissions,
-} from './types';
+} from './types.ts';
 
 /**
  * The whole input `createAuthorizationCheckEvaluator` takes: the answer

@@ -15,7 +15,7 @@ import {
     INSTANCEOF_PROPERTY,
     matchesInstanceof,
     serializeInstanceofChain,
-} from '../../src';
+} from '../../src/index.ts';
 
 describe('serializeInstanceofChain', () => {
     it('serializes an instance chain to marker descriptions in order', () => {

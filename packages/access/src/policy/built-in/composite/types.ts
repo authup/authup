@@ -6,7 +6,7 @@
  */
 
 import type { DecisionStrategy } from '@authup/kit';
-import type { BasePolicy } from '../../types';
+import type { BasePolicy } from '../../types.ts';
 
 export interface CompositePolicy extends BasePolicy {
     /**

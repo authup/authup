@@ -13,16 +13,16 @@ import {
     ref,
     watch,
 } from 'vue';
-import { useHydratedValue } from '../hydration';
-import type { Store } from '../store';
-import { injectStore, storeToRefs } from '../store';
+import { useHydratedValue } from '../hydration/index.ts';
+import type { Store } from '../store/index.ts';
+import { injectStore, storeToRefs } from '../store/index.ts';
 import type {
     PermissionCheckState,
     PermissionCheckerReactiveFn,
     PermissionCheckerReactiveFnContext,
     PermissionCheckerReactiveFnCreateContext,
     PermissionCheckerReactiveStateFn,
-} from './types';
+} from './types.ts';
 
 /**
  * Identity of a permission question, or undefined when it cannot be keyed.

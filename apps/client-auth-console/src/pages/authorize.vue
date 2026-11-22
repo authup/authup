@@ -17,8 +17,8 @@ import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import type { LinkProps } from '@vuecs/link';
 import { useToast } from '@vuecs/overlays';
 import { computed, defineComponent, onMounted } from 'vue';
-import { useBasePath } from '../base-path';
-import { injectPayload } from '../di';
+import { useBasePath } from '../base-path.ts';
+import { injectPayload } from '../di.ts';
 
 type RealmSummary = Pick<Realm, 'id' | 'name' | 'displayName'>;
 

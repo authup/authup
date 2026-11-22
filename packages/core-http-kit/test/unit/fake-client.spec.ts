@@ -6,8 +6,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { createFakeClient, matchRoute } from '../../src/testing';
-import type { FakeHandlerMap } from '../../src/testing';
+import { createFakeClient, matchRoute } from '../../src/testing/index.ts';
+import type { FakeHandlerMap } from '../../src/testing/index.ts';
 
 describe('src/testing/matcher', () => {
     const handlers : FakeHandlerMap = {

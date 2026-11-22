@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BaseAPI } from '../../base';
-import type { ISchemaAPI, SchemaCollectionResponse } from './types';
-import type { APIRequestOptions } from '../../types-base';
-import { buildRequestConfig } from '../../utils';
+import { BaseAPI } from '../../base.ts';
+import type { ISchemaAPI, SchemaCollectionResponse } from './types.ts';
+import type { APIRequestOptions } from '../../types-base.ts';
+import { buildRequestConfig } from '../../utils.ts';
 
 export class SchemaAPI extends BaseAPI implements ISchemaAPI {
     async getMany(options?: APIRequestOptions): Promise<SchemaCollectionResponse> {

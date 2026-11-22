@@ -18,7 +18,7 @@ import {
     TranslatorTranslationCommonKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { DEFAULT_BUTTON_SIZE, useTranslations } from '../../../core';
+import { DEFAULT_BUTTON_SIZE, useTranslations } from '../../../core/index.ts';
 
 export default defineComponent({
     components: { VCButton, VCIcon },

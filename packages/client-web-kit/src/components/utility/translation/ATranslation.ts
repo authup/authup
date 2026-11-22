@@ -3,7 +3,7 @@ import {
     hasNormalizedSlot,
     normalizeSlot,
     useTranslation,
-} from '../../../core';
+} from '../../../core/index.ts';
 import { defineComponent } from 'vue';
 
 export const ATranslation = defineComponent({

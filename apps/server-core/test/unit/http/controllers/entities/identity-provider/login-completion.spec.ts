@@ -27,15 +27,15 @@ import {
     UserAuthenticatorKind,
 } from '@authup/core-kit';
 import { OAuth2ErrorCode } from '@authup/specs';
-import { ConfigInjectionKey } from '../../../../../../src/app/modules/config/constants';
-import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants';
+import { ConfigInjectionKey } from '../../../../../../src/app/modules/config/constants.ts';
+import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants.ts';
 import {
     createFakeClient,
     createFakeOAuth2IdentityProvider,
     createFakeRealm,
     httpRequest,
-} from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+} from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 
 const USER_AGENT = 'login-completion-spec-agent';
 

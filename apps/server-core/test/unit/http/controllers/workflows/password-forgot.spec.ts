@@ -12,7 +12,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 
 describe('http/controller/password', () => {
     const suite = createTestApplication();

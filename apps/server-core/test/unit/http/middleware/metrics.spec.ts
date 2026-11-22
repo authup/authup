@@ -11,8 +11,8 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../app';
-import { createFakeUser, httpRequest } from '../../../utils';
+import { createTestApplication } from '../../../app/index.ts';
+import { createFakeUser, httpRequest } from '../../../utils/index.ts';
 
 /**
  * Reads the sample value of a counter from a prometheus exposition body.

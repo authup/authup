@@ -14,14 +14,14 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     createFakeClient,
     createFakeOAuth2IdentityProvider,
     createFakeRole,
     createFakeUser,
     httpRequest,
-} from '../../../../utils';
+} from '../../../../utils/index.ts';
 
 describe('http/controllers/security (role assignment superset #3607)', () => {
     const suite = createTestApplication();

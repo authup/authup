@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TranslatorTranslationCommonKey } from '../../constants';
-import type { NamespaceTranslations } from '../../types';
+import { TranslatorTranslationCommonKey } from '../../constants.ts';
+import type { NamespaceTranslations } from '../../types.ts';
 
 export const TranslatorTranslationCommonSpanish : NamespaceTranslations<`${TranslatorTranslationCommonKey}`> = {
     [TranslatorTranslationCommonKey.GENERAL]: 'General',

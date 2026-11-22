@@ -15,8 +15,8 @@ import { VCFormSwitch } from '@vuecs/forms';
 import { createPinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import AIdentityProviderEnrollmentFields from '../../../../../src/components/entities/identity-provider/AIdentityProviderEnrollmentFields.vue';
-import { install } from '../../../../../src/module';
-import type { Options } from '../../../../../src/types';
+import { install } from '../../../../../src/module.ts';
+import type { Options } from '../../../../../src/types.ts';
 
 const noop = () => undefined;
 

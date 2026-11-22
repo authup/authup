@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './is-editing';
-export * from './on-change';
-export * from './updated-at';
-export * from './use-permission-check';
+export * from './is-editing.ts';
+export * from './on-change.ts';
+export * from './updated-at.ts';
+export * from './use-permission-check.ts';

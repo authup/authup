@@ -10,8 +10,8 @@ import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@au
 import { VCButton } from '@vuecs/button';
 import type { PropType } from 'vue';
 import { computed, defineComponent } from 'vue';
-import type { EntityStatsWindow, StatsWindowCoverage } from '../../composables/entity-stats';
-import { ENTITY_STATS_WINDOWS, isStatsWindowCovered } from '../../composables/entity-stats';
+import type { EntityStatsWindow, StatsWindowCoverage } from '../../composables/entity-stats.ts';
+import { ENTITY_STATS_WINDOWS, isStatsWindowCovered } from '../../composables/entity-stats.ts';
 
 const WINDOW_LABELS = {
     '24h': TranslatorTranslationAppKey.DASHBOARD_WINDOW_24H,

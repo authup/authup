@@ -6,7 +6,7 @@
  */
 
 import { getURLBasePath } from '@authup/kit';
-import type { ConsoleRuntimeConfig, ConsoleRuntimeConfigInput } from './types';
+import type { ConsoleRuntimeConfig, ConsoleRuntimeConfigInput } from './types.ts';
 
 /**
  * Resolve the runtime configuration every served console shares.

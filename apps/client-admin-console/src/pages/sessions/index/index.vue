@@ -29,7 +29,7 @@ import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
 import { computed, defineComponent, ref } from 'vue';
 import EntityActivity from '../../../components/stats/EntityActivity.vue';
-import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
+import type { EntityStatsLoadFn } from '../../../composables/entity-stats.ts';
 
 export default defineComponent({
     components: {

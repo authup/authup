@@ -7,7 +7,7 @@
 
 import { MemoryTransport } from 'hapic';
 import { describe, expect, it } from 'vitest';
-import { Client } from '../../src';
+import { Client } from '../../src/index.ts';
 
 function createClient() {
     return new Client({

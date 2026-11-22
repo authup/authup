@@ -44,7 +44,7 @@ import {
     isServerRuntime,
     useHydratedValue,
     useTranslation,
-} from '../../../core';
+} from '../../../core/index.ts';
 import AAuthShell from '../../utility/AAuthShell.vue';
 import LoginForm from '../login/LoginForm.vue';
 import AMfaChallengeForm from '../mfa/AMfaChallengeForm.vue';

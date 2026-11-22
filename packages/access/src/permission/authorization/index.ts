@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './check';
-export * from './check-schema';
-export * from './constants';
-export * from './error';
-export * from './module';
-export * from './policy';
-export * from './schema';
-export * from './snapshot-schema';
-export * from './snapshot-validator';
-export * from './types';
+export * from './check.ts';
+export * from './check-schema.ts';
+export * from './constants.ts';
+export * from './error.ts';
+export * from './module.ts';
+export * from './policy.ts';
+export * from './schema.ts';
+export * from './snapshot-schema.ts';
+export * from './snapshot-validator.ts';
+export * from './types.ts';

@@ -7,7 +7,7 @@
 
 import { createClient } from 'hapic';
 import { isObject } from '@authup/kit';
-import type { ApiTransport, BaseAPIContext } from './types-base';
+import type { ApiTransport, BaseAPIContext } from './types-base.ts';
 
 function isApiTransport(input: unknown) : input is ApiTransport {
     if (!isObject(input)) {

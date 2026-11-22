@@ -22,7 +22,7 @@ import {
     extractTokenPayload,
     signToken,
     verifyToken,
-} from '../../src';
+} from '../../src/index.ts';
 
 describe('src/json-web-token', () => {
     let keyPair : CryptoKeyPair;

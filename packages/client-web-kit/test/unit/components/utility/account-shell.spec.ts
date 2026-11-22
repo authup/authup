@@ -8,8 +8,8 @@
 import { describe, expect, it } from 'vitest';
 import AAccountShell from '../../../../src/components/utility/AAccountShell.vue';
 import AAuthApp from '../../../../src/components/utility/AAuthApp.vue';
-import type { AAccountShellNavItem } from '../../../../src/components/utility/types';
-import { mountKitComponent } from '../../../utils';
+import type { AAccountShellNavItem } from '../../../../src/components/utility/types.ts';
+import { mountKitComponent } from '../../../utils/index.ts';
 
 const items : AAccountShellNavItem[] = [
     {

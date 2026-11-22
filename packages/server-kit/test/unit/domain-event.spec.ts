@@ -6,8 +6,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { DomainEventPublisher } from '../../src';
-import type { DomainEventPublishContext } from '../../src';
+import { DomainEventPublisher } from '../../src/index.ts';
+import type { DomainEventPublishContext } from '../../src/index.ts';
 
 const ctx : DomainEventPublishContext = {
     content: {

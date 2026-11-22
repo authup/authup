@@ -32,7 +32,7 @@ function unauthorized() {
     return Object.assign(new Error('Request failed'), { response: { status: 401, data: { code: 'identity_unauthorized' } } });
 }
 
-const { usePageError } = await import('../../src/pages/utils');
+const { usePageError } = await import('../../src/pages/utils.ts');
 
 describe('usePageError', () => {
     beforeEach(() => {

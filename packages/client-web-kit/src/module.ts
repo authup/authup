@@ -8,7 +8,7 @@
 import { createValidup } from '@validup/vue';
 import { OptionalValue } from 'validup';
 import type { App, Component } from 'vue';
-import * as components from './components/entities';
+import * as components from './components/entities/index.ts';
 import {
     installHTTPClient,
     installHTTPClientAuthenticationHook,
@@ -16,8 +16,8 @@ import {
     installStore,
     installTranslator,
     provideHydrationStore,
-} from './core';
-import type { Options } from './types';
+} from './core/index.ts';
+import type { Options } from './types.ts';
 
 export function installComponents(app: App, input?: boolean | string[]) {
     if (typeof input === 'undefined' || input === false) {

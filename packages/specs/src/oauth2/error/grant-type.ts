@@ -7,7 +7,7 @@
 
 import { ErrorCode, markInstanceof } from '@authup/errors';
 import type { AuthupErrorInput } from '@authup/errors';
-import { OAuth2ErrorCode } from '../constants';
+import { OAuth2ErrorCode } from '../constants.ts';
 import { OAuth2Error, normalizeOAuth2ErrorInput } from './module.ts';
 
 export const OAUTH2_GRANT_TYPE_ERROR_INSTANCE = Symbol.for('@authup/specs/OAuth2GrantTypeError');

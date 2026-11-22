@@ -10,10 +10,10 @@ import { PermissionName } from '@authup/core-kit';
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h } from 'vue';
-import { usePermissionCheck, useTranslation } from '../../../src';
-import { mountKitComponent } from '../../utils';
-import { createFakeHydrationStore } from '../../utils/hydration';
-import { ASYNC_ONLY_TRANSLATION, withAsyncOnlyTranslator } from '../../utils/ilingo';
+import { usePermissionCheck, useTranslation } from '../../../src/index.ts';
+import { mountKitComponent } from '../../utils/index.ts';
+import { createFakeHydrationStore } from '../../utils/hydration.ts';
+import { ASYNC_ONLY_TRANSLATION, withAsyncOnlyTranslator } from '../../utils/ilingo.ts';
 
 // must match what the server render writes (see hydration-ssr.spec.ts)
 const TRANSLATION_KEY = 'authup:translation:en:authupField:name::';

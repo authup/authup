@@ -17,7 +17,7 @@ import {
     createHealthChangeObserver,
     createShutdownHealthCheck,
     runHealthChecks,
-} from '../../../../../src/app/modules/http/health';
+} from '../../../../../src/app/modules/http/health/index.ts';
 
 describe('app/modules/http/health', () => {
     afterEach(() => {

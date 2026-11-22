@@ -7,7 +7,7 @@
 
 import { ValidatorGroup } from '@authup/kit';
 import { describe, expect, it } from 'vitest';
-import { PermissionValidator, isNameValid, isPermissionNameValid } from '../../../../src';
+import { PermissionValidator, isNameValid, isPermissionNameValid } from '../../../../src/index.ts';
 
 describe('domains/permission/validator', () => {
     it.each(['run:read', 'run:cancel', 'state:read', 'agent:worker-1:run', 'agent:worker_1:approve', 'user_read', 'user.read'])('accepts %s as a permission name', (name) => {

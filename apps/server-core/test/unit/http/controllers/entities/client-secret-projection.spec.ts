@@ -17,7 +17,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     createFakeClient,
     createFakePermission,
@@ -25,7 +25,7 @@ import {
     createFakeRole,
     createFakeScope,
     expectClientError,
-} from '../../../../utils';
+} from '../../../../utils/index.ts';
 
 /**
  * Schema-level `secret` projection gate (issue #3322): the per-row

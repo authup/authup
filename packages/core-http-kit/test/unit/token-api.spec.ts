@@ -9,7 +9,7 @@ import { MemoryTransport } from 'hapic';
 import type { TransportRequest } from 'hapic';
 import { OAuth2TokenGrant } from '@authup/specs';
 import { describe, expect, it } from 'vitest';
-import { Client } from '../../src';
+import { Client } from '../../src/index.ts';
 
 const TOKEN_RESPONSE = {
     access_token: 'access',

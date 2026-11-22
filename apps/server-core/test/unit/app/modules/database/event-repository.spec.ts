@@ -19,7 +19,7 @@ import {
 import { EventEntity } from '../../../../../src/adapters/database/domains/index.ts';
 import { EVENT_RETENTION_SWEEP_BATCH_SIZE } from '../../../../../src/core/index.ts';
 import { EventRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/index.ts';
-import { createTestDatabaseApplication } from '../../../../app';
+import { createTestDatabaseApplication } from '../../../../app/index.ts';
 
 // Force a non-UTC host timezone for THIS worker: the defect this spec pins
 // (a bound Date serialized in host-local time against the DB-clock-stamped

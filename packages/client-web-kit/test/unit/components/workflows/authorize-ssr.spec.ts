@@ -15,9 +15,9 @@ import { createPinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import { createSSRApp, h } from 'vue';
 import AAuthorize from '../../../../src/components/workflows/authorize/Authorize.vue';
-import { injectStore } from '../../../../src/core';
-import { install } from '../../../../src/module';
-import { createFakeHydrationStore } from '../../../utils/hydration';
+import { injectStore } from '../../../../src/core/index.ts';
+import { install } from '../../../../src/module.ts';
+import { createFakeHydrationStore } from '../../../utils/hydration.ts';
 
 const noop = () => undefined;
 

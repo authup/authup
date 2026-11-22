@@ -12,8 +12,8 @@ import {
     it,
 } from 'vitest';
 import { REALM_MASTER_NAME, buildUserFakeEmail } from '@authup/core-kit';
-import { httpRequest } from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+import { httpRequest } from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 // The OIDC userinfo endpoint is a dedicated flat route: it must never adopt
 // the { data, meta } entity-record envelope, and discovery must advertise it.

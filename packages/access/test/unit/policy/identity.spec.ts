@@ -6,13 +6,13 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { IdentityPolicy } from '../../../src';
+import type { IdentityPolicy } from '../../../src/index.ts';
 import {
     BuiltInPolicyType,
     IdentityPolicyEvaluator,
     PolicyData,
     definePolicyEvaluationContext,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 describe('src/policy/identity', () => {
     it('should permit due defined identity', async () => {

@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { resolveConsoleRuntimeConfig } from '../../../../src/core/console';
+import { resolveConsoleRuntimeConfig } from '../../../../src/core/console/index.ts';
 
 const basePathDefault = '/console/account';
 

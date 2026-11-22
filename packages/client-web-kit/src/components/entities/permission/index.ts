@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { APermission } from './APermission';
-export { APermissionCheck } from './APermissionCheck';
+export { APermission } from './APermission.ts';
+export { APermissionCheck } from './APermissionCheck.ts';
 export { default as APermissionForm } from './APermissionForm.vue';
-export { APermissions } from './APermissions';
+export { APermissions } from './APermissions.ts';

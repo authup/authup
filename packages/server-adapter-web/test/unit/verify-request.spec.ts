@@ -13,7 +13,7 @@ import {
     it,
     vi,
 } from 'vitest';
-import { verifyRequest } from '../../src';
+import { verifyRequest } from '../../src/index.ts';
 
 function createVerifier(impl: ITokenVerifier['verify']): ITokenVerifier {
     return { verify: impl };

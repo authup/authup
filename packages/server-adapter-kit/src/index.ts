@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './bearer-token';
-export * from './certificate-binding';
-export * from './verifier';
+export * from './bearer-token/index.ts';
+export * from './certificate-binding/index.ts';
+export * from './verifier/index.ts';

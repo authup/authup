@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AbstractEntityService } from './service';
+import { AbstractEntityService } from './service.ts';
 
 /**
  * Base class for junction/association entity services (role-permission, user-role,

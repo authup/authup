@@ -6,10 +6,10 @@
  */
 
 import type { AuthorizationHeader } from 'hapic';
-import type { EntityQueryInput } from '../../../helpers';
+import type { EntityQueryInput } from '../../../helpers/index.ts';
 import type { User, UserAuthenticator, UserAuthenticatorKind } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base.ts';
 
 export type UserAuthenticatorCreatePayload = {
     kind: `${UserAuthenticatorKind}`,

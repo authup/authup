@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProvider } from '../identity-provider';
-import type { Realm } from '../realm';
+import type { IdentityProvider } from '../identity-provider/index.ts';
+import type { Realm } from '../realm/index.ts';
 
 export interface IdentityProviderAttribute {
     id: string;

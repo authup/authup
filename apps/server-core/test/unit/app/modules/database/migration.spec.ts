@@ -13,7 +13,7 @@ import {
     it,
     vi,
 } from 'vitest';
-import { assertNoPendingMigrations } from '../../../../../src/app/modules/database/migration';
+import { assertNoPendingMigrations } from '../../../../../src/app/modules/database/migration.ts';
 
 const createDataSource = (
     options: Record<string, any>,

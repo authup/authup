@@ -22,11 +22,11 @@ import {
     OAuth2TokenKind,
 } from '@authup/specs';
 import { Secret, TOTP } from 'otpauth';
-import { generateOAuth2CodeVerifier } from '../../../../../../src/core';
-import { MailInjectionKey } from '../../../../../../src/app';
+import { generateOAuth2CodeVerifier } from '../../../../../../src/core/index.ts';
+import { MailInjectionKey } from '../../../../../../src/app/index.ts';
 import { FakeMailClient } from '../../../../core/helpers/index.ts';
-import { createFakeClient, createFakeUser, httpRequest } from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+import { createFakeClient, createFakeUser, httpRequest } from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 
 const MFA_TICKET_MAX_AGE = 600;
 

@@ -16,14 +16,14 @@ import {
 import { PermissionName, REALM_MASTER_NAME } from '@authup/core-kit';
 import { OAuth2TokenKind } from '@authup/specs';
 import { TokenRequestValidator } from '../../../../../../src/adapters/http/controllers/workflows/token/utils/index.ts';
-import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants';
-import { createTestApplication } from '../../../../../app';
+import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 import {
     createFakeClient,
     createFakeRole,
     createFakeUser,
     httpRequest,
-} from '../../../../../utils';
+} from '../../../../../utils/index.ts';
 
 const TOKEN_MAX_LENGTH = 16384;
 const LEGACY_TOKEN_MAX_LENGTH = 2048;

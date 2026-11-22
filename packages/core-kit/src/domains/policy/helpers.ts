@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { NameValidOptions } from '../../helpers';
-import { isNameValid } from '../../helpers';
-import type { Policy } from './entity';
+import type { NameValidOptions } from '../../helpers/index.ts';
+import { isNameValid } from '../../helpers/index.ts';
+import type { Policy } from './entity.ts';
 
 export function isPolicyNameValid(name: string, options: NameValidOptions = {}) : boolean {
     return isNameValid(name, options);

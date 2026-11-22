@@ -19,10 +19,10 @@ import {
 } from 'vitest';
 import type { MockInstance } from 'vitest';
 import type { App } from 'vue';
-import { AEndSessionForm } from '../../../../src/components/workflows/end-session';
-import { injectStore } from '../../../../src/core';
-import { install } from '../../../../src/module';
-import type { Options } from '../../../../src/types';
+import { AEndSessionForm } from '../../../../src/components/workflows/end-session/index.ts';
+import { injectStore } from '../../../../src/core/index.ts';
+import { install } from '../../../../src/module.ts';
+import type { Options } from '../../../../src/types.ts';
 
 const noop = () => undefined;
 

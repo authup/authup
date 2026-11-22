@@ -14,15 +14,15 @@ import {
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import { CLIENT_ACCOUNT_CONSOLE_NAME, UserAuthenticatorKind } from '@authup/core-kit';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
-import { ConfigInjectionKey } from '../../../../../src/app';
-import { SESSION_COOKIE } from '../../../../../src/core';
+import { ConfigInjectionKey } from '../../../../../src/app/index.ts';
+import { SESSION_COOKIE } from '../../../../../src/core/index.ts';
 import {
     TestCookieJar,
     createFakeUser,
     expectClientError,
     httpRequest,
-} from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+} from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 describe('src/http/controllers/user-authenticator', () => {
     const suite = createTestApplication({

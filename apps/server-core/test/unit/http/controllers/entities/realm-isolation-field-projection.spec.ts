@@ -15,14 +15,14 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     createFakeClient,
     createFakeRealm,
     createFakeRoleAttribute,
     createFakeUser,
     createFakeUserAttribute,
-} from '../../../../utils';
+} from '../../../../utils/index.ts';
 
 /**
  * Regression (plan 039): an own-scoped `<ENTITY>_READ` holder must not be able

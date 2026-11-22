@@ -12,9 +12,9 @@ import {
     defineEntityPicker,
     defineEntityPickerVEmitOptions,
     defineEntityPickerVProps,
-} from '../../utility/entity/picker/module';
-import type { EntityPickerVSlots } from '../../utility/entity/picker/types';
-import { APaths } from './APaths';
+} from '../../utility/entity/picker/module.ts';
+import type { EntityPickerVSlots } from '../../utility/entity/picker/types.ts';
+import { APaths } from './APaths.ts';
 
 export const APathPicker = defineComponent({
     props: defineEntityPickerVProps<Path>(),

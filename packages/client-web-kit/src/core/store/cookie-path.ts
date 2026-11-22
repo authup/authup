@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { COOKIE_PATH } from './constants';
+import { COOKIE_PATH } from './constants.ts';
 
 /**
  * The one form a store cookie path is written, cleared and compared in: a

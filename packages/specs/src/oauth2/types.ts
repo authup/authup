@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { JWTClaims } from '../json-web-token';
-import type { OpenIDClaims } from '../openid/claims';
-import type { OAuth2SubKind, OAuth2TokenKind } from './constants';
+import type { JWTClaims } from '../json-web-token/index.ts';
+import type { OpenIDClaims } from '../openid/claims.ts';
+import type { OAuth2SubKind, OAuth2TokenKind } from './constants.ts';
 
 export type OAuth2TokenGrantResponse = {
     access_token: string,

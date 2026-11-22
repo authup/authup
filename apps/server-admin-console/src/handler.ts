@@ -26,9 +26,9 @@ import {
     HEALTH_PATH,
     PACKAGE_NAME,
     VITE_BASE,
-} from './constants';
-import { PACKAGE_PATH } from './path';
-import type { Config } from './types';
+} from './constants.ts';
+import { PACKAGE_PATH } from './path.ts';
+import type { Config } from './types.ts';
 
 const ASSETS_PATH = '/assets';
 

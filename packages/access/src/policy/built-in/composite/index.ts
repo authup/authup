@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './evaluator';
-export * from './types';
-export * from './helper';
-export * from './validator';
+export * from './evaluator.ts';
+export * from './types.ts';
+export * from './helper.ts';
+export * from './validator.ts';

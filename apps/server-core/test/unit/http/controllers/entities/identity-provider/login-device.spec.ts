@@ -27,10 +27,10 @@ import {
     createFakeOAuth2IdentityProvider,
     createFakeRealm,
     httpRequest,
-} from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
-import { CacheInjectionKey, ConfigInjectionKey, OAuth2InjectionToken } from '../../../../../../src/app';
-import { CacheOAuth2Prefix } from '../../../../../../src/app/modules/oauth2/repositories/constants';
+} from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
+import { CacheInjectionKey, ConfigInjectionKey, OAuth2InjectionToken } from '../../../../../../src/app/index.ts';
+import { CacheOAuth2Prefix } from '../../../../../../src/app/modules/oauth2/repositories/constants.ts';
 
 const FEDERATED_LOGIN_COOKIE = 'authup_federated_login';
 // well formed, and never minted by anything in this file

@@ -11,13 +11,13 @@ import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h, ref } from 'vue';
 import type { Ref } from 'vue';
-import type { EntityManager } from '../../../../src/components/utility';
+import type { EntityManager } from '../../../../src/components/utility/index.ts';
 import {
     defineEntityManager,
     defineEntityVEmitOptions,
     defineEntityVProps,
-} from '../../../../src/components/utility';
-import { mountKitComponent } from '../../../utils';
+} from '../../../../src/components/utility/index.ts';
+import { mountKitComponent } from '../../../utils/index.ts';
 
 function createRecord(
     capture: (manager: EntityManager<Role>) => void,

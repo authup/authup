@@ -5,15 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './attributes-validator';
-export * from './constants';
-export * from './enrollment';
-export * from './entity';
-export * from './utils';
+export * from './attributes-validator.ts';
+export * from './constants.ts';
+export * from './enrollment/index.ts';
+export * from './entity.ts';
+export * from './utils.ts';
 
-export * from './ldap';
-export * from './oauth2';
-export * from './oidc';
+export * from './ldap/index.ts';
+export * from './oauth2/index.ts';
+export * from './oidc/index.ts';
 
-export * from './preset';
-export * from './validator';
+export * from './preset/index.ts';
+export * from './validator.ts';

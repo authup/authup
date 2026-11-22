@@ -7,7 +7,7 @@
 
 import type { App } from 'vue';
 import { provide as _provide } from 'vue';
-import { inject } from './inject';
+import { inject } from './inject.ts';
 
 export function provide(
     key: string | symbol,

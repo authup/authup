@@ -14,8 +14,8 @@ import {
     buildShutdownOptions,
     markShuttingDown,
     mountHealthRoutes,
-} from '../../src';
-import type { Config } from '../../src';
+} from '../../src/index.ts';
+import type { Config } from '../../src/index.ts';
 
 function createApp() : IApp {
     const app = new App();

@@ -7,8 +7,8 @@
 
 import type { ICondition } from '@rapiq/core';
 import { and, or } from '@rapiq/core';
-import type { PolicyEvaluationResult } from '../evaluation';
-import type { PolicySide, PolicySides } from './types';
+import type { PolicyEvaluationResult } from '../evaluation/index.ts';
+import type { PolicySide, PolicySides } from './types.ts';
 
 export const POLICY_SIDE_ALWAYS : PolicySide = { kind: 'always' };
 export const POLICY_SIDE_NEVER : PolicySide = { kind: 'never' };

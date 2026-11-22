@@ -6,14 +6,14 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { DatePolicy } from '../../../src';
+import type { DatePolicy } from '../../../src/index.ts';
 import {
     BuiltInPolicyType,
     DatePolicyEvaluator,
     DatePolicyValidator,
     PolicyData,
     definePolicyEvaluationContext,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 describe('src/policy/date', () => {
     it('should restrict', async () => {

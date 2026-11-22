@@ -7,8 +7,8 @@
 
 import type { ICondition } from '@rapiq/core';
 import type { DecisionStrategy } from '@authup/kit';
-import type { IPolicyEngine, PolicyData, PolicyTransitionSink } from '../../policy';
-import type { IPermissionProvider } from '../provider';
+import type { IPolicyEngine, PolicyData, PolicyTransitionSink } from '../../policy/index.ts';
+import type { IPermissionProvider } from '../provider/index.ts';
 
 export interface IPermissionEvaluator {
     evaluate(ctx: PermissionEvaluationContext): Promise<void>;

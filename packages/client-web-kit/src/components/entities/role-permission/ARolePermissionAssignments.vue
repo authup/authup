@@ -7,7 +7,7 @@
 
 <script lang="ts">
 import { computed, defineComponent } from 'vue';
-import { APermissions } from '../permission';
+import { APermissions } from '../permission/index.ts';
 import ARolePermissionAssignment from './ARolePermissionAssignment.vue';
 
 export default defineComponent({

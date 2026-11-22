@@ -7,7 +7,7 @@
 
 import { CLIENT_ADMIN_CONSOLE_NAME } from '@authup/core-kit';
 import { describe, expect, it } from 'vitest';
-import { resolveAdminConsoleConfig } from '../../src/config';
+import { resolveAdminConsoleConfig } from '../../src/config.ts';
 
 describe('src/config', () => {
     it('should apply injected configuration', () => {

@@ -7,8 +7,8 @@
 
 <script lang="ts">
 import { computed, defineComponent } from 'vue';
-import { AClients } from '../client';
-import { AClientScopeAssignment } from '../client-scope';
+import { AClients } from '../client/index.ts';
+import { AClientScopeAssignment } from '../client-scope/index.ts';
 
 export default defineComponent({
     components: { AClients, AClientScopeAssignment },

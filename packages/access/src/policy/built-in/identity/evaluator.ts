@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
-import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
-import { maybeInvertPolicyOutcome } from '../../helpers';
-import { BuiltInPolicyType } from '../constants';
-import { PolicyIdentityDataValidator } from './data';
-import type { IdentityPolicyData } from './types';
-import { IdentityPolicyValidator } from './validator';
+import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation/index.ts';
+import { PolicyIssueCode, definePolicyIssueItem } from '../../issue/index.ts';
+import { maybeInvertPolicyOutcome } from '../../helpers/index.ts';
+import { BuiltInPolicyType } from '../constants.ts';
+import { PolicyIdentityDataValidator } from './data/index.ts';
+import type { IdentityPolicyData } from './types.ts';
+import { IdentityPolicyValidator } from './validator.ts';
 
 export class IdentityPolicyEvaluator implements IPolicyEvaluator {
     protected validator : IdentityPolicyValidator;

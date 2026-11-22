@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { assertConsolePath } from '../../src/console/path';
+import { assertConsolePath } from '../../src/console/path.ts';
 
 const PUBLIC_URL = 'https://idp.example.com';
 const PUBLIC_URL_SUB_PATH = 'https://example.com/auth';

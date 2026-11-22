@@ -15,7 +15,7 @@ import {
     it,
     vi,
 } from 'vitest';
-import { createOAuth2CleanerComponent } from '../../../src/components';
+import { createOAuth2CleanerComponent } from '../../../src/components/index.ts';
 
 const flushMicrotasks = async () => {
     for (let i = 0; i < 10; i++) {

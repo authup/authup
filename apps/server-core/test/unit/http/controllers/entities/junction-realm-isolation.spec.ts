@@ -15,7 +15,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     createFakeClient,
     createFakeOAuth2IdentityProvider,
@@ -25,8 +25,8 @@ import {
     createFakeScope,
     createFakeUser,
     expectClientError,
-} from '../../../../utils';
-import { createFakeTimePolicy } from '../../../../utils/domains/policy';
+} from '../../../../utils/index.ts';
+import { createFakeTimePolicy } from '../../../../utils/domains/policy.ts';
 
 /**
  * Regression (issue #3594): every `JunctionEntityService` read applied a

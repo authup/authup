@@ -8,8 +8,8 @@
 import type { EventStatsResponse, IClient } from '@authup/core-http-kit';
 import type { Ref } from 'vue';
 import { computed, ref } from 'vue';
-import type { EntityStatsWindow, EntityStatsWindowEntry } from './entity-stats';
-import { ENTITY_STATS_WINDOWS, useEntityStats } from './entity-stats';
+import type { EntityStatsWindow, EntityStatsWindowEntry } from './entity-stats.ts';
+import { ENTITY_STATS_WINDOWS, useEntityStats } from './entity-stats.ts';
 
 export type EventStatsWindow = EntityStatsWindow;
 

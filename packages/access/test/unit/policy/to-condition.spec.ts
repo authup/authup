@@ -9,14 +9,14 @@ import { describe, expect, it } from 'vitest';
 import type { ICondition, IFilter, IFilters } from '@rapiq/core';
 import { compileFilters } from '@rapiq/adapter-memory';
 import { DecisionStrategy } from '@authup/kit';
-import type { PolicyEvaluationContextInput, PolicyEvaluationResult, RealmScope } from '../../../src';
+import type { PolicyEvaluationContextInput, PolicyEvaluationResult, RealmScope } from '../../../src/index.ts';
 import {
     BuiltInPolicyType,
     PolicyEngine,
     definePolicyData,
     definePolicyEvaluationContext,
     definePolicyWithType,
-} from '../../../src';
+} from '../../../src/index.ts';
 import { PolicyDefaultEvaluators } from '../../../src/policy/constants.ts';
 
 const engine = new PolicyEngine(PolicyDefaultEvaluators);

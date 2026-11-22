@@ -16,8 +16,8 @@ import type { Client } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
 import { OAuth2ErrorCode } from '@authup/specs';
-import { createFakeClient, httpRequest } from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+import { createFakeClient, httpRequest } from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 /**
  * `GET /authorize/info` answers the render input the `/authorize` page is

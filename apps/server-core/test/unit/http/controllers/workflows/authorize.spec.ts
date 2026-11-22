@@ -21,9 +21,9 @@ import {
 import { ErrorCode } from '@authup/errors';
 import { OAuth2AuthorizationResponseType, OAuth2UIColorMode } from '@authup/specs';
 import { LOCALE_CODES } from '@authup/i18n';
-import { generateOAuth2CodeVerifier } from '../../../../../src/core';
-import { createFakeClient, createFakeRealm, expectClientError } from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+import { generateOAuth2CodeVerifier } from '../../../../../src/core/index.ts';
+import { createFakeClient, createFakeRealm, expectClientError } from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 describe('src/http/controllers/token', () => {
     let payload : OAuth2AuthorizationCodeRequest;

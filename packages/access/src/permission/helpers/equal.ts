@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BasePermission } from '../types';
+import type { BasePermission } from '../types.ts';
 
 export function isPermissionPolicyBindingEqual(
     a: { permission: BasePermission },

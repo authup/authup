@@ -12,14 +12,14 @@ import type { FakeRequest } from '@authup/core-http-kit/testing';
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h, provide } from 'vue';
-import type { EntityCollectionManager } from '../../../../src/components/utility';
+import type { EntityCollectionManager } from '../../../../src/components/utility/index.ts';
 import {
     defineEntityCollectionManager,
     defineEntityCollectionVEmitOptions,
     defineEntityCollectionVProps,
-} from '../../../../src/components/utility';
-import { SocketClientSymbol } from '../../../../src/core/socket-manager';
-import { mountKitComponent } from '../../../utils';
+} from '../../../../src/components/utility/index.ts';
+import { SocketClientSymbol } from '../../../../src/core/socket-manager/index.ts';
+import { mountKitComponent } from '../../../utils/index.ts';
 
 type SocketListener = (event: unknown) => void;
 

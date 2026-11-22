@@ -7,6 +7,20 @@
 
 import eslintConfig from '@tada5hi/eslint-config';
 
+// tsc emits relative specifiers verbatim into the published .d.ts, and a
+// node16 / nodenext consumer drops every extensionless one (#3843).
+const RELATIVE_SPECIFIER_MESSAGE = 'Write the source extension on a relative import (\'./x.ts\', \'./dir/index.ts\'): the published .d.ts keeps the specifier verbatim and node16/nodenext consumers drop extensionless ones (#3843).';
+const RELATIVE_SPECIFIER = '[source.value=/^\\./]:not([source.value=/\\.(?:[cm]?[jt]sx?|vue|json|css|svg)$/])';
+const RELATIVE_SPECIFIER_RULES = [
+    'ImportDeclaration',
+    'ExportAllDeclaration',
+    'ExportNamedDeclaration',
+    'ImportExpression',
+].map((node) => ({
+    selector: `${node}${RELATIVE_SPECIFIER}`,
+    message: RELATIVE_SPECIFIER_MESSAGE,
+}));
+
 export default eslintConfig(
     {
         typescript: true,
@@ -64,6 +78,17 @@ export default eslintConfig(
         },
     },
     {
+        files: [
+            'apps/*/src/**/*.{ts,mts,tsx,vue}',
+            'apps/*/test/**/*.{ts,mts,tsx,vue}',
+            'packages/*/src/**/*.{ts,mts,tsx,vue}',
+            'packages/*/test/**/*.{ts,mts,tsx,vue}',
+        ],
+        // nuxt-module-build owns this package's emit, not tsc
+        ignores: ['packages/client-web-nuxt/**'],
+        rules: { 'no-restricted-syntax': ['error', ...RELATIVE_SPECIFIER_RULES] },
+    },
+    {
         files: ['apps/server-core/scripts/*.mjs'],
         rules: {
             // These maintenance scripts report their results on stdout/stderr.
@@ -104,7 +129,7 @@ export default eslintConfig(
             }, {
                 selector: 'CallExpression[callee.property.name="set"] > Literal.arguments:first-child[value="realmMatch"]',
                 message: 'Pass the record realm to evaluateRecord / reachesRecord (@authup/access) instead of a realmMatch policy data key.',
-            }],
+            }, ...RELATIVE_SPECIFIER_RULES],
         },
     },
     {

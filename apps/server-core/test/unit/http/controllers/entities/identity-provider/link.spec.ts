@@ -18,15 +18,15 @@ import {
 import type { IdentityProvider, Realm, User } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import { createNoopLogger } from '@authup/server-kit';
-import { generateOAuth2CodeVerifier } from '../../../../../../src/core';
-import { LoggerInjectionKey } from '../../../../../../src/app';
+import { generateOAuth2CodeVerifier } from '../../../../../../src/core/index.ts';
+import { LoggerInjectionKey } from '../../../../../../src/app/index.ts';
 import {
     createFakeOAuth2IdentityProvider,
     createFakeRealm,
     createFakeUser,
     httpRequest,
-} from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+} from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 
 const USER_AGENT = 'link-spec-agent';
 

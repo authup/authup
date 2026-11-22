@@ -30,15 +30,15 @@ import {
     OAUTH2_BACKCHANNEL_LOGOUT_EVENT,
     buildOAuth2CodeChallenge,
     generateOAuth2CodeVerifier,
-} from '../../../../../../src/core';
-import { ConfigInjectionKey } from '../../../../../../src/app';
+} from '../../../../../../src/core/index.ts';
+import { ConfigInjectionKey } from '../../../../../../src/app/index.ts';
 import {
     createFakeClient,
     createFakeRealm,
     createFakeUser,
     httpRequest,
-} from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+} from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 
 const REDIRECT_PATTERN = 'https://app.example.com/**';
 const REDIRECT_URI = 'https://app.example.com/cb';

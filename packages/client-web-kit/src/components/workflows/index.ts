@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './authorize';
-export * from './device';
-export * from './end-session';
-export * from './login';
-export * from './mfa';
-export * from './password';
-export * from './register';
+export * from './authorize/index.ts';
+export * from './device/index.ts';
+export * from './end-session/index.ts';
+export * from './login/index.ts';
+export * from './mfa/index.ts';
+export * from './password/index.ts';
+export * from './register/index.ts';
 
 export { default as AWorkflowDisabledNotice } from './AWorkflowDisabledNotice.vue';

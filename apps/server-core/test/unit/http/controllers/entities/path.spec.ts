@@ -23,14 +23,14 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     createFakePath,
     createFakeRealm,
     createFakeUser,
     expectClientError,
     httpRequest,
-} from '../../../../utils';
+} from '../../../../utils/index.ts';
 
 const ADMIN_AUTHORIZATION = `Basic ${Buffer.from('admin:start123').toBase64()}`;
 

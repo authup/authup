@@ -11,7 +11,7 @@ import {
     ClientSecretRotateValidator,
     ClientValidator,
     getClientSecretMode,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 describe('ClientValidator redirect patterns', () => {
     const validator = new ClientValidator();

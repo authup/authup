@@ -1,11 +1,11 @@
 import type { Plugin } from 'vue';
-import { install } from './module';
-import type { Options } from './types';
+import { install } from './module.ts';
+import type { Options } from './types.ts';
 
-export * from './components';
-export * from './composables';
-export * from './core';
-export * from './types';
+export * from './components/index.ts';
+export * from './composables/index.ts';
+export * from './core/index.ts';
+export * from './types.ts';
 
 export { install };
 

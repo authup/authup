@@ -7,10 +7,10 @@
 
 import { buildEventFullName } from '@authup/core-realtime-kit';
 import { Emitter } from '@socket.io/redis-emitter';
-import type { RedisClientCreateInput } from '../../../redis';
-import { createRedisClient } from '../../../redis';
-import type { DomainEventPublishContext, IDomainEventHandler } from '../../types';
-import { buildDomainEventChannelName, transformDomainEventData } from '../../utils';
+import type { RedisClientCreateInput } from '../../../redis/index.ts';
+import { createRedisClient } from '../../../redis/index.ts';
+import type { DomainEventPublishContext, IDomainEventHandler } from '../../types.ts';
+import { buildDomainEventChannelName, transformDomainEventData } from '../../utils.ts';
 
 export class DomainEventSocketHandler implements IDomainEventHandler {
     protected driver : Emitter;

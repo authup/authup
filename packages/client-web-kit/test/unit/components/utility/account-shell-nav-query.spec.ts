@@ -13,8 +13,8 @@ import { createPinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import AAccountShell from '../../../../src/components/utility/AAccountShell.vue';
-import type { AAccountShellNavItem } from '../../../../src/components/utility/types';
-import { install } from '../../../../src/module';
+import type { AAccountShellNavItem } from '../../../../src/components/utility/types.ts';
+import { install } from '../../../../src/module.ts';
 
 const noop = () => undefined;
 const REF = 'http://localhost:3000/';

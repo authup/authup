@@ -24,8 +24,8 @@ import { VCLink } from '@vuecs/link';
 import { useAlertDialog } from '@vuecs/overlays';
 import type { PropType } from 'vue';
 import { computed, defineComponent, ref } from 'vue';
-import { useErrorToast } from '../../../composables/error';
-import { useToast } from '../../../composables/toast';
+import { useErrorToast } from '../../../composables/error.ts';
+import { useToast } from '../../../composables/toast.ts';
 
 export default defineComponent({
     components: {

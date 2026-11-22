@@ -6,8 +6,8 @@
  */
 
 import type { DecisionStrategy } from '@authup/kit';
-import type { RealmScope } from '../../../permission/realm-scope';
-import type { BasePolicy } from '../../types';
+import type { RealmScope } from '../../../permission/realm-scope/index.ts';
+import type { BasePolicy } from '../../types.ts';
 
 export interface RealmMatchPolicy extends BasePolicy {
     /**

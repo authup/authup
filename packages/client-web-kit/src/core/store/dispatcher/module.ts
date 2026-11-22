@@ -6,7 +6,7 @@
  */
 
 import { EventEmitter } from '@posva/event-emitter';
-import type { StoreDispatcher, StoreDispatcherEvents } from './types';
+import type { StoreDispatcher, StoreDispatcherEvents } from './types.ts';
 
 export function createStoreDispatcher() : StoreDispatcher {
     return new EventEmitter<StoreDispatcherEvents>();

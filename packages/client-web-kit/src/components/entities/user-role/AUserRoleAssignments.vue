@@ -7,7 +7,7 @@
 
 <script lang="ts">
 import { computed, defineComponent } from 'vue';
-import { ARoles } from '../role';
+import { ARoles } from '../role/index.ts';
 import AUserRoleAssignment from './AUserRoleAssignment.vue';
 
 export default defineComponent({

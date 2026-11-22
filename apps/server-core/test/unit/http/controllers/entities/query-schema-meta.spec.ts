@@ -11,8 +11,8 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createFakeRole } from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+import { createFakeRole } from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 // Issue #1649: every query-capable GET carries the endpoint's queryable
 // vocabulary under meta.schema — the static allow-list upper bound, with

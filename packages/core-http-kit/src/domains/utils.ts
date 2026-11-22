@@ -7,7 +7,7 @@
 
 import type { AuthorizationHeader, RequestBaseOptions } from 'hapic';
 import { stringifyAuthorizationHeader } from 'hapic';
-import type { APIRequestOptions } from './types-base';
+import type { APIRequestOptions } from './types-base.ts';
 
 /**
  * The per-request config of a call: only `signal`, `timeout` and an

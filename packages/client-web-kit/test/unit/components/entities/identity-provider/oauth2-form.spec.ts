@@ -17,9 +17,9 @@ import { createPinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import AIdentityProviderBasicFields from '../../../../../src/components/entities/identity-provider/AIdentityProviderBasicFields.vue';
 import AIdentityProviderOAuth2Form from '../../../../../src/components/entities/identity-provider/AIdentityProviderOAuth2Form.vue';
-import { AFormInputList, ANameInput } from '../../../../../src/components/utility';
-import { install } from '../../../../../src/module';
-import type { Options } from '../../../../../src/types';
+import { AFormInputList, ANameInput } from '../../../../../src/components/utility/index.ts';
+import { install } from '../../../../../src/module.ts';
+import type { Options } from '../../../../../src/types.ts';
 
 const noop = () => undefined;
 

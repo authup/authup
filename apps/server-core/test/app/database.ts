@@ -11,7 +11,7 @@ import { createDatabase, dropDatabase, readDataSourceOptionsFromEnv } from 'type
 import fs from 'node:fs';
 import path from 'node:path';
 import { inject } from 'vitest';
-import { ConfigInjectionKey, DatabaseModule } from '../../src';
+import { ConfigInjectionKey, DatabaseModule } from '../../src/index.ts';
 import type { IContainer } from 'eldin';
 import { PACKAGE_PATH } from '../../src/path.ts';
 

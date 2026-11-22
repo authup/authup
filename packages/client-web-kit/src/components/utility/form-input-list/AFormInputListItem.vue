@@ -17,7 +17,7 @@ import { z } from 'zod';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { IFieldValidation } from '@ilingo/validup-vue';
-import { DEFAULT_BUTTON_SIZE } from '../../../core';
+import { DEFAULT_BUTTON_SIZE } from '../../../core/index.ts';
 
 // Per-row input validator — local because there's no
 // "list item name" entity in core-kit.

@@ -14,8 +14,8 @@ import {
 } from 'vitest';
 import { SCHEMA_COLLECTIONS } from '../../../../../src/adapters/http/controllers/workflows/schema/constants.ts';
 import { computeSchemaRegistryHash, describeQuerySchemas } from '../../../../../src/core/index.ts';
-import { createTestApplication } from '../../../../app';
-import { expectClientError, httpRequest } from '../../../../utils';
+import { createTestApplication } from '../../../../app/index.ts';
+import { expectClientError, httpRequest } from '../../../../utils/index.ts';
 
 const adminAuthorization = `Basic ${Buffer.from('admin:start123').toBase64()}`;
 

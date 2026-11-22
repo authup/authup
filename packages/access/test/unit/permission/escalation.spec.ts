@@ -6,14 +6,14 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { PermissionGrant, PermissionPolicyBinding } from '../../../src';
+import type { PermissionGrant, PermissionPolicyBinding } from '../../../src/index.ts';
 import {
     BuiltInPolicyType,
     RealmScope,
     aggregatePermissionPolicyBindings,
     grantDominates,
     isPermissionPolicyBindingEqual,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 // Mirrors IdentityPermissionProvider.isSuperset over the aggregated disjunction: every child
 // grant must be dominated by some parent grant (reach >= AND policy provably covered). Uses the

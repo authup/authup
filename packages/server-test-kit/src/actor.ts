@@ -9,7 +9,7 @@ import { randomUUID } from 'node:crypto';
 import type { Realm, User } from '@authup/core-kit';
 import { IdentityType, REALM_MASTER_NAME } from '@authup/core-kit';
 import type { ActorContext } from '@authup/server-kit';
-import { FakePermissionEvaluator } from './fake-permission-evaluator';
+import { FakePermissionEvaluator } from './fake-permission-evaluator.ts';
 
 export type FakeActorContext = ActorContext & {
     permissionEvaluator: FakePermissionEvaluator;

@@ -6,14 +6,14 @@
  */
 
 import type { AuthorizationCatalog, AuthorizationCheckPermissions } from '@authup/access';
-import { BaseAPI } from '../../base';
-import { buildRequestConfig } from '../../utils';
+import { BaseAPI } from '../../base.ts';
+import { buildRequestConfig } from '../../utils.ts';
 import type {
     AuthorizationCheckPayload,
     AuthorizationCheckResponse,
     AuthorizationRequestOptions,
     IAuthorizationAPI,
-} from './types';
+} from './types.ts';
 
 export class AuthorizationAPI extends BaseAPI implements IAuthorizationAPI {
     async get(options?: AuthorizationRequestOptions) : Promise<AuthorizationCatalog> {

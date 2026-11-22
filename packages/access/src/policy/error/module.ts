@@ -6,7 +6,7 @@
  */
 
 import { AuthupError, ErrorCode, markInstanceof } from '@authup/errors';
-import type { PolicyIssue } from '../issue';
+import type { PolicyIssue } from '../issue/index.ts';
 
 export const POLICY_ERROR_INSTANCE = Symbol.for('@authup/access/PolicyError');
 

@@ -23,7 +23,7 @@ import {
     setRequestPermissionEvaluator,
     setRequestScopes,
     useRequestPolicyGrants,
-} from '../../../../../src/adapters/http/request';
+} from '../../../../../src/adapters/http/request/index.ts';
 
 const grants : PermissionPolicyBinding[] = [{ permission: { name: 'test' }, realmScope: 'any' }];
 

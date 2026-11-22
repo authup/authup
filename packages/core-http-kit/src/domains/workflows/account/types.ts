@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2TokenIntrospectionResponse } from '@authup/specs';
-import type { APIRequestOptions } from '../../types-base';
+import type { APIRequestOptions } from '../../types-base.ts';
 
 /**
  * The account console's own session surface (plan 088).

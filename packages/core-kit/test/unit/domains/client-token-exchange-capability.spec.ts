@@ -7,7 +7,7 @@
 
 import { ValidatorGroup } from '@authup/kit';
 import { describe, expect, it } from 'vitest';
-import { ClientTokenExchangeCapabilityValidator, ClientTokenExchangeRealmScope } from '../../../src';
+import { ClientTokenExchangeCapabilityValidator, ClientTokenExchangeRealmScope } from '../../../src/index.ts';
 
 const ID = '6f4b5e0a-7f7b-4d43-9b0e-0a2f7a7a0001';
 

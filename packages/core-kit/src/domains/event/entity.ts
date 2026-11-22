@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityType } from '../identity';
-import type { Realm } from '../realm';
-import type { EventName, EventScope } from './constants';
+import type { IdentityType } from '../identity/index.ts';
+import type { Realm } from '../realm/index.ts';
+import type { EventName, EventScope } from './constants.ts';
 
 export interface Event {
     id: string;

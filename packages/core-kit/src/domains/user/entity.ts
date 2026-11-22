@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Path } from '../path';
-import type { Realm } from '../realm';
+import type { Path } from '../path/index.ts';
+import type { Realm } from '../realm/index.ts';
 
 export interface User {
     id: string;

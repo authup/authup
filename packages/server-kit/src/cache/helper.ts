@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildRedisKeyPath } from '../redis';
-import type { CacheKeyBuildOptions } from './types';
+import { buildRedisKeyPath } from '../redis/index.ts';
+import type { CacheKeyBuildOptions } from './types.ts';
 
 export function buildCacheKey(options: CacheKeyBuildOptions) {
     return buildRedisKeyPath(options);

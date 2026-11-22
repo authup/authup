@@ -7,7 +7,7 @@
 
 import { IssueCode, defineIssueItem } from '@ebec/core';
 import { describe, expect, it } from 'vitest';
-import { AuthupError } from '../../src';
+import { AuthupError } from '../../src/index.ts';
 
 describe('AuthupError issues', () => {
     it('should carry issues passed through the constructor', () => {

@@ -30,7 +30,7 @@ import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
 import { IFieldValidation } from '@ilingo/validup-vue';
-import { DEFAULT_BUTTON_SIZE, useTranslations, useTranslator } from '../../../core';
+import { DEFAULT_BUTTON_SIZE, useTranslations, useTranslator } from '../../../core/index.ts';
 
 // Standalone form (not a registered child) — uses its own URL
 // validator since `@authup/core-kit` doesn't ship a "discovery URL"

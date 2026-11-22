@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Role } from '../role';
-import type { Client } from '../client';
-import type { Realm } from '../realm';
+import type { Role } from '../role/index.ts';
+import type { Client } from '../client/index.ts';
+import type { Realm } from '../realm/index.ts';
 
 export interface ClientRole {
     id: string;

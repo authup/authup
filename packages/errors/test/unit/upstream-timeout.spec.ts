@@ -14,7 +14,7 @@ import {
     isAuthupError,
     isUpstreamTimeoutError,
     serializeError,
-} from '../../src';
+} from '../../src/index.ts';
 
 describe('UpstreamTimeoutError', () => {
     it('should carry the upstream_timeout code, served as a gateway timeout', () => {

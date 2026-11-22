@@ -22,7 +22,7 @@ import { VCButton } from '@vuecs/button';
 import { VCAlert } from '@vuecs/elements';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import type { UserAuthenticatorChallengeRequestOptions } from '@authup/core-http-kit';
-import { extractErrorContext, injectHTTPClient, useTranslations } from '../../../core';
+import { extractErrorContext, injectHTTPClient, useTranslations } from '../../../core/index.ts';
 
 // preference order for the initially-selected factor (most secure first)
 const KIND_PRIORITY : `${UserAuthenticatorKind}`[] = [

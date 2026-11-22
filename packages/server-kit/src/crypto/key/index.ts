@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './asymmetric';
-export * from './symmetric';
+export * from './asymmetric/index.ts';
+export * from './symmetric/index.ts';
 
-export * from './base';
+export * from './base.ts';

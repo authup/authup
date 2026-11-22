@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client } from '../client';
-import type { Session } from '../session';
+import type { Client } from '../client/index.ts';
+import type { Session } from '../session/index.ts';
 
 export type SessionTokenKind = 'access' | 'refresh';
 

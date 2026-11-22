@@ -10,8 +10,8 @@ import {
     THEME_ASSET_MOUNT_PATH,
     THEME_CSS_LAYER_NAME,
     THEME_LOGO_TOKENS,
-} from './constants';
-import type { ThemeManifest } from './types';
+} from './constants.ts';
+import type { ThemeManifest } from './types.ts';
 
 export function escapeHtml(value: string) : string {
     return value

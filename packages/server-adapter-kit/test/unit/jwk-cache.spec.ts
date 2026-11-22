@@ -17,10 +17,10 @@ import {
     it,
     vi,
 } from 'vitest';
-import type { TokenVerifierContext } from '../../src';
-import { RedisTokenCache, TokenVerifier } from '../../src';
-import { TokenPayload } from '../data/token';
-import { Faker } from '../utils';
+import type { TokenVerifierContext } from '../../src/index.ts';
+import { RedisTokenCache, TokenVerifier } from '../../src/index.ts';
+import { TokenPayload } from '../data/token.ts';
+import { Faker } from '../utils/index.ts';
 
 const KID_A = '0b6c3f0e-2a51-4d8e-9f3b-7a1c5e2d4f60';
 const KID_B = '1c7d4a1f-3b62-4e9f-a04c-8b2d6f3e5a71';

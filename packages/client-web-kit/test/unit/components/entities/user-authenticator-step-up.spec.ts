@@ -16,7 +16,7 @@ import {
 import AUserAuthenticatorEnroll from '../../../../src/components/entities/user-authenticator/AUserAuthenticatorEnroll.vue';
 import AUserAuthenticators from '../../../../src/components/entities/user-authenticator/AUserAuthenticators.vue';
 import AMfaChallengeForm from '../../../../src/components/workflows/mfa/AMfaChallengeForm.vue';
-import { mountKitComponent } from '../../../utils';
+import { mountKitComponent } from '../../../utils/index.ts';
 
 const { startRegistration } = vi.hoisted(() => ({ startRegistration: vi.fn() }));
 

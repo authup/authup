@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { createFakeClient } from '../../src/testing';
+import { createFakeClient } from '../../src/testing/index.ts';
 
 describe('src/domains/entities/client', () => {
     it('should rotate a secret through POST /clients/:id/secret and hand back the shown-once secret', async () => {

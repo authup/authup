@@ -7,7 +7,7 @@
 
 import type { AuthupErrorOptions } from '@authup/errors';
 import { AuthupError, ErrorCode, markInstanceof } from '@authup/errors';
-import type { PolicyIssue } from '../../policy';
+import type { PolicyIssue } from '../../policy/index.ts';
 
 export const PERMISSION_ERROR_INSTANCE = Symbol.for('@authup/access/PermissionError');
 

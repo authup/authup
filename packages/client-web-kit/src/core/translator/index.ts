@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './entity-name';
-export * from './error';
-export * from './helpers';
-export * from './install';
-export * from './locale';
-export * from './singleton';
+export * from './entity-name.ts';
+export * from './error.ts';
+export * from './helpers.ts';
+export * from './install.ts';
+export * from './locale.ts';
+export * from './singleton.ts';

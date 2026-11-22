@@ -13,8 +13,8 @@ import {
 } from 'vitest';
 import type { Client } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
-import { createFakeClient, expectClientError } from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+import { createFakeClient, expectClientError } from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 
 describe('refresh-token', () => {
     const suite = createTestApplication();

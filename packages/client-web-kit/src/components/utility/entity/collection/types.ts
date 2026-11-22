@@ -6,15 +6,15 @@
  */
 
 import type { ICondition, PaginationBuildInput } from '@rapiq/core';
-import type { EntityListQueryInput, QueryFiltersInput } from '../../../../core';
+import type { EntityListQueryInput, QueryFiltersInput } from '../../../../core/index.ts';
 import type {
     ComputedRef,
     MaybeRef,
     SetupContext,
     VNodeChild,
 } from 'vue';
-import type { EntitySocketManagerCreateContext } from '../socket';
-import type { EntityCollectionSlotName } from './constants';
+import type { EntitySocketManagerCreateContext } from '../socket/index.ts';
+import type { EntityCollectionSlotName } from './constants.ts';
 
 type Entity<T> = T extends Record<string, any> ? T : never;
 

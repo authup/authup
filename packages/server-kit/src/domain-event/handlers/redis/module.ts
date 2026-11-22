@@ -6,10 +6,10 @@
  */
 
 import type { Client } from 'redis-extension';
-import type { RedisClientCreateInput } from '../../../redis';
-import { createRedisClient } from '../../../redis';
-import type { DomainEventPublishContext, IDomainEventHandler } from '../../types';
-import { buildDomainEventChannelName, transformDomainEventData } from '../../utils';
+import type { RedisClientCreateInput } from '../../../redis/index.ts';
+import { createRedisClient } from '../../../redis/index.ts';
+import type { DomainEventPublishContext, IDomainEventHandler } from '../../types.ts';
+import { buildDomainEventChannelName, transformDomainEventData } from '../../utils.ts';
 
 export class DomainEventRedisHandler implements IDomainEventHandler {
     protected driver : Client;

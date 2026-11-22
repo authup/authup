@@ -16,12 +16,12 @@ import { VCIcon } from '@vuecs/icon';
 import { VCBreadcrumb } from '@vuecs/navigation';
 import type { Ref } from 'vue';
 import { computed, defineComponent, ref } from 'vue';
-import { buildRecordHeading } from '../../composables/record';
-import { LayoutSection } from '../../config/layout';
+import { buildRecordHeading } from '../../composables/record.ts';
+import { LayoutSection } from '../../config/layout/index.ts';
 import { useRoute, useRouter } from 'vue-router';
-import { buildEntityBreadcrumb, useSectionBreadcrumb } from '../../composables/breadcrumb';
-import { useErrorToast } from '../../composables/error';
-import { useToast } from '../../composables/toast';
+import { buildEntityBreadcrumb, useSectionBreadcrumb } from '../../composables/breadcrumb.ts';
+import { useErrorToast } from '../../composables/error.ts';
+import { useToast } from '../../composables/toast.ts';
 
 export default defineComponent({
     components: { VCBreadcrumb, VCIcon },

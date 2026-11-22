@@ -25,8 +25,8 @@ import {
     useRequestIdentityOrFail,
     useRequestScopes,
     useRequestToken,
-} from '../../../../../src/adapters/http/request';
-import { createFakeEvent } from './fake-event';
+} from '../../../../../src/adapters/http/request/index.ts';
+import { createFakeEvent } from './fake-event.ts';
 
 function clientIdentity(data: Partial<Client>): Identity {
     return { type: IdentityType.CLIENT, data: data as Client };

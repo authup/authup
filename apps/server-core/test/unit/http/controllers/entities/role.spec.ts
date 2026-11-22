@@ -12,7 +12,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 import { PermissionName } from '@authup/core-kit';
 import {
     createFakeClient,
@@ -21,7 +21,7 @@ import {
     expectClientError,
     expectPropertiesEqualToSrc,
     httpRequest,
-} from '../../../../utils';
+} from '../../../../utils/index.ts';
 
 describe('src/http/controllers/role', () => {
     const suite = createTestApplication();

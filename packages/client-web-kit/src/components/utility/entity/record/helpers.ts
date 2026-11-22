@@ -6,14 +6,14 @@
  */
 
 import type { ICondition } from '@rapiq/core';
-import type { EntityListQueryInput, QueryFieldsInput, QueryFiltersInput } from '../../../../core';
+import type { EntityListQueryInput, QueryFieldsInput, QueryFiltersInput } from '../../../../core/index.ts';
 import { unref } from 'vue';
 import type { PropType } from 'vue';
 import type {
     EntityManager,
     EntityVEmitOptions,
     EntityVSlotProps,
-} from './types';
+} from './types.ts';
 
 export function buildEntityVSlotProps<T>(
     input: EntityManager<T>,

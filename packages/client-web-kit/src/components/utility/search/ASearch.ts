@@ -7,9 +7,9 @@
 
 import type { PropType, SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { ListLoadFn, ListMeta } from '../entity';
-import type { SearchSlotProps } from './type';
-import { buildListSearch } from './module';
+import type { ListLoadFn, ListMeta } from '../entity/index.ts';
+import type { SearchSlotProps } from './type.ts';
+import { buildListSearch } from './module.ts';
 
 export const ASearch = defineComponent({
     props: {

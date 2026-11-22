@@ -9,8 +9,8 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
 import { ValidatorGroup } from '@authup/kit';
-import { UserAuthenticatorKind } from './constants';
-import type { UserAuthenticator } from './entity';
+import { UserAuthenticatorKind } from './constants.ts';
+import type { UserAuthenticator } from './entity.ts';
 
 export class UserAuthenticatorValidator extends Container<
     UserAuthenticator

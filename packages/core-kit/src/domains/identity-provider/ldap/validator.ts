@@ -8,9 +8,9 @@
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import { IdentityProviderProtocol } from '../constants';
-import { IdentityProviderEnrollmentAttributesValidator } from '../enrollment';
-import type { LdapIdentityProvider } from './types';
+import { IdentityProviderProtocol } from '../constants.ts';
+import { IdentityProviderEnrollmentAttributesValidator } from '../enrollment/index.ts';
+import type { LdapIdentityProvider } from './types.ts';
 
 export class IdentityProviderLDAPAttributesValidator extends Container<LdapIdentityProvider> {
     protected override initialize() {

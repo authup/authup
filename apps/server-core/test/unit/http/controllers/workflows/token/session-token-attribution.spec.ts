@@ -17,11 +17,11 @@ import { ScopeName, UserAuthenticatorKind } from '@authup/core-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
 import { SessionTokenEntity } from '../../../../../../src/adapters/database/domains/index.ts';
-import { MailInjectionKey } from '../../../../../../src/app';
-import { generateOAuth2CodeVerifier } from '../../../../../../src/core';
+import { MailInjectionKey } from '../../../../../../src/app/index.ts';
+import { generateOAuth2CodeVerifier } from '../../../../../../src/core/index.ts';
 import { FakeMailClient } from '../../../../core/helpers/index.ts';
-import { createFakeClient, createFakeUser, httpRequest } from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+import { createFakeClient, createFakeUser, httpRequest } from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 
 const REDIRECT_URI = 'https://example.com/redirect';
 

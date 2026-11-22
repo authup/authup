@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { CryptoAsymmetricAlgorithm, createAsymmetricKeyPair } from '../../src';
+import { CryptoAsymmetricAlgorithm, createAsymmetricKeyPair } from '../../src/index.ts';
 
 describe('sc/key-pair', () => {
     it('should create key-pair', async () => {

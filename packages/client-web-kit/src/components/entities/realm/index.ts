@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { ARealm } from './ARealm';
+export { ARealm } from './ARealm.ts';
 export { default as ARealmForm } from './ARealmForm.vue';
 export { default as ARealmGrid } from './ARealmGrid.vue';
-export { ARealmPicker } from './ARealmPicker';
-export { ARealms } from './ARealms';
+export { ARealmPicker } from './ARealmPicker.ts';
+export { ARealms } from './ARealms.ts';

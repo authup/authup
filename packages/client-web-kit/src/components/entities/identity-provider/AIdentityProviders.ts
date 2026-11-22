@@ -9,15 +9,15 @@ import { EntityType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { IdentityProvider } from '@authup/core-kit';
-import type { EntityCollectionVSlots } from '../../utility';
+import type { EntityCollectionVSlots } from '../../utility/index.ts';
 import { TranslatorTranslationEntityKey, TranslatorTranslationNamespace, TranslatorTranslationVuecsKey } from '@authup/i18n';
-import { useTranslation } from '../../../core';
+import { useTranslation } from '../../../core/index.ts';
 import {
 
     defineEntityCollectionManager,
     defineEntityCollectionVEmitOptions,
     defineEntityCollectionVProps,
-} from '../../utility';
+} from '../../utility/index.ts';
 
 export const AIdentityProviders = defineComponent({
     props: defineEntityCollectionVProps<IdentityProvider>(),

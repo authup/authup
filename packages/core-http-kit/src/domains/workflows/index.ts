@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './account';
-export * from './authorization';
-export * from './oauth2';
-export * from './schema';
-export * from './status';
+export * from './account/index.ts';
+export * from './authorization/index.ts';
+export * from './oauth2/index.ts';
+export * from './schema/index.ts';
+export * from './status/index.ts';

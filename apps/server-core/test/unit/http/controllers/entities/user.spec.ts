@@ -18,13 +18,13 @@ import { PermissionName, REALM_MASTER_NAME } from '@authup/core-kit';
 import type { UserCreatePayload } from '@authup/core-http-kit';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import { ErrorCode } from '@authup/errors';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     createFakeRealm,
     createFakeUser,
     expectClientError,
     expectPropertiesEqualToSrc,
-} from '../../../../utils';
+} from '../../../../utils/index.ts';
 
 describe('src/http/controllers/user', () => {
     const suite = createTestApplication();

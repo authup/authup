@@ -23,10 +23,10 @@ import {
     LoggerInjectionKey,
     ModuleName,
     createWorkerApplication,
-} from '../../../src/app';
-import type { Config } from '../../../src/app';
-import { normalizeConfig } from '../../../src/app/modules/config/read';
-import { PACKAGE_PATH } from '../../../src/path';
+} from '../../../src/app/index.ts';
+import type { Config } from '../../../src/app/index.ts';
+import { normalizeConfig } from '../../../src/app/modules/config/read.ts';
+import { PACKAGE_PATH } from '../../../src/path.ts';
 
 // The worker preset builds its own DatabaseModule, so the suite's database
 // module cannot be injected: the connection is steered through the config

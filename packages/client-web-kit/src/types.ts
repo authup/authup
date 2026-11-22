@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { HTTPClientInput } from './core/http-client/types';
+import type { HTTPClientInput } from './core/http-client/types.ts';
 import type { Pinia } from 'pinia';
-import type { HydrationStore } from './core/hydration';
-import type { StorePreferences } from './core/store';
+import type { HydrationStore } from './core/hydration/index.ts';
+import type { StorePreferences } from './core/store/index.ts';
 import type {
     AAttributeNamesPolicyForm,
     AClient,
@@ -70,7 +70,7 @@ import type {
     AUserRoleAssignment,
     AUserRoleAssignments,
     AUsers,
-} from './components';
+} from './components/index.ts';
 
 export type CookieOptions = {
     path?: string;

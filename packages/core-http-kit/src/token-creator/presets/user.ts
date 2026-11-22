@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ClientOptions } from '../../client';
-import { Client } from '../../client';
-import type { TokenCreator } from '../type';
+import type { ClientOptions } from '../../client/index.ts';
+import { Client } from '../../client/index.ts';
+import type { TokenCreator } from '../type.ts';
 
 export type UserTokenCreatorOptions = {
     client?: ClientOptions,

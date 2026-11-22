@@ -6,7 +6,7 @@
  */
 
 import { isObject } from 'smob';
-import type { RedisClient } from './module';
+import type { RedisClient } from './module.ts';
 
 export function isRedisClient(data: unknown) : data is RedisClient {
     return isObject(data) &&

@@ -22,7 +22,7 @@ import {
 import { storeToRefs } from 'pinia';
 import { defineComponent, onMounted, ref } from 'vue';
 import PageError from '../components/PageError.vue';
-import { useAccountToasts, usePageError } from './utils';
+import { useAccountToasts, usePageError } from './utils.ts';
 
 export default defineComponent({
     components: { AUserForm, PageError },

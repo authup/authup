@@ -16,10 +16,10 @@ import {
     vi,
 } from 'vitest';
 import { createApp, h } from 'vue';
-import type { CookieOptions } from '../../../../src/types';
-import { StoreAuthStatus, injectStore, installStore } from '../../../../src/core/store';
-import { install } from '../../../../src/module';
-import { buildAuthorizationCatalog } from '../../../utils/authorization';
+import type { CookieOptions } from '../../../../src/types.ts';
+import { StoreAuthStatus, injectStore, installStore } from '../../../../src/core/store/index.ts';
+import { install } from '../../../../src/module.ts';
+import { buildAuthorizationCatalog } from '../../../utils/authorization.ts';
 
 const defaultCookies = vi.hoisted(() => ({ removeCalls: [] as { key: string, options: Record<string, any> }[] }));
 

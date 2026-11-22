@@ -19,10 +19,10 @@ import { OAuth2ErrorCode } from '@authup/specs';
 import { VCAlert } from '@vuecs/elements';
 import { computed, defineComponent, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import LogoSVG from '../../components/svg/LogoSVG';
-import { useErrorToast } from '../../composables/error';
-import { injectAdminConsoleConfig } from '../../di';
-import { saveLoginRedirect } from '../../redirect';
+import LogoSVG from '../../components/svg/LogoSVG.ts';
+import { useErrorToast } from '../../composables/error.ts';
+import { injectAdminConsoleConfig } from '../../di.ts';
+import { saveLoginRedirect } from '../../redirect.ts';
 
 export default defineComponent({
     components: {

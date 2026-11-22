@@ -7,7 +7,7 @@
 
 import type { TTLCacheOptions } from '@isaacs/ttlcache';
 import { TTLCache } from '@isaacs/ttlcache';
-import type { CacheClearOptions, CacheSetOptions, ICache } from '../types';
+import type { CacheClearOptions, CacheSetOptions, ICache } from '../types.ts';
 
 export class MemoryCache implements ICache {
     protected instance : TTLCache<string, unknown>;

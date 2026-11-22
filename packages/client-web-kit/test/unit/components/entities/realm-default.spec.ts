@@ -18,10 +18,10 @@ import APermissionForm from '../../../../src/components/entities/permission/APer
 import APolicyForm from '../../../../src/components/entities/policy/APolicyForm.vue';
 import ARoleForm from '../../../../src/components/entities/role/ARoleForm.vue';
 import AScopeForm from '../../../../src/components/entities/scope/AScopeForm.vue';
-import { AFormSubmit } from '../../../../src/components/utility';
-import { injectStore } from '../../../../src/core';
-import { install } from '../../../../src/module';
-import type { Options } from '../../../../src/types';
+import { AFormSubmit } from '../../../../src/components/utility/index.ts';
+import { injectStore } from '../../../../src/core/index.ts';
+import { install } from '../../../../src/module.ts';
+import type { Options } from '../../../../src/types.ts';
 
 const REALM = { id: '5cb2b3fa-6a3a-4f1e-9a4f-2d1f6a1b0c11', name: 'tenant' };
 const MASTER_REALM = { id: '0f1e2d3c-4b5a-4968-8776-655443322110', name: 'master' };

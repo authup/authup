@@ -12,8 +12,8 @@ import { OAuth2UIColorMode } from '@authup/specs';
 import { useRequestCookie } from '@routup/basic/cookie';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IAppEvent } from 'routup';
-import { sanitizeRelativeRedirect } from './redirect';
-import type { Config } from './types';
+import { sanitizeRelativeRedirect } from './redirect.ts';
+import type { Config } from './types.ts';
 
 /**
  * The service holds no credential of its own. Its page data is what an

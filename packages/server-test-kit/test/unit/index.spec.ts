@@ -14,7 +14,7 @@ import {
     createDenyAllActor,
     createMasterRealmActor,
     createNonMasterRealmActor,
-} from '../../src';
+} from '../../src/index.ts';
 
 describe('FakeEntityRepository', () => {
     it('seeds and retrieves entities', async () => {

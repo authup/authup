@@ -9,9 +9,9 @@ import { buildEntityNamespaceName } from '@authup/core-kit';
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h, provide } from 'vue';
-import { defineEntitySocketManager } from '../../../../src/components/utility/entity';
-import { SocketClientSymbol } from '../../../../src/core/socket-manager';
-import { mountKitComponent } from '../../../utils';
+import { defineEntitySocketManager } from '../../../../src/components/utility/entity/index.ts';
+import { SocketClientSymbol } from '../../../../src/core/socket-manager/index.ts';
+import { mountKitComponent } from '../../../utils/index.ts';
 
 function mountSocketConsumer(realmId?: string) {
     const namespaces : string[] = [];

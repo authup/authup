@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './actor';
-export * from './fake-entity-repository';
-export * from './fake-permission-evaluator';
+export * from './actor.ts';
+export * from './fake-entity-repository.ts';
+export * from './fake-permission-evaluator.ts';

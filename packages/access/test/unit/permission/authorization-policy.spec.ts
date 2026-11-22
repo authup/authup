@@ -15,7 +15,7 @@ import {
     containsWithheldPolicy,
     projectAuthorizationPolicy,
     projectAuthorizationPolicyPartially,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 class WeekdayPolicyValidator extends Container<{ weekday: number }> {
     override initialize() {

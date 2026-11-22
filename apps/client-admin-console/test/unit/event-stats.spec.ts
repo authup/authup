@@ -10,8 +10,8 @@ import { createFakeClient } from '@authup/core-http-kit/testing';
 import { flushPromises, mount } from '@vue/test-utils';
 import { defineComponent, h, ref } from 'vue';
 import { describe, expect, it } from 'vitest';
-import type { EventStats } from '../../src/composables/event-stats';
-import { useEventStats } from '../../src/composables/event-stats';
+import type { EventStats } from '../../src/composables/event-stats.ts';
+import { useEventStats } from '../../src/composables/event-stats.ts';
 
 const REALM_ID = '4f0f6f2c-4a0b-4f4a-9a3f-4b7d4b4a1f11';
 const OTHER_REALM_ID = '9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d';

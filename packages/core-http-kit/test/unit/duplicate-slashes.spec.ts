@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { cleanDoubleSlashes } from '../../src/utils';
+import { cleanDoubleSlashes } from '../../src/utils/index.ts';
 
 describe('src/utils/duplicate-slashes.ts', () => {
     it('should build safe url', () => {

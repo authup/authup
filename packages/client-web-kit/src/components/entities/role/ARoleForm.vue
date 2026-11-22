@@ -14,7 +14,7 @@ import {
     injectStore,
     storeToRefs,
     useTranslations,
-} from '../../../core';
+} from '../../../core/index.ts';
 import type { PropType } from 'vue';
 import {
     computed,
@@ -26,14 +26,14 @@ import {
 } from 'vue';
 import type { Role } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput, VCFormTextarea } from '@vuecs/forms';
-import { useIsEditing, useUpdatedAt } from '../../../composables';
+import { useIsEditing, useUpdatedAt } from '../../../composables/index.ts';
 import {
     AFormSubmit,
     ANameInput,
     defineEntityManager,
     defineEntityVEmitOptions,
-} from '../../utility';
-import { ARealmPicker } from '../realm';
+} from '../../utility/index.ts';
+import { ARealmPicker } from '../realm/index.ts';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({

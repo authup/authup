@@ -8,7 +8,7 @@
 
 import { buildShutdownOptions } from '@authup/server-console-kit';
 import process from 'node:process';
-import { createApplication } from './application';
+import { createApplication } from './application.ts';
 
 /**
  * The standalone entry: the same application `authup start console auth`

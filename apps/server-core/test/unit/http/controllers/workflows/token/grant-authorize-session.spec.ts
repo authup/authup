@@ -14,13 +14,13 @@ import {
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import { ScopeName } from '@authup/core-kit';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
-import { generateOAuth2CodeVerifier } from '../../../../../../src/core';
+import { generateOAuth2CodeVerifier } from '../../../../../../src/core/index.ts';
 import {
     createFakeClient,
     createFakeUser,
     httpRequest,
-} from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+} from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 
 describe('grant-authorize session reuse', () => {
     const suite = createTestApplication();

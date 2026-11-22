@@ -5,7 +5,7 @@ import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
-import { onChange, useUpdatedAt } from '../../../../composables';
+import { onChange, useUpdatedAt } from '../../../../composables/index.ts';
 import AFormInputList from '../../../utility/form-input-list/AFormInputList.vue';
 
 export default defineComponent({

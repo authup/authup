@@ -13,8 +13,8 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createFakeClient, createFakeOAuth2IdentityProvider, httpRequest } from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+import { createFakeClient, createFakeOAuth2IdentityProvider, httpRequest } from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 
 /**
  * The pending login rides a cookie, so its Path decides whether the browser

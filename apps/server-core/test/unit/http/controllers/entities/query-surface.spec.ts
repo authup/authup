@@ -13,8 +13,8 @@ import {
 } from 'vitest';
 import { PermissionName } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
-import { createFakeRole, createFakeUser, httpRequest } from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+import { createFakeRole, createFakeUser, httpRequest } from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 /**
  * The widened filter surface, EXECUTED rather than decoded. Passing the

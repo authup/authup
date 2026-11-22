@@ -14,7 +14,7 @@ import {
 import { VCIcon } from '@vuecs/icon';
 import { computed, defineComponent } from 'vue';
 import { useRoute } from 'vue-router';
-import { injectAdminConsoleConfig } from './di';
+import { injectAdminConsoleConfig } from './di.ts';
 import AuthLayout from './layouts/auth.vue';
 import DefaultLayout from './layouts/default.vue';
 

@@ -16,7 +16,7 @@ import {
     RealmValidator,
     RoleValidator,
     UserValidator,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 describe('domains/validator-groups', () => {
     it('should run zero group-scoped mounts at a group-less run', async () => {

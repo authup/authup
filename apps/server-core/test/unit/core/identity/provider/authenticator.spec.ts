@@ -22,14 +22,14 @@ import { ValidationError, isValidationError } from '@authup/errors';
 import type { TokenGrantResponse } from '@hapic/oauth2';
 import { OAuth2Client } from '@hapic/oauth2';
 import { MemoryTransport } from 'hapic';
-import type { IIdentityProviderAccountManager, IdentityProviderIdentity } from '../../../../../src/core';
+import type { IIdentityProviderAccountManager, IdentityProviderIdentity } from '../../../../../src/core/index.ts';
 import {
     IdentityProviderAttributeMapper,
     IdentityProviderGoogleAuthenticator,
     IdentityProviderMapperOperation,
     IdentityProviderOAuth2Authenticator,
     IdentityProviderOpenIDAuthenticator,
-} from '../../../../../src/core';
+} from '../../../../../src/core/index.ts';
 
 function createProvider(data: Partial<OAuth2IdentityProvider> = {}) : OAuth2IdentityProvider {
     const realm: Realm = {

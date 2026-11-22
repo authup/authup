@@ -7,7 +7,7 @@
 
 import { inject, provide } from 'vue';
 import type { App } from 'vue';
-import type { HydrationPayload } from './contract';
+import type { HydrationPayload } from './contract.ts';
 
 const HYDRATION_PAYLOAD = Symbol.for('HYDRATION_PAYLOAD');
 

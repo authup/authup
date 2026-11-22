@@ -22,20 +22,20 @@ import type {
     OAuth2TokenIntrospectionResponse,
 } from '@authup/specs';
 import { REALM_MASTER_NAME } from '@authup/core-kit';
-import { extractErrorContext } from '../error';
-import { buildHTTPClient } from '../http-client/build';
-import { isServerRuntime } from '../hydration/value';
-import { StoreAuthOrigin, StoreAuthStatus } from './constants';
-import { StoreDispatcherEventName } from './dispatcher';
-import { StorePermissionEvaluator, createDenyAllPermissionEvaluator } from './permission-evaluator';
-import { createStorePreferenceSync } from './preferences';
+import { extractErrorContext } from '../error/index.ts';
+import { buildHTTPClient } from '../http-client/build.ts';
+import { isServerRuntime } from '../hydration/value.ts';
+import { StoreAuthOrigin, StoreAuthStatus } from './constants.ts';
+import { StoreDispatcherEventName } from './dispatcher/index.ts';
+import { StorePermissionEvaluator, createDenyAllPermissionEvaluator } from './permission-evaluator.ts';
+import { createStorePreferenceSync } from './preferences.ts';
 import type {
     RealmMinimal,
     StoreCreateContext,
     StoreLoginContext,
     StoreLogoutOptions,
     UserMinimal,
-} from './types';
+} from './types.ts';
 
 type InputFn = (...args: any[]) => Promise<any>;
 type OutputFn<F extends InputFn> = (...args: Parameters<F>) => Promise<Awaited<ReturnType<F>>>;

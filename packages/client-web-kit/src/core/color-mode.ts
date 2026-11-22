@@ -8,7 +8,7 @@
 import type { ColorMode } from '@vuecs/design';
 import { bindColorMode, isColorMode } from '@vuecs/design';
 import { computed } from 'vue';
-import { COLOR_MODE_COOKIE, COLOR_MODE_UNSET, createCookieRef } from './cookie';
+import { COLOR_MODE_COOKIE, COLOR_MODE_UNSET, createCookieRef } from './cookie.ts';
 
 /**
  * Non-Nuxt counterpart of `@vuecs/nuxt`'s `useColorMode()`: the shared

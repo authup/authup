@@ -13,7 +13,7 @@ import {
     it,
 } from 'vitest';
 import { z } from 'zod';
-import type { SchemaInput } from '../../src';
+import type { SchemaInput } from '../../src/index.ts';
 import {
     buildSchemaDefaults,
     buildSchemaJSONSchema,
@@ -27,7 +27,7 @@ import {
     readSchemaFromEnv,
     readSchemaFromFileTree,
     resolveSchemaData,
-} from '../../src';
+} from '../../src/index.ts';
 
 /**
  * The document shape every registry has: deployment-wide keys at the root,

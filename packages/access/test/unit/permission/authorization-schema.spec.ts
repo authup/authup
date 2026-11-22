@@ -7,7 +7,7 @@
 
 import { isValidupError } from 'validup';
 import { describe, expect, it } from 'vitest';
-import { parseAuthorizationEvaluatorInput } from '../../../src';
+import { parseAuthorizationEvaluatorInput } from '../../../src/index.ts';
 
 function createCatalog(permissions: Record<string, any>[], policies: Record<string, any> = {}) {
     return {

@@ -18,7 +18,7 @@ import { basic } from '@routup/basic';
 import path from 'node:path';
 import type { IApp } from 'routup';
 import { App, defineCoreHandler } from 'routup';
-import { ASSETS_PATH, HEALTH_PATH } from './constants';
+import { ASSETS_PATH, HEALTH_PATH } from './constants.ts';
 import {
     buildWorkflowPageData,
     createAPIClient,
@@ -27,10 +27,10 @@ import {
     readDeviceError,
     readDeviceFederatedLogin,
     readDeviceUserCode,
-} from './payload';
-import { assertRenderContract, createRenderPage } from './render';
-import { resolveDistPath } from './resolve';
-import type { Config, RenderPage } from './types';
+} from './payload.ts';
+import { assertRenderContract, createRenderPage } from './render.ts';
+import { resolveDistPath } from './resolve.ts';
+import type { Config, RenderPage } from './types.ts';
 
 const WORKFLOW_PAGES : {
     url: string,

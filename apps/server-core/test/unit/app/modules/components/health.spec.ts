@@ -8,12 +8,12 @@
 import { createNoopLogger } from '@authup/server-kit';
 import { Container } from 'eldin';
 import { describe, expect, it } from 'vitest';
-import { ApplicationBuilder } from '../../../../../src/app/builder';
-import type { ComponentsHealth, ComponentsModule } from '../../../../../src/app/modules/components';
-import { ComponentsInjectionKey, WorkerHealthModule } from '../../../../../src/app/modules/components';
-import { ConfigModule } from '../../../../../src/app/modules/config';
-import { normalizeConfig } from '../../../../../src/app/modules/config/read';
-import { LoggerInjectionKey } from '../../../../../src/app/modules/logger';
+import { ApplicationBuilder } from '../../../../../src/app/builder.ts';
+import type { ComponentsHealth, ComponentsModule } from '../../../../../src/app/modules/components/index.ts';
+import { ComponentsInjectionKey, WorkerHealthModule } from '../../../../../src/app/modules/components/index.ts';
+import { ConfigModule } from '../../../../../src/app/modules/config/index.ts';
+import { normalizeConfig } from '../../../../../src/app/modules/config/read.ts';
+import { LoggerInjectionKey } from '../../../../../src/app/modules/logger/index.ts';
 
 async function serve(health?: ComponentsHealth) {
     const container = new Container();

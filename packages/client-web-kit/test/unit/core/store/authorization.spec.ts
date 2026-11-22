@@ -9,14 +9,14 @@ import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { createFakeClient } from '@authup/core-http-kit/testing';
 import type { FakeClient, FakeHandlerMap, FakeRequest } from '@authup/core-http-kit/testing';
 import { describe, expect, it } from 'vitest';
-import { StoreAuthStatus, createStore, createStoreDispatcher } from '../../../../src/core/store';
+import { StoreAuthStatus, createStore, createStoreDispatcher } from '../../../../src/core/store/index.ts';
 import {
     AUTHORIZATION_REALM,
     AUTHORIZATION_SUBJECT,
     buildAuthorizationCatalog,
     buildAuthorizationCheck,
     buildAuthorizationGrants,
-} from '../../../utils/authorization';
+} from '../../../utils/authorization.ts';
 
 const INTROSPECTION = {
     active: true,

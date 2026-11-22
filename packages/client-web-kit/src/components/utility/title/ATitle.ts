@@ -8,9 +8,9 @@
 import type { PropType, SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import { TranslatorTranslationCommonKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { useTranslation } from '../../../core';
-import type { TitleSlotProps } from './type';
-import { buildTitle } from './module';
+import { useTranslation } from '../../../core/index.ts';
+import type { TitleSlotProps } from './type.ts';
+import { buildTitle } from './module.ts';
 
 export const ATitle = defineComponent({
     props: {

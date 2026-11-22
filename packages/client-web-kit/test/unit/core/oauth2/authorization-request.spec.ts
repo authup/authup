@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { buildConsoleLoginURL } from '../../../../src';
+import { buildConsoleLoginURL } from '../../../../src/index.ts';
 
 describe('core/oauth2/authorization-request', () => {
     describe('buildConsoleLoginURL', () => {

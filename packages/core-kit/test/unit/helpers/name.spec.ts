@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import { describe, expect, it } from 'vitest';
-import { isNameValid } from '../../../src';
+import { isNameValid } from '../../../src/index.ts';
 
 describe('src/helpers/name', () => {
     it('should be a valid name ("-" character)', () => {

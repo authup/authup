@@ -14,8 +14,8 @@ import {
     StoreDispatcherEventName,
     createStore,
     createStoreDispatcher,
-} from '../../../../src/core/store';
-import { buildAuthorizationCatalog } from '../../../utils/authorization';
+} from '../../../../src/core/store/index.ts';
+import { buildAuthorizationCatalog } from '../../../utils/authorization.ts';
 
 const GRANT_RESPONSE = {
     access_token: 'at-1',

@@ -13,11 +13,11 @@ import type {
     PolicyEvaluationContext,
     PolicyEvaluationResult,
     PolicyEvaluators,
-} from '../evaluation';
-import type { PolicyIssue } from '../issue';
-import { PolicyIssueCode, definePolicyIssueItem } from '../issue';
+} from '../evaluation/index.ts';
+import type { PolicyIssue } from '../issue/index.ts';
+import { PolicyIssueCode, definePolicyIssueItem } from '../issue/index.ts';
 import type { IPolicyEngine } from './types.ts';
-import { PolicyError, isPolicyError } from '../error';
+import { PolicyError, isPolicyError } from '../error/index.ts';
 import type { BasePolicy } from '../types.ts';
 
 // Cross-realm-safe extraction of an error message from an unknown thrown

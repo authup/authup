@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './error';
-export * from './helpers';
-export * from './provider';
-export * from './evaluator';
-export * from './realm-scope';
-export * from './record';
-export * from './types';
-export * from './authorization';
+export * from './error/index.ts';
+export * from './helpers/index.ts';
+export * from './provider/index.ts';
+export * from './evaluator/index.ts';
+export * from './realm-scope/index.ts';
+export * from './record/index.ts';
+export * from './types.ts';
+export * from './authorization/index.ts';

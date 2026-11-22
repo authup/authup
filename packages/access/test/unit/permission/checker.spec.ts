@@ -8,7 +8,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { ErrorCode } from '@authup/errors';
-import type { PermissionPolicyBinding } from '../../../src';
+import type { PermissionPolicyBinding } from '../../../src/index.ts';
 import {
     BuiltInPolicyType,
     PermissionError,
@@ -18,7 +18,7 @@ import {
     PolicyEngine,
     definePolicyData,
     definePolicyWithType,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 const abilities : PermissionPolicyBinding[] = [
     {

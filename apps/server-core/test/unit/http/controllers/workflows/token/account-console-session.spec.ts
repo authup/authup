@@ -22,9 +22,9 @@ import {
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2AuthorizationPrompt, OAuth2AuthorizationResponseType } from '@authup/specs';
 import { SessionTokenEntity } from '../../../../../../src/adapters/database/domains/index.ts';
-import { generateOAuth2CodeVerifier } from '../../../../../../src/core';
-import { createFakeUser } from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+import { generateOAuth2CodeVerifier } from '../../../../../../src/core/index.ts';
+import { createFakeUser } from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 
 type SystemClient = {
     entity: Client,

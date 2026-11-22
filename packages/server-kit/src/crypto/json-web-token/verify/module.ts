@@ -8,9 +8,9 @@
 import { JWKType, JWTError } from '@authup/specs';
 import type { JWTClaims, OAuth2TokenPayload } from '@authup/specs';
 import { Algorithm, verify } from '@node-rs/jsonwebtoken';
-import { AsymmetricKey, SymmetricKey, encodeSPKIToPem } from '../../key';
-import { createErrorForJWTError, transformJWTAlgorithmToInternal } from '../utils';
-import type { TokenVerifyOptions } from './types';
+import { AsymmetricKey, SymmetricKey, encodeSPKIToPem } from '../../key/index.ts';
+import { createErrorForJWTError, transformJWTAlgorithmToInternal } from '../utils.ts';
+import type { TokenVerifyOptions } from './types.ts';
 
 /**
  * Verify JWT.

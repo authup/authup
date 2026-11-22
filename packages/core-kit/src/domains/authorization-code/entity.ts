@@ -6,9 +6,9 @@
  */
 
 import type { OAuth2SubKind } from '@authup/specs';
-import type { Client } from '../client';
-import type { Realm } from '../realm';
-import type { SessionAuthMethod } from '../session/constants';
+import type { Client } from '../client/index.ts';
+import type { Realm } from '../realm/index.ts';
+import type { SessionAuthMethod } from '../session/constants.ts';
 
 export interface OAuth2AuthorizationCode {
     id: string,

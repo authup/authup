@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { SymmetricAlgorithm } from './constants';
+import { SymmetricAlgorithm } from './constants.ts';
 import type {
     SymmetricKeyCreateOptions,
     SymmetricKeyCreateOptionsInput,
     SymmetricKeyImportOptions,
     SymmetricKeyImportOptionsInput,
-} from './types';
+} from './types.ts';
 
 export function normalizeSymmetricKeyCreateOptions(
     input: SymmetricKeyCreateOptionsInput,

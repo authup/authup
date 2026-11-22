@@ -8,7 +8,7 @@
 import type { PermissionEvaluationContext } from '@authup/access';
 import type { Pinia } from 'pinia';
 import type { App, Ref } from 'vue';
-import type { Store } from '../store';
+import type { Store } from '../store/index.ts';
 
 export type PermissionCheckerReactiveFnCreateContext = {
     store?: Store,

@@ -29,7 +29,7 @@ import {
     storeToRefs,
     useTranslations,
     useTranslationsForNamespace,
-} from '../../../core';
+} from '../../../core/index.ts';
 import {
     type Client,
     ClientAuthMethod,
@@ -51,8 +51,8 @@ import {
     generateName,
     generateSecret,
 } from '@authup/kit';
-import { APathPicker } from '../path';
-import { ARealmPicker } from '../realm';
+import { APathPicker } from '../path/index.ts';
+import { ARealmPicker } from '../realm/index.ts';
 import APolicyPicker from '../policy/APolicyPicker.vue';
 import AClientSecretRotate from './AClientSecretRotate.vue';
 import {
@@ -62,8 +62,8 @@ import {
     ASecretInput,
     defineEntityManager,
     defineEntityVEmitOptions,
-} from '../../utility';
-import { useIsEditing, useUpdatedAt } from '../../../composables';
+} from '../../utility/index.ts';
+import { useIsEditing, useUpdatedAt } from '../../../composables/index.ts';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({

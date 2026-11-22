@@ -8,7 +8,7 @@
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import type { AttributeNamesPolicy } from './types';
+import type { AttributeNamesPolicy } from './types.ts';
 
 export class AttributeNamesPolicyValidator extends Container<AttributeNamesPolicy> {
     override initialize() {

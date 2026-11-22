@@ -16,8 +16,8 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
-import { createFakeClient, expectClientError } from '../../../../utils';
+import { createTestApplication } from '../../../../app/index.ts';
+import { createFakeClient, expectClientError } from '../../../../utils/index.ts';
 
 /**
  * `POST /clients/:id/secret` (plan 105, #3351): the ONLY writer of a secret

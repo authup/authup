@@ -14,8 +14,8 @@ import {
     StoreAuthStatus,
     createStore,
     createStoreDispatcher,
-} from '../../../../src/core/store';
-import { buildAuthorizationCatalog } from '../../../utils/authorization';
+} from '../../../../src/core/store/index.ts';
+import { buildAuthorizationCatalog } from '../../../utils/authorization.ts';
 
 function buildUser() : User {
     const now = new Date(0).toISOString();

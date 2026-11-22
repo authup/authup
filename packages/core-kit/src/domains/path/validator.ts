@@ -9,9 +9,9 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
 import { ValidatorGroup } from '@authup/kit';
-import { PATH_SEGMENT_MAX_LENGTH } from './constants';
-import type { Path } from './entity';
-import { isPathSegmentValid } from './utils';
+import { PATH_SEGMENT_MAX_LENGTH } from './constants.ts';
+import type { Path } from './entity.ts';
+import { isPathSegmentValid } from './utils.ts';
 
 export class PathValidator extends Container<
     Path

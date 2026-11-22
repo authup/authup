@@ -6,9 +6,9 @@
  */
 
 import { AuthupError } from '@authup/errors';
-import type { NameValidOptions } from '../../helpers';
-import { isNameValid } from '../../helpers';
-import { PATH_SEPARATOR } from './constants';
+import type { NameValidOptions } from '../../helpers/index.ts';
+import { isNameValid } from '../../helpers/index.ts';
+import { PATH_SEPARATOR } from './constants.ts';
 
 export function isPathSegmentValid(name: string, options: NameValidOptions = {}) : boolean {
     return isNameValid(name, options);

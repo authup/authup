@@ -7,11 +7,11 @@
 
 import type { Role } from '@authup/core-kit';
 import { describe, expect, it } from 'vitest';
-import { IdentityRoleProvider } from '../../../../../src/core/identity/role/module';
+import { IdentityRoleProvider } from '../../../../../src/core/identity/role/module.ts';
 import type {
     IClientRepository,
     IUserRepository,
-} from '../../../../../src/core/index';
+} from '../../../../../src/core/index.ts';
 
 function role(name: string, clientId: string | null): Role {
     return { name, clientId } as Role;

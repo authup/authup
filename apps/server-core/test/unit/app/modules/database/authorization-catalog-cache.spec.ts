@@ -30,9 +30,9 @@ import {
     UserPermissionEntity,
 } from '../../../../../src/adapters/database/domains/index.ts';
 import { DatabaseInjectionKey, TaggedCacheInjectionKey } from '../../../../../src/app/index.ts';
-import { createTestApplication } from '../../../../app';
-import { createFakeClient, createFakeRealm, createFakeRole } from '../../../../utils';
-import { createFakeTimePolicy } from '../../../../utils/domains/policy';
+import { createTestApplication } from '../../../../app/index.ts';
+import { createFakeClient, createFakeRealm, createFakeRole } from '../../../../utils/index.ts';
+import { createFakeTimePolicy } from '../../../../utils/domains/policy.ts';
 
 const DEFINITIONS_KEY = 'authorization/definitions';
 

@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { SymmetricCipher } from '../../src';
+import { SymmetricCipher } from '../../src/index.ts';
 
 const key = Buffer.alloc(32, 1).toBase64();
 

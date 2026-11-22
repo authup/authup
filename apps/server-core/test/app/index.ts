@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './database';
-export * from './factory';
-export * from './http';
-export * from './module';
-export * from './redis';
+export * from './database.ts';
+export * from './factory.ts';
+export * from './http.ts';
+export * from './module.ts';
+export * from './redis.ts';

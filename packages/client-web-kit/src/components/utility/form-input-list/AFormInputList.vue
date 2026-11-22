@@ -23,7 +23,7 @@ import { VCAlert } from '@vuecs/elements';
 import type { ButtonSize } from '@vuecs/button';
 import { VCButton } from '@vuecs/button';
 import { VCIcon } from '@vuecs/icon';
-import { DEFAULT_BUTTON_SIZE, useTranslations } from '../../../core';
+import { DEFAULT_BUTTON_SIZE, useTranslations } from '../../../core/index.ts';
 
 export default defineComponent({
     components: {

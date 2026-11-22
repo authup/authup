@@ -32,8 +32,8 @@ import type {
     TokenRevokeParameters,
 } from '@hapic/oauth2';
 import type { AuthorizationHeader, Response } from 'hapic';
-import type { APIRequestOptions } from '../../types-base';
-import type { StatusResponseFeatures } from '../status';
+import type { APIRequestOptions } from '../../types-base.ts';
+import type { StatusResponseFeatures } from '../status/index.ts';
 
 /**
  * The OAuth2 protocol mechanics (and their parameter shapes) are owned

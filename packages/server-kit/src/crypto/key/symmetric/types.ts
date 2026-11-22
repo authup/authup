@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { SymmetricAlgorithm } from './constants';
+import type { SymmetricAlgorithm } from './constants.ts';
 
 export type AESKeyCreateOptions = AesKeyGenParams & {
     name: `${SymmetricAlgorithm.AES_CBC}` |

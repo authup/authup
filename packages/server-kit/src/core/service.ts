@@ -8,8 +8,8 @@
 import type { PermissionPolicyBinding } from '@authup/access';
 import { BuiltInPolicyType, evaluateRecordUpdate } from '@authup/access';
 import { isObject } from '@authup/kit';
-import type { ActorContext } from './actor/types';
-import type { EntityUpdateEvaluationResolvers } from './types';
+import type { ActorContext } from './actor/types.ts';
+import type { EntityUpdateEvaluationResolvers } from './types.ts';
 
 export abstract class AbstractEntityService {
     /**

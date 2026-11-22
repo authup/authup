@@ -15,13 +15,13 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     createFakeClient,
     createFakeRealm,
     createFakeRole,
     httpRequest,
-} from '../../../../utils';
+} from '../../../../utils/index.ts';
 
 /**
  * A role attribute is gated by ROLE_UPDATE against the realm of the role it

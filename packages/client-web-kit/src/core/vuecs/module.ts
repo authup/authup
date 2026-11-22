@@ -6,8 +6,8 @@
  */
 
 import fontAwesome from '@vuecs/icons-font-awesome';
-import { buildSubmitButtonDefaults } from '../form';
-import type { VuecsInstallOptions, VuecsInstallOptionsInput } from './types';
+import { buildSubmitButtonDefaults } from '../form/index.ts';
+import type { VuecsInstallOptions, VuecsInstallOptionsInput } from './types.ts';
 
 /**
  * Build the `app.use(vuecs, ...)` install options shared by authup's UI

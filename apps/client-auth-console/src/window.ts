@@ -6,7 +6,7 @@
  */
 
 import { hasOwnProperty, isObject } from '@authup/kit';
-import type { HydrationPayload } from './contract';
+import type { HydrationPayload } from './contract.ts';
 
 export function getWindowPayload() : HydrationPayload {
     if (

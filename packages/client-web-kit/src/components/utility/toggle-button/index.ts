@@ -6,4 +6,4 @@
  */
 
 export { default as AToggleButton } from './AToggleButton.vue';
-export * from './module';
+export * from './module.ts';

@@ -7,7 +7,7 @@
 
 import { ValidatorGroup } from '@authup/kit';
 import { describe, expect, it } from 'vitest';
-import { PathValidator } from '../../../../src';
+import { PathValidator } from '../../../../src/index.ts';
 
 describe('domains/path/validator', () => {
     const validator = new PathValidator();

@@ -24,8 +24,8 @@ import { ClientAuthenticationHook, Client as HTTPClient } from '@authup/core-htt
 import { ErrorCode } from '@authup/errors';
 import type { OAuth2TokenPermission } from '@authup/specs';
 import { OAuth2TokenKind } from '@authup/specs';
-import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants';
-import { createTestApplication } from '../../../../../app';
+import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 import {
     createFakeClient,
     createFakeRole,
@@ -33,8 +33,8 @@ import {
     createScopeRestrictedClient,
     expectClientError,
     httpRequest,
-} from '../../../../../utils';
-import { createFakeTimePolicy } from '../../../../../utils/domains/policy';
+} from '../../../../../utils/index.ts';
+import { createFakeTimePolicy } from '../../../../../utils/domains/policy.ts';
 
 /**
  * RFC 7662 §2.2: a token that is not active or does not exist on this server

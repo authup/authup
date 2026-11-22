@@ -14,9 +14,9 @@ import {
 } from 'vitest';
 import { Client as HTTPClient } from '@authup/core-http-kit';
 import { SessionEntity } from '../../../../../src/adapters/database/domains/session/entity.ts';
-import { SESSION_COOKIE, hashSessionSecret } from '../../../../../src/core';
-import { createTestApplication } from '../../../../app';
-import { httpRequest } from '../../../../utils';
+import { SESSION_COOKIE, hashSessionSecret } from '../../../../../src/core/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
+import { httpRequest } from '../../../../utils/index.ts';
 
 const PUBLIC_URL = 'https://authup.test';
 const COOKIE = `__Host-${SESSION_COOKIE}`;

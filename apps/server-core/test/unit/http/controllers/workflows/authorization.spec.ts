@@ -35,15 +35,15 @@ import {
     UserEntity,
     UserPermissionEntity,
 } from '../../../../../src/adapters/database/domains/index.ts';
-import { OAuth2InjectionToken } from '../../../../../src/app/modules/oauth2/constants';
-import { createTestApplication } from '../../../../app';
+import { OAuth2InjectionToken } from '../../../../../src/app/modules/oauth2/constants.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     createFakeRealm,
     createFakeRole,
     createFakeUser,
     httpRequest,
-} from '../../../../utils';
-import { createFakeTimePolicy } from '../../../../utils/domains/policy';
+} from '../../../../utils/index.ts';
+import { createFakeTimePolicy } from '../../../../utils/domains/policy.ts';
 
 describe('src/http/controllers/workflows/authorization/*.ts', () => {
     const suite = createTestApplication();

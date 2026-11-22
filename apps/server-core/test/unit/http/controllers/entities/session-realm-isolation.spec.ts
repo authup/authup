@@ -14,8 +14,8 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
-import { createFakeClient, createFakeRealm, createFakeUser } from '../../../../utils';
+import { createTestApplication } from '../../../../app/index.ts';
+import { createFakeClient, createFakeRealm, createFakeUser } from '../../../../utils/index.ts';
 
 /**
  * Regression: a `SESSION_READ` holder scoped to its own realm must not be able

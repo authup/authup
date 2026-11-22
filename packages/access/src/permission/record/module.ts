@@ -6,14 +6,14 @@
  */
 
 import { isObject } from '@authup/kit';
-import { BuiltInPolicyType, PolicyData } from '../../policy';
-import { isPermissionError } from '../error';
-import type { IPermissionEvaluator, PermissionCompileContext, PermissionEvaluationContext } from '../evaluator';
+import { BuiltInPolicyType, PolicyData } from '../../policy/index.ts';
+import { isPermissionError } from '../error/index.ts';
+import type { IPermissionEvaluator, PermissionCompileContext, PermissionEvaluationContext } from '../evaluator/index.ts';
 import type {
     RecordEvaluationContext,
     RecordTarget,
     RecordUpdateEvaluationContext,
-} from './types';
+} from './types.ts';
 
 function describeName(name: string | string[]): string {
     return Array.isArray(name) ? name.join(', ') : name;

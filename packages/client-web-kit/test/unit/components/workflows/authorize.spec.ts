@@ -34,12 +34,12 @@ import AuthorizeSilentRedirect from '../../../../src/components/workflows/author
 import {
     StoreAuthOrigin,
     injectStore,
-} from '../../../../src/core';
-import type { Store } from '../../../../src/core';
-import { install } from '../../../../src/module';
-import type { Options } from '../../../../src/types';
-import { buildAuthorizationCatalog } from '../../../utils/authorization';
-import { createFakeHydrationStore } from '../../../utils/hydration';
+} from '../../../../src/core/index.ts';
+import type { Store } from '../../../../src/core/index.ts';
+import { install } from '../../../../src/module.ts';
+import type { Options } from '../../../../src/types.ts';
+import { buildAuthorizationCatalog } from '../../../utils/authorization.ts';
+import { createFakeHydrationStore } from '../../../utils/hydration.ts';
 
 const noop = () => undefined;
 const REALM = { id: 'realm-x', name: 'master' };

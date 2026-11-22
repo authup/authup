@@ -19,7 +19,7 @@ import {
     collectPathPages,
     readPathScopeQuery,
     reloadCollection,
-} from '../../src/composables/path-scope';
+} from '../../src/composables/path-scope.ts';
 
 const SALES_ID = '1f9b2c6d-8a4e-4c1b-9f2a-6d3e5c7b8a90';
 const BERLIN_ID = '2a8c3d7e-9b5f-4d2c-8e3b-7f4a6b5c9d01';

@@ -14,9 +14,9 @@ import {
     it,
     vi,
 } from 'vitest';
-import type { Config, ShutdownState } from '../../../src/app';
-import { ConfigInjectionKey, HTTPInjectionKey } from '../../../src/app';
-import { buildShutdownHandlersOptions, registerShutdownHandlers } from '../../../src/cli/commands/shutdown';
+import type { Config, ShutdownState } from '../../../src/app/index.ts';
+import { ConfigInjectionKey, HTTPInjectionKey } from '../../../src/app/index.ts';
+import { buildShutdownHandlersOptions, registerShutdownHandlers } from '../../../src/cli/commands/shutdown.ts';
 
 type SignalHandler = (signal: NodeJS.Signals) => Promise<void>;
 

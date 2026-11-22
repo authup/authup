@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPolicyEvaluator, PolicyEvaluationResult } from '../../evaluation';
-import { maybeInvertPolicyOutcome } from '../../helpers';
-import { BuiltInPolicyType } from '../constants';
-import { PermissionBindingPolicyValidator } from './validator';
+import type { IPolicyEvaluator, PolicyEvaluationResult } from '../../evaluation/index.ts';
+import { maybeInvertPolicyOutcome } from '../../helpers/index.ts';
+import { BuiltInPolicyType } from '../constants.ts';
+import { PermissionBindingPolicyValidator } from './validator.ts';
 
 export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
     protected validator: PermissionBindingPolicyValidator;

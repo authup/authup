@@ -9,9 +9,9 @@ import { EntityType } from '@authup/core-kit';
 import type { TransportRequest } from 'hapic';
 import { ErrorCode, MemoryTransport, isClientError } from 'hapic';
 import { describe, expect, it } from 'vitest';
-import type { APIRequestOptions, IClient } from '../../src';
-import { Client, isClientErrorDueTimeout } from '../../src';
-import { createFakeClient } from '../../src/testing';
+import type { APIRequestOptions, IClient } from '../../src/index.ts';
+import { Client, isClientErrorDueTimeout } from '../../src/index.ts';
+import { createFakeClient } from '../../src/testing/index.ts';
 
 type ArgsBuilder = (options: APIRequestOptions) => unknown[];
 

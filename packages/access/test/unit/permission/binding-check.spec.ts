@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { DecisionStrategy } from '@authup/kit';
-import { RealmScope, isPermissionPolicyBinding } from '../../../src';
+import { RealmScope, isPermissionPolicyBinding } from '../../../src/index.ts';
 
 type Case = [string, unknown];
 

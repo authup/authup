@@ -8,7 +8,7 @@
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import type { AttributesPolicy } from './types';
+import type { AttributesPolicy } from './types.ts';
 
 export class AttributesPolicyValidator<
     T extends Record<string, any> = Record<string, any>,

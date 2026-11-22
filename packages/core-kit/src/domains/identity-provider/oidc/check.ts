@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IdentityProviderProtocol } from '../constants';
-import type { IdentityProvider } from '../entity';
-import type { OpenIDIdentityProvider } from './types';
+import { IdentityProviderProtocol } from '../constants.ts';
+import type { IdentityProvider } from '../entity.ts';
+import type { OpenIDIdentityProvider } from './types.ts';
 
 export function isOpenIDIdentityProvider(input: IdentityProvider) : input is OpenIDIdentityProvider {
     return input.protocol === IdentityProviderProtocol.OIDC;

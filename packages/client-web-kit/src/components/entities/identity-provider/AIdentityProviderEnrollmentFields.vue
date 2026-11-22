@@ -15,8 +15,8 @@ import { useValidup } from '@validup/vue';
 import { VCFormGroup, VCFormSwitch } from '@vuecs/forms';
 import type { PropType } from 'vue';
 import { computed, defineComponent, reactive } from 'vue';
-import { onChange, useIsEditing, useUpdatedAt } from '../../../composables';
-import { assignFormProperties, useTranslations } from '../../../core';
+import { onChange, useIsEditing, useUpdatedAt } from '../../../composables/index.ts';
+import { assignFormProperties, useTranslations } from '../../../core/index.ts';
 import APolicyPicker from '../policy/APolicyPicker.vue';
 
 export default defineComponent({

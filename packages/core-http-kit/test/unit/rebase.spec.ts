@@ -11,7 +11,7 @@ import {
     Client,
     createBaseURLRewriter,
     createRebasedTransport,
-} from '../../src';
+} from '../../src/index.ts';
 
 const PROVIDER_ID = '11111111-1111-1111-1111-111111111111';
 

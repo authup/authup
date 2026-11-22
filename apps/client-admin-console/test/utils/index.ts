@@ -17,7 +17,7 @@ import { createPinia } from 'pinia';
 import { Suspense, defineComponent, h } from 'vue';
 import type { RouteRecordRaw } from 'vue-router';
 import { RouterView, createMemoryHistory, createRouter } from 'vue-router';
-import { routes as appRoutes } from '../../src/router';
+import { routes as appRoutes } from '../../src/router.ts';
 
 const noop = () => undefined;
 

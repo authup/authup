@@ -26,7 +26,7 @@ import { VCTimeago } from '@vuecs/timeago';
 import { useAlertDialog } from '@vuecs/overlays';
 import { computed, defineComponent, ref } from 'vue';
 import PageError from '../components/PageError.vue';
-import { isHttpURL, useAccountToasts, usePageError } from './utils';
+import { isHttpURL, useAccountToasts, usePageError } from './utils.ts';
 
 type ConsentGroup = {
     clientId: string,

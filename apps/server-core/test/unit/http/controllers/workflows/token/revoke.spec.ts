@@ -11,9 +11,9 @@ import {
     expect,
     it,
 } from 'vitest';
-import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants';
-import { createTestApplication } from '../../../../../app';
-import { httpRequest } from '../../../../../utils';
+import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
+import { httpRequest } from '../../../../../utils/index.ts';
 
 describe('token-revoke', () => {
     const suite = createTestApplication();

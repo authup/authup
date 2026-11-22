@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { AClientScope } from './AClientScope';
-export { AClientScopes } from './AClientScopes';
+export { AClientScope } from './AClientScope.ts';
+export { AClientScopes } from './AClientScopes.ts';
 export { default as AClientScopeAssignments } from './AClientScopeAssignments.vue';
 export { default as AClientScopeAssignment } from './AClientScopeAssignment.vue';

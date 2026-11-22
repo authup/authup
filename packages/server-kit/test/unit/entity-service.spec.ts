@@ -8,8 +8,8 @@
 import type { PermissionEvaluationContext } from '@authup/access';
 import { BuiltInPolicyType } from '@authup/access';
 import { describe, expect, it } from 'vitest';
-import { AbstractEntityService } from '../../src';
-import type { ActorContext } from '../../src';
+import { AbstractEntityService } from '../../src/index.ts';
+import type { ActorContext } from '../../src/index.ts';
 
 class Service extends AbstractEntityService {
     run(...args: Parameters<AbstractEntityService['evaluateUpdate']>) {

@@ -22,7 +22,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 import { BuiltInPolicyType, RealmScope } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
 import {
@@ -31,8 +31,8 @@ import {
     createFakeRole,
     createFakeUser,
     httpRequest,
-} from '../../../../utils';
-import { createFakeTimePolicy } from '../../../../utils/domains/policy';
+} from '../../../../utils/index.ts';
+import { createFakeTimePolicy } from '../../../../utils/domains/policy.ts';
 
 const DAY_BUCKET = /^\d{4}-\d{2}-\d{2}T00:00:00\.000Z$/;
 

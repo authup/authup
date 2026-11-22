@@ -6,7 +6,7 @@
  */
 
 import { isEqual } from 'smob';
-import type { AssignFormPropertiesOptions, PartialRecordWithNull } from './types';
+import type { AssignFormPropertiesOptions, PartialRecordWithNull } from './types.ts';
 
 /**
  * Hydrate form state from a data source (e.g. a loaded entity):

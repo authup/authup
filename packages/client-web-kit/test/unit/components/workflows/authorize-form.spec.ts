@@ -18,8 +18,8 @@ import {
     it,
 } from 'vitest';
 import AuthorizeForm from '../../../../src/components/workflows/authorize/AuthorizeForm.vue';
-import { install } from '../../../../src/module';
-import type { Options } from '../../../../src/types';
+import { install } from '../../../../src/module.ts';
+import type { Options } from '../../../../src/types.ts';
 
 const noop = () => undefined;
 

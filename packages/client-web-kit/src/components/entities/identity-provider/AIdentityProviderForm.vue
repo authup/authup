@@ -17,8 +17,8 @@ import type { IdentityProvider, IdentityProviderPreset } from '@authup/core-kit'
 import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import type { PropType } from 'vue';
 import { VCAlert } from '@vuecs/elements';
-import { onChange, useUpdatedAt } from '../../../composables';
-import { useTranslations } from '../../../core';
+import { onChange, useUpdatedAt } from '../../../composables/index.ts';
+import { useTranslations } from '../../../core/index.ts';
 import AIdentityProviderLdapForm from './AIdentityProviderLdapForm.vue';
 import AIdentityProviderPicker from './AIdentityProviderPicker.vue';
 import AIdentityProviderOAuth2Form from './AIdentityProviderOAuth2Form.vue';

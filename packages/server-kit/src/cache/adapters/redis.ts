@@ -7,9 +7,9 @@
 
 import type { Client } from 'redis-extension';
 import { ValueStore } from 'redis-extension';
-import type { RedisClient, RedisClientOptions } from '../../redis';
-import { createRedisClient } from '../../redis';
-import type { CacheClearOptions, CacheSetOptions, ICache } from '../types';
+import type { RedisClient, RedisClientOptions } from '../../redis/index.ts';
+import { createRedisClient } from '../../redis/index.ts';
+import type { CacheClearOptions, CacheSetOptions, ICache } from '../types.ts';
 
 const RENEW_IF_VALUE_SCRIPT = `
 if redis.call('get', KEYS[1]) == ARGV[1] then

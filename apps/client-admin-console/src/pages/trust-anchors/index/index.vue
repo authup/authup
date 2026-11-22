@@ -27,7 +27,7 @@ import { VCTimeago } from '@vuecs/timeago';
 import { storeToRefs } from 'pinia';
 import { computed, defineComponent } from 'vue';
 import EntityActivity from '../../../components/stats/EntityActivity.vue';
-import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
+import type { EntityStatsLoadFn } from '../../../composables/entity-stats.ts';
 
 // VCTable deliberately stays globally registered; see structure.md → Table usage.
 export default defineComponent({

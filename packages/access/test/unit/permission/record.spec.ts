@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { IPermissionEvaluator, IdentityPolicyData } from '../../../src';
+import type { IPermissionEvaluator, IdentityPolicyData } from '../../../src/index.ts';
 import {
     BuiltInPolicyType,
     PermissionEvaluator,
@@ -24,7 +24,7 @@ import {
     isPermissionError,
     reachesRecord,
     reachesRecordOneOf,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 const realmA = 'c641912c-21e5-4cb4-84b6-169e2b2bb023';
 const realmB = 'c641912c-21e5-4cb4-84b6-169e2b2bb024';

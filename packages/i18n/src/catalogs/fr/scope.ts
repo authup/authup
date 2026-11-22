@@ -6,7 +6,7 @@
  */
 
 import { ScopeName } from '@authup/core-kit';
-import type { NamespaceTranslations } from '../../types';
+import type { NamespaceTranslations } from '../../types.ts';
 
 export const TranslatorTranslationScopeFrench : NamespaceTranslations<`${ScopeName}`> = {
     [ScopeName.GLOBAL]: 'Accès complet',

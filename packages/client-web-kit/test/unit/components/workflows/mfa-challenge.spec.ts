@@ -12,8 +12,8 @@ import {
     it,
     vi,
 } from 'vitest';
-import { AMfaChallengeForm } from '../../../../src/components/workflows/mfa';
-import { mountKitComponent } from '../../../utils';
+import { AMfaChallengeForm } from '../../../../src/components/workflows/mfa/index.ts';
+import { mountKitComponent } from '../../../utils/index.ts';
 
 vi.mock('@simplewebauthn/browser', () => ({
     startAuthentication: vi.fn(async () => ({

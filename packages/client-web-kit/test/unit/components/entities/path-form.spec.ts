@@ -9,9 +9,9 @@ import type { FakeClient, FakeRequest } from '@authup/core-http-kit/testing';
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import APathForm from '../../../../src/components/entities/path/APathForm.vue';
-import { APathPicker, APaths } from '../../../../src/components/entities/path';
-import { AFormSubmit } from '../../../../src/components/utility';
-import { mountKitComponent } from '../../../utils';
+import { APathPicker, APaths } from '../../../../src/components/entities/path/index.ts';
+import { AFormSubmit } from '../../../../src/components/utility/index.ts';
+import { mountKitComponent } from '../../../utils/index.ts';
 
 const REALM_ID = '5cb2b3fa-6a3a-4f1e-9a4f-2d1f6a1b0c11';
 

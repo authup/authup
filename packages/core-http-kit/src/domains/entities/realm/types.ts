@@ -5,15 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats';
+import type { IEntitySchemaAPI, IEntityStatsAPI } from '../../stats/index.ts';
 import type {
     APIRequestOptions,
     DomainEntityID,
     EntityRecordMeta,
     EntityRecordResponse, 
     IEntityAPI, 
-} from '../../types-base';
-import type { EntityQueryInput } from '../../../helpers';
+} from '../../types-base.ts';
+import type { EntityQueryInput } from '../../../helpers/index.ts';
 
 import type { Realm } from '@authup/core-kit';
 

@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './constants';
-export * from './module';
-export * from './check';
-export * from './create';
-export * from './helpers';
-export * from './key-usages';
-export * from './normalize';
-export * from './types';
+export * from './constants.ts';
+export * from './module.ts';
+export * from './check.ts';
+export * from './create.ts';
+export * from './helpers/index.ts';
+export * from './key-usages.ts';
+export * from './normalize.ts';
+export * from './types.ts';

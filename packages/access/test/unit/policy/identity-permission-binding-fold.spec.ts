@@ -17,7 +17,7 @@ import type {
     PolicyEvaluationContext,
     PolicyEvaluationResult,
     PolicyWithType,
-} from '../../../src';
+} from '../../../src/index.ts';
 import {
     BuiltInPolicyType,
     IdentityPermissionBindingPolicyEvaluator,
@@ -26,7 +26,7 @@ import {
     definePolicyData,
     definePolicyEvaluationContext,
     definePolicyWithType,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 // The grants of a permission are a disjunction of `reach AND grant policy` terms
 // with the node's own `invert`. This spec checks the node against a reference

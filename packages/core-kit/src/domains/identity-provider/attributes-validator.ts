@@ -8,8 +8,8 @@
 import type { ObjectLiteral } from '@authup/kit';
 import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
-import { IdentityProviderLDAPAttributesValidator } from './ldap';
-import { IdentityProviderOAuth2AttributesValidator, IdentityProviderOAuth2PresetAttributesValidator } from './oauth2';
+import { IdentityProviderLDAPAttributesValidator } from './ldap/index.ts';
+import { IdentityProviderOAuth2AttributesValidator, IdentityProviderOAuth2PresetAttributesValidator } from './oauth2/index.ts';
 
 export class IdentityProviderAttributesValidator extends Container<ObjectLiteral> {
     constructor(options: ContainerOptions<ObjectLiteral> = {}) {

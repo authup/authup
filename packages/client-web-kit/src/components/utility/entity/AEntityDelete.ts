@@ -34,7 +34,7 @@ import {
     injectHTTPClient,
     useTranslation,
     wrapFnWithBusyState,
-} from '../../../core';
+} from '../../../core/index.ts';
 
 enum ElementType {
     BUTTON = 'button',

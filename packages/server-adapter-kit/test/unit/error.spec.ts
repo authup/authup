@@ -11,7 +11,7 @@ import { VouchlyError, VouchlyErrorCode, isVouchlyError } from 'vouchly';
 import { describe, expect, it } from 'vitest';
 import type { TransportRequest } from 'hapic';
 import { MemoryTransport, createClient, isClientErrorDueTimeout } from 'hapic';
-import { toVerificationError } from '../../src/verifier/error';
+import { toVerificationError } from '../../src/verifier/error.ts';
 
 async function createClientTimeoutError() : Promise<unknown> {
     const client = createClient({

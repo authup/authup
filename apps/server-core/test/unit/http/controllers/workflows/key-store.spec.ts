@@ -17,8 +17,8 @@ import { UserAuthenticatorKind } from '@authup/core-kit';
 import { JWKUse } from '@authup/specs';
 import { Secret, TOTP } from 'otpauth';
 import { KeyEntity, UserAuthenticatorEntity } from '../../../../../src/adapters/database/domains/index.ts';
-import { createFakeUser, httpRequest } from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+import { createFakeUser, httpRequest } from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 // KEK wrapping is deliberately NOT exercised here — the http suites share one
 // sqlite database across parallel spec files, and a wrapped master-realm

@@ -13,8 +13,8 @@ import {
     it,
 } from 'vitest';
 import type { Scope } from '@authup/core-kit';
-import { createTestApplication } from '../../../../app';
-import { createFakeScope, expectClientError, expectPropertiesEqualToSrc } from '../../../../utils';
+import { createTestApplication } from '../../../../app/index.ts';
+import { createFakeScope, expectClientError, expectPropertiesEqualToSrc } from '../../../../utils/index.ts';
 
 describe('src/http/controllers/scope', () => {
     const suite = createTestApplication();

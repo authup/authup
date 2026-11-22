@@ -25,7 +25,7 @@ import {
     ref,
     watch,
 } from 'vue';
-import { readThemeToken } from './theme';
+import { readThemeToken } from './theme.ts';
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 

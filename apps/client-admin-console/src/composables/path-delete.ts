@@ -9,7 +9,7 @@ import { buildPathScopeCondition } from '@authup/client-web-kit';
 import type { Client, Path, User } from '@authup/core-kit';
 import type { IClient } from '@authup/core-http-kit';
 import { and, defineQuery, eq } from '@rapiq/core';
-import { PATH_SCOPE_LIMIT, collectPathPages } from './path-scope';
+import { PATH_SCOPE_LIMIT, collectPathPages } from './path-scope.ts';
 
 /**
  * What deleting a folder takes with it.

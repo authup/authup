@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BasePolicy } from '../policy';
+import type { BasePolicy } from '../policy/index.ts';
 import type { DecisionStrategy } from '@authup/kit';
-import type { RealmScope } from './realm-scope';
+import type { RealmScope } from './realm-scope/index.ts';
 
 export type BasePermission = {
     name: string;

@@ -13,7 +13,7 @@ import {
     LOCALE_COOKIE,
     LOCALE_UNSET,
     readPreferenceCookie,
-} from '../cookie';
+} from '../cookie.ts';
 
 const STORAGE_KEY = 'authup.authorization-request';
 

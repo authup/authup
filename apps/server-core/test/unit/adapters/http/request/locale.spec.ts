@@ -6,8 +6,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { useRequestLocale } from '../../../../../src/adapters/http/request';
-import { createFakeEvent } from './fake-event';
+import { useRequestLocale } from '../../../../../src/adapters/http/request/index.ts';
+import { createFakeEvent } from './fake-event.ts';
 
 describe('useRequestLocale', () => {
     it('should resolve the explicit locale cookie', () => {

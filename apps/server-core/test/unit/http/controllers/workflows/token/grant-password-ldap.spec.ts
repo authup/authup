@@ -14,14 +14,14 @@ import {
 } from 'vitest';
 import type { IdentityProviderCreatePayload } from '@authup/core-http-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
-import { createTestApplication } from '../../../../../app';
+import { createTestApplication } from '../../../../../app/index.ts';
 import { createFakeLdapIdentityProvider } from '../../../../../utils/index.ts';
 import {
     createLdapTestClient,
     createLdapTestClientURL,
     createLdapTestUserAccount,
     dropLdapTestUserAccount,
-} from '../../../../adapters/ldap/helpers';
+} from '../../../../adapters/ldap/helpers.ts';
 
 describe('src/http/controllers/identity-provider', () => {
     const suite = createTestApplication();

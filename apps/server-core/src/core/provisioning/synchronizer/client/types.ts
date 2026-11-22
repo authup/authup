@@ -16,8 +16,8 @@ import type {
 } from '../../../entities/index.ts';
 import type { IPathRepository } from '../../../entities/path/types.ts';
 import type { ClientTokenExchangeCapabilityProvisioningEntity } from '../../entities/client-token-exchange-capability/index.ts';
-import type { PermissionProvisioningEntity } from '../../entities/permission';
-import type { RoleProvisioningEntity } from '../../entities/role';
+import type { PermissionProvisioningEntity } from '../../entities/permission/index.ts';
+import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
 import type { IProvisioningSynchronizer } from '../../types.ts';
 import type { IRealmCipher } from '../../../key/types.ts';
 

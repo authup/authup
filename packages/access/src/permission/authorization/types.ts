@@ -6,10 +6,10 @@
  */
 
 import type { DecisionStrategy } from '@authup/kit';
-import type { IdentityPolicyData, PolicyEvaluators, PolicyValidators } from '../../policy';
-import type { RealmScope } from '../realm-scope';
-import type { PermissionPolicyBinding } from '../types';
-import type { AUTHORIZATION_CHECK_GRANTED } from './constants';
+import type { IdentityPolicyData, PolicyEvaluators, PolicyValidators } from '../../policy/index.ts';
+import type { RealmScope } from '../realm-scope/index.ts';
+import type { PermissionPolicyBinding } from '../types.ts';
+import type { AUTHORIZATION_CHECK_GRANTED } from './constants.ts';
 
 /**
  * One policy tree node as it travels: the type's configuration keys (the output

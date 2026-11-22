@@ -14,8 +14,8 @@ import {
 } from 'vitest';
 import type { ClientPermission } from '@authup/core-kit';
 
-import { createTestApplication } from '../../../../app';
-import { createFakeClient, createFakePermission, expectPropertiesEqualToSrc } from '../../../../utils';
+import { createTestApplication } from '../../../../app/index.ts';
+import { createFakeClient, createFakePermission, expectPropertiesEqualToSrc } from '../../../../utils/index.ts';
 
 describe('src/http/controllers/client-permission', () => {
     const suite = createTestApplication();

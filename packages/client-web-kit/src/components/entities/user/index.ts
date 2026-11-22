@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { AUser } from './AUser';
+export { AUser } from './AUser.ts';
 export { default as AUserForm } from './AUserForm.vue';
-export { AUsers } from './AUsers';
+export { AUsers } from './AUsers.ts';
 export { default as AUserPasswordForm } from './AUserPasswordForm.vue';

@@ -6,8 +6,8 @@
  */
 
 import { AuthupError } from '@authup/errors';
-import type { NameValidOptions } from '../../helpers';
-import { isNameValid } from '../../helpers';
+import type { NameValidOptions } from '../../helpers/index.ts';
+import { isNameValid } from '../../helpers/index.ts';
 
 export function isUserNameValid(input: string, options: NameValidOptions = {}) : boolean {
     if (!isNameValid(input, options)) {

@@ -6,8 +6,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { readFromLocations } from '../../../../../src/adapters/http/request';
-import { createFakeEvent } from './fake-event';
+import { readFromLocations } from '../../../../../src/adapters/http/request/index.ts';
+import { createFakeEvent } from './fake-event.ts';
 
 describe('readFromLocations', () => {
     it('should read from a single location', async () => {

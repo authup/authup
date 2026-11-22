@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './authentication-hook';
+export * from './authentication-hook/index.ts';
 
-export * from './build';
-export * from './singleton';
-export * from './install';
-export * from './types';
+export * from './build.ts';
+export * from './singleton.ts';
+export * from './install.ts';
+export * from './types.ts';

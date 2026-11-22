@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { HydrationStore } from '../../src';
+import type { HydrationStore } from '../../src/index.ts';
 
 export type FakeHydrationStore = {
     entries: Record<string, any>,

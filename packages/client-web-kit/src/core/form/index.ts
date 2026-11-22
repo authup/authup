@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './defaults';
-export * from './properties';
-export * from './types';
+export * from './defaults.ts';
+export * from './properties.ts';
+export * from './types.ts';

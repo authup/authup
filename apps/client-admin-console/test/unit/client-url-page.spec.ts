@@ -9,10 +9,10 @@ import type { Client } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h } from 'vue';
-import type { AdminConsoleConfig } from '../../src/config';
-import { provideAdminConsoleConfig } from '../../src/di';
+import type { AdminConsoleConfig } from '../../src/config.ts';
+import { provideAdminConsoleConfig } from '../../src/di.ts';
 import UrlPage from '../../src/pages/clients/[id]/url.vue';
-import { mountPage } from '../utils';
+import { mountPage } from '../utils/index.ts';
 
 const CLIENT_ID = '3f5a1c2e-7d4b-4e8a-9c0f-1a2b3c4d5e6f';
 const REALM_ID = '5cb2b3fa-6a3a-4f1e-9a4f-2d1f6a1b0c11';

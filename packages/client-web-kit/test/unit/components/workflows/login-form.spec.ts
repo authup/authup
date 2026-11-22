@@ -8,9 +8,9 @@
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import type { FakeClient } from '@authup/core-http-kit/testing';
-import { AIdentityProviders, ARealmPicker } from '../../../../src/components/entities';
+import { AIdentityProviders, ARealmPicker } from '../../../../src/components/entities/index.ts';
 import AMfaChallengeForm from '../../../../src/components/workflows/mfa/AMfaChallengeForm.vue';
-import { findTokenRequest, mountLoginForm } from '../../../utils';
+import { findTokenRequest, mountLoginForm } from '../../../utils/index.ts';
 
 type LoginFormWrapper = ReturnType<typeof mountLoginForm>['wrapper'];
 

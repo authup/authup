@@ -26,7 +26,7 @@ import { VCButton } from '@vuecs/button';
 import { VCAlert } from '@vuecs/elements';
 import { VCFormGroup, VCFormInput, useSubmitButton } from '@vuecs/forms';
 import { IFieldValidation } from '@ilingo/validup-vue';
-import { injectHTTPClient, useTranslations, wrapFnWithBusyState } from '../../../core';
+import { injectHTTPClient, useTranslations, wrapFnWithBusyState } from '../../../core/index.ts';
 
 class ActivateValidator extends Container<{ token: string }> {
     protected override initialize() {

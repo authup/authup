@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { resolveAccountConsoleConfig } from '../../src/config';
+import { resolveAccountConsoleConfig } from '../../src/config.ts';
 
 describe('src/config', () => {
     it('should apply injected configuration', () => {

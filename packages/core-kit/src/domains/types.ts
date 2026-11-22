@@ -5,36 +5,36 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client } from './client';
-import type { ClientPermission } from './client-permission';
-import type { ClientRole } from './client-role';
-import type { ClientScope } from './client-scope';
-import type { ClientTokenExchangeCapability } from './client-token-exchange-capability';
-import type { Consent } from './consent';
-import type { EntityType } from './contstants';
-import type { Event } from './event';
-import type { IdentityProvider } from './identity-provider';
-import type { IdentityProviderAccount } from './identity-provider-account';
-import type { IdentityProviderAttribute } from './identity-provider-attribute';
-import type { IdentityProviderRoleMapping } from './identity-provider-role-mapping';
-import type { Key } from './key';
-import type { Path } from './path';
-import type { Permission } from './permission';
-import type { PermissionPolicy } from './permission-policy';
-import type { Policy } from './policy';
-import type { PolicyAttribute } from './policy-attribute';
-import type { Realm } from './realm';
-import type { Role } from './role';
-import type { RoleAttribute } from './role-attribute';
-import type { RolePermission } from './role-permission';
-import type { Scope } from './scope';
-import type { Session } from './session';
-import type { SessionToken } from './session-token';
-import type { TrustAnchor } from './trust-anchor';
-import type { User } from './user';
-import type { UserAttribute } from './user-attribute';
-import type { UserPermission } from './user-permission';
-import type { UserRole } from './user-role';
+import type { Client } from './client/index.ts';
+import type { ClientPermission } from './client-permission/index.ts';
+import type { ClientRole } from './client-role/index.ts';
+import type { ClientScope } from './client-scope/index.ts';
+import type { ClientTokenExchangeCapability } from './client-token-exchange-capability/index.ts';
+import type { Consent } from './consent/index.ts';
+import type { EntityType } from './contstants.ts';
+import type { Event } from './event/index.ts';
+import type { IdentityProvider } from './identity-provider/index.ts';
+import type { IdentityProviderAccount } from './identity-provider-account/index.ts';
+import type { IdentityProviderAttribute } from './identity-provider-attribute/index.ts';
+import type { IdentityProviderRoleMapping } from './identity-provider-role-mapping/index.ts';
+import type { Key } from './key/index.ts';
+import type { Path } from './path/index.ts';
+import type { Permission } from './permission/index.ts';
+import type { PermissionPolicy } from './permission-policy/index.ts';
+import type { Policy } from './policy/index.ts';
+import type { PolicyAttribute } from './policy-attribute/index.ts';
+import type { Realm } from './realm/index.ts';
+import type { Role } from './role/index.ts';
+import type { RoleAttribute } from './role-attribute/index.ts';
+import type { RolePermission } from './role-permission/index.ts';
+import type { Scope } from './scope/index.ts';
+import type { Session } from './session/index.ts';
+import type { SessionToken } from './session-token/index.ts';
+import type { TrustAnchor } from './trust-anchor/index.ts';
+import type { User } from './user/index.ts';
+import type { UserAttribute } from './user-attribute/index.ts';
+import type { UserPermission } from './user-permission/index.ts';
+import type { UserRole } from './user-role/index.ts';
 
 type EntityTypeMapRaw = {
     [EntityType.CLIENT]: Client,

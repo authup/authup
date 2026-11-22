@@ -6,9 +6,9 @@
  */
 
 import type { App } from 'vue';
-import { inject } from '../../inject';
-import { provide } from '../../provide';
-import type { StoreDispatcher } from './types';
+import { inject } from '../../inject.ts';
+import { provide } from '../../provide.ts';
+import type { StoreDispatcher } from './types.ts';
 
 const sym = Symbol.for('AuthupStoreEventBus');
 

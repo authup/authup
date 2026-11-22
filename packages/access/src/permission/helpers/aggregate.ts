@@ -6,14 +6,14 @@
  */
 
 import { DecisionStrategy } from '@authup/kit';
-import type { BasePolicy } from '../../policy';
-import { normalizeRealmScope } from '../realm-scope';
+import type { BasePolicy } from '../../policy/index.ts';
+import { normalizeRealmScope } from '../realm-scope/index.ts';
 import type {
     PermissionGrant,
     PermissionPolicyBinding,
     PermissionPolicyBindingAggregated,
-} from '../types';
-import { buildPermissionKey } from './key';
+} from '../types.ts';
+import { buildPermissionKey } from './key.ts';
 
 type CompositePolicy = BasePolicy & {
     decisionStrategy?: `${DecisionStrategy}`,

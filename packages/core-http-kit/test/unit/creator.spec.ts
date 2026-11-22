@@ -16,7 +16,7 @@ import {
     OAuth2TokenAPI,
     createClientTokenCreator,
     createUserTokenCreator,
-} from '../../src';
+} from '../../src/index.ts';
 
 const tokenGrantResponse : OAuth2TokenGrantResponse = {
     token_type: 'bearer',

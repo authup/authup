@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EventCallback, EventTarget } from './types';
+import type { EventCallback, EventTarget } from './types.ts';
 
 export function isEventTarget(
     input: unknown,

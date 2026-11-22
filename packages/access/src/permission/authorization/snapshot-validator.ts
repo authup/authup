@@ -8,9 +8,9 @@
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import { isPermissionPolicyBinding } from '../helpers';
-import type { PermissionPolicyBinding } from '../types';
-import type { AuthorizationSnapshot } from './types';
+import { isPermissionPolicyBinding } from '../helpers/index.ts';
+import type { PermissionPolicyBinding } from '../types.ts';
+import type { AuthorizationSnapshot } from './types.ts';
 
 /**
  * One binding of a snapshot, checked shallowly: its policy trees are

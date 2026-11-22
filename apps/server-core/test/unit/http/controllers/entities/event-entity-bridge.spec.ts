@@ -21,14 +21,14 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     createFakeClient,
     createFakeRealm,
     createFakeRole,
     createFakeUser,
     httpRequest,
-} from '../../../../utils';
+} from '../../../../utils/index.ts';
 
 const SECRET_KEY_REGEX = /(password|secret|hash|token|credential)/i;
 const ADMIN_AUTHORIZATION = `Basic ${Buffer.from('admin:start123').toBase64()}`;

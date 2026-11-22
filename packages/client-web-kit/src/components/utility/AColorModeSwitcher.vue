@@ -11,7 +11,7 @@ import {
     TranslatorTranslationCommonKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { useTranslations } from '../../core';
+import { useTranslations } from '../../core/index.ts';
 
 // Presentational on purpose: color-mode *storage* is framework-specific
 // (the admin console uses @vuecs/nuxt's cookie-backed useColorMode()), so the

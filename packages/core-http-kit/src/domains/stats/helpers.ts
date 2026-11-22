@@ -6,8 +6,8 @@
  */
 
 import type { ObjectLiteral } from '@authup/kit';
-import { buildQueryString } from '../../helpers';
-import type { EntityStatsQuery } from './types';
+import { buildQueryString } from '../../helpers/index.ts';
+import type { EntityStatsQuery } from './types.ts';
 
 /**
  * The `@stats` url of an entity collection. Filters, groups and aggregates

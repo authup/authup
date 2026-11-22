@@ -19,16 +19,16 @@ import {
 import { read } from 'locter';
 import fs from 'node:fs';
 import path from 'node:path';
-import { CONTRACT_VERSION, VITE_BASE } from './constants';
+import { CONTRACT_VERSION, VITE_BASE } from './constants.ts';
 import {
     createAPIClient,
     readRenderCookies,
     readUIColorModeHint,
     readUILocalesHint,
-} from './payload';
-import { resolveDistPath } from './resolve';
-import { createSessionForwardingGuard } from './session';
-import type { RenderPage } from './types';
+} from './payload.ts';
+import { resolveDistPath } from './resolve.ts';
+import { createSessionForwardingGuard } from './session.ts';
+import type { RenderPage } from './types.ts';
 
 /**
  * Refuse a bundle built against another render contract at boot, naming the

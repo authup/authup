@@ -10,7 +10,7 @@ import { DecisionStrategy } from '@authup/kit';
 import { createValidator } from '@validup/zod';
 import { Container, ValidupError } from 'validup';
 import { z } from 'zod';
-import { RealmScope } from '../realm-scope';
+import { RealmScope } from '../realm-scope/index.ts';
 import type {
     AuthorizationCatalog,
     AuthorizationEvaluatorInput,
@@ -18,7 +18,7 @@ import type {
     AuthorizationGrant,
     AuthorizationSnapshotInput,
     AuthorizationSnapshotInputParsed,
-} from './types';
+} from './types.ts';
 
 const id = z.string().min(1);
 const namespaceId = id.nullable();

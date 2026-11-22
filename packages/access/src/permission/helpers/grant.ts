@@ -6,9 +6,9 @@
  */
 
 import { isEqual } from 'smob';
-import type { BasePolicy } from '../../policy';
-import { compareRealmScope } from '../realm-scope';
-import type { PermissionGrant } from '../types';
+import type { BasePolicy } from '../../policy/index.ts';
+import { compareRealmScope } from '../realm-scope/index.ts';
+import type { PermissionGrant } from '../types.ts';
 
 /**
  * Policy fields that do NOT affect evaluation — persisted identity, audit and label columns plus

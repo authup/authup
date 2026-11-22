@@ -8,9 +8,9 @@
 import { JWKType, JWTError } from '@authup/specs';
 import type { JWTClaims } from '@authup/specs';
 import { Algorithm, sign } from '@node-rs/jsonwebtoken';
-import { AsymmetricKey, SymmetricKey, encodePKCS8ToPEM } from '../../key';
-import { transformJWTAlgorithmToInternal } from '../utils';
-import type { TokenSignOptions } from './types';
+import { AsymmetricKey, SymmetricKey, encodePKCS8ToPEM } from '../../key/index.ts';
+import { transformJWTAlgorithmToInternal } from '../utils.ts';
+import type { TokenSignOptions } from './types.ts';
 
 const getUtcTimestamp = () => Math.floor(new Date().getTime() / 1000);
 

@@ -18,7 +18,7 @@ import type {
     PolicyEvaluationContext,
     PolicyEvaluationResult,
     PolicyWithType,
-} from '../../../src';
+} from '../../../src/index.ts';
 import {
     BuiltInPolicyType,
     IdentityPermissionBindingPolicyEvaluator,
@@ -31,7 +31,7 @@ import {
     definePolicyEvaluationContext,
     definePolicyIssueItem,
     definePolicyWithType,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 // ---------------------------------------------------------------------
 // The truth table

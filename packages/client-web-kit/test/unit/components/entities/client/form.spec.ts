@@ -16,9 +16,9 @@ import { VCFormRadioGroup, install as installForms } from '@vuecs/forms';
 import { createPinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import AClientForm from '../../../../../src/components/entities/client/AClientForm.vue';
-import { AFormSubmit } from '../../../../../src/components/utility';
-import { install } from '../../../../../src/module';
-import type { Options } from '../../../../../src/types';
+import { AFormSubmit } from '../../../../../src/components/utility/index.ts';
+import { install } from '../../../../../src/module.ts';
+import type { Options } from '../../../../../src/types.ts';
 
 const noop = () => undefined;
 

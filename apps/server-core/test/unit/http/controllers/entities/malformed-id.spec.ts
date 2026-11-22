@@ -12,8 +12,8 @@ import {
     it,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
-import { httpRequest } from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+import { httpRequest } from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 type Case = {
     method: 'GET' | 'POST' | 'DELETE',

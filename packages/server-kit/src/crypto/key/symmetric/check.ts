@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { SymmetricAlgorithm } from './constants';
+import { SymmetricAlgorithm } from './constants.ts';
 
 export function isSymmetricAlgorithm(input: string) : input is SymmetricAlgorithm {
     return (Object.values(SymmetricAlgorithm) as string[]).includes(input);

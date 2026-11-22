@@ -5,15 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EntityQueryInput } from '../../../helpers';
-import { buildQueryString } from '../../../helpers';
+import type { EntityQueryInput } from '../../../helpers/index.ts';
+import { buildQueryString } from '../../../helpers/index.ts';
 import type { Event } from '@authup/core-kit';
-import { BaseAPI } from '../../base';
-import { buildStatsURL } from '../../stats';
-import type { EntitySchemaResponse } from '../../stats';
-import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
-import type { EventStatsQuery, EventStatsResponse, IEventAPI } from './types';
-import { buildRequestConfig } from '../../utils';
+import { BaseAPI } from '../../base.ts';
+import { buildStatsURL } from '../../stats/index.ts';
+import type { EntitySchemaResponse } from '../../stats/index.ts';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base.ts';
+import type { EventStatsQuery, EventStatsResponse, IEventAPI } from './types.ts';
+import { buildRequestConfig } from '../../utils.ts';
 
 export class EventAPI extends BaseAPI implements IEventAPI {
     async getStats(query: EventStatsQuery = {}, options?: APIRequestOptions): Promise<EventStatsResponse> {

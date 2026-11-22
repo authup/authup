@@ -17,10 +17,10 @@ import {
     it,
 } from 'vitest';
 import { PolicyEntity } from '../../../../../../src/adapters/database/domains/policy/entity.ts';
-import { DatabaseInjectionKey } from '../../../../../../src/app/modules/database';
-import { createTestApplication } from '../../../../../app';
-import { createFakeRealm, createFakeUser, expectClientError } from '../../../../../utils';
-import { createFakeTimePolicy } from '../../../../../utils/domains/policy';
+import { DatabaseInjectionKey } from '../../../../../../src/app/modules/database/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
+import { createFakeRealm, createFakeUser, expectClientError } from '../../../../../utils/index.ts';
+import { createFakeTimePolicy } from '../../../../../utils/domains/policy.ts';
 
 const RUN = randomUUID().slice(0, 8);
 

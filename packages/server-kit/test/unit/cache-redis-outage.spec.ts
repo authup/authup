@@ -12,7 +12,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { RedisCache } from '../../src';
+import { RedisCache } from '../../src/index.ts';
 
 // Nothing listens on port 1, and the client neither retries nor queues, so
 // every command fails with a connection error at once.

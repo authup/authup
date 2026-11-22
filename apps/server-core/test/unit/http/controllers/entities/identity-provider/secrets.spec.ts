@@ -18,12 +18,12 @@ import {
 import { IdentityProviderAttributeEntity } from '../../../../../../src/adapters/database/index.ts';
 import { DatabaseInjectionKey } from '../../../../../../src/app/modules/database/index.ts';
 import { isRealmCipherBlob } from '../../../../../../src/core/index.ts';
-import { createTestApplication } from '../../../../../app';
+import { createTestApplication } from '../../../../../app/index.ts';
 import {
     createFakeLdapIdentityProvider,
     createFakeOAuth2IdentityProvider,
     expectClientError,
-} from '../../../../../utils';
+} from '../../../../../utils/index.ts';
 
 const suite = createTestApplication();
 

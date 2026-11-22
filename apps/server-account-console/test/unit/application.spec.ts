@@ -16,7 +16,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createApplication } from '../../src';
+import { createApplication } from '../../src/index.ts';
 
 const MARKER = '/*INJECTED-THEME-MARKER*/';
 

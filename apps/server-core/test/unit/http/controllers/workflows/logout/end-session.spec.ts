@@ -18,14 +18,14 @@ import {
     OAuth2AuthorizationCodeChallengeMethod,
     OAuth2AuthorizationResponseType,
 } from '@authup/specs';
-import { buildOAuth2CodeChallenge, generateOAuth2CodeVerifier } from '../../../../../../src/core';
+import { buildOAuth2CodeChallenge, generateOAuth2CodeVerifier } from '../../../../../../src/core/index.ts';
 import {
     createFakeClient,
     createFakeRealm,
     createFakeUser,
     httpRequest,
-} from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+} from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 
 const REDIRECT_PATTERN = 'https://app.example.com/**';
 const REDIRECT_URI = 'https://app.example.com/cb';

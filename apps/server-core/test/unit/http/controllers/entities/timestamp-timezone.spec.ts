@@ -11,8 +11,8 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createFakeRole } from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+import { createFakeRole } from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 /**
  * The API must answer the stored instant whatever the timezone of the Node

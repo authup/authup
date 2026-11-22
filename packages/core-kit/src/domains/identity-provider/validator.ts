@@ -9,10 +9,10 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import zod from 'zod';
 import { ValidatorGroup } from '@authup/kit';
-import { IdentityProviderProtocol } from './constants';
-import type { IdentityProvider } from './entity';
-import { IdentityProviderPreset } from './preset';
-import { isIdentityProviderNameValid } from './utils';
+import { IdentityProviderProtocol } from './constants.ts';
+import type { IdentityProvider } from './entity.ts';
+import { IdentityProviderPreset } from './preset/index.ts';
+import { isIdentityProviderNameValid } from './utils.ts';
 
 export class IdentityProviderValidator extends Container<IdentityProvider> {
     protected override initialize() {

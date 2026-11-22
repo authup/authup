@@ -14,7 +14,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     createFakeClient,
     createFakeOAuth2IdentityProvider,
@@ -23,8 +23,8 @@ import {
     createFakeRole,
     createFakeScope,
     createFakeUser,
-} from '../../../../utils';
-import { createFakeTimePolicy } from '../../../../utils/domains/policy';
+} from '../../../../utils/index.ts';
+import { createFakeTimePolicy } from '../../../../utils/domains/policy.ts';
 
 /**
  * STRUCTURAL GUARD for the junction realm-isolation contract (plan 033, Layer 2).

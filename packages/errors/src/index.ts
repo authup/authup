@@ -13,12 +13,12 @@ export {
     matchesInstanceof,
     serializeInstanceofChain,
 } from '@ebec/core';
-export * from './built-in';
-export * from './check';
-export * from './constants';
-export * from './module';
-export * from './normalize';
-export * from './serialize';
-export * from './status';
-export * from './types';
+export * from './built-in/index.ts';
+export * from './check.ts';
+export * from './constants.ts';
+export * from './module.ts';
+export * from './normalize.ts';
+export * from './serialize.ts';
+export * from './status.ts';
+export * from './types.ts';
 

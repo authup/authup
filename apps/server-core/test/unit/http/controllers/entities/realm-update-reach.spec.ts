@@ -15,8 +15,8 @@ import {
     expect,
     it,
 } from 'vitest';
-import { createTestApplication } from '../../../../app';
-import { createFakeClient, createFakeRealm, expectClientError } from '../../../../utils';
+import { createTestApplication } from '../../../../app/index.ts';
+import { createFakeClient, createFakeRealm, expectClientError } from '../../../../utils/index.ts';
 
 /**
  * A realm update or delete is evaluated with the realm as its own record

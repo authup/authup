@@ -12,9 +12,9 @@ import {
     expect,
     it,
 } from 'vitest';
-import type { Config } from '../../../../../src';
-import { createTestApplication } from '../../../../app';
-import { ConfigInjectionKey } from '../../../../../src';
+import type { Config } from '../../../../../src/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
+import { ConfigInjectionKey } from '../../../../../src/index.ts';
 
 describe('src/http/controllers/auth/openid/*.ts', () => {
     const suite = createTestApplication();

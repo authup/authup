@@ -23,11 +23,11 @@ import type {
     TranslatorTranslationFieldKey,
     TranslatorTranslationMailKey,
     TranslatorTranslationVuecsKey,
-} from '../constants';
+} from '../constants.ts';
 import {
     TranslatorTranslationNamespace,
-} from '../constants';
-import type { NamespaceTranslations, SystemPolicyNameValue } from '../types';
+} from '../constants.ts';
+import type { NamespaceTranslations, SystemPolicyNameValue } from '../types.ts';
 import {
     TranslatorTranslationActionEnglish,
     TranslatorTranslationAppEnglish,
@@ -42,7 +42,7 @@ import {
     TranslatorTranslationPolicyEnglish,
     TranslatorTranslationScopeEnglish,
     TranslatorTranslationVuecsEnglish,
-} from './en';
+} from './en/index.ts';
 import {
     TranslatorTranslationActionGerman,
     TranslatorTranslationAppGerman,
@@ -57,7 +57,7 @@ import {
     TranslatorTranslationPolicyGerman,
     TranslatorTranslationScopeGerman,
     TranslatorTranslationVuecsGerman,
-} from './de';
+} from './de/index.ts';
 import {
     TranslatorTranslationActionFrench,
     TranslatorTranslationAppFrench,
@@ -72,7 +72,7 @@ import {
     TranslatorTranslationPolicyFrench,
     TranslatorTranslationScopeFrench,
     TranslatorTranslationVuecsFrench,
-} from './fr';
+} from './fr/index.ts';
 import {
     TranslatorTranslationActionSpanish,
     TranslatorTranslationAppSpanish,
@@ -87,12 +87,12 @@ import {
     TranslatorTranslationPolicySpanish,
     TranslatorTranslationScopeSpanish,
     TranslatorTranslationVuecsSpanish,
-} from './es';
+} from './es/index.ts';
 
-export * from './en';
-export * from './de';
-export * from './fr';
-export * from './es';
+export * from './en/index.ts';
+export * from './de/index.ts';
+export * from './fr/index.ts';
+export * from './es/index.ts';
 
 /**
  * The complete set of namespaces a single authored locale must provide.

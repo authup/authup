@@ -14,8 +14,8 @@ import {
 } from 'vitest';
 import { OAuth2ErrorCode } from '@authup/specs';
 import { UserEntity } from '../../../../../../src/adapters/database/domains/user/entity.ts';
-import { createFakeUser, expectClientError } from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+import { createFakeUser, expectClientError } from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 
 /**
  * A deactivation written straight to the row (provisioning MERGEs the admin

@@ -25,9 +25,9 @@ import {
     VCModalTitle,
 } from '@vuecs/overlays';
 import { TranslatorTranslationActionKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { DEFAULT_BUTTON_SIZE, useEntityNameTranslator, useTranslations } from '../../../core';
+import { DEFAULT_BUTTON_SIZE, useEntityNameTranslator, useTranslations } from '../../../core/index.ts';
 import APermissionPolicyAssignment from './APermissionPolicyAssignment.vue';
-import { APolicies } from '../policy';
+import { APolicies } from '../policy/index.ts';
 import APolicyInlineInfo from '../policy/APolicyInlineInfo.vue';
 import APolicySummary from '../policy/APolicySummary.vue';
 

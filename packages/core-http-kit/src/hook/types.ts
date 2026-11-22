@@ -7,8 +7,8 @@
 
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { ClientError } from 'hapic';
-import type { TokenCreator } from '../token-creator';
-import type { ClientAuthenticationHookEventName } from './constants';
+import type { TokenCreator } from '../token-creator/index.ts';
+import type { ClientAuthenticationHookEventName } from './constants.ts';
 
 export type ClientAuthenticationHookOptions = {
     /**

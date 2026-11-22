@@ -20,7 +20,7 @@ import { VCAlertDialogProvider } from '@vuecs/overlays';
 import { storeToRefs } from 'pinia';
 import { computed, defineComponent } from 'vue';
 import { useRouter } from 'vue-router';
-import { injectAccountConsoleConfig } from './di';
+import { injectAccountConsoleConfig } from './di.ts';
 
 export default defineComponent({
     components: {

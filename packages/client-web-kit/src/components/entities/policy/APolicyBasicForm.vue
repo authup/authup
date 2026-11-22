@@ -19,7 +19,7 @@ import {
     injectStore,
     storeToRefs,
     useTranslations,
-} from '../../../core';
+} from '../../../core/index.ts';
 import { ValidatorGroup, generateName } from '@authup/kit';
 import type { Policy } from '@authup/core-kit';
 import { PolicyValidator } from '@authup/core-kit';
@@ -31,10 +31,10 @@ import {
     VCFormTextarea,
 } from '@vuecs/forms';
 import { BuiltInPolicyType } from '@authup/access';
-import { onChange, useIsEditing, useUpdatedAt } from '../../../composables';
-import { ARealmPicker } from '../realm';
+import { onChange, useIsEditing, useUpdatedAt } from '../../../composables/index.ts';
+import { ARealmPicker } from '../realm/index.ts';
 import { IFieldValidation } from '@ilingo/validup-vue';
-import { ANameInput } from '../../utility';
+import { ANameInput } from '../../utility/index.ts';
 
 export default defineComponent({
     components: {

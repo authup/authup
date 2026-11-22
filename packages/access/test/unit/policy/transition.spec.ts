@@ -14,7 +14,7 @@ import {
     vi,
 } from 'vitest';
 import { DecisionStrategy } from '@authup/kit';
-import type { DatePolicy, TimePolicy } from '../../../src';
+import type { DatePolicy, TimePolicy } from '../../../src/index.ts';
 import {
     BuiltInPolicyType,
     DatePolicyEvaluator,
@@ -27,7 +27,7 @@ import {
     definePolicyData,
     definePolicyEvaluationContext,
     definePolicyWithType,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 // Wednesday, 2024-04-17, local time.
 const at = (hours: number, minutes = 0) => new Date(2024, 3, 17, hours, minutes);

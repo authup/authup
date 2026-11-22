@@ -6,9 +6,9 @@
  */
 
 import { subtle } from 'uncrypto';
-import { getKeyUsagesForSymmetricAlgorithm } from './key-usages';
-import { normalizeSymmetricKeyCreateOptions } from './normalize';
-import type { SymmetricKeyCreateOptionsInput } from './types';
+import { getKeyUsagesForSymmetricAlgorithm } from './key-usages.ts';
+import { normalizeSymmetricKeyCreateOptions } from './normalize.ts';
+import type { SymmetricKeyCreateOptionsInput } from './types.ts';
 
 export async function createSymmetricKey(input: SymmetricKeyCreateOptionsInput) : Promise<CryptoKey> {
     const optionsNormalized = normalizeSymmetricKeyCreateOptions(input);

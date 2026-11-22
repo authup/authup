@@ -10,13 +10,13 @@ import {
     applyTheme,
     buildThemeHead,
     parseThemeManifest,
-} from '../../src/theme/index';
-import type { IThemeProvider, ThemeManifest } from '../../src/theme/index';
+} from '../../src/theme/index.ts';
+import type { IThemeProvider, ThemeManifest } from '../../src/theme/index.ts';
 import {
     injectHeadContent,
     removeFaviconLinks,
     stampDocumentTitle,
-} from '../../src/html';
+} from '../../src/html.ts';
 
 function createProvider(manifest: ThemeManifest | undefined) : IThemeProvider {
     return {

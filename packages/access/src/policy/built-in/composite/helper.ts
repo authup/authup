@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyWithType } from '../../types';
-import { BuiltInPolicyType } from '../constants';
-import type { CompositePolicy } from './types';
+import type { PolicyWithType } from '../../types.ts';
+import { BuiltInPolicyType } from '../constants.ts';
+import type { CompositePolicy } from './types.ts';
 
 export function isCompositePolicy(
     input: PolicyWithType,

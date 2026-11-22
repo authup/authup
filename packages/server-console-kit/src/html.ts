@@ -7,8 +7,8 @@
 
 import { useRequestCookie } from '@routup/basic/cookie';
 import type { IAppEvent } from 'routup';
-import { COLOR_MODE_COOKIE, LOCALE_COOKIE } from './constants';
-import type { UIClientPreferences } from './types';
+import { COLOR_MODE_COOKIE, LOCALE_COOKIE } from './constants.ts';
+import type { UIClientPreferences } from './types.ts';
 
 /**
  * Mirror @vuecs/nuxt's SSR plugins: resolve the shared cookies server-side

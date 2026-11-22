@@ -14,14 +14,14 @@ import {
     or,
 } from '@rapiq/core';
 import { DecisionStrategy, hasOwnProperty  } from '@authup/kit';
-import { RealmScope, normalizeRealmScope, realmScopeMatches } from '../../../permission/realm-scope';
-import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
-import { maybeInvertPolicyOutcome } from '../../helpers';
-import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
-import { AttributesPolicyEvaluator } from '../attributes';
-import { BuiltInPolicyType } from '../constants';
-import { IdentityPolicyEvaluator } from '../identity';
-import { RealmMatchPolicyValidator } from './validator';
+import { RealmScope, normalizeRealmScope, realmScopeMatches } from '../../../permission/realm-scope/index.ts';
+import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation/index.ts';
+import { maybeInvertPolicyOutcome } from '../../helpers/index.ts';
+import { PolicyIssueCode, definePolicyIssueItem } from '../../issue/index.ts';
+import { AttributesPolicyEvaluator } from '../attributes/index.ts';
+import { BuiltInPolicyType } from '../constants.ts';
+import { IdentityPolicyEvaluator } from '../identity/index.ts';
+import { RealmMatchPolicyValidator } from './validator.ts';
 
 export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
     protected validator : RealmMatchPolicyValidator;

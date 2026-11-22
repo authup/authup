@@ -5,17 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EntityQueryInput } from '../../../helpers';
-import { buildQueryString } from '../../../helpers';
+import type { EntityQueryInput } from '../../../helpers/index.ts';
+import { buildQueryString } from '../../../helpers/index.ts';
 import type { PermissionPolicy } from '@authup/core-kit';
-import { BaseAPI } from '../../base';
-import type { EntitySchemaResponse } from '../../stats';
-import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import { BaseAPI } from '../../base.ts';
+import type { EntitySchemaResponse } from '../../stats/index.ts';
+import type { APIRequestOptions, EntityCollectionResponse, EntityRecordResponse } from '../../types-base.ts';
 import type {
     IPermissionPolicyAPI,
     PermissionPolicyCreatePayload,
-} from './types';
-import { buildRequestConfig } from '../../utils';
+} from './types.ts';
+import { buildRequestConfig } from '../../utils.ts';
 
 export class PermissionPolicyAPI extends BaseAPI implements IPermissionPolicyAPI {
     async getSchema(options?: APIRequestOptions): Promise<EntitySchemaResponse> {

@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './cache';
-export * from './core';
-export * from './crypto';
-export * from './domain-event';
-export * from './logger';
-export * from './redis';
-export * from './utils';
+export * from './cache/index.ts';
+export * from './core/index.ts';
+export * from './crypto/index.ts';
+export * from './domain-event/index.ts';
+export * from './logger/index.ts';
+export * from './redis/index.ts';
+export * from './utils/index.ts';

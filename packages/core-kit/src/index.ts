@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './domains';
-export * from './helpers';
+export * from './domains/index.ts';
+export * from './helpers/index.ts';
 

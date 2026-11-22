@@ -38,9 +38,9 @@ import {
     injectHTTPClient,
     useEntityNameTranslator,
     useTranslation,
-} from '../../../core';
+} from '../../../core/index.ts';
 import { hasOwnProperty } from '@authup/kit';
-import { APolicies } from '../policy/APolicies';
+import { APolicies } from '../policy/APolicies.ts';
 import APolicyInlineInfo from '../policy/APolicyInlineInfo.vue';
 import APolicySummary from '../policy/APolicySummary.vue';
 

@@ -8,7 +8,7 @@
 <script lang="ts">
 import { computed, defineComponent } from 'vue';
 import AIdentityProviderRoleAssignment from './AIdentityProviderRoleAssignment.vue';
-import { ARoles } from '../role';
+import { ARoles } from '../role/index.ts';
 
 export default defineComponent({
     components: { ARoles, AIdentityProviderRoleAssignment },

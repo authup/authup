@@ -15,7 +15,7 @@ import {
     vi,
 } from 'vitest';
 import { flushPromises } from '@vue/test-utils';
-import { mountPage } from '../utils';
+import { mountPage } from '../utils/index.ts';
 
 // chart.js measures its canvas, which happy-dom cannot lay out.
 vi.mock('../../src/components/dashboard/EventVolumeChart.vue', async () => {

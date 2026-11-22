@@ -45,10 +45,10 @@ import {
     UserAuthenticatorAPI,
     UserPermissionAPI,
     UserRoleAPI,
-} from '../domains';
-import type { APIRequestOptions, OAuth2APIOptions } from '../domains';
-import { buildRequestConfig } from '../domains/utils';
-import type { ClientOptions, IClient } from './type';
+} from '../domains/index.ts';
+import type { APIRequestOptions, OAuth2APIOptions } from '../domains/index.ts';
+import { buildRequestConfig } from '../domains/utils.ts';
+import type { ClientOptions, IClient } from './type.ts';
 
 export class Client extends BaseClient implements IClient {
     public readonly account : AccountAPI;

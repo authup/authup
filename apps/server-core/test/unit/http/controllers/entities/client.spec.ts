@@ -14,16 +14,16 @@ import {
     expect,
     it,
 } from 'vitest';
-import { ClientCredentialsService } from '../../../../../src/core';
+import { ClientCredentialsService } from '../../../../../src/core/index.ts';
 import {
     createFakeClient,
     createFakeRealm,
     expectClientError,
     expectPropertiesEqualToSrc,
     httpRequest,
-} from '../../../../utils';
-import { createFakeTimePolicy } from '../../../../utils/domains/policy';
-import { createTestApplication } from '../../../../app';
+} from '../../../../utils/index.ts';
+import { createFakeTimePolicy } from '../../../../utils/domains/policy.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 describe('http/controllers/client', () => {
     const suite = createTestApplication();

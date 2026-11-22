@@ -13,10 +13,10 @@ import vuecs from '@vuecs/core';
 import { createPinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import AUserForm from '../../../../../src/components/entities/user/AUserForm.vue';
-import { APathPicker } from '../../../../../src/components/entities/path';
-import { AFormSubmit } from '../../../../../src/components/utility';
-import { install } from '../../../../../src/module';
-import type { Options } from '../../../../../src/types';
+import { APathPicker } from '../../../../../src/components/entities/path/index.ts';
+import { AFormSubmit } from '../../../../../src/components/utility/index.ts';
+import { install } from '../../../../../src/module.ts';
+import type { Options } from '../../../../../src/types.ts';
 
 const noop = () => undefined;
 

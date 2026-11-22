@@ -13,8 +13,8 @@ import {
     it,
 } from 'vitest';
 import { Client as HTTPClient } from '@authup/core-http-kit';
-import { createFakeClient, createFakeUser } from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+import { createFakeClient, createFakeUser } from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 describe('session-include', () => {
     const suite = createTestApplication();

@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './check';
-export * from './constants';
-export * from './module';
-export * from './create';
-export * from './key-usages';
-export * from './types';
+export * from './check.ts';
+export * from './constants.ts';
+export * from './module.ts';
+export * from './create.ts';
+export * from './key-usages.ts';
+export * from './types.ts';

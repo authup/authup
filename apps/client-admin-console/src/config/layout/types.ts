@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { LayoutKey } from './contants';
+import type { LayoutKey } from './contants.ts';
 
 /**
  * Identifies the catalog entry whose value replaces a nav item's

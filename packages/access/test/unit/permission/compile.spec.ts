@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import type { ICondition, IFilter, IFilters } from '@rapiq/core';
 import { compileFilters } from '@rapiq/adapter-memory';
 import { DecisionStrategy } from '@authup/kit';
-import type { PermissionPolicyBinding } from '../../../src';
+import type { PermissionPolicyBinding } from '../../../src/index.ts';
 import {
     BuiltInPolicyType,
     IdentityPermissionBindingPolicyEvaluator,
@@ -19,7 +19,7 @@ import {
     PolicyEngine,
     definePolicyData,
     definePolicyWithType,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 const identityData = {
     type: 'user',

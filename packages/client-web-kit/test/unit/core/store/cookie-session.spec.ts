@@ -11,10 +11,10 @@ import type { FakeHandlerMap } from '@authup/core-http-kit/testing';
 import { createPinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import { createApp, h } from 'vue';
-import { installHTTPClient, installHTTPClientAuthenticationHook } from '../../../../src/core/http-client';
-import { StoreAuthStatus, injectStore, installStore } from '../../../../src/core/store';
-import type { CookieOptions } from '../../../../src/types';
-import { buildAuthorizationCatalog } from '../../../utils/authorization';
+import { installHTTPClient, installHTTPClientAuthenticationHook } from '../../../../src/core/http-client/index.ts';
+import { StoreAuthStatus, injectStore, installStore } from '../../../../src/core/store/index.ts';
+import type { CookieOptions } from '../../../../src/types.ts';
+import { buildAuthorizationCatalog } from '../../../utils/authorization.ts';
 
 const SESSION_RESPONSE = {
     active: true,

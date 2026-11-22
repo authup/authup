@@ -6,5 +6,5 @@
  */
 
 export { default as AScopeForm } from './AScopeForm.vue';
-export { AScopes } from './AScopes';
-export { AScope } from './AScope';
+export { AScopes } from './AScopes.ts';
+export { AScope } from './AScope.ts';

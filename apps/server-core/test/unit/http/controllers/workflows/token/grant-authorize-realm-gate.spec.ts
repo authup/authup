@@ -14,16 +14,16 @@ import type { Client, Identity, Realm } from '@authup/core-kit';
 import { IdentityType, ScopeName } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
 import { OAuth2AuthorizationCodeChallengeMethod, OAuth2AuthorizationResponseType } from '@authup/specs';
-import type { IOAuth2AuthorizationCodeIssuer } from '../../../../../../src/core';
-import { buildOAuth2CodeChallenge, generateOAuth2CodeVerifier } from '../../../../../../src/core';
-import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants';
+import type { IOAuth2AuthorizationCodeIssuer } from '../../../../../../src/core/index.ts';
+import { buildOAuth2CodeChallenge, generateOAuth2CodeVerifier } from '../../../../../../src/core/index.ts';
+import { OAuth2InjectionToken } from '../../../../../../src/app/modules/oauth2/constants.ts';
 import {
     createFakeClient,
     createFakeRealm,
     createFakeUser,
     expectClientError,
-} from '../../../../../utils';
-import { createTestApplication } from '../../../../../app';
+} from '../../../../../utils/index.ts';
+import { createTestApplication } from '../../../../../app/index.ts';
 
 const REDIRECT_URI = 'https://app.example.com/cb';
 

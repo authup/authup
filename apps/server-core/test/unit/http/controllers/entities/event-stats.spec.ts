@@ -41,13 +41,13 @@ import {
     EventAggregateRepositoryAdapter,
 } from '../../../../../src/app/modules/database/repositories/index.ts';
 import { EntityStatsService, eventSchema } from '../../../../../src/core/index.ts';
-import { createTestApplication } from '../../../../app';
+import { createTestApplication } from '../../../../app/index.ts';
 import {
     createFakeRealm,
     createFakeUser,
     expectClientError,
     httpRequest,
-} from '../../../../utils';
+} from '../../../../utils/index.ts';
 
 const DAY_BUCKET = /^\d{4}-\d{2}-\d{2}T00:00:00\.000Z$/;
 const HOUR_BUCKET = /^\d{4}-\d{2}-\d{2}T\d{2}:00:00\.000Z$/;

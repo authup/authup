@@ -20,8 +20,8 @@ import type { OAuth2JsonWebKey } from '@authup/specs';
 import { JWKType, JWKUse } from '@authup/specs';
 import { extractTokenHeader } from '@authup/server-kit';
 import { KeyEntity } from '../../../../../src/adapters/database/domains/index.ts';
-import { createTestApplication } from '../../../../app';
-import { expectClientError, httpRequest } from '../../../../utils';
+import { createTestApplication } from '../../../../app/index.ts';
+import { expectClientError, httpRequest } from '../../../../utils/index.ts';
 
 const CERTIFICATE = readFileSync(
     new URL('../../../../data/certificates/certificate.pem', import.meta.url),

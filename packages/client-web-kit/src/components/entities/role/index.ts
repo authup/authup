@@ -6,5 +6,5 @@
  */
 
 export { default as ARoleForm } from './ARoleForm.vue';
-export { ARoles } from './ARoles';
-export { ARole } from './ARole';
+export { ARoles } from './ARoles.ts';
+export { ARole } from './ARole.ts';

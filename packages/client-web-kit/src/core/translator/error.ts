@@ -8,7 +8,7 @@
 import { TranslatorTranslationNamespace } from '@authup/i18n';
 import { injectIlingo, injectLocale } from '@ilingo/vue';
 import { translateIssues } from '@ilingo/validup';
-import { extractErrorContext } from '../error';
+import { extractErrorContext } from '../error/index.ts';
 
 /**
  * Resolve a caught error to a localized, user-facing message.

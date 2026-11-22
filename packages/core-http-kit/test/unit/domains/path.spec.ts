@@ -6,8 +6,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { pickEntityAPI } from '../../../src';
-import { createFakeClient } from '../../../src/testing';
+import { pickEntityAPI } from '../../../src/index.ts';
+import { createFakeClient } from '../../../src/testing/index.ts';
 
 describe('src/domains/entities/path', () => {
     it('should call the paths routes', async () => {

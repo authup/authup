@@ -17,7 +17,7 @@ import {
     isOAuth2GrantError,
     isOAuth2TargetError,
     isOAuth2TokenErrorCode,
-} from '../../../src';
+} from '../../../src/index.ts';
 
 const roundtrip = (input: unknown) => JSON.parse(JSON.stringify(input));
 

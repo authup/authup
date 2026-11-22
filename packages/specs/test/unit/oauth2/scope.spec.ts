@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { mergeOAuth2Scopes, splitOAuth2Scope, unwrapOAuth2Scope } from '../../../src';
+import { mergeOAuth2Scopes, splitOAuth2Scope, unwrapOAuth2Scope } from '../../../src/index.ts';
 
 describe('src/oauth2/scope/helpers', () => {
     it('should split scopes preserving case', () => {

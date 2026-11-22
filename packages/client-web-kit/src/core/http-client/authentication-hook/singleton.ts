@@ -7,8 +7,8 @@
 
 import type { App } from 'vue';
 import type { ClientAuthenticationHook } from '@authup/core-http-kit';
-import { inject } from '../../inject';
-import { provide } from '../../provide';
+import { inject } from '../../inject.ts';
+import { provide } from '../../provide.ts';
 
 const sym = Symbol.for('AuthupHTTPClientAuthenticationHook');
 

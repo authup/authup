@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { buildURL, getURLBasePath } from '../../src';
+import { buildURL, getURLBasePath } from '../../src/index.ts';
 
 describe('getURLBasePath', () => {
     it('extracts the path prefix of a sub-path URL', () => {

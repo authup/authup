@@ -15,11 +15,11 @@ import type {
 } from 'pinia';
 import type { Realm, User } from '@authup/core-kit';
 import type { IClient } from '@authup/core-http-kit';
-import type { HTTPClientInput } from '../http-client/types';
+import type { HTTPClientInput } from '../http-client/types.ts';
 import type { Ref } from 'vue';
-import type { CookieGetFn, CookieSetFn, CookieUnsetFn } from '../../types';
-import type { createStore } from './create';
-import type { StoreDispatcher } from './dispatcher';
+import type { CookieGetFn, CookieSetFn, CookieUnsetFn } from '../../types.ts';
+import type { createStore } from './create.ts';
+import type { StoreDispatcher } from './dispatcher/index.ts';
 
 export type RealmMinimal = Pick<Realm, 'id' | 'name'> & Partial<Pick<Realm, 'displayName'>>;
 export type UserMinimal = Pick<User, 'id' | 'name' | 'displayName' | 'email'>;

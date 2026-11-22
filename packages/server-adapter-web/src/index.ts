@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './types';
-export * from './verify-request';
+export * from './types.ts';
+export * from './verify-request.ts';

@@ -9,7 +9,7 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
 
-import type { PermissionPolicyBinding } from '../../../../permission/types';
+import type { PermissionPolicyBinding } from '../../../../permission/types.ts';
 import type { IdentityPolicyData } from '../types.ts';
 
 function isPermissionPolicyBinding(input: unknown) : boolean {

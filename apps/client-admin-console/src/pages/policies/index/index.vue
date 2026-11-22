@@ -24,7 +24,7 @@ import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@au
 import { storeToRefs } from 'pinia';
 import type { TableColumn } from '@vuecs/table';
 import EntityActivity from '../../../components/stats/EntityActivity.vue';
-import type { EntityStatsLoadFn } from '../../../composables/entity-stats';
+import type { EntityStatsLoadFn } from '../../../composables/entity-stats.ts';
 
 export default defineComponent({
     components: {

@@ -5,15 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AttributeNamesPolicy } from './attribute-names';
-import type { AttributesPolicy } from './attributes';
-import type { BuiltInPolicyType } from './constants';
-import type { DatePolicy } from './date';
-import type { CompositePolicy } from './composite';
-import type { IdentityPolicy } from './identity';
-import type { PermissionBindingPolicy } from './permission-binding';
-import type { RealmMatchPolicy } from './realm-match';
-import type { TimePolicy } from './time';
+import type { AttributeNamesPolicy } from './attribute-names/index.ts';
+import type { AttributesPolicy } from './attributes/index.ts';
+import type { BuiltInPolicyType } from './constants.ts';
+import type { DatePolicy } from './date/index.ts';
+import type { CompositePolicy } from './composite/index.ts';
+import type { IdentityPolicy } from './identity/index.ts';
+import type { PermissionBindingPolicy } from './permission-binding/index.ts';
+import type { RealmMatchPolicy } from './realm-match/index.ts';
+import type { TimePolicy } from './time/index.ts';
 
 type BuiltInPolicyTypeMapRaw<T extends Record<string, any> = Record<string, any>> = {
     [BuiltInPolicyType.ATTRIBUTES]: AttributesPolicy<T>,

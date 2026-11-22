@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Realm } from '../realm';
-import type { IdentityProviderMappingSyncMode, IdentityProviderProtocol } from './constants';
-import type { IdentityProviderPreset } from './preset';
+import type { Realm } from '../realm/index.ts';
+import type { IdentityProviderMappingSyncMode, IdentityProviderProtocol } from './constants.ts';
+import type { IdentityProviderPreset } from './preset/index.ts';
 
 export interface IdentityProvider {
     id: string,

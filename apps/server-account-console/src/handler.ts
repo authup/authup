@@ -28,11 +28,11 @@ import {
     HEALTH_PATH,
     PACKAGE_NAME,
     VITE_BASE,
-} from './constants';
-import { PACKAGE_PATH } from './path';
-import { resolveRef } from './ref';
+} from './constants.ts';
+import { PACKAGE_PATH } from './path.ts';
+import { resolveRef } from './ref.ts';
 import { expandToOrigins } from '@authup/server-config';
-import type { Config } from './types';
+import type { Config } from './types.ts';
 
 const ASSETS_PATH = '/assets';
 

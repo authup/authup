@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { HydrationPayload } from './contract';
+import type { HydrationPayload } from './contract.ts';
 import { getURLBasePath } from '@authup/kit';
-import { injectPayload } from './di';
+import { injectPayload } from './di.ts';
 
 /**
  * The sub-path this console is served under.

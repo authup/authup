@@ -11,13 +11,13 @@ import { TranslatorTranslationEntityKey, TranslatorTranslationNamespace, Transla
 import { contains, or } from '@rapiq/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import { useTranslation } from '../../../core';
-import type { EntityCollectionVSlots } from '../../utility';
+import { useTranslation } from '../../../core/index.ts';
+import type { EntityCollectionVSlots } from '../../utility/index.ts';
 import {
     defineEntityCollectionManager,
     defineEntityCollectionVEmitOptions,
     defineEntityCollectionVProps,
-} from '../../utility';
+} from '../../utility/index.ts';
 
 export const APaths = defineComponent({
     props: defineEntityCollectionVProps<Path>(),

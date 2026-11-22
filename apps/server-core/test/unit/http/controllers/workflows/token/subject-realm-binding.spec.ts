@@ -18,13 +18,13 @@ import { Client as HTTPClient } from '@authup/core-http-kit';
 import { signToken } from '@authup/server-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { JWKType, JWKUse, OAuth2TokenKind } from '@authup/specs';
-import { createTestApplication } from '../../../../../app';
+import { createTestApplication } from '../../../../../app/index.ts';
 import {
     createFakeRealm,
     createFakeUser,
     expectClientError,
     httpRequest,
-} from '../../../../../utils';
+} from '../../../../../utils/index.ts';
 
 /**
  * A token is only honoured for a subject of the realm it names, bound to a

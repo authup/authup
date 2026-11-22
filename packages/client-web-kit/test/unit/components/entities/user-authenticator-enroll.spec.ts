@@ -8,7 +8,7 @@
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import AUserAuthenticatorEnroll from '../../../../src/components/entities/user-authenticator/AUserAuthenticatorEnroll.vue';
-import { mountKitComponent } from '../../../utils';
+import { mountKitComponent } from '../../../utils/index.ts';
 
 type MountResult = ReturnType<typeof mountKitComponent>;
 
