@@ -62,10 +62,10 @@
     "tailwindcss": "^4.3.5"
   },
   "peerDependencies": {
-    "@vuecs/core": "^3.6.0",
+    "@vuecs/core": "^3.6.1",
     "@vuecs/design": "^1.2.2",
-    "@vuecs/theme-tailwind": "^6.5.2",
-    "tailwindcss": "^4.3.2"
+    "@vuecs/theme-tailwind": "^6.6.0",
+    "tailwindcss": "^4.3.5"
   },
   "publishConfig": {
     "access": "public"
