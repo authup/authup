@@ -489,18 +489,18 @@ export class RoleController {
     }
 
     @DPost('')
+    @DStatus(201)
     async add(@DBody() data: RoleCreatePayload, @DContext() event: IAppEvent): Promise<EntityRecordResponse<Role>> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
-        event.response.status = 201;
         return { data: entity, meta: {} };
     }
 
     @DDelete('/:id')
+    @DStatus(202)
     async drop(@DPath('id') id: string, @DContext() event: IAppEvent): Promise<EntityRecordResponse<Role>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
-        event.response.status = 202;
         return { data: entity, meta: {} };
     }
 }
@@ -518,7 +518,7 @@ Controller conventions:
 - Build actor via `buildActorContext(event)`
 - For realm-scoped writes (create / update / save) on controllers that are dual-mounted at `/realms/:realmId/<entity>`, call `applyRouteRealmIDToBody(event, data)` before delegating: route realm wins silently over body realm. For realm-scoped reads, pass `getRequestRealmID(event)` as the realm key argument. See *Realm Scoping Model → Nested Route Mounting*.
 - Delegate all work to `this.service.*()` methods
-- For non-200 statuses, set `event.response.status = 201/202` and return the value. Never use `sendCreated`/`sendAccepted` because they erase the typed return value that trapi extracts.
+- A method that always answers a non-200 status declares it with `@DStatus(201)` / `@DStatus(202)`, which also documents the return type under that status. Set `event.response.status` only when the status depends on the outcome (a `PUT` upsert answers `created ? 201 : 202`); a status the method sets differs from the default and wins over the decorator, so such a method carries no `@DStatus`. Never use `sendCreated`/`sendAccepted` because they erase the typed return value that trapi extracts.
 
 Exceptions where controllers retain some logic:
 - **Self-access resolution** (client, user): Resolve `@me`/`@self` tokens to actual IDs before delegating

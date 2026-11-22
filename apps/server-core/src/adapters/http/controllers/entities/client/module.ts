@@ -15,6 +15,7 @@ import {
     DPath,
     DPost,
     DPut,
+    DStatus,
     DTags,
 } from '@routup/decorators';
 import { EntityNotFoundError } from '@authup/errors';
@@ -167,6 +168,7 @@ export class ClientController {
     }
 
     @DPost('', [ForceLoggedInMiddleware])
+    @DStatus(201)
     async add(
         @DBody() data: ClientCreatePayload,
         @DContext() event: IAppEvent,
@@ -176,12 +178,11 @@ export class ClientController {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
-        event.response.status = 201;
-
         return { data: entity, meta: {} };
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
+    @DStatus(202)
     async edit(
         @DPath('id') id: string,
         @DBody() data: ClientUpdatePayload,
@@ -191,8 +192,6 @@ export class ClientController {
 
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
-
-        event.response.status = 202;
 
         return { data: entity, meta: {} };
     }
@@ -248,14 +247,13 @@ export class ClientController {
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
+    @DStatus(202)
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
     ): Promise<EntityRecordResponse<Client>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
-
-        event.response.status = 202;
 
         return { data: entity, meta: {} };
     }

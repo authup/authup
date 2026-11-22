@@ -28,6 +28,7 @@ import {
     DPath,
     DPost,
     DPut,
+    DStatus,
     DTags,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
@@ -242,6 +243,7 @@ export class IdentityProviderController {
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
+    @DStatus(202)
     async editProvider(
         @DPath('id') id: string,
         @DBody() user: IdentityProviderUpdatePayload,
@@ -260,6 +262,7 @@ export class IdentityProviderController {
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
+    @DStatus(202)
     async dropProvider(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
@@ -288,12 +291,11 @@ export class IdentityProviderController {
 
         entity.id = entityId;
 
-        event.response.status = 202;
-
         return { data: entity, meta: {} };
     }
 
     @DPost('', [ForceLoggedInMiddleware])
+    @DStatus(201)
     async addProvider(
         @DBody() user: IdentityProviderCreatePayload,
         @DContext() event: IAppEvent,

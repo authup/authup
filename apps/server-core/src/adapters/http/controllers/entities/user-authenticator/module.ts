@@ -13,6 +13,7 @@ import {
     DGet,
     DPath,
     DPost,
+    DStatus,
     DTags,
 } from '@routup/decorators';
 import { EntityType, IdentityType } from '@authup/core-kit';
@@ -92,6 +93,7 @@ export class UserAuthenticatorController {
     }
 
     @DPost('', [ForceLoggedInMiddleware])
+    @DStatus(201)
     async enroll(
         @DPath('id') id: string,
         @DBody() data: UserAuthenticatorCreatePayload,
@@ -102,8 +104,6 @@ export class UserAuthenticatorController {
 
         // route wins silently over body
         const result = await this.service.enroll({ ...data, userId }, actor);
-
-        event.response.status = 201;
 
         return result;
     }
@@ -143,6 +143,7 @@ export class UserAuthenticatorController {
     }
 
     @DDelete('/:deviceId', [ForceLoggedInMiddleware])
+    @DStatus(202)
     async drop(
         @DPath('id') id: string,
         @DPath('deviceId') deviceId: string,
@@ -152,8 +153,6 @@ export class UserAuthenticatorController {
         const userId = this.resolveUserId(id, event);
 
         const entity = await this.service.delete(deviceId, actor, { userId });
-
-        event.response.status = 202;
 
         return { data: entity, meta: {} };
     }

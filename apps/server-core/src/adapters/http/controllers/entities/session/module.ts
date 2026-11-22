@@ -11,6 +11,7 @@ import {
     DDelete,
     DGet,
     DPath,
+    DStatus,
     DTags,
 } from '@routup/decorators';
 import type { Session } from '@authup/core-kit';
@@ -248,6 +249,7 @@ export class SessionController {
      */
     @DDelete('', [ForceLoggedInMiddleware])
     @DQuerySchema(EntityType.SESSION, 'filters')
+    @DStatus(202)
     async dropMany(
         @DContext() event: IAppEvent,
     ): Promise<SessionDeleteManyResponse> {
@@ -261,12 +263,11 @@ export class SessionController {
             currentSessionId: useRequestSessionId(event),
         });
 
-        event.response.status = 202;
-
         return result;
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
+    @DStatus(202)
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
@@ -291,8 +292,6 @@ export class SessionController {
         ) {
             unsetSessionCookie(event, this.baseURL);
         }
-
-        event.response.status = 202;
 
         return { data: entity, meta: {} };
     }
