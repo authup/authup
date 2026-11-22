@@ -157,6 +157,26 @@ describe('swagger middleware', () => {
         });
     });
 
+    describe('refused ui options', () => {
+        it('keeps serving the raw document', async () => {
+            const { logger, warnings } = createRecordingLogger();
+            const middleware = createSwaggerMiddleware({
+                documentPath,
+                logger,
+                baseURL: 'ftp://localhost:3000',
+            });
+
+            const app = new App();
+
+            expect(() => app.use('/docs', middleware!)).not.toThrow();
+
+            const response = await app.fetch(new Request('http://localhost/docs/openapi.json'));
+
+            expect(response.status).toEqual(200);
+            expect(warnings.some((line) => line.startsWith('The Swagger UI could not be mounted'))).toBe(true);
+        });
+    });
+
     describe('gate', () => {
         async function mount(middlewareSwagger: boolean) : Promise<App> {
             const container = new Container();
