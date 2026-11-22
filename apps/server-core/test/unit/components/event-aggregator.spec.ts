@@ -190,7 +190,11 @@ describe('components/event-aggregator', () => {
             await component.start();
 
             expect(await read(TODAY)).toHaveLength(1);
-            expect(component.status()).toEqual({ lastSuccessAt: Date.now(), runningSince: undefined });
+            expect(component.status()).toEqual({
+                lastSuccessAt: Date.now(), 
+                lastRunAt: Date.now(), 
+                runningSince: undefined, 
+            });
         } finally {
             await component.stop();
         }

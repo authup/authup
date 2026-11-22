@@ -25,8 +25,8 @@
     },
     "dependencies": {
         "@tailwindcss/vite": "^4.3.5",
-        "tailwindcss": "^4.3.3",
-        "vitepress": "^1.6.3",
-        "vue": "^3.5.45"
+        "tailwindcss": "^4.3.5",
+        "vitepress": "^1.6.4",
+        "vue": "^3.5.46"
     }
 }

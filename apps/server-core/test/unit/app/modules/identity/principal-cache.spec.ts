@@ -92,6 +92,10 @@ describe('app/modules/identity/repositories (principal cache, #3688)', () => {
             }, options),
             invalidate: (tags) => tagged.invalidate(tags),
             drop: (keys) => tagged.drop(keys),
+            get pendingInvalidations() {
+                return tagged.pendingInvalidations;
+            },
+            dispose: () => tagged.dispose(),
         };
 
         return {

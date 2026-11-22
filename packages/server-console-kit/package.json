@@ -56,17 +56,17 @@
         "@routup/basic": "^3.0.3",
         "@validup/zod": "^2.0.2",
         "eldin": "^1.3.0",
-        "locter": "^4.1.2",
+        "locter": "^4.3.0",
         "orkos": "^1.1.1",
         "validup": "^2.0.1",
         "zod": "^4.6.7"
     },
     "devDependencies": {
-        "@routup/assets": "^5.0.1",
+        "@routup/assets": "^6.0.0",
         "@types/node": "^26.6.6",
         "cross-env": "^10.1.0",
         "routup": "^6.4.0",
-        "vitest": "^5.0.3"
+        "vitest": "^5.1.1"
     },
     "publishConfig": {
         "access": "public"

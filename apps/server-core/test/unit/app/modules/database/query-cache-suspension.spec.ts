@@ -63,6 +63,10 @@ function createFailingTaggedCache(): FailingTaggedCache {
                 return cache.invalidate(tags);
             },
             drop: (keys) => cache.drop(keys),
+            get pendingInvalidations() {
+                return cache.pendingInvalidations;
+            },
+            dispose: () => cache.dispose(),
         },
         fail: (count = 1) => {
             failures = count;
