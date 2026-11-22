@@ -104,9 +104,8 @@ describe('swagger middleware', () => {
             expect(conditional.status).toEqual(304);
         });
 
-        // The UI plugin answers every unmatched path under its mount with the
-        // HTML shell, so the raw route only exists while it is registered
-        // ahead of it.
+        // The raw route is registered ahead of the UI plugin, so the shell
+        // at the mount must still answer next to it.
         it('is not shadowed by the ui shell', async () => {
             const app = createRouter(documentPath);
 
