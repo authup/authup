@@ -211,7 +211,7 @@ describe('app/modules/cache/tagged', () => {
         await module.teardown();
 
         expect(lines).toHaveLength(1);
-        expect(lines[0]).toMatch(/^The tagged cache failed: /);
+        expect(lines[0]).toMatch(/^The tagged cache failed/);
     });
 
     it('throttle calls once per window and again after it', () => {

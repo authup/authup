@@ -13,12 +13,12 @@ import {
     Group,
     Groups,
     Query,
+    findRequiredEqualValue,
     gte,
     isFilter,
     isFilters,
     lt,
 } from '@rapiq/core';
-import { readConjuncts } from '../../stats/window.ts';
 
 /**
  * The event columns a rollup row carries, in the event schema's vocabulary.
@@ -140,10 +140,7 @@ export function resolveEventRawHorizonDays(
     query: IQuery,
     retention: { retentionDays: number, entityRetentionDays: number },
 ): number {
-    const entityOnly = readConjuncts(query.filters).some((condition) => isFilter(condition) &&
-        condition.field === 'scope' &&
-        condition.operator === 'eq' &&
-        condition.value === 'entity');
+    const entityOnly = findRequiredEqualValue(query.filters, 'scope') === 'entity';
 
     return Math.max(0, entityOnly ? retention.entityRetentionDays : retention.retentionDays);
 }

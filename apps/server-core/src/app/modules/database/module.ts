@@ -12,7 +12,7 @@ import {
     createRedisClient,
 } from '@authup/server-kit';
 import type { RedisClient } from '@authup/server-kit';
-import { AuthupError, normalizeError } from '@authup/errors';
+import { AuthupError } from '@authup/errors';
 import { CacheInvalidationSubscriber } from '@rapiq/cache/typeorm';
 import type { DataSourceOptions } from 'typeorm';
 import { DataSource, InstanceChecker } from 'typeorm';
@@ -35,7 +35,12 @@ import { useRequestEventContext } from '../../../adapters/http/request/index.ts'
 import { EventRepositoryAdapter } from './repositories/index.ts';
 import { validateEntitySchemas } from './repositories/schema-validation.ts';
 import { verifySchemaOrSynchronize } from './migration.ts';
-import { TAGGED_CACHE_ERROR_LOG_INTERVAL, TaggedCacheInjectionKey, throttle } from '../cache/index.ts';
+import {
+    TAGGED_CACHE_ERROR_LOG_INTERVAL,
+    TaggedCacheInjectionKey,
+    describeTaggedCacheError,
+    throttle,
+} from '../cache/index.ts';
 import { QUERY_CACHE_SCOPED_VALUE_NORMALIZER, QueryCache, resolveCacheSchemaName } from './cache/index.ts';
 import type { IModule, ModuleDependency } from 'orkos';
 import { ModuleName } from '../constants.ts';
@@ -262,7 +267,7 @@ export class DatabaseModule implements IModule {
                 resolveSchemaName: resolveCacheSchemaName,
                 // every commit on a tracked table reports while Redis is down.
                 onError: throttle((error: unknown) => {
-                    logger.warn(`The cache invalidation failed: ${normalizeError(error).message}`);
+                    logger.warn(describeTaggedCacheError(error, 'The cache invalidation failed'));
                 }, TAGGED_CACHE_ERROR_LOG_INTERVAL),
             }));
         }

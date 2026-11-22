@@ -18,127 +18,96 @@ import {
 import { EntityType } from '@authup/core-kit';
 import type { Logger } from '@authup/server-kit';
 import { createNoopLogger } from '@authup/server-kit';
-import type { ITaggedCache } from '@rapiq/cache';
+import {
+    MemoryCacheDriver,
+    TaggedCache,
+    collectQueryTags,
+    isCacheError,
+} from '@rapiq/cache';
 import { defineQuery } from '@rapiq/core';
 import type { IModule } from 'orkos';
+import { DataSource } from 'typeorm';
 import { RoleEntity } from '../../../../../src/adapters/database/domains/index.ts';
+import { schemaRegistry } from '../../../../../src/core/index.ts';
 import {
     ConfigModule,
     DatabaseInjectionKey,
     LoggerInjectionKey,
     LoggerModule,
     ModuleName,
+    QUERY_CACHE_SCOPED_VALUE_NORMALIZER,
     QueryCache,
     TAGGED_CACHE_TTL,
     TaggedCacheInjectionKey,
-    createTaggedCache,
 } from '../../../../../src/app/index.ts';
 import {
     TestApplication,
-    createTestDatabaseApplication,
     createTestDatabaseModuleForSuite,
 } from '../../../../app/index.ts';
 import { createFakeRole } from '../../../../utils/index.ts';
 
-type FailingTaggedCache = {
-    cache: ITaggedCache,
-    /** How many of the next invalidations reject without bumping. */
-    fail: (count?: number) => void,
-};
+class UnreachableMemoryCacheDriver extends MemoryCacheDriver {
+    /** While set, every bump rejects without touching the store. */
+    down = false;
 
-function createFailingTaggedCache(): FailingTaggedCache {
-    const { cache } = createTaggedCache({ redis: false, onError: () => {} });
-    let failures = 0;
+    override async invalidate(tags: string[]): Promise<void> {
+        if (this.down) {
+            throw new Error('The cache store is unreachable.');
+        }
 
-    return {
-        cache: {
-            remember: (key, read, options) => cache.remember(key, read, options),
-            invalidate: (tags) => {
-                if (failures > 0) {
-                    failures--;
-
-                    return Promise.reject(new Error('The cache store is unreachable.'));
-                }
-
-                return cache.invalidate(tags);
-            },
-            drop: (keys) => cache.drop(keys),
-            get pendingInvalidations() {
-                return cache.pendingInvalidations;
-            },
-            dispose: () => cache.dispose(),
-        },
-        fail: (count = 1) => {
-            failures = count;
-        },
-    };
+        return super.invalidate(tags);
+    }
 }
 
-describe('app/modules/database/cache suspension after a lost invalidation (#3688)', () => {
-    const suite = createTestDatabaseApplication();
+function createTaggedCache() {
+    const driver = new UnreachableMemoryCacheDriver({ maxTtl: TAGGED_CACHE_TTL });
+    const cache = new TaggedCache({ driver, ttl: TAGGED_CACHE_TTL });
 
-    let tagged: FailingTaggedCache;
+    return { driver, cache };
+}
+
+const ROLE_QUERY = defineQuery({});
+
+function collectRoleQueryTags(): string[] {
+    return collectQueryTags({
+        query: ROLE_QUERY,
+        schema: EntityType.ROLE,
+        registry: schemaRegistry,
+        value: [],
+        normalizeScopedValue: QUERY_CACHE_SCOPED_VALUE_NORMALIZER,
+    });
+}
+
+describe('app/modules/database/cache after a lost invalidation (#3688)', () => {
+    // never initialized: the cache reads only its transaction state.
+    const dataSource = new DataSource({ type: 'better-sqlite3', database: ':memory:' });
+
+    let driver: UnreachableMemoryCacheDriver;
+    let tagged: TaggedCache;
     let cache: QueryCache;
     let invalidator: ReturnType<QueryCache['createInvalidator']>;
 
-    beforeAll(async () => {
-        await suite.setup();
-    });
-
-    afterAll(async () => {
-        await suite.teardown();
-    });
-
     beforeEach(() => {
-        // only Date: the store's expiry and the suspension window read the same clock.
-        vi.useFakeTimers({ toFake: ['Date'] });
-
-        tagged = createFailingTaggedCache();
-        cache = new QueryCache({ dataSource: suite.dataSource, cache: tagged.cache });
+        ({ driver, cache: tagged } = createTaggedCache());
+        cache = new QueryCache({ dataSource, cache: tagged });
         invalidator = cache.createInvalidator();
     });
 
     afterEach(() => {
-        vi.useRealTimers();
+        tagged.dispose();
     });
 
-    function advance(ms: number) {
-        vi.setSystemTime(Date.now() + ms);
-    }
+    it('a failed invalidation rejects naming its tags and keeps them pending', async () => {
+        driver.down = true;
 
-    it('a failed invalidation suspends cached reads for one ttl', async () => {
-        const read = vi.fn(async () => 'value');
+        const error = await invalidator.invalidate([EntityType.ROLE]).catch((e: unknown) => e);
 
-        await cache.remember('k', () => [EntityType.ROLE], read);
-        await cache.remember('k', () => [EntityType.ROLE], read);
-        expect(read).toHaveBeenCalledTimes(1);
-
-        tagged.fail();
-        await expect(invalidator.invalidate([EntityType.ROLE])).rejects.toThrow('The cache store is unreachable.');
-
-        await cache.remember('k', () => [EntityType.ROLE], read);
-        await cache.rememberQuery({
-            key: 'q',
-            query: defineQuery({}),
-            schema: EntityType.ROLE,
-        }, read);
-        expect(read).toHaveBeenCalledTimes(3);
-
-        advance(TAGGED_CACHE_TTL - 1);
-
-        await cache.remember('k', () => [EntityType.ROLE], read);
-        expect(read).toHaveBeenCalledTimes(4);
-
-        advance(1);
-
-        await cache.remember('k', () => [EntityType.ROLE], read);
-        expect(read).toHaveBeenCalledTimes(5);
-
-        await cache.remember('k', () => [EntityType.ROLE], read);
-        expect(read).toHaveBeenCalledTimes(5);
+        expect(isCacheError(error)).toBe(true);
+        expect(isCacheError(error) ? error.tags : []).toEqual([EntityType.ROLE]);
+        expect(tagged.pendingInvalidations).toEqual([EntityType.ROLE]);
     });
 
-    it('a stale entry is not served after a lost bump', async () => {
+    it('a stale entry is neither served nor refilled while its tag is pending', async () => {
         let current = 'old';
         const read = vi.fn(async () => current);
 
@@ -147,43 +116,54 @@ describe('app/modules/database/cache suspension after a lost invalidation (#3688
         expect(read).toHaveBeenCalledTimes(1);
 
         current = 'new';
-        tagged.fail();
+        driver.down = true;
         await expect(invalidator.invalidate([EntityType.ROLE])).rejects.toThrow();
-
-        // the store still holds the old entry under an unbumped tag.
-        expect(await tagged.cache.remember('s', read, { tags: () => [EntityType.ROLE] })).toEqual('old');
 
         expect(await cache.remember('s', () => [EntityType.ROLE], read)).toEqual('new');
-    });
-
-    it('a second failure extends the suspension', async () => {
-        const read = vi.fn(async () => 'value');
-
-        tagged.fail();
-        await expect(invalidator.invalidate([EntityType.ROLE])).rejects.toThrow();
-
-        advance(TAGGED_CACHE_TTL / 2);
-
-        tagged.fail();
-        await expect(invalidator.invalidate([EntityType.ROLE])).rejects.toThrow();
-
-        advance(TAGGED_CACHE_TTL / 2);
-
-        await cache.remember('e', () => [EntityType.ROLE], read);
-        await cache.remember('e', () => [EntityType.ROLE], read);
-        expect(read).toHaveBeenCalledTimes(2);
-
-        advance(TAGGED_CACHE_TTL / 2);
-
-        await cache.remember('e', () => [EntityType.ROLE], read);
-        await cache.remember('e', () => [EntityType.ROLE], read);
+        expect(await cache.remember('s', () => [EntityType.ROLE], read)).toEqual('new');
         expect(read).toHaveBeenCalledTimes(3);
     });
 
-    it('a successful invalidation does not suspend', async () => {
+    it('a query read carrying a pending tag reads through', async () => {
+        const read = vi.fn(async () => []);
+        const input = {
+            key: 'q', 
+            query: ROLE_QUERY, 
+            schema: EntityType.ROLE, 
+        };
+
+        await cache.rememberQuery(input, read);
+        await cache.rememberQuery(input, read);
+        expect(read).toHaveBeenCalledTimes(1);
+
+        driver.down = true;
+        await expect(invalidator.invalidate(collectRoleQueryTags())).rejects.toThrow();
+
+        await cache.rememberQuery(input, read);
+        await cache.rememberQuery(input, read);
+        expect(read).toHaveBeenCalledTimes(3);
+    });
+
+    it('the next bump replays the lost one and the cache serves again', async () => {
+        const read = vi.fn(async () => 'value');
+
+        driver.down = true;
+        await expect(invalidator.invalidate([EntityType.ROLE])).rejects.toThrow();
+
+        driver.down = false;
+        await invalidator.invalidate([EntityType.USER]);
+        expect(tagged.pendingInvalidations).toEqual([]);
+
+        await cache.remember('r', () => [EntityType.ROLE], read);
+        await cache.remember('r', () => [EntityType.ROLE], read);
+        expect(read).toHaveBeenCalledTimes(1);
+    });
+
+    it('a successful invalidation leaves nothing pending', async () => {
         const read = vi.fn(async () => 'value');
 
         await invalidator.invalidate([EntityType.ROLE]);
+        expect(tagged.pendingInvalidations).toEqual([]);
 
         await cache.remember('o', () => [EntityType.ROLE], read);
         await cache.remember('o', () => [EntityType.ROLE], read);
@@ -197,18 +177,19 @@ describe('app/modules/database/cache suspension after a lost invalidation (#3688
     });
 });
 
-describe('app/modules/database/cache suspension on the test application (#3688)', () => {
+describe('app/modules/database/cache after a lost invalidation on the test application (#3688)', () => {
     const lines: string[] = [];
-    const tagged = createFailingTaggedCache();
+    const { driver, cache: tagged } = createTaggedCache();
 
     // stands in for the cache module, so the database module wires this store.
     const cacheModule: IModule = {
         name: ModuleName.CACHE,
         async setup(container) {
-            container.register(TaggedCacheInjectionKey, { useValue: tagged.cache });
+            container.register(TaggedCacheInjectionKey, { useValue: tagged });
         },
         async teardown(container) {
             container.unregister(TaggedCacheInjectionKey);
+            tagged.dispose();
         },
     };
 
@@ -241,21 +222,27 @@ describe('app/modules/database/cache suspension on the test application (#3688)'
 
     it('a role save with a lost bump commits, logs once and is not answered from the cache', async () => {
         const cache = suite.container.resolve(DatabaseInjectionKey.QueryCache);
-        const read = vi.fn(async () => 'value');
+        const read = vi.fn(async () => []);
+        const input = {
+            key: 'e2e', 
+            query: ROLE_QUERY, 
+            schema: EntityType.ROLE, 
+        };
 
-        await cache.remember('e2e', () => [EntityType.ROLE], read);
-        await cache.remember('e2e', () => [EntityType.ROLE], read);
+        await cache.rememberQuery(input, read);
+        await cache.rememberQuery(input, read);
         expect(read).toHaveBeenCalledTimes(1);
 
-        tagged.fail();
+        driver.down = true;
 
         const repository = suite.dataSource.getRepository(RoleEntity);
         const role = await repository.save(createFakeRole());
 
         expect(await repository.findOneBy({ id: role.id })).not.toBeNull();
-        expect(lines.filter((line) => line.startsWith('The cache invalidation failed: '))).toHaveLength(1);
+        expect(lines.filter((line) => line.startsWith('The cache invalidation failed'))).toHaveLength(1);
+        expect(tagged.pendingInvalidations).toEqual(expect.arrayContaining(collectRoleQueryTags()));
 
-        await cache.remember('e2e', () => [EntityType.ROLE], read);
+        await cache.rememberQuery(input, read);
         expect(read).toHaveBeenCalledTimes(2);
     });
 });
