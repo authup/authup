@@ -252,6 +252,9 @@ central PII write boundary.
   prom-client adapter: `authup_login_total{result}`,
   `authup_token_grant_total{grant_type}`, `authup_authorize_total{outcome}`,
   `authup_refresh_replay_total`. Bounded label sets only; subject attribution
-  belongs in the event log. The HTTP duration `path` label is the registered
-  route template (`createRouteTemplateNormalizePath`), with unregistered paths
-  collapsed into `/{unmatched}`, so raw ids never become label values (#3253).
+  belongs in the event log. The HTTP duration `path` label is the pattern of
+  the dispatched route (`event.route`), a parameter-free method-less mount as
+  `<mount>/**` (`createMountPathLabelTransformer`), everything else
+  `/{unmatched}`, so raw ids never become label values (#3253). A request a
+  global middleware refuses before any route runs (a bad bearer's 401, a 429)
+  is therefore `/{unmatched}`.
