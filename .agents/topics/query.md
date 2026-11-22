@@ -305,9 +305,10 @@ suspect resolution first.
   The fingerprint rides `meta.hash` and `x-authup-schema-hash`.
 
 **`/docs/openapi.json`** (`adapters/http/middleware/built-in/swagger.ts`)
-must be registered before `@routup/swagger-ui`, which answers every path under
-its mount with its HTML shell (the failure is a 200 with the wrong type). A
-missing document disables the surface instead of aborting the boot. A hash
+is registered before `@routup/swagger-ui`, so the raw document never depends on
+which paths the UI handler answers. A missing document disables the surface,
+and options the UI refuses at install (an unusable `baseURL`) leave the raw
+document alone, instead of aborting the boot. A hash
 mismatch with the running registry logs a warning, the only drift signal
 under `authup dev`.
 

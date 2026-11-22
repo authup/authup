@@ -34,9 +34,9 @@ type SwaggerMiddlewareOptions = SwaggerUIOptions & {
 /**
  * Serve the Swagger UI at the mount path plus the raw document next to it,
  * at `<mount>/openapi.json`. The raw URL is the only machine-readable one:
- * `@routup/swagger-ui` inlines the document into its HTML shell and answers
- * every other path under the mount with that same shell, so a client that
- * wants the document itself has nowhere to fetch it from.
+ * `@routup/swagger-ui` inlines the document into its HTML shell and serves
+ * no copy of it, so a client that wants the document itself has nowhere
+ * else to fetch it from.
  *
  * Returns `undefined` when the document cannot be read, and the caller then
  * mounts nothing. `swaggerUI()` reads the file synchronously inside its own
@@ -89,9 +89,8 @@ export function createSwaggerMiddleware(input: SwaggerMiddlewareOptions) : Plugi
     return {
         name: 'swagger',
         install(router: IApp) {
-            // Registered BEFORE the UI: that plugin answers every unmatched
-            // path under the mount with its HTML shell, so a route declared
-            // after it is never reached.
+            // Registered BEFORE the UI, so the raw document never depends on
+            // which paths that plugin chooses to answer.
             router.get('/openapi.json', defineCoreHandler((event) => {
                 event.response.headers.set('content-type', 'application/json; charset=utf-8');
 
@@ -107,8 +106,14 @@ export function createSwaggerMiddleware(input: SwaggerMiddlewareOptions) : Plugi
             // install: a document that changed or vanished after the check
             // above would then either abort the boot this guard exists to
             // prevent, or leave the UI rendering something other than what
-            // `/openapi.json` serves.
-            swaggerUI(document, options).install(router);
+            // `/openapi.json` serves. The plugin also validates its options
+            // here (an unusable `baseURL` throws), which must not abort the
+            // boot either: the raw document stays served.
+            try {
+                swaggerUI(document, options).install(router);
+            } catch (e) {
+                logger?.warn(`The Swagger UI could not be mounted, only the raw OpenAPI document is served. Reason: ${normalizeError(e).message}`);
+            }
         },
     };
 }

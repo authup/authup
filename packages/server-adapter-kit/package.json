@@ -64,8 +64,8 @@
         "@authup/server-kit": "^1.0.0-beta.76",
         "hapic": "^3.1.0",
         "ioredis": "^6.0.0",
-        "jose": "^6.2.13",
-        "vitest": "^5.0.3"
+        "jose": "^6.2.18",
+        "vitest": "^5.1.1"
     },
     "publishConfig": {
         "access": "public"

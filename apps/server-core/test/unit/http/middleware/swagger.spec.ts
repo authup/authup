@@ -104,9 +104,8 @@ describe('swagger middleware', () => {
             expect(conditional.status).toEqual(304);
         });
 
-        // The UI plugin answers every unmatched path under its mount with the
-        // HTML shell, so the raw route only exists while it is registered
-        // ahead of it.
+        // The raw route is registered ahead of the UI plugin, so the shell
+        // at the mount must still answer next to it.
         it('is not shadowed by the ui shell', async () => {
             const app = createRouter(documentPath);
 
@@ -155,6 +154,26 @@ describe('swagger middleware', () => {
             const response = await app.fetch(new Request('http://localhost/docs/openapi.json'));
 
             expect(response.status).toEqual(404);
+        });
+    });
+
+    describe('refused ui options', () => {
+        it('keeps serving the raw document', async () => {
+            const { logger, warnings } = createRecordingLogger();
+            const middleware = createSwaggerMiddleware({
+                documentPath,
+                logger,
+                baseURL: 'ftp://localhost:3000',
+            });
+
+            const app = new App();
+
+            expect(() => app.use('/docs', middleware!)).not.toThrow();
+
+            const response = await app.fetch(new Request('http://localhost/docs/openapi.json'));
+
+            expect(response.status).toEqual(200);
+            expect(warnings.some((line) => line.startsWith('The Swagger UI could not be mounted'))).toBe(true);
         });
     });
 

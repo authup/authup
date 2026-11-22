@@ -27,8 +27,8 @@ export function injectTranslatorLocale(): Ref<string> {
     return injectLocale();
 }
 
-function unwrapTranslationData(input: DataMaybeRef) : Record<string, string | number> {
-    const output : Record<string, string | number> = {};
+function unwrapTranslationData(input: DataMaybeRef) : Record<string, unknown> {
+    const output : Record<string, unknown> = {};
     const entries = Object.entries(input);
 
     for (const [key, value] of entries) {

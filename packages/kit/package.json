@@ -53,11 +53,11 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "destr": "^2.0.3",
+        "destr": "^2.0.5",
         "nanoid": "^6.0.2"
     },
     "devDependencies": {
-        "vitest": "^5.0.3"
+        "vitest": "^5.1.1"
     },
     "publishConfig": {
         "access": "public"
