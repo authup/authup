@@ -8,7 +8,7 @@
 import type { TrustAnchor } from '@authup/core-kit';
 import type { DataSource, EntityManager, Repository } from 'typeorm';
 import { RealmEntity, TrustAnchorEntity } from '../../../../../adapters/database/index.ts';
-import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
+import { isRowLockSupported } from 'typeorm-extension';
 import type { ITrustAnchorRepository } from '../../../../../core/index.ts';
 import { EntityRepositoryAdapter } from '../entity/index.ts';
 import { createRealmNameResolver } from '../realm/repository.ts';
@@ -32,7 +32,7 @@ export class TrustAnchorRepositoryAdapter extends EntityRepositoryAdapter<TrustA
     async transaction<R>(fn: (repository: ITrustAnchorRepository) => Promise<R>): Promise<R> {
         const dataSource = this.repository.manager.connection;
 
-        if (!isDatabaseTypeRowLockable(dataSource.options.type)) {
+        if (!isRowLockSupported(dataSource)) {
             return fn(this);
         }
 

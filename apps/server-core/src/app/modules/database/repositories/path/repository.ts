@@ -8,7 +8,7 @@
 import type { Path, Realm } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import type { IPathRepository } from '../../../../../core/index.ts';
-import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
+import { isRowLockSupported } from 'typeorm-extension';
 import { PathEntity, RealmEntity } from '../../../../../adapters/database/domains/index.ts';
 import { EntityRepositoryAdapter } from '../entity/index.ts';
 import { createRealmNameResolver } from '../realm/repository.ts';
@@ -75,7 +75,7 @@ export class PathRepositoryAdapter extends EntityRepositoryAdapter<Path> impleme
             // database cascade
             const current = await manager.getRepository(PathEntity).findOne({
                 where: { id: entity.id },
-                ...(isDatabaseTypeRowLockable(manager.connection.options.type) ?
+                ...(isRowLockSupported(manager) ?
                     { lock: { mode: 'pessimistic_write' } } :
                     {}),
             });
@@ -94,9 +94,7 @@ export class PathRepositoryAdapter extends EntityRepositoryAdapter<Path> impleme
     }
 
     async transaction<R>(fn: (repository: IPathRepository) => Promise<R>): Promise<R> {
-        const { type } = this.repository.manager.connection.options;
-
-        if (!isDatabaseTypeRowLockable(type)) {
+        if (!isRowLockSupported(this.repository.manager)) {
             // better-sqlite3: plain unlocked passthrough (the removeGuarded rule)
             return fn(this);
         }

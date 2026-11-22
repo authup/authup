@@ -70,6 +70,7 @@ describe('adapters/database/data-source/options', () => {
     it('should refuse a half-written configuration rather than falling back', () => {
         withDatabaseEnv({ DB_HOST: '127.0.0.1', DB_DATABASE: 'app' }, () => {
             expect(() => new DataSourceOptionsBuilder().buildWithEnvOrDefault()).toThrow(AuthupError);
+            expect(() => new DataSourceOptionsBuilder().buildWithEnvOrDefault()).toThrow(/DB_HOST, DB_DATABASE/);
         });
     });
 

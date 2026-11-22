@@ -7,8 +7,7 @@
 
 import { Brackets, In } from 'typeorm';
 import type { EntityManager } from 'typeorm';
-import { isDatabaseLockConflictError } from 'typeorm-extension';
-import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
+import { isDatabaseLockConflictError, isRowLockSupported } from 'typeorm-extension';
 import {
     ClientEntity,
     PathEntity,
@@ -135,7 +134,7 @@ export async function runPathTransaction<R>(
     manager: EntityManager,
     fn: (manager: EntityManager) => Promise<R>,
 ) : Promise<R> {
-    if (!isDatabaseTypeRowLockable(manager.connection.options.type)) {
+    if (!isRowLockSupported(manager)) {
         return fn(manager);
     }
 

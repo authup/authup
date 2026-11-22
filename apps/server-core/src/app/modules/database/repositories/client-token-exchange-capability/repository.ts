@@ -9,7 +9,7 @@ import type { ClientTokenExchangeCapability } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import type { IClientTokenExchangeCapabilityRepository } from '../../../../../core/entities/client-token-exchange-capability/types.ts';
 import { ClientTokenExchangeCapabilityEntity } from '../../../../../adapters/database/domains/index.ts';
-import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
+import { isRowLockSupported } from 'typeorm-extension';
 import { EntityRepositoryAdapter } from '../entity/index.ts';
 
 export type ClientTokenExchangeCapabilityRepositoryAdapterOptions = {
@@ -34,7 +34,7 @@ export class ClientTokenExchangeCapabilityRepositoryAdapter extends EntityReposi
     async transaction<R>(fn: (repository: IClientTokenExchangeCapabilityRepository) => Promise<R>): Promise<R> {
         const dataSource = this.repository.manager.connection;
 
-        if (!isDatabaseTypeRowLockable(dataSource.options.type)) {
+        if (!isRowLockSupported(dataSource)) {
             return fn(this);
         }
 
