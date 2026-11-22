@@ -12,6 +12,7 @@ import {
     DController,
     DGet,
     DPost,
+    DStatus,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
 import type { IRegistrationService } from '../../../../../core/index.ts';
@@ -49,13 +50,12 @@ export class RegisterController {
     }
 
     @DPost('', [])
+    @DStatus(202)
     async execute(
         @DBody() data: RegisterPayload,
         @DContext() event: IAppEvent,
     ): Promise<RegisterResponse> {
         const result = await this.service.register(data, { locale: useRequestLocale(event) });
-
-        event.response.status = 202;
 
         return result;
     }

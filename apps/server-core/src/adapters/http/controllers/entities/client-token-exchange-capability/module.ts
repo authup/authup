@@ -13,6 +13,7 @@ import {
     DGet,
     DPath,
     DPost,
+    DStatus,
     DTags,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
@@ -69,14 +70,13 @@ export class ClientTokenExchangeCapabilityController {
     }
 
     @DPost('', [ForceLoggedInMiddleware])
+    @DStatus(201)
     async add(
         @DBody() data: ClientTokenExchangeCapabilityCreatePayload,
         @DContext() event: IAppEvent,
     ): Promise<EntityRecordResponse<ClientTokenExchangeCapability>> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
-
-        event.response.status = 201;
 
         return { data: entity, meta: {} };
     }
@@ -97,6 +97,7 @@ export class ClientTokenExchangeCapabilityController {
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
+    @DStatus(202)
     async edit(
         @DPath('id') id: string,
         @DBody() data: ClientTokenExchangeCapabilityUpdatePayload,
@@ -105,20 +106,17 @@ export class ClientTokenExchangeCapabilityController {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
-        event.response.status = 202;
-
         return { data: entity, meta: {} };
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
+    @DStatus(202)
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
     ): Promise<EntityRecordResponse<ClientTokenExchangeCapability>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
-
-        event.response.status = 202;
 
         return { data: entity, meta: {} };
     }

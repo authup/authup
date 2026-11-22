@@ -36,13 +36,17 @@ export function createOAuth2CleanerComponent(
                 logger?.warn(e);
             },
         },
-        run: async () => {
+        run: async ({ signal }) => {
             const isoDate = new Date().toISOString();
 
             // Sweep expired session-token rows first: the auth_session_tokens
             // volume dominates (one row per access token, ~15min TTL) and a
             // deleted session cascade-drops its remaining rows anyway.
             await sessionTokenRepository.deleteExpired(isoDate);
+
+            if (signal.aborted) {
+                return;
+            }
 
             await sessionRepository.deleteExpired(isoDate);
         },

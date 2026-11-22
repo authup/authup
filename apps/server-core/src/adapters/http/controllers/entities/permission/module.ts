@@ -26,6 +26,7 @@ import {
     DPath,
     DPost,
     DPut,
+    DStatus,
     DTags,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
@@ -108,6 +109,7 @@ export class PermissionController {
     }
 
     @DPost('', [ForceLoggedInMiddleware])
+    @DStatus(201)
     async add(
         @DBody() data: PermissionCreatePayload,
         @DContext() event: IAppEvent,
@@ -117,12 +119,11 @@ export class PermissionController {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
-        event.response.status = 201;
-
         return { data: entity, meta: {} };
     }
 
     @DPost('/:id/check', [ForceLoggedInMiddleware])
+    @DStatus(202)
     async check(
         @DPath('id') id: string,
         @DBody() data: any,
@@ -137,8 +138,6 @@ export class PermissionController {
             actor,
             getRequestRealmID(event),
         );
-
-        event.response.status = 202;
 
         if (result.success) {
             return { status: 'success' };
@@ -167,6 +166,7 @@ export class PermissionController {
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
+    @DStatus(202)
     async edit(
         @DPath('id') id: string,
         @DBody() data: PermissionUpdatePayload,
@@ -180,8 +180,6 @@ export class PermissionController {
             data,
             actor,
         );
-
-        event.response.status = 202;
 
         return { data: entity, meta: {} };
     }
@@ -210,14 +208,13 @@ export class PermissionController {
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
+    @DStatus(202)
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
     ): Promise<EntityRecordResponse<Permission>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
-
-        event.response.status = 202;
 
         return { data: entity, meta: {} };
     }

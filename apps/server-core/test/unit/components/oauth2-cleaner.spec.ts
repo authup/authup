@@ -130,10 +130,11 @@ describe('components/oauth2-cleaner', () => {
         release();
         await started;
 
-        expect(findMock).toHaveBeenCalledTimes(2);
+        // the stop aborted the pass, so the session sweep after the token sweep is skipped
+        expect(findMock).toHaveBeenCalledTimes(1);
 
         await vi.advanceTimersByTimeAsync(180_000);
-        expect(findMock).toHaveBeenCalledTimes(2);
+        expect(findMock).toHaveBeenCalledTimes(1);
     });
 
     it('should tolerate stop() without a prior start()', async () => {

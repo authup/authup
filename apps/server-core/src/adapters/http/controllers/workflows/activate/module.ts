@@ -11,6 +11,7 @@ import {
     DController,
     DGet,
     DPost,
+    DStatus,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
 import type { ActivatePayload } from '@authup/core-http-kit';
@@ -49,16 +50,14 @@ export class ActivateController {
     }
 
     @DPost('', [])
+    @DStatus(202)
     async execute(
         @DBody() data: ActivatePayload,
-        @DContext() event: IAppEvent,
     ): Promise<null> {
         const validator = new ActivateRequestValidator();
         const validated = await validator.run(data);
 
         await this.service.activate(validated);
-
-        event.response.status = 202;
 
         return null;
     }

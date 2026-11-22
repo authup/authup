@@ -346,10 +346,11 @@ export default defineComponent({
                         v-if="pathScopeFailed"
                         color="error"
                         variant="soft"
+                        align="center"
                         class="mt-2"
                     >
-                        <div class="flex items-center justify-between gap-2">
-                            <span>{{ translations.pathScopeFailed }}</span>
+                        {{ translations.pathScopeFailed }}
+                        <template #actions>
                             <VCButton
                                 size="sm"
                                 color="error"
@@ -358,7 +359,7 @@ export default defineComponent({
                             >
                                 {{ translations.retry }}
                             </VCButton>
-                        </div>
+                        </template>
                     </VCAlert>
                     <VCAlert
                         v-else-if="pathScopeMissing"

@@ -16,7 +16,7 @@ import type {
     UserAuthenticatorFindManyOptions,
     UserAuthenticatorSecretsFilter,
 } from '../../../../../core/index.ts';
-import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
+import { isRowLockSupported } from 'typeorm-extension';
 import { UserAuthenticatorEntity, UserEntity } from '../../../../../adapters/database/domains/index.ts';
 import { applyRealmScopeSelect } from '../helpers.ts';
 
@@ -49,7 +49,7 @@ export class UserAuthenticatorRepositoryAdapter implements IUserAuthenticatorRep
     ): Promise<R> {
         const dataSource = this.repository.manager.connection;
 
-        if (!isDatabaseTypeRowLockable(dataSource.options.type)) {
+        if (!isRowLockSupported(dataSource)) {
             // better-sqlite3: no FOR UPDATE, and the driver shares one query
             // runner, so a transaction here would nest inside whatever else
             // runs on it (the removeGuarded rule)

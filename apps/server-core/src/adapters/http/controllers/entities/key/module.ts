@@ -13,6 +13,7 @@ import {
     DGet,
     DPath,
     DPost,
+    DStatus,
     DTags,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
@@ -107,6 +108,7 @@ export class KeyController {
     }
 
     @DPost('', [ForceLoggedInMiddleware])
+    @DStatus(201)
     async add(
         @DBody() data: KeyCreatePayload,
         @DContext() event: IAppEvent,
@@ -115,8 +117,6 @@ export class KeyController {
 
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
-
-        event.response.status = 201;
 
         return { data: entity, meta: {} };
     }
@@ -135,6 +135,7 @@ export class KeyController {
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
+    @DStatus(202)
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
@@ -145,8 +146,6 @@ export class KeyController {
         const force = query.force === 'true' || query.force === '1';
 
         const entity = await this.service.delete(id, actor, { force });
-
-        event.response.status = 202;
 
         return { data: entity, meta: {} };
     }

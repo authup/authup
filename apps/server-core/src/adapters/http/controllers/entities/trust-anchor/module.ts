@@ -23,6 +23,7 @@ import {
     DGet,
     DPath,
     DPost,
+    DStatus,
     DTags,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
@@ -107,6 +108,7 @@ export class TrustAnchorController {
     }
 
     @DPost('', [ForceLoggedInMiddleware])
+    @DStatus(201)
     async add(
         @DBody() data: TrustAnchorCreatePayload,
         @DContext() event: IAppEvent,
@@ -115,8 +117,6 @@ export class TrustAnchorController {
 
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
-
-        event.response.status = 201;
 
         return { data: entity, meta: {} };
     }
@@ -135,14 +135,13 @@ export class TrustAnchorController {
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
+    @DStatus(202)
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
     ): Promise<EntityRecordResponse<TrustAnchor>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
-
-        event.response.status = 202;
 
         return { data: entity, meta: {} };
     }

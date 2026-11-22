@@ -470,6 +470,6 @@ describe('app/modules/database/cache with an unreachable redis (#3688)', () => {
 
         expect(elapsed).toBeLessThan(2000);
         expect(await repository.findOneBy({ id: role.id })).not.toBeNull();
-        expect(lines.filter((line) => line.startsWith('The cache invalidation failed: '))).toHaveLength(1);
+        expect(lines.filter((line) => line.startsWith('The cache invalidation failed'))).toHaveLength(1);
     });
 });

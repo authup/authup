@@ -18,8 +18,7 @@ import type {
 import { applyQuery, fetchMany } from '../query.ts';
 import { applyJunctionRealmScopeSelect } from '../helpers.ts';
 import { IdentityProviderAccountEntity } from '../../../../../adapters/database/domains/index.ts';
-import { isDatabaseUniqueViolationError } from 'typeorm-extension';
-import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
+import { isDatabaseUniqueViolationError, isRowLockSupported } from 'typeorm-extension';
 import type {
     IIdentityProviderAccountRepository,
     IdentityProviderAccountFindManyOptions,
@@ -81,7 +80,7 @@ export class IdentityProviderAccountRepositoryAdapter implements IIdentityProvid
     }
 
     async removeGuarded(entity: IdentityProviderAccount, userHasOtherLogin: boolean): Promise<boolean> {
-        if (!isDatabaseTypeRowLockable(this.dataSource.options.type)) {
+        if (!isRowLockSupported(this.dataSource)) {
             // better-sqlite3: a single synchronous writer, so the
             // count/delete race cannot manifest and no transaction is
             // needed. Deliberately NOT wrapped in one — a held write

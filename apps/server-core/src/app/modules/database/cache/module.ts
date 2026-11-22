@@ -10,7 +10,6 @@ import { rememberQuery } from '@rapiq/cache';
 import { isTransactionActive } from '@rapiq/cache/typeorm';
 import type { DataSource } from 'typeorm';
 import { schemaRegistry } from '../../../../core/index.ts';
-import { TAGGED_CACHE_TTL } from '../../cache/index.ts';
 import { QUERY_CACHE_SCOPED_VALUE_NORMALIZER } from './constants.ts';
 import type {
     IQueryCache,
@@ -25,14 +24,9 @@ export class QueryCache implements IQueryCache {
 
     protected cache: ITaggedCache | undefined;
 
-    protected now: () => number;
-
-    protected suspendedUntil: number | undefined;
-
     constructor(ctx: QueryCacheContext) {
         this.dataSource = ctx.dataSource;
         this.cache = ctx.cache;
-        this.now = ctx.now ?? (() => Date.now());
     }
 
     async remember<T>(
@@ -66,10 +60,8 @@ export class QueryCache implements IQueryCache {
 
     /**
      * What the invalidation subscriber bumps through. A rejected bump
-     * leaves the entries carrying those tags in the store, so this
-     * process reads past the cache until every such entry has lapsed,
-     * one entry ttl from the failure. Other processes sharing the store
-     * are not reached (tada5hi/rapiq#993).
+     * stays pending in the tagged cache, which neither serves nor stores
+     * a value carrying a pending tag and replays the bump.
      */
     createInvalidator(): QueryCacheInvalidator {
         return {
@@ -78,23 +70,13 @@ export class QueryCache implements IQueryCache {
                     return;
                 }
 
-                try {
-                    await this.cache.invalidate(tags);
-                } catch (e) {
-                    this.suspendedUntil = this.now() + TAGGED_CACHE_TTL;
-
-                    throw e;
-                }
+                await this.cache.invalidate(tags);
             },
         };
     }
 
     protected isBypassed(options: QueryCacheReadOptions): boolean {
-        return this.isSuspended() || this.isTransactionActive(options);
-    }
-
-    protected isSuspended(): boolean {
-        return typeof this.suspendedUntil !== 'undefined' && this.now() < this.suspendedUntil;
+        return this.isTransactionActive(options);
     }
 
     /**

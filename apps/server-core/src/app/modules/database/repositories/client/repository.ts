@@ -11,7 +11,7 @@ import type { IQuery } from '@rapiq/core';
 import type { PermissionPolicyBinding } from '@authup/access';
 import type { Repository } from 'typeorm';
 import type { IClientRepository } from '../../../../../core/index.ts';
-import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
+import { isRowLockSupported } from 'typeorm-extension';
 import { loadBoundPermissions, loadBoundRoles } from '../bindings.ts';
 import type { IQueryCache } from '../../cache/index.ts';
 import {
@@ -78,7 +78,7 @@ export class ClientRepositoryAdapter extends EntityRepositoryAdapter<Client> imp
     async transaction<R>(fn: (repository: IClientRepository) => Promise<R>): Promise<R> {
         const dataSource = this.repository.manager.connection;
 
-        if (!isDatabaseTypeRowLockable(dataSource.options.type)) {
+        if (!isRowLockSupported(dataSource)) {
             // better-sqlite3: no FOR UPDATE, and the driver shares ONE query
             // runner, so a transaction here would nest as a savepoint inside
             // whatever else is running on it. Plain unlocked passthrough,

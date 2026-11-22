@@ -26,6 +26,7 @@ import {
     DPath,
     DPost,
     DPut,
+    DStatus,
     DTags,
 } from '@routup/decorators';
 import { useRequestQuery } from '@routup/basic/query';
@@ -135,6 +136,7 @@ export class PolicyController {
     }
 
     @DPost('/:id/check', [ForceLoggedInMiddleware])
+    @DStatus(202)
     async check(
         @DPath('id') id: string,
         @DBody() data: any,
@@ -150,8 +152,6 @@ export class PolicyController {
             getRequestRealmID(event),
         );
 
-        event.response.status = 202;
-
         if (result.success) {
             return { status: 'success' };
         }
@@ -163,6 +163,7 @@ export class PolicyController {
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
+    @DStatus(202)
     async update(
         @DPath('id') id: string,
         @DBody() data: PolicyUpdatePayload,
@@ -176,8 +177,6 @@ export class PolicyController {
             data,
             actor,
         );
-
-        event.response.status = 202;
 
         return { data: entity, meta: {} };
     }
@@ -207,6 +206,7 @@ export class PolicyController {
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
+    @DStatus(202)
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
@@ -214,12 +214,11 @@ export class PolicyController {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
-        event.response.status = 202;
-
         return { data: entity, meta: {} };
     }
 
     @DPost('', [ForceLoggedInMiddleware])
+    @DStatus(201)
     async create(
         @DBody() data: PolicyCreatePayload,
         @DContext() event: IAppEvent,
@@ -228,8 +227,6 @@ export class PolicyController {
 
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
-
-        event.response.status = 201;
 
         return { data: entity, meta: {} };
     }

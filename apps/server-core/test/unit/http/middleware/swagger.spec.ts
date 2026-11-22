@@ -116,6 +116,29 @@ describe('swagger middleware', () => {
         });
     });
 
+    describe('ui shell headers', () => {
+        it('sets a content security policy bound to the api origin', async () => {
+            const app = createRouter(documentPath);
+
+            const response = await app.fetch(new Request('http://localhost/docs'));
+            const policy = response.headers.get('content-security-policy');
+
+            expect(policy).toBeTruthy();
+            expect(policy).toMatch(/connect-src [^;]*http:\/\/localhost:3000/);
+            expect(policy).toMatch(/frame-ancestors 'none'/);
+        });
+
+        it('sets the security headers', async () => {
+            const app = createRouter(documentPath);
+
+            const response = await app.fetch(new Request('http://localhost/docs'));
+
+            expect(response.headers.get('x-content-type-options')).toEqual('nosniff');
+            expect(response.headers.get('referrer-policy')).toEqual('no-referrer');
+            expect(response.headers.get('x-frame-options')).toEqual('DENY');
+        });
+    });
+
     describe('staleness', () => {
         it('warns when the document was built for another query vocabulary', () => {
             const { logger, warnings } = createRecordingLogger();

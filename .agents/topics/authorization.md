@@ -100,10 +100,10 @@ invalidation is load-bearing:
 - A read inside an open transaction bypasses the cache (`QueryCache`): a rollback bumps
   nothing, so an uncommitted row must never be stored.
 - The TTL (`TAGGED_CACHE_TTL`, 60 s) is the only backstop for raw SQL, which fires no
-  subscriber. A bump that fails (Redis down at commit) makes this process read past the cache
-  for one TTL from the failure (`QueryCache.createInvalidator`); other replicas sharing the
-  Redis serve the stale entry until it lapses. Remove the guard once tada5hi/rapiq#993
-  replays lost tags.
+  subscriber. A bump that fails (Redis down at commit) stays pending in this process's
+  `TaggedCache` (`pendingInvalidations`), which serves and stores no value carrying the tag
+  and replays the bump; other replicas sharing the Redis serve the stale entry until the
+  replay lands or the entry lapses.
 - Trees are cached normalized (once, not per definition) and reassembled on read, which is
   where a missing tree still throws. Every hit is a copy (JSON on Redis, a clone in the
   memory driver), because the memory driver would otherwise hand out the stored reference.

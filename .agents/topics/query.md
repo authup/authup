@@ -233,9 +233,15 @@ marks each query-capable method, a runtime no-op that trapi reads.
   filter-decoding route.
 
 **The trapi handler** is an inline preset in `trapi.config.ts`
-(`querySchemaHandler`, extends `@routup/decorators/preset`). It resolves the
-name via `schemaRegistry.getOrFail` (`EntityType` is wider than the registry)
-and throws on an unfoldable argument or unknown schema, failing the generate.
+(`querySchemaHandler`, extends `@routup/decorators/preset`). The preset is
+extended by a path resolved from server-core (`import.meta.resolve`): a bare
+name is resolved from `@trapi/core`'s own location, which misses or loads
+another copy whenever npm nests `@routup/decorators` under server-core, and
+`@DStatus` then silently documents 200. The handler resolves the name via
+`schemaRegistry.getOrFail` (`EntityType` is wider than the registry) and
+throws on an unfoldable argument (`requireString`, naming argument index and
+location), a missing one, an unknown shape or an unknown schema, failing the
+generate.
 
 - A handler's `draft.extensions`, `draft.responses` and `draft.parameters`
   (trapi 2.1.1) land on the operation. Root

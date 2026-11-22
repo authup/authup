@@ -9,7 +9,7 @@ import type { Policy, Realm } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import type { IPolicyRepository } from '../../../../../core/index.ts';
 import { PolicyEntity, PolicyRepository, RealmEntity } from '../../../../../adapters/database/domains/index.ts';
-import { isDatabaseTypeRowLockable } from '../../../../../adapters/database/helpers/index.ts';
+import { isRowLockSupported } from 'typeorm-extension';
 import { EntityRepositoryAdapter } from '../entity/index.ts';
 import { createRealmNameResolver } from '../realm/repository.ts';
 
@@ -105,7 +105,7 @@ export class PolicyRepositoryAdapter extends EntityRepositoryAdapter<Policy, Pol
     async transaction<R>(fn: (repository: IPolicyRepository) => Promise<R>): Promise<R> {
         const dataSource = this.repository.manager.connection;
 
-        if (!isDatabaseTypeRowLockable(dataSource.options.type)) {
+        if (!isRowLockSupported(dataSource)) {
             // better-sqlite3: no FOR UPDATE, and the driver shares one query
             // runner, so a transaction here would nest inside whatever else
             // runs on it (the removeGuarded rule)

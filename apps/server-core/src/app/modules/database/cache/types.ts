@@ -42,8 +42,6 @@ export interface IQueryCache {
 export type QueryCacheContext = {
     dataSource: DataSource,
     cache?: ITaggedCache,
-    /** The clock the suspension window is measured on. Default: `Date.now()`. */
-    now?: () => number,
 };
 
 /**

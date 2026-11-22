@@ -489,18 +489,18 @@ export class RoleController {
     }
 
     @DPost('')
+    @DStatus(201)
     async add(@DBody() data: RoleCreatePayload, @DContext() event: IAppEvent): Promise<EntityRecordResponse<Role>> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
-        event.response.status = 201;
         return { data: entity, meta: {} };
     }
 
     @DDelete('/:id')
+    @DStatus(202)
     async drop(@DPath('id') id: string, @DContext() event: IAppEvent): Promise<EntityRecordResponse<Role>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
-        event.response.status = 202;
         return { data: entity, meta: {} };
     }
 }
@@ -518,7 +518,7 @@ Controller conventions:
 - Build actor via `buildActorContext(event)`
 - For realm-scoped writes (create / update / save) on controllers that are dual-mounted at `/realms/:realmId/<entity>`, call `applyRouteRealmIDToBody(event, data)` before delegating: route realm wins silently over body realm. For realm-scoped reads, pass `getRequestRealmID(event)` as the realm key argument. See *Realm Scoping Model → Nested Route Mounting*.
 - Delegate all work to `this.service.*()` methods
-- For non-200 statuses, set `event.response.status = 201/202` and return the value. Never use `sendCreated`/`sendAccepted` because they erase the typed return value that trapi extracts.
+- A method that always answers a non-200 status declares it with `@DStatus(201)` / `@DStatus(202)`, which also documents the return type under that status. Set `event.response.status` only when the status depends on the outcome (a `PUT` upsert answers `created ? 201 : 202`); a status the method sets differs from the default and wins over the decorator, so such a method carries no `@DStatus`. Never use `sendCreated`/`sendAccepted` because they erase the typed return value that trapi extracts.
 
 Exceptions where controllers retain some logic:
 - **Self-access resolution** (client, user): Resolve `@me`/`@self` tokens to actual IDs before delegating
@@ -599,7 +599,7 @@ Entities like user, policy, and identity-provider store dynamic key-value pairs 
 
 **A value is stored in a type-preserving form (#3671).** The four `*_attributes` `value` columns persist through `serialize` / `deserialize` from `@authup/kit`: `serialize` writes a string JSON-quoted like any other JSON value, and `deserialize` (destr) reads both the quoted and the legacy bare form. Two consequences. A query on `value` through a find operator runs its operand through the transformer, so `KeyRepositoryAdapter.countBlobReferences` matches identity-provider blobs with raw parameters for both forms (`v1.<key>.%` and `"v1.<key>.%`). And no row is migrated: a legacy bare `false` or `123` is ambiguous, since `serialize(false)` and `serialize('false')` both wrote `false` and the API accepts non-string JSON values, so rewriting it would be a guess. Every attribute table may therefore hold legacy bare rows, which keep their old reading everywhere until written again; a reader or filter on `value` must accept both forms.
 
-**Critical rule: separate read-path vs write-path EA loading.** `EntityRepositoryAdapter` enforces it (see *Adapter Implementation*): an EA adapter overrides `extendOne` / `extendMany`, which the base calls from `findOneById`, `findOneByName` and `findMany` but never from `findOneBy`, the read a write loads through. `saveWithEA()` does not extend after the save either. It writes the parent row and its attribute rows in ONE transaction (issue #3668), so a failing row write rolls the parent back; it joins a transaction already open on its manager and otherwise opens one on that manager, never a second pooled connection (#3526, #3539). On better-sqlite3 it opens none, since the driver shares one query runner and a transaction there would nest inside whatever else is running (the `isDatabaseTypeRowLockable` rule every transaction seam follows). Pinned on mysql/postgres by `test/unit/adapters/database/extra-attribute-transaction.spec.ts` (sqlite does not enforce the varchar length the spec fails on).
+**Critical rule: separate read-path vs write-path EA loading.** `EntityRepositoryAdapter` enforces it (see *Adapter Implementation*): an EA adapter overrides `extendOne` / `extendMany`, which the base calls from `findOneById`, `findOneByName` and `findMany` but never from `findOneBy`, the read a write loads through. `saveWithEA()` does not extend after the save either. It writes the parent row and its attribute rows in ONE transaction (issue #3668), so a failing row write rolls the parent back; it joins a transaction already open on its manager and otherwise opens one on that manager, never a second pooled connection (#3526, #3539). On better-sqlite3 it opens none, since the driver shares one query runner and a transaction there would nest inside whatever else is running (the `isRowLockSupported` rule every transaction seam follows). Pinned on mysql/postgres by `test/unit/adapters/database/extra-attribute-transaction.spec.ts` (sqlite does not enforce the varchar length the spec fails on).
 
 **`saveEA` REPLACES the attribute set, which a partial update must opt out
 of.** Every existing attribute row whose name is not an own-property of the

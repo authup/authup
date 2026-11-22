@@ -14,6 +14,7 @@ import {
     DPath,
     DPost,
     DPut,
+    DStatus,
     DTags,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
@@ -94,14 +95,13 @@ export class ScopeController {
     }
 
     @DPost('', [ForceLoggedInMiddleware])
+    @DStatus(201)
     async add(
         @DBody() data: ScopeCreatePayload,
         @DContext() event: IAppEvent,
     ): Promise<EntityRecordResponse<Scope>> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
-
-        event.response.status = 201;
 
         return { data: entity, meta: {} };
     }
@@ -122,6 +122,7 @@ export class ScopeController {
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
+    @DStatus(202)
     async edit(
         @DPath('id') id: string,
         @DBody() data: ScopeUpdatePayload,
@@ -133,8 +134,6 @@ export class ScopeController {
             data,
             actor,
         );
-
-        event.response.status = 202;
 
         return { data: entity, meta: {} };
     }
@@ -161,14 +160,13 @@ export class ScopeController {
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
+    @DStatus(202)
     async drop(
         @DPath('id') id: string,
         @DContext() event: IAppEvent,
     ): Promise<EntityRecordResponse<Scope>> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
-
-        event.response.status = 202;
 
         return { data: entity, meta: {} };
     }

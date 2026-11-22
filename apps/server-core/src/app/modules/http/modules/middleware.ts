@@ -23,6 +23,7 @@ import {
     registerIdentityRateLimitMiddleware,
     registerInternalHttpClientMiddleware,
     registerPrometheusMiddleware,
+    registerPrometheusRoutingMarker,
     registerRateLimitMiddleware,
 } from '../../../../adapters/http/index.ts';
 import { HTTPInjectionKey } from '../constants.ts';
@@ -56,6 +57,8 @@ export class HTTPMiddlewareModule {
         await this.mountRealmResolver(router, container);
         await this.mountAuthorization(router, container);
         await this.mountIdentityRateLimit(router, container);
+        // after the last middleware that refuses a request, before every mount
+        await this.mountPrometheusRoutingMarker(router, container);
         // after the second stage, which is the one that limits an anonymous
         // request: the first stage counts failed authentications alone
         await this.mountSwagger(router, container);
@@ -116,6 +119,16 @@ export class HTTPMiddlewareModule {
         }
 
         registerPrometheusMiddleware(router, this.transformBoolToEmptyObject(config.middlewarePrometheus));
+    }
+
+    async mountPrometheusRoutingMarker(router: IApp, container: IContainer): Promise<void> {
+        const config = container.resolve(ConfigInjectionKey);
+
+        if (!this.isEnabled(config.middlewarePrometheus)) {
+            return;
+        }
+
+        registerPrometheusRoutingMarker(router);
     }
 
     async mountRateLimit(router: IApp, container: IContainer): Promise<void> {

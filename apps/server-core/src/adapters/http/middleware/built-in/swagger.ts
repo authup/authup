@@ -109,8 +109,16 @@ export function createSwaggerMiddleware(input: SwaggerMiddlewareOptions) : Plugi
             // `/openapi.json` serves. The plugin also validates its options
             // here (an unusable `baseURL` throws), which must not abort the
             // boot either: the raw document stays served.
+            //
+            // `csp` derives `connect-src` from the document's servers and
+            // the `baseURL`, so "Try it out" reaches the API and nothing
+            // else.
             try {
-                swaggerUI(document, options).install(router);
+                swaggerUI(document, {
+                    csp: true,
+                    securityHeaders: true,
+                    ...options,
+                }).install(router);
             } catch (e) {
                 logger?.warn(`The Swagger UI could not be mounted, only the raw OpenAPI document is served. Reason: ${normalizeError(e).message}`);
             }

@@ -5,149 +5,77 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OptionsInput } from '@routup/prometheus';
+import type { LabelTransformer, OptionsInput } from '@routup/prometheus';
 import { prometheus } from '@routup/prometheus';
-import type { IApp, IAppEvent } from 'routup';
+import type { IApp } from 'routup';
+import { defineCoreHandler } from 'routup';
 
 const PATH_LABEL_UNMATCHED = '/{unmatched}';
 
-type RouteTemplate = {
-    method?: string,
-    segments: string[],
-    label: string,
-};
-
-type RouteTemplates = {
-    exact: RouteTemplate[],
-    prefix: RouteTemplate[],
-};
-
-function toPathSegments(path: string): string[] {
-    return path.split('/').filter((segment) => segment.length > 0);
-}
-
-function isParameterSegment(segment: string): boolean {
-    return segment.startsWith(':') || segment === '*';
-}
-
-function matchSegments(
-    templateSegments: string[],
-    segments: string[],
-    prefix: boolean,
-): boolean {
-    if (
-        prefix ?
-            segments.length < templateSegments.length :
-            segments.length !== templateSegments.length
-    ) {
-        return false;
-    }
-
-    for (const [i, templateSegment] of templateSegments.entries()) {
-        if (isParameterSegment(templateSegment)) {
-            continue;
-        }
-
-        if (templateSegment !== segments[i]) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-function buildRouteTemplates(router: IApp): RouteTemplates {
-    const exact: RouteTemplate[] = [];
-    const prefix: RouteTemplate[] = [];
-    const seen = new Set<string>();
-
-    for (const route of router.routes) {
-        if (typeof route.path !== 'string') {
-            continue;
-        }
-
-        const segments = toPathSegments(route.path);
-        const label = `/${segments.join('/')}`;
-        const key = `${route.method || ''} ${label}`;
-
-        if (seen.has(key)) {
-            continue;
-        }
-
-        seen.add(key);
-
-        if (route.method) {
-            exact.push({
-                method: route.method,
-                segments,
-                label,
-            });
-        } else if (segments.length > 0) {
-            prefix.push({ segments, label });
-        }
-    }
-
-    prefix.sort((a, b) => b.segments.length - a.segments.length);
-
-    return { exact, prefix };
-}
+const ROUTING_REACHED_KEY = 'authup:prometheus:routing-reached';
 
 /**
  * The `path` label must stay bounded: labeling by the raw request path lets
  * every probed id (`/users/<random-uuid>`, even on 401/404) mint a new
- * prom-client time-series — unbounded registry growth. Requests are instead
- * labeled by the registered route template (`/users/:id`), read from the
- * router's own route table (child apps are flattened into the root with full
- * patterns, and all routes are registered before `listen`, so a snapshot at
- * first request is complete). Method-agnostic mounts (`/docs`, a console
- * handler's mount under `authup start`) label as `<mount>/**`; anything else collapses into
- * one unmatched bucket.
+ * prom-client time-series. The plugin labels a request by the pattern of the
+ * method-bound route it dispatched (`/users/:id`, `HEAD` by its `GET` route)
+ * and every other request by `unmatchedPath`.
+ *
+ * This transformer relabels the requests no method-bound route handled but
+ * that fall under a method-less mount (`/docs`, a console handler's mount
+ * under `authup start`) as `<mount>/**`, so dashboards keep one series per
+ * mount. Only a request that reached routing qualifies
+ * (`registerPrometheusRoutingMarker`): one a global middleware refused (a
+ * 401, a 429) stays unmatched even when its path lies under a mount. Only
+ * parameter-free mounts qualify, so the label set stays the set of mount
+ * paths. They are read from the router's route table at the first
+ * request: every mount is registered before `listen`, while this plugin is
+ * installed before any of them.
  */
-export function createRouteTemplateNormalizePath(
-    router: IApp,
-): (path: string, event: IAppEvent) => string {
-    let templates : RouteTemplates | undefined;
+export function createMountPathLabelTransformer(router: IApp): LabelTransformer {
+    let mounts : string[] | undefined;
 
-    return (path, event) => {
-        if (!templates) {
-            templates = buildRouteTemplates(router);
+    return (labels, event) => {
+        if (event.route || !event.store[ROUTING_REACHED_KEY]) {
+            return;
         }
 
-        const segments = toPathSegments(path);
-        const method = `${event.method}`.toUpperCase();
-
-        for (const template of templates.exact) {
-            if (
-                template.method !== method &&
-                !(method === 'HEAD' && template.method === 'GET')
-            ) {
-                continue;
-            }
-
-            if (matchSegments(template.segments, segments, false)) {
-                return template.label;
-            }
+        if (!mounts) {
+            mounts = router.routes
+                .filter((route) => !route.method &&
+                    typeof route.path === 'string' &&
+                    route.path !== '/' &&
+                    !/[:*]/.test(route.path))
+                .map((route) => `${route.path}`.replace(/\/+$/, ''))
+                .sort((a, b) => b.length - a.length);
         }
 
-        for (const template of templates.exact) {
-            if (matchSegments(template.segments, segments, false)) {
-                return template.label;
-            }
-        }
+        const mount = mounts.find((prefix) => event.path === prefix ||
+            event.path.startsWith(`${prefix}/`));
 
-        for (const template of templates.prefix) {
-            if (matchSegments(template.segments, segments, true)) {
-                return `${template.label}/**`;
-            }
+        if (mount) {
+            labels.path = `${mount}/**`;
         }
-
-        return PATH_LABEL_UNMATCHED;
     };
+}
+
+/**
+ * Marks a request as having passed every global middleware that can refuse
+ * it. Registered after the last of them and before the mounts, so the mount
+ * label is given only to requests a mount could have answered.
+ */
+export function registerPrometheusRoutingMarker(router: IApp) {
+    router.use(defineCoreHandler((event) => {
+        event.store[ROUTING_REACHED_KEY] = true;
+
+        return event.next();
+    }));
 }
 
 export function registerPrometheusMiddleware(router: IApp, input?: OptionsInput) {
     let options : OptionsInput = {
-        normalizePath: createRouteTemplateNormalizePath(router),
+        unmatchedPath: PATH_LABEL_UNMATCHED,
+        requestDurationLabelTransformer: createMountPathLabelTransformer(router),
         skip(event) {
             let { path } = event;
 

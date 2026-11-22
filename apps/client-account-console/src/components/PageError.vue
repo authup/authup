@@ -55,9 +55,10 @@ export default defineComponent({
     <VCAlert
         color="error"
         variant="soft"
+        align="center"
     >
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <span>{{ translations.loadFailed }}</span>
+        {{ translations.loadFailed }}
+        <template #actions>
             <VCButton
                 size="sm"
                 color="error"
@@ -66,6 +67,6 @@ export default defineComponent({
             >
                 {{ translations.retry }}
             </VCButton>
-        </div>
+        </template>
     </VCAlert>
 </template>

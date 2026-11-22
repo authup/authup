@@ -4,93 +4,134 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import type { IAppEvent } from 'routup';
+import { Registry } from 'prom-client';
 import { App, defineCoreHandler } from 'routup';
-import { describe, expect, it } from 'vitest';
-import { createRouteTemplateNormalizePath } from '../../../../src/adapters/http/middleware/built-in/prometheus.ts';
+import {
+    beforeEach,
+    describe,
+    expect,
+    it,
+} from 'vitest';
+import {
+    registerPrometheusMiddleware,
+    registerPrometheusRoutingMarker,
+} from '../../../../src/adapters/http/middleware/built-in/prometheus.ts';
+
+const ID = '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d';
 
 function createHandler() {
     return defineCoreHandler(() => 'ok');
 }
 
-function createRouter(): App {
+function createRouter(registry: Registry): App {
     const router = new App();
+
+    // installed first, like the middleware module does
+    registerPrometheusMiddleware(router, { registry, uptime: false });
+
+    // a global middleware refusing before routing, like the rate limit
+    router.use(defineCoreHandler((event) => {
+        if (event.headers.get('x-refuse')) {
+            return new Response(null, { status: 429 });
+        }
+
+        return event.next();
+    }));
+
+    registerPrometheusRoutingMarker(router);
 
     const users = new App();
 
     users.get('/', createHandler());
     users.get('/:id', createHandler());
     users.post('/', createHandler());
-    users.delete('/:id', createHandler());
     users.post('/:id/authenticators/:deviceId/confirm', createHandler());
 
     router.use('/users', users);
     router.use('/realms/:realmId/users', users);
 
     router.post('/token', createHandler());
-    router.get('/token/introspect', createHandler());
 
     router.use('/docs', createHandler());
-    router.use(defineCoreHandler((event) => event.next()));
+    router.use('/console/admin', createHandler());
 
     return router;
 }
 
-function createEvent(method: string): IAppEvent {
-    return { method } as IAppEvent;
-}
+describe('http/middleware/prometheus/path-label', () => {
+    let registry : Registry;
+    let router : App;
 
-describe('http/middleware/prometheus/normalize-path', () => {
-    const normalize = createRouteTemplateNormalizePath(createRouter());
-
-    it('should label a parameterized route by its template', () => {
-        expect(normalize('/users/9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d', createEvent('GET')))
-            .toEqual('/users/:id');
-        expect(normalize('/users/@me', createEvent('GET')))
-            .toEqual('/users/:id');
-        expect(normalize('/users/foo/authenticators/bar/confirm', createEvent('POST')))
-            .toEqual('/users/:id/authenticators/:deviceId/confirm');
+    beforeEach(() => {
+        registry = new Registry();
+        router = createRouter(registry);
     });
 
-    it('should label nested realm mounts by their template', () => {
-        expect(normalize('/realms/master/users/9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d', createEvent('GET')))
-            .toEqual('/realms/:realmId/users/:id');
-        expect(normalize('/realms/master/users', createEvent('POST')))
-            .toEqual('/realms/:realmId/users');
+    async function request(method: string, path: string, headers?: Record<string, string>) {
+        await router.fetch(new Request(`http://localhost${path}`, { method, headers }));
+    }
+
+    async function readPathLabels() : Promise<string[]> {
+        const metrics = await registry.getMetricsAsJSON();
+        const labels = new Set<string>();
+
+        for (const metric of metrics) {
+            for (const value of (metric as { values?: { labels: Record<string, unknown> }[] }).values || []) {
+                if (typeof value.labels.path === 'string') {
+                    labels.add(value.labels.path);
+                }
+            }
+        }
+
+        return [...labels].sort();
+    }
+
+    it('should label a request by the pattern of its route', async () => {
+        await request('GET', `/users/${ID}`);
+        await request('GET', '/users/@me');
+        await request('POST', '/users/foo/authenticators/bar/confirm');
+        await request('GET', `/realms/master/users/${ID}`);
+        await request('POST', '/token');
+
+        expect(await readPathLabels()).toEqual([
+            '/realms/:realmId/users/:id',
+            '/token',
+            '/users/:id',
+            '/users/:id/authenticators/:deviceId/confirm',
+        ]);
     });
 
-    it('should keep static routes as-is', () => {
-        expect(normalize('/users', createEvent('GET'))).toEqual('/users');
-        expect(normalize('/token', createEvent('POST'))).toEqual('/token');
-        expect(normalize('/token/introspect', createEvent('GET'))).toEqual('/token/introspect');
+    it('should label a HEAD request by its GET route', async () => {
+        await request('HEAD', `/users/${ID}`);
+
+        expect(await readPathLabels()).toEqual(['/users/:id']);
     });
 
-    it('should ignore trailing slashes', () => {
-        expect(normalize('/users/9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d/', createEvent('GET')))
-            .toEqual('/users/:id');
+    it('should collapse unrouted requests into one bucket', async () => {
+        await request('GET', `/no-such-route/${ID}`);
+        await request('GET', '/users/foo/bar');
+        await request('PATCH', `/users/${ID}`);
+
+        expect(await readPathLabels()).toEqual(['/{unmatched}']);
     });
 
-    it('should match HEAD requests against GET routes', () => {
-        expect(normalize('/users/9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d', createEvent('HEAD')))
-            .toEqual('/users/:id');
+    it('should label a request a method-less mount answers by its mount', async () => {
+        await request('GET', '/docs');
+        await request('GET', '/docs/swagger-ui.css');
+        await request('GET', '/console/admin/users/abc');
+        await request('GET', '/documents');
+
+        expect(await readPathLabels()).toEqual([
+            '/console/admin/**',
+            '/docs/**',
+            '/{unmatched}',
+        ]);
     });
 
-    it('should label a method mismatch by the route shape of the url', () => {
-        expect(normalize('/users/9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d', createEvent('PATCH')))
-            .toEqual('/users/:id');
-        expect(normalize('/users/9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d', createEvent('OPTIONS')))
-            .toEqual('/users/:id');
-    });
+    it('should keep a request refused before routing unmatched under a mount', async () => {
+        await request('GET', '/docs/swagger-ui.css', { 'x-refuse': '1' });
+        await request('GET', `/users/${ID}`, { 'x-refuse': '1' });
 
-    it('should label method-agnostic mounts with a wildcard suffix', () => {
-        expect(normalize('/docs/swagger.json', createEvent('GET'))).toEqual('/docs/**');
-        expect(normalize('/docs', createEvent('GET'))).toEqual('/docs/**');
-    });
-
-    it('should collapse unregistered paths into a single bucket', () => {
-        expect(normalize('/no-such-route/9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d', createEvent('GET')))
-            .toEqual('/{unmatched}');
-        expect(normalize('/users/foo/bar', createEvent('GET')))
-            .toEqual('/{unmatched}');
+        expect(await readPathLabels()).toEqual(['/{unmatched}']);
     });
 });

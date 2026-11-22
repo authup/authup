@@ -16,7 +16,7 @@ import type {
     Repository,
 } from 'typeorm';
 import { In } from 'typeorm';
-import { isDatabaseTypeRowLockable } from '../helpers/index.ts';
+import { isRowLockSupported } from 'typeorm-extension';
 import type {
     EARepositoryAdapterOptions,
     EARepositoryEntityBase,
@@ -104,7 +104,7 @@ export class ExtraAttributesRepositoryAdapter<
 
         if (
             manager.queryRunner?.isTransactionActive ||
-            !isDatabaseTypeRowLockable(manager.connection.options.type)
+            !isRowLockSupported(manager)
         ) {
             return this.saveWithEAIn(manager, input, attributes, options);
         }

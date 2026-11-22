@@ -76,14 +76,18 @@ export function createTaggedCacheClient(input: TaggedCacheClientCreateInput) : T
 
 export function createTaggedCache(input: TaggedCacheCreateInput) : TaggedCacheCreateResult {
     if (!input.redis) {
+        const cache = new TaggedCache({
+            driver: new MemoryCacheDriver({ maxTtl: TAGGED_CACHE_TTL }),
+            ttl: TAGGED_CACHE_TTL,
+            onError: input.onError,
+        });
+
         return {
-            cache: new TaggedCache({
-                driver: new MemoryCacheDriver({ maxTtl: TAGGED_CACHE_TTL }),
-                ttl: TAGGED_CACHE_TTL,
-                onError: input.onError,
-            }),
+            cache,
             ready: async () => {},
-            dispose: async () => {},
+            dispose: async () => {
+                cache.dispose();
+            },
         };
     }
 
@@ -97,16 +101,20 @@ export function createTaggedCache(input: TaggedCacheCreateInput) : TaggedCacheCr
         maxTtl: TAGGED_CACHE_TTL,
     });
 
+    const cache = new TaggedCache({
+        driver,
+        ttl: TAGGED_CACHE_TTL,
+        onError: input.onError,
+    });
+
     return {
-        cache: new TaggedCache({
-            driver,
-            ttl: TAGGED_CACHE_TTL,
-            onError: input.onError,
-        }),
+        cache,
         ready: async () => {
             await driver.ready(TAGGED_CACHE_CONNECT_TIMEOUT);
         },
         dispose: async () => {
+            // the replay timer would otherwise bump through a closed client.
+            cache.dispose();
             client.disconnect();
         },
     };
