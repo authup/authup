@@ -16,10 +16,11 @@
  * `test/unit/http/openapi-coverage.spec.ts`.
  */
 
+import { fileURLToPath } from 'node:url';
 import { Parameter as RapiqParameter } from '@rapiq/core';
 import type { Parameter, Response, SchemaDescription } from '@trapi/core';
 import { defineConfig } from '@trapi/cli';
-import { method, readString } from '@trapi/core';
+import { method, requireString } from '@trapi/core';
 import {
     FILTERS_QUERY_PARAMETERS,
     RECORD_QUERY_PARAMETERS,
@@ -383,19 +384,34 @@ const FILTER_REJECTED_RESPONSE : Response = {
  * `RECORD_QUERY_PARAMETERS` stays declared exactly once while the decorator
  * argument stays something the type resolver folds.
  *
- * An argument the resolver cannot fold, and a schema name the registry does
- * not hold, both fail the generate: `EntityType` is wider than the registry,
+ * An argument the resolver cannot fold fails the generate naming the
+ * decorator, the argument index and the source location (`requireString`).
+ * A missing argument, a shape outside `SHAPE_PARAMETERS` and a schema name
+ * the registry does not hold fail it too: `EntityType` is wider than the registry,
  * four of its members carrying no schema, so the marker's own type cannot rule
  * them out.
  */
+/**
+ * The decorators preset, resolved from this package. Named bare, `@trapi/core`
+ * resolves it from its OWN location, the workspace root, so wherever npm
+ * nests `@routup/decorators` under this package the generate either cannot
+ * find it or loads another copy, which silently drops what a newer preset
+ * handles (`@DStatus`).
+ */
+const DECORATORS_PRESET = fileURLToPath(import.meta.resolve('@routup/decorators/preset'));
+
 const querySchemaHandler = method({
     match: { name: 'DQuerySchema', on: 'method' },
     apply: (ctx, draft) => {
-        const schema = readString(ctx.argument(0));
-        const shape = readString(ctx.argument(1));
+        const schema = requireString(ctx, 0);
+        const shape = requireString(ctx, 1);
 
-        if (!schema || !(shape && shape in SHAPE_PARAMETERS)) {
-            throw new Error(`@DQuerySchema on '${draft.name}' has unresolvable arguments.`);
+        if (!schema || !shape) {
+            throw new Error(`@DQuerySchema on '${draft.name}' needs a schema and a shape.`);
+        }
+
+        if (!(shape in SHAPE_PARAMETERS)) {
+            throw new Error(`@DQuerySchema on '${draft.name}' names the shape '${shape}', expected one of: ${Object.keys(SHAPE_PARAMETERS).join(', ')}.`);
         }
 
         const registered = schemaRegistry.getOrFail(schema);
@@ -427,7 +443,7 @@ export default defineConfig({
         entryPoint: 'src/adapters/http/controllers/**/*.ts',
         preset: {
             name: 'authup',
-            extends: ['@routup/decorators/preset'],
+            extends: [DECORATORS_PRESET],
             methods: [querySchemaHandler],
         },
         tsconfig: 'tsconfig.json',
