@@ -235,7 +235,7 @@ describe.each(CONSOLES)('$name console session', ({
 
         expect(sessionResponse.status).toEqual(200);
         expect(sessionResponse.headers.get('cache-control')).toEqual('no-store');
-        expect(sessionResponse.headers.get('vary')).toEqual('cookie');
+        expect((sessionResponse.headers.get('vary') ?? '').split(',').map((value) => value.trim())).toEqual(expect.arrayContaining(['cookie', 'origin']));
 
         const sessionBody = await sessionResponse.json();
 

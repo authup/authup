@@ -122,12 +122,13 @@ export function createThemeAssetsHandler(provider: IThemeProvider) : Handler {
             ) as ReadableStream,
             stats: () => stats,
             name: filePath,
+            // Pinned from our own extension map rather than sniffed or
+            // inferred from the name.
+            type: THEME_ASSET_CONTENT_TYPES[extension],
         });
 
-        // Pin the content type from our own extension map rather than
-        // letting it be sniffed or inferred, and neutralize SVG as active
-        // content (an SVG navigated to directly executes inline script).
-        response.headers.set(HeaderName.CONTENT_TYPE, THEME_ASSET_CONTENT_TYPES[extension]);
+        // Neutralize SVG as active content (an SVG navigated to directly
+        // executes inline script).
         response.headers.set('x-content-type-options', 'nosniff');
         response.headers.set('content-security-policy', THEME_ASSET_CSP);
 

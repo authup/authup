@@ -77,9 +77,9 @@ function isFailedAuthentication(event: IAppEvent, response: Response) : boolean 
 }
 
 function buildAddressKey(event: IAppEvent) : string {
-    // @routup/rate-limit's default keyGenerator hardcodes
-    // `{ trustProxy: true }`; deriving the key here instead lets it follow the
-    // app-level trust contract (config `trustProxy`). A trailing port is
+    // @routup/rate-limit's default keyGenerator trusts proxies unless its own
+    // `trustProxy` option says otherwise; deriving the key here follows the
+    // app-level trust contract (config `trustProxy`) instead. A trailing port is
     // dropped, and the key is prefixed because it indexes a plain object,
     // where a name such as `constructor` would never count up to the limit.
     return `ip:${stripPort(getRequestIP(event) || '127.0.0.1')}`;
