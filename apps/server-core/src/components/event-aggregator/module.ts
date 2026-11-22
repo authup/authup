@@ -30,19 +30,32 @@ function shiftDay(day: string, days: number) : string {
  * refilling the newest missing days on every tick. The cursor lives as long
  * as the returned function; a restart walks again, skipping days that
  * already hold rows.
+ *
+ * An aborted `signal` (the component stopping) ends the pass between two
+ * steps: the cursor keeps the days already filled, and the prune waits for
+ * the next pass.
  */
 export function createEventAggregatorTick(
     repository: IEventAggregateRepository,
     options: { retentionDays: number },
-) : () => Promise<void> {
+) : (signal?: AbortSignal) => Promise<void> {
     let cursor : string | undefined;
 
-    return async () => {
+    return async (signal?: AbortSignal) => {
         const today = new Date().toISOString().slice(0, 10);
         const yesterday = shiftDay(today, -1);
 
         await repository.recompute(today);
+
+        if (signal?.aborted) {
+            return;
+        }
+
         await repository.recompute(yesterday);
+
+        if (signal?.aborted) {
+            return;
+        }
 
         const horizon = options.retentionDays > 0 ?
             shiftDay(today, -options.retentionDays) :
@@ -56,13 +69,13 @@ export function createEventAggregatorTick(
 
         const start = cursor && cursor < yesterday ? cursor : shiftDay(yesterday, -1);
 
-        if (oldest && start >= oldest) {
+        if (oldest && start >= oldest && !signal?.aborted) {
             const present = new Set(await repository.findDays(oldest, start));
 
             let day = start;
             let filled = 0;
 
-            while (day >= oldest && filled < EVENT_AGGREGATE_BACKFILL_DAYS) {
+            while (day >= oldest && filled < EVENT_AGGREGATE_BACKFILL_DAYS && !signal?.aborted) {
                 if (!present.has(day)) {
                     await repository.recompute(day);
                     filled++;
@@ -74,7 +87,7 @@ export function createEventAggregatorTick(
             cursor = day;
         }
 
-        if (horizon) {
+        if (horizon && !signal?.aborted) {
             await repository.deleteBefore(horizon);
         }
     };
@@ -98,6 +111,6 @@ export function createEventAggregatorComponent(
                 logger?.warn(e);
             },
         },
-        run: tick,
+        run: ({ signal }) => tick(signal),
     });
 }

@@ -76,7 +76,7 @@ behind it. `/readyz` carries a JSON report of its sweeps:
         { "name": "components", "ok": true }
     ],
     "components": [
-        { "name": "oauth2-cleaner", "lastSuccessAt": "2026-09-25T10:00:00.000Z", "runningSince": null, "overdue": false, "hung": false }
+        { "name": "oauth2-cleaner", "lastSuccessAt": "2026-09-25T10:00:00.000Z", "lastErrorAt": null, "lastRunAt": "2026-09-25T10:00:00.000Z", "runningSince": null, "overdue": false, "hung": false }
     ]
 }
 ```
@@ -90,7 +90,8 @@ startup until the first success). A sweep that keeps failing, for example
 because the database is unreachable, turns the worker unhealthy. A pass that
 is still running (`runningSince`) counts as progress for up to 30 minutes, so a
 large drain after lowering a retention window does not read as a failure,
-while a pass that never returns still does.
+while a pass that never returns still does. A sweep failing on every tick
+shows a `lastErrorAt` newer than its `lastSuccessAt` before it turns overdue.
 
 `/livez` is 503 only for that last case, a pass that has been running for more
 than 30 minutes. A restart is the remedy for a hung pass and no help for an

@@ -201,6 +201,8 @@ describe('app/modules/components', () => {
         expect(healthy.components).toEqual([{
             name: 'oauth2-cleaner',
             lastSuccessAt: '2026-01-01T00:00:30.000Z',
+            lastErrorAt: null,
+            lastRunAt: '2026-01-01T00:00:30.000Z',
             runningSince: null,
             overdue: false,
             hung: false,
@@ -220,6 +222,8 @@ describe('app/modules/components', () => {
         expect(overdue.components[0]).toEqual({
             name: 'oauth2-cleaner',
             lastSuccessAt: '2026-01-01T00:00:30.000Z',
+            lastErrorAt: '2026-01-01T00:06:00.000Z',
+            lastRunAt: '2026-01-01T00:06:00.000Z',
             runningSince: null,
             overdue: true,
             hung: false,
@@ -259,6 +263,8 @@ describe('app/modules/components', () => {
             components: [{
                 name: 'oauth2-cleaner',
                 lastSuccessAt: null,
+                lastErrorAt: '2026-01-01T00:06:00.000Z',
+                lastRunAt: '2026-01-01T00:06:00.000Z',
                 runningSince: null,
                 overdue: true,
                 hung: false,
@@ -294,6 +300,8 @@ describe('app/modules/components', () => {
             components: [{
                 name: 'oauth2-cleaner',
                 lastSuccessAt: '2026-01-01T00:00:30.000Z',
+                lastErrorAt: null,
+                lastRunAt: '2026-01-01T00:00:30.000Z',
                 runningSince: '2026-01-01T00:01:00.000Z',
                 overdue: false,
                 hung: false,

@@ -67,6 +67,8 @@ describe('app/modules/components/health', () => {
             components: [{
                 name: 'oauth2-cleaner',
                 lastSuccessAt: null,
+                lastErrorAt: null,
+                lastRunAt: null,
                 runningSince: null,
                 overdue: true,
                 hung: false,
@@ -114,6 +116,8 @@ describe('app/modules/components/health', () => {
             components: [{
                 name: 'oauth2-cleaner',
                 lastSuccessAt: null,
+                lastErrorAt: null,
+                lastRunAt: null,
                 runningSince: null,
                 overdue: true,
                 hung: false,
@@ -142,6 +146,8 @@ describe('app/modules/components/health', () => {
             components: [{
                 name: 'oauth2-cleaner',
                 lastSuccessAt: null,
+                lastErrorAt: null,
+                lastRunAt: null,
                 runningSince: null,
                 overdue: true,
                 hung: false,
@@ -168,6 +174,8 @@ describe('app/modules/components/health', () => {
             components: [{
                 name: 'oauth2-cleaner',
                 lastSuccessAt: null,
+                lastErrorAt: null,
+                lastRunAt: null,
                 runningSince: '2026-01-01T00:00:00.000Z',
                 overdue: true,
                 hung: true,
