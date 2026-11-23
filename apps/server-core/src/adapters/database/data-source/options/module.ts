@@ -81,6 +81,38 @@ const DATABASE_TYPE_HINT = 'Set DB_TYPE to "postgres" or "mysql", together with 
 
 const NO_DATABASE_CONFIGURED = `No database is configured. ${DATABASE_TYPE_HINT}`;
 
+/**
+ * typeorm qualifies its own tables with a postgres `schema` (`DB_SCHEMA`) but
+ * never sets the search_path, so every unqualified migration statement would
+ * land in `public` while the entities read the schema (#3849). The schema
+ * goes first on the search_path, `public` after it for the `uuid-ossp`
+ * functions. A search_path the caller set wins. It runs after the timezone
+ * pin, which moves the startup options in effect into `extra.options`.
+ */
+function applySchemaSearchPath(options: DataSourceOptions): DataSourceOptions {
+    if (options.type !== 'postgres' || !options.schema) {
+        return options;
+    }
+
+    const extra: Record<string, unknown> = options.extra ?? {};
+    const current = typeof extra.options === 'string' ? extra.options : '';
+
+    if (current.includes('search_path')) {
+        return options;
+    }
+
+    // pg splits startup options on whitespace; a backslash keeps a space.
+    const schema = `"${options.schema.replaceAll('"', '""')}"`.replaceAll(' ', '\\ ');
+
+    return {
+        ...options,
+        extra: {
+            ...extra,
+            options: `${current} -c search_path=${schema},public`.trim(),
+        },
+    };
+}
+
 export class DataSourceOptionsBuilder {
     buildWithEnv() {
         const options = readDataSourceOptionsFromEnv();
@@ -254,6 +286,6 @@ export class DataSourceOptionsBuilder {
         // of authup assumes UTC (#3641), so all three halves (session,
         // reader, Date writer) are pinned. A setting contradicting the pin
         // fails here rather than being half applied.
-        return pinTimezone(options, 'UTC');
+        return applySchemaSearchPath(pinTimezone(options, 'UTC'));
     }
 }

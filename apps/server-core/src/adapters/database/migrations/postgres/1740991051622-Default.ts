@@ -177,16 +177,16 @@ export class Default1740991051622 implements MigrationInterface {
             ALTER TABLE "auth_permissions" DROP CONSTRAINT "UQ_561d1b8a5a7db602df418d7cd53"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_00fd737c365d688f9edd0c73ec"
+            DROP INDEX "IDX_00fd737c365d688f9edd0c73ec"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_69e83c8e7e11a247a0809eb332"
+            DROP INDEX "IDX_69e83c8e7e11a247a0809eb332"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_8f460e65af897b9b049f582ad0"
+            DROP INDEX "IDX_8f460e65af897b9b049f582ad0"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_707089f1df498d1719972e69ae"
+            DROP INDEX "IDX_707089f1df498d1719972e69ae"
         `);
         await queryRunner.query(`
             ALTER TABLE "auth_roles" ALTER COLUMN "name" TYPE character varying(64)
@@ -199,13 +199,13 @@ export class Default1740991051622 implements MigrationInterface {
             ADD "slug" character varying(36) NULL
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_2b1afa844bfc6635f92be68375"
+            DROP INDEX "IDX_2b1afa844bfc6635f92be68375"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_client_roles"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_3ccaff24ccf92dcd528dab81ef"
+            DROP INDEX "IDX_3ccaff24ccf92dcd528dab81ef"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_client_permissions"

@@ -124,7 +124,7 @@ export class PathsAndEventAggregates1789930726252 implements MigrationInterface 
             ALTER TABLE "auth_event_aggregates" DROP CONSTRAINT "FK_2949cc65b187ad191fa381309ff"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_dbc33a4d3f78297eacf707ab6e"
+            DROP INDEX "IDX_dbc33a4d3f78297eacf707ab6e"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_event_aggregates"
@@ -142,10 +142,10 @@ export class PathsAndEventAggregates1789930726252 implements MigrationInterface 
             ALTER TABLE "auth_paths" DROP CONSTRAINT "FK_d8068d2fd1b78d7184d16008264"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_989d28ac7ffdf0536c240f12eb"
+            DROP INDEX "IDX_989d28ac7ffdf0536c240f12eb"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_2c5ab328862c732ada1f9a76ac"
+            DROP INDEX "IDX_2c5ab328862c732ada1f9a76ac"
         `);
         await queryRunner.query(`
             ALTER TABLE "auth_users" DROP COLUMN "path_id"
@@ -154,19 +154,19 @@ export class PathsAndEventAggregates1789930726252 implements MigrationInterface 
             ALTER TABLE "auth_clients" DROP COLUMN "path_id"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_9eae1160d870608cd8d1c4223b"
+            DROP INDEX "IDX_9eae1160d870608cd8d1c4223b"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_d8068d2fd1b78d7184d1600826"
+            DROP INDEX "IDX_d8068d2fd1b78d7184d1600826"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_c5cdb926153d9f36721b6658a1"
+            DROP INDEX "IDX_c5cdb926153d9f36721b6658a1"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_4a58b4bc98119bdb7be28aaa25"
+            DROP INDEX "IDX_4a58b4bc98119bdb7be28aaa25"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_c8ec32db0f97412a4083f44343"
+            DROP INDEX "IDX_c8ec32db0f97412a4083f44343"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_paths"

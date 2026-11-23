@@ -748,16 +748,16 @@ export class Default1673449341125 implements MigrationInterface {
             DROP TABLE "auth_refresh_tokens"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_fadb9ce4df580cc42e78b74b2f"
+            DROP INDEX "IDX_fadb9ce4df580cc42e78b74b2f"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_42df2e30eee05e54c74bced78b"
+            DROP INDEX "IDX_42df2e30eee05e54c74bced78b"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_identity_provider_roles"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_96a230c697b83505e073713507"
+            DROP INDEX "IDX_96a230c697b83505e073713507"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_identity_provider_accounts"
@@ -781,19 +781,19 @@ export class Default1673449341125 implements MigrationInterface {
             DROP TABLE "auth_clients"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_0c2284272043ed8aba6689306b"
+            DROP INDEX "IDX_0c2284272043ed8aba6689306b"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_robot_permissions"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_515b3dc84ba9bec42bd0e92cbd"
+            DROP INDEX "IDX_515b3dc84ba9bec42bd0e92cbd"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_robot_roles"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_9c99802f3f360718344180c3f6"
+            DROP INDEX "IDX_9c99802f3f360718344180c3f6"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_robots"
@@ -802,55 +802,55 @@ export class Default1673449341125 implements MigrationInterface {
             DROP TABLE "auth_user_attributes"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_e1a21fc2e6ac12fa29b02c4382"
+            DROP INDEX "IDX_e1a21fc2e6ac12fa29b02c4382"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_user_permissions"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_e1aaaa657b3c0615f6b4a6e657"
+            DROP INDEX "IDX_e1aaaa657b3c0615f6b4a6e657"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_user_roles"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_40c0ee0929b20575df125e8d14"
+            DROP INDEX "IDX_40c0ee0929b20575df125e8d14"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_role_permissions"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_9356935453c5e442d375531ee5"
+            DROP INDEX "IDX_9356935453c5e442d375531ee5"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_permissions"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_063e4bd5b708c304b51b7ee774"
+            DROP INDEX "IDX_063e4bd5b708c304b51b7ee774"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_roles"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_1d5fcbfcbba74381ca8a58a3f1"
+            DROP INDEX "IDX_1d5fcbfcbba74381ca8a58a3f1"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_13d8b49e55a8b06bee6bbc828f"
+            DROP INDEX "IDX_13d8b49e55a8b06bee6bbc828f"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_2d54113aa2edfc3955abcf524a"
+            DROP INDEX "IDX_2d54113aa2edfc3955abcf524a"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_users"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_e38d9d6e8be3d1d6e684b60342"
+            DROP INDEX "IDX_e38d9d6e8be3d1d6e684b60342"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_5921107054192639a79fb274b9"
+            DROP INDEX "IDX_5921107054192639a79fb274b9"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_fdc78f76d9316352bddfed9165"
+            DROP INDEX "IDX_fdc78f76d9316352bddfed9165"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_keys"

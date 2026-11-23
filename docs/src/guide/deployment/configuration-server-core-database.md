@@ -88,3 +88,5 @@ DB_PASSWORD=start123
 DB_DATABASE=app
 ```
 :::
+
+To keep authup's tables in a schema other than `public`, set `DB_SCHEMA` (or `schema` in the `db` block). Authup puts that schema first on the connection's `search_path`, followed by `public`, unless the connection options already set a `search_path`.

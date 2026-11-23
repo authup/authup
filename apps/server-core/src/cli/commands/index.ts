@@ -7,7 +7,8 @@
 
 export * from './config.ts';
 export * from './healthcheck.ts';
-export * from './migration.ts';
+// The operation helpers stay internal; specs import them by path.
+export { defineCLIMigrationCommand } from './migration.ts';
 export * from './shutdown.ts';
 export * from './start.ts';
 export * from './types.ts';

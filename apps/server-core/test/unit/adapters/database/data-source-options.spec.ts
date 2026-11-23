@@ -108,6 +108,44 @@ describe('adapters/database/data-source/options', () => {
         expect(mysql).toMatchObject({ timezone: 'Z', dateStrings: ['DATE'] });
     });
 
+    // typeorm qualifies its own tables with `schema` but never sets the
+    // search_path, where the unqualified migration statements land (#3849).
+    it('should resolve a postgres schema through the search_path', () => {
+        const options = new DataSourceOptionsBuilder().buildWith({
+            type: 'postgres',
+            schema: 'tenant',
+        }) as DataSourceOptions & { extra: Record<string, any> };
+
+        expect(options.extra.options).toContain('-c search_path="tenant",public');
+        expect(options.extra.options).toContain('TimeZone=UTC');
+    });
+
+    it('should read the postgres schema from DB_SCHEMA', () => {
+        const options = withDatabaseEnv(
+            { DB_TYPE: 'postgres', DB_SCHEMA: 'tenant' },
+            () => new DataSourceOptionsBuilder().buildWithEnv(),
+        ) as DataSourceOptions & { extra: Record<string, any> };
+
+        expect(options.extra.options).toContain('-c search_path="tenant",public');
+    });
+
+    it('should keep a search_path the caller set', () => {
+        const options = new DataSourceOptionsBuilder().buildWith({
+            type: 'postgres',
+            schema: 'tenant',
+            extra: { options: '-c search_path=custom' },
+        }) as DataSourceOptions & { extra: Record<string, any> };
+
+        expect(options.extra.options).toContain('-c search_path=custom');
+        expect(options.extra.options).not.toContain('"tenant"');
+    });
+
+    it('should set no search_path without a schema', () => {
+        const options = new DataSourceOptionsBuilder().buildWith({ type: 'postgres' }) as DataSourceOptions & { extra: Record<string, any> };
+
+        expect(options.extra.options).not.toContain('search_path');
+    });
+
     it('should still throw on the strict read when no database is configured', () => {
         withDatabaseEnv({}, () => {
             expect(() => new DataSourceOptionsBuilder().buildWithEnv()).toThrow(AuthupError);

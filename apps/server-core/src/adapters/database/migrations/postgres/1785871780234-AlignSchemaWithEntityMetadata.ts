@@ -116,7 +116,7 @@ export class AlignSchemaWithEntityMetadata1785871780234 implements MigrationInte
         await queryRunner.query('ALTER INDEX "IDX_089778fa70ab97a637b84957a8" RENAME TO "IDX_auth_consents_realm_id"');
         await queryRunner.query('ALTER INDEX "IDX_adc5a3c5fa915f59ddac529f2b" RENAME TO "IDX_auth_consents_client_id"');
         await queryRunner.query('ALTER INDEX "IDX_482fa13b8f47218a844e333282" RENAME TO "IDX_auth_consents_sub"');
-        await queryRunner.query('DROP INDEX "public"."IDX_cac31ef1ae7871c905a3842df4"');
+        await queryRunner.query('DROP INDEX "IDX_cac31ef1ae7871c905a3842df4"');
         await queryRunner.query('ALTER TABLE "auth_events" DROP COLUMN "session_id"');
         await queryRunner.query('ALTER TABLE "auth_session_tokens" DROP CONSTRAINT "FK_883cfabf7d5f7466a27625843db"');
         await queryRunner.query('ALTER TABLE "auth_session_tokens" DROP COLUMN "client_id"');

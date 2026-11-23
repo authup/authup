@@ -21,7 +21,8 @@ export const DatabaseInjectionKey = {
 } as const;
 
 /**
- * How a boot pass waits for a database lock. It throws a `DatabaseLockError`
+ * How a boot pass and the migration CLI (`run`, `revert`) wait for a
+ * database lock. It throws a `DatabaseLockError`
  * after 60s rather than running unlocked. `strict: false` runs the callback
  * unlocked on better-sqlite3, which has no lock: one database file per
  * container means a second replica cannot reach it.

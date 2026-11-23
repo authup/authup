@@ -6,6 +6,7 @@
  */
 
 import { defineCommand } from 'citty';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import {
@@ -17,6 +18,7 @@ import {
 } from 'typeorm-extension';
 import { DataSource, type DataSourceOptions } from 'typeorm';
 import { DataSourceOptionsBuilder } from '../../adapters/database/index.ts';
+import { revertLastMigration, runPendingMigrations, withMigrationLock } from '../../app/modules/database/index.ts';
 import type { ConfigReadFsOptions } from '@authup/server-config';
 import type { Config } from '../../app/index.ts';
 import {
@@ -30,7 +32,7 @@ import { CODE_PATH } from '../../path.ts';
 import { createCLIConfigModule } from './config.ts';
 import type { CLIMigrationCommandOptions } from './types.ts';
 
-enum MigrationOperation {
+export enum MigrationOperation {
     GENERATE = 'generate',
     REVERT = 'revert',
     STATUS = 'status',
@@ -45,6 +47,51 @@ const OPERATOR_OPERATIONS = OPERATIONS.filter((op) => op !== MigrationOperation.
 
 function isMigrationOperation(value: string, operations: MigrationOperation[]) : value is MigrationOperation {
     return (operations as string[]).includes(value);
+}
+
+/**
+ * `run` and `revert` hold the lock the boot path migrates under, so they
+ * cannot race a starting replica or another migration job (#3847). `revert`
+ * reads the executed migrations inside it, so the check and the undo see one
+ * state. `status` changes nothing and stays unlocked.
+ */
+export async function executeMigrationOperation(
+    dataSource: DataSource,
+    operation: MigrationOperation,
+): Promise<void> {
+    switch (operation) {
+        case MigrationOperation.STATUS: {
+            await dataSource.showMigrations();
+
+            return;
+        }
+        case MigrationOperation.RUN: {
+            await withMigrationLock(dataSource, (queryRunner) => runPendingMigrations(dataSource, queryRunner));
+
+            return;
+        }
+        case MigrationOperation.REVERT: {
+            await withMigrationLock(dataSource, (queryRunner) => revertLastMigration(dataSource, queryRunner));
+
+            return;
+        }
+        default: {
+            // An operation without a branch must never fall through to one (#3542).
+            throw new Error(`The migration operation "${operation}" cannot run against a data source.`);
+        }
+    }
+}
+
+/**
+ * The postgres generator qualifies some statements with `"public".`, while
+ * the objects they name are created through the `search_path`. Qualified,
+ * they miss a deployment in another schema (`DB_SCHEMA`), so the generated
+ * file loses the qualifier before anyone reads it (#3849).
+ *
+ * Upstream: tada5hi/typeorm-extension#1517
+ */
+export function removePublicSchemaQualifier(content: string): string {
+    return content.replaceAll('"public".', '');
 }
 
 async function runMigrationOperation(
@@ -98,13 +145,7 @@ async function runMigrationOperation(
     try {
         await dataSource.initialize();
 
-        if (operation === MigrationOperation.REVERT) {
-            await dataSource.undoLastMigration();
-        } else if (operation === MigrationOperation.STATUS) {
-            await dataSource.showMigrations();
-        } else {
-            await dataSource.runMigrations();
-        }
+        await executeMigrationOperation(dataSource, operation);
     } finally {
         if (dataSource.isInitialized) {
             try {
@@ -163,13 +204,23 @@ async function generateMigrations(): Promise<void> {
 
             await dataSource.runMigrations();
 
-            await generateMigration({
+            // Previewed and written here, so the postgres file is stripped
+            // before it lands. No content means nothing changed: no file.
+            const { content } = await generateMigration({
                 dataSource,
                 name: 'Default',
-                directoryPath,
                 timestamp,
                 prettify: true,
+                preview: true,
             });
+
+            if (content) {
+                await fs.mkdir(directoryPath, { recursive: true });
+                await fs.writeFile(
+                    path.join(directoryPath, `${timestamp}-Default.ts`),
+                    dataSourceOptions.type === 'postgres' ? removePublicSchemaQualifier(content) : content,
+                );
+            }
         } finally {
             if (dataSource.isInitialized) {
                 try {

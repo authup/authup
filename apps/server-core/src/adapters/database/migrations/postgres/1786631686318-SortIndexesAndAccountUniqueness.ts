@@ -62,7 +62,7 @@ export class SortIndexesAndAccountUniqueness1786631686318 implements MigrationIn
         `);
 
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_ccf3fd36253755bd9a5f43c516"
+            DROP INDEX "IDX_ccf3fd36253755bd9a5f43c516"
         `);
         await queryRunner.query(`
             CREATE UNIQUE INDEX "IDX_ccf3fd36253755bd9a5f43c516" ON "auth_identity_provider_accounts" ("provider_user_id", "provider_id")
@@ -71,16 +71,16 @@ export class SortIndexesAndAccountUniqueness1786631686318 implements MigrationIn
 
     public async down(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_ccf3fd36253755bd9a5f43c516"
+            DROP INDEX "IDX_ccf3fd36253755bd9a5f43c516"
         `);
         await queryRunner.query(`
             CREATE INDEX "IDX_ccf3fd36253755bd9a5f43c516" ON "auth_identity_provider_accounts" ("provider_user_id", "provider_id")
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_04264aebc8b6625b1da88e23df"
+            DROP INDEX "IDX_04264aebc8b6625b1da88e23df"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_52f59535945c8cdbd62439bba5"
+            DROP INDEX "IDX_52f59535945c8cdbd62439bba5"
         `);
     }
 }

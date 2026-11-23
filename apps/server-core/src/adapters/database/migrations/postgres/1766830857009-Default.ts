@@ -226,16 +226,16 @@ export class Default1766830857009 implements MigrationInterface {
             ADD "user_id" uuid
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_717d1d5d49af59b84a3c70281f"
+            DROP INDEX "IDX_717d1d5d49af59b84a3c70281f"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_514d063fddd0ce969e7b8881c5"
+            DROP INDEX "IDX_514d063fddd0ce969e7b8881c5"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_00a5096d599ad839dee7385f4e"
+            DROP INDEX "IDX_00a5096d599ad839dee7385f4e"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_a83763bae0948e46c0c128a3c4"
+            DROP INDEX "IDX_a83763bae0948e46c0c128a3c4"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_sessions"
