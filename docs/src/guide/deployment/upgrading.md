@@ -19,6 +19,11 @@ the role, user, client and identity-provider assignments and policy bindings tha
 under `createOnly` keeps the assignments it got then: give its entry `strategy: { type: merge }`
 for one boot (or bind the permissions through the API) to add the ones the old order missed.
 
+**May need action:** a permission is identified by its name, realm and client together. A
+resource server that checks a provisioned client permission by `{ name, clientId }` alone matched
+the permission without a realm; after the first boot it must pass the client's `realmId` too, or
+the check finds no such permission and denies.
+
 ### A permission manager may assign roles over realm- and client-owned permissions
 
 Assigning a role to a user or client, or mapping it from an identity provider, requires the
@@ -81,6 +86,17 @@ as a peer dependency, so a resource server using only `MemoryTokenCache` does no
 
 **Action required:** A resource server using `RedisTokenCache` installs
 `@authup/server-adapter-redis` and imports the class from there.
+
+### `@authup/client-web-kit` renames its pickers
+
+The form pickers carry a `Form` infix: `APathPicker`, `APolicyPicker` and `AClientPicker` are
+`AFormPathPicker`, `AFormPolicyPicker` and `AFormClientPicker`, and the realm form picker
+`ARealmPicker` is `AFormRealmPicker`. The login realm chooser `ARealmGrid` takes the freed name
+and is `ARealmPicker`.
+
+**Action required:** an application rendering the kit's pickers renames them. Rename the realm
+form picker before the chooser: an unchanged `<ARealmPicker :value @change>` still resolves, now
+to the chooser, which ignores `value` and emits `select` instead of `change`.
 
 ### `JunctionEntityService` declares `ownerRealm` instead of `ownerRealmKey`
 
