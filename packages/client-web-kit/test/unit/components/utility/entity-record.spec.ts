@@ -231,7 +231,6 @@ describe('defineEntityManager', () => {
         const emitted = wrapper.emitted('updated')!;
 
         expect(emitted[0][0]).toEqual({ id: 'role-1', name: 'renamed' });
-        expect(emitted[0][0].name).toEqual('renamed');
         expect(manager!.data.value?.name).toEqual('renamed');
 
         release();
