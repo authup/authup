@@ -1,0 +1,37 @@
+name: Commitlint
+
+on:
+    pull_request:
+        types: [ opened, edited, synchronize, reopened ]
+
+permissions:
+    contents: read
+
+jobs:
+    commitlint:
+        name: Lint commits and title
+        if: github.event.pull_request.user.login != 'github-actions[bot]'
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v6
+                with:
+                    fetch-depth: 0
+
+            -   name: Install
+                uses: ./.github/actions/install
+                with:
+                    node-version: 26
+
+            # the squash message is the title plus every commit, and a commit
+            # made without the local hook reaches it unchecked
+            -   name: Lint commits
+                env:
+                    BASE_SHA: ${{ github.event.pull_request.base.sha }}
+                    HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+                run: npx --no -- commitlint --from "$BASE_SHA" --to "$HEAD_SHA" --verbose
+
+            -   name: Lint title
+                env:
+                    TITLE: ${{ github.event.pull_request.title }}
+                run: printf '%s\n' "$TITLE" | npx --no -- commitlint --verbose
