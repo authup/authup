@@ -177,7 +177,7 @@ describe('ADeviceVerifyForm', () => {
         expect(wrapper.findComponent(ALoginForm).exists()).toBe(true);
         expect(requestsTo(httpClient, '/device_authorization/lookup')).toHaveLength(0);
 
-        wrapper.findComponent(ALoginForm).vm.$emit('done');
+        await wrapper.findComponent(ALoginForm).emit('done');
         await flushPromises();
 
         const [lookup] = requestsTo(httpClient, '/device_authorization/lookup');
@@ -288,7 +288,7 @@ describe('ADeviceVerifyForm', () => {
         expect(challenge.props('kinds')).toEqual(['totp']);
         expect(findButton(wrapper, 'Authorize')).toBeUndefined();
 
-        challenge.vm.$emit('done');
+        await challenge.emit('done');
         await flushPromises();
 
         expect(wrapper.findComponent(AMfaChallengeForm).exists()).toBe(false);

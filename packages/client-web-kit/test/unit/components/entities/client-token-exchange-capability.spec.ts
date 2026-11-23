@@ -36,7 +36,7 @@ function createCapability(input: Partial<ClientTokenExchangeCapability> = {}) : 
     } as ClientTokenExchangeCapability;
 }
 
-function mountForm(props: Record<string, unknown> = { clientId: CLIENT_ID }) {
+function mountForm(props: { clientId: string, entity?: ClientTokenExchangeCapability } = { clientId: CLIENT_ID }) {
     return mountKitComponent(AClientTokenExchangeCapabilityForm, props, {
         'POST /client-token-exchange-capabilities': (request: FakeRequest) => ({
             data: {
@@ -88,7 +88,7 @@ describe('AClientTokenExchangeCapabilityForm', () => {
 
         expect(wrapper.findComponent(AFormSubmit).props('isInvalid')).toBe(true);
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         expect(findWrite(httpClient, '/client-token-exchange-capabilities')).toBeUndefined();
@@ -109,7 +109,7 @@ describe('AClientTokenExchangeCapabilityForm', () => {
 
         expect(wrapper.findComponent(AFormSubmit).props('isInvalid')).toBe(false);
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         const request = findWrite(httpClient, '/client-token-exchange-capabilities');
@@ -123,7 +123,11 @@ describe('AClientTokenExchangeCapabilityForm', () => {
             realmScope: 'own',
         });
 
-        expect(wrapper.emitted('created')).toHaveLength(1);
+        const created = wrapper.emitted('created')!;
+
+        expect(created).toHaveLength(1);
+        expect(created[0][0].clientId).toEqual(CLIENT_ID);
+        expect(created[0][0].value).toEqual('bucket bucket-file');
 
         wrapper.unmount();
     });
@@ -143,7 +147,7 @@ describe('AClientTokenExchangeCapabilityForm', () => {
         await maxAge!.setValue('60');
         await flushPromises();
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         const request = findWrite(httpClient, `/client-token-exchange-capabilities/${CAPABILITY_ID}`);
@@ -173,7 +177,7 @@ describe('AClientTokenExchangeCapabilityForm', () => {
 
         expect(wrapper.findComponent(AFormSubmit).props('isInvalid')).toBe(true);
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         expect(findWrite(httpClient, `/client-token-exchange-capabilities/${CAPABILITY_ID}`)).toBeUndefined();
@@ -193,7 +197,7 @@ describe('AClientTokenExchangeCapabilityForm', () => {
 
         expect(wrapper.findComponent(AFormSubmit).props('isInvalid')).toBe(true);
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         expect(findWrite(httpClient, `/client-token-exchange-capabilities/${CAPABILITY_ID}`)).toBeUndefined();

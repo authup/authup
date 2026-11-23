@@ -114,7 +114,12 @@ describe('defineEntityManager', () => {
         expect(creates).toHaveLength(1);
         expect(manager!.busy.value).toBe(false);
         expect(manager!.data.value?.id).toEqual('role-1');
-        expect(wrapper.emitted('created')).toHaveLength(1);
+
+        const created = wrapper.emitted('created')!;
+
+        expect(created).toHaveLength(1);
+        expect(created[0][0].id).toEqual('role-1');
+        expect(created[0][0].name).toEqual('admin');
     });
 
     it('resolves by props.entityId before the resolve query', async () => {
@@ -226,6 +231,7 @@ describe('defineEntityManager', () => {
         const emitted = wrapper.emitted('updated')!;
 
         expect(emitted[0][0]).toEqual({ id: 'role-1', name: 'renamed' });
+        expect(emitted[0][0].name).toEqual('renamed');
         expect(manager!.data.value?.name).toEqual('renamed');
 
         release();

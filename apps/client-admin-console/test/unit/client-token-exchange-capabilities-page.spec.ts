@@ -182,7 +182,7 @@ describe('src/pages/clients/[id]/token-exchange-capabilities.vue', () => {
 
         expect(wrapper.findComponent(AClientTokenExchangeCapabilityForm).exists()).toBe(true);
 
-        wrapper.findComponent(AEntityDelete).vm.$emit('deleted', capability);
+        await wrapper.findComponent(AEntityDelete).emit('deleted', capability);
         await flushPromises();
 
         expect(wrapper.findComponent(AClientTokenExchangeCapabilityForm).exists()).toBe(false);
@@ -257,7 +257,7 @@ describe('src/pages/clients/[id]/token-exchange-capabilities.vue', () => {
         await value!.setValue('run');
         await flushPromises();
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         const [request] = capabilityRequests(mounted, 'POST');

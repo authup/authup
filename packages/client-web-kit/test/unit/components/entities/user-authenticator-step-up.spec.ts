@@ -144,7 +144,7 @@ describe('components/entities/user-authenticator (step-up)', () => {
         expect(recovery.calls).toBe(1);
 
         recovery.proven = true;
-        challenge.vm.$emit('done', {});
+        await challenge.emit('done', {});
         await flushPromises();
 
         expect(recovery.calls).toBe(2);
@@ -203,7 +203,7 @@ describe('components/entities/user-authenticator (step-up)', () => {
         expect(challenge.exists()).toBe(true);
 
         drop.state.proven = true;
-        challenge.vm.$emit('done', {});
+        await challenge.emit('done', {});
         await flushPromises();
 
         expect(drop.state.calls).toBe(2);
@@ -317,7 +317,7 @@ describe('components/entities/user-authenticator (step-up)', () => {
         expect(wrapper.text()).toContain('Complete a second-factor challenge to continue.');
 
         proven = true;
-        challenge.vm.$emit('done', {});
+        await challenge.emit('done', {});
         await flushPromises();
 
         expect(calls).toHaveLength(3);
@@ -365,7 +365,7 @@ describe('components/entities/user-authenticator (step-up)', () => {
         expect(challenge.exists()).toBe(true);
 
         confirm.state.proven = true;
-        challenge.vm.$emit('done', {});
+        await challenge.emit('done', {});
         await flushPromises();
 
         expect(confirm.state.calls).toBe(1);
@@ -427,7 +427,7 @@ describe('components/entities/user-authenticator (step-up)', () => {
         expect(challenge.exists()).toBe(true);
 
         confirm.state.proven = true;
-        challenge.vm.$emit('done', {});
+        await challenge.emit('done', {});
         await flushPromises();
 
         expect(begins).toBe(2);
