@@ -91,15 +91,6 @@ an owner pinned to one realm, the realm or a resolver per row (`{ realm: 'blog' 
 **Action required:** a subclass replaces `ownerRealmKey = 'roleRealmId'` with
 `ownerRealm = { key: 'roleRealmId' } as const` and reads the column as `this.ownerRealm.key`.
 
-### Names shaped like a uuid are refused
-
-Every name (realm, client, user, role, scope, permission, policy, key, path, identity provider,
-trust anchor) is refused with 400 when it is shaped like a uuid, since a route taking an id or
-a name reads such a value as an id.
-
-**May need action:** automation creating records under uuid-shaped names picks another name.
-An existing record keeps its name until it is renamed.
-
 ## v1.0.0-beta.76 (was: next release after v1.0.0-beta.75)
 
 ### Health moves to `/livez` and `/readyz`

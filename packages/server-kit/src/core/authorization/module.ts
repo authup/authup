@@ -28,16 +28,35 @@ export class AuthorizationCatalogCache implements IAuthorizationCatalogCache {
 
     protected current: Promise<Catalog> | undefined;
 
-    protected readAt = 0;
+    /**
+     * When the current read resolved; undefined while it is pending, which
+     * never expires.
+     */
+    protected readAt: number | undefined;
+
+    protected maxAge: number;
 
     constructor(options: AuthorizationCatalogCacheOptions) {
+        const maxAge = options.maxAge ?? AUTHORIZATION_CATALOG_CACHE_MAX_AGE;
+
+        if (
+            typeof maxAge !== 'number' ||
+            Number.isNaN(maxAge) ||
+            maxAge < 0
+        ) {
+            throw new TypeError('The catalog cache maxAge must be a number of milliseconds >= 0, or Infinity.');
+        }
+
         this.options = options;
+        this.maxAge = maxAge;
     }
 
     get(): Promise<Catalog> {
-        const maxAge = this.options.maxAge ?? AUTHORIZATION_CATALOG_CACHE_MAX_AGE;
-
-        if (this.current && Date.now() - this.readAt >= maxAge) {
+        if (
+            this.current &&
+            typeof this.readAt !== 'undefined' &&
+            Date.now() - this.readAt >= this.maxAge
+        ) {
             this.current = undefined;
         }
 
@@ -45,9 +64,13 @@ export class AuthorizationCatalogCache implements IAuthorizationCatalogCache {
             const read = this.options.read();
 
             this.current = read;
-            this.readAt = Date.now();
+            this.readAt = undefined;
 
-            read.catch(() => {
+            read.then(() => {
+                if (this.current === read) {
+                    this.readAt = Date.now();
+                }
+            }, () => {
                 if (this.current === read) {
                     this.current = undefined;
                 }

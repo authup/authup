@@ -66,7 +66,10 @@ export type JunctionOwnerRealmColumn = {
 /**
  * A junction's owner realm for an owner pinned to one realm that carries no
  * realm column: the realm itself, or a resolver per row. `false` names an
- * owner that belongs to no realm (`evaluateRecord`'s `realm: false`).
+ * owner that truly belongs to no realm (`evaluateRecord`'s `realm: false`):
+ * every grant's realm reach neutral-passes for it. `null` (a global owner)
+ * is the safe default; never write `e.realmId ?? false`, which turns a row
+ * with a missing realm into one that skips realm matching.
  */
 export type JunctionOwnerRealmResolved = {
     realm: string | null | false | ((entity: Record<string, any>) => string | null | false),

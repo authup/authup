@@ -243,5 +243,66 @@ describe('core/authorization/catalog-cache', () => {
 
             expect(reads).toBe(1);
         });
+
+        it('never expires a pending read, and stamps its age on resolve', async () => {
+            vi.useFakeTimers();
+
+            let reads = 0;
+            const pending = Promise.withResolvers<AuthorizationCatalog>();
+            const cache = new AuthorizationCatalogCache({
+                maxAge: 1_000,
+                read: () => {
+                    reads++;
+
+                    return reads === 1 ? pending.promise : Promise.resolve(buildCatalog(['post_read']));
+                },
+            });
+
+            const first = cache.get();
+
+            vi.advanceTimersByTime(5_000);
+
+            expect(cache.get()).toBe(first);
+
+            pending.resolve(buildCatalog(['post_read']));
+            await first;
+
+            vi.advanceTimersByTime(999);
+            await cache.get();
+
+            expect(reads).toBe(1);
+
+            vi.advanceTimersByTime(1);
+            await cache.get();
+
+            expect(reads).toBe(2);
+        });
+
+        it('shares an in-flight read with maxAge 0', async () => {
+            let reads = 0;
+            const cache = new AuthorizationCatalogCache({
+                maxAge: 0,
+                read: async () => {
+                    reads++;
+
+                    return buildCatalog(['post_read']);
+                },
+            });
+
+            await Promise.all([cache.get(), cache.get()]);
+
+            expect(reads).toBe(1);
+
+            await cache.get();
+
+            expect(reads).toBe(2);
+        });
+
+        it.each([-1, NaN, '1000'])('refuses maxAge %s', (maxAge) => {
+            expect(() => new AuthorizationCatalogCache({
+                maxAge: maxAge as number,
+                read: async () => buildCatalog([]),
+            })).toThrow(TypeError);
+        });
     });
 });
