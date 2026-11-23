@@ -238,6 +238,13 @@ describe('app/modules/cache/tagged', () => {
         expect(output).not.toContain('more)');
     });
 
+    it('describeCacheError places the tags after a multi-line message', () => {
+        const error = new CacheError({ message: 'first line\nsecond line', tags: ['role'] });
+        const lines = describeCacheError(error, 'headline').split('\n');
+
+        expect(lines.slice(0, 4)).toEqual(['headline', 'first line', 'second line', '  tags:            role']);
+    });
+
     it('describeCacheError masks the value of a column tag', () => {
         const output = describeCacheError(CacheError.invalidationsOverflowed([
             'user',

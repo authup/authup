@@ -40,8 +40,9 @@ export function describeCacheError(input: unknown, headline?: string): string {
     }
 
     const lines = output.split('\n');
+    const index = (headline ? 1 : 0) + input.message.split('\n').length;
 
-    lines.splice(headline ? 2 : 1, 0, `  tags:            ${rendered}`);
+    lines.splice(index, 0, `  tags:            ${rendered}`);
 
     return lines.join('\n');
 }
