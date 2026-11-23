@@ -24,8 +24,10 @@ export class RoleProvisioningValidator extends Container<RoleProvisioningEntity>
 
         this.mount('attributes', dataValidator);
 
-        const relationsValidator = new RoleProvisioningRelationsValidator();
+        this.mount('relations', { optional: true }, this.createRelationsValidator());
+    }
 
-        this.mount('relations', { optional: true }, relationsValidator);
+    protected createRelationsValidator(): RoleProvisioningRelationsValidator {
+        return new RoleProvisioningRelationsValidator();
     }
 }

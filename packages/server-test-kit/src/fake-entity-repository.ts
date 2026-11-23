@@ -157,9 +157,18 @@ export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRep
     }
 
     private matchesWhere(entity: T, where: Record<string, any>): boolean {
-        // `null` matches an unset column too, as `IS NULL` does.
-        return Object.entries(where).every(([key, value]) => (value === null ?
-            entity[key] === null || typeof entity[key] === 'undefined' :
-            entity[key] === value));
+        // `null` matches an unset column too, as `IS NULL` does, and a list
+        // matches any of its members, as `IN` does.
+        return Object.entries(where).every(([key, value]) => {
+            if (value === null) {
+                return entity[key] === null || typeof entity[key] === 'undefined';
+            }
+
+            if (Array.isArray(value)) {
+                return value.includes(entity[key]);
+            }
+
+            return entity[key] === value;
+        });
     }
 }

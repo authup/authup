@@ -103,9 +103,9 @@ export function expandWildcardRealmEntry(
 /**
  * Applies the wildcard entry's relations to ONE realm, by synthesizing a
  * realm provisioning entity and pushing it through the regular realm
- * synchronizer (scopes -> clients -> permissions -> roles -> users; the
- * realm row itself is resolved by name and, carrying no strategy, is
- * never modified). The entry is deep-cloned per application: the
+ * synchronizer (scopes, paths, permissions, roles, clients, users, then
+ * every relation binding; the realm row itself is resolved by name and,
+ * carrying no strategy, is never modified). The entry is deep-cloned per application: the
  * synchronizer mutates its input (realmId stamping, `replace` writes the
  * resolved row id back), so a shared object would leak one realm's ids
  * into the next realm's sync.

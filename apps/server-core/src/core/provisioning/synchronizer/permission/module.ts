@@ -11,11 +11,15 @@ import type { IPermissionPolicyRepository } from '../../../entities/permission-p
 import type { IPermissionRepository, IPolicyRepository } from '../../../entities/index.ts';
 import type { PermissionProvisioningEntity } from '../../entities/permission/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
+import type { IProvisioningRealmRepairer } from '../../types.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
+import { findOwnedEntity } from '../owner.ts';
 import type { PermissionProvisioningSynchronizerContext } from './types.ts';
 
 export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchronizer<PermissionProvisioningEntity> {
     protected repository : IPermissionRepository;
+
+    protected realmRepairer?: IProvisioningRealmRepairer;
 
     protected policyRepository?: IPolicyRepository;
 
@@ -25,6 +29,7 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
         super();
 
         this.repository = ctx.repository;
+        this.realmRepairer = ctx.realmRepairer;
         this.policyRepository = ctx.policyRepository;
         this.permissionPolicyRepository = ctx.permissionPolicyRepository;
     }
@@ -34,11 +39,16 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
 
         const strategy = normalizeEntityProvisioningStrategy(input.strategy);
 
-        let attributes = await this.repository.findOneBy({
-            name: input.attributes.name,
-            realmId: input.attributes.realmId || null,
-            clientId: input.attributes.clientId || null,
-        });
+        const lookup = await findOwnedEntity(this.repository, input.attributes);
+        let attributes = lookup.entity;
+
+        if (
+            attributes &&
+            lookup.realmless &&
+            strategy.type !== ProvisioningEntityStrategyType.ABSENT
+        ) {
+            attributes = await this.repairRealm(attributes, input.attributes.realmId as string);
+        }
 
         if (strategy.type === ProvisioningEntityStrategyType.ABSENT) {
             if (attributes) {
@@ -82,6 +92,20 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
             ...input,
             attributes,
         };
+    }
+
+    /**
+     * The rows referring to the permission take the realm first, so an
+     * interrupted repair is found again on the next boot.
+     */
+    protected async repairRealm(entity: Permission, realmId: string): Promise<Permission> {
+        if (this.realmRepairer) {
+            await this.realmRepairer.repairPermission(entity.id, realmId);
+        }
+
+        entity.realmId = realmId;
+
+        return this.repository.save(entity);
     }
 
     private async synchronizePolicies(permission: Permission, policyNames: string[]): Promise<void> {

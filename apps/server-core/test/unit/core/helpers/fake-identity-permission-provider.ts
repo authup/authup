@@ -14,6 +14,7 @@ import type {
     IdentityToken,
     ResolveJunctionGrantResult,
     ResolveJunctionPolicyOptions,
+    SupersetActor,
 } from '../../../../src/core/identity/permission/types.ts';
 
 export class FakeIdentityPermissionProvider implements IIdentityPermissionProvider {
@@ -64,8 +65,18 @@ export class FakeIdentityPermissionProvider implements IIdentityPermissionProvid
         return this.bindings;
     }
 
-    async isSuperset(parent: PermissionPolicyBinding[], _child: PermissionPolicyBinding[]): Promise<boolean> {
+    /**
+     * The actor each superset check was handed, in call order.
+     */
+    public supersetActors: SupersetActor[] = [];
+
+    async isSuperset(
+        parent: PermissionPolicyBinding[],
+        _child: PermissionPolicyBinding[],
+        actor: SupersetActor,
+    ): Promise<boolean> {
         this.delegatedGrants.push(parent);
+        this.supersetActors.push(actor);
 
         return this.supersetResult;
     }

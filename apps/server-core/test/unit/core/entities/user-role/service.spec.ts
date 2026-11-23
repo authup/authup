@@ -21,7 +21,18 @@ import {
     createAllowAllActor,
     createDenyAllActor,
     createMasterRealmActor,
+    createNonMasterRealmActor,
 } from '@authup/server-test-kit';
+import type { PermissionPolicyBinding, PolicyData } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    PermissionError,
+    RealmScope,
+    realmScopeMatches,
+} from '@authup/access';
+import type { IClientRepository, IRoleRepository, IUserRepository } from '../../../../../src/core/entities/index.ts';
+import { IdentityPermissionProvider } from '../../../../../src/core/identity/permission/module.ts';
+import type { IIdentityRoleProvider } from '../../../../../src/core/identity/role/types.ts';
 import { FakeIdentityPermissionProvider } from '../../helpers/fake-identity-permission-provider.ts';
 
 describe('core/entities/user-role/service', () => {
@@ -93,6 +104,24 @@ describe('core/entities/user-role/service', () => {
             expect(result.id).toBeDefined();
             expect(result.userRealmId).toBe(userRealmId);
             expect(result.roleRealmId).toBe(roleRealmId);
+        });
+
+        it('should run the superset check with the actor\'s evaluator', async () => {
+            repository.onValidateJoinColumns((data: any) => {
+                data.user = { realmId: null };
+                data.role = { realmId: null, clientId: null };
+            });
+
+            const actor = createMasterRealmActor();
+
+            await service.create({
+                userId: randomUUID(),
+                roleId: randomUUID(),
+            }, actor);
+
+            expect(identityPermissionProvider.supersetActors).toEqual([
+                { permissionEvaluator: actor.permissionEvaluator },
+            ]);
         });
 
         it('should call preCheck with USER_ROLE_CREATE', async () => {
@@ -182,6 +211,147 @@ describe('core/entities/user-role/service', () => {
 
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(service.delete('non-existent-id', createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
+        });
+    });
+
+    // #3855: whoever manages the permission definitions of a realm may assign
+    // a role over that realm's own (realm- or client-owned) permissions.
+    describe('create over realm- and client-owned permissions', () => {
+        const realmA = randomUUID();
+        const realmB = randomUUID();
+        const roleId = randomUUID();
+
+        function createService(roleBindings: PermissionPolicyBinding[]) {
+            return new UserRoleService({
+                repository,
+                identityPermissionProvider: new IdentityPermissionProvider({
+                    roleRepository: {
+                        getBoundPermissions: async () => roleBindings,
+                        getBoundPermissionsForMany: async () => [],
+                    } as unknown as IRoleRepository,
+                    clientRepository: {} as IClientRepository,
+                    userRepository: {} as IUserRepository,
+                    roleProvider: { getRolesFor: async () => [] } as unknown as IIdentityRoleProvider,
+                }),
+            });
+        }
+
+        function ownedBy(realmId: string): PermissionPolicyBinding[] {
+            return [
+                {
+                    permission: {
+                        name: 'p1',
+                        realmId,
+                        clientId: null,
+                    },
+                },
+                {
+                    permission: {
+                        name: 'p2',
+                        realmId,
+                        clientId: randomUUID(),
+                    },
+                },
+            ];
+        }
+
+        // The request evaluator's permission_update gate, as system.default
+        // decides it: some grant of the actor reaches the permission's realm.
+        function createActor(realmId: string, grants: PermissionPolicyBinding[]) {
+            const actor = createNonMasterRealmActor(realmId);
+
+            actor.grants = async () => grants;
+            actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
+                if (method !== 'evaluate' || ctx.name !== PermissionName.PERMISSION_UPDATE) {
+                    return;
+                }
+
+                const realm = (ctx.data as PolicyData).get(BuiltInPolicyType.REALM_MATCH) as string | null;
+                const reached = grants.some((grant) => grant.permission.name === PermissionName.PERMISSION_UPDATE &&
+                    realmScopeMatches(grant.realmScope, realm, realmId));
+
+                if (!reached) {
+                    throw PermissionError.denied(PermissionName.PERMISSION_UPDATE);
+                }
+            });
+
+            return actor;
+        }
+
+        function managing(realmScope: `${RealmScope}`): PermissionPolicyBinding {
+            return {
+                permission: {
+                    name: PermissionName.PERMISSION_UPDATE,
+                    realmId: null,
+                    clientId: null,
+                },
+                realmScope,
+            };
+        }
+
+        beforeEach(() => {
+            repository.onValidateJoinColumns((data: any) => {
+                data.user = { realmId: realmA };
+                data.role = { realmId: realmA };
+            });
+        });
+
+        it('should let an actor managing every realm assign the role', async () => {
+            const svc = createService(ownedBy(realmB));
+
+            await expect(svc.create(
+                { userId: randomUUID(), roleId },
+                createActor(realmA, [managing(RealmScope.ANY)]),
+            )).resolves.toBeDefined();
+        });
+
+        it('should let an actor managing its own realm assign a role over that realm', async () => {
+            const svc = createService(ownedBy(realmA));
+
+            await expect(svc.create(
+                { userId: randomUUID(), roleId },
+                createActor(realmA, [managing(RealmScope.OWN)]),
+            )).resolves.toBeDefined();
+        });
+
+        it('should refuse an actor managing its own realm a role over another realm', async () => {
+            const svc = createService(ownedBy(realmB));
+
+            await expect(svc.create(
+                { userId: randomUUID(), roleId },
+                createActor(realmA, [managing(RealmScope.OWN)]),
+            )).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+        });
+
+        it('should refuse an actor that does not manage permissions', async () => {
+            const svc = createService(ownedBy(realmA));
+
+            await expect(svc.create(
+                { userId: randomUUID(), roleId },
+                createActor(realmA, [{
+                    permission: {
+                        name: PermissionName.USER_ROLE_CREATE,
+                        realmId: null,
+                        clientId: null,
+                    },
+                    realmScope: RealmScope.ANY,
+                }]),
+            )).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+        });
+
+        it('should keep requiring a global permission the actor does not hold', async () => {
+            const svc = createService([{
+                permission: {
+                    name: 'user_read',
+                    realmId: null,
+                    clientId: null,
+                },
+            }]);
+
+            await expect(svc.create(
+                { userId: randomUUID(), roleId },
+                createActor(realmA, [managing(RealmScope.ANY)]),
+            )).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 });

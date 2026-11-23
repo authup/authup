@@ -11,6 +11,8 @@ import { describe, expect, it } from 'vitest';
 import { ClientProvisioningRelationsValidator } from '../../../../../src/core/provisioning/entities/client/relations-validator.ts';
 import type { ClientProvisioningRelations } from '../../../../../src/core/provisioning/entities/client/index.ts';
 import { mergeProvisioningEntities } from '../../../../../src/core/provisioning/merge/index.ts';
+import { RoleProvisioningRelationsValidator } from '../../../../../src/core/provisioning/entities/role/relations-validator.ts';
+import { RootProvisioningValidator } from '../../../../../src/core/provisioning/entities/root/validator.ts';
 
 function validate(tokenExchangeCapabilities: unknown[]) {
     return new ClientProvisioningRelationsValidator().run(
@@ -115,5 +117,64 @@ describe('core/provisioning/entities/client tokenExchangeCapabilities', () => {
             { audience: 'storage', value: 'bucket-file' },
             { audience: 'registry', value: 'image' },
         ]);
+    });
+});
+
+describe('core/provisioning/entities client-owned relations', () => {
+    it('should keep the client permissions and roles a client declares', async () => {
+        const output = await new ClientProvisioningRelationsValidator().run(
+            {
+                clientPermissions: { 'blog-console': ['post_read'] },
+                clientRoles: { 'blog-console': ['blog-editor'] },
+            },
+            { group: ValidatorGroup.PROVISIONING },
+        );
+
+        expect(output).toEqual({
+            clientPermissions: { 'blog-console': ['post_read'] },
+            clientRoles: { 'blog-console': ['blog-editor'] },
+        });
+    });
+
+    it('should keep the client permissions a role declares', async () => {
+        const output = await new RoleProvisioningRelationsValidator().run(
+            { clientPermissions: { 'blog-console': ['*'] } },
+            { group: ValidatorGroup.PROVISIONING },
+        );
+
+        expect(output).toEqual({ clientPermissions: { 'blog-console': ['*'] } });
+    });
+
+    it('should refuse a client permission list that is not a list', async () => {
+        await expect(new RoleProvisioningRelationsValidator().run(
+            { clientPermissions: { 'blog-console': 'post_read' } } as never,
+            { group: ValidatorGroup.PROVISIONING },
+        )).rejects.toThrow();
+    });
+
+    it('should refuse client permissions on a global role', async () => {
+        await expect(new RootProvisioningValidator().run(
+            {
+                roles: [{
+                    attributes: { name: 'operator' },
+                    relations: { clientPermissions: { 'blog-console': ['*'] } },
+                }],
+            },
+            { group: ValidatorGroup.PROVISIONING },
+        )).rejects.toThrow();
+    });
+
+    it('should keep a global role without client permissions', async () => {
+        const output = await new RootProvisioningValidator().run(
+            {
+                roles: [{
+                    attributes: { name: 'operator' },
+                    relations: { globalPermissions: ['*'] },
+                }],
+            },
+            { group: ValidatorGroup.PROVISIONING },
+        );
+
+        expect(output.roles![0]!.relations).toEqual({ globalPermissions: ['*'] });
     });
 });

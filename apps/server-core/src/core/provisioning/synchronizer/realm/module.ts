@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Realm } from '@authup/core-kit';
 import { pickRecord } from '@authup/kit';
 import type { IRealmRepository } from '../../../entities/index.ts';
 import type { ClientProvisioningEntity, ScopeProvisioningEntity } from '../../entities/index.ts';
@@ -14,7 +15,7 @@ import type { RealmProvisioningEntity } from '../../entities/realm/index.ts';
 import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
 import type { UserProvisioningEntity } from '../../entities/user/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
-import type { IProvisioningSynchronizer } from '../../types.ts';
+import type { IProvisioningSynchronizer, ProvisioningSynchronizeContext } from '../../types.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { RealmProvisioningSynchronizerContext } from './types.ts';
 
@@ -85,6 +86,60 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             attributes = await this.repository.save(this.repository.create(input.attributes));
         }
 
+        // Entities first, relations after: a relation between two entities
+        // of the realm (a client granted a realm permission, a role bound to
+        // a permission another client owns) binds only once both exist,
+        // whatever order the file declares them in (#3854).
+        const deferred: Array<() => Promise<void>> = [];
+        const context: ProvisioningSynchronizeContext = {
+            defer: (task) => {
+                deferred.push(task);
+            },
+        };
+
+        // A failing entity still lets the bindings queued before it run:
+        // the entities saved so far were created on this pass, and a
+        // createOnly entity is never bound on a later one.
+        let entityError: unknown;
+
+        try {
+            await this.synchronizeEntities(input, attributes, context);
+        } catch (e) {
+            entityError = e;
+        }
+
+        // Every binding runs even when one fails: a createOnly entity created
+        // on this pass is never bound on a later one, so a binding skipped
+        // now would stay missing for good. The first failure fails the pass.
+        const errors: unknown[] = [];
+
+        for (const task of deferred) {
+            try {
+                await task();
+            } catch (e) {
+                errors.push(e);
+            }
+        }
+
+        if (typeof entityError !== 'undefined') {
+            throw entityError;
+        }
+
+        if (errors.length > 0) {
+            throw errors[0];
+        }
+
+        return {
+            ...input,
+            attributes,
+        };
+    }
+
+    protected async synchronizeEntities(
+        input: RealmProvisioningEntity,
+        attributes: Realm,
+        context: ProvisioningSynchronizeContext,
+    ): Promise<void> {
         // Scopes first: they are leaf entities carrying no relations of their
         // own, and a client below may bind them through `realmScopes`.
         if (input.relations && input.relations.scopes) {
@@ -111,19 +166,6 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             await this.pathSynchronizer.synchronizeMany(paths);
         }
 
-        if (input.relations && input.relations.clients) {
-            const clients = input.relations.clients.map(
-                (child) => {
-                    child.attributes.realmId = attributes.id;
-                    child.attributes.realm = attributes;
-
-                    return child;
-                },
-            );
-
-            await this.clientSynchronizer.synchronizeMany(clients);
-        }
-
         if (input.relations && input.relations.permissions) {
             const permissions = input.relations.permissions.map((child) => {
                 child.attributes.realmId = attributes.id;
@@ -132,7 +174,7 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
                 return child;
             });
 
-            await this.permissionSynchronizer.synchronizeMany(permissions);
+            await this.permissionSynchronizer.synchronizeMany(permissions, context);
         }
 
         if (input.relations && input.relations.roles) {
@@ -143,23 +185,33 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
                 return child;
             });
 
-            await this.roleSynchronizer.synchronizeMany(roles);
+            await this.roleSynchronizer.synchronizeMany(roles, context);
         }
 
-        if (input.relations && input.relations.users) {
-            const users = input.relations.users.map((child) => {
-                child.attributes.realmId = attributes.id;
-                child.attributes.realm = attributes;
+        if (input.relations && input.relations.clients) {
+            const clients = input.relations.clients.map(
+                (child) => {
+                    child.attributes.realmId = attributes.id;
+                    child.attributes.realm = attributes;
 
-                return child;
-            });
+                    return child;
+                },
+            );
 
-            await this.userSynchronizer.synchronizeMany(users);
+            await this.clientSynchronizer.synchronizeMany(clients, context);
         }
 
-        return {
-            ...input,
-            attributes,
-        };
+        if (!input.relations || !input.relations.users) {
+            return;
+        }
+
+        const users = input.relations.users.map((child) => {
+            child.attributes.realmId = attributes.id;
+            child.attributes.realm = attributes;
+
+            return child;
+        });
+
+        await this.userSynchronizer.synchronizeMany(users, context);
     }
 }

@@ -32,6 +32,12 @@ export type ClientProvisioningRelations = {
      */
     globalPermissions?: string[],
 
+    /**
+     * Assign client to permissions owned by clients of the same realm.
+     * Key = client name, value = permission names.
+     */
+    clientPermissions?: Record<string, string[]>,
+
     // ------------------------------------------
 
     /**
@@ -48,6 +54,12 @@ export type ClientProvisioningRelations = {
      * Assign client to global roles.
      */
     globalRoles?: string[],
+
+    /**
+     * Assign client to roles owned by clients of the same realm.
+     * Key = client name, value = role names.
+     */
+    clientRoles?: Record<string, string[]>,
 
     // ------------------------------------------
 

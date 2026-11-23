@@ -38,6 +38,8 @@ import {
 import {
     CacheModule,
     ClientEntity,
+    ClientPermissionEntity,
+    ClientRoleEntity,
     ClientScopeEntity,
     ClientTokenExchangeCapabilityEntity,
     ConfigInjectionKey,
@@ -50,6 +52,9 @@ import {
     ProvisionerModule,
     RealmEntity,
     RoleEntity,
+    RolePermissionEntity,
+    UserEntity,
+    UserRoleEntity,
 } from '../../../src/index.ts';
 import { Container } from 'eldin';
 import type { IContainer } from 'eldin';
@@ -246,6 +251,112 @@ describe('app/modules/provisioning', () => {
             realmScope: 'any',
             realmId: realm!.id,
         });
+    });
+
+    // A client declared before the permissions, roles and clients it names
+    // binds all of them on the first boot (#3854), and roles and clients bind
+    // permissions and roles another client owns (#3869).
+    // Provisioning once stored a client's own permissions and roles without
+    // a realm; the next boot gives them the client's realm together with
+    // every row that refers to them, so a realm-scoped read reaches those.
+    it('should give a realm-less client-owned row and its references the client realm', async () => {
+        const realm = await dataSource.getRepository(RealmEntity).save({ name: 'realm-repair' });
+        const client = await dataSource.getRepository(ClientEntity).save({
+            name: 'legacy-console',
+            realmId: realm.id,
+        });
+        const permission = await dataSource.getRepository(PermissionEntity).save({
+            name: 'legacy_read',
+            clientId: client.id,
+            realmId: null,
+        });
+        const role = await dataSource.getRepository(RoleEntity).save({
+            name: 'legacy-admin',
+            clientId: client.id,
+            realmId: null,
+        });
+        const rolePermission = await dataSource.getRepository(RolePermissionEntity).save({
+            roleId: role.id,
+            roleRealmId: null,
+            permissionId: permission.id,
+            permissionRealmId: null,
+        });
+        const clientRole = await dataSource.getRepository(ClientRoleEntity).save({
+            clientId: client.id,
+            clientRealmId: realm.id,
+            roleId: role.id,
+            roleRealmId: null,
+        });
+
+        await new ProvisionerModule([
+            new FileProvisioningSource({ cwd: 'test/data/sources-realm-repair' }),
+        ]).setup(di);
+
+        const permissions = await dataSource.getRepository(PermissionEntity).findBy({ clientId: client.id });
+        const roles = await dataSource.getRepository(RoleEntity).findBy({ clientId: client.id });
+
+        expect(permissions).toEqual([expect.objectContaining({ id: permission.id, realmId: realm.id })]);
+        expect(roles).toEqual([expect.objectContaining({ id: role.id, realmId: realm.id })]);
+
+        expect(await dataSource.getRepository(RolePermissionEntity).findOneByOrFail({ id: rolePermission.id }))
+            .toMatchObject({ roleRealmId: realm.id, permissionRealmId: realm.id });
+        expect(await dataSource.getRepository(ClientRoleEntity).findOneByOrFail({ id: clientRole.id }))
+            .toMatchObject({ roleRealmId: realm.id });
+    });
+
+    it('should bind every relation of a realm on the first boot', async () => {
+        await new ProvisionerModule([
+            new FileProvisioningSource({ cwd: 'test/data/sources-client-owned' }),
+        ]).setup(di);
+
+        const realm = await dataSource.getRepository(RealmEntity).findOneByOrFail({ name: 'client-owned' });
+        const findClient = (name: string) => dataSource.getRepository(ClientEntity).findOneByOrFail({
+            name,
+            realmId: realm.id,
+        });
+        const writer = await findClient('content-writer');
+        const blogConsole = await findClient('blog-console');
+
+        const ownedPermissions = await dataSource.getRepository(PermissionEntity).findBy({ clientId: blogConsole.id });
+
+        expect(ownedPermissions.map((row) => row.realmId)).toEqual([realm.id, realm.id]);
+
+        const writerPermissions = await dataSource.getRepository(ClientPermissionEntity).find({
+            where: { clientId: writer.id },
+            relations: { permission: true },
+        });
+
+        expect(writerPermissions.map((row) => row.permission.name).sort())
+            .toEqual(['perm_a', 'perm_b', 'post_create', 'post_read']);
+
+        const writerRoles = await dataSource.getRepository(ClientRoleEntity).find({
+            where: { clientId: writer.id },
+            relations: { role: true },
+        });
+
+        expect(writerRoles.map((row) => row.role.name).sort()).toEqual(['blog-editor', 'ops']);
+
+        const readRolePermissions = async (name: string) => {
+            const role = await dataSource.getRepository(RoleEntity).findOneByOrFail({ name, realmId: realm.id });
+            const rows = await dataSource.getRepository(RolePermissionEntity).find({
+                where: { roleId: role.id },
+                relations: { permission: true },
+            });
+
+            return rows.map((row) => row.permission.name).sort();
+        };
+
+        expect(await readRolePermissions('ops')).toEqual(['perm_a', 'post_read']);
+        expect(await readRolePermissions('blog-admin')).toEqual(['post_create', 'post_read']);
+        expect(await readRolePermissions('blog-editor')).toEqual(['post_create']);
+
+        const user = await dataSource.getRepository(UserEntity).findOneByOrFail({ name: 'alice', realmId: realm.id });
+        const userRoles = await dataSource.getRepository(UserRoleEntity).find({
+            where: { userId: user.id },
+            relations: { role: true },
+        });
+
+        expect(userRoles.map((row) => row.role.name).sort()).toEqual(['blog-admin', 'ops']);
     });
 
     // Every realm carries the console system clients whose provisioned

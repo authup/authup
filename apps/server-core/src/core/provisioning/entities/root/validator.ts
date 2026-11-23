@@ -12,7 +12,7 @@ import { ProvisioningStrategyValidator } from '../../strategy/index.ts';
 import { PermissionProvisioningValidator } from '../permission/index.ts';
 import { PolicyProvisioningValidator } from '../policy/index.ts';
 import { RealmProvisioningValidator } from '../realm/index.ts';
-import { RoleProvisioningValidator } from '../role/index.ts';
+import { GlobalRoleProvisioningValidator } from '../role/index.ts';
 import { ScopeProvisioningValidator } from '../scope/index.ts';
 import { createProvisioningEntitiesValidator } from '../utils.ts';
 
@@ -42,7 +42,7 @@ export class RootProvisioningValidator extends Container<RootProvisioningEntity>
                 .check(createProvisioningEntitiesValidator(realmValidator)),
         ));
 
-        const roleValidator = new RoleProvisioningValidator();
+        const roleValidator = new GlobalRoleProvisioningValidator();
 
         this.mount('roles', { optional: true }, createValidator(
             z

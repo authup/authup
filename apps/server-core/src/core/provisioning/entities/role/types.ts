@@ -36,6 +36,12 @@ export type RoleProvisioningRelations = {
      * Assign role to realm permissions.
      */
     realmPermissions?: string[],
+
+    /**
+     * Assign role to permissions owned by clients of the same realm.
+     * Key = client name, value = permission names.
+     */
+    clientPermissions?: Record<string, string[]>,
 };
 
 export type RoleProvisioningEntity = BaseProvisioningEntity<Role> & {

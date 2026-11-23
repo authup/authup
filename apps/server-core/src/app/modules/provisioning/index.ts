@@ -9,3 +9,4 @@ export * from './constants.ts';
 export * from './lazy-wildcard.ts';
 export * from './sources/index.ts';
 export * from './module.ts';
+export * from './realm-repairer.ts';

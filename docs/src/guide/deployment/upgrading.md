@@ -5,6 +5,33 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
+## Next release (after v1.0.0-beta.76)
+
+### Provisioning binds a realm's relations after its entities
+
+Within a realm, provisioning creates every permission, role, client and user first and makes
+their permission, role and scope assignments afterwards, so an assignment no longer depends on
+the order of the file. A permission or role a client declares is stored in the client's realm;
+one that an existing deployment holds without a realm is given it on the next boot, together with
+the role, user, client and identity-provider assignments and policy bindings that refer to it.
+
+**Action required:** none for a fresh deployment. A client or user created by an earlier boot
+under `createOnly` keeps the assignments it got then: give its entry `strategy: { type: merge }`
+for one boot (or bind the permissions through the API) to add the ones the old order missed.
+
+### A permission manager may assign roles over realm- and client-owned permissions
+
+Assigning a role to a user or client, or mapping it from an identity provider, requires the
+assigning actor to hold every permission of the role. A permission owned by a realm or a client
+now also counts as held when the actor may update that permission (`permission_update`, with the
+permission's own policies applied) and holds `permission_update` without a policy at least as wide
+as the reach the role grants. The `admin` user therefore assigns application roles in every realm
+and a `realm_admin` in its own. Binding such a permission directly to a user or client still
+requires holding it.
+
+**Action required:** none. A provisioning workaround that binds `admin` to an application's
+admin role only to delegate it can be dropped.
+
 ## Next release (after v1.0.0-beta.75)
 
 ### Health moves to `/livez` and `/readyz`
