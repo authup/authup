@@ -15,3 +15,17 @@ export type ProvisioningEntityResolverOptions = {
      */
     clientScoped?: boolean
 };
+
+export type OwnedEntityAttributes = {
+    name?: string | null,
+    realmId?: string | null,
+    clientId?: string | null,
+};
+
+export type OwnedEntityLookupResult<T> = {
+    entity: T | null,
+    /**
+     * The row is client-owned and stored without its client's realm.
+     */
+    realmless: boolean,
+};

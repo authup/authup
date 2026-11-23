@@ -12,6 +12,7 @@ import { ClientProvisioningRelationsValidator } from '../../../../../src/core/pr
 import type { ClientProvisioningRelations } from '../../../../../src/core/provisioning/entities/client/index.ts';
 import { mergeProvisioningEntities } from '../../../../../src/core/provisioning/merge/index.ts';
 import { RoleProvisioningRelationsValidator } from '../../../../../src/core/provisioning/entities/role/relations-validator.ts';
+import { RootProvisioningValidator } from '../../../../../src/core/provisioning/entities/root/validator.ts';
 
 function validate(tokenExchangeCapabilities: unknown[]) {
     return new ClientProvisioningRelationsValidator().run(
@@ -149,5 +150,31 @@ describe('core/provisioning/entities client-owned relations', () => {
             { clientPermissions: { 'blog-console': 'post_read' } } as never,
             { group: ValidatorGroup.PROVISIONING },
         )).rejects.toThrow();
+    });
+
+    it('should refuse client permissions on a global role', async () => {
+        await expect(new RootProvisioningValidator().run(
+            {
+                roles: [{
+                    attributes: { name: 'operator' },
+                    relations: { clientPermissions: { 'blog-console': ['*'] } },
+                }],
+            },
+            { group: ValidatorGroup.PROVISIONING },
+        )).rejects.toThrow();
+    });
+
+    it('should keep a global role without client permissions', async () => {
+        const output = await new RootProvisioningValidator().run(
+            {
+                roles: [{
+                    attributes: { name: 'operator' },
+                    relations: { globalPermissions: ['*'] },
+                }],
+            },
+            { group: ValidatorGroup.PROVISIONING },
+        );
+
+        expect(output.roles![0]!.relations).toEqual({ globalPermissions: ['*'] });
     });
 });

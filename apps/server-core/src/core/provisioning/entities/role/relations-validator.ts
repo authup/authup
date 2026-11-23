@@ -19,8 +19,12 @@ export class RoleProvisioningRelationsValidator extends Container<RoleProvisioni
             z.array(z.string()),
         ));
 
+        // A client relation names clients of the role's realm, which a
+        // global role does not have.
         this.mount('clientPermissions', { optional: true }, createValidator(
-            z.record(z.string(), z.array(z.string())),
+            this.isGlobal() ?
+                z.never({ error: 'A global role cannot be bound to permissions a client owns.' }) :
+                z.record(z.string(), z.array(z.string())),
         ));
 
         this.mount('globalPermissions', { optional: true }, createValidator(
@@ -38,5 +42,9 @@ export class RoleProvisioningRelationsValidator extends Container<RoleProvisioni
         this.mount('globalPermissionsRealmScopeOverrides', { optional: true }, createValidator(
             z.partialRecord(z.enum(RealmScope), z.array(z.string())),
         ));
+    }
+
+    protected isGlobal(): boolean {
+        return false;
     }
 }

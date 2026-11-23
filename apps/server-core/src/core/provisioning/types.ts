@@ -34,6 +34,16 @@ export type ProvisioningSynchronizeContext = {
     defer(task: () => Promise<void>): void,
 };
 
+/**
+ * Gives a client-owned permission or role stored without a realm the realm
+ * of its client in every row that refers to it, so a realm-scoped read or
+ * delete of those rows reaches them. The row itself is the caller's.
+ */
+export interface IProvisioningRealmRepairer {
+    repairPermission(id: string, realmId: string): Promise<void>;
+    repairRole(id: string, realmId: string): Promise<void>;
+}
+
 export interface IProvisioningSynchronizer<T> {
     synchronize(input: T, context?: ProvisioningSynchronizeContext) : Promise<T>;
     synchronizeMany(input: T[], context?: ProvisioningSynchronizeContext) : Promise<T[]>;

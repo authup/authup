@@ -18,6 +18,7 @@ import { RoleProvisioningSynchronizer } from '../../../../../src/core/provisioni
 import type { RoleProvisioningEntity } from '../../../../../src/core/provisioning/entities/role/index.ts';
 import { ProvisioningEntityStrategyType } from '../../../../../src/core/provisioning/strategy/index.ts';
 import type { IPermissionRepository, IRolePermissionRepository } from '../../../../../src/core/entities/index.ts';
+import { FakeClientRepository } from '../../entities/client/fake-repository.ts';
 import { FakeRoleRepository } from '../../entities/role/fake-repository.ts';
 
 describe('core/provisioning/synchronizer/role', () => {
@@ -33,6 +34,7 @@ describe('core/provisioning/synchronizer/role', () => {
         rolePermissionRepository = new FakeEntityRepository<RolePermission>();
         synchronizer = new RoleProvisioningSynchronizer({
             repository: roleRepository,
+            clientRepository: new FakeClientRepository(),
             permissionRepository: permissionRepository as
                 FakeEntityRepository<Permission> & IPermissionRepository,
             rolePermissionRepository: rolePermissionRepository as

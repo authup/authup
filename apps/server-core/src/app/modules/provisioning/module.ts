@@ -63,6 +63,7 @@ import {
 } from '../../../core/provisioning/wildcard/index.ts';
 import type { IProvisioningSource } from '../../../core/provisioning/types.ts';
 import { PROVISIONING_DATABASE_LOCK, ProvisioningInjectionKey } from './constants.ts';
+import { ProvisioningRealmRepairer } from './realm-repairer.ts';
 import {
     ClientPermissionRepositoryAdapter,
     ClientRepositoryAdapter,
@@ -234,14 +235,18 @@ export class ProvisionerModule implements IModule {
             container.resolve<IRealmCipher>(OAuth2InjectionToken.RealmCipher) :
             new RealmCipher({ keyStore });
 
+        const realmRepairer = new ProvisioningRealmRepairer(dataSource);
+
         const permissionSynchronizer = new PermissionProvisioningSynchronizer({
             repository: permissionRepository,
+            realmRepairer,
             policyRepository,
             permissionPolicyRepository,
         });
 
         const roleSynchronizer = new RoleProvisioningSynchronizer({
             repository: roleRepository,
+            realmRepairer,
             clientRepository,
             permissionRepository,
             rolePermissionRepository: new RolePermissionRepositoryAdapter(

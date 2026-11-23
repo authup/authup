@@ -168,8 +168,21 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             await this.userSynchronizer.synchronizeMany(users, context);
         }
 
+        // Every binding runs even when one fails: a createOnly entity created
+        // on this pass is never bound on a later one, so a binding skipped
+        // now would stay missing for good. The first failure fails the pass.
+        const errors: unknown[] = [];
+
         for (const task of deferred) {
-            await task();
+            try {
+                await task();
+            } catch (e) {
+                errors.push(e);
+            }
+        }
+
+        if (errors.length > 0) {
+            throw errors[0];
         }
 
         return {

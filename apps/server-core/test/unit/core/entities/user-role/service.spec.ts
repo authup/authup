@@ -240,17 +240,17 @@ describe('core/entities/user-role/service', () => {
             return [
                 {
                     permission: {
-                        name: 'p1', 
-                        realmId, 
-                        clientId: null, 
-                    }, 
+                        name: 'p1',
+                        realmId,
+                        clientId: null,
+                    },
                 },
                 {
                     permission: {
-                        name: 'p2', 
-                        realmId, 
-                        clientId: randomUUID(), 
-                    }, 
+                        name: 'p2',
+                        realmId,
+                        clientId: randomUUID(),
+                    },
                 },
             ];
         }
@@ -330,9 +330,9 @@ describe('core/entities/user-role/service', () => {
                 { userId: randomUUID(), roleId },
                 createActor(realmA, [{
                     permission: {
-                        name: PermissionName.USER_ROLE_CREATE, 
-                        realmId: null, 
-                        clientId: null, 
+                        name: PermissionName.USER_ROLE_CREATE,
+                        realmId: null,
+                        clientId: null,
                     },
                     realmScope: RealmScope.ANY,
                 }]),
@@ -342,10 +342,10 @@ describe('core/entities/user-role/service', () => {
         it('should keep requiring a global permission the actor does not hold', async () => {
             const svc = createService([{
                 permission: {
-                    name: 'user_read', 
-                    realmId: null, 
-                    clientId: null, 
-                }, 
+                    name: 'user_read',
+                    realmId: null,
+                    clientId: null,
+                },
             }]);
 
             await expect(svc.create(

@@ -16,8 +16,11 @@ Core logic lives in `core/provisioning/`, wiring in `app/modules/provisioning/`.
   `clientPermissions` / `clientRoles` (users and clients) and a role's
   `clientPermissions` are keyed by client name and reach any client of the
   same realm (#3869), at the junction's default reach. A client-owned row
-  carries its client's realm, and its lookup is by client alone, so a row
-  stored without that realm is repaired in place rather than duplicated.
+  carries its client's realm. Its lookup tries that realm first and falls back
+  to a realm-less row of the client (`findOwnedEntity`), which is then given
+  the realm together with every row referring to it
+  (`IProvisioningRealmRepairer`, references first so an interrupted repair is
+  found again). A realm row always wins: the two may coexist.
 - **`core/provisioning/strategy/`**: `createOnly`, `merge`, `replace`,
   `absent`.
 - **`core/provisioning/synchronizer/`**: `ProvisioningEntityResolver<T>`
@@ -72,8 +75,11 @@ config-gated `assignDefaultPolicy` backfill.
   writes on the `ProvisioningSynchronizeContext` the realm hands down, so a
   relation resolves whatever order the file declares its ends in; binding
   inline made a client's realm permissions miss on the first boot, which
-  `createOnly` never repaired. Called without a context (the graph level), a
-  synchronizer binds inline. Paths are entities, resolved inline.
+  `createOnly` never repaired. Every queued binding runs even when one fails
+  and the first error fails the pass afterwards: an entity created on this
+  pass is never bound by a later `createOnly` one. Called without a context
+  (the graph level), a synchronizer binds inline. Paths are entities,
+  resolved inline.
 
 ### Concurrent boots: the provisioning lock (issue #3356)
 

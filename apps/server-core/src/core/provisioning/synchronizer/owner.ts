@@ -5,42 +5,49 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-type OwnedEntityAttributes = {
-    name?: string | null,
-    realmId?: string | null,
-    clientId?: string | null,
-};
+import type { ObjectLiteral } from '@authup/kit';
+import type { IEntityRepository } from '@authup/server-kit';
+import type { OwnedEntityAttributes, OwnedEntityLookupResult } from './types.ts';
 
 /**
- * The lookup of a provisioned permission or role. A client-owned row is
- * found by its client alone, since the client pins its realm: a row an
- * earlier release stored without that realm is still the same row.
+ * Find the stored row of a provisioned permission or role.
+ *
+ * A client-owned row lives in its client's realm. Provisioning once stored
+ * such rows without a realm, so when the realm row is missing the lookup
+ * falls back to a realm-less row of the same client, which the caller then
+ * gives the realm. A realm row always wins: both may exist side by side
+ * (the realm-less one written by provisioning, the other through the API).
  */
-export function buildOwnedEntityLookup(attributes: OwnedEntityAttributes): Record<string, unknown> {
-    if (attributes.clientId) {
+export async function findOwnedEntity<T extends ObjectLiteral>(
+    repository: Pick<IEntityRepository<T>, 'findOneBy'>,
+    attributes: OwnedEntityAttributes,
+): Promise<OwnedEntityLookupResult<T>> {
+    if (!attributes.clientId) {
         return {
-            name: attributes.name,
-            clientId: attributes.clientId,
+            entity: await repository.findOneBy({
+                name: attributes.name,
+                realmId: attributes.realmId || null,
+                clientId: null,
+            }),
+            realmless: false,
         };
     }
 
-    return {
+    const entity = await repository.findOneBy({
         name: attributes.name,
         realmId: attributes.realmId || null,
-        clientId: null,
-    };
-}
+        clientId: attributes.clientId,
+    });
 
-/**
- * Whether a stored client-owned row lacks the realm of its client. A client
- * relation resolves the rows of the client's realm only, so such a row is
- * repaired whatever the strategy.
- */
-export function needsOwningClientRealm(
-    stored: OwnedEntityAttributes,
-    input: OwnedEntityAttributes,
-): boolean {
-    return !!stored.clientId &&
-        !stored.realmId &&
-        !!input.realmId;
+    if (entity || !attributes.realmId) {
+        return { entity, realmless: false };
+    }
+
+    const realmless = await repository.findOneBy({
+        name: attributes.name,
+        realmId: null,
+        clientId: attributes.clientId,
+    });
+
+    return { entity: realmless, realmless: !!realmless };
 }

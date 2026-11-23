@@ -28,7 +28,8 @@ import type {
     IRolePermissionRepository,
     IScopeRepository,
 } from '../../../../../src/core/entities/index.ts';
-import type { ProvisioningSynchronizeContext } from '../../../../../src/core/provisioning/index.ts';
+import type { IProvisioningRealmRepairer, ProvisioningSynchronizeContext } from '../../../../../src/core/provisioning/index.ts';
+import { ProvisioningEntityStrategyType } from '../../../../../src/core/provisioning/strategy/index.ts';
 import { ClientProvisioningSynchronizer } from '../../../../../src/core/provisioning/synchronizer/client/module.ts';
 import { PermissionProvisioningSynchronizer } from '../../../../../src/core/provisioning/synchronizer/permission/module.ts';
 import { RoleProvisioningSynchronizer } from '../../../../../src/core/provisioning/synchronizer/role/module.ts';
@@ -54,6 +55,16 @@ describe('core/provisioning/synchronizer client-owned relations', () => {
     let roleSynchronizer: RoleProvisioningSynchronizer;
     let clientSynchronizer: ClientProvisioningSynchronizer;
 
+    let repairs: Array<[string, string, string]>;
+    const realmRepairer: IProvisioningRealmRepairer = {
+        repairPermission: async (id, realm) => {
+            repairs.push(['permission', id, realm]);
+        },
+        repairRole: async (id, realm) => {
+            repairs.push(['role', id, realm]);
+        },
+    };
+
     beforeEach(() => {
         clientRepository = new FakeClientRepository();
         permissionRepository = new FakePermissionRepository();
@@ -61,9 +72,11 @@ describe('core/provisioning/synchronizer client-owned relations', () => {
         rolePermissionRepository = new FakeEntityRepository<RolePermission>();
         clientPermissionRepository = new FakeEntityRepository<ClientPermission>();
         clientRoleRepository = new FakeEntityRepository<ClientRole>();
+        repairs = [];
 
         roleSynchronizer = new RoleProvisioningSynchronizer({
             repository: roleRepository,
+            realmRepairer,
             clientRepository,
             permissionRepository,
             rolePermissionRepository: rolePermissionRepository as
@@ -83,7 +96,7 @@ describe('core/provisioning/synchronizer client-owned relations', () => {
             scopeRepository: new FakeEntityRepository<Scope>() as
                 FakeEntityRepository<Scope> & IScopeRepository,
             roleSynchronizer,
-            permissionSynchronizer: new PermissionProvisioningSynchronizer({ repository: permissionRepository }),
+            permissionSynchronizer: new PermissionProvisioningSynchronizer({ repository: permissionRepository, realmRepairer }),
             tokenExchangeCapabilitySynchronizer: {
                 synchronize: async (input) => input,
                 synchronizeMany: async (inputs) => inputs,
@@ -204,14 +217,64 @@ describe('core/provisioning/synchronizer client-owned relations', () => {
         expect(permissionRepository.getAll()).toEqual([
             expect.objectContaining({ id: stored.id, realmId }),
         ]);
+        expect(repairs).toEqual([['permission', stored.id, realmId]]);
+    });
+
+    it('should give a client-owned role stored without a realm the realm of its client', async () => {
+        const owner = clientRepository.seed({ name: 'blog-console', realmId });
+        const stored = roleRepository.seed({
+            name: 'blog-admin',
+            realmId: null,
+            clientId: owner.id,
+        });
+
+        await clientSynchronizer.synchronize({
+            attributes: { name: 'blog-console', realmId },
+            relations: { roles: [{ attributes: { name: 'blog-admin' } }] },
+        });
+
+        expect(roleRepository.getAll()).toEqual([
+            expect.objectContaining({ id: stored.id, realmId }),
+        ]);
+        expect(repairs).toEqual([['role', stored.id, realmId]]);
+    });
+
+    it('should prefer the realm row over a realm-less row of the same client', async () => {
+        const owner = clientRepository.seed({ name: 'blog-console', realmId });
+        const realmless = permissionRepository.seed({
+            name: 'post_read',
+            realmId: null,
+            clientId: owner.id,
+        });
+        const realmRow = permissionRepository.seed({
+            name: 'post_read',
+            realmId,
+            clientId: owner.id,
+            description: 'before',
+        });
+
+        await clientSynchronizer.synchronize({
+            attributes: { name: 'blog-console', realmId },
+            relations: {
+                permissions: [{
+                    strategy: { type: ProvisioningEntityStrategyType.MERGE },
+                    attributes: { name: 'post_read', description: 'after' },
+                }],
+            },
+        });
+
+        expect(repairs).toEqual([]);
+        expect(await permissionRepository.findOneBy({ id: realmless.id })).toMatchObject({ realmId: null });
+        expect(await permissionRepository.findOneBy({ id: realmRow.id })).toMatchObject({ realmId, description: 'after' });
+        expect(permissionRepository.getAll()).toHaveLength(2);
     });
 
     it('should defer the bindings to the context it is handed', async () => {
         const tasks: Array<() => Promise<void>> = [];
         const context: ProvisioningSynchronizeContext = {
             defer: (task) => {
-                tasks.push(task); 
-            }, 
+                tasks.push(task);
+            },
         };
 
         await clientSynchronizer.synchronize({
@@ -250,21 +313,5 @@ describe('core/provisioning/synchronizer client-owned relations', () => {
         });
 
         expect(rolePermissionRepository.getAll()).toHaveLength(0);
-    });
-});
-
-describe('core/provisioning/synchronizer/role without a client repository', () => {
-    it('should refuse a client permission relation', async () => {
-        const synchronizer = new RoleProvisioningSynchronizer({
-            repository: new FakeRoleRepository(),
-            permissionRepository: new FakePermissionRepository(),
-            rolePermissionRepository: new FakeEntityRepository<RolePermission>() as
-                FakeEntityRepository<RolePermission> & IRolePermissionRepository,
-        });
-
-        await expect(synchronizer.synchronize({
-            attributes: { name: 'ops', realmId: randomUUID() },
-            relations: { clientPermissions: { 'blog-console': ['*'] } },
-        })).rejects.toThrow(/client repository/);
     });
 });

@@ -11,6 +11,7 @@ import type {
     IRolePermissionRepository,
     IRoleRepository,
 } from '../../../entities/index.ts';
+import type { IProvisioningRealmRepairer } from '../../types.ts';
 
 export type RoleProvisioningSynchronizerContext = {
     repository: IRoleRepository,
@@ -18,8 +19,13 @@ export type RoleProvisioningSynchronizerContext = {
     rolePermissionRepository: IRolePermissionRepository,
 
     /**
-     * Resolves the clients a `relations.clientPermissions` entry names;
-     * without it such a declaration fails the boot.
+     * Resolves the clients a `relations.clientPermissions` entry names.
      */
-    clientRepository?: IClientRepository,
+    clientRepository: IClientRepository,
+
+    /**
+     * Gives the rows referring to a client-owned row stored without a realm
+     * the realm of its client; without it only the row itself is repaired.
+     */
+    realmRepairer?: IProvisioningRealmRepairer,
 };

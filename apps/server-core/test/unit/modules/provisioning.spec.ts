@@ -256,6 +256,54 @@ describe('app/modules/provisioning', () => {
     // A client declared before the permissions, roles and clients it names
     // binds all of them on the first boot (#3854), and roles and clients bind
     // permissions and roles another client owns (#3869).
+    // Provisioning once stored a client's own permissions and roles without
+    // a realm; the next boot gives them the client's realm together with
+    // every row that refers to them, so a realm-scoped read reaches those.
+    it('should give a realm-less client-owned row and its references the client realm', async () => {
+        const realm = await dataSource.getRepository(RealmEntity).save({ name: 'realm-repair' });
+        const client = await dataSource.getRepository(ClientEntity).save({
+            name: 'legacy-console',
+            realmId: realm.id,
+        });
+        const permission = await dataSource.getRepository(PermissionEntity).save({
+            name: 'legacy_read',
+            clientId: client.id,
+            realmId: null,
+        });
+        const role = await dataSource.getRepository(RoleEntity).save({
+            name: 'legacy-admin',
+            clientId: client.id,
+            realmId: null,
+        });
+        const rolePermission = await dataSource.getRepository(RolePermissionEntity).save({
+            roleId: role.id,
+            roleRealmId: null,
+            permissionId: permission.id,
+            permissionRealmId: null,
+        });
+        const clientRole = await dataSource.getRepository(ClientRoleEntity).save({
+            clientId: client.id,
+            clientRealmId: realm.id,
+            roleId: role.id,
+            roleRealmId: null,
+        });
+
+        await new ProvisionerModule([
+            new FileProvisioningSource({ cwd: 'test/data/sources-realm-repair' }),
+        ]).setup(di);
+
+        const permissions = await dataSource.getRepository(PermissionEntity).findBy({ clientId: client.id });
+        const roles = await dataSource.getRepository(RoleEntity).findBy({ clientId: client.id });
+
+        expect(permissions).toEqual([expect.objectContaining({ id: permission.id, realmId: realm.id })]);
+        expect(roles).toEqual([expect.objectContaining({ id: role.id, realmId: realm.id })]);
+
+        expect(await dataSource.getRepository(RolePermissionEntity).findOneByOrFail({ id: rolePermission.id }))
+            .toMatchObject({ roleRealmId: realm.id, permissionRealmId: realm.id });
+        expect(await dataSource.getRepository(ClientRoleEntity).findOneByOrFail({ id: clientRole.id }))
+            .toMatchObject({ roleRealmId: realm.id });
+    });
+
     it('should bind every relation of a realm on the first boot', async () => {
         await new ProvisionerModule([
             new FileProvisioningSource({ cwd: 'test/data/sources-client-owned' }),

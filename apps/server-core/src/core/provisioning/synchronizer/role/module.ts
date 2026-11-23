@@ -5,15 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthupError } from '@authup/errors';
 import { pickRecord } from '@authup/kit';
 import type { Permission, Role, RolePermission } from '@authup/core-kit';
 import type { IClientRepository, IRoleRepository } from '../../../entities/index.ts';
 import type { RoleProvisioningEntity, RoleProvisioningRelations } from '../../entities/role/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
-import type { ProvisioningSynchronizeContext } from '../../types.ts';
+import type { IProvisioningRealmRepairer, ProvisioningSynchronizeContext } from '../../types.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
-import { buildOwnedEntityLookup, needsOwningClientRealm } from '../owner.ts';
+import { findOwnedEntity } from '../owner.ts';
 import { ProvisioningEntityResolver } from '../entity-resolver.ts';
 import { ProvisioningJunctionSynchronizer } from '../junction-synchronizer.ts';
 import type { RoleProvisioningSynchronizerContext } from './types.ts';
@@ -21,7 +20,9 @@ import type { RoleProvisioningSynchronizerContext } from './types.ts';
 export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<RoleProvisioningEntity> {
     protected repository : IRoleRepository;
 
-    protected clientRepository?: IClientRepository;
+    protected realmRepairer?: IProvisioningRealmRepairer;
+
+    protected clientRepository: IClientRepository;
 
     protected permissionResolver : ProvisioningEntityResolver<Permission>;
 
@@ -31,6 +32,7 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         super();
 
         this.repository = ctx.repository;
+        this.realmRepairer = ctx.realmRepairer;
         this.clientRepository = ctx.clientRepository;
         this.permissionResolver = new ProvisioningEntityResolver(ctx.permissionRepository);
         this.permissionJunction = new ProvisioningJunctionSynchronizer({
@@ -47,7 +49,16 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         this.canonicalizeName(input.attributes);
 
         const strategy = normalizeEntityProvisioningStrategy(input.strategy);
-        let attributes = await this.repository.findOneBy(buildOwnedEntityLookup(input.attributes));
+        const lookup = await findOwnedEntity(this.repository, input.attributes);
+        let attributes = lookup.entity;
+
+        if (
+            attributes &&
+            lookup.realmless &&
+            strategy.type !== ProvisioningEntityStrategyType.ABSENT
+        ) {
+            attributes = await this.repairRealm(attributes, input.attributes.realmId as string);
+        }
 
         if (strategy.type === ProvisioningEntityStrategyType.ABSENT) {
             if (attributes) {
@@ -84,11 +95,6 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         } else {
             attributes = await this.repository.save(this.repository.create(input.attributes));
             created = true;
-        }
-
-        if (needsOwningClientRealm(attributes, input.attributes)) {
-            attributes.realmId = input.attributes.realmId as string;
-            attributes = await this.repository.save(attributes);
         }
 
         // createOnly leaves a row it did not create alone, its permission
@@ -166,10 +172,6 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             return;
         }
 
-        if (!this.clientRepository) {
-            throw new AuthupError('A role client permission relation needs the client repository, which is not wired here.');
-        }
-
         const clientPermissions = await this.permissionResolver.resolveClientOwned(
             relations.clientPermissions,
             attributes.realmId,
@@ -184,6 +186,20 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
                 'permissionRealmId',
             );
         }
+    }
+
+    /**
+     * The rows referring to the role take the realm first, so an
+     * interrupted repair is found again on the next boot.
+     */
+    protected async repairRealm(entity: Role, realmId: string): Promise<Role> {
+        if (this.realmRepairer) {
+            await this.realmRepairer.repairRole(entity.id, realmId);
+        }
+
+        entity.realmId = realmId;
+
+        return this.repository.save(entity);
     }
 
     private buildRealmScopeOverrides(input: RoleProvisioningEntity): Map<string, string> {

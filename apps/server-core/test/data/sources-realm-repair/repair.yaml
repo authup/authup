@@ -1,0 +1,14 @@
+realms:
+  - attributes:
+      name: realm-repair
+    relations:
+      clients:
+        - attributes:
+            name: legacy-console
+          relations:
+            permissions:
+              - attributes:
+                  name: legacy_read
+            roles:
+              - attributes:
+                  name: legacy-admin
