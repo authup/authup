@@ -29,6 +29,7 @@ describe('core/oauth2/login-redirect', () => {
             ['/users?page=2#row-7', '/users?page=2#row-7'],
             ['users', '/users'],
             ['/login-history', '/login-history'],
+            ['/logouts', '/logouts'],
         ])('accepts the site-relative path %j', (value, expected) => {
             expect(resolveLoginRedirect(value)).toEqual(expected);
         });
@@ -53,7 +54,10 @@ describe('core/oauth2/login-redirect', () => {
             '/login?redirect=%2Fusers',
             '/login/callback?code=x',
             '/LOGIN',
-        ])('refuses the login route %j', (value) => {
+            '/logout',
+            '/logout?redirect=%2F',
+            '/logout/done',
+        ])('refuses the login or logout route %j', (value) => {
             expect(resolveLoginRedirect(value)).toBeUndefined();
         });
 

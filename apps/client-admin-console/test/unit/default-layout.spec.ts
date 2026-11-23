@@ -54,6 +54,36 @@ describe('src/layouts/default.vue', () => {
         expect(httpClient.requests.some((request) => request.url?.includes(ROLE_B))).toBe(true);
     });
 
+    it('should keep the record page when only its tab changes', async () => {
+        const recordReads = () => httpClient.requests.filter(
+            (request) => request.method === 'GET' &&
+                new URL(request.url, 'http://localhost').pathname === `/roles/${ROLE_A}`,
+        ).length;
+
+        const {
+            router,
+            httpClient,
+        } = await mountPage(`/roles/${ROLE_A}`, {
+            [`GET /roles/${ROLE_A}`]: () => buildRole(ROLE_A, 'alpha'),
+            '*': () => ({
+                data: [],
+                meta: {
+                    total: 0,
+                    limit: 10,
+                    offset: 0,
+                },
+            }),
+        }, routes, { root: DefaultLayout, stubs: STUBS });
+
+        expect(recordReads()).toEqual(1);
+
+        await router.push(`/roles/${ROLE_A}/users`);
+        await flushPromises();
+
+        // same params, so the same [id].vue instance: no second record read
+        expect(recordReads()).toEqual(1);
+    });
+
     it('should keep the page instance on a query-only change', async () => {
         let mounts = 0;
 

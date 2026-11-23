@@ -19,7 +19,7 @@ import {
 } from 'vitest';
 import { LayoutKey } from '../../src/config/layout/index.ts';
 import { createRoutingGuard } from '../../src/guard.ts';
-import { LOGIN_REDIRECT_OPTIONS, LOGIN_REDIRECT_STORAGE_KEY } from '../../src/redirect.ts';
+import { ADMIN_LOGIN_REDIRECT_STORAGE_KEY, LOGIN_REDIRECT_OPTIONS } from '../../src/redirect.ts';
 import { routes } from '../../src/router.ts';
 
 type StoreStub = {
@@ -165,12 +165,12 @@ describe('src/guard', () => {
             const { guard } = createGuard({}, { cookieSession: true });
 
             // written raw: the stash is validated on the way OUT as well
-            sessionStorage.setItem(LOGIN_REDIRECT_STORAGE_KEY, value);
+            sessionStorage.setItem(ADMIN_LOGIN_REDIRECT_STORAGE_KEY, value);
 
             const result = await guard(createRoute({ path: '/' }), createRoute({ path: '/' }));
 
             expect(result).toBeUndefined();
-            expect(sessionStorage.getItem(LOGIN_REDIRECT_STORAGE_KEY)).toBeNull();
+            expect(sessionStorage.getItem(ADMIN_LOGIN_REDIRECT_STORAGE_KEY)).toBeNull();
         });
 
         it('should drop the stash when the session did not land', async () => {
@@ -179,7 +179,7 @@ describe('src/guard', () => {
             saveLoginRedirect('/users', LOGIN_REDIRECT_OPTIONS);
 
             await guard(createRoute({ path: '/login' }), createRoute({ path: '/' }));
-            expect(sessionStorage.getItem(LOGIN_REDIRECT_STORAGE_KEY)).toBeNull();
+            expect(sessionStorage.getItem(ADMIN_LOGIN_REDIRECT_STORAGE_KEY)).toBeNull();
         });
     });
 

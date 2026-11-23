@@ -7,10 +7,10 @@
 
 import type { LoginRedirectOptions } from '@authup/client-web-kit';
 
-export const LOGIN_REDIRECT_STORAGE_KEY = 'authup:admin:redirect';
+export const ADMIN_LOGIN_REDIRECT_STORAGE_KEY = 'authup:admin:redirect';
 
 /**
  * The post-login destination stash of this console. Its own key, because
  * every console on the IdP origin shares one `sessionStorage`.
  */
-export const LOGIN_REDIRECT_OPTIONS : LoginRedirectOptions = { storageKey: LOGIN_REDIRECT_STORAGE_KEY };
+export const LOGIN_REDIRECT_OPTIONS : LoginRedirectOptions = { storageKey: ADMIN_LOGIN_REDIRECT_STORAGE_KEY };

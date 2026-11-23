@@ -13,14 +13,16 @@ export const LOGIN_REDIRECT_STORAGE_KEY = 'authup:login-redirect';
 
 export const LOGIN_REDIRECT_LOGIN_PATH = '/login';
 
+export const LOGIN_REDIRECT_LOGOUT_PATH = '/logout';
+
 /**
  * Base for resolving a post-login destination. Any origin works; it exists
  * only so a relative path resolves and an absolute one is visibly not this.
  */
 const DESTINATION_BASE = 'http://localhost';
 
-function isLoginPath(pathname: string, loginPath: string) : boolean {
-    const prefix = loginPath.replace(/\/+$/, '').toLowerCase();
+function isOnPath(pathname: string, route: string) : boolean {
+    const prefix = route.replace(/\/+$/, '').toLowerCase();
     const path = pathname.toLowerCase();
 
     return path === prefix || path.startsWith(`${prefix}/`);
@@ -34,7 +36,11 @@ function isLoginPath(pathname: string, loginPath: string) : boolean {
  * non-special schemes all resolve somewhere else and are refused. An
  * attacker-chosen path is no improvement over an attacker-chosen host, so
  * the value is dropped outright rather than coerced. A destination on the
- * login route itself is refused too: landing there after a login loops.
+ * login or logout route (or below either) is refused too: landing there
+ * after a login loops or signs the visitor straight out again.
+ *
+ * The value is compared as the app's router sees it, so `loginPath` and
+ * `logoutPath` must carry any base path that router has in its paths.
  */
 export function resolveLoginRedirect(
     value: unknown,
@@ -56,7 +62,10 @@ export function resolveLoginRedirect(
         return undefined;
     }
 
-    if (isLoginPath(url.pathname, options.loginPath ?? LOGIN_REDIRECT_LOGIN_PATH)) {
+    if (
+        isOnPath(url.pathname, options.loginPath ?? LOGIN_REDIRECT_LOGIN_PATH) ||
+        isOnPath(url.pathname, options.logoutPath ?? LOGIN_REDIRECT_LOGOUT_PATH)
+    ) {
         return undefined;
     }
 

@@ -9,6 +9,11 @@ import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import type { Component } from 'vue';
 import AClientForm from '../../../../src/components/entities/client/AClientForm.vue';
+import AClientTokenExchangeCapabilityForm from '../../../../src/components/entities/client-token-exchange-capability/AClientTokenExchangeCapabilityForm.vue';
+import AIdentityProviderLdapForm from '../../../../src/components/entities/identity-provider/AIdentityProviderLdapForm.vue';
+import AIdentityProviderOAuth2Form from '../../../../src/components/entities/identity-provider/AIdentityProviderOAuth2Form.vue';
+import AKeyForm from '../../../../src/components/entities/key/AKeyForm.vue';
+import ATrustAnchorForm from '../../../../src/components/entities/trust-anchor/ATrustAnchorForm.vue';
 import APathForm from '../../../../src/components/entities/path/APathForm.vue';
 import APolicyForm from '../../../../src/components/entities/policy/APolicyForm.vue';
 import AUserForm from '../../../../src/components/entities/user/AUserForm.vue';
@@ -36,6 +41,21 @@ describe.each<[string, Component, string, Record<string, unknown>?]>([
     ['AUserForm', AUserForm, 'users'],
     ['APathForm', APathForm, 'paths'],
     ['APolicyForm', APolicyForm, 'policies', { type: 'composite', decisionStrategy: 'unanimous' }],
+    ['AIdentityProviderOAuth2Form', AIdentityProviderOAuth2Form, 'identity-providers', {
+        protocol: 'oauth2',
+        clientId: 'client',
+        tokenUrl: 'https://idp.example.com/token',
+        authorizeUrl: 'https://idp.example.com/authorize',
+    }],
+    ['AIdentityProviderLdapForm', AIdentityProviderLdapForm, 'identity-providers', { protocol: 'ldap' }],
+    ['AKeyForm', AKeyForm, 'keys'],
+    ['ATrustAnchorForm', ATrustAnchorForm, 'trust-anchors'],
+    ['AClientTokenExchangeCapabilityForm', AClientTokenExchangeCapabilityForm, 'client-token-exchange-capabilities', {
+        audience: 'storage',
+        value: 'bucket',
+        maxAge: 300,
+        realmScope: 'own',
+    }],
 ])('%s', (_name, component, collection, extra = {}) => {
     it('should disable its fields while a save is pending', async () => {
         const entity = {

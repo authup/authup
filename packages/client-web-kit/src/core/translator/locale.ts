@@ -9,6 +9,7 @@ import { matchLocale } from '@authup/i18n';
 import { injectLocale } from '@ilingo/vue';
 import { useLocaleManager } from '@vuecs/locale';
 import type { App, ComputedRef } from 'vue';
+import { runInAppScope } from '../scope.ts';
 import { computed, watch } from 'vue';
 
 function tryUseLocaleManager() {
@@ -71,17 +72,20 @@ export function syncTranslatorLocaleFromManager(app: App): void {
         return;
     }
 
-    const ilingo = app.runWithContext(() => injectLocale());
+    // In the app's own scope, so the watcher stops when the app unmounts.
+    runInAppScope(app, () => {
+        const ilingo = injectLocale();
 
-    watch(
-        manager.resolved,
-        (value) => {
-            const mapped = matchLocale(value);
+        watch(
+            manager.resolved,
+            (value) => {
+                const mapped = matchLocale(value);
 
-            if (mapped && mapped !== ilingo.value) {
-                ilingo.value = mapped;
-            }
-        },
-        { immediate: true },
-    );
+                if (mapped && mapped !== ilingo.value) {
+                    ilingo.value = mapped;
+                }
+            },
+            { immediate: true },
+        );
+    });
 }

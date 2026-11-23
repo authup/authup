@@ -292,7 +292,7 @@ there are no render-function builders (`buildForm*`, `buildList`) (#3139).
   `v.fields.<key>.$model.value` (never `form.<key> = ...`) so the edit
   is dirty-tracked: direct `form` writes are reserved for hydration
   defaults (`generateName()` fills, prop seeds) that deliberately stay
-  clean. Every entity form wraps its fields in a
+  clean. Every entity form with this re-init wraps its fields in a
   `<fieldset :disabled>` bound to the save's busy state (the manager's
   `busy` or a flag held across `createOrUpdate`), because the response
   re-initializes the form and an edit typed meanwhile would be lost (#3863).
