@@ -60,8 +60,8 @@ function mountFields(props: { entity?: EnrollmentEntity, realmId?: string } = {}
             stubs: {
                 // the picker is a network-backed entity collection; the stub
                 // declares its props so hydration and scoping are assertable
-                APolicyPicker: {
-                    name: 'APolicyPicker',
+                AFormPolicyPicker: {
+                    name: 'AFormPolicyPicker',
                     props: ['value', 'query'],
                     template: '<div class="policy-picker-stub" />',
                 },
@@ -102,14 +102,14 @@ describe('AIdentityProviderEnrollmentFields', () => {
         expect(toggle.exists()).toBe(true);
         expect(toggle.props('modelValue')).toBe(true);
 
-        const picker = wrapper.findComponent({ name: 'APolicyPicker' });
+        const picker = wrapper.findComponent({ name: 'AFormPolicyPicker' });
 
         expect(picker.exists()).toBe(true);
         expect(picker.props('value')).toBeNull();
         // no realm known: only global policies are offered
         expect(picker.props('query')).toEqual(defineQuery({ filters: { realmId: [null] } }));
 
-        toggle.vm.$emit('update:modelValue', true);
+        await toggle.emit('update:modelValue', true);
         await flushPromises();
 
         const update = lastUpdate(wrapper);
@@ -125,7 +125,7 @@ describe('AIdentityProviderEnrollmentFields', () => {
 
         expect(wrapper.findComponent(VCFormSwitch).props('modelValue')).toBe(false);
 
-        const picker = wrapper.findComponent({ name: 'APolicyPicker' });
+        const picker = wrapper.findComponent({ name: 'AFormPolicyPicker' });
 
         expect(picker.props('value')).toEqual(POLICY_ID);
         expect(picker.props('query')).toEqual(defineQuery({ filters: { realmId: ['realm-1', null] } }));
@@ -148,9 +148,9 @@ describe('AIdentityProviderEnrollmentFields', () => {
 
         await flushPromises();
 
-        expect(wrapper.findComponent({ name: 'APolicyPicker' }).props('value')).toBeNull();
+        expect(wrapper.findComponent({ name: 'AFormPolicyPicker' }).props('value')).toBeNull();
 
-        wrapper.findComponent(VCFormSwitch).vm.$emit('update:modelValue', false);
+        await wrapper.findComponent(VCFormSwitch).emit('update:modelValue', false);
         await flushPromises();
 
         expect(lastUpdate(wrapper).data.enrollmentPolicyId).toBeNull();
@@ -164,7 +164,7 @@ describe('AIdentityProviderEnrollmentFields', () => {
 
         await flushPromises();
 
-        const picker = wrapper.findComponent({ name: 'APolicyPicker' });
+        const picker = wrapper.findComponent({ name: 'AFormPolicyPicker' });
 
         expect(picker.props('query')).toEqual(defineQuery({ filters: { realmId: ['realm-2', null] } }));
     });
@@ -174,7 +174,7 @@ describe('AIdentityProviderEnrollmentFields', () => {
 
         await flushPromises();
 
-        wrapper.findComponent(VCFormSwitch).vm.$emit('update:modelValue', false);
+        await wrapper.findComponent(VCFormSwitch).emit('update:modelValue', false);
         await flushPromises();
 
         const update = lastUpdate(wrapper);
@@ -189,14 +189,14 @@ describe('AIdentityProviderEnrollmentFields', () => {
 
         await flushPromises();
 
-        const picker = wrapper.findComponent({ name: 'APolicyPicker' });
+        const picker = wrapper.findComponent({ name: 'AFormPolicyPicker' });
 
-        picker.vm.$emit('change', [POLICY_ID]);
+        await picker.emit('change', [POLICY_ID]);
         await flushPromises();
         expect(lastUpdate(wrapper).data).toMatchObject({ enrollmentPolicyId: POLICY_ID });
         expect(picker.props('value')).toEqual(POLICY_ID);
 
-        picker.vm.$emit('change', []);
+        await picker.emit('change', []);
         await flushPromises();
         expect(lastUpdate(wrapper).data).toMatchObject({ enrollmentPolicyId: null });
         expect(lastUpdate(wrapper).valid).toBe(true);
@@ -208,7 +208,7 @@ describe('AIdentityProviderEnrollmentFields', () => {
 
         await flushPromises();
 
-        wrapper.findComponent(VCFormSwitch).vm.$emit('update:modelValue', false);
+        await wrapper.findComponent(VCFormSwitch).emit('update:modelValue', false);
         await flushPromises();
 
         await wrapper.setProps({

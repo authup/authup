@@ -32,14 +32,14 @@ import {
 } from '@vuecs/forms';
 import { BuiltInPolicyType } from '@authup/access';
 import { onChange, useIsEditing, useUpdatedAt } from '../../../composables/index.ts';
-import { ARealmPicker } from '../realm/index.ts';
+import { AFormRealmPicker } from '../realm/index.ts';
 import { IFieldValidation } from '@ilingo/validup-vue';
 import { ANameInput } from '../../utility/index.ts';
 
 export default defineComponent({
     components: {
         ANameInput,
-        ARealmPicker,
+        AFormRealmPicker,
         VCFormInput,
         VCFormSwitch,
         VCFormGroup,
@@ -255,7 +255,7 @@ export default defineComponent({
                     <template #label>
                         {{ translationsDefault.realm }}
                     </template>
-                    <ARealmPicker
+                    <AFormRealmPicker
                         :value="v.fields.realmId.$model.value"
                         @change="(value: string[]) => { v.fields.realmId.$model.value = value[0] || null; }"
                     />

@@ -20,9 +20,11 @@ import { AUTHORIZATION_SUBJECT, buildAuthorizationCatalog } from './authorizatio
 
 const noop = () => undefined;
 
-export function mountKitComponent(
-    component: Component,
-    props: Record<string, any> = {},
+type KitMountProps<C> = NonNullable<Parameters<typeof mount<C>>[1]>['props'];
+
+export function mountKitComponent<C extends Component>(
+    component: C,
+    props?: KitMountProps<C>,
     handlers: FakeHandlerMap = {},
     overrides: Partial<Options> = {},
     mountOptions: { slots?: Record<string, string> } = {},

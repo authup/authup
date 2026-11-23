@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { Path } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils/index.ts';
 import { BaseAPI } from '../../base.ts';
@@ -40,13 +40,13 @@ export class PathAPI extends BaseAPI implements IPathAPI {
     }
 
     async getOne(id: Path['id'], record?: EntityQueryInput<Path>, options?: APIRequestOptions): Promise<EntityRecordResponse<Path>> {
-        const response = await this.client.get(`paths/${id}${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`paths/${encodePathSegment(id)}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async delete(id: Path['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<Path>> {
-        const response = await this.client.delete(`paths/${id}`, buildRequestConfig(options));
+        const response = await this.client.delete(`paths/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -58,7 +58,7 @@ export class PathAPI extends BaseAPI implements IPathAPI {
     }
 
     async update(id: Path['id'], data: PathUpdatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<Path>> {
-        const response = await this.client.post(`paths/${id}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.post(`paths/${encodePathSegment(id)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }

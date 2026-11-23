@@ -13,7 +13,7 @@ import vuecs from '@vuecs/core';
 import { createPinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import AUserForm from '../../../../../src/components/entities/user/AUserForm.vue';
-import { APathPicker } from '../../../../../src/components/entities/path/index.ts';
+import { AFormPathPicker } from '../../../../../src/components/entities/path/index.ts';
 import { AFormSubmit } from '../../../../../src/components/utility/index.ts';
 import { install } from '../../../../../src/module.ts';
 import type { Options } from '../../../../../src/types.ts';
@@ -149,7 +149,7 @@ async function submit(entity: User, canManage: boolean) {
 
     await flushPromises();
 
-    wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+    await wrapper.findComponent(AFormSubmit).emit('submit');
     await flushPromises();
 
     const request = findUpdateRequest(httpClient);
@@ -202,7 +202,7 @@ describe('AUserForm folder picker', () => {
 
         await flushPromises();
 
-        expect(wrapper.findComponent(APathPicker).exists()).toBe(true);
+        expect(wrapper.findComponent(AFormPathPicker).exists()).toBe(true);
 
         const requests = findPathRequests(httpClient);
 
@@ -217,7 +217,7 @@ describe('AUserForm folder picker', () => {
 
         await flushPromises();
 
-        expect(wrapper.findComponent(APathPicker).exists()).toBe(false);
+        expect(wrapper.findComponent(AFormPathPicker).exists()).toBe(false);
         expect(findPathRequests(httpClient)).toHaveLength(0);
 
         wrapper.unmount();

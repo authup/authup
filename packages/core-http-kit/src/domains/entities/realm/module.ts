@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { Realm } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils/index.ts';
 import { BaseAPI } from '../../base.ts';
@@ -42,13 +42,13 @@ export class RealmAPI extends BaseAPI implements IRealmAPI {
     }
 
     async getOne(id: Realm['id'], record?: EntityQueryInput<Realm>, options?: APIRequestOptions): Promise<RealmRecordResponse> {
-        const response = await this.client.get(`realms/${id}${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`realms/${encodePathSegment(id)}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async delete(id: Realm['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<Realm>> {
-        const response = await this.client.delete(`realms/${id}`, buildRequestConfig(options));
+        const response = await this.client.delete(`realms/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -60,7 +60,7 @@ export class RealmAPI extends BaseAPI implements IRealmAPI {
     }
 
     async update(realmId: Realm['id'], data: RealmUpdatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<Realm>> {
-        const response = await this.client.post(`realms/${realmId}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.post(`realms/${encodePathSegment(realmId)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
@@ -70,7 +70,7 @@ export class RealmAPI extends BaseAPI implements IRealmAPI {
         data: RealmSavePayload,
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<Realm>> {
-        const response = await this.client.put(`realms/${idOrName}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.put(`realms/${encodePathSegment(idOrName)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }

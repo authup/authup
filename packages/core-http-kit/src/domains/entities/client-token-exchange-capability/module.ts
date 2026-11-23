@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { ClientTokenExchangeCapability } from '@authup/core-kit';
 import { BaseAPI } from '../../base.ts';
 import type { EntitySchemaResponse } from '../../stats/index.ts';
@@ -39,13 +39,13 @@ export class ClientTokenExchangeCapabilityAPI extends BaseAPI implements IClient
         record?: EntityQueryInput<ClientTokenExchangeCapability>,
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<ClientTokenExchangeCapability>> {
-        const response = await this.client.get(`client-token-exchange-capabilities/${id}${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`client-token-exchange-capabilities/${encodePathSegment(id)}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async delete(id: ClientTokenExchangeCapability['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<ClientTokenExchangeCapability>> {
-        const response = await this.client.delete(`client-token-exchange-capabilities/${id}`, buildRequestConfig(options));
+        const response = await this.client.delete(`client-token-exchange-capabilities/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -64,7 +64,7 @@ export class ClientTokenExchangeCapabilityAPI extends BaseAPI implements IClient
         data: ClientTokenExchangeCapabilityUpdatePayload,
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<ClientTokenExchangeCapability>> {
-        const response = await this.client.post(`client-token-exchange-capabilities/${id}`, data, buildRequestConfig(options));
+        const response = await this.client.post(`client-token-exchange-capabilities/${encodePathSegment(id)}`, data, buildRequestConfig(options));
 
         return response.data;
     }

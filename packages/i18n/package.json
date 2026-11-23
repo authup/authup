@@ -57,7 +57,7 @@
     },
     "devDependencies": {
         "@ebec/core": "^1.3.2",
-        "validup": "^2.0.1",
+        "validup": "^2.0.2",
         "vitest": "^5.1.1"
     },
     "publishConfig": {
@@ -65,7 +65,7 @@
     },
     "peerDependencies": {
         "@ebec/core": "^1.3.2",
-        "validup": "^2.0.1"
+        "validup": "^2.0.2"
     },
     "peerDependenciesMeta": {
         "@ebec/core": {

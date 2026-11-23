@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { Policy } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils/index.ts';
 import { BaseAPI } from '../../base.ts';
@@ -49,7 +49,7 @@ export class PolicyAPI extends BaseAPI implements IPolicyAPI {
     async delete<
         OUTPUT extends PolicyResponse = PolicyResponse,
     >(id: Policy['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<OUTPUT>> {
-        const response = await this.client.delete(`policies/${id}`, buildRequestConfig(options));
+        const response = await this.client.delete(`policies/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -57,7 +57,7 @@ export class PolicyAPI extends BaseAPI implements IPolicyAPI {
     async getOne<
         OUTPUT extends PolicyResponse = PolicyResponse,
     >(id: Policy['id'], record?: EntityQueryInput<Policy>, options?: APIRequestOptions) : Promise<EntityRecordResponse<OUTPUT>> {
-        const response = await this.client.get(`policies/${id}${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`policies/${encodePathSegment(id)}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -65,7 +65,7 @@ export class PolicyAPI extends BaseAPI implements IPolicyAPI {
     async getOneExpanded<
         OUTPUT extends PolicyResponse = PolicyResponse,
     >(id: Policy['id'], record?: EntityQueryInput<Policy>, options?: APIRequestOptions) : Promise<EntityRecordResponse<OUTPUT>> {
-        const response = await this.client.get(`policies/${id}/expanded${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`policies/${encodePathSegment(id)}/expanded${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -90,7 +90,7 @@ export class PolicyAPI extends BaseAPI implements IPolicyAPI {
         INPUT extends PolicyUpdatePayload = PolicyUpdatePayload,
         OUTPUT extends PolicyResponse = PolicyResponse,
     >(id: Policy['id'], data: INPUT, options?: APIRequestOptions): Promise<EntityRecordResponse<OUTPUT>> {
-        const response = await this.client.post(`policies/${id}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.post(`policies/${encodePathSegment(id)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
@@ -111,7 +111,7 @@ export class PolicyAPI extends BaseAPI implements IPolicyAPI {
         data: INPUT,
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<OUTPUT>> {
-        const response = await this.client.put(`policies/${idOrName}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.put(`policies/${encodePathSegment(idOrName)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
@@ -130,7 +130,7 @@ export class PolicyAPI extends BaseAPI implements IPolicyAPI {
         options?: APIRequestOptions,
     ) : Promise<PolicyAPICheckResponse> {
         const response = await this.client.post(
-            `policies/${idOrName}/check`,
+            `policies/${encodePathSegment(idOrName)}/check`,
             nullifyEmptyObjectProperties(data),
             buildRequestConfig(options),
         );

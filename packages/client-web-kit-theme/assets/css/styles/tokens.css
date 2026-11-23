@@ -84,10 +84,12 @@
         --authup-account-card-border-radius:    1rem;
         --authup-account-card-box-shadow:       0 18px 45px -18px rgb(0 0 0 / 25%);
 
-        /* realm chooser (.a-realm-grid / .a-realm-grid-item) ----------- */
+        /* realm chooser (.a-realm-grid / .a-realm-list items) --------- */
         --authup-realm-grid-item-min-width:     150px;
         --authup-realm-grid-item-min-height:    6.25rem;
         --authup-realm-grid-item-border-radius: 0.85rem;
+        --authup-realm-list-item-min-height:    3rem;
+        --authup-realm-list-item-border-radius: 0.65rem;
 
         /* login (.a-login-provider-box) ------------------------------- */
         --authup-login-provider-min-width:      120px;

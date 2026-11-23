@@ -382,11 +382,11 @@ describe('AAuthorize prompt=select_account', () => {
 
         await flushPromises();
 
-        wrapper.findComponent(AAccountPrompt).vm.$emit('continue');
+        await wrapper.findComponent(AAccountPrompt).emit('continue');
         await flushPromises();
         expect(wrapper.find('.authorize-form-stub').exists()).toBe(true);
 
-        authorizeForm(wrapper).vm.$emit('loginRequired');
+        await authorizeForm(wrapper).emit('loginRequired');
         await flushPromises();
 
         expect(wrapper.find('.login-form-stub').exists()).toBe(true);
@@ -425,7 +425,7 @@ describe('AAuthorize prompt=select_account', () => {
 
         await flushPromises();
 
-        wrapper.findComponent(AAccountPrompt).vm.$emit('switch');
+        await wrapper.findComponent(AAccountPrompt).emit('switch');
         await flushPromises();
 
         expect(hasChooser(wrapper)).toBe(false);
@@ -535,7 +535,7 @@ describe('AAuthorize prompt=none (silent)', () => {
 
         await flushPromises();
 
-        authorizeForm(wrapper).vm.$emit('loginRequired');
+        await authorizeForm(wrapper).emit('loginRequired');
         await flushPromises();
 
         expect(silentRedirect(wrapper).exists()).toBe(false);
@@ -552,7 +552,7 @@ describe('AAuthorize prompt=none (silent)', () => {
 
         expect(store().accessToken).not.toBeNull();
 
-        authorizeForm(wrapper).vm.$emit('loginRequired');
+        await authorizeForm(wrapper).emit('loginRequired');
         await flushPromises();
 
         expect(wrapper.find('.login-form-stub').exists()).toBe(true);
@@ -778,7 +778,7 @@ describe('AAuthorize prompt=login (re-auth)', () => {
         store().lastAuthOrigin = StoreAuthOrigin.LOGIN;
         await flushPromises();
 
-        authorizeForm(wrapper).vm.$emit('loginRequired');
+        await authorizeForm(wrapper).emit('loginRequired');
         await flushPromises();
 
         expect(wrapper.find('.login-form-stub').exists()).toBe(true);
@@ -1019,7 +1019,7 @@ describe('AAuthorize MFA gate', () => {
 
         await flushPromises();
 
-        wrapper.findComponent(AMfaChallengeForm).vm.$emit('done');
+        await wrapper.findComponent(AMfaChallengeForm).emit('done');
         await flushPromises();
 
         expect(wrapper.findComponent(AuthorizeForm).exists()).toBe(true);

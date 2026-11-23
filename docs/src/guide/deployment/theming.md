@@ -335,7 +335,7 @@ hover borders and the login backdrop.
 | `--authup-surface-*`, `--authup-on-surface*` | page backdrop, cards, borders, body and muted text. Propagates into every component. |
 | `--authup-auth-*` | the logged-out chrome: accent, backdrop aurora, card width, padding, radius, shadow, logo background |
 | `--authup-account-*` | the account console shell: width, surfaces, nav hover and active states, card padding and radius |
-| `--authup-realm-*` | the realm chooser grid |
+| `--authup-realm-*` | the realm chooser (grid and list layout) |
 | `--authup-picker-item-*` | picker tiles (identity provider, policy type, authenticator kind) |
 | `--font-sans`, `--spacing`, `--radius-*`, `--text-*` | the underlying Tailwind scales |
 
@@ -371,7 +371,7 @@ Structural classes you can target: `.a-auth-app`, `.a-auth-shell`,
 `.a-auth-shell-card`, `.a-auth-shell-aurora`, `.a-auth-shell-logo`,
 `.a-auth-gadget`, `.a-auth-gadgets`, `.a-auth-back-link`, `.a-account-shell`
 (plus `-header`, `-brand`, `-title`, `-nav`, `-nav-link`, `-body`),
-`.a-realm-grid`, `.a-realm-search`, `.a-picker-item`,
+`.a-realm-grid`, `.a-realm-list`, `.a-realm-search`, `.a-picker-item`,
 `.a-login-provider-box`.
 
 ::: warning Dark mode in theme.css

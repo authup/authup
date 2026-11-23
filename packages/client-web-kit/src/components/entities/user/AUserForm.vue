@@ -40,7 +40,7 @@ import {
     defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility/index.ts';
-import { APathPicker } from '../path/index.ts';
+import { AFormPathPicker } from '../path/index.ts';
 import { ARealms } from '../realm/index.ts';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
@@ -53,7 +53,7 @@ type UserFormState = Pick<User, 'active' | 'name' | 'nameLocked' | 'displayName'
 
 export default defineComponent({
     components: {
-        APathPicker,
+        AFormPathPicker,
         ARealms,
         AFormSubmit,
         ANameInput,
@@ -355,7 +355,7 @@ export default defineComponent({
                                         {{ translationsDefault.path }}
                                     </template>
                                     <template #default>
-                                        <APathPicker
+                                        <AFormPathPicker
                                             :value="v.fields.pathId.$model.value ?? ''"
                                             :query="pathQuery"
                                             @change="(input: string[]) => {

@@ -7,7 +7,7 @@
 
 import type { TrustAnchor } from '@authup/core-kit';
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import { nullifyEmptyObjectProperties } from '../../../utils/index.ts';
 import { BaseAPI } from '../../base.ts';
 import { buildStatsURL } from '../../stats/index.ts';
@@ -40,7 +40,7 @@ export class TrustAnchorAPI extends BaseAPI implements ITrustAnchorAPI {
     }
 
     async getOne(id: TrustAnchor['id'], record?: EntityQueryInput<TrustAnchor>, options?: APIRequestOptions): Promise<EntityRecordResponse<TrustAnchor>> {
-        const response = await this.client.get(`trust-anchors/${id}${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`trust-anchors/${encodePathSegment(id)}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -52,13 +52,13 @@ export class TrustAnchorAPI extends BaseAPI implements ITrustAnchorAPI {
     }
 
     async update(id: TrustAnchor['id'], data: TrustAnchorUpdatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<TrustAnchor>> {
-        const response = await this.client.post(`trust-anchors/${id}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.post(`trust-anchors/${encodePathSegment(id)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
 
     async delete(id: TrustAnchor['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<TrustAnchor>> {
-        const response = await this.client.delete(`trust-anchors/${id}`, buildRequestConfig(options));
+        const response = await this.client.delete(`trust-anchors/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }

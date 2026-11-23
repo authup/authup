@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { User, UserAuthenticator } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils/index.ts';
 import { BaseAPI } from '../../base.ts';
@@ -30,7 +30,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
         data?: EntityQueryInput<UserAuthenticator>,
         options?: APIRequestOptions,
     ): Promise<EntityCollectionResponse<UserAuthenticator>> {
-        const response = await this.client.get(`users/${userId}/authenticators${buildQueryString(data)}`, buildRequestConfig(options));
+        const response = await this.client.get(`users/${encodePathSegment(userId)}/authenticators${buildQueryString(data)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -40,7 +40,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
         id: UserAuthenticator['id'],
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<UserAuthenticator>> {
-        const response = await this.client.get(`users/${userId}/authenticators/${id}`, buildRequestConfig(options));
+        const response = await this.client.get(`users/${encodePathSegment(userId)}/authenticators/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -50,7 +50,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
         data: UserAuthenticatorCreatePayload,
         options?: APIRequestOptions,
     ): Promise<UserAuthenticatorEnrollResponse> {
-        const response = await this.client.post(`users/${userId}/authenticators`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.post(`users/${encodePathSegment(userId)}/authenticators`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
@@ -61,7 +61,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
         data: UserAuthenticatorConfirmPayload,
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<UserAuthenticator>> {
-        const response = await this.client.post(`users/${userId}/authenticators/${id}/confirm`, data, buildRequestConfig(options));
+        const response = await this.client.post(`users/${encodePathSegment(userId)}/authenticators/${encodePathSegment(id)}/confirm`, data, buildRequestConfig(options));
 
         return response.data;
     }
@@ -71,7 +71,7 @@ export class UserAuthenticatorAPI extends BaseAPI implements IUserAuthenticatorA
         id: UserAuthenticator['id'],
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<UserAuthenticator>> {
-        const response = await this.client.delete(`users/${userId}/authenticators/${id}`, buildRequestConfig(options));
+        const response = await this.client.delete(`users/${encodePathSegment(userId)}/authenticators/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }

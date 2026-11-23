@@ -2,7 +2,7 @@
 /* global window */
 import type { Realm } from '@authup/core-kit';
 import {
-    ARealmGrid,
+    ARealmPicker,
     buildAuthorizeURL,
     buildConsoleLoginURL,
     createPKCE,
@@ -27,7 +27,7 @@ import { LOGIN_REDIRECT_OPTIONS } from '../../redirect.ts';
 
 export default defineComponent({
     components: {
-        ARealmGrid,
+        ARealmPicker,
         LogoSVG,
         VCAlert,
     },
@@ -183,7 +183,7 @@ export default defineComponent({
                 forever on a single-realm deployment), so a refusal waits for
                 a click.
             -->
-            <ARealmGrid
+            <ARealmPicker
                 ref="realmGrid"
                 :auto-select-single="!denied && !failed"
                 @select="handleSelect"

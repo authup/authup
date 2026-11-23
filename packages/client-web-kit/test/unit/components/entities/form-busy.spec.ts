@@ -101,7 +101,7 @@ describe.each<[string, Component, string, Record<string, unknown>?]>([
         expect(fieldset().exists()).toBe(true);
         expect(fieldset().attributes('disabled')).toBeUndefined();
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         expect(fieldset().attributes('disabled')).toBeDefined();

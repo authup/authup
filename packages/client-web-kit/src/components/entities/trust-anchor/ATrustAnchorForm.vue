@@ -42,13 +42,13 @@ import {
     defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility/index.ts';
-import { ARealmPicker } from '../realm/index.ts';
+import { AFormRealmPicker } from '../realm/index.ts';
 
 export default defineComponent({
     components: {
         AFormSubmit,
         ANameInput,
-        ARealmPicker,
+        AFormRealmPicker,
         IFieldValidation,
         VCFormGroup,
         VCFormSwitch,
@@ -241,7 +241,7 @@ export default defineComponent({
                             <template #label>
                                 {{ translationsDefault.realm }}
                             </template>
-                            <ARealmPicker
+                            <AFormRealmPicker
                                 :value="v.fields.realmId.$model.value"
                                 @change="(input: string[]) => {
                                     v.fields.realmId.$model.value = input.length > 0 ? input[0] ?? '' : '';

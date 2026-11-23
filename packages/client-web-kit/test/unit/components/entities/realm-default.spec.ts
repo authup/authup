@@ -142,7 +142,7 @@ async function submit(entry: FormCase, realm: { id: string, name: string }) {
 
     await flushPromises();
 
-    wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+    await wrapper.findComponent(AFormSubmit).emit('submit');
     await flushPromises();
 
     const request = findCreateRequest(httpClient, entry.path);

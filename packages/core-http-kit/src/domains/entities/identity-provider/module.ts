@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { IdentityProvider, IdentityProviderAccount } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { buildIdentityProviderAuthorizePath } from '@authup/core-kit';
@@ -41,7 +41,7 @@ export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI
     }
 
     getAuthorizeUri(id: IdentityProvider['id'], options: IdentityProviderAuthorizeUriOptions = {}): string {
-        const url = cleanDoubleSlashes(`${this.client.getBaseURL()}/${buildIdentityProviderAuthorizePath(id)}`);
+        const url = cleanDoubleSlashes(`${this.client.getBaseURL()}/${buildIdentityProviderAuthorizePath(encodePathSegment(id))}`);
 
         if (options.codeRequest) {
             return `${url}?codeRequest=${base64URLEncode(JSON.stringify(options.codeRequest))}`;
@@ -55,7 +55,7 @@ export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI
     }
 
     async createLinkRequest(id: IdentityProvider['id'], options?: APIRequestOptions): Promise<IdentityProviderLinkRequestResponse> {
-        const response = await this.client.post(`identity-providers/${encodeURIComponent(id)}/link-request`, undefined, buildRequestConfig(options));
+        const response = await this.client.post(`identity-providers/${encodePathSegment(id)}/link-request`, undefined, buildRequestConfig(options));
 
         return response.data;
     }
@@ -63,7 +63,7 @@ export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI
     async completeLogin(id: IdentityProvider['id'], options?: APIRequestOptions): Promise<OAuth2TokenGrantResponse> {
         // No payload: the pending login rides a cookie the callback set, which
         // the browser sends with this same-origin request.
-        const response = await this.client.post(`identity-providers/${encodeURIComponent(id)}/login-complete`, undefined, buildRequestConfig(options));
+        const response = await this.client.post(`identity-providers/${encodePathSegment(id)}/login-complete`, undefined, buildRequestConfig(options));
 
         return response.data;
     }
@@ -74,7 +74,7 @@ export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<IdentityProviderAccount>> {
         const payload : IdentityProviderLinkConfirmPayload = { handle };
-        const response = await this.client.post(`identity-providers/${encodeURIComponent(id)}/link-confirm`, payload, buildRequestConfig(options));
+        const response = await this.client.post(`identity-providers/${encodePathSegment(id)}/link-confirm`, payload, buildRequestConfig(options));
 
         return response.data;
     }
@@ -90,13 +90,13 @@ export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI
         record?: EntityQueryInput<IdentityProvider>,
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<IdentityProvider>> {
-        const response = await this.client.get(`identity-providers/${id}${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`identity-providers/${encodePathSegment(id)}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async delete(id: IdentityProvider['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<IdentityProvider>> {
-        const response = await this.client.delete(`identity-providers/${id}`, buildRequestConfig(options));
+        const response = await this.client.delete(`identity-providers/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -108,7 +108,7 @@ export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI
     }
 
     async update(id: IdentityProvider['id'], data: IdentityProviderUpdatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<IdentityProvider>> {
-        const response = await this.client.post(`identity-providers/${id}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.post(`identity-providers/${encodePathSegment(id)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
@@ -118,7 +118,7 @@ export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI
         data: IdentityProviderSavePayload,
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<IdentityProvider>> {
-        const response = await this.client.put(`identity-providers/${idOrName}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.put(`identity-providers/${encodePathSegment(idOrName)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }

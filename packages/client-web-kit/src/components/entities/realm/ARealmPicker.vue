@@ -6,6 +6,7 @@
   -->
 <script lang="ts">
 import type { Realm } from '@authup/core-kit';
+import type { PropType, SlotsType } from 'vue';
 import {
     computed,
     defineComponent,
@@ -19,6 +20,7 @@ import {
 import { VCAlert, VCEmptyState } from '@vuecs/elements';
 import { VCIcon } from '@vuecs/icon';
 import { injectHTTPClient, useTranslations } from '../../../core/index.ts';
+import type { RealmPickerLayout, RealmPickerSlots } from './types.ts';
 
 export default defineComponent({
     components: {
@@ -27,6 +29,13 @@ export default defineComponent({
         VCIcon,
     },
     props: {
+        // `grid` renders one tile per realm, `list` one row per realm with
+        // its description.
+        layout: {
+            type: String as PropType<RealmPickerLayout>,
+            default: 'grid',
+            validator: (value: string) => value === 'grid' || value === 'list',
+        },
         // When exactly one realm is available, emit `select` for it
         // immediately instead of rendering a single-tile chooser. Lets the
         // common single-realm deployment skip the picker entirely.
@@ -42,6 +51,7 @@ export default defineComponent({
         },
     },
     emits: ['select'],
+    slots: Object as SlotsType<RealmPickerSlots>,
     setup(props, { emit }) {
         const client = injectHTTPClient();
 
@@ -133,6 +143,9 @@ export default defineComponent({
             emit('select', realm);
         };
 
+        const containerClass = computed(() => (props.layout === 'list' ? 'a-realm-list' : 'a-realm-grid'));
+        const itemClass = computed(() => (props.layout === 'list' ? 'a-realm-list-item' : 'a-realm-grid-item'));
+
         // Recovery hatch for the auto-select path: if the parent's redirect
         // glue fails (e.g. PKCE crypto unavailable on an insecure origin) it
         // can call this to drop the skeleton and re-show the tiles instead of
@@ -155,6 +168,8 @@ export default defineComponent({
             labelFor,
             slugFor,
             handleSelect,
+            containerClass,
+            itemClass,
             reset,
         };
     },
@@ -173,13 +188,13 @@ export default defineComponent({
 
         <div
             v-if="!loaded || busy || redirecting"
-            class="a-realm-grid"
+            :class="containerClass"
             aria-hidden="true"
         >
             <div
                 v-for="n in 6"
                 :key="n"
-                class="a-realm-grid-item a-realm-grid-item--skeleton"
+                :class="[itemClass, `${itemClass}--skeleton`]"
             />
         </div>
 
@@ -222,25 +237,40 @@ export default defineComponent({
 
             <div
                 v-else
-                class="a-realm-grid"
+                :class="containerClass"
             >
-                <button
+                <template
                     v-for="realm in filtered"
                     :key="realm.id"
-                    type="button"
-                    class="a-realm-grid-item"
-                    @click.prevent="handleSelect(realm)"
                 >
-                    <span class="a-realm-grid-item-name">
-                        {{ labelFor(realm) }}
-                    </span>
-                    <span
-                        v-if="slugFor(realm)"
-                        class="a-realm-grid-item-slug"
+                    <slot
+                        name="item"
+                        :realm="realm"
+                        :select="() => handleSelect(realm)"
                     >
-                        {{ slugFor(realm) }}
-                    </span>
-                </button>
+                        <button
+                            type="button"
+                            :class="itemClass"
+                            @click.prevent="handleSelect(realm)"
+                        >
+                            <span :class="`${itemClass}-name`">
+                                {{ labelFor(realm) }}
+                            </span>
+                            <span
+                                v-if="slugFor(realm)"
+                                :class="`${itemClass}-slug`"
+                            >
+                                {{ slugFor(realm) }}
+                            </span>
+                            <span
+                                v-if="layout === 'list' && realm.description"
+                                class="a-realm-list-item-description"
+                            >
+                                {{ realm.description }}
+                            </span>
+                        </button>
+                    </slot>
+                </template>
             </div>
         </template>
     </div>

@@ -94,12 +94,12 @@ function mountForm(entity?: Client, handlers: FakeHandlerMap = {}) {
             stubs: {
                 // pickers are entity collections (network-backed) — stub them,
                 // declaring the props so hydration/scoping is assertable.
-                APolicyPicker: {
-                    name: 'APolicyPicker',
+                AFormPolicyPicker: {
+                    name: 'AFormPolicyPicker',
                     props: ['value', 'query'],
                     template: '<div class="policy-picker-stub" />',
                 },
-                ARealmPicker: { template: '<div class="realm-picker-stub" />' },
+                AFormRealmPicker: { template: '<div class="realm-picker-stub" />' },
                 ANameInput: {
                     props: ['modelValue', 'disabled'],
                     template: '<input class="name-input-stub" />',
@@ -166,7 +166,7 @@ describe('AClientForm access policy', () => {
 
         await flushPromises();
 
-        const picker = wrapper.findComponent({ name: 'APolicyPicker' });
+        const picker = wrapper.findComponent({ name: 'AFormPolicyPicker' });
 
         expect(picker.exists()).toBe(true);
         expect(picker.props('value')).toEqual(entity.accessPolicyId);
@@ -179,12 +179,12 @@ describe('AClientForm access policy', () => {
 
         await flushPromises();
 
-        const picker = wrapper.findComponent({ name: 'APolicyPicker' });
+        const picker = wrapper.findComponent({ name: 'AFormPolicyPicker' });
 
-        picker.vm.$emit('change', ['1b2c3d4e-5f60-4172-8394-a5b6c7d8e9f0']);
+        await picker.emit('change', ['1b2c3d4e-5f60-4172-8394-a5b6c7d8e9f0']);
         await flushPromises();
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
@@ -199,12 +199,12 @@ describe('AClientForm access policy', () => {
 
         await flushPromises();
 
-        const picker = wrapper.findComponent({ name: 'APolicyPicker' });
+        const picker = wrapper.findComponent({ name: 'AFormPolicyPicker' });
 
-        picker.vm.$emit('change', []);
+        await picker.emit('change', []);
         await flushPromises();
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
@@ -249,8 +249,8 @@ describe('AClientForm untouched url lists', () => {
             global: {
                 components: { VCIcon: { render: () => null } },
                 stubs: {
-                    APolicyPicker: { template: '<div />' },
-                    ARealmPicker: { template: '<div />' },
+                    AFormPolicyPicker: { template: '<div />' },
+                    AFormRealmPicker: { template: '<div />' },
                     ANameInput: { props: ['modelValue', 'disabled'], template: '<input />' },
                     ASecretInput: { props: ['modelValue', 'disabled'], template: '<input />' },
                     VCFormGroup: { template: '<div><slot /></div>' },
@@ -275,7 +275,7 @@ describe('AClientForm untouched url lists', () => {
 
         await flushPromises();
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         const request = httpClient.requests.find(
@@ -318,13 +318,13 @@ describe('AClientForm post-logout redirect uris', () => {
 
         await flushPromises();
 
-        findList(wrapper).vm.$emit('changed', [
+        await findList(wrapper).emit('changed', [
             'https://app.example.com/bye',
             'https://alt.example.com/**',
         ]);
         await flushPromises();
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
@@ -342,10 +342,10 @@ describe('AClientForm post-logout redirect uris', () => {
 
         await flushPromises();
 
-        findList(wrapper).vm.$emit('changed', []);
+        await findList(wrapper).emit('changed', []);
         await flushPromises();
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
@@ -381,8 +381,8 @@ describe('AClientForm checkbox indicator', () => {
             props: { entity },
             global: {
                 stubs: {
-                    APolicyPicker: { template: '<div />' },
-                    ARealmPicker: { template: '<div />' },
+                    AFormPolicyPicker: { template: '<div />' },
+                    AFormRealmPicker: { template: '<div />' },
                 },
                 plugins: [
                     pinia,
@@ -486,10 +486,10 @@ describe('AClientForm grant types', () => {
 
         await flushPromises();
 
-        findGroup(wrapper).vm.$emit('update:modelValue', ['authorization_code', 'refresh_token']);
+        await findGroup(wrapper).emit('update:modelValue', ['authorization_code', 'refresh_token']);
         await flushPromises();
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
@@ -509,10 +509,10 @@ describe('AClientForm grant types', () => {
 
         await flushPromises();
 
-        findGroup(wrapper).vm.$emit('update:modelValue', []);
+        await findGroup(wrapper).emit('update:modelValue', []);
         await flushPromises();
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
@@ -547,10 +547,10 @@ describe('AClientForm home and back-channel logout urls', () => {
 
         expect(input).toBeDefined();
 
-        input!.vm.$emit('update:modelValue', next);
+        await input!.emit('update:modelValue', next);
         await flushPromises();
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
@@ -575,10 +575,10 @@ describe('AClientForm home and back-channel logout urls', () => {
 
         expect(input).toBeDefined();
 
-        input!.vm.$emit('update:modelValue', '');
+        await input!.emit('update:modelValue', '');
         await flushPromises();
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
@@ -673,7 +673,7 @@ describe('AClientForm secret rotation', () => {
 
         await flushPromises();
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
@@ -694,7 +694,7 @@ describe('AClientForm secret rotation', () => {
 
         expect(findRotate(wrapper).exists()).toBe(true);
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         expect(findUpdateRequest(httpClient)!.body).not.toHaveProperty('secret');
@@ -705,10 +705,10 @@ describe('AClientForm secret rotation', () => {
 
         await flushPromises();
 
-        wrapper.findComponent({ name: 'ASecretInput' }).vm.$emit('update:modelValue', 'next-secret');
+        await wrapper.findComponent({ name: 'ASecretInput' }).emit('update:modelValue', 'next-secret');
         await flushPromises();
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         const request = findUpdateRequest(httpClient);
@@ -731,7 +731,7 @@ describe('AClientForm secret rotation', () => {
 
         const rotate = await openDialog(wrapper);
 
-        rotate.findComponent({ name: 'ASecretInput' }).vm.$emit('update:modelValue', 'typed-secret');
+        await rotate.findComponent({ name: 'ASecretInput' }).emit('update:modelValue', 'typed-secret');
         await flushPromises();
 
         await submitDialog(rotate);
@@ -745,7 +745,7 @@ describe('AClientForm secret rotation', () => {
         expect(rotate.findComponent({ name: 'ASecretInput' }).exists()).toBe(false);
         expect(document.body.textContent).toContain('rotated-plaintext-one');
         expect(wrapper.emitted('updated')).toHaveLength(1);
-        expect(wrapper.emitted('updated')![0]![0]).toMatchObject({ id: entity.id });
+        expect(wrapper.emitted('updated')![0]![0].id).toEqual(entity.id);
 
         wrapper.unmount();
     });

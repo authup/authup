@@ -16,7 +16,7 @@ import {
 import type { EntityPickerVSlots } from '../../utility/entity/picker/types.ts';
 import { AClients } from './AClients.ts';
 
-export const AClientPicker = defineComponent({
+export const AFormClientPicker = defineComponent({
     props: defineEntityPickerVProps<Client>(),
     emits: defineEntityPickerVEmitOptions<Client>(),
     slots: Object as SlotsType<EntityPickerVSlots<Client>>,

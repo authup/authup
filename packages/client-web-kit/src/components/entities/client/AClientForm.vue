@@ -51,9 +51,9 @@ import {
     generateName,
     generateSecret,
 } from '@authup/kit';
-import { APathPicker } from '../path/index.ts';
-import { ARealmPicker } from '../realm/index.ts';
-import APolicyPicker from '../policy/APolicyPicker.vue';
+import { AFormPathPicker } from '../path/index.ts';
+import { AFormRealmPicker } from '../realm/index.ts';
+import AFormPolicyPicker from '../policy/AFormPolicyPicker.vue';
 import AClientSecretRotate from './AClientSecretRotate.vue';
 import {
     AFormInputList,
@@ -71,10 +71,10 @@ export default defineComponent({
         AClientSecretRotate,
         AFormSubmit,
         ANameInput,
-        APathPicker,
-        APolicyPicker,
+        AFormPathPicker,
+        AFormPolicyPicker,
         ASecretInput,
-        ARealmPicker,
+        AFormRealmPicker,
         AFormInputList,
         VCFormCheckbox,
         VCFormCheckboxGroup,
@@ -624,7 +624,7 @@ export default defineComponent({
                                 {{ translationsDefault.realm }}
                             </template>
                             <template #default>
-                                <ARealmPicker
+                                <AFormRealmPicker
                                     :value="v.fields.realmId.$model.value"
                                     @change="(input: string[]) => {
                                         v.fields.realmId.$model.value = input.length > 0 ? input[0] ?? '' : '';
@@ -766,7 +766,7 @@ export default defineComponent({
                             {{ translationsDefault.path }}
                         </template>
                         <template #default>
-                            <APathPicker
+                            <AFormPathPicker
                                 :value="v.fields.pathId.$model.value ?? ''"
                                 :query="pathQuery"
                                 @change="(input: string[]) => {
@@ -788,7 +788,7 @@ export default defineComponent({
                             {{ translationsDefault.accessPolicy }}
                         </template>
                         <template #default>
-                            <APolicyPicker
+                            <AFormPolicyPicker
                                 :value="v.fields.accessPolicyId.$model.value"
                                 :query="policyQuery"
                                 @change="(input: string[]) => {

@@ -7,4 +7,5 @@
 
 export * from './error-code.ts';
 export * from './header.ts';
+export * from './path.ts';
 export * from './query.ts';

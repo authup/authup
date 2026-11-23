@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { PermissionPolicy } from '@authup/core-kit';
 import { BaseAPI } from '../../base.ts';
 import type { EntitySchemaResponse } from '../../stats/index.ts';
@@ -31,13 +31,13 @@ export class PermissionPolicyAPI extends BaseAPI implements IPermissionPolicyAPI
     }
 
     async getOne(id: PermissionPolicy['id'], record?: EntityQueryInput<PermissionPolicy>, options?: APIRequestOptions) : Promise<EntityRecordResponse<PermissionPolicy>> {
-        const response = await this.client.get(`permission-policies/${id}${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`permission-policies/${encodePathSegment(id)}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async delete(id: PermissionPolicy['id'], options?: APIRequestOptions) : Promise<EntityRecordResponse<PermissionPolicy>> {
-        const response = await this.client.delete(`permission-policies/${id}`, buildRequestConfig(options));
+        const response = await this.client.delete(`permission-policies/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }

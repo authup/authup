@@ -194,10 +194,10 @@ describe('device page', () => {
         expect(window.location.search).toEqual('?user_code=BCDF-GHJK');
     });
 
-    it('toasts the failed emit', () => {
+    it('toasts the failed emit', async () => {
         const { wrapper, toastManager } = mountDevicePage({ features: FEATURES, userCode: 'BCDFGHJK' });
 
-        wrapper.findComponent(DeviceVerifyFormStub).vm.$emit('failed', 'The code is invalid or has expired.');
+        await wrapper.findComponent(DeviceVerifyFormStub).emit('failed', 'The code is invalid or has expired.');
 
         expect(toastManager.entries.value).toHaveLength(1);
         expect(toastManager.entries.value[0].description).toEqual('The code is invalid or has expired.');

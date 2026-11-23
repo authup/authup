@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { IdentityProviderAccount } from '@authup/core-kit';
 import { BaseAPI } from '../../base.ts';
 import type { EntitySchemaResponse } from '../../stats/index.ts';
@@ -35,13 +35,13 @@ export class IdentityProviderAccountAPI extends BaseAPI implements IIdentityProv
         record?: EntityQueryInput<IdentityProviderAccount>,
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<IdentityProviderAccount>> {
-        const response = await this.client.get(`identity-provider-accounts/${id}${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`identity-provider-accounts/${encodePathSegment(id)}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async delete(id: IdentityProviderAccount['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<IdentityProviderAccount>> {
-        const response = await this.client.delete(`identity-provider-accounts/${id}`, buildRequestConfig(options));
+        const response = await this.client.delete(`identity-provider-accounts/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }

@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { Session } from '@authup/core-kit';
 import { BaseAPI } from '../../base.ts';
 import { buildStatsURL } from '../../stats/index.ts';
@@ -35,13 +35,13 @@ export class SessionAPI extends BaseAPI implements ISessionAPI {
     }
 
     async getOne(id: Session['id'], record?: EntityQueryInput<Session>, options?: APIRequestOptions): Promise<EntityRecordResponse<Session>> {
-        const response = await this.client.get(`sessions/${id}${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`sessions/${encodePathSegment(id)}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async delete(id: Session['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<Session>> {
-        const response = await this.client.delete(`sessions/${id}`, buildRequestConfig(options));
+        const response = await this.client.delete(`sessions/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }

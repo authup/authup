@@ -9,7 +9,7 @@ import type { FakeClient, FakeRequest } from '@authup/core-http-kit/testing';
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import APathForm from '../../../../src/components/entities/path/APathForm.vue';
-import { APathPicker, APaths } from '../../../../src/components/entities/path/index.ts';
+import { AFormPathPicker, APaths } from '../../../../src/components/entities/path/index.ts';
 import { AFormSubmit } from '../../../../src/components/utility/index.ts';
 import { mountKitComponent } from '../../../utils/index.ts';
 
@@ -58,10 +58,10 @@ describe('APathForm', () => {
 
         await flushPromises();
 
-        wrapper.findComponent({ name: 'ANameInput' }).vm.$emit('update:modelValue', 'berlin');
+        await wrapper.findComponent({ name: 'ANameInput' }).emit('update:modelValue', 'berlin');
         await flushPromises();
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         const request = findCreateRequest(httpClient);
@@ -83,10 +83,10 @@ describe('APathForm', () => {
 
         await flushPromises();
 
-        wrapper.findComponent({ name: 'ANameInput' }).vm.$emit('update:modelValue', 'berlin');
+        await wrapper.findComponent({ name: 'ANameInput' }).emit('update:modelValue', 'berlin');
         await flushPromises();
 
-        wrapper.findComponent(AFormSubmit).vm.$emit('submit');
+        await wrapper.findComponent(AFormSubmit).emit('submit');
         await flushPromises();
 
         const request = findCreateRequest(httpClient);
@@ -105,7 +105,7 @@ describe('APathForm', () => {
 
         await flushPromises();
 
-        expect(wrapper.findComponent(APathPicker).exists()).toBe(false);
+        expect(wrapper.findComponent(AFormPathPicker).exists()).toBe(false);
         expect(findCollectionRequests(httpClient)).toHaveLength(0);
 
         wrapper.unmount();
@@ -116,7 +116,7 @@ describe('APathForm', () => {
 
         await flushPromises();
 
-        expect(wrapper.findComponent(APathPicker).exists()).toBe(true);
+        expect(wrapper.findComponent(AFormPathPicker).exists()).toBe(true);
 
         const requests = findCollectionRequests(httpClient);
 

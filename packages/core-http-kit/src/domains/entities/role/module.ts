@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { Role } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils/index.ts';
 import { BaseAPI } from '../../base.ts';
@@ -41,13 +41,13 @@ export class RoleAPI extends BaseAPI implements IRoleAPI {
     }
 
     async getOne(roleId: Role['id'], record?: EntityQueryInput<Role>, options?: APIRequestOptions): Promise<EntityRecordResponse<Role>> {
-        const response = await this.client.get(`roles/${roleId}${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`roles/${encodePathSegment(roleId)}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async delete(roleId: Role['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<Role>> {
-        const response = await this.client.delete(`roles/${roleId}`, buildRequestConfig(options));
+        const response = await this.client.delete(`roles/${encodePathSegment(roleId)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -59,7 +59,7 @@ export class RoleAPI extends BaseAPI implements IRoleAPI {
     }
 
     async update(id: Role['id'], data: RoleUpdatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<Role>> {
-        const response = await this.client.post(`roles/${id}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.post(`roles/${encodePathSegment(id)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
@@ -69,7 +69,7 @@ export class RoleAPI extends BaseAPI implements IRoleAPI {
         data: RoleSavePayload,
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<Role>> {
-        const response = await this.client.put(`roles/${idOrName}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.put(`roles/${encodePathSegment(idOrName)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
