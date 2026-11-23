@@ -65,6 +65,11 @@ export type Config = {
      */
     enabled: boolean,
     /**
+     * Send the strict shell content security policy. Still skipped for a
+     * dev-server shell and while theme fragments are enabled.
+     */
+    cspEnabled: boolean,
+    /**
      * Where the standalone service listens. Unrelated to
      * {@link Config.url}: behind a reverse proxy the two always
      * differ.

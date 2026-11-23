@@ -16,7 +16,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { defineStaticConsole } from '../../src/index.ts';
+import { defineStaticConsole, defineStaticConsoleCSP } from '../../src/index.ts';
 import type { StaticConsole, StaticConsoleServeOptions } from '../../src/index.ts';
 
 const SHELL = '<!doctype html><html><head></head><body><div id="app"></div><!--test-config--></body></html>';
@@ -207,7 +207,7 @@ describe('defineStaticConsole: csp', () => {
             // Request-reflected shapes: the hash must cover the escaped bytes
             // that are actually served, not the raw value.
             config: { apiUrl: 'https://example.com/?x=</script>$\'&<!--' },
-            csp: { origins: ['https://auth.example.com', 'wss://auth.example.com'] },
+            csp: defineStaticConsoleCSP({ origins: ['https://auth.example.com', 'wss://auth.example.com'] }),
         });
         const body = await response.text();
 
@@ -230,7 +230,7 @@ describe('defineStaticConsole: csp', () => {
     });
 
     it('emits the policy with no extra origins', async () => {
-        const response = await serveOnce(defineTestConsole(), { ...OPTIONS, csp: {} });
+        const response = await serveOnce(defineTestConsole(), { ...OPTIONS, csp: defineStaticConsoleCSP() });
 
         expect(response.headers.get('content-security-policy')).toContain('connect-src \'self\';');
     });
@@ -242,12 +242,7 @@ describe('defineStaticConsole: csp', () => {
         '"https://a.example.com"',
         'https://a.example.com,https://b.example.com',
         '',
-    ])('refuses the origin %j', async (origin) => {
-        const response = await serveOnce(defineTestConsole(), {
-            ...OPTIONS,
-            csp: { origins: [origin] },
-        });
-
-        expect(response.status).toEqual(500);
+    ])('refuses the origin %j when the policy is defined', (origin) => {
+        expect(() => defineStaticConsoleCSP({ origins: [origin] })).toThrow(/not a valid content security policy source/);
     });
 });

@@ -320,9 +320,13 @@ default `admin-console`, `cookieSession`, `features`), same cookie-mode rule.
   the sha256 of the injected config script, `connect-src` / `form-action`
   `'self'` plus the named origins; without it the framing-only default. The
   hash only admits the shell if the config script is its ONE inline script.
-  Both services pass the API origin, except for a `readShell` shell (vite's
-  client and its HMR socket on another port) or with
-  `theme.fragmentsEnabled` (a head fragment is documented to run scripts).
+  The origins are validated once by `defineStaticConsoleCSP` at handler
+  build (a bad one fails the boot). Both services pass the API origin unless
+  `<name>Console.cspEnabled` is off, the shell comes from `readShell` (vite's
+  client and its HMR socket on another port) or `theme.fragmentsEnabled` is
+  on (a head fragment is documented to run scripts). The two SPA bundles
+  alias `@iconify/vue` to its offline build, so no icon is fetched from
+  api.iconify.design, which `connect-src` would refuse.
 - **One login class**: `ConsoleLogin`
   (`adapters/http/controllers/workflows/console-login/`), parameterized by
   `{ clientName, segment, consoleUrl, refusalPath? }`. Login cookie scope and

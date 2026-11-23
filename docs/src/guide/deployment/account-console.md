@@ -115,6 +115,13 @@ a localized "not enabled" notice instead of the surface, so stale links do
 not dead-end. The flag is also reported in the `features` block of the
 public status endpoint (`GET /`).
 
+The console page is sent with a `Content-Security-Policy` admitting scripts
+from its own origin plus its injected configuration script (by hash), and
+requests to its own origin and the API's. `accountConsole.cspEnabled` /
+`ACCOUNT_CONSOLE_CSP_ENABLED` (default `true`) turns it off, for a proxy that
+injects scripts into the page; the header then denies framing alone. It is
+never sent while `theme.fragmentsEnabled` is on.
+
 ## Standalone hosting
 
 The console is an ordinary OAuth2 relying party, so the same built bundle

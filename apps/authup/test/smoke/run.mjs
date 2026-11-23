@@ -22,6 +22,7 @@
  */
 
 import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -203,6 +204,48 @@ async function assertConsoleServed(name, route, marker) {
     log(`${name}: ${url} served the console shell.`);
 
     return body;
+}
+
+/**
+ * A static console shell carries a script policy admitting exactly its one
+ * inline script, the injected config, by hash. A second inline script in the
+ * shell (a changed bundle, a splice in the wrong place) would be refused by
+ * the browser while every status code here stays 200.
+ */
+function assertShellContentSecurityPolicy(name, policy, body) {
+    const scripts = body.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g).toArray()
+        .map((match) => match[1])
+        .filter((content) => content.length > 0);
+
+    if (scripts.length !== 1) {
+        throw fail(`${name}: the shell carries ${scripts.length} inline scripts, expected exactly the injected config.`);
+    }
+
+    const hash = createHash('sha256').update(scripts[0], 'utf8').digest('base64');
+    const directives = (policy || '').split(';').map((directive) => directive.trim());
+
+    if (!directives.includes(`script-src 'self' 'sha256-${hash}'`)) {
+        throw fail(`${name}: the content-security-policy "${policy}" does not admit the inline config script (sha256-${hash}).`);
+    }
+
+    const connect = directives.find((directive) => directive.startsWith('connect-src '));
+    const apiOrigin = new URL(SERVER_URL).origin;
+
+    if (!connect || !connect.split(' ').includes(apiOrigin)) {
+        throw fail(`${name}: connect-src "${connect}" does not carry the API origin ${apiOrigin}.`);
+    }
+
+    log(`${name}: the shell policy admits its config script and the API origin.`);
+}
+
+/**
+ * Fetch a console shell and assert its policy (see above).
+ */
+async function assertConsolePolicy(name, route) {
+    const response = await fetch(new URL(route, SERVER_URL).href, { redirect: 'manual' });
+    const body = await response.text();
+
+    assertShellContentSecurityPolicy(name, response.headers.get('content-security-policy'), body);
 }
 
 /**
@@ -498,6 +541,9 @@ async function executeScenario(name, cliExec, cliArgs, cwd) {
         // on the port; this proves the file was read at all.
         assertConfigFileApplied(`${name}/config`, adminShell);
 
+        await assertConsolePolicy(`${name}/client-account-console`, 'console/account');
+        await assertConsolePolicy(`${name}/client-admin-console`, 'console/admin');
+
         log(`${name}: sending SIGTERM.`);
         child.kill('SIGTERM');
 
@@ -654,6 +700,14 @@ async function executeSplitScenario() {
 
             if (!body.includes('window.__AUTHUP__')) {
                 throw fail(`split/console: ${target} answered 200 without the injected runtime config.`);
+            }
+
+            if (name !== 'auth') {
+                assertShellContentSecurityPolicy(
+                    `split/console/${name}`,
+                    response.headers.get('content-security-policy'),
+                    body,
+                );
             }
 
             // The href the shell carries is the PUBLIC one, so it is routed

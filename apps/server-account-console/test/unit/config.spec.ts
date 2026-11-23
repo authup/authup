@@ -19,6 +19,7 @@ const KEYS = [
     'ACCOUNT_CONSOLE_PORT',
     'ACCOUNT_CONSOLE_HOST',
     'ACCOUNT_CONSOLE_ENABLED',
+    'ACCOUNT_CONSOLE_CSP_ENABLED',
     'ACCOUNT_CONSOLE_PATH',
     'TRUSTED_ORIGINS',
     // read by the publicUrl derivation, so a case that sets them must not
@@ -96,6 +97,16 @@ describe('readConfigFromEnv', () => {
         process.env.ACCOUNT_CONSOLE_ENABLED = 'false';
 
         expect((await readConfigFromEnv()).enabled).toEqual(false);
+    });
+
+    it('should send the shell policy unless it is switched off', async () => {
+        process.env.PUBLIC_URL = 'https://example.com';
+
+        expect((await readConfigFromEnv()).cspEnabled).toEqual(true);
+
+        process.env.ACCOUNT_CONSOLE_CSP_ENABLED = 'false';
+
+        expect((await readConfigFromEnv()).cspEnabled).toEqual(false);
     });
 
     it('should read the listen address as a number and a string', async () => {

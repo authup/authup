@@ -13,6 +13,7 @@ import {
     createThemeAssetsHandler,
     createThemeProvider,
     defineStaticConsole,
+    defineStaticConsoleCSP,
     mountHealthRoutes,
 } from '@authup/server-console-kit';
 import { createHandler as createAssetsHandler } from '@routup/assets';
@@ -110,9 +111,10 @@ export async function createHandler(
     // its HMR socket on a port of its own) and an operator head fragment
     // (documented to run scripts) carry more, so they keep the framing-only
     // default.
-    const csp = readShell || config.theme.fragmentsEnabled ?
+    // Defined here, once, so a bad origin fails the boot.
+    const csp = readShell || !config.cspEnabled || config.theme.fragmentsEnabled ?
         undefined :
-        { origins: [new URL(config.apiUrl).origin] };
+        defineStaticConsoleCSP({ origins: [new URL(config.apiUrl).origin] });
 
     const render = (event: IAppEvent) : Promise<string> => staticConsole.serve(event, {
         basePath,

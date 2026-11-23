@@ -48,12 +48,15 @@ single-container deployment ever needs; `url`, `port` and `host` matter for a
 ADMIN_CONSOLE_ENABLED=true
 # Package directory of a substituted console.
 ADMIN_CONSOLE_PATH=
+# Send the script policy with the console page.
+ADMIN_CONSOLE_CSP_ENABLED=true
 ````
 
 ````yaml [authup.yml]
 adminConsole:
   enabled: true
   path: ''
+  cspEnabled: true
 ````
 :::
 
@@ -64,6 +67,14 @@ all, and the API's two sign-in routes (`/console/admin/login/start`,
 console nothing serves. `authup start console admin` refuses to start for the same
 reason. The flag is also reported in the `features` block of the public status
 endpoint (`GET /`).
+
+`adminConsole.cspEnabled` / `ADMIN_CONSOLE_CSP_ENABLED` (default `true`) sends
+the console page with a `Content-Security-Policy` admitting scripts from its
+own origin plus its injected configuration script (by hash), and requests to
+its own origin and the API's. Turn it off only when something outside authup
+adds scripts to the page (a proxy-injected snippet); the header then denies
+framing alone. It is never sent while `theme.fragmentsEnabled` is on, since a
+head fragment may carry scripts.
 
 `adminConsole.path` / `ADMIN_CONSOLE_PATH` replaces the served package. It
 points at a directory

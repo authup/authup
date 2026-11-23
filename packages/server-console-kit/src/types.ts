@@ -105,8 +105,9 @@ export type StaticConsoleServeOptions = {
      * injected config script by hash, requests and form posts to the own
      * origin plus `origins`. Only for a shell whose sole inline script is
      * the injected one; anything else inline is refused by the browser.
+     * Built once with `defineStaticConsoleCSP`, which validates the origins.
      */
-    csp?: StaticConsoleCSPOptions,
+    csp?: StaticConsoleCSP,
 };
 
 export type StaticConsoleCSPOptions = {
@@ -116,6 +117,14 @@ export type StaticConsoleCSPOptions = {
      * quotes.
      */
     origins?: string[],
+};
+
+/**
+ * A validated shell policy, built by `defineStaticConsoleCSP`.
+ */
+export type StaticConsoleCSP = {
+    /** The source list of `connect-src` and `form-action`. */
+    readonly sources: string,
 };
 
 export type StaticConsole = {

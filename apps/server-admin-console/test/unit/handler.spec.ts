@@ -29,6 +29,7 @@ describe('createHandler', () => {
         apiUrl: 'https://example.com',
         accountConsoleUrl: 'https://account.example.net/account',
         enabled: true,
+        cspEnabled: true,
         port: 3021,
         host: '',
         distPath: '',
@@ -121,6 +122,23 @@ describe('createHandler', () => {
         expect(policy).toContain("connect-src 'self' https://example.com");
         expect(policy).toContain("object-src 'none'");
         expect(policy).toContain("frame-ancestors 'none'");
+    });
+
+    it('should keep the framing-only policy when the operator switched it off', async () => {
+        const handler = await createHandler({ ...config, cspEnabled: false });
+
+        const local = serve(handler, { port: 0, silent: true });
+
+        await local.ready();
+
+        try {
+            const url = (local.url ?? '').replace(/\/+$/, '');
+            const response = await fetch(`${url}/`);
+
+            expect(response.headers.get('content-security-policy')).toEqual("frame-ancestors 'none'");
+        } finally {
+            await local.close(true);
+        }
     });
 
     it('should keep the framing-only policy when an operator head fragment may carry scripts', async () => {

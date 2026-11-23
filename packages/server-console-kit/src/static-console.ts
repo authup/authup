@@ -120,10 +120,8 @@ export function defineStaticConsole(definition: StaticConsoleDefinition) : Stati
         // hydration payload.
         const inlineScript = `window.${globalName} = ${serializeInlineScriptJSON(options.config)};`;
 
-        // Built before the body so a refused origin fails the request
-        // before anything is written.
         const contentSecurityPolicy = options.csp ?
-            buildShellContentSecurityPolicy({ inlineScript, origins: options.csp.origins }) :
+            buildShellContentSecurityPolicy(inlineScript, options.csp) :
             undefined;
 
         let body = replaceTemplateMarker(

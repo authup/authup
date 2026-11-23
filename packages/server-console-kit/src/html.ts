@@ -10,7 +10,7 @@ import { useRequestCookie } from '@routup/basic/cookie';
 import { createHash } from 'node:crypto';
 import type { IAppEvent } from 'routup';
 import { COLOR_MODE_COOKIE, LOCALE_COOKIE } from './constants.ts';
-import type { UIClientPreferences } from './types.ts';
+import type { StaticConsoleCSP, StaticConsoleCSPOptions, UIClientPreferences } from './types.ts';
 
 /**
  * Mirror @vuecs/nuxt's SSR plugins: resolve the shared cookies server-side
@@ -116,28 +116,13 @@ export const UI_PAGE_CSP_DEFAULT = 'frame-ancestors \'none\'';
  */
 const CSP_SOURCE_FORBIDDEN = /[\s;,'"]/;
 
-export type ShellContentSecurityPolicyContext = {
-    /**
-     * The exact text between `<script>` and `</script>` of the one inline
-     * script the shell carries. Hashed, so it must be the served bytes.
-     */
-    inlineScript: string,
-    /**
-     * Origins the page may call and submit forms to, besides its own.
-     */
-    origins?: string[],
-};
-
 /**
- * The policy for a shell whose only inline script is known: scripts from the
- * own origin plus that one script by hash, requests and form posts to the own
- * origin plus the named ones, no plugins, no `<base>`, no framing.
- *
- * Styles, images and fonts stay unrestricted: the theme splices an inline
- * `<style>` and its assets may come from anywhere the operator points them.
+ * Validate the extra origins of a shell policy once, when the handler is
+ * built, so a misconfigured origin fails the boot instead of every page
+ * request. `serve` takes only the result.
  */
-export function buildShellContentSecurityPolicy(ctx: ShellContentSecurityPolicyContext) : string {
-    const origins = ctx.origins ?? [];
+export function defineStaticConsoleCSP(options: StaticConsoleCSPOptions = {}) : StaticConsoleCSP {
+    const origins = options.origins ?? [];
 
     for (const origin of origins) {
         if (!origin || CSP_SOURCE_FORBIDDEN.test(origin)) {
@@ -145,16 +130,28 @@ export function buildShellContentSecurityPolicy(ctx: ShellContentSecurityPolicyC
         }
     }
 
-    const hash = createHash('sha256')
-        .update(ctx.inlineScript, 'utf8')
-        .digest('base64');
+    return Object.freeze({ sources: ['\'self\'', ...origins].join(' ') });
+}
 
-    const sources = ['\'self\'', ...origins].join(' ');
+/**
+ * The policy for a shell whose only inline script is known: scripts from the
+ * own origin plus that one script by hash (`inlineScript` must be the exact
+ * served text between `<script>` and `</script>`), requests and form posts to
+ * the own origin plus the validated ones, no plugins, no `<base>`, no
+ * framing.
+ *
+ * Styles, images and fonts stay unrestricted: the theme splices an inline
+ * `<style>` and its assets may come from anywhere the operator points them.
+ */
+export function buildShellContentSecurityPolicy(inlineScript: string, csp: StaticConsoleCSP) : string {
+    const hash = createHash('sha256')
+        .update(inlineScript, 'utf8')
+        .digest('base64');
 
     return [
         `script-src 'self' 'sha256-${hash}'`,
-        `connect-src ${sources}`,
-        `form-action ${sources}`,
+        `connect-src ${csp.sources}`,
+        `form-action ${csp.sources}`,
         'object-src \'none\'',
         'base-uri \'none\'',
         UI_PAGE_CSP_DEFAULT,

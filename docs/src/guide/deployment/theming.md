@@ -407,6 +407,10 @@ stylesheet. The file is capped at 64 KB.
 The flag defaults to off and the file is not read at all while it is off.
 Dropping `fragments/head.html` into the directory does nothing by itself.
 
+While the flag is on, the admin and account consoles send their framing-only
+`Content-Security-Policy` instead of the stricter script policy they send
+otherwise, so a script in the fragment runs.
+
 ::: danger Fragments are unsanitized
 The content is passed through verbatim, so a `<script>` there runs on the
 origin that holds your users' session cookies. Authup does not sanitize it: a

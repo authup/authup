@@ -19,6 +19,7 @@ const KEYS = [
     'ADMIN_CONSOLE_PORT',
     'ADMIN_CONSOLE_HOST',
     'ADMIN_CONSOLE_ENABLED',
+    'ADMIN_CONSOLE_CSP_ENABLED',
     'ADMIN_CONSOLE_PATH',
     // the sibling console this one links to
     'ACCOUNT_CONSOLE_URL',
@@ -118,6 +119,16 @@ describe('readConfigFromEnv', () => {
         process.env.ADMIN_CONSOLE_ENABLED = 'false';
 
         expect((await readConfigFromEnv()).enabled).toEqual(false);
+    });
+
+    it('should send the shell policy unless it is switched off', async () => {
+        process.env.PUBLIC_URL = 'https://example.com';
+
+        expect((await readConfigFromEnv()).cspEnabled).toEqual(true);
+
+        process.env.ADMIN_CONSOLE_CSP_ENABLED = 'false';
+
+        expect((await readConfigFromEnv()).cspEnabled).toEqual(false);
     });
 
     it('should read the listen address as a number and a string', async () => {
