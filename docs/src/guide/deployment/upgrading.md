@@ -82,6 +82,15 @@ as a peer dependency, so a resource server using only `MemoryTokenCache` does no
 **Action required:** A resource server using `RedisTokenCache` installs
 `@authup/server-adapter-redis` and imports the class from there.
 
+### `JunctionEntityService` declares `ownerRealm` instead of `ownerRealmKey`
+
+A junction service built on `@authup/server-kit` names where its owner realm comes from in one
+abstract member, `ownerRealm`: a column of the junction row (`{ key: 'roleRealmId' }`) or, for
+an owner pinned to one realm, the realm or a resolver per row (`{ realm: 'blog' }`).
+
+**Action required:** a subclass replaces `ownerRealmKey = 'roleRealmId'` with
+`ownerRealm = { key: 'roleRealmId' } as const` and reads the column as `this.ownerRealm.key`.
+
 ## v1.0.0-beta.76 (was: next release after v1.0.0-beta.75)
 
 ### Health moves to `/livez` and `/readyz`

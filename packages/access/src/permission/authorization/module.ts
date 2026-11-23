@@ -664,12 +664,24 @@ function createBindingEvaluator(
                 throw new InternalError('Compile authorization without resource realm or row attributes.');
             }
 
+            if (typeof ctx.realm !== 'undefined' && ctx.realm !== false) {
+                const outcome = realmMatchSchema.safeParse(ctx.realm);
+
+                if (!outcome.success) {
+                    refuseDocumentWithIssues(
+                        buildIssuesForZodError(outcome.error, ctx.realm)
+                            .map((issue) => prefixIssuePath(issue, ['realm'])),
+                    );
+                }
+            }
+
             return evaluator.compile({
                 name: ctx.name,
                 realmId: ctx.realmId,
                 clientId: ctx.clientId,
                 data: withIdentity(ctx.data),
                 realmAttributeName: ctx.realmAttributeName,
+                ...(typeof ctx.realm !== 'undefined' ? { realm: ctx.realm } : {}),
             });
         },
     };

@@ -11,9 +11,9 @@ import {
     StaleRowSignal,
     assertRowUnchanged,
     retryOnStaleRow,
-} from '../../../../../src/core/entities/stale-row/index.ts';
+} from '../../src/core/index.ts';
 
-describe('core/entities/stale-row', () => {
+describe('core/stale-row', () => {
     describe('assertRowUnchanged', () => {
         it('should pass for an equal row', () => {
             expect(() => assertRowUnchanged({

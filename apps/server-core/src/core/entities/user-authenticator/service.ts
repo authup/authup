@@ -6,7 +6,12 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { BuiltInPolicyType, evaluateRecord, reachesRecord } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    appendQueryConditions,
+    evaluateRecord,
+    reachesRecord,
+} from '@authup/access';
 import { ValidatorGroup } from '@authup/kit';
 import { eq, inArray, or } from '@rapiq/core';
 import {
@@ -98,7 +103,6 @@ import type {
 } from './types.ts';
 import type { WebauthnContext } from './webauthn.ts';
 import {
-    appendQueryConditions,
     decodeQuery,
     readResponseAttributeNames,
     redactUnreachedRelations,

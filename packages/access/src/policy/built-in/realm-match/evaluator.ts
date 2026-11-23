@@ -188,7 +188,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
                 // query-build caller (`withConditions`) the resource realm IS the
                 // unknown row column, so the reach pends with its condition form
                 // instead of neutral-passing.
-                if (ctx.withConditions) {
+                if (ctx.withConditions && !ctx.realmless) {
                     const condition = await this.toCondition(value, ctx);
 
                     // the reach is total on rows: where it does not hold, it fails

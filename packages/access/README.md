@@ -136,6 +136,7 @@ const canDelete = await reachesRecord(evaluator, { name: 'user_delete', realm: n
 | `'<realm id>'` | A row of that realm |
 | `null` | A global row |
 | `['<id>', null]` | A row spanning several realms; every one must be reached |
+| `false` | A resource that belongs to no realm: no grant's reach is matched, the `data` decides alone |
 | `undefined` | Throws: a missing realm is a bug, never "global" |
 
 - `realmId` and `clientId` name the realm and client OWNING the permission definition, not the record's realm. Absent means a global definition; an owned one is unreachable without them.
@@ -143,6 +144,12 @@ const canDelete = await reachesRecord(evaluator, { name: 'user_delete', realm: n
 - `reachesRecord*` returns `false` for a `PermissionError` and rethrows anything else.
 - `evaluateRecordUpdate(evaluator, { name, current, next })` evaluates the stored row and the updated row, so an update can neither move a row into reach nor out of it.
 - `hasUnboundedReach(evaluator, name, owner?)` is true when `compile` answers `allow`: an `any` grant with no narrowing policy. Pass `{ realmId, clientId }` as `owner` for an owned definition.
+
+### Scope a list query
+
+`scopeReadQuery(query, evaluator, { names, ownership?, realm?, widen?, ... })` pre-gates the read permissions, compiles them and lowers the verdict onto a rapiq query: `allow` passes it through, `conditional` ANDs the condition (ORed with `ownership`), `deny` narrows to `ownership` or to nothing, `post` hands it back with `post: true` for a per-row check. `narrowReadScope(scope)` turns a `post` scope into a query a count can run. `appendQueryConditions(query, ...conditions)` ANDs server-side conditions onto a query without touching it.
+
+`compile` lowers each grant's reach onto the row's `realmId` column by default (`realmAttributeName` names another one). For rows without a realm column pass `realm`: a realm settles the reach against it, `false` names a resource of no realm, and only the remaining policy terms become conditions.
 
 ### Use the batch check answer
 
@@ -209,6 +216,7 @@ Every policy accepts `invert`. Policy data is a `PolicyData` bag keyed by the ty
 | `PermissionEvaluator`, `IPermissionEvaluator` | class, interface | `evaluate`, `evaluateOneOf`, `preEvaluate`, `preEvaluateOneOf`, `compile` |
 | `PermissionMemoryProvider`, `IPermissionProvider` | class, interface | Where an evaluator looks permission definitions up |
 | `evaluateRecord`, `evaluateRecordOneOf`, `reachesRecord`, `reachesRecordOneOf`, `evaluateRecordUpdate`, `hasUnboundedReach` | function | Single-record checks with an explicit realm |
+| `scopeReadQuery`, `narrowReadScope`, `appendQueryConditions`, `ReadScope`, `ReadScopeOptions` | function, type | A list query scoped by the compiled read permissions |
 | `createAuthorizationEvaluator` | function | An evaluator over the catalog, the introspected grants and the identity |
 | `createAuthorizationCheckEvaluator` | function | An evaluator over the batch check answer |
 | `AuthorizationCatalogStaleError`, `isAuthorizationCatalogStaleError` | class, function | The refetch signal |

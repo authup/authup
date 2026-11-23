@@ -43,6 +43,13 @@ export type PolicyEvaluationContext = {
      */
     readonly realmAttributeName?: string,
     /**
+     * The resource belongs to no realm. An absent `realmMatch` key then
+     * neutral-passes the realm reach while lowering too, so a compilation
+     * emits no realm term, exactly as a full evaluation without the key
+     * neutral-passes it.
+     */
+    readonly realmless?: boolean,
+    /**
      * The evaluation runs ahead of the resource (the pre-gate): a resource
      * realm that is absent may still arrive, so the realm reach pends instead
      * of neutral-passing. Off for a full evaluation, where an absent resource

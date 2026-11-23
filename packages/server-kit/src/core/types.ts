@@ -53,6 +53,28 @@ export interface IEntityRepository<
 
 /** How `AbstractEntityService.evaluateUpdate` reads each evaluated row. */
 export type EntityUpdateEvaluationResolvers = {
-    /** The record's realm (`null` = global row) for this row. */
-    realm: (row: Record<string, any>) => RecordRealm,
+    /** The record's realm (`null` = global row, `false` = a resource of no realm) for this row. */
+    realm: (row: Record<string, any>) => RecordRealm | false,
 };
+
+/** A junction's owner realm, read from a column of the junction row. */
+export type JunctionOwnerRealmColumn = {
+    key: string,
+    realm?: never,
+};
+
+/**
+ * A junction's owner realm for an owner pinned to one realm that carries no
+ * realm column: the realm itself, or a resolver per row. `false` names an
+ * owner that truly belongs to no realm (`evaluateRecord`'s `realm: false`):
+ * every grant's realm reach neutral-passes for it. `null` (a global owner)
+ * is the safe default; never write `e.realmId ?? false`, which turns a row
+ * with a missing realm into one that skips realm matching.
+ */
+export type JunctionOwnerRealmResolved = {
+    realm: string | null | false | ((entity: Record<string, any>) => string | null | false),
+    key?: never,
+};
+
+/** Where `JunctionEntityService` reads the owner realm of a row from. */
+export type JunctionOwnerRealm = JunctionOwnerRealmColumn | JunctionOwnerRealmResolved;

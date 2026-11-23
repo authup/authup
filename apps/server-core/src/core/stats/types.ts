@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ReadScope } from '@authup/access';
 import type { EntityStatsMeta, EntityStatsRow, StatsBucketUnit } from '@authup/core-http-kit';
 import type { ActorContext } from '@authup/server-kit';
 import type { IQuery, Schema } from '@rapiq/core';
-import type { ReadScope } from '../query/scope.ts';
 
 export interface IEntityStatsRepository {
     /**

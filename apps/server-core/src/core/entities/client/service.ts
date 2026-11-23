@@ -5,12 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ReadScope } from '@authup/access';
 import {
     BuiltInPolicyType,
     evaluateRecord,
     evaluateRecordOneOf,
     hasUnboundedReach,
     reachesRecordOneOf,
+    scopeReadQuery,
 } from '@authup/access';
 import { OAuth2TokenGrant } from '@authup/specs';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
@@ -32,7 +34,11 @@ import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/serv
 import type { IRealmRepository } from '../realm/types.ts';
 import type { IPathRepository } from '../path/types.ts';
 import type { EventRequestContext, IEventService } from '../event/index.ts';
-import { AbstractEntityService } from '@authup/server-kit';
+import {
+    AbstractEntityService,
+    assertRowUnchanged,
+    retryOnStaleRow,
+} from '@authup/server-kit';
 import { ClientCredentialsService } from '../../authentication/credential/entities/client/module.ts';
 import { isRealmCipherBlob, isRealmCipherBlobError } from '../../key/index.ts';
 import type { IRealmCipher } from '../../key/index.ts';
@@ -42,14 +48,12 @@ import {
     decodeQuery,
     readResponseAttributeNames,
     redactUnreachedRelations,
-    scopeReadQuery,
     widenSparseRootProjection,
+    widenToSchema,
 } from '../../query/index.ts';
-import type { ReadScope } from '../../query/index.ts';
 import { assertTokenExchangeAuthority } from '../client-token-exchange-capability/helpers.ts';
 import type { IClientTokenExchangeCapabilityRepository } from '../client-token-exchange-capability/types.ts';
 import { clientSchema } from './schema.ts';
-import { assertRowUnchanged, retryOnStaleRow } from '../stale-row/index.ts';
 import { isRealmReachable } from '../realm/helpers.ts';
 import type { IQuery } from '@rapiq/core';
 import type { ISessionManager } from '../../authentication/session/types.ts';
@@ -130,7 +134,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
-        return scopeReadQuery(query, actor, { names: CLIENT_READ_PERMISSIONS, schema: clientSchema });
+        return scopeReadQuery(query, actor.permissionEvaluator, { names: CLIENT_READ_PERMISSIONS, widen: widenToSchema(clientSchema) });
     }
 
     async getMany(

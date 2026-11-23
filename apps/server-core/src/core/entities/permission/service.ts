@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ReadScope } from '@authup/access';
 import {
     BuiltInPolicyType,
     RealmScope,
@@ -12,6 +13,7 @@ import {
     evaluateRecord,
     evaluateRecordOneOf,
     reachesRecordOneOf,
+    scopeReadQuery,
 } from '@authup/access';
 import type { IQuery } from '@rapiq/core';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
@@ -36,10 +38,9 @@ import { applyOwningClientRealm, findClientOwnedRowForSave } from '../client/own
 import {
     decodeQuery,
     readResponseAttributeNames,
-    scopeReadQuery,
     trimReachCheckFields,
+    widenToSchema,
 } from '../../query/index.ts';
-import type { ReadScope } from '../../query/index.ts';
 import { permissionSchema } from './schema.ts';
 import { REALM_ADMIN_EXCLUDED_PERMISSIONS, REALM_ADMIN_OWN_REACH_PERMISSIONS } from './constants.ts';
 
@@ -85,7 +86,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
-        return scopeReadQuery(query, actor, { names: PERMISSION_NAMES, schema: permissionSchema });
+        return scopeReadQuery(query, actor.permissionEvaluator, { names: PERMISSION_NAMES, widen: widenToSchema(permissionSchema) });
     }
 
     async getMany(

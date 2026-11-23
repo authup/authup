@@ -5,11 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ReadScope } from '@authup/access';
 import {
     BuiltInPolicyType,
+    appendQueryConditions,
     evaluateRecord,
     evaluateRecordOneOf,
     reachesRecordOneOf,
+    scopeReadQuery,
 } from '@authup/access';
 import { eq } from '@rapiq/core';
 import type { IQuery } from '@rapiq/core';
@@ -21,20 +24,22 @@ import {
 } from '@authup/core-kit';
 import type { Path } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
-import { AbstractEntityService } from '@authup/server-kit';
+import {
+    AbstractEntityService,
+    StaleRowSignal,
+    assertRowUnchanged,
+    retryOnStaleRow,
+} from '@authup/server-kit';
 import type { IRealmRepository } from '../realm/types.ts';
 import type { IPathRepository, IPathService, PathReadOptions } from './types.ts';
 import { assertPathBounds, buildPathForParent } from './helpers.ts';
 import {
-    appendQueryConditions,
     decodeQuery,
     readResponseAttributeNames,
-    scopeReadQuery,
     trimReachCheckFields,
+    widenToSchema,
 } from '../../query/index.ts';
-import type { ReadScope } from '../../query/index.ts';
 import { pathSchema } from './schema.ts';
-import { StaleRowSignal, assertRowUnchanged, retryOnStaleRow } from '../stale-row/index.ts';
 
 export type PathServiceContext = {
     repository: IPathRepository;
@@ -62,7 +67,7 @@ export class PathService extends AbstractEntityService implements IPathService {
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
-        return scopeReadQuery(query, actor, { names: PERMISSION_NAMES, schema: pathSchema });
+        return scopeReadQuery(query, actor.permissionEvaluator, { names: PERMISSION_NAMES, widen: widenToSchema(pathSchema) });
     }
 
     async getMany(

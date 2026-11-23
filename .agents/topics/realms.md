@@ -54,8 +54,10 @@ The relations read gate (#3295) runs `preEvaluateOneOf` without `realmMatch`, so
 it never checks a row's realm; without this gate any holder of the target
 permission read other realms' junction rows.
 
-- A junction row has no `realmId`. Each service passes `this.ownerRealmKey`
-  (abstract on `JunctionEntityService`, `packages/server-kit`) as
+- A junction row has no `realmId`. Each service passes `this.ownerRealm.key`
+  (`ownerRealm` is abstract on `JunctionEntityService`, `packages/server-kit`:
+  a column `{ key }` or, for an owner pinned to one realm, `{ realm }`, never
+  both, #3866) as
   `realmAttributeName` to `compile`, which lowers the reach onto that column.
   It never changes an `evaluate()` outcome.
 - **A declared `realmAttributeName` refuses to lower the grant's own policy**
@@ -177,7 +179,11 @@ defaulting fail-closed to `own`:
   `@authup/access`** (`evaluateRecord`, `evaluateRecordOneOf`,
   `reachesRecord*`, `evaluateRecordUpdate`, `hasUnboundedReach`). `realm` is
   the RECORD's realm (`null` global, a list = every realm); `undefined` throws,
-  and so does caller data already carrying `realmMatch`. Every single-record
+  and so does caller data already carrying `realmMatch`. `false` is the
+  explicit opt-out for a resource of no realm: no `realmMatch`, so every
+  grant's reach neutral-passes and the data decides alone (#3871). `compile`
+  takes the same `realm` (`false`, or a fixed realm settling the reach instead
+  of lowering it onto a column, #3856). Every single-record
   check in server-core goes through them; an eslint rule refuses the
   `realmMatch` key in `apps/server-core/src` except `core/authorization/check.ts`
   and `core/identity/permission/checker/service.ts`.

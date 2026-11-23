@@ -7,7 +7,6 @@
 
 import { createURLCodec } from '@rapiq/codec-url';
 import type {
-    ICondition,
     IQuery,
     ObjectLiteral,
     Schema,
@@ -166,37 +165,4 @@ export async function decodeQuery<RECORD extends ObjectLiteral = ObjectLiteral>(
     );
 
     return widenSparseRelationProjections(pruned, schema, schemaRegistry, options.actor);
-}
-
-/**
- * Append server-derived conditions (a route realm, an owner scope, ...)
- * onto a decoded query by AND-wrapping its filter tree. A client-sent
- * condition on the same field intersects with the scope instead of
- * replacing it, and compound client trees (`or(...)`) are preserved
- * as-is. Same guarantee class as a mandatory `andWhere` at the
- * repository — expressed once in the IR. Appended conditions do not
- * pass through `decodeQuery`, so the schema allow-lists do not
- * constrain them (server-derived context).
- *
- * Immutable: returns a new `Query` whose filters node is the
- * AND-wrapped successor (`IFilters.and`); every other parameter node is
- * carried over **by reference**, so the input query stays untouched and
- * nothing is copied. The node enumeration mirrors rapiq's
- * `QueryContext` — keep it in sync when the IR gains a parameter.
- *
- * Non-displaceability is structural since rapiq beta.19
- * (tada5hi/rapiq#890): filter composition is conjunctive throughout, so
- * no later composition step can drop a conjunct and the appended scope
- * needs no marker to survive.
- */
-export function appendQueryConditions(query: IQuery, ...conditions: ICondition[]) : Query {
-    return new Query({
-        fields: query.fields,
-        filters: query.filters.and(...conditions),
-        relations: query.relations,
-        pagination: query.pagination,
-        sorts: query.sorts,
-        groups: query.groups,
-        aggregates: query.aggregates,
-    });
 }

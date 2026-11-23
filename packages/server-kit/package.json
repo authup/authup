@@ -9,11 +9,16 @@
         ".": {
             "types": "./dist/index.d.ts",
             "import": "./dist/index.mjs"
+        },
+        "./core": {
+            "types": "./dist/core/index.d.ts",
+            "import": "./dist/core.mjs"
         }
     },
     "main": "./dist/index.mjs",
     "module": "./dist/index.mjs",
     "types": "./dist/index.d.ts",
+    "sideEffects": false,
     "files": [
         "dist"
     ],
@@ -60,12 +65,13 @@
         "@authup/access": "^1.0.0-beta.76",
         "@authup/core-kit": "^1.0.0-beta.76",
         "@authup/core-realtime-kit": "^1.0.0-beta.76",
+        "@authup/errors": "^1.0.0-beta.76",
         "@authup/kit": "^1.0.0-beta.76",
         "@authup/specs": "^1.0.0-beta.76",
         "@isaacs/ttlcache": "^2.1.5",
-        "@rapiq/core": "^2.5.0",
         "@node-rs/bcrypt": "^2.0.0",
         "@node-rs/jsonwebtoken": "^0.5.11",
+        "@rapiq/core": "^2.5.0",
         "@socket.io/redis-emitter": "^5.1.0",
         "redis-extension": "^3.0.0",
         "smob": "^1.6.2",

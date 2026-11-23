@@ -97,6 +97,63 @@ describe('src/permission/record', () => {
         })).rejects.toThrow('event_read');
     });
 
+    it.each(['none', 'own', 'ownOrNull', 'any'] as const)(
+        'opts a realm-less record out of realm matching with realm false (%s)',
+        async (scope) => {
+            const evaluator = await build([{ name: 'event_read', realm_scope: scope }]);
+
+            expect(await reachesRecord(evaluator, { name: 'event_read', realm: false })).toBe(true);
+            expect(await reachesRecordOneOf(evaluator, { name: ['event_read', 'event_delete'], realm: false })).toBe(true);
+            await expect(evaluateRecord(evaluator, { name: 'event_read', realm: false })).resolves.toBeUndefined();
+            await expect(evaluateRecordOneOf(evaluator, { name: 'event_read', realm: false })).resolves.toBeUndefined();
+            await expect(evaluateRecordUpdate(evaluator, {
+                name: 'event_read',
+                current: { realm: false },
+                next: { realm: false },
+            })).resolves.toBeUndefined();
+        },
+    );
+
+    it('evaluates the data alone with realm false', async () => {
+        const evaluator = await build([{
+            name: 'event_read',
+            realm_scope: 'own',
+            policies: ['visible'],
+        }]);
+
+        expect(await reachesRecord(evaluator, {
+            name: 'event_read',
+            realm: false,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: { visible: true } },
+        })).toBe(true);
+        expect(await reachesRecord(evaluator, {
+            name: 'event_read',
+            realm: false,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: { visible: false } },
+        })).toBe(false);
+        await expect(evaluateRecordUpdate(evaluator, {
+            name: 'event_read',
+            current: { realm: false, data: { [BuiltInPolicyType.ATTRIBUTES]: { visible: false } } },
+            next: { realm: false, data: { [BuiltInPolicyType.ATTRIBUTES]: { visible: true } } },
+        })).rejects.toSatisfy(isPermissionError);
+    });
+
+    it('denies a realm-less record without a grant', async () => {
+        const evaluator = await build([{ name: 'event_delete', realm_scope: 'any' }]);
+
+        expect(await reachesRecord(evaluator, { name: 'event_read', realm: false })).toBe(false);
+    });
+
+    it('throws when the data already carries realmMatch, also with realm false', async () => {
+        const evaluator = await build([{ name: 'event_read', realm_scope: 'any' }]);
+
+        await expect(evaluateRecord(evaluator, {
+            name: 'event_read',
+            realm: false,
+            data: { [BuiltInPolicyType.REALM_MATCH]: realmB },
+        })).rejects.toThrow('event_read');
+    });
+
     it('throws when the data already carries realmMatch', async () => {
         const evaluator = await build([{ name: 'event_read', realm_scope: 'any' }]);
 

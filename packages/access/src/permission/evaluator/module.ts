@@ -250,7 +250,17 @@ export class PermissionEvaluator implements IPermissionEvaluator {
     async compile(ctx: PermissionCompileContext) : Promise<PermissionCompileResult> {
         const names = Array.isArray(ctx.name) ? ctx.name : [ctx.name];
 
-        const dataBase = ctx.data || new PolicyData();
+        const dataBase = ctx.data ? ctx.data.clone() : new PolicyData();
+
+        if (typeof ctx.realm !== 'undefined') {
+            if (dataBase.has(BuiltInPolicyType.REALM_MATCH)) {
+                throw new Error(`The compile data for permission ${names.join(', ')} must not carry ${BuiltInPolicyType.REALM_MATCH} next to a realm.`);
+            }
+
+            if (ctx.realm !== false) {
+                dataBase.set(BuiltInPolicyType.REALM_MATCH, ctx.realm);
+            }
+        }
 
         const conditions : ICondition[] = [];
         let post = false;
@@ -291,6 +301,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
                     data,
                     withConditions: true,
                     realmAttributeName: ctx.realmAttributeName,
+                    realmless: ctx.realm === false,
                 }),
             );
 

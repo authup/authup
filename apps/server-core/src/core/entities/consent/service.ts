@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, evaluateRecord, reachesRecord } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    appendQueryConditions,
+    evaluateRecord,
+    reachesRecord,
+} from '@authup/access';
 import {
     and,
     eq,
@@ -29,7 +34,6 @@ import type {
     IConsentService,
 } from './types.ts';
 import {
-    appendQueryConditions,
     decodeQuery,
     readResponseAttributeNames,
     trimReachCheckFields,

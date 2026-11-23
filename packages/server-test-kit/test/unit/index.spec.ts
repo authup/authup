@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ActorIdentity } from '@authup/server-kit/core';
 import { Query } from '@rapiq/core';
 import { describe, expect, it } from 'vitest';
 import {
@@ -98,6 +99,11 @@ describe('actor factories', () => {
         expect(actor.identity).toBeUndefined();
     });
 
+    it('keeps a supplied identity even when it is falsy', () => {
+        expect(createAllowAllActor(0)).toHaveProperty('identity', 0);
+        expect(createDenyAllActor(false)).toHaveProperty('identity', false);
+    });
+
     it('createDenyAllActor sets the evaluator to deny every call', async () => {
         const actor = createDenyAllActor();
 
@@ -114,5 +120,30 @@ describe('actor factories', () => {
         const actor = createNonMasterRealmActor();
 
         expect(actor.identity?.data.realm?.name).toBe('test-realm');
+    });
+});
+
+describe('actor factories', () => {
+    it('carry a consumer-sized identity', async () => {
+        const identity: ActorIdentity = {
+            type: 'user',
+            id: 'u1',
+            realmId: 'r1',
+            realmName: 'blog',
+            clientId: null,
+        };
+
+        const allow = createAllowAllActor<ActorIdentity>(identity);
+        const deny = createDenyAllActor<ActorIdentity>(identity);
+
+        expect(allow.identity).toBe(identity);
+        expect(deny.identity).toBe(identity);
+        await expect(allow.permissionEvaluator.evaluate({ name: 'post_read' })).resolves.toBeUndefined();
+        await expect(deny.permissionEvaluator.evaluate({ name: 'post_read' })).rejects.toBeDefined();
+    });
+
+    it('carry no identity unless given one', () => {
+        expect('identity' in createAllowAllActor()).toBe(false);
+        expect('identity' in createDenyAllActor()).toBe(false);
     });
 });

@@ -154,6 +154,15 @@ export function widenSparseRootProjection(
 }
 
 /**
+ * The `widen` of a `scopeReadQuery` over rows of the schema: a `post`
+ * verdict then answers a query widened by {@link widenSparseRootProjection},
+ * and the caller trims the rows it returns ({@link trimReachCheckFields}).
+ */
+export function widenToSchema(schema: Schema<any>): (query: IQuery, retain: string[]) => IQuery {
+    return (query, retain) => widenSparseRootProjection(query, schema, retain);
+}
+
+/**
  * The attribute names of the row as the response carries it: its flattened
  * keys without the {@link ReachCheckField} columns of the query.
  */

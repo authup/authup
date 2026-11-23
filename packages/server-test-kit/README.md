@@ -92,8 +92,8 @@ actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
 |---|---|---|
 | `FakeEntityRepository<T>` | class | In-memory `IEntityRepository`, plus `seed`, `getAll`, `clear`, `onValidateJoinColumns`, `checkUniqueness` |
 | `FakePermissionEvaluator` | class | Recording `IPermissionEvaluator` with `setBehavior`, `deny`, `denyAll`, `setCompileResult` |
-| `createAllowAllActor` | function | Actor without identity, every evaluation permitted |
-| `createDenyAllActor` | function | Actor without identity, every evaluation refused |
+| `createAllowAllActor(identity?)` | function | Every evaluation permitted; no identity unless given one, of any shape (`createAllowAllActor<ActorIdentity>(identity)` for a resource server) |
+| `createDenyAllActor(identity?)` | function | Every evaluation refused; identity as above |
 | `createMasterRealmActor(realmId?)` | function | User actor in a realm named `master`, for realm-defaulting tests |
 | `createNonMasterRealmActor(realmId?)` | function | User actor in a realm named `test-realm` |
 | `FakeActorContext`, `FakeEntityRepositoryOptions`, `EvaluatorBehavior`, `EvaluatorCall`, `EvaluatorMethodName` | type | Shapes of the above |

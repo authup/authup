@@ -54,7 +54,7 @@ and decoding, adapters only execute.
   the target's default columns (`ReachCheckField`, `core/query/projection.ts`,
   trimmed after the check): an unprojected column reads as null to a policy.
   The ROOT row gets the same wherever it is evaluated per row:
-  `widenSparseRootProjection` (via `scopeReadQuery`'s `schema` on a `post`
+  `widenSparseRootProjection` (via `scopeReadQuery`'s `widen: widenToSchema(schema)` on a `post`
   verdict, or called by the service) loads the schema's default columns, never
   an allowed-only one (`secret`, key material), and never on a grouped query. A
   column outside the default row a policy may be written against is declared in
@@ -128,7 +128,7 @@ and decoding, adapters only execute.
 
 **Server-derived scopes**
 
-- Inject scopes with `appendQueryConditions(query, ...conds)` (`core/query`):
+- Inject scopes with `appendQueryConditions(query, ...conds)` (`@authup/access`):
   an AND-wrap that bypasses the allow-lists and cannot be displaced, since
   rapiq filter composition is conjunctive (`mergeQueries` keeps every
   conjunct).

@@ -5,11 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ReadScope } from '@authup/access';
 import {
     BuiltInPolicyType,
     evaluateRecord,
     evaluateRecordOneOf,
     reachesRecordOneOf,
+    scopeReadQuery,
 } from '@authup/access';
 import type { IQuery } from '@rapiq/core';
 import { ValidatorGroup, isUUID } from '@authup/kit';
@@ -26,10 +28,9 @@ import type { IScopeRepository, IScopeService } from './types.ts';
 import {
     decodeQuery,
     readResponseAttributeNames,
-    scopeReadQuery,
     trimReachCheckFields,
+    widenToSchema,
 } from '../../query/index.ts';
-import type { ReadScope } from '../../query/index.ts';
 import { scopeSchema } from './schema.ts';
 
 export type ScopeServiceContext = {
@@ -58,7 +59,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
-        return scopeReadQuery(query, actor, { names: PERMISSION_NAMES, schema: scopeSchema });
+        return scopeReadQuery(query, actor.permissionEvaluator, { names: PERMISSION_NAMES, widen: widenToSchema(scopeSchema) });
     }
 
     async getMany(

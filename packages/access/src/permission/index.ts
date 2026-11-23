@@ -9,6 +9,7 @@ export * from './error/index.ts';
 export * from './helpers/index.ts';
 export * from './provider/index.ts';
 export * from './evaluator/index.ts';
+export * from './read-scope/index.ts';
 export * from './realm-scope/index.ts';
 export * from './record/index.ts';
 export * from './types.ts';

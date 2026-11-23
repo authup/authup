@@ -8,6 +8,7 @@
 import {
     BuiltInPolicyType,
     RealmScope,
+    appendQueryConditions,
     evaluateRecord,
     evaluateRecordOneOf,
     reachesRecordOneOf,
@@ -23,7 +24,6 @@ import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } 
 import { JunctionEntityService } from '@authup/server-kit';
 import type { IUserPermissionRepository, IUserPermissionService } from './types.ts';
 import {
-    appendQueryConditions,
     decodeQuery,
     readResponseAttributeNames,
     redactUnreachedRelations,
@@ -44,7 +44,7 @@ export type UserPermissionServiceContext = {
 };
 
 export class UserPermissionService extends JunctionEntityService implements IUserPermissionService {
-    protected readonly ownerRealmKey = 'userRealmId';
+    protected readonly ownerRealm = { key: 'userRealmId' } as const;
 
     protected repository: IUserPermissionRepository;
 
@@ -74,7 +74,7 @@ export class UserPermissionService extends JunctionEntityService implements IUse
         // the OWNER realm key — a junction row carries no `realmId` (issue #3594).
         const compiled = await actor.permissionEvaluator.compile({
             name: READ_PERMISSION_NAMES,
-            realmAttributeName: this.ownerRealmKey,
+            realmAttributeName: this.ownerRealm.key,
         });
 
         if (compiled.verdict === 'deny') {
@@ -83,7 +83,7 @@ export class UserPermissionService extends JunctionEntityService implements IUse
             parsed = appendQueryConditions(parsed, compiled.condition);
         } else if (compiled.verdict === 'post') {
             // the rows are evaluated one by one, each on its whole default row
-            parsed = widenSparseRootProjection(parsed, userPermissionSchema, [this.ownerRealmKey]);
+            parsed = widenSparseRootProjection(parsed, userPermissionSchema, [this.ownerRealm.key]);
         }
 
         const { data: entities, meta } = await this.repository.findMany(parsed);

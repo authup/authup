@@ -9,6 +9,7 @@ import type { ICondition } from '@rapiq/core';
 import type { DecisionStrategy } from '@authup/kit';
 import type { IPolicyEngine, PolicyData, PolicyTransitionSink } from '../../policy/index.ts';
 import type { IPermissionProvider } from '../provider/index.ts';
+import type { RecordRealm } from '../record/index.ts';
 
 export interface IPermissionEvaluator {
     evaluate(ctx: PermissionEvaluationContext): Promise<void>;
@@ -83,6 +84,18 @@ export type PermissionCompileContext = {
      * realm from the `realmMatch` data key its caller supplies.
      */
     realmAttributeName?: string,
+    /**
+     * The realm every row of the compilation belongs to, for a resource whose
+     * rows carry no realm column. A realm (id, name, `null` for global, or a
+     * list every entry of which must be reached) settles each grant's realm
+     * reach against it instead of lowering it onto a column; `false` names a
+     * resource that belongs to no realm, so the reach neutral-passes as in
+     * `evaluateRecord` with `realm: false`. Either way only the remaining
+     * policy terms become query conditions. Absent, the reach is lowered onto
+     * {@link realmAttributeName}. Must not be combined with a `realmMatch` key
+     * in `data`.
+     */
+    realm?: RecordRealm | false,
 };
 
 /**

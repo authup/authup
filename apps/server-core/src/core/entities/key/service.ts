@@ -5,12 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ReadScope } from '@authup/access';
 import { randomUUID } from 'node:crypto';
 import {
     BuiltInPolicyType,
+    appendQueryConditions,
     evaluateRecord,
     evaluateRecordOneOf,
     reachesRecordOneOf,
+    scopeReadQuery,
 } from '@authup/access';
 import { eq } from '@rapiq/core';
 import type { IQuery } from '@rapiq/core';
@@ -50,13 +53,11 @@ import type {
     KeyServiceReadOptions,
 } from './types.ts';
 import {
-    appendQueryConditions,
     decodeQuery,
     readResponseAttributeNames,
-    scopeReadQuery,
     trimReachCheckFields,
+    widenToSchema,
 } from '../../query/index.ts';
-import type { ReadScope } from '../../query/index.ts';
 import { keySchema } from './schema.ts';
 
 export type KeyServiceContext = {
@@ -93,7 +94,7 @@ export class KeyService extends AbstractEntityService implements IKeyService {
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
-        return scopeReadQuery(query, actor, { names: PERMISSION_NAMES, schema: keySchema });
+        return scopeReadQuery(query, actor.permissionEvaluator, { names: PERMISSION_NAMES, widen: widenToSchema(keySchema) });
     }
 
     async getMany(

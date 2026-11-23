@@ -5,11 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ReadScope } from '@authup/access';
 import {
     BuiltInPolicyType,
     evaluateRecord,
     evaluateRecordOneOf,
     reachesRecordOneOf,
+    scopeReadQuery,
 } from '@authup/access';
 import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
@@ -25,19 +27,21 @@ import type { IRealmRepository } from '../realm/types.ts';
 import type { IPathRepository } from '../path/types.ts';
 import type { EventRequestContext } from '../event/types.ts';
 import type { ISessionManager } from '../../authentication/session/types.ts';
-import { AbstractEntityService } from '@authup/server-kit';
+import {
+    AbstractEntityService,
+    assertRowUnchanged,
+    retryOnStaleRow,
+} from '@authup/server-kit';
 import { UserCredentialsService } from '../../authentication/credential/entities/user/module.ts';
 import type { IUserRepository, IUserService } from './types.ts';
 import {
     decodeQuery,
     readResponseAttributeNames,
-    scopeReadQuery,
     trimReachCheckFields,
     widenSparseRootProjection,
+    widenToSchema,
 } from '../../query/index.ts';
-import type { ReadScope } from '../../query/index.ts';
 import { userSchema } from './schema.ts';
-import { assertRowUnchanged, retryOnStaleRow } from '../stale-row/index.ts';
 
 export type UserServiceContext = {
     repository: IUserRepository;
@@ -80,7 +84,7 @@ export class UserService extends AbstractEntityService implements IUserService {
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
-        return scopeReadQuery(query, actor, {
+        return scopeReadQuery(query, actor.permissionEvaluator, {
             names: [
                 PermissionName.USER_READ,
                 PermissionName.USER_UPDATE,
@@ -89,7 +93,7 @@ export class UserService extends AbstractEntityService implements IUserService {
             ownership: actor.identity && actor.identity.type === 'user' ?
                 eq('id', actor.identity.data.id) :
                 null,
-            schema: userSchema,
+            widen: widenToSchema(userSchema),
             retain: ['id'],
         });
     }
