@@ -45,6 +45,7 @@ export const pathSchema = defineSchema<Path>({
         ],
     },
     filters: {
+        arrays: [],
         allowed: ['id', 'path', 'displayName', 'parentId', 'realmId', 'createdAt', 'updatedAt'],
         indexed: true,
         validate: createTimestampFiltersGate(),

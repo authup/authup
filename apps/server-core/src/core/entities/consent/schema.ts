@@ -48,6 +48,7 @@ export const consentSchema = defineSchema<Consent>({
         ],
     },
     filters: {
+        arrays: [],
         allowed: [...CONSENT_FILTER_KEYS, 'userId', 'createdAt', 'updatedAt'],
         indexed: true,
         validate: createTimestampFiltersGate(),

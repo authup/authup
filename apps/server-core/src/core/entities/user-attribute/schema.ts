@@ -36,6 +36,7 @@ export const userAttributeSchema = defineSchema<UserAttribute>({
         ],
     },
     filters: {
+        arrays: [],
         allowed: ['id', 'name', 'userId', 'realmId', 'createdAt', 'updatedAt'],
         indexed: true,
         validate: createTimestampFiltersGate(),

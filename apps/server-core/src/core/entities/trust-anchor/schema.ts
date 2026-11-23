@@ -35,6 +35,7 @@ export const trustAnchorSchema = defineSchema<TrustAnchor>({
         ],
     },
     filters: {
+        arrays: [],
         allowed: ['id', 'name', 'enabled', 'realmId', 'createdAt', 'updatedAt'],
         indexed: true,
         validate: createTimestampFiltersGate(),

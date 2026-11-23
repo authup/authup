@@ -42,6 +42,7 @@ export const keySchema = defineSchema<Key>({
         allowed: ['encryptionKey', 'certificate'],
     },
     filters: {
+        arrays: [],
         allowed: [
             'id',
             'name',

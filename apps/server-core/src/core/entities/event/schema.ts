@@ -53,6 +53,7 @@ export const eventSchema = defineSchema<Event>({
         ],
     },
     filters: {
+        arrays: [],
         allowed: [
             'id',
             'scope',

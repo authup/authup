@@ -37,6 +37,7 @@ export const scopeSchema = defineSchema<Scope>({
         ],
     },
     filters: {
+        arrays: [],
         allowed: ['id', 'builtIn', 'name', 'displayName', 'realmId', 'createdAt', 'updatedAt'],
         indexed: true,
         validate: createTimestampFiltersGate(),

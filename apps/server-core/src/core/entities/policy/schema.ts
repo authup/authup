@@ -42,6 +42,7 @@ export const policySchema = defineSchema<Policy>({
         ],
     },
     filters: {
+        arrays: [],
         allowed: ['id', 'name', 'displayName', 'type', 'parentId', 'realmId', 'builtIn', 'createdAt', 'updatedAt'],
         indexed: true,
         validate: createTimestampFiltersGate(),

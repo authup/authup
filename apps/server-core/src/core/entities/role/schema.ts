@@ -41,6 +41,7 @@ export const roleSchema = defineSchema<Role>({
         ],
     },
     filters: {
+        arrays: [],
         allowed: ['id', 'builtIn', 'name', 'displayName', 'target', 'clientId', 'realmId', 'createdAt', 'updatedAt'],
         indexed: true,
         validate: createTimestampFiltersGate(),

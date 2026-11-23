@@ -137,6 +137,7 @@ export const clientSchema = defineSchema<Client>({
         validateMany: createFieldsReadGate({ secret: secretReadGate }),
     },
     filters: {
+        arrays: [],
         allowed: ['id', 'name', 'displayName', 'realmId', 'pathId', 'active', 'builtIn', 'createdAt', 'updatedAt'],
         indexed: true,
         validate: createTimestampFiltersGate(),

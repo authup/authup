@@ -39,6 +39,7 @@ export const clientScopeSchema = defineSchema<ClientScope>({
         ],
     },
     filters: {
+        arrays: [],
         allowed: ['clientId', 'scopeId', 'default', 'id', 'clientRealmId', 'scopeRealmId', 'createdAt', 'updatedAt'],
         indexed: true,
         validate: createTimestampFiltersGate(),

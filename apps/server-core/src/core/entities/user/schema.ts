@@ -50,6 +50,7 @@ export const userSchema = defineSchema<User>({
         allowed: ['email'],
     },
     filters: {
+        arrays: [],
         allowed: ['id', 'name', 'displayName', 'realmId', 'pathId', 'active', 'createdAt', 'updatedAt'],
         indexed: true,
         validate: createTimestampFiltersGate(),

@@ -50,6 +50,7 @@ export const identityProviderAccountSchema = defineSchema<IdentityProviderAccoun
         ],
     },
     filters: {
+        arrays: [],
         allowed: [...IDENTITY_PROVIDER_ACCOUNT_FILTER_KEYS, 'providerRealmId', 'createdAt', 'updatedAt'],
         indexed: true,
         validate: createTimestampFiltersGate(),
