@@ -8,15 +8,17 @@
 import type {
     PermissionGrant,
     PermissionPolicyBinding,
+    PermissionPolicyBindingAggregated,
 } from '@authup/access';
 import {
+    BuiltInPolicyType,
     RealmScope,
     aggregatePermissionPolicyBindings,
     compareRealmScope,
     grantDominates,
     isPermissionPolicyBindingEqual,
     minRealmScope,
-    realmScopeMatches,
+    reachesRecord,
 } from '@authup/access';
 import type { Policy, Role } from '@authup/core-kit';
 import { PermissionName, isPolicy } from '@authup/core-kit';
@@ -58,9 +60,10 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         const parentAggregated = aggregatePermissionPolicyBindings(parent);
         const childAggregated = aggregatePermissionPolicyBindings(child);
 
-        // The unrestricted grants of the global permission-management permission:
-        // whoever holds one over a realm defines that realm's own permissions, so a
-        // role carrying them is covered (#3855). Global permissions stay strict.
+        // The reach of the actor's policy-free grants of the global
+        // permission-management permission. A policy-bound grant is held only
+        // conditionally, so it cannot vouch for a reach the role hands out
+        // unconditionally (the grantDominates rule).
         const managerReach = parentAggregated
             .filter((item) => item.permission.name === PermissionName.PERMISSION_UPDATE &&
                 !item.permission.realmId &&
@@ -70,17 +73,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             .map((grant) => grant.realmScope);
 
         for (const childItem of childAggregated) {
-            // Every grant of the role must also stay within the manager's reach, so an
-            // `own` manager cannot hand out a realm permission at `any` reach.
-            const owned = !!childItem.permission.realmId || !!childItem.permission.clientId;
-            const managed = owned && childItem.grants.every((childGrant) => managerReach.some(
-                (realmScope) => compareRealmScope(realmScope, childGrant.realmScope) >= 0 &&
-                    realmScopeMatches(
-                        realmScope,
-                        childItem.permission.realmId ?? null,
-                        actor.realmId,
-                    ),
-            ));
+            const managed = await this.isManagedByActor(childItem, managerReach, actor);
 
             if (managed) {
                 continue;
@@ -111,6 +104,38 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         }
 
         return true;
+    }
+
+    /**
+     * Whether the actor manages a realm- or client-owned permission (#3855):
+     * it passes the real `permission_update` gate on that permission row
+     * (its realm reach and the permission's own policies), and every grant
+     * of the role stays within the reach of its policy-free manager grants,
+     * which the gate cannot see: the gate checks the row, not how far the
+     * role reaches.
+     */
+    protected async isManagedByActor(
+        item: PermissionPolicyBindingAggregated,
+        managerReach: `${RealmScope}`[],
+        actor: SupersetActor,
+    ): Promise<boolean> {
+        if (!item.permission.realmId && !item.permission.clientId) {
+            return false;
+        }
+
+        const withinReach = item.grants.every((grant) => managerReach.some(
+            (realmScope) => compareRealmScope(realmScope, grant.realmScope) >= 0,
+        ));
+
+        if (!withinReach) {
+            return false;
+        }
+
+        return reachesRecord(actor.permissionEvaluator, {
+            name: PermissionName.PERMISSION_UPDATE,
+            realm: item.permission.realmId ?? null,
+            data: { [BuiltInPolicyType.ATTRIBUTES]: item.permission },
+        });
     }
 
     async resolveJunctionGrant(

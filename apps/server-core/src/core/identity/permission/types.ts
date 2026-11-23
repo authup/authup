@@ -7,6 +7,7 @@
 
 import type { Policy } from '@authup/core-kit';
 import type {
+    IPermissionEvaluator,
     IdentityPolicyData,
     PermissionPolicyBinding,
     RealmScope,
@@ -53,11 +54,11 @@ export type IdentityToken = Pick<OAuth2TokenPayload, 'sub' | 'sub_kind' | 'clien
 export type IdentityPermissionSubject = Pick<IdentityPolicyData, 'type' | 'id'>;
 
 /**
- * The actor a superset check runs for, beside its grants: its realm decides
- * what an `own` reach covers.
+ * The actor a superset check runs for, beside its grants: its evaluator runs
+ * the `permission_update` gate on a realm- or client-owned permission.
  */
 export type SupersetActor = {
-    realmId: string | null | undefined;
+    permissionEvaluator: IPermissionEvaluator;
 };
 
 export interface IIdentityPermissionProvider {

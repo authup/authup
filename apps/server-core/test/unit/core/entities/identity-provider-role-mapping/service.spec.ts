@@ -104,6 +104,24 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
             expect(result.roleRealmId).toBe(realmId);
         });
 
+        it('should run the superset check with the actor\'s evaluator', async () => {
+            repository.onValidateJoinColumns((data: any) => {
+                data.provider = { realmId: null };
+                data.role = { realmId: null, clientId: null };
+            });
+
+            const actor = createMasterRealmActor();
+
+            await service.create({
+                providerId: randomUUID(),
+                roleId: randomUUID(),
+            }, actor);
+
+            expect(identityPermissionProvider.supersetActors).toEqual([
+                { permissionEvaluator: actor.permissionEvaluator },
+            ]);
+        });
+
         it('should call preEvaluate with IDENTITY_PROVIDER_ROLE_CREATE', async () => {
             repository.onValidateJoinColumns((data: any) => {
                 data.provider = { realmId: null };

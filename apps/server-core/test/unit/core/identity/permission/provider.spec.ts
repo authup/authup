@@ -5,8 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityPolicyData, PermissionPolicyBinding } from '@authup/access';
-import { BuiltInPolicyType, RealmScope } from '@authup/access';
+import type {
+    IPermissionEvaluator,
+    IdentityPolicyData,
+    PermissionPolicyBinding,
+    PolicyData,
+} from '@authup/access';
+import {
+    BuiltInPolicyType,
+    PermissionError,
+    RealmScope,
+    realmScopeMatches,
+} from '@authup/access';
+import { FakePermissionEvaluator } from '@authup/server-test-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
     describe,
@@ -37,12 +48,34 @@ function createProvider(bindingsById: Record<string, PermissionPolicyBinding[]>)
     });
 }
 
-async function isRoleSuperset(provider: IdentityPermissionProvider, realmId?: string | null) {
+async function isRoleSuperset(
+    provider: IdentityPermissionProvider,
+    permissionEvaluator: IPermissionEvaluator = new FakePermissionEvaluator(),
+) {
     return provider.isSuperset(
         await provider.getFor({ type: 'role', id: 'parent' }),
         await provider.getFor({ type: 'role', id: 'child' }),
-        { realmId: realmId ?? null },
+        { permissionEvaluator },
     );
+}
+
+/**
+ * Stands in for the request evaluator's `permission_update` gate: the
+ * actor's grant reaches the record's realm (what `system.default` decides),
+ * and the permission's own policies pass unless `refuse` says otherwise.
+ */
+function createGate(actorRealmId: string, reach: `${RealmScope}`, refuse = false) {
+    return new FakePermissionEvaluator(({ method, ctx }) => {
+        if (method !== 'evaluate') {
+            return;
+        }
+
+        const realm = (ctx.data as PolicyData).get(BuiltInPolicyType.REALM_MATCH) as string | null;
+
+        if (refuse || !realmScopeMatches(reach, realm, actorRealmId)) {
+            throw PermissionError.denied(String(ctx.name));
+        }
+    });
 }
 
 const policy = { id: 'policy-1', type: BuiltInPolicyType.IDENTITY } as any;
@@ -212,16 +245,16 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
         ) : PermissionPolicyBinding[] => [
             {
                 permission: {
-                    name: 'p1', 
-                    realmId, 
-                    clientId: null, 
-                }, 
+                    name: 'p1',
+                    realmId,
+                    clientId: null,
+                },
             },
             {
                 permission: {
-                    name: 'p2', 
-                    realmId, 
-                    clientId: 'client-1', 
+                    name: 'p2',
+                    realmId,
+                    clientId: 'client-1',
                 },
                 realmScope: clientOwnedReach,
             },
@@ -233,7 +266,27 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 child: ownedBy(realmB),
             });
 
-            await expect(isRoleSuperset(provider, realmA)).resolves.toBe(true);
+            await expect(isRoleSuperset(provider, createGate(realmA, RealmScope.ANY))).resolves.toBe(true);
+        });
+
+        it('runs the permission_update gate on each owned permission row', async () => {
+            const provider = createProvider({
+                parent: [manager(RealmScope.ANY)],
+                child: ownedBy(realmB),
+            });
+            const gate = createGate(realmA, RealmScope.ANY);
+
+            await isRoleSuperset(provider, gate);
+
+            expect(gate.evaluateCalls).toHaveLength(2);
+
+            for (const call of gate.evaluateCalls) {
+                const data = call.data as PolicyData;
+
+                expect(call.name).toEqual(PermissionName.PERMISSION_UPDATE);
+                expect(data.get(BuiltInPolicyType.REALM_MATCH)).toEqual(realmB);
+                expect(data.get(BuiltInPolicyType.ATTRIBUTES)).toMatchObject({ realmId: realmB });
+            }
         });
 
         it('lets an actor managing its own realm assign a role over that realm\'s permissions', async () => {
@@ -242,7 +295,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 child: ownedBy(realmA, RealmScope.OWN),
             });
 
-            await expect(isRoleSuperset(provider, realmA)).resolves.toBe(true);
+            await expect(isRoleSuperset(provider, createGate(realmA, RealmScope.OWN))).resolves.toBe(true);
         });
 
         it('refuses an actor managing its own realm a role granting wider reach than its own', async () => {
@@ -251,25 +304,25 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 child: ownedBy(realmA, RealmScope.ANY),
             });
 
-            await expect(isRoleSuperset(provider, realmA)).resolves.toBe(false);
+            await expect(isRoleSuperset(provider, createGate(realmA, RealmScope.OWN))).resolves.toBe(false);
         });
 
         it('refuses an actor managing its own realm a role over another realm\'s permissions', async () => {
             const provider = createProvider({
                 parent: [manager(RealmScope.OWN)],
-                child: ownedBy(realmB),
+                child: ownedBy(realmB, RealmScope.OWN),
             });
 
-            await expect(isRoleSuperset(provider, realmA)).resolves.toBe(false);
+            await expect(isRoleSuperset(provider, createGate(realmA, RealmScope.OWN))).resolves.toBe(false);
         });
 
-        it('refuses an actor managing its own realm when its realm is not named', async () => {
+        it('refuses an actor whose permission_update the permission\'s own policies deny', async () => {
             const provider = createProvider({
-                parent: [manager(RealmScope.OWN)],
+                parent: [manager(RealmScope.ANY)],
                 child: ownedBy(realmA),
             });
 
-            await expect(isRoleSuperset(provider, null)).resolves.toBe(false);
+            await expect(isRoleSuperset(provider, createGate(realmA, RealmScope.ANY, true))).resolves.toBe(false);
         });
 
         it('refuses an actor managing permissions only under a policy', async () => {
@@ -278,7 +331,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 child: ownedBy(realmA),
             });
 
-            await expect(isRoleSuperset(provider, realmA)).resolves.toBe(false);
+            await expect(isRoleSuperset(provider, createGate(realmA, RealmScope.ANY))).resolves.toBe(false);
         });
 
         it('refuses an actor that does not manage permissions', async () => {
@@ -287,7 +340,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 child: ownedBy(realmA),
             });
 
-            await expect(isRoleSuperset(provider, realmA)).resolves.toBe(false);
+            await expect(isRoleSuperset(provider, createGate(realmA, RealmScope.ANY))).resolves.toBe(false);
         });
 
         it('does not count a realm-owned permission named like the management permission', async () => {
@@ -303,7 +356,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 child: ownedBy(realmA),
             });
 
-            await expect(isRoleSuperset(provider, realmA)).resolves.toBe(false);
+            await expect(isRoleSuperset(provider, createGate(realmA, RealmScope.ANY))).resolves.toBe(false);
         });
 
         it('keeps strict dominance for a global permission', async () => {
@@ -311,14 +364,26 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 parent: [manager(RealmScope.ANY)],
                 child: [{
                     permission: {
-                        name: 'user_read', 
-                        realmId: null, 
-                        clientId: null, 
-                    }, 
+                        name: 'user_read',
+                        realmId: null,
+                        clientId: null,
+                    },
                 }],
             });
 
-            await expect(isRoleSuperset(provider, realmA)).resolves.toBe(false);
+            await expect(isRoleSuperset(provider, createGate(realmA, RealmScope.ANY))).resolves.toBe(false);
+        });
+
+        it('propagates a gate failure that is not a permission error', async () => {
+            const provider = createProvider({
+                parent: [manager(RealmScope.ANY)],
+                child: ownedBy(realmA),
+            });
+            const gate = new FakePermissionEvaluator(() => {
+                throw new Error('database down');
+            });
+
+            await expect(isRoleSuperset(provider, gate)).rejects.toThrow('database down');
         });
     });
 
@@ -610,13 +675,13 @@ describe('core/identity/permission — the grants a token carries (#3597)', () =
             sub: 'u',
             sub_kind: 'user',
             client_id: X,
-        }), await provider.getFor(child), { realmId: null }))
+        }), await provider.getFor(child), { permissionEvaluator: new FakePermissionEvaluator() }))
             .resolves.toBe(false);
         await expect(provider.isSuperset(await provider.getForToken({
             sub: 'u',
             sub_kind: 'user',
             client_id: Z,
-        }), await provider.getFor(child), { realmId: null }))
+        }), await provider.getFor(child), { permissionEvaluator: new FakePermissionEvaluator() }))
             .resolves.toBe(true);
     });
 });

@@ -95,6 +95,24 @@ describe('core/entities/client-role/service', () => {
             expect(result.roleRealmId).toBe(roleRealmId);
         });
 
+        it('should run the superset check with the actor\'s evaluator', async () => {
+            repository.onValidateJoinColumns((data: any) => {
+                data.client = { realmId: null };
+                data.role = { realmId: null, clientId: null };
+            });
+
+            const actor = createMasterRealmActor();
+
+            await service.create({
+                clientId: randomUUID(),
+                roleId: randomUUID(),
+            }, actor);
+
+            expect(identityPermissionProvider.supersetActors).toEqual([
+                { permissionEvaluator: actor.permissionEvaluator },
+            ]);
+        });
+
         it('should call preCheck with CLIENT_ROLE_CREATE', async () => {
             const actor = createAllowAllActor();
 

@@ -23,8 +23,13 @@ import {
     createMasterRealmActor,
     createNonMasterRealmActor,
 } from '@authup/server-test-kit';
-import type { PermissionPolicyBinding } from '@authup/access';
-import { RealmScope } from '@authup/access';
+import type { PermissionPolicyBinding, PolicyData } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    PermissionError,
+    RealmScope,
+    realmScopeMatches,
+} from '@authup/access';
 import type { IClientRepository, IRoleRepository, IUserRepository } from '../../../../../src/core/entities/index.ts';
 import { IdentityPermissionProvider } from '../../../../../src/core/identity/permission/module.ts';
 import type { IIdentityRoleProvider } from '../../../../../src/core/identity/role/types.ts';
@@ -99,6 +104,24 @@ describe('core/entities/user-role/service', () => {
             expect(result.id).toBeDefined();
             expect(result.userRealmId).toBe(userRealmId);
             expect(result.roleRealmId).toBe(roleRealmId);
+        });
+
+        it('should run the superset check with the actor\'s evaluator', async () => {
+            repository.onValidateJoinColumns((data: any) => {
+                data.user = { realmId: null };
+                data.role = { realmId: null, clientId: null };
+            });
+
+            const actor = createMasterRealmActor();
+
+            await service.create({
+                userId: randomUUID(),
+                roleId: randomUUID(),
+            }, actor);
+
+            expect(identityPermissionProvider.supersetActors).toEqual([
+                { permissionEvaluator: actor.permissionEvaluator },
+            ]);
         });
 
         it('should call preCheck with USER_ROLE_CREATE', async () => {
@@ -232,10 +255,25 @@ describe('core/entities/user-role/service', () => {
             ];
         }
 
+        // The request evaluator's permission_update gate, as system.default
+        // decides it: some grant of the actor reaches the permission's realm.
         function createActor(realmId: string, grants: PermissionPolicyBinding[]) {
             const actor = createNonMasterRealmActor(realmId);
 
             actor.grants = async () => grants;
+            actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
+                if (method !== 'evaluate' || ctx.name !== PermissionName.PERMISSION_UPDATE) {
+                    return;
+                }
+
+                const realm = (ctx.data as PolicyData).get(BuiltInPolicyType.REALM_MATCH) as string | null;
+                const reached = grants.some((grant) => grant.permission.name === PermissionName.PERMISSION_UPDATE &&
+                    realmScopeMatches(grant.realmScope, realm, realmId));
+
+                if (!reached) {
+                    throw PermissionError.denied(PermissionName.PERMISSION_UPDATE);
+                }
+            });
 
             return actor;
         }
