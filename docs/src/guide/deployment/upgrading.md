@@ -5,7 +5,11 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
-## Next release (after v1.0.0-beta.76)
+## Next release (after v1.0.0-beta.77)
+
+Nothing yet.
+
+## v1.0.0-beta.77 (was: next release after v1.0.0-beta.76)
 
 ### Provisioning binds a realm's relations after its entities
 
