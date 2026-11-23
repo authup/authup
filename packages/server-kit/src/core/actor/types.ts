@@ -8,9 +8,27 @@
 import type { IPermissionEvaluator, PermissionPolicyBinding } from '@authup/access';
 import type { Identity } from '@authup/core-kit';
 
-export type ActorContext = {
+/**
+ * The identity a resource server holds for a caller: what an introspected
+ * token offers (`sub`, `sub_kind`, `realm_id`, `realm_name`, `client_id`).
+ */
+export type ActorIdentity = {
+    /** user, client */
+    type: string,
+    id: string,
+    realmId?: string | null,
+    realmName?: string | null,
+    clientId?: string | null,
+};
+
+/**
+ * What a service receives instead of a request. The identity defaults to
+ * the full user or client row (server-core); a resource server uses
+ * `ActorContext<ActorIdentity>`.
+ */
+export type ActorContext<TIdentity = Identity> = {
     permissionEvaluator: IPermissionEvaluator;
-    identity?: Identity;
+    identity?: TIdentity;
     /**
      * The actor's own grants, as its request resolved them (for a token, the
      * grants that token carries). A service delegating the actor's grants reads

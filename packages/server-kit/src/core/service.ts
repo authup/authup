@@ -7,8 +7,9 @@
 
 import type { PermissionPolicyBinding } from '@authup/access';
 import { BuiltInPolicyType, evaluateRecordUpdate } from '@authup/access';
+import type { Identity } from '@authup/core-kit';
 import { isObject } from '@authup/kit';
-import type { ActorContext } from './actor/types.ts';
+import type { ActorContext, ActorIdentity } from './actor/types.ts';
 import type { EntityUpdateEvaluationResolvers } from './types.ts';
 
 export abstract class AbstractEntityService {
@@ -16,13 +17,21 @@ export abstract class AbstractEntityService {
      * The actor's grants, or none: an actor whose grants were not resolved can
      * delegate nothing, so a missing resolver denies rather than widens.
      */
-    protected async getActorGrants(actor: ActorContext): Promise<PermissionPolicyBinding[]> {
+    protected async getActorGrants(actor: ActorContext<unknown>): Promise<PermissionPolicyBinding[]> {
         return actor.grants ? actor.grants() : [];
     }
 
-    protected getActorRealmId(actor: ActorContext): string | undefined {
+    /**
+     * The actor's realm id, from the full row (`identity.data`) or from a
+     * narrow {@link ActorIdentity}.
+     */
+    protected getActorRealmId(actor: ActorContext<Identity | ActorIdentity>): string | undefined {
         if (!actor.identity) {
             return undefined;
+        }
+
+        if (!('data' in actor.identity)) {
+            return actor.identity.realmId || undefined;
         }
 
         const { data } = actor.identity;
@@ -51,7 +60,7 @@ export abstract class AbstractEntityService {
      * against.
      */
     protected async evaluateUpdate(
-        actor: ActorContext,
+        actor: ActorContext<unknown>,
         name: string,
         current: Record<string, any>,
         next: Record<string, any>,

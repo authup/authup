@@ -9,11 +9,19 @@ import type { PermissionEvaluationContext } from '@authup/access';
 import { BuiltInPolicyType } from '@authup/access';
 import { describe, expect, it } from 'vitest';
 import { AbstractEntityService } from '../../src/index.ts';
-import type { ActorContext } from '../../src/index.ts';
+import type { ActorContext, ActorIdentity } from '../../src/core/index.ts';
 
 class Service extends AbstractEntityService {
     run(...args: Parameters<AbstractEntityService['evaluateUpdate']>) {
         return this.evaluateUpdate(...args);
+    }
+
+    realmOf(actor: Parameters<AbstractEntityService['getActorRealmId']>[0]) {
+        return this.getActorRealmId(actor);
+    }
+
+    grantsOf(actor: ActorContext<unknown>) {
+        return this.getActorGrants(actor);
     }
 }
 
@@ -61,5 +69,61 @@ describe('AbstractEntityService.evaluateUpdate (#3654)', () => {
 
         await expect(new Service().run(actor, 'client_update', {}, {}, { realm: () => null })).rejects.toThrow('denied');
         expect(calls).toHaveLength(1);
+    });
+});
+
+describe('AbstractEntityService actor helpers', () => {
+    const permissionEvaluator = {} as ActorContext['permissionEvaluator'];
+
+    it('should read the realm of a full identity row', () => {
+        const actor: ActorContext = {
+            permissionEvaluator,
+            identity: { type: 'user', data: { realmId: 'r1' } } as ActorContext['identity'],
+        };
+
+        expect(new Service().realmOf(actor)).toBe('r1');
+    });
+
+    it('should read the realm of a narrow identity', async () => {
+        const identity: ActorIdentity = {
+            type: 'user',
+            id: 'u1',
+            realmId: 'r2',
+            realmName: 'blog',
+            clientId: null,
+        };
+        const actor: ActorContext<ActorIdentity> = {
+            permissionEvaluator,
+            identity,
+            grants: async () => [{ permission: { name: 'post_read' } }],
+        };
+
+        expect(new Service().realmOf(actor)).toBe('r2');
+        expect(new Service().realmOf({
+            permissionEvaluator,
+            identity: {
+                type: 'client', 
+                id: 'c1', 
+                realmId: null, 
+            }, 
+        })).toBeUndefined();
+        expect(new Service().realmOf({ permissionEvaluator })).toBeUndefined();
+        expect(await new Service().grantsOf(actor)).toEqual([{ permission: { name: 'post_read' } }]);
+    });
+
+    it('should evaluate an update for a narrow actor', async () => {
+        const calls: PermissionEvaluationContext[] = [];
+        const actor = {
+            ...createActor(calls),
+            identity: {
+                type: 'user', 
+                id: 'u1', 
+                realmId: 'r1', 
+            },
+        } as ActorContext<ActorIdentity>;
+
+        await new Service().run(actor, 'post_update', {}, {}, { realm: () => false });
+
+        expect(calls).toHaveLength(2);
     });
 });

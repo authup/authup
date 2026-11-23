@@ -53,8 +53,8 @@ export interface IEntityRepository<
 
 /** How `AbstractEntityService.evaluateUpdate` reads each evaluated row. */
 export type EntityUpdateEvaluationResolvers = {
-    /** The record's realm (`null` = global row) for this row. */
-    realm: (row: Record<string, any>) => RecordRealm,
+    /** The record's realm (`null` = global row, `false` = a resource of no realm) for this row. */
+    realm: (row: Record<string, any>) => RecordRealm | false,
 };
 
 /** A junction's owner realm, read from a column of the junction row. */
