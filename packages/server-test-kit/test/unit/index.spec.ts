@@ -99,6 +99,11 @@ describe('actor factories', () => {
         expect(actor.identity).toBeUndefined();
     });
 
+    it('keeps a supplied identity even when it is falsy', () => {
+        expect(createAllowAllActor(0)).toHaveProperty('identity', 0);
+        expect(createDenyAllActor(false)).toHaveProperty('identity', false);
+    });
+
     it('createDenyAllActor sets the evaluator to deny every call', async () => {
         const actor = createDenyAllActor();
 

@@ -15,6 +15,16 @@ export type ReadScopeOptions = {
      */
     names: string[],
     /**
+     * The realm owning the read permission definitions, absent or `null`
+     * for global definitions (#3769). Not the resource's realm: see `realm`.
+     */
+    realmId?: string | null,
+    /**
+     * The client owning the read permission definitions, absent or `null`
+     * for definitions no client owns (#3769).
+     */
+    clientId?: string | null,
+    /**
      * The rows the actor may always read (its own), ORed into the compiled
      * reach and standing alone when the reach denies.
      */

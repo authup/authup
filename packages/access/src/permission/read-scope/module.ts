@@ -55,9 +55,15 @@ export async function scopeReadQuery(
     options: ReadScopeOptions,
 ): Promise<ReadScope> {
     const ownership = options.ownership ?? null;
+    // The definition owner goes to both calls: a pre-gate looking up the
+    // global definition would refuse a grant of an owned one.
+    const owner = {
+        ...(typeof options.realmId !== 'undefined' ? { realmId: options.realmId } : {}),
+        ...(typeof options.clientId !== 'undefined' ? { clientId: options.clientId } : {}),
+    };
 
     try {
-        await evaluator.preEvaluateOneOf({ name: options.names });
+        await evaluator.preEvaluateOneOf({ name: options.names, ...owner });
     } catch (e) {
         if (!ownership || !options.selfService) {
             throw e;
@@ -80,6 +86,7 @@ export async function scopeReadQuery(
 
     const compiled = await evaluator.compile({
         name: options.names,
+        ...owner,
         ...(options.realmAttributeName ? { realmAttributeName: options.realmAttributeName } : {}),
         ...(typeof options.realm !== 'undefined' ? { realm: options.realm } : {}),
     });

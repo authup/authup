@@ -26,7 +26,7 @@ function withIdentity<TIdentity>(
 ): FakeActorContext<TIdentity> {
     return {
         permissionEvaluator: evaluator,
-        ...(identity ? { identity } : {}),
+        ...(typeof identity !== 'undefined' ? { identity } : {}),
     };
 }
 

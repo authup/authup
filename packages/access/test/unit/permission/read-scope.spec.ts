@@ -280,6 +280,56 @@ describe('scopeReadQuery', () => {
         expect(scope.post).toBe(false);
         expect(collect(scope.query.filters)).toEqual([['published', true]]);
     });
+
+    it('scopes by a permission definition a client owns', async () => {
+        const realmId = 'c641912c-21e5-4cb4-84b6-169e2b2bb023';
+        const clientId = '7d3f6a1e-9b2c-4f5d-8e1a-2c3b4d5e6f70';
+
+        const evaluator = await createAuthorizationEvaluator({
+            catalog: {
+                policies: {
+                    binding: { type: 'permissionBinding' },
+                    published: { type: 'attributes', query: { published: { $eq: true } } },
+                },
+                permissions: [{
+                    name: 'post_read',
+                    realmId,
+                    clientId,
+                    decisionStrategy: null,
+                    policies: ['binding'],
+                }],
+            },
+            grants: [{
+                name: 'post_read',
+                realm_id: realmId,
+                client_id: clientId,
+                realm_scope: 'own',
+                policies: ['published'],
+            }],
+            identity: {
+                id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
+                type: 'user',
+                realmId,
+                realmName: 'master',
+                clientId,
+            },
+        });
+
+        const query = new Query({});
+        const scope = await scopeReadQuery(query, evaluator, {
+            names: ['post_read'],
+            realmId,
+            clientId,
+            realm: false,
+        });
+
+        expect(scope.post).toBe(false);
+        expect(collect(scope.query.filters)).toEqual([['published', true]]);
+
+        // without the owner the gate looks up a global definition there is none of
+        await expect(scopeReadQuery(query, evaluator, { names: ['post_read'], realm: false }))
+            .rejects.toThrow();
+    });
 });
 
 describe('narrowReadScope', () => {
