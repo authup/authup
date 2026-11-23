@@ -115,16 +115,16 @@ export class WidenClientSecretAndGlobalUniqueness1788782400000 implements Migrat
 
     public async down(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_auth_policies_global_name"
+            DROP INDEX "IDX_auth_policies_global_name"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_auth_scopes_global_name"
+            DROP INDEX "IDX_auth_scopes_global_name"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_auth_roles_global_name"
+            DROP INDEX "IDX_auth_roles_global_name"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_auth_permissions_global_name"
+            DROP INDEX "IDX_auth_permissions_global_name"
         `);
 
         await queryRunner.query('ALTER TABLE "auth_clients" ALTER COLUMN "secret" TYPE character varying(256)');

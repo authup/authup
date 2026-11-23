@@ -69,9 +69,9 @@ export class Default1783325495597 implements MigrationInterface {
         await queryRunner.query(`
             ALTER TABLE "auth_session_tokens" DROP CONSTRAINT "FK_auth_session_tokens_session_id"
         `);
-        await queryRunner.query('DROP INDEX "public"."IDX_auth_session_tokens_expires_at"');
-        await queryRunner.query('DROP INDEX "public"."IDX_auth_session_tokens_kind"');
-        await queryRunner.query('DROP INDEX "public"."IDX_auth_session_tokens_session_id"');
+        await queryRunner.query('DROP INDEX "IDX_auth_session_tokens_expires_at"');
+        await queryRunner.query('DROP INDEX "IDX_auth_session_tokens_kind"');
+        await queryRunner.query('DROP INDEX "IDX_auth_session_tokens_session_id"');
         await queryRunner.query(`
             DROP TABLE "auth_session_tokens"
         `);

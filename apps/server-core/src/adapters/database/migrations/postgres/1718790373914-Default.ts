@@ -419,13 +419,13 @@ export class Default1718790373914 implements MigrationInterface {
             ALTER TABLE "auth_permissions" DROP CONSTRAINT "UQ_81e4d79be52485b31ea4afeb54b"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_91942a5962da3b91175eeaa2db"
+            DROP INDEX "IDX_91942a5962da3b91175eeaa2db"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_0d8fb586aa4d177206142bd4ed"
+            DROP INDEX "IDX_0d8fb586aa4d177206142bd4ed"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_b1797e07106b4af61280b8edac"
+            DROP INDEX "IDX_b1797e07106b4af61280b8edac"
         `);
         await queryRunner.query(`
             ALTER TABLE "auth_permissions"
@@ -528,28 +528,28 @@ export class Default1718790373914 implements MigrationInterface {
             ADD "power" integer NOT NULL DEFAULT '999'
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_b09663b133807f1207f499d79a"
+            DROP INDEX "IDX_b09663b133807f1207f499d79a"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_864863312111829a4f4ed664c7"
+            DROP INDEX "IDX_864863312111829a4f4ed664c7"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_policy_tree_closure"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_565cc7e3b06db4552002345f75"
+            DROP INDEX "IDX_565cc7e3b06db4552002345f75"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_identity_provider_role_mappings"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_39b28b1e3bcd7a665823f15484"
+            DROP INDEX "IDX_39b28b1e3bcd7a665823f15484"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_identity_provider_permission_mappings"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_13759c902e6d063119f556f621"
+            DROP INDEX "IDX_13759c902e6d063119f556f621"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_identity_provider_attribute_mappings"

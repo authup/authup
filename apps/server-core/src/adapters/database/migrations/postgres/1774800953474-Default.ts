@@ -71,7 +71,7 @@ export class Default1774800953474 implements MigrationInterface {
             ADD "decision_strategy" uuid
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_41ab2228f1cb7778aced673014"
+            DROP INDEX "IDX_41ab2228f1cb7778aced673014"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_permission_policies"

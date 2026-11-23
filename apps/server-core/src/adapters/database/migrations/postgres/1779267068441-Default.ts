@@ -77,7 +77,7 @@ export class Default1779267068441 implements MigrationInterface {
             ALTER TABLE "auth_users" DROP CONSTRAINT "FK_b1797e07106b4af61280b8edac1"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_b1797e07106b4af61280b8edac"
+            DROP INDEX "IDX_b1797e07106b4af61280b8edac"
         `);
         await queryRunner.query(`
             ALTER TABLE "auth_users" DROP COLUMN "client_id"

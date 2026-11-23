@@ -99,7 +99,7 @@ export class SessionUserAndClientColumns1787571998009 implements MigrationInterf
             ALTER TABLE "auth_users" DROP COLUMN "email_verified"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_833c743f7cd787dfc8b70ba400"
+            DROP INDEX "IDX_833c743f7cd787dfc8b70ba400"
         `);
         await queryRunner.query(`
             ALTER TABLE "auth_sessions" DROP COLUMN "secret"

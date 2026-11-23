@@ -62,16 +62,16 @@ export class ClientTokenExchangeCapabilities1794155837154 implements MigrationIn
             ALTER TABLE "auth_client_token_exchange_capabilities" DROP CONSTRAINT "FK_e52e2f2645702c2883a424ec510"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_732198f4f94213e966feb01942"
+            DROP INDEX "IDX_732198f4f94213e966feb01942"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_2ee29e29c920a80a1406d51db4"
+            DROP INDEX "IDX_2ee29e29c920a80a1406d51db4"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_924ea6ec11b619581d09fbe9fe"
+            DROP INDEX "IDX_924ea6ec11b619581d09fbe9fe"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_20aa8806bac68731de5f98e8eb"
+            DROP INDEX "IDX_20aa8806bac68731de5f98e8eb"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_client_token_exchange_capabilities"

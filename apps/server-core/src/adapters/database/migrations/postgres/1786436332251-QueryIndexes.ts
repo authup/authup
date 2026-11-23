@@ -43,7 +43,7 @@ export class QueryIndexes1786436332251 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_ce33c3f58b802bb3c7b2668adc"
+            DROP INDEX "IDX_ce33c3f58b802bb3c7b2668adc"
         `);
         await queryRunner.query(`
             CREATE INDEX "IDX_4a9118b99a30cfd3d0c49c3f4b" ON "auth_realms" ("display_name")
@@ -482,49 +482,49 @@ export class QueryIndexes1786436332251 implements MigrationInterface {
     }
     public async down(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_74d37f543d9f9476b4b232c00b"
+            DROP INDEX "IDX_74d37f543d9f9476b4b232c00b"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_6ff3a9ac44beabcc3a9642f0f9"
+            DROP INDEX "IDX_6ff3a9ac44beabcc3a9642f0f9"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_1ab6178864ca0fd7d23efe6abf"
+            DROP INDEX "IDX_1ab6178864ca0fd7d23efe6abf"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_50bf2034bc55ce71102900f5ae"
+            DROP INDEX "IDX_50bf2034bc55ce71102900f5ae"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_61132a880199e367d87d4f51b5"
+            DROP INDEX "IDX_61132a880199e367d87d4f51b5"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_b532f2eeaa9eb2b5c3ac65459b"
+            DROP INDEX "IDX_b532f2eeaa9eb2b5c3ac65459b"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_dd5af3e4a6f6157685f64d2c80"
+            DROP INDEX "IDX_dd5af3e4a6f6157685f64d2c80"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_6f92ed4d9d7499b1dff735133c"
+            DROP INDEX "IDX_6f92ed4d9d7499b1dff735133c"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_5b1ba660790692f625c7a777d3"
+            DROP INDEX "IDX_5b1ba660790692f625c7a777d3"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_f2835b7434c506b81e48a48229"
+            DROP INDEX "IDX_f2835b7434c506b81e48a48229"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_5015816deff1b14e7d669ed7cb"
+            DROP INDEX "IDX_5015816deff1b14e7d669ed7cb"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_9c08d15bfcf413aad26ee3eda8"
+            DROP INDEX "IDX_9c08d15bfcf413aad26ee3eda8"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_9c861f8e8ea9fe35507b57fb88"
+            DROP INDEX "IDX_9c861f8e8ea9fe35507b57fb88"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_b2003e5ab8c075dc0a11f33bca"
+            DROP INDEX "IDX_b2003e5ab8c075dc0a11f33bca"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_f8538b58d9fe496e4c7bc6c565"
+            DROP INDEX "IDX_f8538b58d9fe496e4c7bc6c565"
         `);
         // Hand-authored: recreate the dropped legacy tables exactly as the
         // pre-existing chain leaves them (constraint and index names
@@ -618,376 +618,376 @@ export class QueryIndexes1786436332251 implements MigrationInterface {
             ADD CONSTRAINT "FK_f32f792ca1aeacea0507ef80a11" FOREIGN KEY ("role_id") REFERENCES "auth_roles" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_92ba9504d7698a5a3de297ac76"
+            DROP INDEX "IDX_92ba9504d7698a5a3de297ac76"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_e0588e81b8ff3c640311b7ee39"
+            DROP INDEX "IDX_e0588e81b8ff3c640311b7ee39"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_6161ccebf3af1c475758651de4"
+            DROP INDEX "IDX_6161ccebf3af1c475758651de4"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_a3a59104c9c9f2a2458972bc96"
+            DROP INDEX "IDX_a3a59104c9c9f2a2458972bc96"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_77fe9d38c984c640fc155503c4"
+            DROP INDEX "IDX_77fe9d38c984c640fc155503c4"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_e2de70574303693fea386cc0ed"
+            DROP INDEX "IDX_e2de70574303693fea386cc0ed"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_5bf6d1affe0575299c44bc58c0"
+            DROP INDEX "IDX_5bf6d1affe0575299c44bc58c0"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_c1d4523b08aa27f07dff798f8d"
+            DROP INDEX "IDX_c1d4523b08aa27f07dff798f8d"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_f15efcb7151cdd0d54ebafdd7f"
+            DROP INDEX "IDX_f15efcb7151cdd0d54ebafdd7f"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_bc15924b6889713da243e883ca"
+            DROP INDEX "IDX_bc15924b6889713da243e883ca"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_0a3a42400243fe3f9d969203a8"
+            DROP INDEX "IDX_0a3a42400243fe3f9d969203a8"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_db13de293f01ac8ab7bc0342c4"
+            DROP INDEX "IDX_db13de293f01ac8ab7bc0342c4"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_eb9bd783394e3aedd35f855104"
+            DROP INDEX "IDX_eb9bd783394e3aedd35f855104"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_fc331813cdc3b9c47a83c3be95"
+            DROP INDEX "IDX_fc331813cdc3b9c47a83c3be95"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_7d3f50dac76afdc4f5a548eaf3"
+            DROP INDEX "IDX_7d3f50dac76afdc4f5a548eaf3"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_c5ad558296a77525b1f52919bf"
+            DROP INDEX "IDX_c5ad558296a77525b1f52919bf"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_f9ab8919ff5d5993816f688187"
+            DROP INDEX "IDX_f9ab8919ff5d5993816f688187"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_3d29528c774bc47404659fad03"
+            DROP INDEX "IDX_3d29528c774bc47404659fad03"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_3a6789765734cf5f3f555f2098"
+            DROP INDEX "IDX_3a6789765734cf5f3f555f2098"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_cfa1834ece97297955f4a9539a"
+            DROP INDEX "IDX_cfa1834ece97297955f4a9539a"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_d1c82cf7a5659d0e6fce7aa481"
+            DROP INDEX "IDX_d1c82cf7a5659d0e6fce7aa481"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_6b28c396d6f0c13165ae2d9abe"
+            DROP INDEX "IDX_6b28c396d6f0c13165ae2d9abe"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_a76f5f6a12317ea0e24a84c1a5"
+            DROP INDEX "IDX_a76f5f6a12317ea0e24a84c1a5"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_f5225aa8083c99b1cd09f4390c"
+            DROP INDEX "IDX_f5225aa8083c99b1cd09f4390c"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_babb340dda101f2df8334eea5c"
+            DROP INDEX "IDX_babb340dda101f2df8334eea5c"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_85164349cdb62316ec19b88470"
+            DROP INDEX "IDX_85164349cdb62316ec19b88470"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_b4a3f78a50e369bfd2d1aa2445"
+            DROP INDEX "IDX_b4a3f78a50e369bfd2d1aa2445"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_16381ac607f6f4e37415a4879f"
+            DROP INDEX "IDX_16381ac607f6f4e37415a4879f"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_a788087fab74ba22302cc128eb"
+            DROP INDEX "IDX_a788087fab74ba22302cc128eb"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_35eec422fb312f3d2d5d104da3"
+            DROP INDEX "IDX_35eec422fb312f3d2d5d104da3"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_9de8962dead711a91eb52badef"
+            DROP INDEX "IDX_9de8962dead711a91eb52badef"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_8d823bc0f1c9fae725fe3c6c9e"
+            DROP INDEX "IDX_8d823bc0f1c9fae725fe3c6c9e"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_883cfabf7d5f7466a27625843d"
+            DROP INDEX "IDX_883cfabf7d5f7466a27625843d"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_f8dfd31c9dc51e1fb8409c83d0"
+            DROP INDEX "IDX_f8dfd31c9dc51e1fb8409c83d0"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_0c61ae237f6a87d65feed8bc45"
+            DROP INDEX "IDX_0c61ae237f6a87d65feed8bc45"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_0c89b2c523eee535a9a18422fd"
+            DROP INDEX "IDX_0c89b2c523eee535a9a18422fd"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_d84c31eb147bde680370f00ea5"
+            DROP INDEX "IDX_d84c31eb147bde680370f00ea5"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_e84cd23669ae68b3bfd44ef986"
+            DROP INDEX "IDX_e84cd23669ae68b3bfd44ef986"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_f2ea716aa0c8bd034b6f28e9eb"
+            DROP INDEX "IDX_f2ea716aa0c8bd034b6f28e9eb"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_acce12b53121e9eb413f32c719"
+            DROP INDEX "IDX_acce12b53121e9eb413f32c719"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_f59883e2400b294414a495002a"
+            DROP INDEX "IDX_f59883e2400b294414a495002a"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_58a45697736646499b3dc7f0d0"
+            DROP INDEX "IDX_58a45697736646499b3dc7f0d0"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_ccf3fd36253755bd9a5f43c516"
+            DROP INDEX "IDX_ccf3fd36253755bd9a5f43c516"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_209348829a22e0fb2715e937e4"
+            DROP INDEX "IDX_209348829a22e0fb2715e937e4"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_c9432656798d6116dd47a896e4"
+            DROP INDEX "IDX_c9432656798d6116dd47a896e4"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_b07582d2705a04c2e868e6c374"
+            DROP INDEX "IDX_b07582d2705a04c2e868e6c374"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_430b7434c1f881ab776562e508"
+            DROP INDEX "IDX_430b7434c1f881ab776562e508"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_9630da9b4e6c478189cc6062c5"
+            DROP INDEX "IDX_9630da9b4e6c478189cc6062c5"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_60411456c45c831be656fbf850"
+            DROP INDEX "IDX_60411456c45c831be656fbf850"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_5ac40c5ce92142639df65a33e5"
+            DROP INDEX "IDX_5ac40c5ce92142639df65a33e5"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_246ce67900aa852582dae0a7d8"
+            DROP INDEX "IDX_246ce67900aa852582dae0a7d8"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_6584e5587d2075fb11a8953bdc"
+            DROP INDEX "IDX_6584e5587d2075fb11a8953bdc"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_213e1f3bdff969667e71206e9f"
+            DROP INDEX "IDX_213e1f3bdff969667e71206e9f"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_bac15f2c6806624e4f7223e5ed"
+            DROP INDEX "IDX_bac15f2c6806624e4f7223e5ed"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_37d01a405dc14c63738f1481b4"
+            DROP INDEX "IDX_37d01a405dc14c63738f1481b4"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_71c9adc2c466c149650c6c56e8"
+            DROP INDEX "IDX_71c9adc2c466c149650c6c56e8"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_50f3b5dc6ae4eb17e736ca0a7d"
+            DROP INDEX "IDX_50f3b5dc6ae4eb17e736ca0a7d"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_9486a670458a7377d1bd8f6245"
+            DROP INDEX "IDX_9486a670458a7377d1bd8f6245"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_6cff5665a42c31ebd8cdcfaad8"
+            DROP INDEX "IDX_6cff5665a42c31ebd8cdcfaad8"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_eb128508302d046ee176ef89fd"
+            DROP INDEX "IDX_eb128508302d046ee176ef89fd"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_31d8afae3f42a07450dc54c2cb"
+            DROP INDEX "IDX_31d8afae3f42a07450dc54c2cb"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_88c5c368c6216d7d1f0eb26a97"
+            DROP INDEX "IDX_88c5c368c6216d7d1f0eb26a97"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_81f39f6e4a90fc8b861cf12dbf"
+            DROP INDEX "IDX_81f39f6e4a90fc8b861cf12dbf"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_471f3da9df80f92c382a586e9c"
+            DROP INDEX "IDX_471f3da9df80f92c382a586e9c"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_410780c372c6b400e9c6cba743"
+            DROP INDEX "IDX_410780c372c6b400e9c6cba743"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_800cdb9ca2821bc6a81b1eff34"
+            DROP INDEX "IDX_800cdb9ca2821bc6a81b1eff34"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_c6dc9d6f6199967609c555ca07"
+            DROP INDEX "IDX_c6dc9d6f6199967609c555ca07"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_a4d3545ecd5c7507c326f6ce0c"
+            DROP INDEX "IDX_a4d3545ecd5c7507c326f6ce0c"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_e41ae7308e97ec75440f973cd8"
+            DROP INDEX "IDX_e41ae7308e97ec75440f973cd8"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_7a11a6fbab29ec59fc185d4f9e"
+            DROP INDEX "IDX_7a11a6fbab29ec59fc185d4f9e"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_ccc15bd289a1ee0ba1ff9f061a"
+            DROP INDEX "IDX_ccc15bd289a1ee0ba1ff9f061a"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_0d08f64ff34cb0d19deff4b1fc"
+            DROP INDEX "IDX_0d08f64ff34cb0d19deff4b1fc"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_feb56f67d0c919e7626f1df836"
+            DROP INDEX "IDX_feb56f67d0c919e7626f1df836"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_b27b823c96287617e5bdf008ea"
+            DROP INDEX "IDX_b27b823c96287617e5bdf008ea"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_d677e1082c27aae4ede40db0e9"
+            DROP INDEX "IDX_d677e1082c27aae4ede40db0e9"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_5690205a3d8b0ab370f18c0e4f"
+            DROP INDEX "IDX_5690205a3d8b0ab370f18c0e4f"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_e97033638618a50676a1637ad6"
+            DROP INDEX "IDX_e97033638618a50676a1637ad6"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_798534b4e296f68e1bc658fbe3"
+            DROP INDEX "IDX_798534b4e296f68e1bc658fbe3"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_0979aabd6e00c278eb9ac1e0ca"
+            DROP INDEX "IDX_0979aabd6e00c278eb9ac1e0ca"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_8a110d4e8e1f9be98cc8d41c1c"
+            DROP INDEX "IDX_8a110d4e8e1f9be98cc8d41c1c"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_ff4c8615288f1f8ebbeeed7f85"
+            DROP INDEX "IDX_ff4c8615288f1f8ebbeeed7f85"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_3a3a792dbd6d343c0dabe9900a"
+            DROP INDEX "IDX_3a3a792dbd6d343c0dabe9900a"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_f88e0dfb5f8c30fc66fef320f6"
+            DROP INDEX "IDX_f88e0dfb5f8c30fc66fef320f6"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_dbcfb3a6d68ad40775ff55b0fd"
+            DROP INDEX "IDX_dbcfb3a6d68ad40775ff55b0fd"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_76b7c51aeeeff6d695c0b8e17f"
+            DROP INDEX "IDX_76b7c51aeeeff6d695c0b8e17f"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_b4ec5361a8a3f49267ccef575c"
+            DROP INDEX "IDX_b4ec5361a8a3f49267ccef575c"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_cd014be6be330f64b8405d0c72"
+            DROP INDEX "IDX_cd014be6be330f64b8405d0c72"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_2ba00548c512fffe2e5bf4bb3f"
+            DROP INDEX "IDX_2ba00548c512fffe2e5bf4bb3f"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_414d5037e0b67b5dc3643ac8b8"
+            DROP INDEX "IDX_414d5037e0b67b5dc3643ac8b8"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_9c66869156cbedfc95533f0df1"
+            DROP INDEX "IDX_9c66869156cbedfc95533f0df1"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_a7a399f06c259755d1b27b01ab"
+            DROP INDEX "IDX_a7a399f06c259755d1b27b01ab"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_5d1a390d8b26eb227c3d2a8ca5"
+            DROP INDEX "IDX_5d1a390d8b26eb227c3d2a8ca5"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_5fc18a2304a0cd7129cb8736ed"
+            DROP INDEX "IDX_5fc18a2304a0cd7129cb8736ed"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_0a1114947c976bbe430d24b2c9"
+            DROP INDEX "IDX_0a1114947c976bbe430d24b2c9"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_81ce3477ef39f7b5e0e009e81c"
+            DROP INDEX "IDX_81ce3477ef39f7b5e0e009e81c"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_2cf41b241977b633ee7df5c8ae"
+            DROP INDEX "IDX_2cf41b241977b633ee7df5c8ae"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_5a40fe23cbb002e73bf740715f"
+            DROP INDEX "IDX_5a40fe23cbb002e73bf740715f"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_50ccaa6440288a06f0ba693ccc"
+            DROP INDEX "IDX_50ccaa6440288a06f0ba693ccc"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_4b428fb760524b6ef45e7c2cbf"
+            DROP INDEX "IDX_4b428fb760524b6ef45e7c2cbf"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_60c2b21c37d79572f92da3476d"
+            DROP INDEX "IDX_60c2b21c37d79572f92da3476d"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_46ab036699db960a12d34aad2b"
+            DROP INDEX "IDX_46ab036699db960a12d34aad2b"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_b1d224a5ac76b109101ce07231"
+            DROP INDEX "IDX_b1d224a5ac76b109101ce07231"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_a4a11809dcf8cdd5fcceec774e"
+            DROP INDEX "IDX_a4a11809dcf8cdd5fcceec774e"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_0d93685dd655ce6ee7c8255503"
+            DROP INDEX "IDX_0d93685dd655ce6ee7c8255503"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_fa1bbd036543e4c4fda32b7ca6"
+            DROP INDEX "IDX_fa1bbd036543e4c4fda32b7ca6"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_f50fe4004312e972a547c0e945"
+            DROP INDEX "IDX_f50fe4004312e972a547c0e945"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_9a84db5a27d34b31644b54d910"
+            DROP INDEX "IDX_9a84db5a27d34b31644b54d910"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_55c4ee639cdf45eb2453ee4fc7"
+            DROP INDEX "IDX_55c4ee639cdf45eb2453ee4fc7"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_6597f3e492f4f8f3cc40772575"
+            DROP INDEX "IDX_6597f3e492f4f8f3cc40772575"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_4f168a45a40758502e4833bb85"
+            DROP INDEX "IDX_4f168a45a40758502e4833bb85"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_b628ffa1b2f5415598cfb1a72a"
+            DROP INDEX "IDX_b628ffa1b2f5415598cfb1a72a"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_01ff3aa3d7f3ea41711fa3abd5"
+            DROP INDEX "IDX_01ff3aa3d7f3ea41711fa3abd5"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_e9d2f1997f5bb2e3b25edc3ab6"
+            DROP INDEX "IDX_e9d2f1997f5bb2e3b25edc3ab6"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_7e7bca0ba30295b43b02a69051"
+            DROP INDEX "IDX_7e7bca0ba30295b43b02a69051"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_8b759199b8a0213a7a0f7b1986"
+            DROP INDEX "IDX_8b759199b8a0213a7a0f7b1986"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_f4cdbb6a56eb93fa2598c8483d"
+            DROP INDEX "IDX_f4cdbb6a56eb93fa2598c8483d"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_3f5906dabc9f129555d823408c"
+            DROP INDEX "IDX_3f5906dabc9f129555d823408c"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_3bdf0256c69127d59bfd92a313"
+            DROP INDEX "IDX_3bdf0256c69127d59bfd92a313"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_14b3b3b9c0a1b3a1d2abecb6e7"
+            DROP INDEX "IDX_14b3b3b9c0a1b3a1d2abecb6e7"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_7cdad1f4b4773508db1c7907e3"
+            DROP INDEX "IDX_7cdad1f4b4773508db1c7907e3"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_98610803836c2be19b55bc016b"
+            DROP INDEX "IDX_98610803836c2be19b55bc016b"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_711b1c0c94c1f50b72ee0bc5b2"
+            DROP INDEX "IDX_711b1c0c94c1f50b72ee0bc5b2"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_75e631fcfae706212f5bd67a93"
+            DROP INDEX "IDX_75e631fcfae706212f5bd67a93"
         `);
         await queryRunner.query(`
-            DROP INDEX "public"."IDX_4a9118b99a30cfd3d0c49c3f4b"
+            DROP INDEX "IDX_4a9118b99a30cfd3d0c49c3f4b"
         `);
         await queryRunner.query(`
             CREATE INDEX "IDX_ce33c3f58b802bb3c7b2668adc" ON "auth_events" USING btree ("actor_name")

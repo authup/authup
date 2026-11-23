@@ -258,7 +258,7 @@ export class Default1783769340000 implements MigrationInterface {
         await queryRunner.query(`
             ALTER TABLE "auth_trust_anchors" DROP CONSTRAINT "FK_auth_trust_anchors_realm_id"
         `);
-        await queryRunner.query('DROP INDEX "public"."IDX_auth_trust_anchors_realm_id"');
+        await queryRunner.query('DROP INDEX "IDX_auth_trust_anchors_realm_id"');
         await queryRunner.query(`
             DROP TABLE "auth_trust_anchors"
         `);
@@ -298,10 +298,10 @@ export class Default1783769340000 implements MigrationInterface {
         await queryRunner.query(`
             ALTER TABLE "auth_consents" DROP CONSTRAINT "FK_auth_consents_client_id"
         `);
-        await queryRunner.query('DROP INDEX "public"."IDX_auth_consents_user_id"');
-        await queryRunner.query('DROP INDEX "public"."IDX_auth_consents_realm_id"');
-        await queryRunner.query('DROP INDEX "public"."IDX_auth_consents_client_id"');
-        await queryRunner.query('DROP INDEX "public"."IDX_auth_consents_sub"');
+        await queryRunner.query('DROP INDEX "IDX_auth_consents_user_id"');
+        await queryRunner.query('DROP INDEX "IDX_auth_consents_realm_id"');
+        await queryRunner.query('DROP INDEX "IDX_auth_consents_client_id"');
+        await queryRunner.query('DROP INDEX "IDX_auth_consents_sub"');
         await queryRunner.query(`
             DROP TABLE "auth_consents"
         `);
@@ -327,23 +327,23 @@ export class Default1783769340000 implements MigrationInterface {
         await queryRunner.query(`
             ALTER TABLE "auth_user_authenticators" DROP CONSTRAINT "FK_auth_user_authenticators_user_id"
         `);
-        await queryRunner.query('DROP INDEX "public"."IDX_auth_user_authenticators_user_id"');
-        await queryRunner.query('DROP INDEX "public"."IDX_auth_user_authenticators_kind"');
+        await queryRunner.query('DROP INDEX "IDX_auth_user_authenticators_user_id"');
+        await queryRunner.query('DROP INDEX "IDX_auth_user_authenticators_kind"');
         await queryRunner.query(`
             DROP TABLE "auth_user_authenticators"
         `);
 
         // security event log (plan 057)
-        await queryRunner.query('DROP INDEX "public"."IDX_auth_events_created_at"');
-        await queryRunner.query('DROP INDEX "public"."IDX_auth_events_expires_at"');
-        await queryRunner.query('DROP INDEX "public"."IDX_auth_events_expiring"');
-        await queryRunner.query('DROP INDEX "public"."IDX_auth_events_realm_id"');
-        await queryRunner.query('DROP INDEX "public"."IDX_auth_events_request_ip_address"');
-        await queryRunner.query('DROP INDEX "public"."IDX_auth_events_actor_name"');
-        await queryRunner.query('DROP INDEX "public"."IDX_auth_events_actor_id"');
-        await queryRunner.query('DROP INDEX "public"."IDX_auth_events_client_id"');
-        await queryRunner.query('DROP INDEX "public"."IDX_auth_events_ref_type_ref_id"');
-        await queryRunner.query('DROP INDEX "public"."IDX_auth_events_name_scope"');
+        await queryRunner.query('DROP INDEX "IDX_auth_events_created_at"');
+        await queryRunner.query('DROP INDEX "IDX_auth_events_expires_at"');
+        await queryRunner.query('DROP INDEX "IDX_auth_events_expiring"');
+        await queryRunner.query('DROP INDEX "IDX_auth_events_realm_id"');
+        await queryRunner.query('DROP INDEX "IDX_auth_events_request_ip_address"');
+        await queryRunner.query('DROP INDEX "IDX_auth_events_actor_name"');
+        await queryRunner.query('DROP INDEX "IDX_auth_events_actor_id"');
+        await queryRunner.query('DROP INDEX "IDX_auth_events_client_id"');
+        await queryRunner.query('DROP INDEX "IDX_auth_events_ref_type_ref_id"');
+        await queryRunner.query('DROP INDEX "IDX_auth_events_name_scope"');
         await queryRunner.query('DROP TABLE "auth_events"');
     }
 }
