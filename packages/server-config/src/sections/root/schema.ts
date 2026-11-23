@@ -44,7 +44,7 @@ const serviceType = z.string()
 export const ROOT_SCHEMA = defineSchema<RootConfig, 'publicUrl' | 'internalUrl' | 'db', EnvironmentVariable>({
     env: {
         type: z.string(),
-        default: () => read('NODE_ENV', EnvironmentName.DEVELOPMENT),
+        default: () => read('NODE_ENV', { default: EnvironmentName.DEVELOPMENT }),
         description: 'Application environment, e.g. production or development.',
         path: 'env',
         env: EnvironmentVariable.NODE_ENV,
