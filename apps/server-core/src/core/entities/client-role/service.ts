@@ -164,6 +164,7 @@ export class ClientRoleService extends JunctionEntityService implements IClientR
                     type: 'role',
                     id: validated.roleId,
                 }),
+                { realmId: this.getActorRealmId(actor) },
             );
 
             if (!hasPermissions) {

@@ -52,15 +52,29 @@ export type IdentityToken = Pick<OAuth2TokenPayload, 'sub' | 'sub_kind' | 'clien
 
 export type IdentityPermissionSubject = Pick<IdentityPolicyData, 'type' | 'id'>;
 
+/**
+ * The actor a superset check runs for, beside its grants: its realm decides
+ * what an `own` reach covers.
+ */
+export type SupersetActor = {
+    realmId: string | null | undefined;
+};
+
 export interface IIdentityPermissionProvider {
     getFor(identity: IdentityPermissionSubject): Promise<PermissionPolicyBinding[]>;
     getForToken(token: IdentityToken): Promise<PermissionPolicyBinding[]>;
     /**
      * Whether `parent` covers every grant in `child`. A caller passes the
      * actor's own grants as its request resolved them, so an assignment is
-     * checked against exactly what the actor's gates evaluated.
+     * checked against exactly what the actor's gates evaluated. A realm- or
+     * client-owned permission is also covered when `parent` holds the
+     * permission-management permission policy-free over its realm (#3855).
      */
-    isSuperset(parent: PermissionPolicyBinding[], child: PermissionPolicyBinding[]): Promise<boolean>;
+    isSuperset(
+        parent: PermissionPolicyBinding[],
+        child: PermissionPolicyBinding[],
+        actor: SupersetActor,
+    ): Promise<boolean>;
     resolveJunctionGrant(bindings: PermissionPolicyBinding[], options: ResolveJunctionPolicyOptions): Promise<ResolveJunctionGrantResult>;
 }
 

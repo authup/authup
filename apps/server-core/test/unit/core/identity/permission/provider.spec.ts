@@ -7,6 +7,7 @@
 
 import type { IdentityPolicyData, PermissionPolicyBinding } from '@authup/access';
 import { BuiltInPolicyType, RealmScope } from '@authup/access';
+import { PermissionName } from '@authup/core-kit';
 import {
     describe,
     expect,
@@ -36,10 +37,11 @@ function createProvider(bindingsById: Record<string, PermissionPolicyBinding[]>)
     });
 }
 
-async function isRoleSuperset(provider: IdentityPermissionProvider) {
+async function isRoleSuperset(provider: IdentityPermissionProvider, realmId?: string | null) {
     return provider.isSuperset(
         await provider.getFor({ type: 'role', id: 'parent' }),
         await provider.getFor({ type: 'role', id: 'child' }),
+        { realmId: realmId ?? null },
     );
 }
 
@@ -187,6 +189,124 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             const result = await isRoleSuperset(provider);
 
             expect(result).toBe(true);
+        });
+    });
+
+    // #3855: an actor managing the permission definitions of a realm may hand out
+    // that realm's own (realm- or client-owned) permissions through a role.
+    describe('isSuperset over realm- and client-owned permissions (#3855)', () => {
+        const realmA = 'realm-a';
+        const realmB = 'realm-b';
+        const manager = (realmScope: `${RealmScope}`, policies?: PermissionPolicyBinding['policies']) : PermissionPolicyBinding => ({
+            permission: {
+                name: PermissionName.PERMISSION_UPDATE,
+                realmId: null,
+                clientId: null,
+            },
+            realmScope,
+            ...(policies ? { policies } : {}),
+        });
+        const ownedBy = (realmId: string) : PermissionPolicyBinding[] => [
+            {
+                permission: {
+                    name: 'p1', 
+                    realmId, 
+                    clientId: null, 
+                }, 
+            },
+            {
+                permission: {
+                    name: 'p2', 
+                    realmId, 
+                    clientId: 'client-1', 
+                },
+                realmScope: RealmScope.ANY,
+            },
+        ];
+
+        it('lets an actor managing every realm assign a role over realm- and client-owned permissions', async () => {
+            const provider = createProvider({
+                parent: [manager(RealmScope.ANY)],
+                child: ownedBy(realmB),
+            });
+
+            await expect(isRoleSuperset(provider, realmA)).resolves.toBe(true);
+        });
+
+        it('lets an actor managing its own realm assign a role over that realm\'s permissions', async () => {
+            const provider = createProvider({
+                parent: [manager(RealmScope.OWN)],
+                child: ownedBy(realmA),
+            });
+
+            await expect(isRoleSuperset(provider, realmA)).resolves.toBe(true);
+        });
+
+        it('refuses an actor managing its own realm a role over another realm\'s permissions', async () => {
+            const provider = createProvider({
+                parent: [manager(RealmScope.OWN)],
+                child: ownedBy(realmB),
+            });
+
+            await expect(isRoleSuperset(provider, realmA)).resolves.toBe(false);
+        });
+
+        it('refuses an actor managing its own realm when its realm is not named', async () => {
+            const provider = createProvider({
+                parent: [manager(RealmScope.OWN)],
+                child: ownedBy(realmA),
+            });
+
+            await expect(isRoleSuperset(provider, null)).resolves.toBe(false);
+        });
+
+        it('refuses an actor managing permissions only under a policy', async () => {
+            const provider = createProvider({
+                parent: [manager(RealmScope.ANY, [policy])],
+                child: ownedBy(realmA),
+            });
+
+            await expect(isRoleSuperset(provider, realmA)).resolves.toBe(false);
+        });
+
+        it('refuses an actor that does not manage permissions', async () => {
+            const provider = createProvider({
+                parent: [{ permission: { name: PermissionName.USER_ROLE_CREATE }, realmScope: RealmScope.ANY }],
+                child: ownedBy(realmA),
+            });
+
+            await expect(isRoleSuperset(provider, realmA)).resolves.toBe(false);
+        });
+
+        it('does not count a realm-owned permission named like the management permission', async () => {
+            const provider = createProvider({
+                parent: [{
+                    permission: {
+                        name: PermissionName.PERMISSION_UPDATE,
+                        realmId: realmA,
+                        clientId: null,
+                    },
+                    realmScope: RealmScope.ANY,
+                }],
+                child: ownedBy(realmA),
+            });
+
+            await expect(isRoleSuperset(provider, realmA)).resolves.toBe(false);
+        });
+
+        it('keeps strict dominance for a global permission', async () => {
+            const provider = createProvider({
+                parent: [manager(RealmScope.ANY)],
+                child: [{
+                    permission: {
+                        name: 'user_read', 
+                        realmId: null, 
+                        clientId: null, 
+                    }, 
+                }],
+            });
+
+            await expect(isRoleSuperset(provider, realmA)).resolves.toBe(false);
         });
     });
 
@@ -478,13 +598,13 @@ describe('core/identity/permission — the grants a token carries (#3597)', () =
             sub: 'u',
             sub_kind: 'user',
             client_id: X,
-        }), await provider.getFor(child)))
+        }), await provider.getFor(child), { realmId: null }))
             .resolves.toBe(false);
         await expect(provider.isSuperset(await provider.getForToken({
             sub: 'u',
             sub_kind: 'user',
             client_id: Z,
-        }), await provider.getFor(child)))
+        }), await provider.getFor(child), { realmId: null }))
             .resolves.toBe(true);
     });
 });

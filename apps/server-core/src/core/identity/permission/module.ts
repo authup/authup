@@ -16,9 +16,10 @@ import {
     grantDominates,
     isPermissionPolicyBindingEqual,
     minRealmScope,
+    realmScopeMatches,
 } from '@authup/access';
 import type { Policy, Role } from '@authup/core-kit';
-import { isPolicy } from '@authup/core-kit';
+import { PermissionName, isPolicy } from '@authup/core-kit';
 import type { IClientRepository } from '../../entities/client/types.ts';
 import type { IRoleRepository } from '../../entities/role/types.ts';
 import type { IUserRepository } from '../../entities/user/types.ts';
@@ -30,6 +31,7 @@ import type {
     IdentityToken,
     ResolveJunctionGrantResult,
     ResolveJunctionPolicyOptions,
+    SupersetActor,
 } from './types.ts';
 
 export class IdentityPermissionProvider implements IIdentityPermissionProvider {
@@ -48,11 +50,37 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         this.roleProvider = ctx.roleProvider;
     }
 
-    async isSuperset(parent: PermissionPolicyBinding[], child: PermissionPolicyBinding[]) : Promise<boolean> {
+    async isSuperset(
+        parent: PermissionPolicyBinding[],
+        child: PermissionPolicyBinding[],
+        actor: SupersetActor,
+    ) : Promise<boolean> {
         const parentAggregated = aggregatePermissionPolicyBindings(parent);
         const childAggregated = aggregatePermissionPolicyBindings(child);
 
+        // The unrestricted grants of the global permission-management permission:
+        // whoever holds one over a realm defines that realm's own permissions, so a
+        // role carrying them is covered (#3855). Global permissions stay strict.
+        const managerReach = parentAggregated
+            .filter((item) => item.permission.name === PermissionName.PERMISSION_UPDATE &&
+                !item.permission.realmId &&
+                !item.permission.clientId)
+            .flatMap((item) => item.grants)
+            .filter((grant) => !grant.policy)
+            .map((grant) => grant.realmScope);
+
         for (const childItem of childAggregated) {
+            const owned = !!childItem.permission.realmId || !!childItem.permission.clientId;
+            const managed = owned && managerReach.some((realmScope) => realmScopeMatches(
+                realmScope,
+                childItem.permission.realmId ?? null,
+                actor.realmId,
+            ));
+
+            if (managed) {
+                continue;
+            }
+
             const parentItem = parentAggregated.find(
                 (p) => isPermissionPolicyBindingEqual(p, childItem),
             );

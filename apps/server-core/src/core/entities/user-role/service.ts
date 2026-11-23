@@ -164,6 +164,7 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
                     type: 'role',
                     id: validated.roleId,
                 }),
+                { realmId: this.getActorRealmId(actor) },
             );
 
             if (!hasPermissions) {

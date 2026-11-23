@@ -398,7 +398,12 @@ Role assignment (user-role, client-role, identity-provider-role-mapping) calls
 (`getActorGrants`, token-narrowed) as `parent` and the role's full grants
 (`getFor({ type: 'role', id })`, unfiltered by client ownership, #3607) as `child`.
 Disjunction- and policy-aware (#3158): every child grant must be dominated by some actor
-grant.
+grant. Exception (#3855): a child grant on a realm- or client-owned permission is covered
+when the actor holds the global `permission_update` policy-free at a reach covering that
+permission's realm (`realmScopeMatches` against the actor realm the caller passes as
+`isSuperset`'s third argument). Holding it, the actor defines that permission (its policies,
+so who passes it); without the exception a provisioned realm permission, which no admin role
+holds, could not be delegated at all. Global permissions keep strict dominance.
 
 `grantDominates(parent, child)` (`packages/access/src/permission/helpers/grant.ts`):
 
