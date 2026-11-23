@@ -16,7 +16,9 @@ import {
     it,
     vi,
 } from 'vitest';
+import { CacheError } from '@rapiq/cache';
 import {
+    CACHE_ERROR_TAGS_MAX,
     CacheInjectionKey,
     CacheModule,
     TAGGED_CACHE_CONNECT_TIMEOUT,
@@ -24,8 +26,10 @@ import {
     TaggedCacheInjectionKey,
     createTaggedCache,
     createTaggedCacheClient,
+    describeCacheError,
     throttle,
 } from '../../../../../src/app/modules/cache/index.ts';
+import { describeError } from '../../../../../src/utils/index.ts';
 import type { TaggedCacheClientCreateInput } from '../../../../../src/app/modules/cache/index.ts';
 import { ConfigInjectionKey } from '../../../../../src/app/modules/config/index.ts';
 import { normalizeConfig } from '../../../../../src/app/modules/config/read.ts';
@@ -212,6 +216,43 @@ describe('app/modules/cache/tagged', () => {
 
         expect(lines).toHaveLength(1);
         expect(lines[0]).toMatch(/^The tagged cache failed/);
+    });
+
+    it('describeCacheError names the tags of a lost invalidation, bounded', () => {
+        const tags = Array.from({ length: CACHE_ERROR_TAGS_MAX + 3 }, (_, i) => `t${i}`);
+        const output = describeCacheError(
+            CacheError.invalidationFailed(tags, new Error('unreachable')),
+            'The cache invalidation failed.',
+        );
+        const kept = tags.slice(0, CACHE_ERROR_TAGS_MAX).join(', ');
+
+        expect(output).toMatch(/^The cache invalidation failed\./);
+        expect(output).toContain(`  tags:            ${kept} (+3 more)`);
+        expect(output).toMatch(/cause: +.*unreachable/);
+    });
+
+    it('describeCacheError lists every tag up to the bound', () => {
+        const output = describeCacheError(CacheError.invalidationsOverflowed(['a', 'b']));
+
+        expect(output).toContain('  tags:            a, b\n');
+        expect(output).not.toContain('more)');
+    });
+
+    it('describeCacheError masks the value of a column tag', () => {
+        const output = describeCacheError(CacheError.invalidationsOverflowed([
+            'user',
+            'user:email=jane@example.com',
+        ]));
+
+        expect(output).toContain('  tags:            user, user:email=...\n');
+        expect(output).not.toContain('jane@example.com');
+    });
+
+    it('describeCacheError renders an error without tags like describeError', () => {
+        const error = new Error('boom');
+
+        expect(describeCacheError(error, 'x')).toEqual(describeError(error, 'x'));
+        expect(describeCacheError(new CacheError('plain'))).not.toContain('tags:');
     });
 
     it('throttle calls once per window and again after it', () => {

@@ -239,7 +239,13 @@ describe('app/modules/database/cache after a lost invalidation on the test appli
         const role = await repository.save(createFakeRole());
 
         expect(await repository.findOneBy({ id: role.id })).not.toBeNull();
-        expect(lines.filter((line) => line.startsWith('The cache invalidation failed'))).toHaveLength(1);
+
+        const warnings = lines.filter((line) => line.startsWith('The cache invalidation failed'));
+
+        expect(warnings).toHaveLength(1);
+        expect(warnings[0]).toMatch(new RegExp(`^ {2}tags: +(.+, )?${EntityType.ROLE}(,|$| \\()`, 'm'));
+        expect(warnings[0]).toMatch(/^ {2}cause: +.*The cache store is unreachable\./m);
+        expect(warnings[0]).not.toContain(role.name);
         expect(tagged.pendingInvalidations).toEqual(expect.arrayContaining(collectRoleQueryTags()));
 
         await cache.rememberQuery(input, read);
