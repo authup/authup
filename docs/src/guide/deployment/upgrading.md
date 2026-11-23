@@ -91,6 +91,28 @@ lists `text/javascript` as well, for example in nginx:
 gzip_types text/plain application/xml text/css text/javascript application/javascript;
 ```
 
+### Provisioning binds a realm's relations after its entities
+
+Within a realm, provisioning creates every permission, role, client and user first and makes
+their permission, role and scope assignments afterwards, so an assignment no longer depends on
+the order of the file. A permission or role a client declares is stored in the client's realm;
+one that an existing deployment holds without a realm is given it on the next boot.
+
+**Action required:** none for a fresh deployment. A client or user created by an earlier boot
+under `createOnly` keeps the assignments it got then: give its entry `strategy: { type: merge }`
+for one boot (or bind the permissions through the API) to add the ones the old order missed.
+
+### A permission manager may assign roles over realm- and client-owned permissions
+
+Assigning a role to a user or client, or mapping it from an identity provider, requires the
+assigning actor to hold every permission of the role. A permission owned by a realm or a client
+now also counts as held when the actor holds `permission_update` without a policy and at a reach
+covering that permission's realm, so the `admin` user assigns application roles in every realm
+and a `realm_admin` in its own.
+
+**Action required:** none. A provisioning workaround that binds `admin` to an application's
+admin role only to delegate it can be dropped.
+
 ## v1.0.0-beta.75 (was: next release after v1.0.0-beta.74)
 
 ### The read cache opens its own Redis connection
