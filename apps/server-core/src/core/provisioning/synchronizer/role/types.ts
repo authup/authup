@@ -6,6 +6,7 @@
  */
 
 import type {
+    IClientRepository,
     IPermissionRepository,
     IRolePermissionRepository,
     IRoleRepository,
@@ -15,4 +16,10 @@ export type RoleProvisioningSynchronizerContext = {
     repository: IRoleRepository,
     permissionRepository: IPermissionRepository,
     rolePermissionRepository: IRolePermissionRepository,
+
+    /**
+     * Resolves the clients a `relations.clientPermissions` entry names;
+     * without it such a declaration fails the boot.
+     */
+    clientRepository?: IClientRepository,
 };

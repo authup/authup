@@ -19,6 +19,10 @@ export class RoleProvisioningRelationsValidator extends Container<RoleProvisioni
             z.array(z.string()),
         ));
 
+        this.mount('clientPermissions', { optional: true }, createValidator(
+            z.record(z.string(), z.array(z.string())),
+        ));
+
         this.mount('globalPermissions', { optional: true }, createValidator(
             z.array(z.string()),
         ));

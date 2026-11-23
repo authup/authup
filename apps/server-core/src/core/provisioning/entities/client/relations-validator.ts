@@ -39,6 +39,10 @@ export class ClientProvisioningRelationsValidator extends Container<ClientProvis
             z.array(z.string()),
         ));
 
+        this.mount('clientPermissions', { optional: true }, createValidator(
+            z.record(z.string(), z.array(z.string())),
+        ));
+
         this.mount('roles', { optional: true }, createValidator(
             z
                 .array(z.any())
@@ -51,6 +55,10 @@ export class ClientProvisioningRelationsValidator extends Container<ClientProvis
 
         this.mount('globalRoles', { optional: true }, createValidator(
             z.array(z.string()),
+        ));
+
+        this.mount('clientRoles', { optional: true }, createValidator(
+            z.record(z.string(), z.array(z.string())),
         ));
 
         this.mount('realmScopes', { optional: true }, createValidator(

@@ -6,6 +6,7 @@
  */
 
 import type {
+    Client,
     ClientPermission,
     ClientRole,
     ClientScope,
@@ -27,7 +28,7 @@ import type { ClientTokenExchangeCapabilityProvisioningEntity } from '../../enti
 import type { PermissionProvisioningEntity } from '../../entities/permission/index.ts';
 import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
-import type { IProvisioningSynchronizer } from '../../types.ts';
+import type { IProvisioningSynchronizer, ProvisioningSynchronizeContext } from '../../types.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import { ProvisioningEntityResolver } from '../entity-resolver.ts';
 import { ProvisioningJunctionSynchronizer } from '../junction-synchronizer.ts';
@@ -90,7 +91,10 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
         this.tokenExchangeCapabilitySynchronizer = ctx.tokenExchangeCapabilitySynchronizer;
     }
 
-    async synchronize(input: ClientProvisioningEntity): Promise<ClientProvisioningEntity> {
+    async synchronize(
+        input: ClientProvisioningEntity,
+        context?: ProvisioningSynchronizeContext,
+    ): Promise<ClientProvisioningEntity> {
         this.canonicalizeName(input.attributes);
         await this.protectSecret(input.attributes);
 
@@ -158,20 +162,78 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             !!attributes.builtIn ||
             strategy.type !== ProvisioningEntityStrategyType.CREATE_ONLY;
 
-        // Permissions (Global + Realm)
+        // Containers: a row a client owns lives in the client's realm.
+
+        if (input.relations && input.relations.permissions) {
+            const children = input.relations.permissions.map((child) => {
+                child.attributes.clientId = attributes.id;
+                child.attributes.client = attributes;
+                child.attributes.realmId = attributes.realmId;
+
+                return child;
+            });
+
+            await this.permissionSynchronizer.synchronizeMany(children, context);
+        }
+
+        if (input.relations && input.relations.roles) {
+            const children = input.relations.roles.map((child) => {
+                child.attributes.clientId = attributes.id;
+                child.attributes.client = attributes;
+                child.attributes.realmId = attributes.realmId;
+
+                return child;
+            });
+
+            await this.roleSynchronizer.synchronizeMany(children, context);
+        }
+
+        if (input.relations && input.relations.tokenExchangeCapabilities) {
+            const children = input.relations.tokenExchangeCapabilities.map((child) => {
+                child.attributes.clientId = attributes.id;
+                child.attributes.realmId = attributes.realmId as string;
+
+                return child;
+            });
+
+            await this.tokenExchangeCapabilitySynchronizer.synchronizeMany(children);
+        }
+
+        // Bound after the containers, so a relation may name them.
+        if (bindRelations) {
+            const client = attributes;
+
+            await this.bind(() => this.synchronizeRelations(client, input), context);
+        }
+
+        return {
+            ...input,
+            attributes,
+        };
+    }
+
+    protected async synchronizeRelations(attributes: Client, input: ClientProvisioningEntity): Promise<void> {
+        // Permissions (Global, Realm & Client)
         const permissions = [
             ...await this.permissionResolver.resolveGlobal(
                 input.relations && input.relations.globalPermissions,
             ),
             ...(attributes.realmId ?
-                await this.permissionResolver.resolveRealm(
-                    input.relations && input.relations.realmPermissions,
-                    attributes.realmId,
-                ) :
+                [
+                    ...await this.permissionResolver.resolveRealm(
+                        input.relations && input.relations.realmPermissions,
+                        attributes.realmId,
+                    ),
+                    ...await this.permissionResolver.resolveClientOwned(
+                        input.relations && input.relations.clientPermissions,
+                        attributes.realmId,
+                        this.clientRepository,
+                    ),
+                ] :
                 []),
         ];
 
-        if (bindRelations && permissions.length > 0) {
+        if (permissions.length > 0) {
             await this.permissionJunction.synchronize(
                 attributes,
                 permissions,
@@ -180,20 +242,27 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             );
         }
 
-        // Roles (Global + Realm)
+        // Roles (Global, Realm & Client)
         const roles = [
             ...await this.roleResolver.resolveGlobal(
                 input.relations && input.relations.globalRoles,
             ),
             ...(attributes.realmId ?
-                await this.roleResolver.resolveRealm(
-                    input.relations && input.relations.realmRoles,
-                    attributes.realmId,
-                ) :
+                [
+                    ...await this.roleResolver.resolveRealm(
+                        input.relations && input.relations.realmRoles,
+                        attributes.realmId,
+                    ),
+                    ...await this.roleResolver.resolveClientOwned(
+                        input.relations && input.relations.clientRoles,
+                        attributes.realmId,
+                        this.clientRepository,
+                    ),
+                ] :
                 []),
         ];
 
-        if (bindRelations && roles.length > 0) {
+        if (roles.length > 0) {
             await this.roleJunction.synchronize(
                 attributes,
                 roles,
@@ -216,7 +285,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
                 []),
         ];
 
-        if (bindRelations && scopes.length > 0) {
+        if (scopes.length > 0) {
             await this.scopeJunction.synchronize(
                 attributes,
                 scopes,
@@ -224,46 +293,6 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
                 'scopeRealmId',
             );
         }
-
-        // Containers
-
-        if (input.relations && input.relations.permissions) {
-            const children = input.relations.permissions.map((child) => {
-                child.attributes.clientId = attributes.id;
-                child.attributes.client = attributes;
-
-                return child;
-            });
-
-            await this.permissionSynchronizer.synchronizeMany(children);
-        }
-
-        if (input.relations && input.relations.roles) {
-            const children = input.relations.roles.map((child) => {
-                child.attributes.clientId = attributes.id;
-                child.attributes.client = attributes;
-
-                return child;
-            });
-
-            await this.roleSynchronizer.synchronizeMany(children);
-        }
-
-        if (input.relations && input.relations.tokenExchangeCapabilities) {
-            const children = input.relations.tokenExchangeCapabilities.map((child) => {
-                child.attributes.clientId = attributes.id;
-                child.attributes.realmId = attributes.realmId as string;
-
-                return child;
-            });
-
-            await this.tokenExchangeCapabilitySynchronizer.synchronizeMany(children);
-        }
-
-        return {
-            ...input,
-            attributes,
-        };
     }
 
     /**

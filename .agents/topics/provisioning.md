@@ -13,6 +13,11 @@ Core logic lives in `core/provisioning/`, wiring in `app/modules/provisioning/`.
   A client declares `permissions` / `roles` (define new client-scoped ones) and
   `globalPermissions` / `realmPermissions` / `globalRoles` / `realmRoles` /
   `globalScopes` / `realmScopes` (assign existing; each lands in its junction).
+  `clientPermissions` / `clientRoles` (users and clients) and a role's
+  `clientPermissions` are keyed by client name and reach any client of the
+  same realm (#3869), at the junction's default reach. A client-owned row
+  carries its client's realm, and its lookup is by client alone, so a row
+  stored without that realm is repaired in place rather than duplicated.
 - **`core/provisioning/strategy/`**: `createOnly`, `merge`, `replace`,
   `absent`.
 - **`core/provisioning/synchronizer/`**: `ProvisioningEntityResolver<T>`
@@ -61,9 +66,14 @@ Core logic lives in `core/provisioning/`, wiring in `app/modules/provisioning/`.
 config-gated `assignDefaultPolicy` backfill.
 
 - Graph: policies, permissions, roles, scopes, realms.
-- Per realm (`RealmProvisioningSynchronizer`): scopes, paths, clients,
-  permissions, roles, users. Scopes and paths come first because clients and
-  users in the same block reference them (`realmScopes`, `relations.path`).
+- Per realm (`RealmProvisioningSynchronizer`): scopes, paths, permissions,
+  roles, clients (with their own permissions and roles), users, and only then
+  every relation binding (#3854). The synchronizers queue their junction
+  writes on the `ProvisioningSynchronizeContext` the realm hands down, so a
+  relation resolves whatever order the file declares its ends in; binding
+  inline made a client's realm permissions miss on the first boot, which
+  `createOnly` never repaired. Called without a context (the graph level), a
+  synchronizer binds inline. Paths are entities, resolved inline.
 
 ### Concurrent boots: the provisioning lock (issue #3356)
 

@@ -1,0 +1,53 @@
+realms:
+  - attributes:
+      name: client-owned
+    relations:
+      clients:
+        # Declared before the permissions, roles and the client it names.
+        - attributes:
+            name: content-writer
+          relations:
+            realmPermissions: [perm_a, perm_b]
+            realmRoles: [ops]
+            clientPermissions:
+              blog-console: [post_read, post_create]
+            clientRoles:
+              blog-console: [blog-editor]
+        - attributes:
+            name: blog-console
+          relations:
+            permissions:
+              - attributes:
+                  name: post_read
+              - attributes:
+                  name: post_create
+            roles:
+              - attributes:
+                  name: blog-admin
+                relations:
+                  clientPermissions:
+                    blog-console: ['*']
+              - attributes:
+                  name: blog-editor
+                relations:
+                  clientPermissions:
+                    blog-console: [post_create]
+      permissions:
+        - attributes:
+            name: perm_a
+        - attributes:
+            name: perm_b
+      roles:
+        - attributes:
+            name: ops
+          relations:
+            realmPermissions: [perm_a]
+            clientPermissions:
+              blog-console: [post_read]
+      users:
+        - attributes:
+            name: alice
+          relations:
+            realmRoles: [ops]
+            clientRoles:
+              blog-console: [blog-admin]

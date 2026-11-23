@@ -12,6 +12,7 @@ import type { IPermissionRepository, IPolicyRepository } from '../../../entities
 import type { PermissionProvisioningEntity } from '../../entities/permission/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
+import { buildOwnedEntityLookup, needsOwningClientRealm } from '../owner.ts';
 import type { PermissionProvisioningSynchronizerContext } from './types.ts';
 
 export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchronizer<PermissionProvisioningEntity> {
@@ -34,11 +35,7 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
 
         const strategy = normalizeEntityProvisioningStrategy(input.strategy);
 
-        let attributes = await this.repository.findOneBy({
-            name: input.attributes.name,
-            realmId: input.attributes.realmId || null,
-            clientId: input.attributes.clientId || null,
-        });
+        let attributes = await this.repository.findOneBy(buildOwnedEntityLookup(input.attributes));
 
         if (strategy.type === ProvisioningEntityStrategyType.ABSENT) {
             if (attributes) {
@@ -72,6 +69,11 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
             }
         } else {
             attributes = await this.repository.save(this.repository.create(input.attributes));
+        }
+
+        if (needsOwningClientRealm(attributes, input.attributes)) {
+            attributes.realmId = input.attributes.realmId as string;
+            attributes = await this.repository.save(attributes);
         }
 
         if (input.relations?.policies && input.relations.policies.length > 0) {

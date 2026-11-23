@@ -23,7 +23,18 @@ export interface IRealmProvisioner {
     ensureForRealm(realm: Realm): Promise<void>;
 }
 
+/**
+ * Handed down by a synchronizer that owns a set of entities (a realm), so
+ * the relations between them are bound only once every one of them exists.
+ */
+export type ProvisioningSynchronizeContext = {
+    /**
+     * Queue a relation binding for after the entities of the set.
+     */
+    defer(task: () => Promise<void>): void,
+};
+
 export interface IProvisioningSynchronizer<T> {
-    synchronize(input: T) : Promise<T>;
-    synchronizeMany(input: T[]) : Promise<T[]>;
+    synchronize(input: T, context?: ProvisioningSynchronizeContext) : Promise<T>;
+    synchronizeMany(input: T[], context?: ProvisioningSynchronizeContext) : Promise<T[]>;
 }

@@ -5,18 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { AuthupError } from '@authup/errors';
 import { pickRecord } from '@authup/kit';
-import type { Permission, RolePermission } from '@authup/core-kit';
-import type { IRoleRepository } from '../../../entities/index.ts';
-import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
+import type { Permission, Role, RolePermission } from '@authup/core-kit';
+import type { IClientRepository, IRoleRepository } from '../../../entities/index.ts';
+import type { RoleProvisioningEntity, RoleProvisioningRelations } from '../../entities/role/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
+import type { ProvisioningSynchronizeContext } from '../../types.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
+import { buildOwnedEntityLookup, needsOwningClientRealm } from '../owner.ts';
 import { ProvisioningEntityResolver } from '../entity-resolver.ts';
 import { ProvisioningJunctionSynchronizer } from '../junction-synchronizer.ts';
 import type { RoleProvisioningSynchronizerContext } from './types.ts';
 
 export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<RoleProvisioningEntity> {
     protected repository : IRoleRepository;
+
+    protected clientRepository?: IClientRepository;
 
     protected permissionResolver : ProvisioningEntityResolver<Permission>;
 
@@ -26,6 +31,7 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         super();
 
         this.repository = ctx.repository;
+        this.clientRepository = ctx.clientRepository;
         this.permissionResolver = new ProvisioningEntityResolver(ctx.permissionRepository);
         this.permissionJunction = new ProvisioningJunctionSynchronizer({
             repository: ctx.rolePermissionRepository,
@@ -34,15 +40,14 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         });
     }
 
-    async synchronize(input: RoleProvisioningEntity): Promise<RoleProvisioningEntity> {
+    async synchronize(
+        input: RoleProvisioningEntity,
+        context?: ProvisioningSynchronizeContext,
+    ): Promise<RoleProvisioningEntity> {
         this.canonicalizeName(input.attributes);
 
         const strategy = normalizeEntityProvisioningStrategy(input.strategy);
-        let attributes = await this.repository.findOneBy({
-            name: input.attributes.name,
-            realmId: input.attributes.realmId || null,
-            clientId: input.attributes.clientId || null,
-        });
+        let attributes = await this.repository.findOneBy(buildOwnedEntityLookup(input.attributes));
 
         if (strategy.type === ProvisioningEntityStrategyType.ABSENT) {
             if (attributes) {
@@ -81,6 +86,11 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             created = true;
         }
 
+        if (needsOwningClientRealm(attributes, input.attributes)) {
+            attributes.realmId = input.attributes.realmId as string;
+            attributes = await this.repository.save(attributes);
+        }
+
         // createOnly leaves a row it did not create alone, its permission
         // bindings included, unless the row is built in: only provisioning
         // writes one, so its bindings are the file's to extend.
@@ -88,23 +98,34 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             !!attributes.builtIn ||
             strategy.type !== ProvisioningEntityStrategyType.CREATE_ONLY;
 
-        if (!bindRelations || !input.relations) {
-            return {
-                ...input,
-                attributes,
-            };
+        if (bindRelations && input.relations) {
+            const role = attributes;
+            const { relations } = input;
+
+            await this.bind(() => this.synchronizeRelations(role, input, relations), context);
         }
 
-        let globalPermissions = await this.permissionResolver.resolveGlobal(input.relations.globalPermissions);
+        return {
+            ...input,
+            attributes,
+        };
+    }
 
-        if (input.relations.globalPermissionsExclude && input.relations.globalPermissionsExclude.length > 0) {
-            const excludeSet = new Set(input.relations.globalPermissionsExclude);
+    protected async synchronizeRelations(
+        attributes: Role,
+        input: RoleProvisioningEntity,
+        relations: RoleProvisioningRelations,
+    ): Promise<void> {
+        let globalPermissions = await this.permissionResolver.resolveGlobal(relations.globalPermissions);
+
+        if (relations.globalPermissionsExclude && relations.globalPermissionsExclude.length > 0) {
+            const excludeSet = new Set(relations.globalPermissionsExclude);
 
             globalPermissions = globalPermissions.filter((p) => !excludeSet.has(p.name));
         }
 
         const realmPermissions = attributes.realmId ?
-            await this.permissionResolver.resolveRealm(input.relations.realmPermissions, attributes.realmId) :
+            await this.permissionResolver.resolveRealm(relations.realmPermissions, attributes.realmId) :
             [];
 
         const permissions = [
@@ -113,7 +134,7 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         ];
 
         if (permissions.length > 0) {
-            const defaultScope = input.relations.globalPermissionsRealmScope;
+            const defaultScope = relations.globalPermissionsRealmScope;
 
             if (defaultScope) {
                 const overrides = this.buildRealmScopeOverrides(input);
@@ -139,10 +160,30 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             }
         }
 
-        return {
-            ...input,
-            attributes,
-        };
+        // Permissions owned by any client of the role's realm, bound at the
+        // junction's default reach.
+        if (!relations.clientPermissions || !attributes.realmId) {
+            return;
+        }
+
+        if (!this.clientRepository) {
+            throw new AuthupError('A role client permission relation needs the client repository, which is not wired here.');
+        }
+
+        const clientPermissions = await this.permissionResolver.resolveClientOwned(
+            relations.clientPermissions,
+            attributes.realmId,
+            this.clientRepository,
+        );
+
+        if (clientPermissions.length > 0) {
+            await this.permissionJunction.synchronize(
+                attributes,
+                clientPermissions,
+                'permissionId',
+                'permissionRealmId',
+            );
+        }
     }
 
     private buildRealmScopeOverrides(input: RoleProvisioningEntity): Map<string, string> {

@@ -463,6 +463,7 @@ and accept `a-z`, `0-9`, `-`, `_`, `.`, and `:` (for example, `run:read` or
 | `globalPermissionsRealmScope`      | `string`                | Default `realmScope` (`own`, `ownOrNull`, `any`) stamped on each `globalPermissions` junction entry. |
 | `globalPermissionsRealmScopeOverrides` | `Record<string, string[]>` | Per-permission `realmScope` overrides. Key = `realmScope` value, value = permission names. |
 | `realmPermissions`                 | `string[]`              | Permission names to assign (realm scope). `'*'` = all.                              |
+| `clientPermissions`                | `Record<string, string[]>` | Permissions owned by a client of the same realm. Key = client name, value = permission names. `'*'` = all. A realm role and a client's own role may both name any client of the realm. |
 
 ### Realm
 
@@ -625,8 +626,10 @@ realms:
 | `roles`             | `RoleProvisioning[]`          | Define new client-scoped roles                           |
 | `globalPermissions` | `string[]`                    | Assign global permissions. `'*'` = all.                 |
 | `realmPermissions`  | `string[]`                    | Assign realm permissions. `'*'` = all.                  |
+| `clientPermissions` | `Record<string, string[]>`    | Assign permissions owned by a client of the same realm. Key = client name, value = permission names. `'*'` = all. |
 | `globalRoles`       | `string[]`                    | Assign global roles. `'*'` = all.                       |
 | `realmRoles`        | `string[]`                    | Assign realm roles. `'*'` = all.                        |
+| `clientRoles`       | `Record<string, string[]>`    | Assign roles owned by a client of the same realm. Key = client name, value = role names. `'*'` = all. |
 | `globalScopes`      | `string[]`                    | Assign global scopes. `'*'` = all.                      |
 | `realmScopes`       | `string[]`                    | Assign realm scopes. `'*'` = all.                       |
 | `tokenExchangeCapabilities` | `TokenExchangeCapabilityProvisioning[]` | Define what the client may delegate through [token exchange](../user/token-exchange.md). See below. |
@@ -791,9 +794,12 @@ Entities are synchronized in dependency order:
 5. Realms, then for each realm:
    1. Scopes (realm-scoped)
    2. Paths (folders for users and clients)
-   3. Clients (with nested permissions/roles)
-   4. Permissions (realm-scoped)
-   5. Roles (realm-scoped, with permission assignments)
-   6. Users (with permission/role assignments)
+   3. Permissions (realm-scoped)
+   4. Roles (realm-scoped)
+   5. Clients (with nested permissions/roles)
+   6. Users
+   7. The permission, role and scope assignments of every role, client and user above
 
-Define entities before referencing them. For example, create a permission before assigning it to a role.
+Within a realm, an assignment may name any entity of the same realm, wherever the file
+declares it: assignments are made once every entity of the realm exists. Global entities
+are synchronized before the realms, so a realm entity may name any of them.

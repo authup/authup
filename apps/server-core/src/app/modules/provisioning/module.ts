@@ -242,6 +242,7 @@ export class ProvisionerModule implements IModule {
 
         const roleSynchronizer = new RoleProvisioningSynchronizer({
             repository: roleRepository,
+            clientRepository,
             permissionRepository,
             rolePermissionRepository: new RolePermissionRepositoryAdapter(
                 container.resolve<Repository<RolePermission>>(RolePermissionEntity),

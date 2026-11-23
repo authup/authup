@@ -5,22 +5,35 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IProvisioningSynchronizer } from '../types.ts';
+import type { IProvisioningSynchronizer, ProvisioningSynchronizeContext } from '../types.ts';
 
 export abstract class BaseProvisioningSynchronizer<T> implements IProvisioningSynchronizer<T> {
     // Sequential to avoid race conditions on concurrent upserts.
     // Can be switched to Promise.all() if callers guarantee unique inputs.
-    async synchronizeMany(input: T[]): Promise<T[]> {
+    async synchronizeMany(input: T[], context?: ProvisioningSynchronizeContext): Promise<T[]> {
         const output: T[] = [];
 
         for (const entity of input) {
-            output.push(await this.synchronize(entity));
+            output.push(await this.synchronize(entity, context));
         }
 
         return output;
     }
 
-    abstract synchronize(input: T): Promise<T>;
+    abstract synchronize(input: T, context?: ProvisioningSynchronizeContext): Promise<T>;
+
+    /**
+     * Bind relations now, or once every entity of the context's set exists.
+     */
+    protected async bind(task: () => Promise<void>, context?: ProvisioningSynchronizeContext): Promise<void> {
+        if (context) {
+            context.defer(task);
+
+            return;
+        }
+
+        await task();
+    }
 
     // canonical identifier form: provisioning sources may carry raw names.
     // The file source validates (and canonicalizes) with the PROVISIONING
