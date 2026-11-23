@@ -8,6 +8,7 @@ import {
     createPKCE,
     createState,
     saveAuthorizationRequest,
+    saveLoginRedirect,
     useTranslations,
 } from '@authup/client-web-kit';
 import {
@@ -22,7 +23,7 @@ import { useRoute } from 'vue-router';
 import LogoSVG from '../../components/svg/LogoSVG.ts';
 import { useErrorToast } from '../../composables/error.ts';
 import { injectAdminConsoleConfig } from '../../di.ts';
-import { saveLoginRedirect } from '../../redirect.ts';
+import { LOGIN_REDIRECT_OPTIONS } from '../../redirect.ts';
 
 export default defineComponent({
     components: {
@@ -74,7 +75,7 @@ export default defineComponent({
                 // token ever reaches this JavaScript. The destination rides a
                 // single-use stash, since the callback lands on the root.
                 if (config.cookieSession) {
-                    saveLoginRedirect(redirect);
+                    saveLoginRedirect(redirect, LOGIN_REDIRECT_OPTIONS);
 
                     window.location.href = buildConsoleLoginURL({
                         baseURL: config.apiUrl,

@@ -38,6 +38,7 @@ function buildConfig() {
         url: 'http://127.0.0.1:0/console/account',
         apiUrl: 'http://127.0.0.1:0',
         enabled: true,
+        cspEnabled: true,
         port: 0,
         host: '127.0.0.1',
         distPath: '',

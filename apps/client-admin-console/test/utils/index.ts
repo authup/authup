@@ -18,6 +18,9 @@ import { Suspense, defineComponent, h } from 'vue';
 import type { RouteRecordRaw } from 'vue-router';
 import { RouterView, createMemoryHistory, createRouter } from 'vue-router';
 import { routes as appRoutes } from '../../src/router.ts';
+import type { MountPageOptions } from './types.ts';
+
+export type { MountPageOptions } from './types.ts';
 
 const noop = () => undefined;
 
@@ -33,6 +36,7 @@ export async function mountPage(
     path: string,
     handlers: FakeHandlerMap = {},
     routes: RouteRecordRaw[] = appRoutes,
+    options: MountPageOptions = {},
 ) {
     const pinia = createPinia();
     const httpClient = createFakeClient({ handlers });
@@ -40,10 +44,11 @@ export async function mountPage(
 
     await router.push(path);
 
-    const wrapper = mount(defineComponent({ render: () => h(Suspense, null, { default: () => h(RouterView) }) }), {
+    const root = options.root ?? RouterView;
+    const wrapper = mount(defineComponent({ render: () => h(Suspense, null, { default: () => h(root) }) }), {
         global: {
             // iconify would fetch every icon it has no data for
-            stubs: { VCIcon: true },
+            stubs: { VCIcon: true, ...options.stubs },
             plugins: [
                 pinia,
                 router,

@@ -14,6 +14,7 @@ import {
     createCookieRef,
     injectStore,
     install,
+    runInAppScope,
     syncTranslatorLocaleFromManager,
     useTranslation,
 } from '@authup/client-web-kit';
@@ -109,9 +110,9 @@ router.beforeEach(createRoutingGuard({
     config,
 }));
 
-// `buildVuecsInstallOptions()` calls `useTranslation` -> `injectIlingo`,
-// which needs an active injection context, hence `app.runWithContext()`.
-const vuecsOptions = app.runWithContext(() => buildVuecsInstallOptions({
+// `buildVuecsInstallOptions()` calls `useTranslation`, which needs the app's
+// injection context and an effect scope the app stops on unmount.
+const vuecsOptions = runInAppScope(app, () => buildVuecsInstallOptions({
     // Kit theme first, app theme overrides win on conflicts.
     themes: [clientWebKitTheme(), clientWebTheme()],
 }));
@@ -125,7 +126,7 @@ app.use(vuecs, {
         // `:label`, so without this a screen reader announces it in English
         // on every localized page.
         breadcrumb: {
-            label: app.runWithContext(() => useTranslation({
+            label: runInAppScope(app, () => useTranslation({
                 namespace: TranslatorTranslationNamespace.COMMON,
                 key: TranslatorTranslationCommonKey.BREADCRUMB,
             })),

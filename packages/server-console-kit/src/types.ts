@@ -39,9 +39,16 @@ export type StaticConsoleDefinition = {
     /**
      * The `index.html` marker the runtime config script replaces. It is the
      * console's whole runtime contract: without it the injected
-     * `window.__AUTHUP__` never lands.
+     * config global never lands.
      */
     marker: string,
+    /**
+     * The window global the runtime config is injected as. Defaults to
+     * `__AUTHUP__`; a console with a config of its own names its own, so
+     * two consoles on one page keep theirs apart. Must be a JavaScript
+     * identifier: it is spliced into an inline script.
+     */
+    globalName?: string,
     /**
      * The fixed vite `base` the bundle was built with (`/console/account/`).
      * Asset hrefs are rebased from it onto the deployment base path per
@@ -87,17 +94,44 @@ export type StaticConsoleServeOptions = {
      */
     theme?: IThemeProvider,
     /**
-     * The runtime configuration injected as `window.__AUTHUP__`, built by the
-     * caller: what a console needs is its own business (the account console
-     * adds a request-reflected `ref`, for one).
+     * The runtime configuration injected as the definition's global, built
+     * by the caller: what a console needs is its own business (the account
+     * console adds a request-reflected `ref`, for one).
      */
     config: Record<string, unknown>,
+    /**
+     * Send a restrictive content security policy for the shell instead of
+     * the framing-only default: scripts from the own origin plus the
+     * injected config script by hash, requests and form posts to the own
+     * origin plus `origins`. Only for a shell whose sole inline script is
+     * the injected one; anything else inline is refused by the browser.
+     * Built once with `defineStaticConsoleCSP`, which validates the origins.
+     */
+    csp?: StaticConsoleCSP,
+};
+
+export type StaticConsoleCSPOptions = {
+    /**
+     * Origins the console calls or submits forms to besides its own, such
+     * as the API's. A source expression each: no whitespace, `;`, `,` or
+     * quotes.
+     */
+    origins?: string[],
+};
+
+/**
+ * A validated shell policy, built by `defineStaticConsoleCSP`.
+ */
+export type StaticConsoleCSP = {
+    /** The source list of `connect-src` and `form-action`. */
+    readonly sources: string,
 };
 
 export type StaticConsole = {
     readonly packageName: string,
     readonly marker: string,
     readonly viteBase: string,
+    readonly globalName: string,
     /**
      * Locate the console PACKAGE, whether or not it holds a built bundle.
      * A caller serving it from source needs the package root, and must not

@@ -420,7 +420,7 @@ export default defineComponent({
             v,
             data: manager.data,
             isNameFixed,
-            isBusy: manager.busy.value,
+            isBusy: manager.busy,
             isEditing,
             isSecretAuthentication,
             isTLSAuthentication,
@@ -446,358 +446,370 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="flex flex-wrap -mx-2">
-        <div class="flex-1 basis-0 px-2">
-            <template v-if="data">
-                <VCFormGroup>
-                    <template #label>
-                        ID
-                    </template>
-                    <VCFormInput
-                        :model-value="data.id"
-                        :disabled="true"
-                    />
-                </VCFormGroup>
-            </template>
+    <fieldset
+        :disabled="isBusy"
+        class="m-0 min-w-0 border-0 p-0"
+    >
+        <!--
+            Disabled while a save is pending: the response re-initializes
+            the form from the saved snapshot, so an edit typed meanwhile
+            would be overwritten.
+        -->
+        <div class="flex flex-wrap -mx-2">
+            <div class="flex-1 basis-0 px-2">
+                <template v-if="data">
+                    <VCFormGroup>
+                        <template #label>
+                            ID
+                        </template>
+                        <VCFormInput
+                            :model-value="data.id"
+                            :disabled="true"
+                        />
+                    </VCFormGroup>
+                </template>
 
-            <IFieldValidation
-                v-slot="{ value }"
-                :field="v.fields.name"
-            >
-                <VCFormGroup :validation="value">
-                    <template #label>
-                        {{ translationsDefault.name }}
-                    </template>
-                    <ANameInput
-                        v-model="v.fields.name.$model.value"
-                        :disabled="isNameFixed"
-                    />
-                    <template #hint>
-                        {{ translationsClient.nameHint }}
-                    </template>
-                </VCFormGroup>
-            </IFieldValidation>
-            <IFieldValidation
-                v-slot="{ value }"
-                :field="v.fields.displayName"
-            >
-                <VCFormGroup :validation="value">
-                    <template #label>
-                        {{ translationsDefault.displayName }}
-                    </template>
-                    <VCFormInput
-                        :model-value="v.fields.displayName.$model.value ?? ''"
-                        :disabled="isNameFixed"
-                        @update:model-value="(next: string) => { v.fields.displayName.$model.value = next; }"
-                    />
-                </VCFormGroup>
-            </IFieldValidation>
-            <IFieldValidation
-                v-slot="{ value }"
-                :field="v.fields.authMethod"
-            >
-                <VCFormGroup :validation="value">
-                    <template #label>
-                        {{ translationsClient.authMethod }}
-                    </template>
-                    <VCFormSelect
-                        v-model="v.fields.authMethod.$model.value"
-                        :options="authMethodOptions"
-                    />
-                </VCFormGroup>
-            </IFieldValidation>
-            <IFieldValidation
-                v-slot="{ value }"
-                :field="v.fields.tokenBindingMethod"
-            >
-                <VCFormGroup :validation="value">
-                    <template #label>
-                        {{ translationsClient.tokenBindingMethod }}
-                    </template>
-                    <VCFormSelect
-                        v-model="v.fields.tokenBindingMethod.$model.value"
-                        :options="tokenBindingMethodOptions"
-                    />
-                </VCFormGroup>
-            </IFieldValidation>
-            <template v-if="isTLSAuthentication && clientCertificateURI">
-                <VCFormGroup>
-                    <template #label>
-                        {{ translationsClient.clientCertificateUri }}
-                    </template>
-                    <VCFormInput
-                        :model-value="clientCertificateURI"
-                        :disabled="true"
-                    />
-                    <template #hint>
-                        {{ translationsClient.clientCertificateUriHint }}
-                    </template>
-                </VCFormGroup>
-            </template>
-            <IFieldValidation
-                v-if="isSecretAuthentication && isSecretEditable"
-                v-slot="{ value }"
-                :field="v.fields.secret"
-            >
-                <VCFormGroup :validation="value">
-                    <template #label>
-                        {{ translationsDefault.secret }}
-                    </template>
-                    <ASecretInput
-                        :model-value="v.fields.secret.$model.value ?? ''"
-                        @update:model-value="(next: string) => { v.fields.secret.$model.value = next; }"
-                    />
-                </VCFormGroup>
-            </IFieldValidation>
-            <template v-if="isSecretAuthentication && isSecretRotatable && data">
-                <VCFormGroup>
-                    <template
-                        v-if="!isSecretEditable"
-                        #label
-                    >
-                        {{ translationsDefault.secret }}
-                    </template>
-                    <AClientSecretRotate
-                        :entity="data"
-                        @updated="handleSecretRotated"
-                    />
-                    <template
-                        v-if="!isSecretEditable && !isSecretWithheld"
-                        #hint
-                    >
-                        {{ translationsClient.secretHashedHint }}
-                    </template>
-                </VCFormGroup>
-            </template>
-            <div class="flex flex-wrap -mx-2">
-                <div
-                    v-if="isSecretAuthentication && !isEditing"
-                    class="flex-1 basis-0 px-2"
-                >
-                    <IFieldValidation
-                        v-slot="{ value }"
-                        :field="v.fields.secretHashed"
-                    >
-                        <VCFormGroup :validation="value">
-                            <VCFormSwitch
-                                v-model="v.fields.secretHashed.$model.value"
-                                :label="true"
-                                :label-content="translationsClient.hashSecret"
-                            />
-                        </VCFormGroup>
-                    </IFieldValidation>
-                </div>
-                <div class="flex-1 basis-0 px-2">
-                    <IFieldValidation
-                        v-slot="{ value }"
-                        :field="v.fields.active"
-                    >
-                        <VCFormGroup :validation="value">
-                            <VCFormSwitch
-                                v-model="v.fields.active.$model.value"
-                                :label="true"
-                                :label-content="translationsClient.isActive"
-                            />
-                        </VCFormGroup>
-                    </IFieldValidation>
-                </div>
-            </div>
-
-            <template v-if="!realmId && !isEditing">
                 <IFieldValidation
                     v-slot="{ value }"
-                    :field="v.fields.realmId"
+                    :field="v.fields.name"
                 >
                     <VCFormGroup :validation="value">
                         <template #label>
-                            {{ translationsDefault.realm }}
+                            {{ translationsDefault.name }}
                         </template>
-                        <template #default>
-                            <ARealmPicker
-                                :value="v.fields.realmId.$model.value"
-                                @change="(input: string[]) => {
-                                    v.fields.realmId.$model.value = input.length > 0 ? input[0] ?? '' : '';
-                                }"
-                            />
+                        <ANameInput
+                            v-model="v.fields.name.$model.value"
+                            :disabled="isNameFixed"
+                        />
+                        <template #hint>
+                            {{ translationsClient.nameHint }}
                         </template>
                     </VCFormGroup>
                 </IFieldValidation>
-            </template>
-        </div>
-        <div class="flex-1 basis-0 px-2">
-            <!--
-                `AFormInputList`'s root carries no bottom margin (it is also
-                nested INSIDE a VCFormGroup elsewhere, where a margin would
-                double up), so a standalone use followed by a sibling has to
-                match the `mb-3` the theme puts on stacked form groups.
-            -->
-            <AFormInputList
-                class="mb-3"
-                :names="redirectUris"
-                @changed="(value) => {
-                    if (value.length === 0) {
-                        v.fields.redirectUri.$model.value = '';
-                        return;
-                    }
-                    v.fields.redirectUri.$model.value = value.join(',');
-                }"
-            >
-                <template #label>
-                    {{ translationsDefault.redirectUris }}
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.displayName"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            {{ translationsDefault.displayName }}
+                        </template>
+                        <VCFormInput
+                            :model-value="v.fields.displayName.$model.value ?? ''"
+                            :disabled="isNameFixed"
+                            @update:model-value="(next: string) => { v.fields.displayName.$model.value = next; }"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.authMethod"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            {{ translationsClient.authMethod }}
+                        </template>
+                        <VCFormSelect
+                            v-model="v.fields.authMethod.$model.value"
+                            :disabled="isBusy"
+                            :options="authMethodOptions"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.tokenBindingMethod"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            {{ translationsClient.tokenBindingMethod }}
+                        </template>
+                        <VCFormSelect
+                            v-model="v.fields.tokenBindingMethod.$model.value"
+                            :disabled="isBusy"
+                            :options="tokenBindingMethodOptions"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
+                <template v-if="isTLSAuthentication && clientCertificateURI">
+                    <VCFormGroup>
+                        <template #label>
+                            {{ translationsClient.clientCertificateUri }}
+                        </template>
+                        <VCFormInput
+                            :model-value="clientCertificateURI"
+                            :disabled="true"
+                        />
+                        <template #hint>
+                            {{ translationsClient.clientCertificateUriHint }}
+                        </template>
+                    </VCFormGroup>
                 </template>
-                <template #hint>
-                    {{ translationsClient.redirectURIHint }}
+                <IFieldValidation
+                    v-if="isSecretAuthentication && isSecretEditable"
+                    v-slot="{ value }"
+                    :field="v.fields.secret"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            {{ translationsDefault.secret }}
+                        </template>
+                        <ASecretInput
+                            :model-value="v.fields.secret.$model.value ?? ''"
+                            @update:model-value="(next: string) => { v.fields.secret.$model.value = next; }"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
+                <template v-if="isSecretAuthentication && isSecretRotatable && data">
+                    <VCFormGroup>
+                        <template
+                            v-if="!isSecretEditable"
+                            #label
+                        >
+                            {{ translationsDefault.secret }}
+                        </template>
+                        <AClientSecretRotate
+                            :entity="data"
+                            @updated="handleSecretRotated"
+                        />
+                        <template
+                            v-if="!isSecretEditable && !isSecretWithheld"
+                            #hint
+                        >
+                            {{ translationsClient.secretHashedHint }}
+                        </template>
+                    </VCFormGroup>
                 </template>
-            </AFormInputList>
-            <AFormInputList
-                class="mb-3"
-                :names="postLogoutRedirectUris"
-                @changed="(value) => {
-                    if (value.length === 0) {
-                        v.fields.postLogoutRedirectUri.$model.value = null;
-                        return;
-                    }
-                    v.fields.postLogoutRedirectUri.$model.value = value.join(',');
-                }"
-            >
-                <template #label>
-                    {{ translationsDefault.postLogoutRedirectUris }}
-                </template>
-                <template #hint>
-                    {{ translationsClient.postLogoutRedirectURIHint }}
-                </template>
-            </AFormInputList>
-            <IFieldValidation
-                v-slot="{ value }"
-                :field="v.fields.baseUrl"
-            >
-                <VCFormGroup :validation="value">
-                    <template #label>
-                        {{ translationsDefault.baseUrl }}
-                    </template>
-                    <VCFormInput
-                        :model-value="v.fields.baseUrl.$model.value ?? ''"
-                        @update:model-value="(next: string) => { v.fields.baseUrl.$model.value = next; }"
-                    />
-                    <template #hint>
-                        {{ translationsClient.baseUrlHint }}
-                    </template>
-                </VCFormGroup>
-            </IFieldValidation>
-            <IFieldValidation
-                v-slot="{ value }"
-                :field="v.fields.backchannelLogoutUri"
-            >
-                <VCFormGroup :validation="value">
-                    <template #label>
-                        {{ translationsDefault.backchannelLogoutUri }}
-                    </template>
-                    <VCFormInput
-                        :model-value="v.fields.backchannelLogoutUri.$model.value ?? ''"
-                        @update:model-value="(next: string) => { v.fields.backchannelLogoutUri.$model.value = next; }"
-                    />
-                    <template #hint>
-                        {{ translationsClient.backchannelLogoutURIHint }}
-                    </template>
-                </VCFormGroup>
-            </IFieldValidation>
-            <IFieldValidation
-                v-slot="{ value }"
-                :field="v.fields.grantTypes"
-            >
-                <VCFormGroup :validation="value">
-                    <template #label>
-                        {{ translationsDefault.grantTypes }}
-                    </template>
-                    <VCFormCheckboxGroup
-                        :model-value="grantTypeSelection"
-                        @update:model-value="setGrantTypes"
+                <div class="flex flex-wrap -mx-2">
+                    <div
+                        v-if="isSecretAuthentication && !isEditing"
+                        class="flex-1 basis-0 px-2"
                     >
-                        <VCFormCheckbox
-                            v-for="grantType in grantTypeOptions"
-                            :key="grantType"
-                            :value="grantType"
-                            :label="true"
-                            :label-content="grantTypeLabels[grantType] ?? grantType"
-                        />
-                    </VCFormCheckboxGroup>
-                    <template #hint>
-                        {{ translationsClient.grantTypesHint }}
-                    </template>
-                </VCFormGroup>
-            </IFieldValidation>
-            <IFieldValidation
-                v-slot="{ value }"
-                :field="v.fields.description"
-            >
-                <VCFormGroup :validation="value">
+                        <IFieldValidation
+                            v-slot="{ value }"
+                            :field="v.fields.secretHashed"
+                        >
+                            <VCFormGroup :validation="value">
+                                <VCFormSwitch
+                                    v-model="v.fields.secretHashed.$model.value"
+                                    :label="true"
+                                    :label-content="translationsClient.hashSecret"
+                                />
+                            </VCFormGroup>
+                        </IFieldValidation>
+                    </div>
+                    <div class="flex-1 basis-0 px-2">
+                        <IFieldValidation
+                            v-slot="{ value }"
+                            :field="v.fields.active"
+                        >
+                            <VCFormGroup :validation="value">
+                                <VCFormSwitch
+                                    v-model="v.fields.active.$model.value"
+                                    :label="true"
+                                    :label-content="translationsClient.isActive"
+                                />
+                            </VCFormGroup>
+                        </IFieldValidation>
+                    </div>
+                </div>
+
+                <template v-if="!realmId && !isEditing">
+                    <IFieldValidation
+                        v-slot="{ value }"
+                        :field="v.fields.realmId"
+                    >
+                        <VCFormGroup :validation="value">
+                            <template #label>
+                                {{ translationsDefault.realm }}
+                            </template>
+                            <template #default>
+                                <ARealmPicker
+                                    :value="v.fields.realmId.$model.value"
+                                    @change="(input: string[]) => {
+                                        v.fields.realmId.$model.value = input.length > 0 ? input[0] ?? '' : '';
+                                    }"
+                                />
+                            </template>
+                        </VCFormGroup>
+                    </IFieldValidation>
+                </template>
+            </div>
+            <div class="flex-1 basis-0 px-2">
+                <!--
+                    `AFormInputList`'s root carries no bottom margin (it is also
+                    nested INSIDE a VCFormGroup elsewhere, where a margin would
+                    double up), so a standalone use followed by a sibling has to
+                    match the `mb-3` the theme puts on stacked form groups.
+                -->
+                <AFormInputList
+                    class="mb-3"
+                    :names="redirectUris"
+                    @changed="(value) => {
+                        if (value.length === 0) {
+                            v.fields.redirectUri.$model.value = '';
+                            return;
+                        }
+                        v.fields.redirectUri.$model.value = value.join(',');
+                    }"
+                >
                     <template #label>
-                        {{ translationsDefault.description }}
+                        {{ translationsDefault.redirectUris }}
                     </template>
-                    <VCFormTextarea
-                        :model-value="v.fields.description.$model.value ?? ''"
-                        rows="7"
-                        @update:model-value="(next: string) => { v.fields.description.$model.value = next; }"
+                    <template #hint>
+                        {{ translationsClient.redirectURIHint }}
+                    </template>
+                </AFormInputList>
+                <AFormInputList
+                    class="mb-3"
+                    :names="postLogoutRedirectUris"
+                    @changed="(value) => {
+                        if (value.length === 0) {
+                            v.fields.postLogoutRedirectUri.$model.value = null;
+                            return;
+                        }
+                        v.fields.postLogoutRedirectUri.$model.value = value.join(',');
+                    }"
+                >
+                    <template #label>
+                        {{ translationsDefault.postLogoutRedirectUris }}
+                    </template>
+                    <template #hint>
+                        {{ translationsClient.postLogoutRedirectURIHint }}
+                    </template>
+                </AFormInputList>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.baseUrl"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            {{ translationsDefault.baseUrl }}
+                        </template>
+                        <VCFormInput
+                            :model-value="v.fields.baseUrl.$model.value ?? ''"
+                            @update:model-value="(next: string) => { v.fields.baseUrl.$model.value = next; }"
+                        />
+                        <template #hint>
+                            {{ translationsClient.baseUrlHint }}
+                        </template>
+                    </VCFormGroup>
+                </IFieldValidation>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.backchannelLogoutUri"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            {{ translationsDefault.backchannelLogoutUri }}
+                        </template>
+                        <VCFormInput
+                            :model-value="v.fields.backchannelLogoutUri.$model.value ?? ''"
+                            @update:model-value="(next: string) => { v.fields.backchannelLogoutUri.$model.value = next; }"
+                        />
+                        <template #hint>
+                            {{ translationsClient.backchannelLogoutURIHint }}
+                        </template>
+                    </VCFormGroup>
+                </IFieldValidation>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.grantTypes"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            {{ translationsDefault.grantTypes }}
+                        </template>
+                        <VCFormCheckboxGroup
+                            :model-value="grantTypeSelection"
+                            @update:model-value="setGrantTypes"
+                        >
+                            <VCFormCheckbox
+                                v-for="grantType in grantTypeOptions"
+                                :key="grantType"
+                                :value="grantType"
+                                :label="true"
+                                :label-content="grantTypeLabels[grantType] ?? grantType"
+                            />
+                        </VCFormCheckboxGroup>
+                        <template #hint>
+                            {{ translationsClient.grantTypesHint }}
+                        </template>
+                    </VCFormGroup>
+                </IFieldValidation>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.description"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            {{ translationsDefault.description }}
+                        </template>
+                        <VCFormTextarea
+                            :model-value="v.fields.description.$model.value ?? ''"
+                            rows="7"
+                            @update:model-value="(next: string) => { v.fields.description.$model.value = next; }"
+                        />
+                        <template #hint>
+                            {{ translationsClient.descriptionHint }}
+                        </template>
+                    </VCFormGroup>
+                </IFieldValidation>
+                <!-- folders are realm bound, so the picker waits for a realm -->
+                <IFieldValidation
+                    v-if="resolvedRealmId"
+                    v-slot="{ value }"
+                    :field="v.fields.pathId"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            {{ translationsDefault.path }}
+                        </template>
+                        <template #default>
+                            <APathPicker
+                                :value="v.fields.pathId.$model.value ?? ''"
+                                :query="pathQuery"
+                                @change="(input: string[]) => {
+                                    v.fields.pathId.$model.value = input.length > 0 ? input[0] ?? null : null;
+                                }"
+                            />
+                        </template>
+                        <template #hint>
+                            {{ translationsApp.pathHint }}
+                        </template>
+                    </VCFormGroup>
+                </IFieldValidation>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.accessPolicyId"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            {{ translationsDefault.accessPolicy }}
+                        </template>
+                        <template #default>
+                            <APolicyPicker
+                                :value="v.fields.accessPolicyId.$model.value"
+                                :query="policyQuery"
+                                @change="(input: string[]) => {
+                                    v.fields.accessPolicyId.$model.value = input.length > 0 ? input[0] ?? null : null;
+                                }"
+                            />
+                        </template>
+                        <template #hint>
+                            {{ translationsClient.clientAccessPolicyHint }}
+                        </template>
+                    </VCFormGroup>
+                </IFieldValidation>
+                <div>
+                    <AFormSubmit
+                        :is-busy="isBusy"
+                        :is-editing="isEditing"
+                        :is-invalid="v.$invalid.value"
+                        @submit="submit"
                     />
-                    <template #hint>
-                        {{ translationsClient.descriptionHint }}
-                    </template>
-                </VCFormGroup>
-            </IFieldValidation>
-            <!-- folders are realm bound, so the picker waits for a realm -->
-            <IFieldValidation
-                v-if="resolvedRealmId"
-                v-slot="{ value }"
-                :field="v.fields.pathId"
-            >
-                <VCFormGroup :validation="value">
-                    <template #label>
-                        {{ translationsDefault.path }}
-                    </template>
-                    <template #default>
-                        <APathPicker
-                            :value="v.fields.pathId.$model.value ?? ''"
-                            :query="pathQuery"
-                            @change="(input: string[]) => {
-                                v.fields.pathId.$model.value = input.length > 0 ? input[0] ?? null : null;
-                            }"
-                        />
-                    </template>
-                    <template #hint>
-                        {{ translationsApp.pathHint }}
-                    </template>
-                </VCFormGroup>
-            </IFieldValidation>
-            <IFieldValidation
-                v-slot="{ value }"
-                :field="v.fields.accessPolicyId"
-            >
-                <VCFormGroup :validation="value">
-                    <template #label>
-                        {{ translationsDefault.accessPolicy }}
-                    </template>
-                    <template #default>
-                        <APolicyPicker
-                            :value="v.fields.accessPolicyId.$model.value"
-                            :query="policyQuery"
-                            @change="(input: string[]) => {
-                                v.fields.accessPolicyId.$model.value = input.length > 0 ? input[0] ?? null : null;
-                            }"
-                        />
-                    </template>
-                    <template #hint>
-                        {{ translationsClient.clientAccessPolicyHint }}
-                    </template>
-                </VCFormGroup>
-            </IFieldValidation>
-            <div>
-                <AFormSubmit
-                    :is-busy="isBusy"
-                    :is-editing="isEditing"
-                    :is-invalid="v.$invalid.value"
-                    @submit="submit"
-                />
+                </div>
             </div>
         </div>
-    </div>
+    </fieldset>
 </template>

@@ -9,13 +9,15 @@ import { matchLocale } from '@authup/i18n';
 import { injectLocale } from '@ilingo/vue';
 import { useLocaleManager } from '@vuecs/locale';
 import type { App, ComputedRef } from 'vue';
+import { runInAppScope } from '../scope.ts';
 import { computed, watch } from 'vue';
 
 function tryUseLocaleManager() {
-    // useLocaleManager() throws when @vuecs/locale is not installed. Authup's
-    // apps install it (so vuecs owns the locale, cookie-backed — same as
-    // color-mode owns vc-color-mode), but a downstream consumer that embeds
-    // the kit without it should still get a working switcher.
+    // useLocaleManager() throws when the app did not install @vuecs/locale's
+    // plugin. The package is a required peer, but installing the plugin is
+    // still the app's call: authup's apps do (so vuecs owns the locale,
+    // cookie-backed, as color-mode owns vc-color-mode), and a consumer that
+    // does not still gets a working switcher.
     try {
         return useLocaleManager();
     } catch {
@@ -70,17 +72,20 @@ export function syncTranslatorLocaleFromManager(app: App): void {
         return;
     }
 
-    const ilingo = app.runWithContext(() => injectLocale());
+    // In the app's own scope, so the watcher stops when the app unmounts.
+    runInAppScope(app, () => {
+        const ilingo = injectLocale();
 
-    watch(
-        manager.resolved,
-        (value) => {
-            const mapped = matchLocale(value);
+        watch(
+            manager.resolved,
+            (value) => {
+                const mapped = matchLocale(value);
 
-            if (mapped && mapped !== ilingo.value) {
-                ilingo.value = mapped;
-            }
-        },
-        { immediate: true },
-    );
+                if (mapped && mapped !== ilingo.value) {
+                    ilingo.value = mapped;
+                }
+            },
+            { immediate: true },
+        );
+    });
 }

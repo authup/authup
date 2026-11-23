@@ -185,6 +185,16 @@ export default {
         enabled: true,
 
         /**
+         * Send the console page with a content security policy admitting its
+         * own scripts plus the injected config script (by hash), and requests
+         * to its own and the API origin. Off, only framing is denied. Never
+         * sent while theme.fragmentsEnabled is on.
+         * env: ADMIN_CONSOLE_CSP_ENABLED
+         * default: true
+         */
+        cspEnabled: true,
+
+        /**
          * EXPERIMENTAL. Package directory replacing the served admin console. It
          * points at a directory holding the built dist/. Empty resolves the
          * packaged console from node_modules. See the Theming guide.
@@ -214,6 +224,16 @@ export default {
          * default: true
          */
         enabled: true,
+
+        /**
+         * Send the console page with a content security policy admitting its
+         * own scripts plus the injected config script (by hash), and requests
+         * to its own and the API origin. Off, only framing is denied. Never
+         * sent while theme.fragmentsEnabled is on.
+         * env: ACCOUNT_CONSOLE_CSP_ENABLED
+         * default: true
+         */
+        cspEnabled: true,
 
         /**
          * EXPERIMENTAL. Package directory replacing the served account console. It

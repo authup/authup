@@ -14,6 +14,7 @@ import {
     createCookieRef,
     injectStore,
     install,
+    runInAppScope,
     syncTranslatorLocaleFromManager,
 } from '@authup/client-web-kit';
 import type { IClient } from '@authup/core-http-kit';
@@ -227,15 +228,14 @@ export function createApp(payload: HydrationPayload, options: CreateAppOptions =
     // which updates the cookie-backed source above, so no reverse bridge.
     syncTranslatorLocaleFromManager(app);
 
-    // `buildVuecsInstallOptions()` (shared with apps/client-admin-console's vuecs
-    // plugin: icon preset + translator-wired submit-button defaults) calls
-    // `useTranslation` → `injectIlingo`, which reads the ilingo instance
-    // via `inject()`. Outside a component setup there is no active
-    // injection context, so it must run inside `app.runWithContext()` to
-    // see the app-level provide that `installTranslator` (via `install`
-    // above) registered. apps/client-admin-console gets this for free because Nuxt
-    // runs plugin `setup()` within an injection context.
-    const vuecsOptions = app.runWithContext(() => buildVuecsInstallOptions({
+    // `buildVuecsInstallOptions()` (shared with the other consoles: icon
+    // preset + translator-wired submit-button defaults) calls
+    // `useTranslation`, which reads the ilingo instance `installTranslator`
+    // (via `install` above) provided and subscribes to it. Outside a
+    // component setup there is neither an injection context nor an effect
+    // scope, so it runs in `runInAppScope()`, which gives both and stops the
+    // subscriptions on unmount.
+    const vuecsOptions = runInAppScope(app, () => buildVuecsInstallOptions({
         // Register both themes side-by-side (mirrors the Nuxt plugin).
         // Kit theme first, app theme layers on top.
         themes: [clientWebKitTheme(), clientWebTheme()],

@@ -57,6 +57,14 @@ export const ADMIN_CONSOLE_SCHEMA = defineSchema<
             env: EnvironmentVariable.ADMIN_CONSOLE_ENABLED,
             readEnv: readEnvBool,
         },
+        cspEnabled: {
+            type: z.boolean(),
+            default: true,
+            description: 'Send a content security policy restricting the console shell to its own scripts plus the injected config script (by hash), and its requests and form posts to its own origin plus the API\'s. ' +
+            'Off, only framing is denied. Never applied while theme.fragmentsEnabled is on, since a head fragment may carry scripts.',
+            env: EnvironmentVariable.ADMIN_CONSOLE_CSP_ENABLED,
+            readEnv: readEnvBool,
+        },
         path: {
             type: z.string(),
             default: '',

@@ -32,6 +32,25 @@ requires holding it.
 **Action required:** none. A provisioning workaround that binds `admin` to an application's
 admin role only to delegate it can be dropped.
 
+### The admin and account console shells send a script policy
+
+The admin console (`/console/admin`) and the account console (`/console/account`) answer their
+page with a `Content-Security-Policy` that admits scripts from their own origin plus the one
+inline script that carries the injected runtime configuration (by its sha256 hash). Requests
+and form posts may go to the console's own origin and the API's, and `object-src` and
+`base-uri` are `'none'`. The header used to deny framing only, which it still does.
+
+Nothing changes for a deployment that serves the packaged consoles. It matters if something
+adds scripts to those pages: a reverse proxy or CDN injecting a snippet, or a browser
+extension the policy now blocks. A [head fragment](./theming.md#head-fragment) is not affected:
+while `theme.fragmentsEnabled` is on, the consoles keep the framing-only header so fragment
+scripts run.
+
+**Action required:** none for most deployments. If a proxy injects scripts into the consoles,
+turn the policy off per console with `adminConsole.cspEnabled: false` /
+`ADMIN_CONSOLE_CSP_ENABLED=false` and `accountConsole.cspEnabled: false` /
+`ACCOUNT_CONSOLE_CSP_ENABLED=false` (both default `true`).
+
 ## Next release (after v1.0.0-beta.75)
 
 ### Health moves to `/livez` and `/readyz`

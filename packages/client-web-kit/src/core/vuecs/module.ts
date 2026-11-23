@@ -18,10 +18,11 @@ import type { VuecsInstallOptions, VuecsInstallOptionsInput } from './types.ts';
  * kit) — and are passed through in the given order (kit theme first, app
  * theme layers on top).
  *
- * MUST be called within an injection context (a component setup, a Nuxt
- * plugin's `setup()`, or `app.runWithContext(...)`) AFTER the kit's
- * `install()` ran — `buildSubmitButtonDefaults()` reads the ilingo locale
- * provider via `inject()`.
+ * MUST be called AFTER the kit's `install()` ran, within an injection
+ * context AND an effect scope: `runInAppScope(app, ...)` at boot, or a
+ * component setup. `buildSubmitButtonDefaults()` reads the ilingo provider
+ * via `inject()` and its lookups subscribe to the translator, which only a
+ * scope ever stops (`app.runWithContext()` alone leaks them).
  *
  * Defaults for components the kit does not depend on stay with their
  * consumer: a `@vuecs/navigation` key (the breadcrumb landmark label) would

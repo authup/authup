@@ -12,6 +12,7 @@ import {
     expect,
     it,
 } from 'vitest';
+import { createHash } from 'node:crypto';
 import { serve } from 'routup/node';
 import { createHandler } from '../../src/index.ts';
 
@@ -28,6 +29,7 @@ describe('createHandler', () => {
         url: 'https://example.com/console/account',
         apiUrl: 'https://example.com',
         enabled: true,
+        cspEnabled: true,
         port: 3022,
         host: '',
         distPath: '',
@@ -102,6 +104,64 @@ describe('createHandler', () => {
         expect(body).toContain('"accountConsole":true');
     });
 
+    it('should send a script policy admitting exactly the injected config script', async () => {
+        const response = await fetch(`${baseURL}/`);
+        const body = await response.text();
+
+        const scripts = body.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g).toArray()
+            .map((match) => match[1] ?? '')
+            .filter((content) => content.length > 0);
+
+        // the config is the shell's one inline script, or the policy would
+        // refuse the rest of the console
+        expect(scripts).toHaveLength(1);
+
+        const hash = createHash('sha256').update(scripts[0] ?? '', 'utf8').digest('base64');
+        const policy = response.headers.get('content-security-policy') ?? '';
+
+        expect(policy).toContain(`script-src 'self' 'sha256-${hash}'`);
+        expect(policy).toContain("connect-src 'self' https://example.com");
+        expect(policy).toContain("object-src 'none'");
+        expect(policy).toContain("frame-ancestors 'none'");
+    });
+
+    it('should keep the framing-only policy when the operator switched it off', async () => {
+        const handler = await createHandler({ ...config, cspEnabled: false });
+
+        const local = serve(handler, { port: 0, silent: true });
+
+        await local.ready();
+
+        try {
+            const url = (local.url ?? '').replace(/\/+$/, '');
+            const response = await fetch(`${url}/`);
+
+            expect(response.headers.get('content-security-policy')).toEqual("frame-ancestors 'none'");
+        } finally {
+            await local.close(true);
+        }
+    });
+
+    it('should keep the framing-only policy when an operator head fragment may carry scripts', async () => {
+        const handler = await createHandler({
+            ...config,
+            theme: { ...config.theme, fragmentsEnabled: true },
+        });
+
+        const local = serve(handler, { port: 0, silent: true });
+
+        await local.ready();
+
+        try {
+            const url = (local.url ?? '').replace(/\/+$/, '');
+            const response = await fetch(`${url}/`);
+
+            expect(response.headers.get('content-security-policy')).toEqual("frame-ancestors 'none'");
+        } finally {
+            await local.close(true);
+        }
+    });
+
     it('should serve the same shell for a console route', async () => {
         const response = await fetch(`${baseURL}/sessions`);
 
@@ -174,6 +234,8 @@ describe('createHandler', () => {
             expect(body).toContain('window.__AUTHUP__');
             expect(body).toContain('"cookieSession":true');
             expect(response.headers.get('cache-control')).toEqual('no-store');
+            // a dev server's shell loads its own client, so no script policy
+            expect(response.headers.get('content-security-policy')).toEqual("frame-ancestors 'none'");
         } finally {
             await local.close(true);
         }

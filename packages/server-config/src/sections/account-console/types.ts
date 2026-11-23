@@ -39,6 +39,13 @@ export type AccountConsoleConfig = {
     enabled: boolean,
 
     /**
+     * Whether the console shell is sent with the strict content security
+     * policy (scripts by origin plus the config script by hash, requests to
+     * the own and the API origin). Read by the console service only.
+     */
+    cspEnabled: boolean,
+
+    /**
      * A substituted console package to serve instead of the resolved
      * `@authup/client-account-console`. Empty resolves the package through
      * the node_modules walk.

@@ -38,7 +38,20 @@ export default defineComponent({
             <div class="page-wrapper">
                 <PageSidebar />
                 <div class="page-content">
-                    <RouterView />
+                    <!--
+                        Keyed by the params: vue-router reuses a component
+                        when only its params change, and the record pages
+                        load their entity once in setup(), so /roles/<a>
+                        to /roles/<b> would keep <a> (and save or delete
+                        it). A query-only change (filters, pagination)
+                        keeps the instance.
+                    -->
+                    <RouterView v-slot="{ Component, route }">
+                        <component
+                            :is="Component"
+                            :key="JSON.stringify(route.params)"
+                        />
+                    </RouterView>
                 </div>
             </div>
             <PageFooter />

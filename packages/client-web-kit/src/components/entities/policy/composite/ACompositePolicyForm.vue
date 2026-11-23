@@ -33,7 +33,10 @@ export default defineComponent({
 
         IFieldValidation,
     },
-    props: { entity: { type: Object as PropType<Partial<Policy>> } },
+    props: {
+        entity: { type: Object as PropType<Partial<Policy>> },
+        busy: { type: Boolean, default: false },
+    },
     emits: ['updated'],
     setup(props, setup) {
         const form = reactive<{ items: string[], decisionStrategy: string }>({
@@ -198,6 +201,7 @@ export default defineComponent({
                 </template>
                 <VCFormSelect
                     v-model="v.fields.decisionStrategy.$model.value"
+                    :disabled="busy"
                     :options="decisionStrategyOptions"
                     :placeholder="translations.optionNoneUnanimous"
                     @update:model-value="handleDecisionStrategyUpdated"

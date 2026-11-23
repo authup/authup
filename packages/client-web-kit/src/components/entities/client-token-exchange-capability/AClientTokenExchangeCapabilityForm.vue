@@ -141,81 +141,92 @@ export default defineComponent({
 
 <template>
     <form @submit.prevent="submit">
-        <IFieldValidation
-            v-slot="{ value }"
-            :field="v.fields.audience"
+        <!--
+            Disabled while a save is pending: the response re-initializes the
+            form from the saved snapshot, so an edit typed meanwhile would be
+            overwritten.
+        -->
+        <fieldset
+            :disabled="busy"
+            class="m-0 min-w-0 border-0 p-0"
         >
-            <VCFormGroup :validation="value">
-                <template #label>
-                    {{ translations.tokenExchangeAudience }}
-                </template>
-                <VCFormInput v-model="v.fields.audience.$model.value" />
-                <template #hint>
-                    {{ translations.tokenExchangeAudienceHint }}
-                </template>
-            </VCFormGroup>
-        </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.audience"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        {{ translations.tokenExchangeAudience }}
+                    </template>
+                    <VCFormInput v-model="v.fields.audience.$model.value" />
+                    <template #hint>
+                        {{ translations.tokenExchangeAudienceHint }}
+                    </template>
+                </VCFormGroup>
+            </IFieldValidation>
 
-        <IFieldValidation
-            v-slot="{ value }"
-            :field="v.fields.value"
-        >
-            <VCFormGroup :validation="value">
-                <template #label>
-                    {{ translations.tokenExchangeCapabilityValue }}
-                </template>
-                <VCFormInput v-model="v.fields.value.$model.value" />
-                <template #hint>
-                    {{ translations.tokenExchangeCapabilityValueHint }}
-                </template>
-            </VCFormGroup>
-        </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.value"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        {{ translations.tokenExchangeCapabilityValue }}
+                    </template>
+                    <VCFormInput v-model="v.fields.value.$model.value" />
+                    <template #hint>
+                        {{ translations.tokenExchangeCapabilityValueHint }}
+                    </template>
+                </VCFormGroup>
+            </IFieldValidation>
 
-        <IFieldValidation
-            v-slot="{ value }"
-            :field="v.fields.maxAge"
-        >
-            <VCFormGroup :validation="value">
-                <template #label>
-                    {{ translations.tokenExchangeMaxAge }}
-                </template>
-                <VCFormInput
-                    type="number"
-                    :model-value="`${v.fields.maxAge.$model.value ?? 0}`"
-                    @update:model-value="(next: string) => { v.fields.maxAge.$model.value = Number(next); }"
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.maxAge"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        {{ translations.tokenExchangeMaxAge }}
+                    </template>
+                    <VCFormInput
+                        type="number"
+                        :model-value="`${v.fields.maxAge.$model.value ?? 0}`"
+                        @update:model-value="(next: string) => { v.fields.maxAge.$model.value = Number(next); }"
+                    />
+                    <template #hint>
+                        {{ translations.tokenExchangeMaxAgeHint }}
+                    </template>
+                </VCFormGroup>
+            </IFieldValidation>
+
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.realmScope"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        {{ translations.tokenExchangeRealmScope }}
+                    </template>
+                    <VCFormSelect
+                        v-model="v.fields.realmScope.$model.value"
+                        :disabled="busy"
+                        :options="realmScopeOptions"
+                    />
+                    <template #hint>
+                        {{ translations.tokenExchangeRealmScopeHint }}
+                    </template>
+                </VCFormGroup>
+            </IFieldValidation>
+
+            <div class="flex items-center gap-2">
+                <AFormSubmit
+                    :is-busy="busy"
+                    :is-editing="isEditing"
+                    :is-invalid="v.$invalid.value"
+                    @submit="submit"
                 />
-                <template #hint>
-                    {{ translations.tokenExchangeMaxAgeHint }}
-                </template>
-            </VCFormGroup>
-        </IFieldValidation>
-
-        <IFieldValidation
-            v-slot="{ value }"
-            :field="v.fields.realmScope"
-        >
-            <VCFormGroup :validation="value">
-                <template #label>
-                    {{ translations.tokenExchangeRealmScope }}
-                </template>
-                <VCFormSelect
-                    v-model="v.fields.realmScope.$model.value"
-                    :options="realmScopeOptions"
-                />
-                <template #hint>
-                    {{ translations.tokenExchangeRealmScopeHint }}
-                </template>
-            </VCFormGroup>
-        </IFieldValidation>
-
-        <div class="flex items-center gap-2">
-            <AFormSubmit
-                :is-busy="busy"
-                :is-editing="isEditing"
-                :is-invalid="v.$invalid.value"
-                @submit="submit"
-            />
-            <slot name="actions" />
-        </div>
+                <slot name="actions" />
+            </div>
+        </fieldset>
     </form>
 </template>

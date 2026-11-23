@@ -78,18 +78,26 @@ export default defineConfig({
         // packages/client-web-kit/node_modules while the app's resolves here,
         // and the two `Symbol('pinia')` values never meet.
         dedupe: ['pinia', 'vue', 'vue-router'],
-        alias: {
-            '@authup/access': path.join(packagesRoot, 'access', 'src'),
-            '@authup/core-kit': path.join(packagesRoot, 'core-kit', 'src'),
-            '@authup/core-http-kit': path.join(packagesRoot, 'core-http-kit', 'src'),
-            '@authup/core-realtime-kit': path.join(packagesRoot, 'core-realtime-kit', 'src'),
-            '@authup/errors': path.join(packagesRoot, 'errors', 'src'),
-            '@authup/i18n': path.join(packagesRoot, 'i18n', 'src'),
-            '@authup/kit': path.join(packagesRoot, 'kit', 'src'),
-            '@authup/client-web-kit': path.join(packagesRoot, 'client-web-kit', 'src'),
-            '@authup/client-web-kit-theme': path.join(packagesRoot, 'client-web-kit-theme', 'src'),
-            '@authup/client-web-theme': path.join(packagesRoot, 'client-web-theme', 'src'),
-            '@authup/specs': path.join(packagesRoot, 'specs', 'src'),
-        },
+        alias: [
+            // The offline build of iconify: no API provider, so an icon the
+            // bundle lacks renders empty in dev as in production, where the
+            // shell's script policy (connect-src) would refuse the fetch to
+            // api.iconify.design anyway. Exact match only, the `/offline`
+            // entry itself must not be rewritten.
+            { find: /^@iconify\/vue$/, replacement: '@iconify/vue/offline' },
+            ...Object.entries({
+                '@authup/access': path.join(packagesRoot, 'access', 'src'),
+                '@authup/core-kit': path.join(packagesRoot, 'core-kit', 'src'),
+                '@authup/core-http-kit': path.join(packagesRoot, 'core-http-kit', 'src'),
+                '@authup/core-realtime-kit': path.join(packagesRoot, 'core-realtime-kit', 'src'),
+                '@authup/errors': path.join(packagesRoot, 'errors', 'src'),
+                '@authup/i18n': path.join(packagesRoot, 'i18n', 'src'),
+                '@authup/kit': path.join(packagesRoot, 'kit', 'src'),
+                '@authup/client-web-kit': path.join(packagesRoot, 'client-web-kit', 'src'),
+                '@authup/client-web-kit-theme': path.join(packagesRoot, 'client-web-kit-theme', 'src'),
+                '@authup/client-web-theme': path.join(packagesRoot, 'client-web-theme', 'src'),
+                '@authup/specs': path.join(packagesRoot, 'specs', 'src'),
+            }).map(([find, replacement]) => ({ find, replacement })),
+        ],
     },
 });

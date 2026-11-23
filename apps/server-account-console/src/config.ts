@@ -85,6 +85,7 @@ export async function resolveConfig(
         url: values.url,
         apiUrl: values.publicUrl,
         enabled: values.enabled,
+        cspEnabled: values.cspEnabled,
         port: values.port,
         host: values.host,
         shutdownDelay: values.shutdownDelay,

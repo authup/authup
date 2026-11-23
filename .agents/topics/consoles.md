@@ -23,7 +23,7 @@ protocol: endpoints, issuer and every POST that mints or ends something.
 - **`/logout` forwards on BOTH methods** (the POST is the OIDC `form_post`
   binding, a navigation). The page's own JSON call is told apart by
   `Content-Type`, compared case-folded (RFC 9110).
-- `window.__AUTHUP__` is the one window global every console injects into.
+- `window.__AUTHUP__` is the one window global every authup console injects into (a `defineStaticConsole` consumer may name another via `globalName`, validated as an identifier at define time).
 - **`GET /authorize/info`** (`AuthorizeController.buildAuthorizeInfo`, the only
   producer; `client.authorize.getInfo()`) is the `/authorize` page's render
   input: anonymous, `no-store`, takes the page's query (`provider` and the
@@ -315,7 +315,18 @@ default `admin-console`, `cookieSession`, `features`), same cookie-mode rule.
   viteBase, cwd, distPath? })`. All state is instance-scoped and the
   substitution is a definition field, never a mutator, so two handlers never
   share a resolution. `serve(event, { basePath, assetBasePath, theme,
-  config })` takes a built config and the theme provider.
+  config, csp? })` takes a built config and the theme provider.
+- **Shell CSP** (#3859): with `csp` the shell gets `script-src 'self'` plus
+  the sha256 of the injected config script, `connect-src` / `form-action`
+  `'self'` plus the named origins; without it the framing-only default. The
+  hash only admits the shell if the config script is its ONE inline script.
+  The origins are validated once by `defineStaticConsoleCSP` at handler
+  build (a bad one fails the boot). Both services pass the API origin unless
+  `<name>Console.cspEnabled` is off, the shell comes from `readShell` (vite's
+  client and its HMR socket on another port) or `theme.fragmentsEnabled` is
+  on (a head fragment is documented to run scripts). The two SPA bundles
+  alias `@iconify/vue` to its offline build, so no icon is fetched from
+  api.iconify.design, which `connect-src` would refuse.
 - **One login class**: `ConsoleLogin`
   (`adapters/http/controllers/workflows/console-login/`), parameterized by
   `{ clientName, segment, consoleUrl, refusalPath? }`. Login cookie scope and
@@ -347,8 +358,10 @@ default `admin-console`, `cookieSession`, `features`), same cookie-mode rule.
   the marker after mounting on a resolved navigation. Without the marker a
   persistently 404ing asset loops.
 - **Post-login destination** rides `sessionStorage` `authup:admin:redirect`
-  (`src/redirect.ts`), validated as a site-relative path, because the server
-  callback lands on the console root. Standalone hosting keeps it in the
+  through the kit's `saveLoginRedirect` / `loadLoginRedirect` (the key in
+  `src/redirect.ts`; consoles on one origin share `sessionStorage`, so each
+  names its own), validated by `resolveLoginRedirect` as a site-relative path
+  off the login route, because the server callback lands on the console root. Standalone hosting keeps it in the
   callback URI's query (#3476).
 - **`<Suspense>`** in `src/App.vue` keeps the detail pages' `async setup()`.
   Runtime asset urls are chunk-relative via `renderBuiltUrl` (js and css),

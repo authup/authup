@@ -266,174 +266,187 @@ export default defineComponent({
 
 <template>
     <form @submit.prevent="submit">
-        <template v-if="!isEditing">
-            <IFieldValidation
-                v-slot="{ value }"
-                :field="v.fields.use"
-            >
-                <VCFormGroup :validation="value">
-                    <template #label>
-                        {{ translationsDefault.use }}
-                    </template>
-                    <VCFormSelect
-                        v-model="v.fields.use.$model.value"
-                        :options="useOptions"
-                    />
-                </VCFormGroup>
-            </IFieldValidation>
-        </template>
-
-        <IFieldValidation
-            v-slot="{ value }"
-            :field="v.fields.name"
+        <!--
+            Disabled while a save is pending: the response re-initializes the
+            form from the saved snapshot, so an edit typed meanwhile would be
+            overwritten.
+        -->
+        <fieldset
+            :disabled="busy"
+            class="m-0 min-w-0 border-0 p-0"
         >
-            <VCFormGroup :validation="value">
-                <template #label>
-                    {{ translationsDefault.name }}
-                </template>
-                <ANameInput
-                    v-model="v.fields.name.$model.value"
-                />
-            </VCFormGroup>
-        </IFieldValidation>
-
-        <template v-if="!isEditing && !isEnc">
-            <IFieldValidation
-                v-slot="{ value }"
-                :field="v.fields.signatureAlgorithm"
-            >
-                <VCFormGroup :validation="value">
-                    <template #label>
-                        {{ translationsDefault.signatureAlgorithm }}
-                    </template>
-                    <VCFormSelect
-                        v-model="v.fields.signatureAlgorithm.$model.value"
-                        :options="algorithmOptions"
-                    />
-                </VCFormGroup>
-            </IFieldValidation>
-        </template>
-
-        <template v-if="isEditing">
-            <IFieldValidation
-                v-slot="{ value }"
-                :field="v.fields.status"
-            >
-                <VCFormGroup :validation="value">
-                    <template #label>
-                        {{ translationsDefault.status }}
-                    </template>
-                    <VCFormSelect
-                        v-model="v.fields.status.$model.value"
-                        :options="statusOptions"
-                    />
-                </VCFormGroup>
-            </IFieldValidation>
-
-            <IFieldValidation
-                v-slot="{ value }"
-                :field="v.fields.priority"
-            >
-                <VCFormGroup :validation="value">
-                    <template #label>
-                        {{ translationsDefault.priority }}
-                    </template>
-                    <VCFormInput
-                        type="number"
-                        :model-value="`${v.fields.priority.$model.value ?? 0}`"
-                        @update:model-value="(next: string) => { v.fields.priority.$model.value = Number.parseInt(next, 10) || 0; }"
-                    />
-                </VCFormGroup>
-            </IFieldValidation>
-        </template>
-
-        <template v-if="!isEditing">
-            <VCFormGroup>
-                <VCFormCheckbox
-                    v-model="importEnabled"
-                    label
-                    :label-content="translationsClient.keyImportMaterial"
-                />
-            </VCFormGroup>
-
-            <template v-if="importEnabled">
+            <template v-if="!isEditing">
                 <IFieldValidation
                     v-slot="{ value }"
-                    :field="v.fields.decryptionKey"
+                    :field="v.fields.use"
                 >
                     <VCFormGroup :validation="value">
                         <template #label>
-                            {{ isEnc ? translationsClient.keyMaterialOct : translationsClient.keyMaterialPrivate }}
+                            {{ translationsDefault.use }}
                         </template>
-                        <VCFormTextarea
-                            :model-value="v.fields.decryptionKey.$model.value ?? ''"
-                            :rows="5"
-                            @update:model-value="(next: string) => { v.fields.decryptionKey.$model.value = next; }"
+                        <VCFormSelect
+                            v-model="v.fields.use.$model.value"
+                            :disabled="busy"
+                            :options="useOptions"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
+            </template>
+
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.name"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        {{ translationsDefault.name }}
+                    </template>
+                    <ANameInput
+                        v-model="v.fields.name.$model.value"
+                    />
+                </VCFormGroup>
+            </IFieldValidation>
+
+            <template v-if="!isEditing && !isEnc">
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.signatureAlgorithm"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            {{ translationsDefault.signatureAlgorithm }}
+                        </template>
+                        <VCFormSelect
+                            v-model="v.fields.signatureAlgorithm.$model.value"
+                            :disabled="busy"
+                            :options="algorithmOptions"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
+            </template>
+
+            <template v-if="isEditing">
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.status"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            {{ translationsDefault.status }}
+                        </template>
+                        <VCFormSelect
+                            v-model="v.fields.status.$model.value"
+                            :disabled="busy"
+                            :options="statusOptions"
                         />
                     </VCFormGroup>
                 </IFieldValidation>
 
-                <template v-if="!isEnc">
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.priority"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            {{ translationsDefault.priority }}
+                        </template>
+                        <VCFormInput
+                            type="number"
+                            :model-value="`${v.fields.priority.$model.value ?? 0}`"
+                            @update:model-value="(next: string) => { v.fields.priority.$model.value = Number.parseInt(next, 10) || 0; }"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
+            </template>
+
+            <template v-if="!isEditing">
+                <VCFormGroup>
+                    <VCFormCheckbox
+                        v-model="importEnabled"
+                        label
+                        :label-content="translationsClient.keyImportMaterial"
+                    />
+                </VCFormGroup>
+
+                <template v-if="importEnabled">
                     <IFieldValidation
                         v-slot="{ value }"
-                        :field="v.fields.encryptionKey"
+                        :field="v.fields.decryptionKey"
                     >
                         <VCFormGroup :validation="value">
                             <template #label>
-                                {{ translationsClient.keyMaterialPublic }}
+                                {{ isEnc ? translationsClient.keyMaterialOct : translationsClient.keyMaterialPrivate }}
                             </template>
                             <VCFormTextarea
-                                :model-value="v.fields.encryptionKey.$model.value ?? ''"
+                                :model-value="v.fields.decryptionKey.$model.value ?? ''"
                                 :rows="5"
-                                @update:model-value="(next: string) => { v.fields.encryptionKey.$model.value = next; }"
+                                @update:model-value="(next: string) => { v.fields.decryptionKey.$model.value = next; }"
                             />
                         </VCFormGroup>
                     </IFieldValidation>
 
+                    <template v-if="!isEnc">
+                        <IFieldValidation
+                            v-slot="{ value }"
+                            :field="v.fields.encryptionKey"
+                        >
+                            <VCFormGroup :validation="value">
+                                <template #label>
+                                    {{ translationsClient.keyMaterialPublic }}
+                                </template>
+                                <VCFormTextarea
+                                    :model-value="v.fields.encryptionKey.$model.value ?? ''"
+                                    :rows="5"
+                                    @update:model-value="(next: string) => { v.fields.encryptionKey.$model.value = next; }"
+                                />
+                            </VCFormGroup>
+                        </IFieldValidation>
+
+                        <IFieldValidation
+                            v-if="v.fields.certificate"
+                            v-slot="{ value }"
+                            :field="v.fields.certificate"
+                        >
+                            <VCFormGroup :validation="value">
+                                <template #label>
+                                    {{ translationsDefault.certificate }}
+                                </template>
+                                <VCFormTextarea
+                                    :model-value="v.fields.certificate.$model.value ?? ''"
+                                    :rows="8"
+                                    @update:model-value="updateCertificate"
+                                />
+                            </VCFormGroup>
+                        </IFieldValidation>
+                    </template>
+                </template>
+
+                <template v-if="!realmLock">
                     <IFieldValidation
-                        v-if="v.fields.certificate"
                         v-slot="{ value }"
-                        :field="v.fields.certificate"
+                        :field="v.fields.realmId"
                     >
                         <VCFormGroup :validation="value">
                             <template #label>
-                                {{ translationsDefault.certificate }}
+                                {{ translationsDefault.realm }}
                             </template>
-                            <VCFormTextarea
-                                :model-value="v.fields.certificate.$model.value ?? ''"
-                                :rows="8"
-                                @update:model-value="updateCertificate"
+                            <ARealmPicker
+                                :value="v.fields.realmId.$model.value"
+                                @change="(input: string[]) => {
+                                    v.fields.realmId.$model.value = input.length > 0 ? input[0] ?? '' : '';
+                                }"
                             />
                         </VCFormGroup>
                     </IFieldValidation>
                 </template>
             </template>
 
-            <template v-if="!realmLock">
-                <IFieldValidation
-                    v-slot="{ value }"
-                    :field="v.fields.realmId"
-                >
-                    <VCFormGroup :validation="value">
-                        <template #label>
-                            {{ translationsDefault.realm }}
-                        </template>
-                        <ARealmPicker
-                            :value="v.fields.realmId.$model.value"
-                            @change="(input: string[]) => {
-                                v.fields.realmId.$model.value = input.length > 0 ? input[0] ?? '' : '';
-                            }"
-                        />
-                    </VCFormGroup>
-                </IFieldValidation>
-            </template>
-        </template>
-
-        <AFormSubmit
-            :is-busy="busy"
-            :is-editing="isEditing"
-            :is-invalid="v.$invalid.value"
-            @submit="submit"
-        />
+            <AFormSubmit
+                :is-busy="busy"
+                :is-editing="isEditing"
+                :is-invalid="v.$invalid.value"
+                @submit="submit"
+            />
+        </fieldset>
     </form>
 </template>
