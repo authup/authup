@@ -97,6 +97,13 @@ describe('src/cli/commands/migration', () => {
         expect(lock.names).toEqual([]);
         expect(calls).toEqual([{ operation: 'status', locked: false }]);
     });
+
+    it('should refuse an operation it has no branch for', async () => {
+        await expect(executeMigrationOperation(dataSource, MigrationOperation.GENERATE)).rejects.toThrow();
+
+        expect(lock.names).toEqual([]);
+        expect(calls).toEqual([]);
+    });
 });
 
 describe('removePublicSchemaQualifier', () => {

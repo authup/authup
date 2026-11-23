@@ -59,19 +59,31 @@ export async function executeMigrationOperation(
     dataSource: DataSource,
     operation: MigrationOperation,
 ): Promise<void> {
-    if (operation === MigrationOperation.STATUS) {
-        await dataSource.showMigrations();
+    switch (operation) {
+        case MigrationOperation.STATUS: {
+            await dataSource.showMigrations();
 
-        return;
-    }
-
-    await withMigrationLock(dataSource, async () => {
-        if (operation === MigrationOperation.REVERT) {
-            await dataSource.undoLastMigration();
-        } else {
-            await dataSource.runMigrations();
+            return;
         }
-    });
+        case MigrationOperation.RUN: {
+            await withMigrationLock(dataSource, async () => {
+                await dataSource.runMigrations();
+            });
+
+            return;
+        }
+        case MigrationOperation.REVERT: {
+            await withMigrationLock(dataSource, async () => {
+                await dataSource.undoLastMigration();
+            });
+
+            return;
+        }
+        default: {
+            // An operation without a branch must never fall through to one (#3542).
+            throw new Error(`The migration operation "${operation}" cannot run against a data source.`);
+        }
+    }
 }
 
 /**
@@ -79,15 +91,11 @@ export async function executeMigrationOperation(
  * the objects they name are created through the `search_path`. Qualified,
  * they miss a deployment in another schema (`DB_SCHEMA`), so the generated
  * file loses the qualifier before anyone reads it (#3849).
+ *
+ * Upstream: tada5hi/typeorm-extension#1517
  */
 export function removePublicSchemaQualifier(content: string): string {
     return content.replaceAll('"public".', '');
-}
-
-async function stripPublicSchemaQualifier(filePath: string): Promise<void> {
-    const content = await fs.readFile(filePath, 'utf8');
-
-    await fs.writeFile(filePath, removePublicSchemaQualifier(content));
 }
 
 async function runMigrationOperation(
@@ -200,16 +208,22 @@ async function generateMigrations(): Promise<void> {
 
             await dataSource.runMigrations();
 
-            await generateMigration({
+            // Previewed and written here, so the postgres file is stripped
+            // before it lands. No content means nothing changed: no file.
+            const { content } = await generateMigration({
                 dataSource,
                 name: 'Default',
-                directoryPath,
                 timestamp,
                 prettify: true,
+                preview: true,
             });
 
-            if (dataSourceOptions.type === 'postgres') {
-                await stripPublicSchemaQualifier(path.join(directoryPath, `${timestamp}-Default.ts`));
+            if (content) {
+                await fs.mkdir(directoryPath, { recursive: true });
+                await fs.writeFile(
+                    path.join(directoryPath, `${timestamp}-Default.ts`),
+                    dataSourceOptions.type === 'postgres' ? removePublicSchemaQualifier(content) : content,
+                );
             }
         } finally {
             if (dataSource.isInitialized) {

@@ -17,6 +17,7 @@ import {
     it,
 } from 'vitest';
 import { SRC_PATH } from '../../../../src/path.ts';
+import { DataSourceOptionsBuilder } from '../../../../src/adapters/database/index.ts';
 import { readTestServerDataSourceOptions } from '../../../app/index.ts';
 
 const MIGRATIONS_PATH = path.join(SRC_PATH, 'adapters', 'database', 'migrations');
@@ -71,6 +72,7 @@ describe.skipIf(process.env.DB_TYPE !== 'postgres')('postgres migrations in a sc
     let admin: DataSource;
     let dataSource: DataSource;
     let migrations: MigrationClass[];
+    let publicSnapshot: string[];
 
     beforeAll(async () => {
         const options = readTestServerDataSourceOptions();
@@ -92,17 +94,16 @@ describe.skipIf(process.env.DB_TYPE !== 'postgres')('postgres migrations in a sc
         await admin.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
 
         migrations = await loadPostgresMigrations();
+        publicSnapshot = await snapshotPublic();
 
-        // DB_SCHEMA names the schema typeorm qualifies its own tables with;
-        // the search_path is where the unqualified migration statements land.
+        // DB_SCHEMA alone: the builder puts the schema on the search_path,
+        // where the unqualified migration statements land.
         dataSource = new DataSource({
-            ...options,
-            schema,
+            ...new DataSourceOptionsBuilder().buildWith({ ...options, schema } as DataSourceOptions),
             entities: [],
             subscribers: [],
             migrations,
             migrationsTransactionMode: 'all',
-            extra: { options: `-c search_path="${schema}",public` },
         } as DataSourceOptions);
         await dataSource.initialize();
     }, MIGRATION_TIMEOUT);
@@ -127,14 +128,25 @@ describe.skipIf(process.env.DB_TYPE !== 'postgres')('postgres migrations in a sc
         return rows.map((row) => row.table_name);
     }
 
-    it('should apply every migration inside the schema', async () => {
-        const publicTables = await listTables('public');
+    // A statement falling through to `public` (a table, or an index created on
+    // or dropped from a table there) changes this.
+    async function snapshotPublic(): Promise<string[]> {
+        const indexes: { indexname: string }[] = await admin.query(
+            'SELECT indexname FROM pg_indexes WHERE schemaname = \'public\' ORDER BY indexname',
+        );
 
+        return [
+            ...(await listTables('public')).map((name) => `table:${name}`),
+            ...indexes.map((row) => `index:${row.indexname}`),
+        ];
+    }
+
+    it('should apply every migration inside the schema', async () => {
         const executed = await dataSource.runMigrations();
 
         expect(executed).toHaveLength(migrations.length);
         expect(await listTables(schema)).toContain('auth_realms');
-        expect(await listTables('public')).toEqual(publicTables);
+        expect(await snapshotPublic()).toEqual(publicSnapshot);
     }, MIGRATION_TIMEOUT);
 
     it('should revert every migration inside the schema', async () => {
@@ -147,5 +159,6 @@ describe.skipIf(process.env.DB_TYPE !== 'postgres')('postgres migrations in a sc
         }
 
         expect(await listTables(schema)).toEqual(['migrations']);
+        expect(await snapshotPublic()).toEqual(publicSnapshot);
     }, MIGRATION_TIMEOUT);
 });
