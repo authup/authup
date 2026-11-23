@@ -102,13 +102,30 @@ describe('verifier local', () => {
         expect(getJwk).not.toHaveBeenCalled();
     });
 
-    it('should reject a realm key without an algorithm with a JWTError', async () => {
-        const jwk : Partial<OAuth2JsonWebKey> = { ...await faker.useJwk() };
+    it.each([
+        ['an html page', async () => '<!doctype html><html></html>'],
+        ['null', async () => null],
+        ['an object without kty', async () => {
+            const jwk : Partial<OAuth2JsonWebKey> = { ...await faker.useJwk() };
 
-        delete jwk.alg;
-        getJwk.mockResolvedValueOnce(jwk);
+            delete jwk.kty;
 
-        await expect(verifier.verify(await faker.sign(buildPayload()))).rejects.toSatisfy(isJWTError);
+            return jwk;
+        }],
+        ['a realm key without an algorithm', async () => {
+            const jwk : Partial<OAuth2JsonWebKey> = { ...await faker.useJwk() };
+
+            delete jwk.alg;
+
+            return jwk;
+        }],
+    ])('should reject a key endpoint answering %s with an upstream error, never a JWTError', async (_label, build) => {
+        getJwk.mockResolvedValueOnce(await build());
+
+        await expect(verifier.verify(await faker.sign(buildPayload()))).rejects.toSatisfy(
+            (e: unknown) => isUpstreamError(e) && !isJWTError(e) &&
+                (e as Error).message === 'The auth server answered no usable key.',
+        );
     });
 
     it('should reject an RSA realm key shorter than 2048 bits with a JWTError naming the cause', async () => {

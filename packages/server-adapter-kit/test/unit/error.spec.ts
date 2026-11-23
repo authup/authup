@@ -98,14 +98,15 @@ describe('toVerificationError', () => {
         expect(output).toMatchObject({ cause: input });
     });
 
-    it('maps a client timeout wrapped by the key loader onto an upstream timeout', async () => {
+    it('maps a client timeout wrapped by the key loader onto an upstream timeout, before the upstream error', async () => {
         const timeout = await createClientTimeoutError();
-        const wrapped = new JWTError({ message: 'Failed to fetch JWK from auth server.', cause: timeout as Error });
+        const wrapped = new UpstreamError({ message: 'Failed to fetch JWK from auth server.', cause: timeout });
         const input = new VouchlyError(VouchlyErrorCode.KEY_UNAVAILABLE, 'unavailable', { cause: wrapped });
 
         const output = toVerificationError(input);
 
         expect(isUpstreamTimeoutError(output)).toBe(true);
+        expect(isUpstreamError(output)).toBe(false);
         expect(isJWTError(output)).toBe(false);
     });
 

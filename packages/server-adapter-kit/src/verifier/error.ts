@@ -13,11 +13,11 @@ import { VouchlyErrorCode, isVouchlyError } from 'vouchly';
 
 const CAUSE_DEPTH_MAX = 10;
 
-function findCause<T>(input: unknown, guard: (value: unknown) => value is T) : T | undefined {
+function findCause(input: unknown, match: (value: unknown) => boolean) : unknown {
     let current = input;
 
     for (let i = 0; i < CAUSE_DEPTH_MAX && isObject(current); i++) {
-        if (guard(current)) {
+        if (match(current)) {
             return current;
         }
 
@@ -27,7 +27,7 @@ function findCause<T>(input: unknown, guard: (value: unknown) => value is T) : T
     return undefined;
 }
 
-function isTimeout(input: unknown) : input is object {
+function isTimeout(input: unknown) : boolean {
     return (isVouchlyError(input) && input.code === VouchlyErrorCode.TIMEOUT) ||
         isClientErrorDueTimeout(input);
 }

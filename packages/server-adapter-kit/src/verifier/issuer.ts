@@ -87,10 +87,12 @@ function createKeyLoader(client: Client) : KeyLoader {
             });
         }
 
-        // authup always names the algorithm of a realm key; a key without one
-        // would be imported with whatever the token header claims.
-        if (!jwk.alg) {
-            throw JWTError.payloadInvalid('The jwt key is not valid.');
+        // A 200 that is no usable key (an html page of a proxy, an object
+        // without kty) is not about the token. authup always names the
+        // algorithm of a realm key; a key without one would be imported with
+        // whatever the token header claims.
+        if (!isObject(jwk) || typeof jwk.kty !== 'string' || !jwk.kty || typeof jwk.alg !== 'string' || !jwk.alg) {
+            throw new UpstreamError({ message: 'The auth server answered no usable key.' });
         }
 
         return jwk as Awaited<ReturnType<KeyLoader>>;

@@ -51,7 +51,38 @@ turn the policy off per console with `adminConsole.cspEnabled: false` /
 `ADMIN_CONSOLE_CSP_ENABLED=false` and `accountConsole.cspEnabled: false` /
 `ACCOUNT_CONSOLE_CSP_ENABLED=false` (both default `true`).
 
-## Next release (after v1.0.0-beta.75)
+### An unreachable authup is no longer an invalid token
+
+A `TokenVerifier` rejects with an `UpstreamError` (`upstream_error`, HTTP 502) instead of a
+`JWTError` (`invalid_token`, HTTP 401) for every failure that is not about the token, with the
+original failure as `cause`:
+
+- authup cannot be reached (connection refused, network error);
+- a key fetch in local mode fails other than with 404 (an unknown `kid` stays `invalid_token`),
+  or answers no usable key (no object, no `kty` or no `alg`);
+- the introspection in remote mode answers anything but 200 or 400 (a 401 after the re-mint
+  means the verifier's client is misconfigured), or answers no JSON object;
+- the client credentials mint of remote mode fails.
+
+An introspection answered 400 stays `invalid_token`: that request carries nothing but the
+token. `POST /token/introspect` itself answers `200 {"active": false}` instead of 400
+(`identity_invalid`) for a token whose subject no longer exists, so a deleted user's token is
+reported `inactive_token`.
+
+**May need action:** recognize the outage with `isUpstreamError` from `@authup/errors` and
+answer 502 or 503 instead of 401.
+
+### `RedisTokenCache` moves to `@authup/server-adapter-redis`
+
+`@authup/server-adapter-kit` no longer exports `RedisTokenCache` and no longer declares `ioredis`
+as a peer dependency, so a resource server using only `MemoryTokenCache` does not install
+`ioredis`. The class lives in the new package `@authup/server-adapter-redis`, unchanged, with
+`ioredis` (`^6.0.0`) as its peer dependency.
+
+**Action required:** A resource server using `RedisTokenCache` installs
+`@authup/server-adapter-redis` and imports the class from there.
+
+## v1.0.0-beta.76 (was: next release after v1.0.0-beta.75)
 
 ### Health moves to `/livez` and `/readyz`
 
@@ -105,36 +136,6 @@ the verification.
 also does so for "authup did not answer in time". Recognize the timeout with
 `isUpstreamTimeoutError` from `@authup/errors` and answer 503 or 504 instead, so a client
 does not discard a token that may well be valid.
-
-### An unreachable authup is no longer an invalid token
-
-A `TokenVerifier` rejects with an `UpstreamError` (`upstream_error`, HTTP 502) instead of a
-`JWTError` (`invalid_token`, HTTP 401) for every failure that is not about the token, with the
-original failure as `cause`:
-
-- authup cannot be reached (connection refused, network error);
-- a key fetch in local mode fails other than with 404 (an unknown `kid` stays `invalid_token`);
-- the introspection in remote mode answers anything but 200 or 400 (a 401 after the re-mint
-  means the verifier's client is misconfigured), or answers no JSON object;
-- the client credentials mint of remote mode fails.
-
-An introspection answered 400 stays `invalid_token`: that request carries nothing but the
-token. `POST /token/introspect` itself answers `200 {"active": false}` instead of 400
-(`identity_invalid`) for a token whose subject no longer exists, so a deleted user's token is
-reported `inactive_token`.
-
-**May need action:** recognize the outage with `isUpstreamError` from `@authup/errors` and
-answer 502 or 503 instead of 401.
-
-### `RedisTokenCache` moves to `@authup/server-adapter-redis`
-
-`@authup/server-adapter-kit` no longer exports `RedisTokenCache` and no longer declares `ioredis`
-as a peer dependency, so a resource server using only `MemoryTokenCache` does not install
-`ioredis`. The class lives in the new package `@authup/server-adapter-redis`, unchanged, with
-`ioredis` (`^6.0.0`) as its peer dependency.
-
-**Action required:** A resource server using `RedisTokenCache` installs
-`@authup/server-adapter-redis` and imports the class from there.
 
 ### The kit refreshes a token on a client of its own
 

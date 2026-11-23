@@ -100,8 +100,8 @@ Remote verification introspects with the token `creator` mints and keeps it unti
 `401`; it then mints a new one and asks once more. An inactive token is rejected with
 `inactive_token` and an introspection answered 400 with `invalid_token`. Any other failed
 introspection, a failed mint, an unreachable authup and a key fetch failing other than with 404
-reject with `UpstreamError` (`upstream_error`, HTTP 502), naming the status authup answered and
-carrying the original failure as `cause`.
+or answering no usable key reject with `UpstreamError` (`upstream_error`, HTTP 502), carrying the
+original failure as `cause`. When authup answered the introspection, the message names the status.
 
 ## Timeouts
 
