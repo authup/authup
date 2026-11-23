@@ -289,6 +289,7 @@ export default defineComponent({
                     </template>
                     <VCFormSelect
                         v-model="v.fields.decisionStrategy.$model.value"
+                        :disabled="busy"
                         :options="decisionStrategyOptions"
                         :placeholder="translationsClient.optionNoneUnanimous"
                     />

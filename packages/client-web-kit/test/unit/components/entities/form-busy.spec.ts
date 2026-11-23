@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { VCFormSelect } from '@vuecs/forms';
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import type { Component } from 'vue';
@@ -92,6 +93,10 @@ describe.each<[string, Component, string, Record<string, unknown>?]>([
         await flushPromises();
 
         const fieldset = () => wrapper.find('fieldset');
+        // A select opens its menu in a portal outside the fieldset, so it is
+        // disabled through its own prop.
+        const selectsDisabled = () => wrapper.findAllComponents(VCFormSelect)
+            .map((select) => select.props('disabled'));
 
         expect(fieldset().exists()).toBe(true);
         expect(fieldset().attributes('disabled')).toBeUndefined();
@@ -100,11 +105,13 @@ describe.each<[string, Component, string, Record<string, unknown>?]>([
         await flushPromises();
 
         expect(fieldset().attributes('disabled')).toBeDefined();
+        expect(selectsDisabled().every(Boolean)).toBe(true);
 
         deferred.resolve();
         await flushPromises();
 
         expect(fieldset().attributes('disabled')).toBeUndefined();
+        expect(selectsDisabled().some(Boolean)).toBe(false);
 
         wrapper.unmount();
     });

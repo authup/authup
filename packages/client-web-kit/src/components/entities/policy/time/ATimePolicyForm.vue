@@ -30,7 +30,10 @@ export default defineComponent({
 
         IFieldValidation,
     },
-    props: { entity: { type: Object as PropType<Partial<Policy>> } },
+    props: {
+        entity: { type: Object as PropType<Partial<Policy>> },
+        busy: { type: Boolean, default: false },
+    },
     emits: ['updated'],
     setup(props, setup) {
         const form = reactive({
@@ -187,6 +190,7 @@ export default defineComponent({
                         </template>
                         <VCFormSelect
                             v-model="v.fields.interval.$model.value"
+                            :disabled="busy"
                             :options="intervalOptions"
                             placeholder="-- None --"
                             @update:model-value="handleIntervalUpdated"

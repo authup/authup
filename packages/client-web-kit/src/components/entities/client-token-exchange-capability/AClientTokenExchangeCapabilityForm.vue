@@ -209,6 +209,7 @@ export default defineComponent({
                     </template>
                     <VCFormSelect
                         v-model="v.fields.realmScope.$model.value"
+                        :disabled="busy"
                         :options="realmScopeOptions"
                     />
                     <template #hint>

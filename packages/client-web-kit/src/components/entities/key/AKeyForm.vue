@@ -286,6 +286,7 @@ export default defineComponent({
                         </template>
                         <VCFormSelect
                             v-model="v.fields.use.$model.value"
+                            :disabled="busy"
                             :options="useOptions"
                         />
                     </VCFormGroup>
@@ -317,6 +318,7 @@ export default defineComponent({
                         </template>
                         <VCFormSelect
                             v-model="v.fields.signatureAlgorithm.$model.value"
+                            :disabled="busy"
                             :options="algorithmOptions"
                         />
                     </VCFormGroup>
@@ -334,6 +336,7 @@ export default defineComponent({
                         </template>
                         <VCFormSelect
                             v-model="v.fields.status.$model.value"
+                            :disabled="busy"
                             :options="statusOptions"
                         />
                     </VCFormGroup>

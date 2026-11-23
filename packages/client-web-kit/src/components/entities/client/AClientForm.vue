@@ -511,6 +511,7 @@ export default defineComponent({
                         </template>
                         <VCFormSelect
                             v-model="v.fields.authMethod.$model.value"
+                            :disabled="isBusy"
                             :options="authMethodOptions"
                         />
                     </VCFormGroup>
@@ -525,6 +526,7 @@ export default defineComponent({
                         </template>
                         <VCFormSelect
                             v-model="v.fields.tokenBindingMethod.$model.value"
+                            :disabled="isBusy"
                             :options="tokenBindingMethodOptions"
                         />
                     </VCFormGroup>

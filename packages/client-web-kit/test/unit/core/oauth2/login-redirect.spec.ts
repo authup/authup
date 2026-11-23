@@ -40,6 +40,8 @@ describe('core/oauth2/login-redirect', () => {
             42,
             '',
             '//evil.test/x',
+            '/.//evil.test/x',
+            '/a/..//evil.test/x',
             '/\\evil.test/x',
             'https://evil.test/x',
             ['java', 'script:alert(1)'].join(''),
@@ -96,6 +98,24 @@ describe('core/oauth2/login-redirect', () => {
 
             expect(loadLoginRedirect()).toBeUndefined();
             expect(loadLoginRedirect({ storageKey: 'app:redirect' })).toEqual('/roles');
+        });
+
+        it('degrades when reading sessionStorage itself throws', () => {
+            const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'sessionStorage');
+
+            Object.defineProperty(globalThis, 'sessionStorage', {
+                configurable: true,
+                get() {
+                    throw new DOMException('blocked', 'SecurityError');
+                },
+            });
+
+            try {
+                expect(() => saveLoginRedirect('/roles')).not.toThrow();
+                expect(loadLoginRedirect()).toBeUndefined();
+            } finally {
+                Object.defineProperty(globalThis, 'sessionStorage', descriptor as PropertyDescriptor);
+            }
         });
     });
 });

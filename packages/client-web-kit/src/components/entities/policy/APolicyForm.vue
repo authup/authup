@@ -162,6 +162,7 @@ export default defineComponent({
                         <component
                             :is="typeComponents[typeComputed]"
                             :entity="entity"
+                            :busy="busy"
                         />
                     </template>
                 </slot>

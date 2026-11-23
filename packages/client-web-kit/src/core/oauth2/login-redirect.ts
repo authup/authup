@@ -58,7 +58,9 @@ export function resolveLoginRedirect(
         return undefined;
     }
 
-    if (url.origin !== DESTINATION_BASE) {
+    // A normalized path starting with `//` (from `/.//host`, say) is a
+    // network-path reference to whoever reads it next.
+    if (url.origin !== DESTINATION_BASE || url.pathname.startsWith('//')) {
         return undefined;
     }
 
@@ -85,14 +87,16 @@ export function saveLoginRedirect(
     value: unknown,
     options: LoginRedirectOptions = {},
 ) : void {
-    if (typeof sessionStorage === 'undefined') {
-        return;
-    }
-
     const key = options.storageKey ?? LOGIN_REDIRECT_STORAGE_KEY;
     const destination = resolveLoginRedirect(value, options);
 
+    // The `sessionStorage` getter itself throws where site data is blocked,
+    // so the availability check sits inside the `try` as well.
     try {
+        if (typeof sessionStorage === 'undefined') {
+            return;
+        }
+
         if (destination) {
             sessionStorage.setItem(key, destination);
         } else {
@@ -108,13 +112,13 @@ export function saveLoginRedirect(
  * way out. Meant to run at the top of every navigation, so it never throws.
  */
 export function loadLoginRedirect(options: LoginRedirectOptions = {}) : string | undefined {
-    if (typeof sessionStorage === 'undefined') {
-        return undefined;
-    }
-
     const key = options.storageKey ?? LOGIN_REDIRECT_STORAGE_KEY;
 
     try {
+        if (typeof sessionStorage === 'undefined') {
+            return undefined;
+        }
+
         const value = sessionStorage.getItem(key);
 
         if (!value) {
