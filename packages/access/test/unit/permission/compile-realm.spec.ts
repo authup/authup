@@ -11,6 +11,8 @@ import { compileFilters } from '@rapiq/adapter-memory';
 import type { IdentityPolicyData } from '../../../src/index.ts';
 import {
     BuiltInPolicyType,
+    PermissionEvaluator,
+    PermissionMemoryProvider,
     PolicyData,
     createAuthorizationEvaluator,
     reachesRecord,
@@ -149,6 +151,22 @@ describe('src/permission/evaluator (compile, fixed resource realm)', () => {
             realm: realmA,
             data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: realmB }),
         })).rejects.toThrow();
+    });
+
+    it('refuses a realm next to realmMatch on a plain evaluator', async () => {
+        const evaluator = new PermissionEvaluator({ provider: new PermissionMemoryProvider([{ permission: { name: 'post_read' } }]) });
+
+        await expect(evaluator.compile({
+            name: 'post_read',
+            realm: realmA,
+            data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: realmB }),
+        })).rejects.toThrow(BuiltInPolicyType.REALM_MATCH);
+        await expect(evaluator.compile({
+            name: 'post_read',
+            realm: false,
+            data: new PolicyData({ [BuiltInPolicyType.REALM_MATCH]: realmB }),
+        })).rejects.toThrow(BuiltInPolicyType.REALM_MATCH);
+        await expect(evaluator.compile({ name: 'post_read', realm: realmA })).resolves.toEqual({ verdict: 'allow' });
     });
 
     it('refuses a malformed realm', async () => {

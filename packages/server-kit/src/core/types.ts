@@ -65,10 +65,11 @@ export type JunctionOwnerRealmColumn = {
 
 /**
  * A junction's owner realm for an owner pinned to one realm that carries no
- * realm column: the realm itself, or a resolver per row.
+ * realm column: the realm itself, or a resolver per row. `false` names an
+ * owner that belongs to no realm (`evaluateRecord`'s `realm: false`).
  */
 export type JunctionOwnerRealmResolved = {
-    realm: string | null | ((entity: Record<string, any>) => string | null),
+    realm: string | null | false | ((entity: Record<string, any>) => string | null | false),
     key?: never,
 };
 

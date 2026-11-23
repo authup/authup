@@ -18,6 +18,13 @@ export type AuthorizationCatalogCacheOptions = {
      */
     read: () => Promise<AuthorizationEvaluatorInput['catalog']>,
     /**
+     * How long a catalog read is served, in milliseconds (default
+     * {@link AUTHORIZATION_CATALOG_CACHE_MAX_AGE}); the next caller after it
+     * reads again. A policy edited on the server is not seen before. Pass
+     * `Infinity` to keep the catalog until a stale grant or `invalidate()`.
+     */
+    maxAge?: number,
+    /**
      * Handed to every `createAuthorizationEvaluator` call.
      */
     evaluator?: AuthorizationEvaluatorOptions,
@@ -25,8 +32,8 @@ export type AuthorizationCatalogCacheOptions = {
 
 export interface IAuthorizationCatalogCache {
     /**
-     * The catalog, read once per cache. Concurrent callers share one read;
-     * a failed read is not kept.
+     * The catalog, read once per `maxAge`. Concurrent callers share one
+     * read; a failed read is not kept.
      */
     get(): Promise<AuthorizationEvaluatorInput['catalog']>;
 

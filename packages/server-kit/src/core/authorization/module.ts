@@ -12,7 +12,14 @@ import type { AuthorizationCatalogCacheOptions, IAuthorizationCatalogCache } fro
 type Catalog = AuthorizationEvaluatorInput['catalog'];
 
 /**
- * The authorization catalog of a resource server, read once per process.
+ * 60 seconds: the backstop the server's own tagged read cache keeps for
+ * the catalog reads, so a resource server lags a policy edit no longer
+ * than the server can, and a busy one reads the catalog once a minute.
+ */
+export const AUTHORIZATION_CATALOG_CACHE_MAX_AGE = 60_000;
+
+/**
+ * The authorization catalog of a resource server, read once per `maxAge`.
  * A stale catalog is dropped only by the caller that found it stale on the
  * read it used, so concurrent stale callers share one refetch.
  */
@@ -21,15 +28,24 @@ export class AuthorizationCatalogCache implements IAuthorizationCatalogCache {
 
     protected current: Promise<Catalog> | undefined;
 
+    protected readAt = 0;
+
     constructor(options: AuthorizationCatalogCacheOptions) {
         this.options = options;
     }
 
     get(): Promise<Catalog> {
+        const maxAge = this.options.maxAge ?? AUTHORIZATION_CATALOG_CACHE_MAX_AGE;
+
+        if (this.current && Date.now() - this.readAt >= maxAge) {
+            this.current = undefined;
+        }
+
         if (!this.current) {
             const read = this.options.read();
 
             this.current = read;
+            this.readAt = Date.now();
 
             read.catch(() => {
                 if (this.current === read) {

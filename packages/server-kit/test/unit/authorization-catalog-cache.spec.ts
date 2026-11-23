@@ -7,8 +7,14 @@
 
 import type { AuthorizationCatalog, AuthorizationGrant, IdentityPolicyData } from '@authup/access';
 import { isAuthorizationCatalogStaleError, reachesRecord } from '@authup/access';
-import { describe, expect, it } from 'vitest';
-import { AuthorizationCatalogCache } from '../../src/core/index.ts';
+import {
+    afterEach,
+    describe,
+    expect,
+    it,
+    vi,
+} from 'vitest';
+import { AUTHORIZATION_CATALOG_CACHE_MAX_AGE, AuthorizationCatalogCache } from '../../src/core/index.ts';
 
 const identity : IdentityPolicyData = {
     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
@@ -162,5 +168,80 @@ describe('core/authorization/catalog-cache', () => {
         await cache.get();
 
         expect(reads).toBe(2);
+    });
+
+    describe('maxAge', () => {
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
+        it('reads again after maxAge, sharing that read', async () => {
+            vi.useFakeTimers();
+
+            let reads = 0;
+            const cache = new AuthorizationCatalogCache({
+                maxAge: 1_000,
+                read: async () => {
+                    reads++;
+
+                    return buildCatalog(['post_read']);
+                },
+            });
+
+            await cache.get();
+            vi.advanceTimersByTime(999);
+            await cache.get();
+
+            expect(reads).toBe(1);
+
+            vi.advanceTimersByTime(1);
+            await Promise.all([cache.get(), cache.get()]);
+
+            expect(reads).toBe(2);
+        });
+
+        it('defaults to a bounded maxAge', async () => {
+            vi.useFakeTimers();
+
+            let reads = 0;
+            const cache = new AuthorizationCatalogCache({
+                read: async () => {
+                    reads++;
+
+                    return buildCatalog(['post_read']);
+                },
+            });
+
+            await cache.get();
+            vi.advanceTimersByTime(AUTHORIZATION_CATALOG_CACHE_MAX_AGE - 1);
+            await cache.get();
+
+            expect(reads).toBe(1);
+
+            vi.advanceTimersByTime(1);
+            await cache.get();
+
+            expect(reads).toBe(2);
+        });
+
+        it('keeps the catalog with an infinite maxAge', async () => {
+            vi.useFakeTimers();
+
+            let reads = 0;
+            const cache = new AuthorizationCatalogCache({
+                maxAge: Infinity,
+                read: async () => {
+                    reads++;
+
+                    return buildCatalog(['post_read']);
+                },
+            });
+
+            await cache.get();
+            vi.advanceTimersByTime(AUTHORIZATION_CATALOG_CACHE_MAX_AGE * 100);
+            await cache.get();
+
+            expect(reads).toBe(1);
+        });
     });
 });

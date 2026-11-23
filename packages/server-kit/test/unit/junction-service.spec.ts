@@ -34,6 +34,14 @@ class ResolvedJunction extends JunctionEntityService {
     }
 }
 
+class RealmlessJunction extends JunctionEntityService {
+    protected readonly ownerRealm = { realm: false } as const;
+
+    realm(entity: Record<string, any>) {
+        return this.junctionResourceRealm(entity);
+    }
+}
+
 // @ts-expect-error a junction must declare where its owner realm comes from
 class UndeclaredJunction extends JunctionEntityService {}
 
@@ -63,6 +71,10 @@ describe('JunctionEntityService', () => {
 
         expect(service.realm({ postRealm: 'r2' })).toBe('r2');
         expect(service.realm({})).toBeNull();
+    });
+
+    it('answers false for an owner of no realm', () => {
+        expect(new RealmlessJunction().realm({ postId: 'p1' })).toBe(false);
     });
 
     it('keeps the compile-time declarations honest', () => {
