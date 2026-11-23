@@ -181,73 +181,83 @@ export default defineComponent({
 
 <template>
     <form @submit.prevent="submit">
-        <IFieldValidation
-            v-slot="{ value }"
-            :field="v.fields.name"
+        <!--
+            Disabled while a save is pending: the response re-initializes the
+            form from the saved snapshot, so an edit typed meanwhile would be
+            overwritten.
+        -->
+        <fieldset
+            :disabled="busy"
+            class="m-0 min-w-0 border-0 p-0"
         >
-            <VCFormGroup :validation="value">
-                <template #label>
-                    {{ translationsDefault.name }}
-                </template>
-                <ANameInput v-model="v.fields.name.$model.value" />
-            </VCFormGroup>
-        </IFieldValidation>
-
-        <IFieldValidation
-            v-slot="{ value }"
-            :field="v.fields.enabled"
-        >
-            <VCFormGroup :validation="value">
-                <VCFormSwitch
-                    v-model="v.fields.enabled.$model.value"
-                    :label="true"
-                    :label-content="translationsDefault.enabled"
-                />
-            </VCFormGroup>
-        </IFieldValidation>
-
-        <template v-if="!isEditing">
             <IFieldValidation
                 v-slot="{ value }"
-                :field="v.fields.certificate"
+                :field="v.fields.name"
             >
                 <VCFormGroup :validation="value">
                     <template #label>
-                        {{ translationsDefault.certificate }}
+                        {{ translationsDefault.name }}
                     </template>
-                    <VCFormTextarea
-                        :model-value="v.fields.certificate.$model.value"
-                        :rows="12"
-                        @update:model-value="(next: string) => { v.fields.certificate.$model.value = next; }"
+                    <ANameInput v-model="v.fields.name.$model.value" />
+                </VCFormGroup>
+            </IFieldValidation>
+
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.enabled"
+            >
+                <VCFormGroup :validation="value">
+                    <VCFormSwitch
+                        v-model="v.fields.enabled.$model.value"
+                        :label="true"
+                        :label-content="translationsDefault.enabled"
                     />
                 </VCFormGroup>
             </IFieldValidation>
 
-            <template v-if="!realmLock">
+            <template v-if="!isEditing">
                 <IFieldValidation
                     v-slot="{ value }"
-                    :field="v.fields.realmId"
+                    :field="v.fields.certificate"
                 >
                     <VCFormGroup :validation="value">
                         <template #label>
-                            {{ translationsDefault.realm }}
+                            {{ translationsDefault.certificate }}
                         </template>
-                        <ARealmPicker
-                            :value="v.fields.realmId.$model.value"
-                            @change="(input: string[]) => {
-                                v.fields.realmId.$model.value = input.length > 0 ? input[0] ?? '' : '';
-                            }"
+                        <VCFormTextarea
+                            :model-value="v.fields.certificate.$model.value"
+                            :rows="12"
+                            @update:model-value="(next: string) => { v.fields.certificate.$model.value = next; }"
                         />
                     </VCFormGroup>
                 </IFieldValidation>
-            </template>
-        </template>
 
-        <AFormSubmit
-            :is-busy="busy"
-            :is-editing="isEditing"
-            :is-invalid="v.$invalid.value"
-            @submit="submit"
-        />
+                <template v-if="!realmLock">
+                    <IFieldValidation
+                        v-slot="{ value }"
+                        :field="v.fields.realmId"
+                    >
+                        <VCFormGroup :validation="value">
+                            <template #label>
+                                {{ translationsDefault.realm }}
+                            </template>
+                            <ARealmPicker
+                                :value="v.fields.realmId.$model.value"
+                                @change="(input: string[]) => {
+                                    v.fields.realmId.$model.value = input.length > 0 ? input[0] ?? '' : '';
+                                }"
+                            />
+                        </VCFormGroup>
+                    </IFieldValidation>
+                </template>
+            </template>
+
+            <AFormSubmit
+                :is-busy="busy"
+                :is-editing="isEditing"
+                :is-invalid="v.$invalid.value"
+                @submit="submit"
+            />
+        </fieldset>
     </form>
 </template>

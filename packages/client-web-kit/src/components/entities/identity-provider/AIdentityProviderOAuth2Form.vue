@@ -99,7 +99,6 @@ export default defineComponent({
             return props.preset;
         });
 
-        const busy = ref(false);
         // Parent collector — see APolicyForm for the same pattern.
         const v = useValidup(new Container(), reactive({}), { stopPropagation: true });
         const isEditing = useIsEditing(manager.data);
@@ -217,7 +216,7 @@ export default defineComponent({
         return {
             translations,
             data: manager.data,
-            busy,
+            busy: manager.busy,
             isEditing,
             isInvalid,
             protocolEff,
@@ -234,93 +233,103 @@ export default defineComponent({
 
 <template>
     <form @submit.prevent="submit">
-        <template v-if="!data">
-            <AIdentityProviderPreset
-                v-if="presetEff"
-                :id="presetEff"
-                :key="presetEff"
-            >
-                <template #default="element">
-                    <div>
-                        <h4 class="mb-3">
-                            <VCIcon
-                                :name="element.icon"
-                                class="pe-1"
-                            /> {{ element.name }}
-                        </h4>
-                    </div>
-                </template>
-            </AIdentityProviderPreset>
-            <AIdentityProviderProtocol
-                v-else-if="protocolEff"
-                :id="protocolEff"
-                :key="protocolEff"
-            >
-                <template #default="element">
-                    <div>
-                        <h4 class="mb-3">
-                            <VCIcon
-                                :name="element.icon"
-                                class="pe-1"
-                            /> {{ element.name }}
-                        </h4>
-                    </div>
-                </template>
-            </AIdentityProviderProtocol>
-        </template>
+        <!--
+            Disabled while a save is pending: the response re-initializes the
+            form from the saved snapshot, so an edit typed meanwhile would be
+            overwritten.
+        -->
+        <fieldset
+            :disabled="busy"
+            class="m-0 min-w-0 border-0 p-0"
+        >
+            <template v-if="!data">
+                <AIdentityProviderPreset
+                    v-if="presetEff"
+                    :id="presetEff"
+                    :key="presetEff"
+                >
+                    <template #default="element">
+                        <div>
+                            <h4 class="mb-3">
+                                <VCIcon
+                                    :name="element.icon"
+                                    class="pe-1"
+                                /> {{ element.name }}
+                            </h4>
+                        </div>
+                    </template>
+                </AIdentityProviderPreset>
+                <AIdentityProviderProtocol
+                    v-else-if="protocolEff"
+                    :id="protocolEff"
+                    :key="protocolEff"
+                >
+                    <template #default="element">
+                        <div>
+                            <h4 class="mb-3">
+                                <VCIcon
+                                    :name="element.icon"
+                                    class="pe-1"
+                                /> {{ element.name }}
+                            </h4>
+                        </div>
+                    </template>
+                </AIdentityProviderProtocol>
+            </template>
 
-        <template v-if="isEditing">
-            <h6>
-                <VCIcon name="fa6-solid:circle-info" /> {{ translations.details }}
-            </h6>
-            <VCFormGroup>
-                <template #label>
-                    {{ translations.redirectUrl }}
-                </template>
-                <VCFormInput
-                    :model-value="redirectUri"
-                    :disabled="true"
-                />
-            </VCFormGroup>
-        </template>
-
-        <div class="flex flex-wrap -mx-2">
-            <div class="flex-1 basis-0 px-2">
+            <template v-if="isEditing">
                 <h6>
-                    <VCIcon name="fa6-solid:wrench" /> {{ translations.basic }}
+                    <VCIcon name="fa6-solid:circle-info" /> {{ translations.details }}
                 </h6>
-                <AIdentityProviderBasicFields
-                    ref="basicFieldsRef"
-                    :entity="data"
-                />
-                <AIdentityProviderEnrollmentFields
-                    :entity="data"
-                    :realm-id="realmId"
-                />
-            </div>
-            <div class="flex-1 basis-0 px-2">
-                <h6>
-                    <VCIcon name="fa6-solid:lock" /> {{ translations.security }}
-                </h6>
-                <AIdentityProviderOAuth2ClientFields :entity="data" />
-            </div>
-        </div>
+                <VCFormGroup>
+                    <template #label>
+                        {{ translations.redirectUrl }}
+                    </template>
+                    <VCFormInput
+                        :model-value="redirectUri"
+                        :disabled="true"
+                    />
+                </VCFormGroup>
+            </template>
 
-        <template v-if="!presetEff">
-            <h6>
-                <VCIcon name="fa6-solid:vihara" /> {{ translations.endpoints }}
-            </h6>
-            <AIdentityProviderOAuth2EndpointFields
-                :entity="data"
-                :discovery="oidcEnabled"
+            <div class="flex flex-wrap -mx-2">
+                <div class="flex-1 basis-0 px-2">
+                    <h6>
+                        <VCIcon name="fa6-solid:wrench" /> {{ translations.basic }}
+                    </h6>
+                    <AIdentityProviderBasicFields
+                        ref="basicFieldsRef"
+                        :entity="data"
+                    />
+                    <AIdentityProviderEnrollmentFields
+                        :entity="data"
+                        :realm-id="realmId"
+                    />
+                </div>
+                <div class="flex-1 basis-0 px-2">
+                    <h6>
+                        <VCIcon name="fa6-solid:lock" /> {{ translations.security }}
+                    </h6>
+                    <AIdentityProviderOAuth2ClientFields :entity="data" />
+                </div>
+            </div>
+
+            <template v-if="!presetEff">
+                <h6>
+                    <VCIcon name="fa6-solid:vihara" /> {{ translations.endpoints }}
+                </h6>
+                <AIdentityProviderOAuth2EndpointFields
+                    :entity="data"
+                    :discovery="oidcEnabled"
+                />
+            </template>
+
+            <AFormSubmit
+                :is-busy="busy"
+                :is-editing="isEditing"
+                :is-invalid="isInvalid"
+                @submit="submit"
             />
-        </template>
-
-        <AFormSubmit
-            :is-busy="busy"
-            :is-editing="isEditing"
-            :is-invalid="isInvalid"
-            @submit="submit"
-        />
+        </fieldset>
     </form>
 </template>

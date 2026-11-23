@@ -14,7 +14,6 @@ import {
     computed,
     defineComponent,
     reactive,
-    ref,
     useId,
     watch,
 } from 'vue';
@@ -49,7 +48,6 @@ export default defineComponent({
     },
     emits: defineEntityVEmitOptions<Realm>(),
     setup(props, ctx) {
-        const busy = ref(false);
         const nameSeed = useId();
         const form = reactive({
             name: '',
@@ -125,7 +123,7 @@ export default defineComponent({
         );
 
         return {
-            busy,
+            busy: manager.busy,
             v,
             isEditing,
             isMaster,
@@ -139,57 +137,67 @@ export default defineComponent({
 
 <template>
     <form @submit.prevent="submit">
-        <IFieldValidation
-            v-slot="{ value }"
-            :field="v.fields.name"
+        <!--
+            Disabled while a save is pending: the response re-initializes the
+            form from the saved snapshot, so an edit typed meanwhile would be
+            overwritten.
+        -->
+        <fieldset
+            :disabled="busy"
+            class="m-0 min-w-0 border-0 p-0"
         >
-            <VCFormGroup :validation="value">
-                <template #label>
-                    {{ translationsDefault.name }}
-                </template>
-                <ANameInput
-                    v-model="v.fields.name.$model.value"
-                    :disabled="isMaster"
-                />
-            </VCFormGroup>
-        </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.name"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        {{ translationsDefault.name }}
+                    </template>
+                    <ANameInput
+                        v-model="v.fields.name.$model.value"
+                        :disabled="isMaster"
+                    />
+                </VCFormGroup>
+            </IFieldValidation>
 
-        <IFieldValidation
-            v-slot="{ value }"
-            :field="v.fields.displayName"
-        >
-            <VCFormGroup :validation="value">
-                <template #label>
-                    {{ translationsDefault.displayName }}
-                </template>
-                <VCFormInput
-                    :model-value="v.fields.displayName.$model.value ?? ''"
-                    @update:model-value="(next: string) => { v.fields.displayName.$model.value = next; }"
-                />
-            </VCFormGroup>
-        </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.displayName"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        {{ translationsDefault.displayName }}
+                    </template>
+                    <VCFormInput
+                        :model-value="v.fields.displayName.$model.value ?? ''"
+                        @update:model-value="(next: string) => { v.fields.displayName.$model.value = next; }"
+                    />
+                </VCFormGroup>
+            </IFieldValidation>
 
-        <IFieldValidation
-            v-slot="{ value }"
-            :field="v.fields.description"
-        >
-            <VCFormGroup :validation="value">
-                <template #label>
-                    {{ translationsDefault.description }}
-                </template>
-                <VCFormTextarea
-                    :model-value="v.fields.description.$model.value ?? ''"
-                    :rows="4"
-                    @update:model-value="(next: string) => { v.fields.description.$model.value = next; }"
-                />
-            </VCFormGroup>
-        </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.description"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        {{ translationsDefault.description }}
+                    </template>
+                    <VCFormTextarea
+                        :model-value="v.fields.description.$model.value ?? ''"
+                        :rows="4"
+                        @update:model-value="(next: string) => { v.fields.description.$model.value = next; }"
+                    />
+                </VCFormGroup>
+            </IFieldValidation>
 
-        <AFormSubmit
-            :is-busy="busy"
-            :is-editing="isEditing"
-            :is-invalid="v.$invalid.value"
-            @submit="submit"
-        />
+            <AFormSubmit
+                :is-busy="busy"
+                :is-editing="isEditing"
+                :is-invalid="v.$invalid.value"
+                @submit="submit"
+            />
+        </fieldset>
     </form>
 </template>

@@ -285,153 +285,163 @@ export default defineComponent({
 
 <template>
     <form @submit.prevent="submit">
-        <div :class="showRealmPicker ? 'grid grid-cols-1 md:grid-cols-2 gap-2' : ''">
-            <div>
-                <IFieldValidation
-                    v-slot="{ value }"
-                    :field="v.fields.name"
-                >
-                    <VCFormGroup :validation="value">
-                        <template #label>
-                            {{ translationsDefault.name }}
-                        </template>
-                        <ANameInput
-                            :model-value="v.fields.name.$model.value"
-                            :disabled="form.nameLocked"
-                            @update:model-value="onNameChange"
-                        />
-                    </VCFormGroup>
-                </IFieldValidation>
+        <!--
+            Disabled while a save is pending: the response re-initializes the
+            form from the saved snapshot, so an edit typed meanwhile would be
+            overwritten.
+        -->
+        <fieldset
+            :disabled="busy"
+            class="m-0 min-w-0 border-0 p-0"
+        >
+            <div :class="showRealmPicker ? 'grid grid-cols-1 md:grid-cols-2 gap-2' : ''">
+                <div>
+                    <IFieldValidation
+                        v-slot="{ value }"
+                        :field="v.fields.name"
+                    >
+                        <VCFormGroup :validation="value">
+                            <template #label>
+                                {{ translationsDefault.name }}
+                            </template>
+                            <ANameInput
+                                :model-value="v.fields.name.$model.value"
+                                :disabled="form.nameLocked"
+                                @update:model-value="onNameChange"
+                            />
+                        </VCFormGroup>
+                    </IFieldValidation>
 
-                <IFieldValidation
-                    v-slot="{ value }"
-                    :field="v.fields.displayName"
-                >
-                    <VCFormGroup :validation="value">
-                        <template #label>
-                            {{ translationsDefault.displayName }}
-                        </template>
-                        <VCFormInput
-                            :model-value="v.fields.displayName.$model.value ?? ''"
-                            @update:model-value="(next: string) => { v.fields.displayName.$model.value = next; }"
-                        />
-                    </VCFormGroup>
-                </IFieldValidation>
+                    <IFieldValidation
+                        v-slot="{ value }"
+                        :field="v.fields.displayName"
+                    >
+                        <VCFormGroup :validation="value">
+                            <template #label>
+                                {{ translationsDefault.displayName }}
+                            </template>
+                            <VCFormInput
+                                :model-value="v.fields.displayName.$model.value ?? ''"
+                                @update:model-value="(next: string) => { v.fields.displayName.$model.value = next; }"
+                            />
+                        </VCFormGroup>
+                    </IFieldValidation>
 
-                <IFieldValidation
-                    v-slot="{ value }"
-                    :field="v.fields.email"
-                >
-                    <VCFormGroup :validation="value">
-                        <template #label>
-                            {{ translationsDefault.email }}
-                        </template>
-                        <VCFormInput
-                            v-model="v.fields.email.$model.value"
-                            type="email"
-                            placeholder="...@..."
-                        />
-                    </VCFormGroup>
-                </IFieldValidation>
+                    <IFieldValidation
+                        v-slot="{ value }"
+                        :field="v.fields.email"
+                    >
+                        <VCFormGroup :validation="value">
+                            <template #label>
+                                {{ translationsDefault.email }}
+                            </template>
+                            <VCFormInput
+                                v-model="v.fields.email.$model.value"
+                                type="email"
+                                placeholder="...@..."
+                            />
+                        </VCFormGroup>
+                    </IFieldValidation>
 
-                <template v-if="$props.canManage">
-                    <!-- folders are realm bound, so the picker waits for a realm -->
-                    <template v-if="resolvedRealmId">
-                        <IFieldValidation
-                            v-slot="{ value }"
-                            :field="v.fields.pathId"
-                        >
-                            <VCFormGroup :validation="value">
-                                <template #label>
-                                    {{ translationsDefault.path }}
-                                </template>
-                                <template #default>
-                                    <APathPicker
-                                        :value="v.fields.pathId.$model.value ?? ''"
-                                        :query="pathQuery"
-                                        @change="(input: string[]) => {
-                                            v.fields.pathId.$model.value = input.length > 0 ? input[0] ?? null : null;
-                                        }"
-                                    />
-                                </template>
-                                <template #hint>
-                                    {{ translationsApp.pathHint }}
-                                </template>
-                            </VCFormGroup>
-                        </IFieldValidation>
+                    <template v-if="$props.canManage">
+                        <!-- folders are realm bound, so the picker waits for a realm -->
+                        <template v-if="resolvedRealmId">
+                            <IFieldValidation
+                                v-slot="{ value }"
+                                :field="v.fields.pathId"
+                            >
+                                <VCFormGroup :validation="value">
+                                    <template #label>
+                                        {{ translationsDefault.path }}
+                                    </template>
+                                    <template #default>
+                                        <APathPicker
+                                            :value="v.fields.pathId.$model.value ?? ''"
+                                            :query="pathQuery"
+                                            @change="(input: string[]) => {
+                                                v.fields.pathId.$model.value = input.length > 0 ? input[0] ?? null : null;
+                                            }"
+                                        />
+                                    </template>
+                                    <template #hint>
+                                        {{ translationsApp.pathHint }}
+                                    </template>
+                                </VCFormGroup>
+                            </IFieldValidation>
+                        </template>
+
+                        <div class="flex flex-wrap -mx-2">
+                            <div class="flex-1 basis-0 px-2">
+                                <VCFormSwitch
+                                    v-model="form.active"
+                                    :label="true"
+                                >
+                                    <template #label="{ id, class: labelClass }">
+                                        <label
+                                            :for="id"
+                                            :class="[labelClass, form.active ? 'text-success-600' : 'text-error-600']"
+                                        >
+                                            {{ form.active ? translationsDefault.active : translationsDefault.inactive }}
+                                        </label>
+                                    </template>
+                                </VCFormSwitch>
+                            </div>
+                            <div
+                                v-if="$props.entity"
+                                class="flex-1 basis-0 px-2"
+                            >
+                                <VCFormSwitch
+                                    v-model="form.nameLocked"
+                                    :label="true"
+                                >
+                                    <template #label="{ id, class: labelClass }">
+                                        <label
+                                            :for="id"
+                                            :class="[labelClass, form.nameLocked ? 'text-success-600' : 'text-warning-600']"
+                                        >
+                                            {{ form.nameLocked ? translationsDefault.locked : translationsDefault.notLocked }}
+                                        </label>
+                                    </template>
+                                </VCFormSwitch>
+                            </div>
+                            <div class="flex-1 basis-0 px-2">
+                                <VCFormSwitch
+                                    v-model="form.emailVerified"
+                                    :label="true"
+                                >
+                                    <template #label="{ id, class: labelClass }">
+                                        <label
+                                            :for="id"
+                                            :class="[labelClass, form.emailVerified ? 'text-success-600' : 'text-warning-600']"
+                                        >
+                                            {{ form.emailVerified ? translationsDefault.emailVerified : translationsDefault.emailNotVerified }}
+                                        </label>
+                                    </template>
+                                </VCFormSwitch>
+                            </div>
+                        </div>
                     </template>
 
-                    <div class="flex flex-wrap -mx-2">
-                        <div class="flex-1 basis-0 px-2">
-                            <VCFormSwitch
-                                v-model="form.active"
-                                :label="true"
-                            >
-                                <template #label="{ id, class: labelClass }">
-                                    <label
-                                        :for="id"
-                                        :class="[labelClass, form.active ? 'text-success-600' : 'text-error-600']"
-                                    >
-                                        {{ form.active ? translationsDefault.active : translationsDefault.inactive }}
-                                    </label>
-                                </template>
-                            </VCFormSwitch>
-                        </div>
-                        <div
-                            v-if="$props.entity"
-                            class="flex-1 basis-0 px-2"
-                        >
-                            <VCFormSwitch
-                                v-model="form.nameLocked"
-                                :label="true"
-                            >
-                                <template #label="{ id, class: labelClass }">
-                                    <label
-                                        :for="id"
-                                        :class="[labelClass, form.nameLocked ? 'text-success-600' : 'text-warning-600']"
-                                    >
-                                        {{ form.nameLocked ? translationsDefault.locked : translationsDefault.notLocked }}
-                                    </label>
-                                </template>
-                            </VCFormSwitch>
-                        </div>
-                        <div class="flex-1 basis-0 px-2">
-                            <VCFormSwitch
-                                v-model="form.emailVerified"
-                                :label="true"
-                            >
-                                <template #label="{ id, class: labelClass }">
-                                    <label
-                                        :for="id"
-                                        :class="[labelClass, form.emailVerified ? 'text-success-600' : 'text-warning-600']"
-                                    >
-                                        {{ form.emailVerified ? translationsDefault.emailVerified : translationsDefault.emailNotVerified }}
-                                    </label>
-                                </template>
-                            </VCFormSwitch>
-                        </div>
-                    </div>
-                </template>
+                    <AFormSubmit
+                        :is-busy="busy"
+                        :is-editing="isEditing"
+                        :is-invalid="v.$invalid.value"
+                        @submit="submit"
+                    />
+                </div>
 
-                <AFormSubmit
-                    :is-busy="busy"
-                    :is-editing="isEditing"
-                    :is-invalid="v.$invalid.value"
-                    @submit="submit"
-                />
+                <div v-if="showRealmPicker">
+                    <ARealms>
+                        <template #itemActions="pickerProps">
+                            <AToggleButton
+                                :value="form.realmId === pickerProps.data.id"
+                                :is-busy="pickerProps.busy"
+                                @changed="(value: boolean) => { v.fields.realmId.$model.value = value ? pickerProps.data.id : ''; }"
+                            />
+                        </template>
+                    </ARealms>
+                </div>
             </div>
-
-            <div v-if="showRealmPicker">
-                <ARealms>
-                    <template #itemActions="pickerProps">
-                        <AToggleButton
-                            :value="form.realmId === pickerProps.data.id"
-                            :is-busy="pickerProps.busy"
-                            @changed="(value: boolean) => { v.fields.realmId.$model.value = value ? pickerProps.data.id : ''; }"
-                        />
-                    </template>
-                </ARealms>
-            </div>
-        </div>
+        </fieldset>
     </form>
 </template>

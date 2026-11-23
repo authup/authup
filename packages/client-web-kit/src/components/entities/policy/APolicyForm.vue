@@ -137,34 +137,44 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="flex flex-col">
-        <h6>{{ translations.general }}</h6>
-        <APolicyBasicForm
-            :entity="data"
-            :type="typeComputed"
-        />
-
-        <template v-if="typeComputed">
-            <slot
-                name="default"
-                :entity="entity"
-            >
-                <template v-if="typeComputed in typeComponents">
-                    <component
-                        :is="typeComponents[typeComputed]"
-                        :entity="entity"
-                    />
-                </template>
-            </slot>
-        </template>
-
-        <div>
-            <AFormSubmit
-                :is-invalid="isInvalid"
-                :is-busy="busy"
-                :is-editing="isEditing"
-                @submit="submit"
+    <fieldset
+        :disabled="busy"
+        class="m-0 min-w-0 border-0 p-0"
+    >
+        <!--
+            Disabled while a save is pending: the response re-initializes
+            the form from the saved snapshot, so an edit typed meanwhile
+            would be overwritten.
+        -->
+        <div class="flex flex-col">
+            <h6>{{ translations.general }}</h6>
+            <APolicyBasicForm
+                :entity="data"
+                :type="typeComputed"
             />
+
+            <template v-if="typeComputed">
+                <slot
+                    name="default"
+                    :entity="entity"
+                >
+                    <template v-if="typeComputed in typeComponents">
+                        <component
+                            :is="typeComponents[typeComputed]"
+                            :entity="entity"
+                        />
+                    </template>
+                </slot>
+            </template>
+
+            <div>
+                <AFormSubmit
+                    :is-invalid="isInvalid"
+                    :is-busy="busy"
+                    :is-editing="isEditing"
+                    @submit="submit"
+                />
+            </div>
         </div>
-    </div>
+    </fieldset>
 </template>

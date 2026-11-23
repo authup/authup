@@ -143,67 +143,77 @@ export default defineComponent({
 
 <template>
     <form @submit.prevent="submit">
-        <AIdentityProviderProtocol
-            v-if="!data"
-            :id="ldapProtocol"
-            :key="ldapProtocol"
+        <!--
+            Disabled while a save is pending: the response re-initializes the
+            form from the saved snapshot, so an edit typed meanwhile would be
+            overwritten.
+        -->
+        <fieldset
+            :disabled="busy"
+            class="m-0 min-w-0 border-0 p-0"
         >
-            <template #default="element">
-                <div>
-                    <h4 class="mb-3">
-                        <VCIcon
-                            :name="element.icon"
-                            class="pe-1"
-                        /> {{ element.name }}
-                    </h4>
+            <AIdentityProviderProtocol
+                v-if="!data"
+                :id="ldapProtocol"
+                :key="ldapProtocol"
+            >
+                <template #default="element">
+                    <div>
+                        <h4 class="mb-3">
+                            <VCIcon
+                                :name="element.icon"
+                                class="pe-1"
+                            /> {{ element.name }}
+                        </h4>
+                    </div>
+                </template>
+            </AIdentityProviderProtocol>
+
+            <div class="flex flex-wrap -mx-2">
+                <div class="flex-1 basis-0 px-2">
+                    <h6>
+                        <VCIcon name="fa6-solid:wrench" /> {{ translations.basic }}
+                    </h6>
+                    <AIdentityProviderBasicFields :entity="data" />
+                    <AIdentityProviderEnrollmentFields
+                        :entity="data"
+                        :realm-id="realmId"
+                    />
                 </div>
-            </template>
-        </AIdentityProviderProtocol>
-
-        <div class="flex flex-wrap -mx-2">
-            <div class="flex-1 basis-0 px-2">
-                <h6>
-                    <VCIcon name="fa6-solid:wrench" /> {{ translations.basic }}
-                </h6>
-                <AIdentityProviderBasicFields :entity="data" />
-                <AIdentityProviderEnrollmentFields
-                    :entity="data"
-                    :realm-id="realmId"
-                />
+                <div class="flex-1 basis-0 px-2">
+                    <h6>
+                        <VCIcon name="fa6-solid:lock" /> {{ translations.security }}
+                    </h6>
+                    <AIdentityProviderLdapCredentialsFields :entity="data" />
+                </div>
             </div>
-            <div class="flex-1 basis-0 px-2">
-                <h6>
-                    <VCIcon name="fa6-solid:lock" /> {{ translations.security }}
-                </h6>
-                <AIdentityProviderLdapCredentialsFields :entity="data" />
-            </div>
-        </div>
 
-        <h6>
-            <VCIcon name="fa6-solid:vihara" /> {{ translations.connection }}
-        </h6>
-        <AIdentityProviderLdapConnectionFields :entity="data" />
+            <h6>
+                <VCIcon name="fa6-solid:vihara" /> {{ translations.connection }}
+            </h6>
+            <AIdentityProviderLdapConnectionFields :entity="data" />
 
-        <div class="flex flex-wrap -mx-2">
-            <div class="flex-1 basis-0 px-2">
-                <h6>
-                    <VCIcon name="fa6-solid:user" /> {{ translations.user }}
-                </h6>
-                <AIdentityProviderLdapUserFields :entity="data" />
+            <div class="flex flex-wrap -mx-2">
+                <div class="flex-1 basis-0 px-2">
+                    <h6>
+                        <VCIcon name="fa6-solid:user" /> {{ translations.user }}
+                    </h6>
+                    <AIdentityProviderLdapUserFields :entity="data" />
+                </div>
+                <div class="flex-1 basis-0 px-2">
+                    <h6>
+                        <VCIcon name="fa6-solid:masks-theater" /> {{ translations.group }}
+                    </h6>
+                    <AIdentityProviderLdapGroupFields :entity="data" />
+                </div>
             </div>
-            <div class="flex-1 basis-0 px-2">
-                <h6>
-                    <VCIcon name="fa6-solid:masks-theater" /> {{ translations.group }}
-                </h6>
-                <AIdentityProviderLdapGroupFields :entity="data" />
-            </div>
-        </div>
 
-        <AFormSubmit
-            :is-busy="busy"
-            :is-editing="isEditing"
-            :is-invalid="isInvalid"
-            @submit="submit"
-        />
+            <AFormSubmit
+                :is-busy="busy"
+                :is-editing="isEditing"
+                :is-invalid="isInvalid"
+                @submit="submit"
+            />
+        </fieldset>
     </form>
 </template>
