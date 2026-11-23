@@ -31,14 +31,21 @@ export type EntityRecordResponse<R, M extends Record<string, any> = EntityRecord
     meta: M,
 };
 
-export type EntityCollectionResponse<R> = {
+export type EntityCollectionMeta = {
+    limit?: number,
+    offset?: number,
+    total: number,
+    schema?: SchemaDescription,
+};
+
+/**
+ * The wire shape of every entity-collection response. A server answering
+ * more under `meta` passes its own `M`, e.g.
+ * `EntityCollectionMeta & { now: string }`.
+ */
+export type EntityCollectionResponse<R, M extends Record<string, any> = EntityCollectionMeta> = {
     data: R[],
-    meta: {
-        limit?: number,
-        offset?: number,
-        total: number,
-        schema?: SchemaDescription,
-    }
+    meta: M,
 };
 
 export type DomainEntityWithID = {
