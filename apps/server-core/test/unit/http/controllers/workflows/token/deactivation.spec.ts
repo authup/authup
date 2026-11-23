@@ -89,4 +89,19 @@ describe('token endpoint and a deactivated subject', () => {
 
         expect(after.active).toBe(false);
     });
+
+    // RFC 7662 §2.2: a token whose subject no longer exists is not active,
+    // and is reported bare like any other token naming nobody.
+    it('reports the access token of a deleted user inactive and bare', async () => {
+        const { user, token } = await login();
+
+        await suite.client.user.delete(user.id);
+
+        const response = await suite.client.token.introspect(
+            { token: token.access_token },
+            { authorizationHeaderInherit: true },
+        );
+
+        expect(response).toEqual({ active: false });
+    });
 });
