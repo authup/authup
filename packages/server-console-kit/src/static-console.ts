@@ -12,6 +12,7 @@ import path from 'node:path';
 import type { IAppEvent } from 'routup';
 import {
     applyUIPageHeaders,
+    buildShellContentSecurityPolicy,
     readUIClientPreferences,
     rebaseAssetURLs,
     replaceTemplateMarker,
@@ -19,11 +20,14 @@ import {
     stampHtmlAttributes,
 } from './html.ts';
 import { applyTheme } from './theme/index.ts';
+import { STATIC_CONSOLE_GLOBAL_NAME_DEFAULT } from './constants.ts';
 import type {
     StaticConsole,
     StaticConsoleDefinition,
     StaticConsoleServeOptions,
 } from './types.ts';
+
+const GLOBAL_NAME_PATTERN = /^[A-Za-z_$][\w$]*$/;
 
 /**
  * A console shipped as a static SPA bundle (the account console, the admin
@@ -35,6 +39,16 @@ import type {
  * substituted package path or a resolved dist.
  */
 export function defineStaticConsole(definition: StaticConsoleDefinition) : StaticConsole {
+    const globalName = definition.globalName ?? STATIC_CONSOLE_GLOBAL_NAME_DEFAULT;
+
+    // Spliced verbatim into an inline script, so anything beyond an
+    // identifier would be script injection by configuration.
+    if (!GLOBAL_NAME_PATTERN.test(globalName)) {
+        throw new InternalError(
+            `The console global name ${JSON.stringify(globalName)} is not a JavaScript identifier.`,
+        );
+    }
+
     let cachedPackagePath : string | undefined;
     let cachedDistPath : string | undefined;
 
@@ -104,10 +118,18 @@ export function defineStaticConsole(definition: StaticConsoleDefinition) : Stati
         // the template's own tail into the payload and break the inline
         // script. That is the exact bug that killed the auth console's
         // hydration payload.
+        const inlineScript = `window.${globalName} = ${serializeInlineScriptJSON(options.config)};`;
+
+        // Built before the body so a refused origin fails the request
+        // before anything is written.
+        const contentSecurityPolicy = options.csp ?
+            buildShellContentSecurityPolicy({ inlineScript, origins: options.csp.origins }) :
+            undefined;
+
         let body = replaceTemplateMarker(
             html,
             definition.marker,
-            `<script>window.__AUTHUP__ = ${serializeInlineScriptJSON(options.config)};</script>`,
+            `<script>${inlineScript}</script>`,
         );
 
         body = stampHtmlAttributes(body, readUIClientPreferences(event));
@@ -115,7 +137,7 @@ export function defineStaticConsole(definition: StaticConsoleDefinition) : Stati
 
         body = await applyTheme(body, options.theme, options.basePath);
 
-        applyUIPageHeaders(event);
+        applyUIPageHeaders(event, contentSecurityPolicy);
 
         return body;
     };
@@ -124,6 +146,7 @@ export function defineStaticConsole(definition: StaticConsoleDefinition) : Stati
         packageName: definition.packageName,
         marker: definition.marker,
         viteBase: definition.viteBase,
+        globalName,
         resolvePackagePath,
         resolveDistPath,
         serve,

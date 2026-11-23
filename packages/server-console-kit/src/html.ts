@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { InternalError } from '@authup/errors';
 import { useRequestCookie } from '@routup/basic/cookie';
+import { createHash } from 'node:crypto';
 import type { IAppEvent } from 'routup';
 import { COLOR_MODE_COOKIE, LOCALE_COOKIE } from './constants.ts';
 import type { UIClientPreferences } from './types.ts';
@@ -101,6 +103,65 @@ export function stampDocumentTitle(html: string, title: string) : string {
 }
 
 /**
+ * The policy a page gets when its caller names none: framing only, since a
+ * page with inline scripts of its own (the auth console's hydration payload)
+ * cannot be restricted without knowing them.
+ */
+export const UI_PAGE_CSP_DEFAULT = 'frame-ancestors \'none\'';
+
+/**
+ * Characters that would end a source expression or the directive itself:
+ * whitespace separates sources, `;` directives, `,` whole policies, and a
+ * quote opens a keyword or hash source such as `'unsafe-inline'`.
+ */
+const CSP_SOURCE_FORBIDDEN = /[\s;,'"]/;
+
+export type ShellContentSecurityPolicyContext = {
+    /**
+     * The exact text between `<script>` and `</script>` of the one inline
+     * script the shell carries. Hashed, so it must be the served bytes.
+     */
+    inlineScript: string,
+    /**
+     * Origins the page may call and submit forms to, besides its own.
+     */
+    origins?: string[],
+};
+
+/**
+ * The policy for a shell whose only inline script is known: scripts from the
+ * own origin plus that one script by hash, requests and form posts to the own
+ * origin plus the named ones, no plugins, no `<base>`, no framing.
+ *
+ * Styles, images and fonts stay unrestricted: the theme splices an inline
+ * `<style>` and its assets may come from anywhere the operator points them.
+ */
+export function buildShellContentSecurityPolicy(ctx: ShellContentSecurityPolicyContext) : string {
+    const origins = ctx.origins ?? [];
+
+    for (const origin of origins) {
+        if (!origin || CSP_SOURCE_FORBIDDEN.test(origin)) {
+            throw new InternalError(`The origin ${JSON.stringify(origin)} is not a valid content security policy source.`);
+        }
+    }
+
+    const hash = createHash('sha256')
+        .update(ctx.inlineScript, 'utf8')
+        .digest('base64');
+
+    const sources = ['\'self\'', ...origins].join(' ');
+
+    return [
+        `script-src 'self' 'sha256-${hash}'`,
+        `connect-src ${sources}`,
+        `form-action ${sources}`,
+        'object-src \'none\'',
+        'base-uri \'none\'',
+        UI_PAGE_CSP_DEFAULT,
+    ].join('; ');
+}
+
+/**
  * Response headers every served console page shares.
  *
  * Clickjacking guard: the pages mutate state behind explicit clicks and
@@ -110,12 +171,15 @@ export function stampDocumentTitle(html: string, title: string) : string {
  * carry sensitive query params (id_token_hint, code, redirect, state), so
  * never leak them via Referer.
  */
-export function applyUIPageHeaders(event: IAppEvent) : void {
+export function applyUIPageHeaders(
+    event: IAppEvent,
+    contentSecurityPolicy: string = UI_PAGE_CSP_DEFAULT,
+) : void {
     event.response.headers.set('content-type', 'text/html; charset=utf-8');
     // The shell is stamped from the vc-locale / vc-color-mode cookies, so
     // it genuinely varies by them. It carried no Vary header at all.
     event.response.headers.set('vary', 'cookie');
-    event.response.headers.set('content-security-policy', "frame-ancestors 'none'");
+    event.response.headers.set('content-security-policy', contentSecurityPolicy);
     event.response.headers.set('x-frame-options', 'DENY');
     event.response.headers.set('referrer-policy', 'no-referrer');
     // Login pages, and the federated callback's interstitial carries a

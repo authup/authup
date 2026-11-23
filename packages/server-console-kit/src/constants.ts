@@ -17,3 +17,9 @@ export const COLOR_MODE_COOKIE = 'vc-color-mode';
 
 export const HEALTH_LIVENESS_PATH = '/livez';
 export const HEALTH_READINESS_PATH = '/readyz';
+
+/**
+ * The window global a static console's runtime config is injected as,
+ * unless its definition names another.
+ */
+export const STATIC_CONSOLE_GLOBAL_NAME_DEFAULT = '__AUTHUP__';

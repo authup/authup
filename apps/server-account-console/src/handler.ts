@@ -140,6 +140,15 @@ export async function createHandler(
         ));
     }
 
+    // The shell's one inline script is the config injected below, so it
+    // gets the hash-based policy. A shell from a dev server (vite's client,
+    // its HMR socket on a port of its own) and an operator head fragment
+    // (documented to run scripts) carry more, so they keep the framing-only
+    // default.
+    const csp = readShell || config.theme.fragmentsEnabled ?
+        undefined :
+        { origins: [new URL(config.apiUrl).origin] };
+
     const render = (event: IAppEvent) : Promise<string> => staticConsole.serve(event, {
         basePath,
         // This service mounts the bundle's assets at its own /assets, so
@@ -148,6 +157,7 @@ export async function createHandler(
         // built and says nothing about where the service is published.
         assetBasePath: `${basePath}/`,
         theme,
+        csp,
         config: {
             apiUrl: config.apiUrl,
             basePath,
