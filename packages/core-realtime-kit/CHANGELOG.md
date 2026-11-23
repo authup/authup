@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.0-beta.77](https://github.com/authup/authup/compare/v1.0.0-beta.76...v1.0.0-beta.77) (2026-11-23)
+
+
+### Bug Fixes
+
+* **deps:** bump all dependencies except typescript and envix ([#3880](https://github.com/authup/authup/issues/3880)) ([7e85d52](https://github.com/authup/authup/commit/7e85d52b0e89e63f715aa80ab5469e3e0047c0f4))
+* write explicit extensions on relative imports ([f08d954](https://github.com/authup/authup/commit/f08d954210d0da91b9513f416e863c2e230a61c0)), closes [#3843](https://github.com/authup/authup/issues/3843)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.76 to ^1.0.0-beta.77
+
 ## [1.0.0-beta.76](https://github.com/authup/authup/compare/v1.0.0-beta.75...v1.0.0-beta.76) (2026-11-13)
 
 

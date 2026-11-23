@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-kit",
     "type": "module",
-    "version": "1.0.0-beta.76",
+    "version": "1.0.0-beta.77",
     "description": "Server-side building blocks for Authup services: crypto, JWTs, cache, logger, domain events, service contracts.",
     "license": "Apache-2.0",
     "exports": {
@@ -62,12 +62,12 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/access": "^1.0.0-beta.76",
-        "@authup/core-kit": "^1.0.0-beta.76",
-        "@authup/core-realtime-kit": "^1.0.0-beta.76",
-        "@authup/errors": "^1.0.0-beta.76",
-        "@authup/kit": "^1.0.0-beta.76",
-        "@authup/specs": "^1.0.0-beta.76",
+        "@authup/access": "^1.0.0-beta.77",
+        "@authup/core-kit": "^1.0.0-beta.77",
+        "@authup/core-realtime-kit": "^1.0.0-beta.77",
+        "@authup/errors": "^1.0.0-beta.77",
+        "@authup/kit": "^1.0.0-beta.77",
+        "@authup/specs": "^1.0.0-beta.77",
         "@isaacs/ttlcache": "^2.1.5",
         "@node-rs/bcrypt": "^2.0.0",
         "@node-rs/jsonwebtoken": "^0.5.11",

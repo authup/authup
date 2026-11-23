@@ -3,6 +3,33 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.77](https://github.com/authup/authup/compare/v1.0.0-beta.76...v1.0.0-beta.77) (2026-11-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* APathPicker, APolicyPicker, AClientPicker and ARealmPicker (the form picker) are renamed to AForm<Entity>Picker; ARealmGrid is renamed to ARealmPicker.
+* JunctionEntityService subclasses declare `ownerRealm = { key: '<column>' }` instead of `ownerRealmKey = '<column>'`, and read the column as `this.ownerRealm.key`.
+* **server-adapter-kit:** RedisTokenCache is no longer exported by @authup/server-adapter-kit; import it from @authup/server-adapter-redis.
+
+### Features
+
+* bump rapiq and vuecs, adopt their new features ([#3898](https://github.com/authup/authup/issues/3898)) ([83d9bcb](https://github.com/authup/authup/commit/83d9bcba1c05d12a0126b1b557082a89f20d2774))
+* encode kit path ids, realm picker layouts, error and cache fixes ([#3900](https://github.com/authup/authup/issues/3900)) ([4245ac2](https://github.com/authup/authup/commit/4245ac22ef95120853b38a00c40391546ac2d4e0))
+* publish the resource-server surface from access and server-kit ([#3895](https://github.com/authup/authup/issues/3895)) ([f2b31f3](https://github.com/authup/authup/commit/f2b31f37b4c7c23b3c9744c706267f78e0381206))
+* **server-core:** client-owned provisioning relations, owned delegation ([#3892](https://github.com/authup/authup/issues/3892)) ([55687bc](https://github.com/authup/authup/commit/55687bca714722d700714396cb851eacfaa9fdf5))
+
+
+### Bug Fixes
+
+* console shell csp and config global, web-kit form and scope fixes ([#3893](https://github.com/authup/authup/issues/3893)) ([50e1b0d](https://github.com/authup/authup/commit/50e1b0d9653a5a7f05bce65a32a426c91b8ba777))
+* **deps:** bump all dependencies except typescript and envix ([#3880](https://github.com/authup/authup/issues/3880)) ([7e85d52](https://github.com/authup/authup/commit/7e85d52b0e89e63f715aa80ab5469e3e0047c0f4))
+* **deps:** bump routup to 6.5 and the routup plugins ([#3883](https://github.com/authup/authup/issues/3883)) ([6412493](https://github.com/authup/authup/commit/6412493b07c253592837d00fadc595c444dff43b))
+* resolve uuid-shaped names after an id miss, token subjects by id only ([#3896](https://github.com/authup/authup/issues/3896)) ([f7a2438](https://github.com/authup/authup/commit/f7a2438476571126148827a0c9ee92dd6c053bf8)), closes [#3848](https://github.com/authup/authup/issues/3848)
+* **server-adapter-kit:** upstream errors, redis cache package ([#3894](https://github.com/authup/authup/issues/3894)) ([8354fff](https://github.com/authup/authup/commit/8354fff1955b0bbfa6d6e40fab47b66269e4c086))
+* **server-core:** lock CLI migrations, drop the public qualifier ([#3891](https://github.com/authup/authup/issues/3891)) ([5d87eba](https://github.com/authup/authup/commit/5d87ebaa6a82cfcd349624e1f93a37aa14c04d00))
+* write explicit extensions on relative imports ([f08d954](https://github.com/authup/authup/commit/f08d954210d0da91b9513f416e863c2e230a61c0)), closes [#3843](https://github.com/authup/authup/issues/3843)
+
 ## [1.0.0-beta.76](https://github.com/authup/authup/compare/v1.0.0-beta.75...v1.0.0-beta.76) (2026-11-13)
 
 
