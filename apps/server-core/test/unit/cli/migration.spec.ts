@@ -15,7 +15,11 @@ import {
     vi,
 } from 'vitest';
 import { MIGRATION_DATABASE_LOCK } from '../../../src/app/modules/database/index.ts';
-import { MigrationOperation, executeMigrationOperation } from '../../../src/cli/commands/migration.ts';
+import {
+    MigrationOperation,
+    executeMigrationOperation,
+    removePublicSchemaQualifier,
+} from '../../../src/cli/commands/migration.ts';
 
 const lock = vi.hoisted(() => ({
     held: false,
@@ -92,5 +96,17 @@ describe('src/cli/commands/migration', () => {
 
         expect(lock.names).toEqual([]);
         expect(calls).toEqual([{ operation: 'status', locked: false }]);
+    });
+});
+
+describe('removePublicSchemaQualifier', () => {
+    it('should strip the public schema qualifier the postgres generator emits', () => {
+        const content = 'await queryRunner.query(`DROP INDEX "public"."IDX_abc"`);\n' +
+            'await queryRunner.query(`CREATE INDEX "IDX_abc" ON "auth_users" ("name") `);';
+
+        expect(removePublicSchemaQualifier(content)).toEqual(
+            'await queryRunner.query(`DROP INDEX "IDX_abc"`);\n' +
+            'await queryRunner.query(`CREATE INDEX "IDX_abc" ON "auth_users" ("name") `);',
+        );
     });
 });

@@ -6,6 +6,7 @@
  */
 
 import { defineCommand } from 'citty';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import {
@@ -71,6 +72,22 @@ export async function executeMigrationOperation(
             await dataSource.runMigrations();
         }
     });
+}
+
+/**
+ * The postgres generator qualifies some statements with `"public".`, while
+ * the objects they name are created through the `search_path`. Qualified,
+ * they miss a deployment in another schema (`DB_SCHEMA`), so the generated
+ * file loses the qualifier before anyone reads it (#3849).
+ */
+export function removePublicSchemaQualifier(content: string): string {
+    return content.replaceAll('"public".', '');
+}
+
+async function stripPublicSchemaQualifier(filePath: string): Promise<void> {
+    const content = await fs.readFile(filePath, 'utf8');
+
+    await fs.writeFile(filePath, removePublicSchemaQualifier(content));
 }
 
 async function runMigrationOperation(
@@ -190,6 +207,10 @@ async function generateMigrations(): Promise<void> {
                 timestamp,
                 prettify: true,
             });
+
+            if (dataSourceOptions.type === 'postgres') {
+                await stripPublicSchemaQualifier(path.join(directoryPath, `${timestamp}-Default.ts`));
+            }
         } finally {
             if (dataSource.isInitialized) {
                 try {
