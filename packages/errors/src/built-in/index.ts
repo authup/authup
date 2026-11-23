@@ -18,5 +18,6 @@ export * from './internal.ts';
 export * from './login-throttled.ts';
 export * from './mfa-throttled.ts';
 export * from './unauthorized.ts';
+export * from './upstream.ts';
 export * from './upstream-timeout.ts';
 export * from './validation.ts';

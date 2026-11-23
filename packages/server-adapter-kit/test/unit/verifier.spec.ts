@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode } from '@authup/errors';
+import { ErrorCode, isUpstreamError } from '@authup/errors';
 import { JWTError, OAuth2TokenKind } from '@authup/specs';
 import {
     beforeAll,
@@ -335,6 +335,15 @@ describe('verifier', () => {
             expect(getJwk).toHaveBeenCalledTimes(1);
         });
 
+        it('reports a key fetch answered 5xx as an upstream error', async () => {
+            getJwk.mockRejectedValueOnce(Object.assign(new Error('unavailable'), { response: { status: 503 } }));
+
+            const error = await verifier.verify(token).catch((e: unknown) => e);
+
+            expect(isUpstreamError(error)).toBe(true);
+            expect(error).not.toBeInstanceOf(JWTError);
+        });
+
         it('does not cache a 404', async () => {
             getJwk.mockRejectedValueOnce(notFound);
 
@@ -346,10 +355,16 @@ describe('verifier', () => {
             expect(getJwk).toHaveBeenCalledTimes(2);
         });
 
-        it('retries after a failed fetch', async () => {
-            getJwk.mockRejectedValueOnce(new Error('ECONNRESET'));
+        it('reports a failed fetch as an upstream error and retries after it', async () => {
+            const cause = new Error('ECONNRESET');
 
-            await expect(verifier.verify(token)).rejects.toBeInstanceOf(JWTError);
+            getJwk.mockRejectedValueOnce(cause);
+
+            const error = await verifier.verify(token).catch((e: unknown) => e);
+
+            expect(isUpstreamError(error)).toBe(true);
+            expect(error).not.toBeInstanceOf(JWTError);
+            expect(error).toMatchObject({ cause });
             await expect(verifier.verify(token)).resolves.toBeDefined();
             expect(getJwk).toHaveBeenCalledTimes(2);
         });

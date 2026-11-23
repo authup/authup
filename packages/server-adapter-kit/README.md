@@ -199,7 +199,7 @@ It throws `BearerTokenMalformedError` (`bearer_token_malformed`, HTTP 401) for a
 ## Notes
 
 - **Local mode does not see revocations.** A token whose session was revoked keeps verifying until it expires, and a disabled signing key keeps verifying until its cache entry expires (5 minutes by default). Use remote mode, or a short `jwkCache.ttl`, where that matters.
-- **Errors are `JWTError`s, except a timeout or an abort.** A bad signature, missing claim or wrong kind throws `invalid_token`, an expired token `expired_token`, an inactive one `inactive_token`. In remote mode every other failure is `invalid_token`; the server's own error code is not passed through. A request that ran out of time throws `UpstreamTimeoutError` (`isUpstreamTimeoutError` from `@authup/errors`), and an aborted call rejects with the signal's reason.
+- **Errors are `JWTError`s, except an upstream failure or an abort.** A bad signature, missing claim or wrong kind throws `invalid_token`, an expired token `expired_token`, an inactive one `inactive_token`, an unknown `kid` or an introspection answered 400 `invalid_token`. A request that ran out of time throws `UpstreamTimeoutError` (`isUpstreamTimeoutError`). Every other failure that is not about the token (authup unreachable, a failed key fetch, an introspection answered anything but 200 or 400, a failed client credentials mint) throws `UpstreamError` (`upstream_error`, HTTP 502, `isUpstreamError`) with the original failure as `cause`. Both guards come from `@authup/errors`. An aborted call rejects with the signal's reason.
 - **Results are copies.** `verify` returns a clone, so mutating it never changes a cached entry.
 - **Kind-less tokens pass.** Only a present `kind` other than `access_token` is rejected.
 

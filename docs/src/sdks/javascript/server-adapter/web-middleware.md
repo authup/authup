@@ -46,6 +46,7 @@ Contract:
 | Malformed `Authorization` header     | rejects with `BearerTokenMalformedError`       |
 | `tokenVerifier.verify` rejects       | rejects with the underlying verifier error     |
 | authup does not answer in time       | rejects with `UpstreamTimeoutError`            |
+| authup is unreachable or failing     | rejects with `UpstreamError`                   |
 
 The optional `tokenByRequest` callback runs only when the `Authorization` header is absent. The consumer
 extracts the token from wherever they like (cookie, custom header, query string): the adapter does not parse cookies.
@@ -95,7 +96,10 @@ other's results. Verifiers sharing a `cacheNamespace` must be configured identic
 
 Remote verification introspects with the token `creator` mints and keeps it until authup answers
 `401`; it then mints a new one and asks once more. An inactive token is rejected with
-`inactive_token`, a failed introspection with `invalid_token` naming the status authup answered.
+`inactive_token` and an introspection answered 400 with `invalid_token`. Any other failed
+introspection, a failed mint, an unreachable authup and a key fetch failing other than with 404
+reject with `UpstreamError` (`upstream_error`, HTTP 502), naming the status authup answered and
+carrying the original failure as `cause`.
 
 ## Timeouts
 

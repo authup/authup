@@ -106,6 +106,26 @@ also does so for "authup did not answer in time". Recognize the timeout with
 `isUpstreamTimeoutError` from `@authup/errors` and answer 503 or 504 instead, so a client
 does not discard a token that may well be valid.
 
+### An unreachable authup is no longer an invalid token
+
+A `TokenVerifier` rejects with an `UpstreamError` (`upstream_error`, HTTP 502) instead of a
+`JWTError` (`invalid_token`, HTTP 401) for every failure that is not about the token, with the
+original failure as `cause`:
+
+- authup cannot be reached (connection refused, network error);
+- a key fetch in local mode fails other than with 404 (an unknown `kid` stays `invalid_token`);
+- the introspection in remote mode answers anything but 200 or 400 (a 401 after the re-mint
+  means the verifier's client is misconfigured), or answers no JSON object;
+- the client credentials mint of remote mode fails.
+
+An introspection answered 400 stays `invalid_token`: that request carries nothing but the
+token. `POST /token/introspect` itself answers `200 {"active": false}` instead of 400
+(`identity_invalid`) for a token whose subject no longer exists, so a deleted user's token is
+reported `inactive_token`.
+
+**May need action:** recognize the outage with `isUpstreamError` from `@authup/errors` and
+answer 502 or 503 instead of 401.
+
 ### The kit refreshes a token on a client of its own
 
 `install()` of `@authup/client-web-kit` accepts `httpClient` as one instance or as a function

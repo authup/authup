@@ -21,6 +21,7 @@ import { INTERNAL_ERROR_INSTANCE, type InternalError } from './internal.ts';
 import { LOGIN_THROTTLED_ERROR_INSTANCE, type LoginThrottledError } from './login-throttled.ts';
 import { MFA_THROTTLED_ERROR_INSTANCE, type MfaThrottledError } from './mfa-throttled.ts';
 import { UNAUTHORIZED_ERROR_INSTANCE, type UnauthorizedError } from './unauthorized.ts';
+import { UPSTREAM_ERROR_INSTANCE, type UpstreamError } from './upstream.ts';
 import { UPSTREAM_TIMEOUT_ERROR_INSTANCE, type UpstreamTimeoutError } from './upstream-timeout.ts';
 
 export function isAuthHeaderError(input: unknown): input is AuthHeaderError {
@@ -177,6 +178,18 @@ export function isDeviceVerificationThrottledError(input: unknown): input is Dev
     }
 
     return input.code === ErrorCode.OAUTH_DEVICE_VERIFICATION_THROTTLED;
+}
+
+export function isUpstreamError(input: unknown): input is UpstreamError {
+    if (matchesInstanceof(input, UPSTREAM_ERROR_INSTANCE)) {
+        return true;
+    }
+
+    if (!isAuthupError(input)) {
+        return false;
+    }
+
+    return input.code === ErrorCode.UPSTREAM_ERROR;
 }
 
 export function isUpstreamTimeoutError(input: unknown): input is UpstreamTimeoutError {

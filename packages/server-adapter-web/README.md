@@ -45,7 +45,7 @@ npm install @authup/server-adapter-web @authup/server-adapter-kit
 ### Fetch handler
 
 ```typescript
-import { isUpstreamTimeoutError } from '@authup/errors';
+import { isUpstreamError, isUpstreamTimeoutError } from '@authup/errors';
 import { TokenVerifier } from '@authup/server-adapter-kit';
 import { verifyRequest } from '@authup/server-adapter-web';
 
@@ -56,8 +56,8 @@ export async function handle(request: Request): Promise<Response> {
     try {
         data = await verifyRequest(request, { tokenVerifier });
     } catch (e) {
-        if (isUpstreamTimeoutError(e)) {
-            return new Response('authup did not answer in time', { status: 503 });
+        if (isUpstreamTimeoutError(e) || isUpstreamError(e)) {
+            return new Response('authup is unavailable', { status: 503 });
         }
 
         return new Response('invalid token', { status: 401 });

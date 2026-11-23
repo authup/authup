@@ -6,6 +6,7 @@
  */
 
 import type { Client } from '@authup/core-http-kit';
+import { UpstreamError } from '@authup/errors';
 import { isObject, isUUID } from '@authup/kit';
 import type { OAuth2JsonWebKey } from '@authup/specs';
 import { JWTError, OAuth2TokenKind } from '@authup/specs';
@@ -79,9 +80,10 @@ function createKeyLoader(client: Client) : KeyLoader {
                 throw JWTError.payloadPropertyInvalid('kid');
             }
 
-            throw new JWTError({
+            // not about the token: authup is unreachable or failing
+            throw new UpstreamError({
                 message: 'Failed to fetch JWK from auth server.',
-                cause: e as Error,
+                cause: e,
             });
         }
 
