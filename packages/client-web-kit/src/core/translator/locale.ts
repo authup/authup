@@ -12,10 +12,11 @@ import type { App, ComputedRef } from 'vue';
 import { computed, watch } from 'vue';
 
 function tryUseLocaleManager() {
-    // useLocaleManager() throws when @vuecs/locale is not installed. Authup's
-    // apps install it (so vuecs owns the locale, cookie-backed — same as
-    // color-mode owns vc-color-mode), but a downstream consumer that embeds
-    // the kit without it should still get a working switcher.
+    // useLocaleManager() throws when the app did not install @vuecs/locale's
+    // plugin. The package is a required peer, but installing the plugin is
+    // still the app's call: authup's apps do (so vuecs owns the locale,
+    // cookie-backed, as color-mode owns vc-color-mode), and a consumer that
+    // does not still gets a working switcher.
     try {
         return useLocaleManager();
     } catch {
