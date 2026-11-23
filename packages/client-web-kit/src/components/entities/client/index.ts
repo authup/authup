@@ -8,5 +8,5 @@
 export { AClient } from './AClient.ts';
 export { default as AClientForm } from './AClientForm.vue';
 export { default as AClientSecretRotate } from './AClientSecretRotate.vue';
-export { AClientPicker } from './AClientPicker.ts';
+export { AFormClientPicker } from './AFormClientPicker.ts';
 export { AClients } from './AClients.ts';

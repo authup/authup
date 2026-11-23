@@ -20,13 +20,13 @@ import {
 } from '@authup/i18n';
 import { useTranslations } from '../../../../core/index.ts';
 import { onChange, useUpdatedAt } from '../../../../composables/index.ts';
-import APolicyPicker from '../APolicyPicker.vue';
+import AFormPolicyPicker from '../AFormPolicyPicker.vue';
 import { VCAlert } from '@vuecs/elements';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
     components: {
-        APolicyChildrenPicker: APolicyPicker,
+        APolicyChildrenPicker: AFormPolicyPicker,
         VCFormGroup,
         VCFormSelect,
         VCAlert,

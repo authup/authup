@@ -17,11 +17,11 @@ import type { PropType } from 'vue';
 import { computed, defineComponent, reactive } from 'vue';
 import { onChange, useIsEditing, useUpdatedAt } from '../../../composables/index.ts';
 import { assignFormProperties, useTranslations } from '../../../core/index.ts';
-import APolicyPicker from '../policy/APolicyPicker.vue';
+import AFormPolicyPicker from '../policy/AFormPolicyPicker.vue';
 
 export default defineComponent({
     components: {
-        APolicyPicker,
+        AFormPolicyPicker,
         IFieldValidation,
         VCFormGroup,
         VCFormSwitch,
@@ -164,7 +164,7 @@ export default defineComponent({
                     {{ translations.enrollmentPolicy }}
                 </template>
                 <template #default>
-                    <APolicyPicker
+                    <AFormPolicyPicker
                         :value="policyField.$model.value"
                         :query="policyQuery"
                         @change="onPolicyChange"

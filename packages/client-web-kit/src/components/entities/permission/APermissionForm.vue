@@ -45,14 +45,14 @@ import {
     defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility/index.ts';
-import { ARealmPicker } from '../realm/index.ts';
+import { AFormRealmPicker } from '../realm/index.ts';
 import { VCAlert } from '@vuecs/elements';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
     components: {
         ANameInput,
-        ARealmPicker,
+        AFormRealmPicker,
         AFormSubmit,
         VCFormGroup,
         VCFormInput,
@@ -313,7 +313,7 @@ export default defineComponent({
                         <template #label>
                             {{ translationsDefault.realm }}
                         </template>
-                        <ARealmPicker
+                        <AFormRealmPicker
                             :value="v.fields.realmId.$model.value"
                             :multiple="false"
                             @change="(input: string[]) => {

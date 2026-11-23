@@ -87,7 +87,7 @@ The tokens sit in `@layer authup`, declared before `base`, so an override in `@l
 | `--authup-auth-*` | The logged-out shell: aurora backdrop, card, logo, accent colors (`AAuthShell`, `AAuthGadgets`, `AAuthBackLink`) |
 | `--authup-account-*` | The account console shell (`AAccountShell`): width, card, nav, surfaces |
 | `--authup-picker-item-*` | The tile pickers (policy type, identity provider, authenticator kind) |
-| `--authup-realm-grid-item-*` | The realm chooser (`ARealmGrid`) |
+| `--authup-realm-grid-item-*`, `--authup-realm-list-item-*` | The realm chooser (`ARealmPicker`, `grid` / `list` layout) |
 | `--authup-login-provider-*` | The identity-provider buttons on the login form |
 
 `--authup-auth-logo-image` / `--authup-account-logo-image` paint an image over the built-in logo mark, and the matching `-logo-mark-visibility` hides the mark's own shapes.

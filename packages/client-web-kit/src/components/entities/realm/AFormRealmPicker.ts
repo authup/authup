@@ -16,7 +16,7 @@ import {
 import type { EntityPickerVSlots } from '../../utility/entity/picker/types.ts';
 import { ARealms } from './ARealms.ts';
 
-export const ARealmPicker = defineComponent({
+export const AFormRealmPicker = defineComponent({
     props: defineEntityPickerVProps<Realm>(),
     emits: defineEntityPickerVEmitOptions<Realm>(),
     slots: Object as SlotsType<EntityPickerVSlots<Realm>>,

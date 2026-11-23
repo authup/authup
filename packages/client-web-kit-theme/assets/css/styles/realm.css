@@ -6,9 +6,9 @@
  */
 
 /*
- * Realm chooser (<ARealmGrid> in @authup/client-web-kit) — the tile
- * grid on the login entry page, with search input, skeleton loading
- * state and empty state. Colors come from the --authup-auth-* /
+ * Realm chooser (<ARealmPicker> in @authup/client-web-kit): the tile
+ * grid (`.a-realm-grid`) or row list (`.a-realm-list`) on the login entry
+ * page, with search input, skeleton loading state and empty state. Colors come from the --authup-auth-* /
  * --authup-realm-* tokens (see ./tokens.css).
  *
  * Rules live in `@layer components` (before `utilities` in the layer
@@ -130,7 +130,57 @@
         overflow-wrap: break-word;
     }
 
-    .a-realm-grid-item--skeleton {
+    .a-realm-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .a-realm-list-item {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: baseline;
+        column-gap: 0.75rem;
+        row-gap: 0.15rem;
+        width: 100%;
+        min-height: var(--authup-realm-list-item-min-height);
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--authup-auth-surface-border-color);
+        border-radius: var(--authup-realm-list-item-border-radius);
+        background: var(--authup-auth-surface-background);
+        color: var(--authup-auth-surface-color);
+        cursor: pointer;
+        text-align: left;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .a-realm-list-item:hover,
+    .a-realm-list-item:focus-visible {
+        outline: none;
+        border-color: var(--authup-auth-accent);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--authup-auth-accent) 25%, transparent);
+    }
+
+    .a-realm-list-item-name {
+        font-weight: 600;
+        overflow-wrap: anywhere;
+    }
+
+    .a-realm-list-item-slug {
+        color: var(--authup-auth-surface-color-muted);
+        font-size: 0.8em;
+        overflow-wrap: anywhere;
+    }
+
+    .a-realm-list-item-description {
+        grid-column: 1 / -1;
+        color: var(--authup-auth-surface-color-muted);
+        font-size: 0.875em;
+        overflow-wrap: anywhere;
+    }
+
+    .a-realm-grid-item--skeleton,
+    .a-realm-list-item--skeleton {
         cursor: default;
         pointer-events: none;
         border-color: var(--authup-auth-surface-border-color);
@@ -163,7 +213,9 @@
     @media (prefers-reduced-motion: reduce) {
         .a-realm-grid-item,
         .a-realm-grid-item::before,
-        .a-realm-grid-item--skeleton {
+        .a-realm-grid-item--skeleton,
+        .a-realm-list-item,
+        .a-realm-list-item--skeleton {
             transition: none;
             animation: none;
         }

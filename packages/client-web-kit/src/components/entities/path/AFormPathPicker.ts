@@ -16,7 +16,7 @@ import {
 import type { EntityPickerVSlots } from '../../utility/entity/picker/types.ts';
 import { APaths } from './APaths.ts';
 
-export const APathPicker = defineComponent({
+export const AFormPathPicker = defineComponent({
     props: defineEntityPickerVProps<Path>(),
     emits: defineEntityPickerVEmitOptions<Path>(),
     slots: Object as SlotsType<EntityPickerVSlots<Path>>,

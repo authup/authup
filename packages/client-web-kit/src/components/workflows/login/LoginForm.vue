@@ -38,7 +38,7 @@ import { VCFormGroup, VCFormInput, useSubmitButton } from '@vuecs/forms';
 import type { LinkProps } from '@vuecs/link';
 import { VCLink } from '@vuecs/link';
 import type { UserAuthenticatorChallengeVerifyResponse } from '@authup/core-http-kit';
-import { AIdentityProviderIcon, AIdentityProviders, ARealmPicker } from '../../entities/index.ts';
+import { AFormRealmPicker, AIdentityProviderIcon, AIdentityProviders } from '../../entities/index.ts';
 import { APagination, ATitle } from '../../utility/index.ts';
 import AMfaChallengeForm from '../mfa/AMfaChallengeForm.vue';
 import { IFieldValidation } from '@ilingo/validup-vue';
@@ -67,7 +67,7 @@ class LoginCredentialsValidator extends Container<{
 export default defineComponent({
     components: {
         AMfaChallengeForm,
-        ARealmPicker,
+        AFormRealmPicker,
         APagination,
         ATitle,
         AIdentityProviders,
@@ -525,7 +525,7 @@ export default defineComponent({
                     <hr>
 
                     <template v-if="!codeRequest || !codeRequest.realm_id">
-                        <ARealmPicker
+                        <AFormRealmPicker
                             :value="form.realmId"
                             @change="updateRealmId"
                         />

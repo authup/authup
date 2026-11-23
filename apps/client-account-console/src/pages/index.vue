@@ -9,7 +9,7 @@
 import {
     AAccountShell,
     AAuthShell,
-    ARealmGrid,
+    ARealmPicker,
     AWorkflowDisabledNotice,
     StoreAuthStatus,
     buildAuthorizeURL,
@@ -51,7 +51,7 @@ export default defineComponent({
     components: {
         AAccountShell,
         AAuthShell,
-        ARealmGrid,
+        ARealmPicker,
         AWorkflowDisabledNotice,
         VCAlert,
         VCButton,
@@ -333,7 +333,7 @@ export default defineComponent({
                 <div class="text-center">
                     {{ translations.accountSignInIntro }}
                 </div>
-                <ARealmGrid @select="handleRealmSelect" />
+                <ARealmPicker @select="handleRealmSelect" />
             </template>
             <template v-else>
                 <div class="text-center p-3">

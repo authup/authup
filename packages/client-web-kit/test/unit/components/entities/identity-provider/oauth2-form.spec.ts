@@ -85,8 +85,8 @@ function mountComponent(component: any, entity: IdentityProvider) {
                 // the enrollment policy picker is a network-backed entity
                 // collection; the stub declares its props so hydration is
                 // assertable
-                APolicyPicker: {
-                    name: 'APolicyPicker',
+                AFormPolicyPicker: {
+                    name: 'AFormPolicyPicker',
                     props: ['value', 'query'],
                     template: '<div class="policy-picker-stub" />',
                 },
@@ -125,7 +125,7 @@ describe('AIdentityProviderOAuth2Form', () => {
         expect(nameInput.exists()).toBe(true);
         expect(nameInput.props('modelValue')).toEqual('old-name');
 
-        nameInput.vm.$emit('update:modelValue', 'new-name');
+        await nameInput.emit('update:modelValue', 'new-name');
         await flushPromises();
 
         await wrapper.find('form').trigger('submit');
@@ -197,7 +197,7 @@ describe('AIdentityProviderOAuth2Form', () => {
 
         expect(amrInput).toBeDefined();
 
-        amrInput!.vm.$emit('update:modelValue', 'mfa hwk');
+        await amrInput!.emit('update:modelValue', 'mfa hwk');
         await flushPromises();
 
         await wrapper.find('form').trigger('submit');
@@ -238,12 +238,12 @@ describe('AIdentityProviderOAuth2Form', () => {
 
         expect(enrollmentToggle).toBeDefined();
 
-        const picker = wrapper.findComponent({ name: 'APolicyPicker' });
+        const picker = wrapper.findComponent({ name: 'AFormPolicyPicker' });
 
         expect(picker.props('value')).toEqual('1b2c3d4e-5f60-4172-8394-a5b6c7d8e9f0');
         expect(picker.props('query')).toEqual(defineQuery({ filters: { realmId: ['realm-1', null] } }));
 
-        enrollmentToggle!.vm.$emit('update:modelValue', true);
+        await enrollmentToggle!.emit('update:modelValue', true);
         await flushPromises();
 
         await wrapper.find('form').trigger('submit');
@@ -273,7 +273,7 @@ describe('AIdentityProviderOAuth2Form', () => {
         expect(inputValues).toContain('openid');
         expect(inputValues).toContain('profile');
 
-        scopeList.vm.$emit('changed', ['openid', 'profile', 'custom']);
+        await scopeList.emit('changed', ['openid', 'profile', 'custom']);
         await flushPromises();
 
         await wrapper.find('form').trigger('submit');
@@ -301,7 +301,7 @@ describe('AIdentityProviderBasicFields', () => {
         expect(nameInput.props('modelValue')).toEqual('old-name');
 
         // user edits the name (dirty), but does not submit
-        nameInput.vm.$emit('update:modelValue', 'new-name');
+        await nameInput.emit('update:modelValue', 'new-name');
         await flushPromises();
 
         // external refresh: another session changed displayName

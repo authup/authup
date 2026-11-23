@@ -8,7 +8,7 @@
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import type { FakeClient } from '@authup/core-http-kit/testing';
-import { AIdentityProviders, ARealmPicker } from '../../../../src/components/entities/index.ts';
+import { AFormRealmPicker, AIdentityProviders } from '../../../../src/components/entities/index.ts';
 import AMfaChallengeForm from '../../../../src/components/workflows/mfa/AMfaChallengeForm.vue';
 import { findTokenRequest, mountLoginForm } from '../../../utils/index.ts';
 
@@ -74,11 +74,11 @@ describe('components/workflows/login', () => {
 
         await flushPromises();
 
-        const picker = wrapper.findComponent(ARealmPicker);
+        const picker = wrapper.findComponent(AFormRealmPicker);
 
         expect(picker.exists()).toBe(true);
 
-        picker.vm.$emit('change', ['realm-a']);
+        await picker.emit('change', ['realm-a']);
         await flushPromises();
 
         await submitWithCredentials(wrapper);
@@ -104,7 +104,7 @@ describe('components/workflows/login', () => {
 
         await flushPromises();
 
-        expect(wrapper.findComponent(ARealmPicker).exists()).toBe(false);
+        expect(wrapper.findComponent(AFormRealmPicker).exists()).toBe(false);
 
         await submitWithCredentials(wrapper);
 
@@ -177,7 +177,7 @@ describe('components/workflows/login', () => {
         expect(wrapper.emitted('failed')).toBeUndefined();
 
         // the realm picker / credential view is hidden in the challenge step
-        expect(wrapper.findComponent(ARealmPicker).exists()).toBe(false);
+        expect(wrapper.findComponent(AFormRealmPicker).exists()).toBe(false);
 
         // the first token request carried NO otp
         const first = findTokenRequest(httpClient);
@@ -371,7 +371,7 @@ describe('components/workflows/login', () => {
 
         await flushPromises();
 
-        wrapper.findComponent(ARealmPicker).vm.$emit('change', ['realm-a']);
+        await wrapper.findComponent(AFormRealmPicker).emit('change', ['realm-a']);
         await flushPromises();
 
         expect(wrapper.findComponent(AIdentityProviders).exists()).toBe(true);

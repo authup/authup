@@ -46,15 +46,15 @@ import {
     defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility/index.ts';
-import { ARealmPicker } from '../realm/index.ts';
-import { APathPicker } from './APathPicker.ts';
+import { AFormRealmPicker } from '../realm/index.ts';
+import { AFormPathPicker } from './AFormPathPicker.ts';
 
 export default defineComponent({
     components: {
         AFormSubmit,
         ANameInput,
-        APathPicker,
-        ARealmPicker,
+        AFormPathPicker,
+        AFormRealmPicker,
         VCFormGroup,
         VCFormInput,
         VCFormTextarea,
@@ -272,7 +272,7 @@ export default defineComponent({
                         {{ translationsDefault.parent }}
                     </template>
                     <template #default>
-                        <APathPicker
+                        <AFormPathPicker
                             :value="v.fields.parentId.$model.value ?? ''"
                             :query="parentQuery"
                             @change="setParent"
@@ -324,7 +324,7 @@ export default defineComponent({
                         <template #label>
                             {{ translationsDefault.realm }}
                         </template>
-                        <ARealmPicker
+                        <AFormRealmPicker
                             :value="v.fields.realmId.$model.value"
                             @change="(input: string[]) => {
                                 v.fields.realmId.$model.value = input.length > 0 ? input[0] ?? '' : '';

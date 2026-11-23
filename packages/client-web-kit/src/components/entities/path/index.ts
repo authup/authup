@@ -6,7 +6,7 @@
  */
 
 export * from './APath.ts';
-export * from './APathPicker.ts';
+export * from './AFormPathPicker.ts';
 export * from './APaths.ts';
 
 export { default as APathForm } from './APathForm.vue';
