@@ -46,6 +46,7 @@ export type EntityCollectionHydrationSnapshot<T> = {
 /** Minimal slot-prop shape — superset of what the @vuecs/list-controls 2.x types exposed. */
 export type ListSlotProps<T> = {
     data: T[];
+    /** `true` while the newest load runs; a superseded load does not count. */
     busy: boolean;
     total: number;
     load: ListLoadFn<EntityListQueryInput<Entity<T>>>;
@@ -115,7 +116,10 @@ export type EntityCollectionManager<T extends Record<string, any>> = {
     handleDeleted(item: T) : void;
     handleUpdated(item: T) : void;
     data: ComputedRef<T[]>,
+    /** `true` while any load runs, superseded ones included. */
     busy: ComputedRef<boolean>,
+    /** `true` only while the newest load runs. */
+    loading: ComputedRef<boolean>,
     meta: ComputedRef<ListMeta>,
     total: ComputedRef<number>,
 };

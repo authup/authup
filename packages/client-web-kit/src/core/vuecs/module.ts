@@ -7,6 +7,7 @@
 
 import fontAwesome from '@vuecs/icons-font-awesome';
 import { buildSubmitButtonDefaults } from '../form/index.ts';
+import { buildEmptyStateDefaults } from './empty-state.ts';
 import type { VuecsInstallOptions, VuecsInstallOptionsInput } from './types.ts';
 
 /**
@@ -33,6 +34,9 @@ export function buildVuecsInstallOptions(input: VuecsInstallOptionsInput = {}) :
     return {
         themes: input.themes,
         icons: [fontAwesome()],
-        defaults: { submitButton: buildSubmitButtonDefaults() },
+        defaults: {
+            submitButton: buildSubmitButtonDefaults(),
+            emptyState: buildEmptyStateDefaults(),
+        },
     };
 }

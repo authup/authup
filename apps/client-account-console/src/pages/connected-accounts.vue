@@ -22,6 +22,7 @@ import {
 import { isUUID } from '@authup/kit';
 import { storeToRefs } from 'pinia';
 import { VCButton } from '@vuecs/button';
+import { VCEmptyState } from '@vuecs/elements';
 import { useAlertDialog, useToast } from '@vuecs/overlays';
 import {
     computed,
@@ -38,6 +39,7 @@ export default defineComponent({
         AIdentityProviderIcon,
         PageError,
         VCButton,
+        VCEmptyState,
     },
     setup() {
         const store = injectStore();
@@ -248,12 +250,10 @@ export default defineComponent({
             @retry="load"
         />
         <template v-else>
-            <div
+            <VCEmptyState
                 v-if="loaded && providers.length === 0"
-                class="text-fg-muted"
-            >
-                {{ translations.connectedAccountsNone }}
-            </div>
+                :description="translations.connectedAccountsNone"
+            />
             <div class="flex flex-col gap-2">
                 <div
                     v-for="provider in providers"

@@ -45,6 +45,8 @@ export enum TranslatorTranslationNamespace {
 
 export enum TranslatorTranslationVuecsKey {
     NO_MORE = 'noMore',
+    NO_RESULTS_TITLE = 'noResultsTitle',
+    NO_RESULTS_DESCRIPTION = 'noResultsDescription',
 }
 
 export enum TranslatorTranslationClientKey {

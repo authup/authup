@@ -8,4 +8,8 @@
 import { TranslatorTranslationVuecsKey } from '../../constants.ts';
 import type { NamespaceTranslations } from '../../types.ts';
 
-export const TranslatorTranslationVuecsGerman : NamespaceTranslations<`${TranslatorTranslationVuecsKey}`> = { [TranslatorTranslationVuecsKey.NO_MORE]: 'Keine weiteren {{name}} verfügbar' };
+export const TranslatorTranslationVuecsGerman : NamespaceTranslations<`${TranslatorTranslationVuecsKey}`> = {
+    [TranslatorTranslationVuecsKey.NO_MORE]: 'Keine weiteren {{name}} verfügbar',
+    [TranslatorTranslationVuecsKey.NO_RESULTS_TITLE]: 'Keine Ergebnisse',
+    [TranslatorTranslationVuecsKey.NO_RESULTS_DESCRIPTION]: 'Suche oder Filter anpassen.',
+};

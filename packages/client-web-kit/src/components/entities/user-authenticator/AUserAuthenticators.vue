@@ -20,7 +20,7 @@ import {
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import { VCButton } from '@vuecs/button';
-import { VCAlert } from '@vuecs/elements';
+import { VCAlert, VCEmptyState } from '@vuecs/elements';
 import { VCIcon } from '@vuecs/icon';
 import {
     VCModal,
@@ -39,6 +39,7 @@ export default defineComponent({
     components: {
         VCButton,
         VCAlert,
+        VCEmptyState,
         VCIcon,
         VCModal,
         VCModalContent,
@@ -193,14 +194,13 @@ export default defineComponent({
             </VCButton>
         </div>
 
-        <VCAlert
+        <VCEmptyState
             v-if="!busy && items.length === 0"
-            color="info"
-            variant="soft"
-            size="sm"
-        >
-            {{ translations.mfaNoDevices }}
-        </VCAlert>
+            icon="fa6-solid:shield-halved"
+            :description="translations.mfaNoDevices"
+            :action-label="translations.add"
+            @action="adding = true"
+        />
 
         <ul
             v-if="items.length > 0"
