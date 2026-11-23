@@ -7,7 +7,7 @@
 
 import { IssueCode, defineIssueItem } from '@ebec/core';
 import { describe, expect, it } from 'vitest';
-import { AuthupError } from '../../src/index.ts';
+import { AuthupError, ErrorCode, LoginThrottledError } from '../../src/index.ts';
 
 describe('AuthupError issues', () => {
     it('should carry issues passed through the constructor', () => {
@@ -23,5 +23,35 @@ describe('AuthupError issues', () => {
 
     it('should default issues to an empty array', () => {
         expect(new AuthupError('nope').issues).toEqual([]);
+    });
+});
+
+describe('AuthupError toJSON', () => {
+    it('should keep the data payload next to the base fields', () => {
+        const error = new LoginThrottledError({ retryAfter: 30 });
+
+        expect(error.toJSON()).toMatchObject({
+            name: error.name,
+            code: ErrorCode.LOGIN_ATTEMPT_THROTTLED,
+            retryAfter: 30,
+        });
+    });
+
+    it('should not let a data key displace code, message or name', () => {
+        const error = new LoginThrottledError({
+            retryAfter: 30,
+            data: {
+                code: 'other',
+                message: 'x',
+                name: 'y',
+            },
+        });
+
+        const output = error.toJSON();
+
+        expect(output.code).toEqual(ErrorCode.LOGIN_ATTEMPT_THROTTLED);
+        expect(output.message).toEqual(error.message);
+        expect(output.name).toEqual(error.name);
+        expect(output.retryAfter).toEqual(30);
     });
 });
