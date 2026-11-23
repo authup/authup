@@ -354,8 +354,10 @@ default `admin-console`, `cookieSession`, `features`), same cookie-mode rule.
   the marker after mounting on a resolved navigation. Without the marker a
   persistently 404ing asset loops.
 - **Post-login destination** rides `sessionStorage` `authup:admin:redirect`
-  (`src/redirect.ts`), validated as a site-relative path, because the server
-  callback lands on the console root. Standalone hosting keeps it in the
+  through the kit's `saveLoginRedirect` / `loadLoginRedirect` (the key in
+  `src/redirect.ts`; consoles on one origin share `sessionStorage`, so each
+  names its own), validated by `resolveLoginRedirect` as a site-relative path
+  off the login route, because the server callback lands on the console root. Standalone hosting keeps it in the
   callback URI's query (#3476).
 - **`<Suspense>`** in `src/App.vue` keeps the detail pages' `async setup()`.
   Runtime asset urls are chunk-relative via `renderBuiltUrl` (js and css),

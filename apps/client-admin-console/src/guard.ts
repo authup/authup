@@ -12,13 +12,15 @@ import {
     StoreAuthStatus,
     clearAuthorizationRequest,
     loadAuthorizationRequest,
+    loadLoginRedirect,
+    resolveLoginRedirect,
     storeToRefs,
 } from '@authup/client-web-kit';
 import { hasOwnProperty, omitRecord } from '@authup/kit';
 import type { RouteLocationNormalized, RouteLocationRaw } from 'vue-router';
 import type { AdminConsoleConfig } from './config.ts';
 import { LayoutKey } from './config/layout/index.ts';
-import { loadLoginRedirect, resolveLoginRedirect } from './redirect.ts';
+import { LOGIN_REDIRECT_OPTIONS } from './redirect.ts';
 
 export type RoutingGuardContext = {
     store: Store,
@@ -92,6 +94,7 @@ export function createRoutingGuard(ctx: RoutingGuardContext) : RoutingGuard {
     const storeRefs = storeToRefs(store);
     const homeRoute = ctx.homeRoute || '/';
     const loginRoute = ctx.loginRoute || '/login';
+    const redirectOptions = { ...LOGIN_REDIRECT_OPTIONS, loginPath: loginRoute };
 
     const isAuthenticated = () => storeRefs.status.value === StoreAuthStatus.AUTHENTICATED;
 
@@ -139,7 +142,7 @@ export function createRoutingGuard(ctx: RoutingGuardContext) : RoutingGuard {
             // Single use either way: consumed on success, dropped on failure
             // (a reload must not replay the code).
             const request = loadAuthorizationRequest();
-            const destination = resolveLoginRedirect(to.query.redirect);
+            const destination = resolveLoginRedirect(to.query.redirect, redirectOptions);
 
             try {
                 // A code this browser did not ask for has no request to
@@ -176,7 +179,7 @@ export function createRoutingGuard(ctx: RoutingGuardContext) : RoutingGuard {
         // The destination the visitor asked for before the server-side kick
         // (cookie mode); the callback lands on the root, so it rides a stash.
         // Popped on every navigation so nothing stale survives.
-        const pendingRedirect = ctx.config.cookieSession ? loadLoginRedirect() : undefined;
+        const pendingRedirect = ctx.config.cookieSession ? loadLoginRedirect(redirectOptions) : undefined;
 
         try {
             await store.resolve();

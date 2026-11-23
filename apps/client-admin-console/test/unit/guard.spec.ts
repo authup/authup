@@ -6,7 +6,7 @@
  */
 
 import type { Store } from '@authup/client-web-kit';
-import { StoreAuthStatus, saveAuthorizationRequest  } from '@authup/client-web-kit';
+import { StoreAuthStatus, saveAuthorizationRequest, saveLoginRedirect } from '@authup/client-web-kit';
 import type { RouteLocationNormalized } from 'vue-router';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import { ref } from 'vue';
@@ -19,7 +19,7 @@ import {
 } from 'vitest';
 import { LayoutKey } from '../../src/config/layout/index.ts';
 import { createRoutingGuard } from '../../src/guard.ts';
-import { LOGIN_REDIRECT_STORAGE_KEY, saveLoginRedirect } from '../../src/redirect.ts';
+import { LOGIN_REDIRECT_OPTIONS, LOGIN_REDIRECT_STORAGE_KEY } from '../../src/redirect.ts';
 import { routes } from '../../src/router.ts';
 
 type StoreStub = {
@@ -142,7 +142,7 @@ describe('src/guard', () => {
         it('should land on the stashed destination after the server-side login', async () => {
             const { guard } = createGuard({}, { cookieSession: true });
 
-            saveLoginRedirect('/users?page=2#row-7');
+            saveLoginRedirect('/users?page=2#row-7', LOGIN_REDIRECT_OPTIONS);
 
             const result = await guard(createRoute({ path: '/' }), createRoute({ path: '/' }));
 
@@ -176,7 +176,7 @@ describe('src/guard', () => {
         it('should drop the stash when the session did not land', async () => {
             const { guard } = createGuard({ status: ref(StoreAuthStatus.UNAUTHENTICATED) }, { cookieSession: true });
 
-            saveLoginRedirect('/users');
+            saveLoginRedirect('/users', LOGIN_REDIRECT_OPTIONS);
 
             await guard(createRoute({ path: '/login' }), createRoute({ path: '/' }));
             expect(sessionStorage.getItem(LOGIN_REDIRECT_STORAGE_KEY)).toBeNull();
