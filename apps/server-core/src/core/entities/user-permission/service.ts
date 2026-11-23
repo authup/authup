@@ -8,6 +8,7 @@
 import {
     BuiltInPolicyType,
     RealmScope,
+    appendQueryConditions,
     evaluateRecord,
     evaluateRecordOneOf,
     reachesRecordOneOf,
@@ -23,7 +24,6 @@ import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } 
 import { JunctionEntityService } from '@authup/server-kit';
 import type { IUserPermissionRepository, IUserPermissionService } from './types.ts';
 import {
-    appendQueryConditions,
     decodeQuery,
     readResponseAttributeNames,
     redactUnreachedRelations,

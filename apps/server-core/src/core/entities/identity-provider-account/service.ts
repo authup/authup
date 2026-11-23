@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, evaluateRecord, reachesRecord } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    appendQueryConditions,
+    evaluateRecord,
+    reachesRecord,
+} from '@authup/access';
 import { EntityNotFoundError } from '@authup/errors';
 import type { IdentityProviderAccount } from '@authup/core-kit';
 import {
@@ -19,7 +24,6 @@ import { AbstractEntityService } from '@authup/server-kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
 import { eq, inArray, or } from '@rapiq/core';
 import {
-    appendQueryConditions,
     decodeQuery,
     readResponseAttributeNames,
     trimReachCheckFields,

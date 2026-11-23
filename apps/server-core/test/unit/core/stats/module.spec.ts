@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { scopeReadQuery } from '@authup/access';
 import { randomUUID } from 'node:crypto';
 import type {
     Event,
@@ -51,7 +52,6 @@ import {
 import type { EntityStatsDefinition } from '../../../../src/core/index.ts';
 import { EntityStatsService } from '../../../../src/core/index.ts';
 import { decodeQuery } from '../../../../src/core/query/module.ts';
-import { scopeReadQuery } from '../../../../src/core/query/scope.ts';
 import { FakeEventRepository } from '../entities/event/fake-repository.ts';
 import { FakeEntityStatsRepository } from './fake-repository.ts';
 
@@ -681,7 +681,7 @@ describe('EntityStatsService', () => {
                 type: 'role',
                 schema: eventSchema,
                 repository: roles,
-                scope: (query, actor) => scopeReadQuery(query, actor, { names: [PermissionName.ROLE_READ] }),
+                scope: (query, actor) => scopeReadQuery(query, actor.permissionEvaluator, { names: [PermissionName.ROLE_READ] }),
             },
             cache,
         });

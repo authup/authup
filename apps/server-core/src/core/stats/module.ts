@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { appendQueryConditions, narrowReadScope } from '@authup/access';
 import { ValidationError } from '@authup/errors';
 import type { ActorContext, ICache } from '@authup/server-kit';
 import {
@@ -15,8 +16,7 @@ import {
     not,
 } from '@rapiq/core';
 import type { ICondition, IQuery } from '@rapiq/core';
-import { appendQueryConditions, decodeQuery, queryCodec } from '../query/module.ts';
-import { narrowReadScope } from '../query/scope.ts';
+import { decodeQuery, queryCodec } from '../query/module.ts';
 import { STATS_CACHE_TTL } from './constants.ts';
 import type {
     EntityStatsDefinition,

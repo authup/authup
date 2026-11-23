@@ -5,7 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, evaluateRecord, reachesRecord } from '@authup/access';
+import type { ReadScope } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    appendQueryConditions,
+    evaluateRecord,
+    reachesRecord,
+    scopeReadQuery,
+} from '@authup/access';
 import { AuthupError, EntityNotFoundError, ErrorCode } from '@authup/errors';
 import { isObject } from '@authup/kit';
 import { createURLCodec } from '@rapiq/codec-url';
@@ -24,13 +31,11 @@ import type { ISessionManager, ISessionRepository } from '../../authentication/i
 import { SESSION_FILTER_KEYS } from '../../authentication/index.ts';
 import type { ISessionService, SessionDeleteManyOptions, SessionDeleteManyResult } from './types.ts';
 import {
-    appendQueryConditions,
     decodeQuery,
     readResponseAttributeNames,
     redactUnreachedRelations,
-    scopeReadQuery,
+    widenToSchema,
 } from '../../query/index.ts';
-import type { ReadScope } from '../../query/index.ts';
 import { sessionSchema } from './schema.ts';
 
 export type SessionServiceContext = {
@@ -60,13 +65,13 @@ export class SessionService extends AbstractEntityService implements ISessionSer
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
-        return scopeReadQuery(query, actor, {
+        return scopeReadQuery(query, actor.permissionEvaluator, {
             names: [PermissionName.SESSION_READ],
             ownership: actor.identity ?
                 and(eq('sub', actor.identity.data.id), eq('subKind', actor.identity.type)) :
                 null,
             selfService: true,
-            schema: sessionSchema,
+            widen: widenToSchema(sessionSchema),
             retain: ['sub', 'subKind'],
         });
     }

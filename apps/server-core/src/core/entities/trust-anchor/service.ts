@@ -5,11 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ReadScope } from '@authup/access';
 import {
     BuiltInPolicyType,
+    appendQueryConditions,
     evaluateRecord,
     evaluateRecordOneOf,
     reachesRecordOneOf,
+    scopeReadQuery,
 } from '@authup/access';
 import { eq } from '@rapiq/core';
 import type { IQuery } from '@rapiq/core';
@@ -24,7 +27,11 @@ import {
 import { EntityNotFoundError, ValidationError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
-import { AbstractEntityService } from '@authup/server-kit';
+import {
+    AbstractEntityService,
+    assertRowUnchanged,
+    retryOnStaleRow,
+} from '@authup/server-kit';
 import { buildEntityDiff } from '../event/index.ts';
 import type { EventRequestContext, IEventService } from '../event/index.ts';
 import { parseCertificateChain } from '../../key/index.ts';
@@ -34,16 +41,13 @@ import type {
     TrustAnchorServiceReadOptions,
 } from './types.ts';
 import {
-    appendQueryConditions,
     decodeQuery,
     readResponseAttributeNames,
-    scopeReadQuery,
     trimReachCheckFields,
+    widenToSchema,
 } from '../../query/index.ts';
-import type { ReadScope } from '../../query/index.ts';
 import { assertTokenExchangeAuthority } from '../client-token-exchange-capability/helpers.ts';
 import type { IClientTokenExchangeCapabilityRepository } from '../client-token-exchange-capability/types.ts';
-import { assertRowUnchanged, retryOnStaleRow } from '../stale-row/index.ts';
 import { trustAnchorSchema } from './schema.ts';
 
 export type TrustAnchorServiceContext = {
@@ -80,7 +84,7 @@ export class TrustAnchorService extends AbstractEntityService implements ITrustA
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
-        return scopeReadQuery(query, actor, { names: PERMISSION_NAMES, schema: trustAnchorSchema });
+        return scopeReadQuery(query, actor.permissionEvaluator, { names: PERMISSION_NAMES, widen: widenToSchema(trustAnchorSchema) });
     }
 
     async getMany(

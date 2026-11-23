@@ -7,6 +7,7 @@
 
 import {
     BuiltInPolicyType,
+    appendQueryConditions,
     evaluateRecord,
     evaluateRecordOneOf,
     reachesRecordOneOf,
@@ -21,7 +22,6 @@ import { AbstractEntityService } from '@authup/server-kit';
 import { buildErrorMessageForAttribute } from 'validup';
 import type { IRoleAttributeRepository, IRoleAttributeService } from './types.ts';
 import {
-    appendQueryConditions,
     decodeQuery,
     readResponseAttributeNames,
     redactUnreachedRelations,

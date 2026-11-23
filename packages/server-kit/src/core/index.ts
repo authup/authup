@@ -6,6 +6,8 @@
  */
 
 export * from './actor/index.ts';
+export * from './authorization/index.ts';
 export * from './junction-service.ts';
 export * from './service.ts';
+export * from './stale-row/index.ts';
 export * from './types.ts';

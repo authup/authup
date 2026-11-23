@@ -177,7 +177,11 @@ defaulting fail-closed to `own`:
   `@authup/access`** (`evaluateRecord`, `evaluateRecordOneOf`,
   `reachesRecord*`, `evaluateRecordUpdate`, `hasUnboundedReach`). `realm` is
   the RECORD's realm (`null` global, a list = every realm); `undefined` throws,
-  and so does caller data already carrying `realmMatch`. Every single-record
+  and so does caller data already carrying `realmMatch`. `false` is the
+  explicit opt-out for a resource of no realm: no `realmMatch`, so every
+  grant's reach neutral-passes and the data decides alone (#3871). `compile`
+  takes the same `realm` (`false`, or a fixed realm settling the reach instead
+  of lowering it onto a column, #3856). Every single-record
   check in server-core goes through them; an eslint rule refuses the
   `realmMatch` key in `apps/server-core/src` except `core/authorization/check.ts`
   and `core/identity/permission/checker/service.ts`.

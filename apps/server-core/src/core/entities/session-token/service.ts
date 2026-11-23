@@ -8,6 +8,7 @@
 import {
     BuiltInPolicyType,
     PermissionError,
+    appendQueryConditions,
     evaluateRecord,
     isPermissionError,
 } from '@authup/access';
@@ -29,7 +30,6 @@ import { AbstractEntityService } from '@authup/server-kit';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IOAuth2TokenRepository, ISessionTokenRepository  } from '../../oauth2/index.ts';
 import {
-    appendQueryConditions,
     decodeQuery,
     readResponseAttributeNames,
     redactUnreachedRelations,

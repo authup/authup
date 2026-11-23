@@ -501,7 +501,8 @@ Defaults (declared in `app/modules/provisioning/sources/default/module.ts`):
     then writes only changed columns, so concurrent writers' columns survive.
   - The gates judged the pre-read row, so a fresh row differing from it (`updatedAt`
     aside; a path also when its recomputed `path` differs) aborts the transaction
-    (`StaleRowSignal`); `retryOnStaleRow` re-reads, re-authorizes and retries, then 409.
+    (`StaleRowSignal`); `retryOnStaleRow` (`@authup/server-kit/core`) re-reads,
+    re-authorizes and retries, then 409.
     Without it a concurrent commit lands a pair no gate saw. `PathService.update` too.
   - Nothing inside the callback may use a pool-bound repository (same rule for the entity
     audit row, which rides `event.manager`, #3539).

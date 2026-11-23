@@ -25,7 +25,7 @@ Cross-entity statistics would get a root `GET /stats/<name>`; none exists.
   blocks, a definition and a `@stats` method on its controller.
 - **The gate is the list's, by construction.** Lists and statistics both call
   the service's `scopeRead(query, actor)` (`IReadScoper`, over
-  `scopeReadQuery` in `core/query/scope.ts`), so they cannot disagree about
+  `scopeReadQuery` from `@authup/access`), so they cannot disagree about
   reach. A `post` verdict narrows the statistic to the ownership term or to
   nothing (`narrowReadScope`): a grouped count has no row to evaluate, and
   failing closed cannot over-disclose. Consequence: a reader whose grant has a

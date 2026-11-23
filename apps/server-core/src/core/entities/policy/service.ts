@@ -10,8 +10,9 @@ import {
     evaluateRecord,
     evaluateRecordOneOf,
     reachesRecordOneOf,
+    scopeReadQuery,
 } from '@authup/access';
-import type { PolicyValidators } from '@authup/access';
+import type { PolicyValidators, ReadScope } from '@authup/access';
 import type { IQuery } from '@rapiq/core';
 import {
     ValidatorGroup,
@@ -27,18 +28,21 @@ import {
 import type { Policy } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import type { IRealmRepository } from '../realm/types.ts';
-import { AbstractEntityService } from '@authup/server-kit';
+import {
+    AbstractEntityService,
+    StaleRowSignal,
+    assertRowUnchanged,
+    retryOnStaleRow,
+} from '@authup/server-kit';
 import { PolicyAttributesValidator } from './attributes-validator.ts';
 import type { IPolicyRepository, IPolicyService } from './types.ts';
 import {
     decodeQuery,
     readResponseAttributeNames,
     redactUnreachedRelations,
-    scopeReadQuery,
+    widenToSchema,
 } from '../../query/index.ts';
-import type { ReadScope } from '../../query/index.ts';
 import { policySchema } from './schema.ts';
-import { StaleRowSignal, assertRowUnchanged, retryOnStaleRow } from '../stale-row/index.ts';
 
 export type PolicyServiceContext = {
     repository: IPolicyRepository;
@@ -74,7 +78,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
-        return scopeReadQuery(query, actor, { names: PERMISSION_NAMES, schema: policySchema });
+        return scopeReadQuery(query, actor.permissionEvaluator, { names: PERMISSION_NAMES, widen: widenToSchema(policySchema) });
     }
 
     async getMany(

@@ -7,6 +7,7 @@
 
 import {
     BuiltInPolicyType,
+    appendQueryConditions,
     evaluateRecord,
     evaluateRecordOneOf,
     reachesRecordOneOf,
@@ -21,15 +22,17 @@ import { EntityNotFoundError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
 import { inArray } from '@rapiq/core';
 import type { ActorContext, EntityRepositoryFindManyResult } from '@authup/server-kit';
-import { AbstractEntityService } from '@authup/server-kit';
 import {
-    appendQueryConditions,
+    AbstractEntityService,
+    assertRowUnchanged,
+    retryOnStaleRow,
+} from '@authup/server-kit';
+import {
     decodeQuery,
     readResponseAttributeNames,
     redactUnreachedRelations,
     widenSparseRootProjection,
 } from '../../query/index.ts';
-import { assertRowUnchanged, retryOnStaleRow } from '../stale-row/index.ts';
 import { assertCapabilitySubjectRealmReach } from './helpers.ts';
 import { clientTokenExchangeCapabilitySchema } from './schema.ts';
 import type { IClientTokenExchangeCapabilityRepository, IClientTokenExchangeCapabilityService } from './types.ts';

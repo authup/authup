@@ -43,6 +43,8 @@ npm install @authup/server-kit ioredis
 
 It ships native bindings through `@node-rs/bcrypt` and `@node-rs/jsonwebtoken`, and depends on `winston`, `redis-extension` and the Socket.IO Redis emitter. `ioredis` (`^6.0.0`) is a peer dependency: a client you pass in and the clients the package creates come from your copy. The package is ESM only and needs Node.js `>=26.0.0`.
 
+`@authup/server-kit/core` is a light entry for a resource server that only needs the entity service contracts, the stale-row retry and the catalog cache: it loads none of the native bindings, winston, redis or the emitter.
+
 ## Usage
 
 ### Logger and cache
@@ -125,6 +127,8 @@ const plain = await cipher.decrypt(await cipher.encrypt('plain'));
 
 `IEntityRepository<T>` is the repository port: `findMany(query)` takes the rapiq query IR (`IQuery` from `@rapiq/core`), plus lookups by id, name and condition, `create`, `merge`, `save`, `remove` and `validateJoinColumns`. `ActorContext` is what a service receives instead of an HTTP request: a `permissionEvaluator`, the optional `identity`, and an optional `grants()` resolver. `AbstractEntityService` gives subclasses `getActorRealmId`, `getActorGrants` (which answers no grants when the resolver is missing) and `evaluateUpdate`, which evaluates a permission against both the stored and the updated row. `JunctionEntityService` adds the owner-realm accessors a junction service must declare.
 
+`retryOnStaleRow({ row, reread }, fn)` authorizes on the row as read and runs the write against it; when the write's transaction finds the row changed (`assertRowUnchanged` throws `StaleRowSignal`) it re-reads and runs again, then answers a conflict. `AuthorizationCatalogCache` reads `GET /authorization` once per process through the `read` you hand it, shares that read between concurrent callers, keeps no failed read, and builds evaluators over it, reading the catalog again once when the grants outdate it (`AuthorizationCatalogStaleError`).
+
 ## API
 
 | Export | Kind | Purpose |
@@ -140,7 +144,8 @@ const plain = await cipher.decrypt(await cipher.encrypt('plain'));
 | `encodePKCS8ToPEM`, `encodeSPKIToPem`, `decodePemToPKCS8`, `decodePemToSpki` | function | PEM wrapping |
 | `SymmetricCipher`, `ISymmetricCipher` | class, interface | AES-256-GCM encryption at rest |
 | `hash`, `compare` | function | bcrypt |
-| `IEntityRepository`, `EntityRepositoryFindManyResult`, `ActorContext`, `AbstractEntityService`, `JunctionEntityService` | interface, type, class | Entity service contracts |
+| `IEntityRepository`, `EntityRepositoryFindManyResult`, `ActorContext`, `AbstractEntityService`, `JunctionEntityService` | interface, type, class | Entity service contracts (also on `@authup/server-kit/core`) |
+| `retryOnStaleRow`, `assertRowUnchanged`, `StaleRowSignal`, `AuthorizationCatalogCache` | function, class | Stale-row retry and the consumer catalog cache (also on `@authup/server-kit/core`) |
 | `hasOwnProperty` | function | Typed own-property check |
 
 The crypto option types (`TokenSignOptions`, `TokenVerifyOptions`, `AsymmetricKeyPairCreateOptionsInput` and their per-algorithm variants) are exported as well.

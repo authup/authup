@@ -8,6 +8,7 @@
 import {
     BuiltInPolicyType,
     PermissionError,
+    appendQueryConditions,
     evaluateRecord,
     reachesRecord,
 } from '@authup/access';
@@ -21,7 +22,6 @@ import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/serv
 import { AbstractEntityService } from '@authup/server-kit';
 import type { IUserAttributeRepository, IUserAttributeService } from './types.ts';
 import {
-    appendQueryConditions,
     decodeQuery,
     readResponseAttributeNames,
     redactUnreachedRelations,

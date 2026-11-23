@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { appendQueryConditions } from '@authup/access';
 import type { ICondition } from '@rapiq/core';
 import {
     FilterCompoundOperator,
@@ -23,7 +24,7 @@ import { clientSchema } from '../../../../src/core/entities/client/schema.ts';
 import { clientPermissionSchema } from '../../../../src/core/entities/client-permission/schema.ts';
 import { roleSchema } from '../../../../src/core/entities/role/schema.ts';
 import { userRoleSchema } from '../../../../src/core/entities/user-role/schema.ts';
-import { appendQueryConditions, decodeQuery } from '../../../../src/core/query/index.ts';
+import { decodeQuery } from '../../../../src/core/query/index.ts';
 import { ReachCheckField } from '../../../../src/core/query/projection.ts';
 
 function collectFieldConditions(condition: ICondition): [string, unknown][] {

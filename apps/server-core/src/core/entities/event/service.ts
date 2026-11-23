@@ -5,8 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ReadScope } from '@authup/access';
 import { randomUUID } from 'node:crypto';
-import { BuiltInPolicyType, evaluateRecord, reachesRecord } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    evaluateRecord,
+    reachesRecord,
+    scopeReadQuery,
+} from '@authup/access';
 import { and, eq } from '@rapiq/core';
 import type { IQuery } from '@rapiq/core';
 import { PermissionName } from '@authup/core-kit';
@@ -24,10 +30,13 @@ import type {
     IEventRepository,
     IEventService,
 } from './types.ts';
-import { decodeQuery, readResponseAttributeNames, trimReachCheckFields } from '../../query/index.ts';
+import {
+    decodeQuery,
+    readResponseAttributeNames,
+    trimReachCheckFields,
+    widenToSchema,
+} from '../../query/index.ts';
 import { eventSchema } from './schema.ts';
-import type { ReadScope } from '../../query/scope.ts';
-import { scopeReadQuery } from '../../query/scope.ts';
 
 export type EventServiceContext = {
     repository: IEventRepository,
@@ -164,13 +173,13 @@ export class EventService extends AbstractEntityService implements IEventService
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
-        return scopeReadQuery(query, actor, {
+        return scopeReadQuery(query, actor.permissionEvaluator, {
             names: [PermissionName.EVENT_READ],
             ownership: actor.identity ?
                 and(eq('actorId', actor.identity.data.id), eq('actorType', actor.identity.type)) :
                 null,
             selfService: true,
-            schema: eventSchema,
+            widen: widenToSchema(eventSchema),
             retain: ['actorId', 'actorType'],
         });
     }
