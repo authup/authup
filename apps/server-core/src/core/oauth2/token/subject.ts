@@ -9,7 +9,8 @@ import type { Identity, Session } from '@authup/core-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 
 /**
- * Whether the identity a token names belongs to the realm the token names.
+ * Whether the identity is the one the token names (by id, never a namesake)
+ * and belongs to the realm the token names.
  * A token verifies against a signing key of its own realm only, so its
  * subject has to be of that realm too: every issuer stamps the subject's own
  * realm, and a subject of another realm is one that realm's key cannot vouch
@@ -17,10 +18,12 @@ import type { OAuth2TokenPayload } from '@authup/specs';
  */
 export function isTokenSubject(
     identity: Identity | null | undefined,
-    token: Pick<OAuth2TokenPayload, 'realm_id'>,
+    token: Pick<OAuth2TokenPayload, 'sub' | 'realm_id'>,
 ): identity is Identity {
     return !!identity &&
+        !!token.sub &&
         !!token.realm_id &&
+        identity.data.id === token.sub &&
         identity.data.realmId === token.realm_id;
 }
 
@@ -30,7 +33,7 @@ export function isTokenSubject(
  */
 export function isTokenSubjectActive(
     identity: Identity | null | undefined,
-    token: Pick<OAuth2TokenPayload, 'realm_id'>,
+    token: Pick<OAuth2TokenPayload, 'sub' | 'realm_id'>,
 ): identity is Identity {
     return isTokenSubject(identity, token) && !!identity.data.active;
 }

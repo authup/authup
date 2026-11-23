@@ -47,7 +47,7 @@ export async function resolveIntrospectionSubject(
     ctx: OAuth2IntrospectionSubjectContext,
     input: OAuth2IntrospectionSubjectInput,
 ) : Promise<OAuth2IntrospectionSubject | null> {
-    const identity = await ctx.identityResolver.resolve(input.token.sub_kind, input.token.sub);
+    const identity = await ctx.identityResolver.resolveById(input.token.sub_kind, input.token.sub);
 
     // A subject that no longer exists, or one of another realm than the
     // token names, is not the token's subject at all: nothing about it may be

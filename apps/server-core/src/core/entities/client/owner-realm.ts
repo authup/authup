@@ -7,9 +7,11 @@
 
 import { isUUID } from '@authup/kit';
 import { ValidationError } from '@authup/errors';
-import type { Client } from '@authup/core-kit';
+import type { Client, Realm } from '@authup/core-kit';
 import type { ActorContext, IEntityRepository } from '@authup/server-kit';
 import type { IRealmRepository } from '../realm/types.ts';
+import type { IdOrNameCondition } from '../id-or-name.ts';
+import { findOneByIdOrNameKey } from '../id-or-name.ts';
 
 type ClientOwnedInput = {
     clientId?: string | null,
@@ -65,7 +67,7 @@ export type ClientOwnedRowLookupContext<T extends ClientOwnedRow> = {
 /**
  * Find the row a save of a client-ownable entity (permission, role)
  * addresses: by id the one row, by name the row a create with the same
- * body would write.
+ * body would write. A uuid-shaped key matching no id is tried as a name.
  *
  * - a `realmId` in the body pins that realm (a key that does not resolve
  *   is refused) and, for a name key, the owning client or none;
@@ -79,13 +81,20 @@ export async function findClientOwnedRowForSave<T extends ClientOwnedRow>(
     data: Record<string, any>,
     ctx: ClientOwnedRowLookupContext<T>,
 ): Promise<T | null> {
-    const where: Record<string, any> = isUUID(key) ?
-        { id: key } :
-        { name: key };
+    const realm = typeof data.realmId === 'string' ?
+        await ctx.realmRepository.resolveOrFail(data.realmId) :
+        undefined;
 
-    if (typeof data.realmId === 'string') {
-        const realm = await ctx.realmRepository.resolveOrFail(data.realmId);
+    return findOneByIdOrNameKey(key, (where) => findClientOwnedRow(where, data, ctx, realm));
+}
 
+async function findClientOwnedRow<T extends ClientOwnedRow>(
+    where: IdOrNameCondition,
+    data: Record<string, any>,
+    ctx: ClientOwnedRowLookupContext<T>,
+    realm: Realm | undefined,
+): Promise<T | null> {
+    if (realm) {
         return ctx.repository.findOneBy({
             ...where,
             realmId: realm.id,

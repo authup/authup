@@ -139,6 +139,45 @@ describe('token-introspect', () => {
         expect(introspection.permissions).toBeUndefined();
     });
 
+    // #3848: a token subject resolves by id only. A subject that no longer
+    // exists must never report a namesake whose name is that id.
+    it('should never report a namesake of a vanished subject', async () => {
+        const grant = await suite.client.token.createWithPassword({ username: 'admin', password: 'start123' });
+        const payload = await suite.client.token.introspect(
+            { token: grant.access_token },
+            { authorizationHeaderInherit: true },
+        );
+
+        const vanished = randomUUID();
+        const { data: namesake } = await suite.client.user.create(createFakeUser({ name: vanished }));
+
+        const signer = suite.container.resolve(OAuth2InjectionToken.TokenSigner);
+        const now = Math.floor(Date.now() / 1000);
+        const token = await signer.sign({
+            jti: randomUUID(),
+            sub: vanished,
+            sub_kind: 'user',
+            realm_id: payload.realm_id,
+            client_id: payload.client_id,
+            kind: payload.kind,
+            iat: now,
+            exp: now + 3600,
+        });
+
+        const response = await httpRequest(suite, 'POST', '/token/introspect', {
+            headers: { Authorization: `Bearer ${grant.access_token}` },
+            form: { token },
+        });
+        const body = await response.json();
+
+        expect(body.active).not.toBe(true);
+        expect(JSON.stringify(body)).not.toContain(namesake.id);
+        expect(body.sub).toBeUndefined();
+        expect(body.preferred_username).toBeUndefined();
+
+        await suite.client.user.delete(namesake.id);
+    });
+
     // #3749: without `global` a request made with the token evaluates no
     // grants (#3723), so the introspection must not report any either, or a
     // local evaluator built from it allows what the server denies.

@@ -28,11 +28,11 @@ export class IdentityResolver implements IIdentityResolver {
     }
 
     /**
-     * A UUID key is resolved globally by primary key — `realmKey` scopes NAME
-     * resolution only (UUIDs are globally unique, and the realm hint on the
-     * password grant is always set via the master fallback, so applying it to
-     * UUID keys would break realm-less id-identified logins). See
-     * architecture.md → Password grant realm resolution.
+     * A CREDENTIAL entry point (password grant, client authentication, Basic):
+     * the key is an id or a name. A uuid-shaped key is tried as an id first
+     * and, on a miss, as a name: a name may be shaped like a uuid. `realmKey`
+     * scopes the name only (an id is globally unique, and the password grant
+     * always carries a realm hint through the master fallback).
      */
     async resolve(
         type: `${IdentityType}`,
@@ -41,57 +41,45 @@ export class IdentityResolver implements IIdentityResolver {
     ): Promise<Identity | null> {
         switch (type) {
             case IdentityType.CLIENT: {
-                return this.resolveClient(key, realmKey);
+                return this.toClientIdentity(await this.clientRepository.findOneByIdOrName(key, realmKey));
             }
             case IdentityType.USER: {
-                return this.resolveUser(key, realmKey);
+                return this.toUserIdentity(await this.userRepository.findOneByIdOrName(key, realmKey));
             }
         }
 
         return null;
     }
 
-    private async resolveClient(
-        key: string,
-        realmKey?: string,
-    ) : Promise<ClientIdentity | null> {
-        let data : Client | null;
-
-        if (isUUID(key)) {
-            data = await this.clientRepository.findOneById(key);
-        } else {
-            data = await this.clientRepository.findOneByName(key, realmKey);
+    /**
+     * A token SUBJECT (or another stored reference) is an id and only an id:
+     * a subject that no longer exists must never resolve to a namesake.
+     */
+    async resolveById(
+        type: `${IdentityType}`,
+        id: string,
+    ): Promise<Identity | null> {
+        if (!isUUID(id)) {
+            return null;
         }
 
-        if (data) {
-            return {
-                type: IdentityType.CLIENT,
-                data,
-            };
+        switch (type) {
+            case IdentityType.CLIENT: {
+                return this.toClientIdentity(await this.clientRepository.findOneById(id));
+            }
+            case IdentityType.USER: {
+                return this.toUserIdentity(await this.userRepository.findOneById(id));
+            }
         }
 
         return null;
     }
 
-    private async resolveUser(
-        key: string,
-        realmKey?: string,
-    ) : Promise<UserIdentity | null> {
-        let data : User | null;
+    private toClientIdentity(data: Client | null) : ClientIdentity | null {
+        return data ? { type: IdentityType.CLIENT, data } : null;
+    }
 
-        if (isUUID(key)) {
-            data = await this.userRepository.findOneById(key);
-        } else {
-            data = await this.userRepository.findOneByName(key, realmKey);
-        }
-
-        if (data) {
-            return {
-                type: IdentityType.USER,
-                data,
-            };
-        }
-
-        return null;
+    private toUserIdentity(data: User | null) : UserIdentity | null {
+        return data ? { type: IdentityType.USER, data } : null;
     }
 }

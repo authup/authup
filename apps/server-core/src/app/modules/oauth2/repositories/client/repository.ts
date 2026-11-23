@@ -8,35 +8,56 @@
 import type { Client } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import type { IOAuth2ClientRepository } from '../../../../../core/index.ts';
+import type { IOAuth2ClientRepository, IRealmRepository } from '../../../../../core/index.ts';
 
 export class OAuth2ClientRepository implements IOAuth2ClientRepository {
     private readonly repository: Repository<Client>;
 
+    private readonly realmRepository: Pick<IRealmRepository, 'resolveId'>;
+
     constructor(
         repository: Repository<Client>,
+        realmRepository: Pick<IRealmRepository, 'resolveId'>,
     ) {
         this.repository = repository;
+        this.realmRepository = realmRepository;
     }
 
+    /**
+     * A uuid-shaped key is tried as an id first and, on a miss with a realm
+     * key, as a name (a name may be shaped like a uuid, and names are unique
+     * per realm only). An id match wins. The realm key is resolved once (an
+     * id first, then a name) and a key naming no realm matches nothing.
+     */
     async findOneByIdOrName(key: string, realmKey?: string): Promise<Client | null> {
-        const query = this.repository.createQueryBuilder('client')
-            .leftJoinAndSelect('client.realm', 'realm');
-
         if (isUUID(key)) {
-            query.where('client.id = :id', { id: key });
-        } else {
-            query.where('client.name = :name', { name: key.trim().toLowerCase() });
+            const entity = await this.buildQuery()
+                .where('client.id = :id', { id: key })
+                .getOne();
 
-            if (realmKey) {
-                if (isUUID(realmKey)) {
-                    query.andWhere('client.realmId = :realmId', { realmId: realmKey });
-                } else {
-                    query.andWhere('realm.name = :realmName', { realmName: realmKey.trim().toLowerCase() });
-                }
+            if (entity || !realmKey) {
+                return entity;
             }
         }
 
+        const query = this.buildQuery()
+            .where('client.name = :name', { name: key.trim().toLowerCase() });
+
+        if (realmKey) {
+            const realmId = await this.realmRepository.resolveId(realmKey);
+
+            if (!realmId) {
+                return null;
+            }
+
+            query.andWhere('client.realmId = :realmId', { realmId });
+        }
+
         return query.getOne();
+    }
+
+    private buildQuery() {
+        return this.repository.createQueryBuilder('client')
+            .leftJoinAndSelect('client.realm', 'realm');
     }
 }

@@ -122,6 +122,10 @@ describe('core/identity/provider/account', () => {
             userPermissionRepository: suite.dataSource.getRepository(UserPermissionEntity),
             userRoleRepository: suite.dataSource.getRepository(UserRoleEntity),
             cache: suite.container.resolve(DatabaseInjectionKey.QueryCache),
+            realmRepository: new RealmRepositoryAdapter(
+                suite.dataSource.getRepository(RealmEntity),
+                suite.container.resolve(DatabaseInjectionKey.QueryCache),
+            ),
         });
 
         accountManagerContext = {

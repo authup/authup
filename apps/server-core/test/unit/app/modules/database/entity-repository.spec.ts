@@ -114,6 +114,28 @@ describe('app/modules/database/repositories/entity', () => {
             expect((await roles.findOneByIdOrName(role.name, realm.name))?.id).toEqual(role.id);
         });
 
+        it('should fall back to a uuid-shaped name when no row has that id', async () => {
+            for (const name of [randomUUID(), '019b0000-0000-7000-8000-00000000000a']) {
+                const role = await roles.save(roles.create({ name, realmId: realm.id }));
+
+                created.push({ target: RoleEntity, id: role.id });
+
+                expect((await roles.findOneByIdOrName(name))?.id).toEqual(role.id);
+                expect((await roles.findOneByIdOrName(name, realm.id))?.id).toEqual(role.id);
+                await expect(roles.findOneById(name)).resolves.toBeNull();
+            }
+        });
+
+        it('should let an id match win over a name match', async () => {
+            const byId = await createRole();
+            const byName = await roles.save(roles.create({ name: byId.id, realmId: realm.id }));
+
+            created.push({ target: RoleEntity, id: byName.id });
+
+            expect((await roles.findOneByIdOrName(byId.id))?.id).toEqual(byId.id);
+            expect((await roles.findOneByIdOrName(byId.id, realm.id))?.id).toEqual(byId.id);
+        });
+
         it('should match nothing within a realm key that resolves to no realm', async () => {
             const role = await createRole();
 

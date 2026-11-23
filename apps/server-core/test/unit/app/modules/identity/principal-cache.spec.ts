@@ -31,6 +31,7 @@ import {
     QueryCache,
     TaggedCacheInjectionKey,
 } from '../../../../../src/app/index.ts';
+import { RealmRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/index.ts';
 import { ClientIdentityRepository, UserIdentityRepository } from '../../../../../src/app/modules/identity/index.ts';
 import { createTestApplication } from '../../../../app/index.ts';
 import { createFakeClient, createFakeRealm, createFakeUser } from '../../../../utils/index.ts';
@@ -54,6 +55,7 @@ describe('app/modules/identity/repositories (principal cache, #3688)', () => {
         return new ClientIdentityRepository(
             suite.dataSource.getRepository(ClientEntity) as Repository<Client>,
             cache,
+            new RealmRepositoryAdapter(suite.dataSource.getRepository(RealmEntity), cache),
         );
     }
 
@@ -63,6 +65,7 @@ describe('app/modules/identity/repositories (principal cache, #3688)', () => {
             userPermissionRepository: suite.dataSource.getRepository(UserPermissionEntity),
             userRoleRepository: suite.dataSource.getRepository(UserRoleEntity),
             cache,
+            realmRepository: new RealmRepositoryAdapter(suite.dataSource.getRepository(RealmEntity), cache),
         });
     }
 

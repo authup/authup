@@ -76,10 +76,20 @@ export class RealmRepositoryAdapter implements IRealmRepository {
         };
     }
 
+    /**
+     * A uuid-shaped key is tried as an id first and, on a miss, as a name:
+     * a realm name may be shaped like a uuid. An id match wins.
+     */
     async findOneByIdOrName(idOrName: string): Promise<Realm | null> {
-        return isUUID(idOrName) ?
-            this.findOneById(idOrName) :
-            this.findOneByName(idOrName);
+        if (isUUID(idOrName)) {
+            const entity = await this.findOneById(idOrName);
+
+            if (entity) {
+                return entity;
+            }
+        }
+
+        return this.findOneByName(idOrName);
     }
 
     async findManyBy(where: Record<string, any>): Promise<Realm[]> {
@@ -123,13 +133,13 @@ export class RealmRepositoryAdapter implements IRealmRepository {
     }
 
     async resolveId(key: string): Promise<string | null> {
-        if (isUUID(key)) {
-            return key;
+        const entity = await this.findOneByIdOrName(key);
+
+        if (entity) {
+            return entity.id;
         }
 
-        const entity = await this.findOneByName(key);
-
-        return entity ? entity.id : null;
+        return isUUID(key) ? key : null;
     }
 
     async resolve(id: string | undefined, withFallback: true): Promise<Realm>;

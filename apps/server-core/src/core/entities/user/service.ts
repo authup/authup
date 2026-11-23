@@ -42,6 +42,7 @@ import {
     widenToSchema,
 } from '../../query/index.ts';
 import { userSchema } from './schema.ts';
+import { findOneByIdOrNameKey } from '../id-or-name.ts';
 
 export type UserServiceContext = {
     repository: IUserRepository;
@@ -254,40 +255,41 @@ export class UserService extends AbstractEntityService implements IUserService {
         let entity: User | null | undefined;
 
         if (idOrName) {
-            const where: Record<string, any> = {};
+            // A realm key that does not resolve is refused: dropping the
+            // predicate would address a row of whichever realm holds the
+            // name. Resolved once, before the id and the name lookup.
+            const realm = typeof data.realmId === 'string' ?
+                await this.realmRepository.resolveOrFail(data.realmId) :
+                undefined;
 
-            if (isUUID(idOrName)) {
-                where.id = idOrName;
-            } else {
-                where.name = idOrName;
-            }
+            entity = await findOneByIdOrNameKey(idOrName, async (key) => {
+                const where: Record<string, any> = { ...key };
 
-            if (typeof data.realmId === 'string') {
-                // A realm key that does not resolve is refused: dropping the
-                // predicate would address a row of whichever realm holds the
-                // name.
-                const realm = await this.realmRepository.resolveOrFail(data.realmId);
+                if (realm) {
+                    where.realmId = realm.id;
 
-                where.realmId = realm.id;
-                entity = await this.repository.findOneBy(where);
-            } else if (where.id) {
-                // A UUID key names one specific row and needs no realm.
-                entity = await this.repository.findOneBy(where);
-            } else {
+                    return await this.repository.findOneBy(where);
+                }
+
+                if (where.id) {
+                    // A UUID key names one specific row and needs no realm.
+                    return await this.repository.findOneBy(where);
+                }
+ 
                 // Without a realm a name key addresses the row a create with
                 // the same body would write: the actor's realm. An actor
                 // without one cannot create here either, so it matches
                 // nothing.
                 const actorRealmId = this.getActorRealmId(actor);
 
-                entity = actorRealmId ?
+                return actorRealmId ?
                     await this.repository.findOneBy({ ...where, realmId: actorRealmId }) :
                     null;
-            }
+            });
 
-            // Only a NAME key may upsert-create. A UUID addresses one specific
-            // row, so a miss is a 404 (creating would write a different id).
-            if (!entity && (options.updateOnly || where.id)) {
+            // Only a NAME key may upsert-create. A uuid key matching neither
+            // an id nor a name is a 404 (creating would write a different id).
+            if (!entity && (options.updateOnly || isUUID(idOrName))) {
                 throw new EntityNotFoundError();
             }
         } else if (options.updateOnly) {

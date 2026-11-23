@@ -44,7 +44,7 @@ export class OAuth2OpenIDTokenIssuer extends OAuth2BaseTokenIssuer implements IO
             throw JWTError.payloadPropertyInvalid('sub');
         }
 
-        const identity = await this.identityResolver.resolve(
+        const identity = await this.identityResolver.resolveById(
             input.sub_kind,
             input.sub,
         );

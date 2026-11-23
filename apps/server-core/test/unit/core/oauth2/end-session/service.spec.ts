@@ -67,7 +67,7 @@ const client: Client = {
 
 const realmRepository = new FakeRealmRepository();
 
-const clientRepository: IOAuth2ClientRepository = { findOneByIdOrName: async () => client };
+const clientRepository: IOAuth2ClientRepository = { findOneByIdOrName: async (key) => (key === client.id || key === client.name ? client : null) };
 
 // A token-verifier stub whose behavior is set per test.
 function buildVerifier(behavior: () => Promise<OAuth2TokenPayload>): IOAuth2TokenVerifier {

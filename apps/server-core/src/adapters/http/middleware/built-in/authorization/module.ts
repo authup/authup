@@ -15,7 +15,6 @@ import {
 } from '@authup/core-kit';
 import { AuthHeaderError } from '@authup/errors';
 import type { Result } from '@authup/kit';
-import { isUUID } from '@authup/kit';
 import type { Logger } from '@authup/server-kit';
 import { useRequestCookie } from '@routup/basic/cookie';
 import type { OAuth2TokenPayload } from '@authup/specs';
@@ -277,12 +276,12 @@ export class AuthorizationMiddleware {
                 return;
             }
 
-            const identity = await this.identityResolver.resolve(
+            const identity = await this.identityResolver.resolveById(
                 IdentityType.USER,
                 session.sub,
             );
 
-            if (!isTokenSubjectActive(identity, { realm_id: session.realmId })) {
+            if (!isTokenSubjectActive(identity, { sub: session.sub, realm_id: session.realmId })) {
                 return;
             }
 
@@ -418,7 +417,7 @@ export class AuthorizationMiddleware {
             throw JWTError.payloadPropertyInvalid('sub');
         }
 
-        const identity = await this.identityResolver.resolve(
+        const identity = await this.identityResolver.resolveById(
             payload.sub_kind,
             payload.sub,
         );
@@ -514,7 +513,7 @@ export class AuthorizationMiddleware {
 
         await this.sessionManager.ping(session);
 
-        const identity = await this.identityResolver.resolve(
+        const identity = await this.identityResolver.resolveById(
             payload.sub_kind,
             payload.sub,
         );
@@ -570,8 +569,10 @@ export class AuthorizationMiddleware {
      * realm second, or in the master realm alone on a route without one
      * (issue #3687), never in an arbitrary realm. The route realm names the
      * resource, not the caller, so an operator of the master realm keeps
-     * managing other realms by name. A UUID resolves globally. The realm
-     * resolver is mounted ahead of this middleware for that reason.
+     * managing other realms by name. An id resolves globally, and a
+     * uuid-shaped name falls back to the name lookup, so it takes the same
+     * retry. The realm resolver is mounted ahead of this middleware for that
+     * reason.
      */
     protected async authenticateBasic<T extends Client | User>(
         event: IAppEvent,
@@ -586,7 +587,7 @@ export class AuthorizationMiddleware {
 
         const result = await authenticator.safeAuthenticate(header.username, header.password, realmId);
 
-        if (result.success || isUUID(header.username)) {
+        if (result.success) {
             return result;
         }
 

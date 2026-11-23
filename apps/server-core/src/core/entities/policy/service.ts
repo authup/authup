@@ -43,6 +43,7 @@ import {
     widenToSchema,
 } from '../../query/index.ts';
 import { policySchema } from './schema.ts';
+import { findOneByIdOrNameKey } from '../id-or-name.ts';
 
 export type PolicyServiceContext = {
     repository: IPolicyRepository;
@@ -177,22 +178,20 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         let entity: Policy | null | undefined;
 
         if (idOrName) {
-            const where: Record<string, any> = {};
+            // A realm key that does not resolve is refused: dropping the
+            // predicate would address a row of whichever realm holds the
+            // name. Resolved once, before the id and the name lookup.
+            const realm = typeof data.realmId === 'string' ?
+                await this.realmRepository.resolveOrFail(data.realmId) :
+                undefined;
 
-            if (isUUID(idOrName)) {
-                where.id = idOrName;
-            } else {
-                where.name = idOrName;
-            }
+            entity = await findOneByIdOrNameKey(idOrName, async (key) => {
+                const where: Record<string, any> = { ...key };
 
-            if (typeof data.realmId === 'string') {
-                // A realm key that does not resolve is refused: dropping the
-                // predicate would address a row of whichever realm holds the
-                // name.
-                const realm = await this.realmRepository.resolveOrFail(data.realmId);
-
-                entity = await this.repository.findOneBy({ ...where, realmId: realm.id });
-            } else {
+                if (realm) {
+                    return await this.repository.findOneBy({ ...where, realmId: realm.id });
+                }
+ 
                 // No realm value means global on create, so a name key
                 // without one addresses the global row. A UUID key names
                 // one specific row and needs no realm.
@@ -200,12 +199,12 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
                     where.realmId = null;
                 }
 
-                entity = await this.repository.findOneBy(where);
-            }
+                return await this.repository.findOneBy(where);
+            });
 
-            // Only a NAME key may upsert-create. A UUID addresses one specific
-            // row, so a miss is a 404 (creating would write a different id).
-            if (!entity && (options.updateOnly || where.id)) {
+            // Only a NAME key may upsert-create. A uuid key matching neither
+            // an id nor a name is a 404 (creating would write a different id).
+            if (!entity && (options.updateOnly || isUUID(idOrName))) {
                 throw new EntityNotFoundError();
             }
         } else if (options.updateOnly) {

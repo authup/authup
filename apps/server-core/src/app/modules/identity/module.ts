@@ -41,6 +41,7 @@ import {
 import {
     ClientRepositoryAdapter,
     PathRepositoryAdapter,
+    RealmRepositoryAdapter,
     RoleRepositoryAdapter,
     UserRepositoryAdapter,
 } from '../database/repositories/index.ts';
@@ -81,15 +82,19 @@ export class IdentityModule implements IModule {
 
         const queryCache = container.resolve(DatabaseInjectionKey.QueryCache);
 
+        const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository, queryCache);
+
         const clientRepository = new ClientIdentityRepository(
             container.resolve<Repository<Client>>(ClientEntity),
             queryCache,
+            realmRepositoryAdapter,
         );
         const userRepository = new UserIdentityRepository({
             repository: new UserRepository(dataSource),
             userPermissionRepository: container.resolve<Repository<UserPermission>>(UserPermissionEntity),
             userRoleRepository: container.resolve<Repository<UserRole>>(UserRoleEntity),
             cache: queryCache,
+            realmRepository: realmRepositoryAdapter,
         });
 
         container.register(IdentityInjectionKey.Resolver, {

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-const regexp = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const regexp = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-8][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function isUUID(input: string) : boolean {
     return regexp.test(input);
