@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DataSource } from 'typeorm';
+import { DataSource, MigrationExecutor } from 'typeorm';
 import {
     afterEach,
     beforeEach,
@@ -24,6 +24,7 @@ import {
 const lock = vi.hoisted(() => ({
     held: false,
     names: [] as string[],
+    runner: undefined as unknown,
 }));
 
 // better-sqlite3 has no lock (the lock options run it as a passthrough), so
@@ -31,9 +32,10 @@ const lock = vi.hoisted(() => ({
 // real one.
 vi.mock('typeorm-extension', async (importOriginal) => ({
     ...await importOriginal<Record<string, unknown>>(),
-    withDatabaseLock: async (_queryRunner: unknown, name: string, fn: () => Promise<unknown>) => {
+    withDatabaseLock: async (queryRunner: unknown, name: string, fn: () => Promise<unknown>) => {
         lock.names.push(name);
         lock.held = true;
+        lock.runner = queryRunner;
 
         try {
             return await fn();
@@ -45,7 +47,12 @@ vi.mock('typeorm-extension', async (importOriginal) => ({
 
 describe('src/cli/commands/migration', () => {
     let dataSource: DataSource;
-    let calls: { operation: string, locked: boolean }[];
+    let calls: {
+        operation: string, 
+        locked: boolean, 
+        onLockRunner?: boolean, 
+        transaction?: string 
+    }[];
 
     beforeEach(async () => {
         lock.names = [];
@@ -55,16 +62,29 @@ describe('src/cli/commands/migration', () => {
             type: 'better-sqlite3',
             database: ':memory:',
             migrations: [],
+            migrationsTransactionMode: 'each',
         });
         await dataSource.initialize();
 
-        vi.spyOn(dataSource, 'runMigrations').mockImplementation(async () => {
-            calls.push({ operation: 'run', locked: lock.held });
+        // The executor runs on the connection holding the lock: one taking a
+        // second connection waits forever on a pool of one.
+        vi.spyOn(MigrationExecutor.prototype, 'executePendingMigrations').mockImplementation(async function (this: MigrationExecutor) {
+            calls.push({
+                operation: 'run',
+                locked: lock.held,
+                onLockRunner: this.queryRunner === lock.runner,
+                transaction: this.transaction,
+            });
 
             return [];
         });
-        vi.spyOn(dataSource, 'undoLastMigration').mockImplementation(async () => {
-            calls.push({ operation: 'revert', locked: lock.held });
+        vi.spyOn(MigrationExecutor.prototype, 'undoLastMigration').mockImplementation(async function (this: MigrationExecutor) {
+            calls.push({
+                operation: 'revert',
+                locked: lock.held,
+                onLockRunner: this.queryRunner === lock.runner,
+                transaction: this.transaction,
+            });
         });
         vi.spyOn(dataSource, 'showMigrations').mockImplementation(async () => {
             calls.push({ operation: 'status', locked: lock.held });
@@ -74,6 +94,7 @@ describe('src/cli/commands/migration', () => {
     });
 
     afterEach(async () => {
+        vi.restoreAllMocks();
         await dataSource.destroy();
     });
 
@@ -81,14 +102,24 @@ describe('src/cli/commands/migration', () => {
         await executeMigrationOperation(dataSource, MigrationOperation.RUN);
 
         expect(lock.names).toEqual([MIGRATION_DATABASE_LOCK]);
-        expect(calls).toEqual([{ operation: 'run', locked: true }]);
+        expect(calls).toEqual([{
+            operation: 'run',
+            locked: true,
+            onLockRunner: true,
+            transaction: 'each',
+        }]);
     });
 
     it('should revert under the migration lock', async () => {
         await executeMigrationOperation(dataSource, MigrationOperation.REVERT);
 
         expect(lock.names).toEqual([MIGRATION_DATABASE_LOCK]);
-        expect(calls).toEqual([{ operation: 'revert', locked: true }]);
+        expect(calls).toEqual([{
+            operation: 'revert',
+            locked: true,
+            onLockRunner: true,
+            transaction: 'all',
+        }]);
     });
 
     it('should report the status without the lock', async () => {

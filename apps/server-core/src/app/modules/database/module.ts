@@ -19,7 +19,6 @@ import { DataSource, InstanceChecker } from 'typeorm';
 import {
     checkDatabase,
     createDatabase,
-    synchronizeDatabaseSchema,
 } from 'typeorm-extension';
 import {
     DataSourceOptionsBuilder,
@@ -33,7 +32,7 @@ import { EntityEventHandler, EventService, schemaRegistry } from '../../../core/
 import { useRequestEventContext } from '../../../adapters/http/request/index.ts';
 import { EventRepositoryAdapter } from './repositories/index.ts';
 import { validateEntitySchemas } from './repositories/schema-validation.ts';
-import { verifySchemaOrSynchronize, withMigrationLock } from './migration.ts';
+import { migrateDatabaseSchema, verifySchemaOrSynchronize, withMigrationLock } from './migration.ts';
 import { describeError } from '../../../utils/index.ts';
 import {
     TAGGED_CACHE_ERROR_LOG_INTERVAL,
@@ -203,7 +202,7 @@ export class DatabaseModule implements IModule {
         // wait and then find nothing pending.
         logger.debug('Migrating database...');
 
-        await withMigrationLock(dataSource, () => synchronizeDatabaseSchema(dataSource));
+        await withMigrationLock(dataSource, (queryRunner) => migrateDatabaseSchema(dataSource, queryRunner));
 
         logger.debug('Migrated database');
     }

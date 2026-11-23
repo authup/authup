@@ -109,14 +109,19 @@ describe.skipIf(process.env.DB_TYPE !== 'postgres')('postgres migrations in a sc
     }, MIGRATION_TIMEOUT);
 
     afterAll(async () => {
-        await dataSource?.destroy();
-
-        if (!admin?.isInitialized) {
-            return;
+        try {
+            if (dataSource?.isInitialized) {
+                await dataSource.destroy();
+            }
+        } finally {
+            if (admin?.isInitialized) {
+                try {
+                    await admin.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`);
+                } finally {
+                    await admin.destroy();
+                }
+            }
         }
-
-        await admin.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`);
-        await admin.destroy();
     });
 
     async function listTables(name: string): Promise<string[]> {

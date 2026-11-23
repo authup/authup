@@ -7,7 +7,8 @@
 
 import { AuthupError } from '@authup/errors';
 import type { Logger } from '@authup/server-kit';
-import type { DataSource } from 'typeorm';
+import type { DataSource, Migration, QueryRunner } from 'typeorm';
+import { MigrationExecutor } from 'typeorm';
 import { synchronizeDatabaseSchema, withDatabaseLock } from 'typeorm-extension';
 import { DATABASE_LOCK_OPTIONS, MIGRATION_DATABASE_LOCK } from './constants.ts';
 
@@ -16,10 +17,14 @@ import { DATABASE_LOCK_OPTIONS, MIGRATION_DATABASE_LOCK } from './constants.ts';
  * migration CLI both take it: a lock only one side takes serializes nothing,
  * so a `migration run` next to a booting replica would apply the same pending
  * migration twice (#3847).
+ *
+ * The callback gets the connection holding the lock and must run its
+ * statements on it: one reaching for a second connection waits forever on a
+ * pool of one. A transaction it opens must be closed before it returns.
  */
 export async function withMigrationLock<T>(
     dataSource: DataSource,
-    fn: () => Promise<T>,
+    fn: (queryRunner: QueryRunner) => Promise<T>,
 ): Promise<T> {
     const queryRunner = dataSource.createQueryRunner();
 
@@ -27,12 +32,69 @@ export async function withMigrationLock<T>(
         return await withDatabaseLock(
             queryRunner,
             MIGRATION_DATABASE_LOCK,
-            fn,
+            () => fn(queryRunner),
             DATABASE_LOCK_OPTIONS,
         );
     } finally {
         await queryRunner.release();
     }
+}
+
+function hasConfiguredMigrations(dataSource: DataSource): boolean {
+    const { migrations } = dataSource.options;
+
+    return Array.isArray(migrations) ?
+        migrations.length > 0 :
+        !!migrations && Object.keys(migrations).length > 0;
+}
+
+/**
+ * `DataSource.runMigrations()` on the given connection, with the same
+ * transaction mode.
+ */
+export async function runPendingMigrations(
+    dataSource: DataSource,
+    queryRunner: QueryRunner,
+): Promise<Migration[]> {
+    const executor = new MigrationExecutor(dataSource, queryRunner);
+
+    executor.transaction = dataSource.options.migrationsTransactionMode ?? 'all';
+
+    return executor.executePendingMigrations();
+}
+
+/**
+ * `DataSource.undoLastMigration()` on the given connection, which reverts in
+ * one transaction whatever the data source's mode.
+ */
+export async function revertLastMigration(
+    dataSource: DataSource,
+    queryRunner: QueryRunner,
+): Promise<void> {
+    const executor = new MigrationExecutor(dataSource, queryRunner);
+
+    executor.transaction = 'all';
+
+    await executor.undoLastMigration();
+}
+
+/**
+ * typeorm-extension's `synchronizeDatabaseSchema` on the given connection:
+ * the pending migrations where any are configured, a schema synchronize
+ * otherwise. The synchronize branch (sqlite only, where the lock is a
+ * passthrough) still takes its own connection.
+ */
+export async function migrateDatabaseSchema(
+    dataSource: DataSource,
+    queryRunner: QueryRunner,
+): Promise<void> {
+    if (hasConfiguredMigrations(dataSource)) {
+        await runPendingMigrations(dataSource, queryRunner);
+
+        return;
+    }
+
+    await dataSource.synchronize(false);
 }
 
 /**
@@ -49,13 +111,7 @@ export async function withMigrationLock<T>(
  * serve against an older schema.
  */
 export async function assertNoPendingMigrations(dataSource: DataSource) : Promise<boolean> {
-    const { migrations } = dataSource.options;
-
-    const configured = Array.isArray(migrations) ?
-        migrations.length > 0 :
-        !!migrations && Object.keys(migrations).length > 0;
-
-    if (!configured) {
+    if (!hasConfiguredMigrations(dataSource)) {
         return false;
     }
 

@@ -18,7 +18,7 @@ import {
 } from 'typeorm-extension';
 import { DataSource, type DataSourceOptions } from 'typeorm';
 import { DataSourceOptionsBuilder } from '../../adapters/database/index.ts';
-import { withMigrationLock } from '../../app/modules/database/index.ts';
+import { revertLastMigration, runPendingMigrations, withMigrationLock } from '../../app/modules/database/index.ts';
 import type { ConfigReadFsOptions } from '@authup/server-config';
 import type { Config } from '../../app/index.ts';
 import {
@@ -66,16 +66,12 @@ export async function executeMigrationOperation(
             return;
         }
         case MigrationOperation.RUN: {
-            await withMigrationLock(dataSource, async () => {
-                await dataSource.runMigrations();
-            });
+            await withMigrationLock(dataSource, (queryRunner) => runPendingMigrations(dataSource, queryRunner));
 
             return;
         }
         case MigrationOperation.REVERT: {
-            await withMigrationLock(dataSource, async () => {
-                await dataSource.undoLastMigration();
-            });
+            await withMigrationLock(dataSource, (queryRunner) => revertLastMigration(dataSource, queryRunner));
 
             return;
         }

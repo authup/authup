@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DataSourceOptions } from 'typeorm';
+import type { DataSourceOptions, MigrationInterface, QueryRunner } from 'typeorm';
 import { DataSource } from 'typeorm';
 import { withDatabaseLock } from 'typeorm-extension';
 import {
@@ -116,4 +116,80 @@ describe.skipIf(!lockable)('migration CLI against a held migration lock', () => 
     it('should report the status while the lock is held', async () => {
         await whileLockHeld(() => executeMigrationOperation(cli, MigrationOperation.STATUS));
     });
+});
+
+class PoolProbeMigration1000000000000 implements MigrationInterface {
+    name = 'PoolProbeMigration1000000000000';
+
+    async up(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query('CREATE TABLE migration_pool_probe (id int)');
+    }
+
+    async down(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query('DROP TABLE migration_pool_probe');
+    }
+}
+
+// A run or revert reaching for a second connection while the lock holds the
+// only one would wait forever; the test timeout turns that into a failure.
+const POOL_OF_ONE_TIMEOUT = 20_000;
+
+describe.skipIf(!lockable)('migration CLI on a pool of one connection', () => {
+    let dataSource: DataSource;
+
+    async function hasProbeTable(): Promise<boolean> {
+        const runner = dataSource.createQueryRunner();
+
+        try {
+            return await runner.hasTable('migration_pool_probe');
+        } finally {
+            await runner.release();
+        }
+    }
+
+    beforeAll(async () => {
+        const options = readTestServerDataSourceOptions();
+
+        if (!options) {
+            throw new Error('A mysql/postgres run must name its database.');
+        }
+
+        dataSource = new DataSource({
+            ...options,
+            poolSize: 1,
+            entities: [],
+            subscribers: [],
+            migrations: [PoolProbeMigration1000000000000],
+            migrationsTableName: 'migration_pool_probe_migrations',
+        } as DataSourceOptions);
+        await dataSource.initialize();
+
+        await dataSource.query('DROP TABLE IF EXISTS migration_pool_probe');
+        await dataSource.query('DROP TABLE IF EXISTS migration_pool_probe_migrations');
+    });
+
+    afterAll(async () => {
+        if (!dataSource?.isInitialized) {
+            return;
+        }
+
+        try {
+            await dataSource.query('DROP TABLE IF EXISTS migration_pool_probe');
+            await dataSource.query('DROP TABLE IF EXISTS migration_pool_probe_migrations');
+        } finally {
+            await dataSource.destroy();
+        }
+    });
+
+    it('should apply the migrations', async () => {
+        await executeMigrationOperation(dataSource, MigrationOperation.RUN);
+
+        expect(await hasProbeTable()).toBe(true);
+    }, POOL_OF_ONE_TIMEOUT);
+
+    it('should revert', async () => {
+        await executeMigrationOperation(dataSource, MigrationOperation.REVERT);
+
+        expect(await hasProbeTable()).toBe(false);
+    }, POOL_OF_ONE_TIMEOUT);
 });
