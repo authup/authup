@@ -101,7 +101,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
         let entity: Realm | null | undefined;
 
         if (idOrName) {
-            entity = await findOneByIdOrNameKey(idOrName, async (key) => {
+            entity = await findOneByIdOrNameKey(idOrName, this.repository, async (key) => {
                 const where: Record<string, any> = { ...key };
 
                 return await this.repository.findOneBy(where);

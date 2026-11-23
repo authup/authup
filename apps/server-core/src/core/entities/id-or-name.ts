@@ -9,14 +9,21 @@ import { isUUID } from '@authup/kit';
 
 export type IdOrNameCondition = { id: string, name?: never } | { name: string, id?: never };
 
+export type IdOrNameRowSource = {
+    findOneBy(where: Record<string, any>): Promise<unknown>,
+};
+
 /**
  * Resolve a key that is an id or a name. A uuid-shaped key is tried as an
- * id first and, when no row has that id, as a name: a name may be shaped
- * like a uuid (a client named after a foreign record's id), and an id match
- * wins over a name match.
+ * id first and, only when NO row has that id, as a name: a name may be
+ * shaped like a uuid (a client named after a foreign record's id). An id
+ * that exists wins even where `find` constrains it away (another realm or
+ * owning client), so the key then matches nothing rather than a namesake;
+ * `rows` answers that existence check without the constraints.
  */
 export async function findOneByIdOrNameKey<T>(
     key: string,
+    rows: IdOrNameRowSource,
     find: (where: IdOrNameCondition) => Promise<T | null | undefined>,
 ): Promise<T | null> {
     if (isUUID(key)) {
@@ -24,6 +31,10 @@ export async function findOneByIdOrNameKey<T>(
 
         if (entity) {
             return entity;
+        }
+
+        if (await rows.findOneBy({ id: key })) {
+            return null;
         }
     }
 

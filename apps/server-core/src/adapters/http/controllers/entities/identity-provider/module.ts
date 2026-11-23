@@ -593,7 +593,12 @@ export class IdentityProviderController {
                 await this.realmRepository.resolveOrFail(body.realmId) :
                 undefined;
 
-            entity = await findOneByIdOrNameKey(id, async (key) => {
+            if (realm) {
+                // a realm named by a (possibly uuid-shaped) name is stored by its id
+                body.realmId = realm.id;
+            }
+
+            entity = await findOneByIdOrNameKey(id, this.repository, async (key) => {
                 const where: Record<string, any> = { ...key };
 
                 if (realm) {

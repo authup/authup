@@ -310,7 +310,12 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 await this.realmRepository.resolveOrFail(data.realmId) :
                 undefined;
 
-            entity = await findOneByIdOrNameKey(idOrName, async (key) => {
+            if (realm) {
+                // a realm named by a (possibly uuid-shaped) name is stored by its id
+                data.realmId = realm.id;
+            }
+
+            entity = await findOneByIdOrNameKey(idOrName, this.repository, async (key) => {
                 const where: Record<string, any> = { ...key };
 
                 if (realm) {
@@ -684,7 +689,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
             scopedRealmId = realm.id;
         }
 
-        const entity = await findOneByIdOrNameKey(idOrName, (key) => this.repository.findOneWithSecret({
+        const entity = await findOneByIdOrNameKey(idOrName, this.repository, (key) => this.repository.findOneWithSecret({
             ...key,
             ...(scopedRealmId ? { realmId: scopedRealmId } : {}),
         }));

@@ -262,7 +262,12 @@ export class UserService extends AbstractEntityService implements IUserService {
                 await this.realmRepository.resolveOrFail(data.realmId) :
                 undefined;
 
-            entity = await findOneByIdOrNameKey(idOrName, async (key) => {
+            if (realm) {
+                // a realm named by a (possibly uuid-shaped) name is stored by its id
+                data.realmId = realm.id;
+            }
+
+            entity = await findOneByIdOrNameKey(idOrName, this.repository, async (key) => {
                 const where: Record<string, any> = { ...key };
 
                 if (realm) {

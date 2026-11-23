@@ -85,7 +85,12 @@ export async function findClientOwnedRowForSave<T extends ClientOwnedRow>(
         await ctx.realmRepository.resolveOrFail(data.realmId) :
         undefined;
 
-    return findOneByIdOrNameKey(key, (where) => findClientOwnedRow(where, data, ctx, realm));
+    if (realm) {
+        // a realm named by a (possibly uuid-shaped) name is stored by its id
+        data.realmId = realm.id;
+    }
+
+    return findOneByIdOrNameKey(key, ctx.repository, (where) => findClientOwnedRow(where, data, ctx, realm));
 }
 
 async function findClientOwnedRow<T extends ClientOwnedRow>(

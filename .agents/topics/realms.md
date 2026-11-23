@@ -4,7 +4,7 @@ Loaded on demand, not imported by CLAUDE.md. Read it before changing this area.
 
 ## Id-or-name lookup
 
-A uuid-shaped key that matches no id falls back to the name (`findOneByIdOrName`, `findOneByIdOrNameKey` on the save paths, the identity and OAuth2 client repositories, `resolveId`): names may be shaped like a uuid and are never refused for it (hub names clients after foreign ids); an id match wins, and a token subject resolves by id only (`IIdentityResolver.resolveById`, `isTokenSubject` checks `sub`), never through a namesake (#3848).
+A uuid-shaped key that matches no id falls back to the name (`findOneByIdOrName`, `findOneByIdOrNameKey` on the save paths, the identity and OAuth2 client repositories, `resolveId`): names may be shaped like a uuid and are never refused for it (hub names clients after foreign ids); an id that EXISTS wins even where the lookup's realm or client constraint filters it away (the key then matches nothing, never a namesake of another realm), and a token subject resolves by id only (`IIdentityResolver.resolveById`, `isTokenSubject` checks `sub`), never through a namesake (#3848).
 
 ## Realm Scoping Model
 

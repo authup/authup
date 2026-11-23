@@ -168,9 +168,12 @@ describe('token-introspect', () => {
             headers: { Authorization: `Bearer ${grant.access_token}` },
             form: { token },
         });
+
+        expect(response.status).toEqual(200);
+
         const body = await response.json();
 
-        expect(body.active).not.toBe(true);
+        expect(body).toEqual({ active: false });
         expect(JSON.stringify(body)).not.toContain(namesake.id);
         expect(body.sub).toBeUndefined();
         expect(body.preferred_username).toBeUndefined();

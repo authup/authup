@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomUUID } from 'node:crypto';
 import {
     afterAll,
     beforeAll,
@@ -128,5 +129,27 @@ describe('src/http/controllers/scope', () => {
         expect(response).toBeDefined();
         expect(response.name).toEqual(nextName);
         expect(response.id).toEqual(id);
+    });
+
+    // #3848: a body realm named by a uuid-shaped realm NAME is stored by its id
+    it('should store the resolved realm id on a put naming its realm by a uuid-shaped name', async () => {
+        const { data: realm } = await suite.client.realm.create({ name: randomUUID() });
+        const { name } = createFakeScope();
+
+        const { data: created } = await suite.client.scope.createOrUpdate(name, { name, realmId: realm.name });
+
+        expect(created.realmId).toEqual(realm.id);
+
+        const { data: updated } = await suite.client.scope.createOrUpdate(name, {
+            name,
+            description: 'again',
+            realmId: realm.name,
+        });
+
+        expect(updated.id).toEqual(created.id);
+        expect(updated.realmId).toEqual(realm.id);
+
+        await suite.client.scope.delete(created.id);
+        await suite.client.realm.delete(realm.id);
     });
 });

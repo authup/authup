@@ -182,8 +182,9 @@ export abstract class EntityRepositoryAdapter<
 
             const entity = await this.fetchOneWithQuery(qb, query);
 
-            // a name may be shaped like a uuid: an id miss falls back to it
-            if (entity || !this.options.realmRepository) {
+            // a name may be shaped like a uuid: only an id no row has falls
+            // back to it, since the query may filter an existing row away
+            if (entity || !this.options.realmRepository || await this.findOneBy({ id: idOrName })) {
                 return entity;
             }
         }

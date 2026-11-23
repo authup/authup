@@ -58,7 +58,7 @@ export class PolicyCheckerService implements IPolicyCheckerService {
         input: Record<string, any>,
         realm: string | undefined,
     ): Promise<void> {
-        const entity = await findOneByIdOrNameKey(idOrName, async (key) => {
+        const entity = await findOneByIdOrNameKey(idOrName, this.ctx.repository, async (key) => {
             const criteria: Record<string, any> = { ...key };
 
             if (realm && key.name) {
