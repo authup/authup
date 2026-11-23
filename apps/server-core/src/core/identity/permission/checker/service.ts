@@ -8,7 +8,7 @@
 import type { PermissionEvaluationContext } from '@authup/access';
 import { BuiltInPolicyType, PermissionEvaluator, definePolicyData } from '@authup/access';
 import type { Result } from '@authup/kit';
-import { hasOwnProperty, isUUID } from '@authup/kit';
+import { hasOwnProperty } from '@authup/kit';
 import { EntityNotFoundError, normalizeError } from '@authup/errors';
 import type { ActorContext } from '@authup/server-kit';
 import { PolicyEngine } from '../../../security/policy/engine.ts';
@@ -17,6 +17,7 @@ import type {
     IPermissionCheckerService,
     PermissionCheckerServiceContext,
 } from './types.ts';
+import { findOneByIdOrNameKey } from '../../../entities/id-or-name.ts';
 
 export class PermissionCheckerService implements IPermissionCheckerService {
     protected ctx: PermissionCheckerServiceContext;
@@ -59,14 +60,10 @@ export class PermissionCheckerService implements IPermissionCheckerService {
         input: Record<string, any>,
         realm: string | undefined,
     ): Promise<void> {
-        let criteria: Record<string, any>;
+        const entity = await findOneByIdOrNameKey(idOrName, this.ctx.repository, async (key) => {
+            const criteria: Record<string, any> = { ...key };
 
-        if (isUUID(idOrName)) {
-            criteria = { id: idOrName };
-        } else {
-            criteria = { name: idOrName };
-
-            if (realm) {
+            if (realm && key.name) {
                 const realmId = await this.ctx.realmRepository.resolveId(realm);
 
                 if (!realmId) {
@@ -75,9 +72,9 @@ export class PermissionCheckerService implements IPermissionCheckerService {
 
                 criteria.realmId = realmId;
             }
-        }
 
-        const entity = await this.ctx.repository.findOneBy(criteria);
+            return this.ctx.repository.findOneBy(criteria);
+        });
 
         if (!entity) {
             throw new EntityNotFoundError();

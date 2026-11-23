@@ -25,7 +25,7 @@ import {
     OAuth2TokenRepository,
     SessionTokenRepositoryAdapter,
 } from './repositories/index.ts';
-import { KeyRepositoryAdapter } from '../database/repositories/index.ts';
+import { KeyRepositoryAdapter, RealmRepositoryAdapter } from '../database/repositories/index.ts';
 import {
     OAuth2AccessTokenIssuer,
     OAuth2AuthorizationCodeIssuer,
@@ -43,7 +43,7 @@ import {
 import { RealmCipher } from '../../../core/key/realm-cipher.ts';
 import { OAuth2InjectionToken } from './constants.ts';
 import { IdentityInjectionKey } from '../identity/index.ts';
-import { ClientEntity, ClientScopeEntity } from '../../../adapters/database/domains/index.ts';
+import { ClientEntity, ClientScopeEntity, RealmEntity } from '../../../adapters/database/domains/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 import { DatabaseInjectionKey } from '../database/index.ts';
 
@@ -64,7 +64,10 @@ export class OAuth2Module implements IModule {
             useFactory: (c) => {
                 const repository = c.resolve<Repository<ClientEntity>>(ClientEntity);
 
-                return new OAuth2ClientRepository(repository);
+                return new OAuth2ClientRepository(
+                    repository,
+                    new RealmRepositoryAdapter(c.resolve(RealmEntity), c.resolve(DatabaseInjectionKey.QueryCache)),
+                );
             },
         });
 

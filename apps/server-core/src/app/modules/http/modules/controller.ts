@@ -1075,6 +1075,10 @@ export class HTTPControllerModule {
                 userPermissionRepository: container.resolve<Repository<UserPermission>>(UserPermissionEntity),
                 userRoleRepository: container.resolve<Repository<UserRole>>(UserRoleEntity),
                 cache: container.resolve(DatabaseInjectionKey.QueryCache),
+                realmRepository: new RealmRepositoryAdapter(
+                    container.resolve<Repository<Realm>>(RealmEntity),
+                    container.resolve(DatabaseInjectionKey.QueryCache),
+                ),
             }),
             eventService: container.resolve(DatabaseInjectionKey.EventService),
             requestContext: useRequestEventContext,

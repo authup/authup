@@ -197,8 +197,8 @@ export class PermissionService extends AbstractEntityService implements IPermiss
                 ],
             });
 
-            // Only a NAME key may upsert-create. A UUID addresses one specific
-            // row, so a miss is a 404 (creating would write a different id).
+            // Only a NAME key may upsert-create. A uuid key matching neither
+            // an id nor a name is a 404 (creating would write a different id).
             if (!entity && (options.updateOnly || isUUID(idOrName))) {
                 throw new EntityNotFoundError();
             }

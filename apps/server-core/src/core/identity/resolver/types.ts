@@ -17,5 +17,13 @@ export type IdentityResolverContext = {
 };
 
 export interface IIdentityResolver {
+    /**
+     * A credential entry point: an id or a name, the name scoped by `realmKey`.
+     */
     resolve(type: `${IdentityType}`, key: string, realmKey?: string) : Promise<Identity | null>
+
+    /**
+     * A token subject or another stored reference: by id only, never a name.
+     */
+    resolveById(type: `${IdentityType}`, id: string) : Promise<Identity | null>
 }

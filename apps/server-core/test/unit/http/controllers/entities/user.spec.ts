@@ -159,6 +159,35 @@ describe('src/http/controllers/user', () => {
     // misses on a foreign realm, and the upsert must NOT fall through to its
     // create branch: that would write a second user (a fresh id, same name)
     // into the target realm, which reads like a move in the realm-scoped UI.
+    // #3848: an existing id wins even in another realm, so a user of the
+    // target realm NAMED after it is never updated in its place.
+    it('should not reach a namesake of a foreign user id with put', async () => {
+        const { data: realm } = await suite.client.realm.create(createFakeRealm());
+        const { data: user } = await suite.client.user.create(createFakeUser());
+        const { data: namesake } = await suite.client.user.create(createFakeUser({
+            name: user.id,
+            realmId: realm.id,
+        }));
+
+        await expectClientError(
+            () => suite.client.user.createOrUpdate(user.id, {
+                name: user.id,
+                email: namesake.email,
+                displayName: 'overwritten',
+                realmId: realm.id,
+            }),
+            {
+                status: 404,
+                code: ErrorCode.ENTITY_NOT_FOUND,
+            },
+        );
+
+        const { data: read } = await suite.client.user.getOne(namesake.id);
+
+        expect(read.displayName).toEqual(namesake.displayName);
+        expect(read.realmId).toEqual(realm.id);
+    });
+
     it('should not create a copy with put when the realm does not match', async () => {
         const { data: realm } = await suite.client.realm.create(createFakeRealm());
         const { data: user } = await suite.client.user.create(createFakeUser());

@@ -53,7 +53,7 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
         // A code outlives nothing its subject lost in between: the subject
         // must still exist, be active and belong to the code's realm.
         const identity = authorizationCode.sub && authorizationCode.sub_kind ?
-            await this.identityResolver.resolve(authorizationCode.sub_kind, authorizationCode.sub) :
+            await this.identityResolver.resolveById(authorizationCode.sub_kind, authorizationCode.sub) :
             null;
 
         if (!isTokenSubjectActive(identity, authorizationCode)) {

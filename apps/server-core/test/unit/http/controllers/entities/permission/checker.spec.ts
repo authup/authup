@@ -117,6 +117,15 @@ describe('http/controllers/entities/permission/checker', () => {
             { status: 400 },
         );
 
+        // an id that only matches a uuid-shaped NAME names no subject (#3848)
+        const namesakeId = randomUUID();
+
+        await suite.client.user.create(createFakeUser({ name: namesakeId }));
+        await expectClientError(
+            () => suite.client.permission.check(PermissionName.USER_READ, { identity: { type: 'user', id: namesakeId } }),
+            { status: 404 },
+        );
+
         // a name is refused: names repeat across realms, so it would not say which subject
         await expectClientError(
             () => suite.client.permission.check(PermissionName.USER_READ, { identity: { type: 'user', id: subject.name } }),

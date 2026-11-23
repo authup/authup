@@ -57,6 +57,7 @@ import { clientSchema } from './schema.ts';
 import { isRealmReachable } from '../realm/helpers.ts';
 import type { IQuery } from '@rapiq/core';
 import type { ISessionManager } from '../../authentication/session/types.ts';
+import { findOneByIdOrNameKey } from '../id-or-name.ts';
 
 /**
  * What decides who can present a client at the token endpoint and whether it
@@ -302,40 +303,46 @@ export class ClientService extends AbstractEntityService implements IClientServi
         let entity: Client | null | undefined;
 
         if (idOrName) {
-            const where: Record<string, any> = {};
+            // A realm key that does not resolve is refused: dropping the
+            // predicate would address a row of whichever realm holds the
+            // name. Resolved once, before the id and the name lookup.
+            const realm = typeof data.realmId === 'string' ?
+                await this.realmRepository.resolveOrFail(data.realmId) :
+                undefined;
 
-            if (isUUID(idOrName)) {
-                where.id = idOrName;
-            } else {
-                where.name = idOrName;
+            if (realm) {
+                // a realm named by a (possibly uuid-shaped) name is stored by its id
+                data.realmId = realm.id;
             }
 
-            if (typeof data.realmId === 'string') {
-                // A realm key that does not resolve is refused: dropping the
-                // predicate would address a row of whichever realm holds the
-                // name.
-                const realm = await this.realmRepository.resolveOrFail(data.realmId);
+            entity = await findOneByIdOrNameKey(idOrName, this.repository, async (key) => {
+                const where: Record<string, any> = { ...key };
 
-                where.realmId = realm.id;
-                entity = await this.repository.findOneWithSecret(where);
-            } else if (where.id) {
-                // A UUID key names one specific row and needs no realm.
-                entity = await this.repository.findOneWithSecret(where);
-            } else {
+                if (realm) {
+                    where.realmId = realm.id;
+
+                    return await this.repository.findOneWithSecret(where);
+                }
+
+                if (where.id) {
+                    // A UUID key names one specific row and needs no realm.
+                    return await this.repository.findOneWithSecret(where);
+                }
+ 
                 // Without a realm a name key addresses the row a create with
                 // the same body would write: the actor's realm. An actor
                 // without one cannot create here either, so it matches
                 // nothing.
                 const actorRealmId = this.getActorRealmId(actor);
 
-                entity = actorRealmId ?
+                return actorRealmId ?
                     await this.repository.findOneWithSecret({ ...where, realmId: actorRealmId }) :
                     null;
-            }
+            });
 
-            // Only a NAME key may upsert-create. A UUID addresses one specific
-            // row, so a miss is a 404 (creating would write a different id).
-            if (!entity && (options.updateOnly || where.id)) {
+            // Only a NAME key may upsert-create. A uuid key matching neither
+            // an id nor a name is a 404 (creating would write a different id).
+            if (!entity && (options.updateOnly || isUUID(idOrName))) {
                 throw new EntityNotFoundError();
             }
         } else if (options.updateOnly) {
@@ -670,9 +677,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         actor: ActorContext,
         realmId?: string,
     ): Promise<ClientSecretRotateResult> {
-        const where: Record<string, any> = isUUID(idOrName) ?
-            { id: idOrName } :
-            { name: idOrName };
+        let scopedRealmId: string | undefined;
 
         if (realmId) {
             const realm = await this.realmRepository.resolve(realmId);
@@ -681,10 +686,13 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 throw new EntityNotFoundError();
             }
 
-            where.realmId = realm.id;
+            scopedRealmId = realm.id;
         }
 
-        const entity = await this.repository.findOneWithSecret(where);
+        const entity = await findOneByIdOrNameKey(idOrName, this.repository, (key) => this.repository.findOneWithSecret({
+            ...key,
+            ...(scopedRealmId ? { realmId: scopedRealmId } : {}),
+        }));
 
         if (!entity) {
             throw new EntityNotFoundError();

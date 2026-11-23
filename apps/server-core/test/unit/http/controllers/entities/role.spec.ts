@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomUUID } from 'node:crypto';
 import {
     afterAll,
     beforeAll,
@@ -175,6 +176,41 @@ describe('src/http/controllers/role', () => {
         expect(response.name).toEqual(nextName);
         expect(response.id).toEqual(id);
     });
+    // #3848: a name may be shaped like a uuid (hub names records after foreign ids)
+    it.each([
+        ['v4', () => randomUUID()],
+        ['v7', () => `019b${randomUUID().slice(4, 14)}7${randomUUID().slice(15)}`],
+    ])('should address a record by a %s-shaped name', async (_, generate) => {
+        const name = generate();
+
+        const { data: role } = await suite.client.role.create({ name });
+
+        expect((await suite.client.role.getOne(name)).data.id).toEqual(role.id);
+
+        const { data: updated } = await suite.client.role.createOrUpdate(name, { name, description: 'by name' });
+
+        expect(updated.id).toEqual(role.id);
+        expect(updated.description).toEqual('by name');
+
+        await expectClientError(() => suite.client.role.createOrUpdate(randomUUID(), { name: randomUUID(), description: 'none' }), { status: 404 });
+
+        await suite.client.role.delete(role.id);
+    });
+
+    it('should let an id match win over a name match', async () => {
+        const { data: byId } = await suite.client.role.create(createFakeRole());
+        const { data: byName } = await suite.client.role.create({ name: byId.id });
+
+        expect((await suite.client.role.getOne(byId.id)).data.id).toEqual(byId.id);
+
+        const { data: updated } = await suite.client.role.createOrUpdate(byId.id, { name: byId.name, description: 'by id' });
+
+        expect(updated.id).toEqual(byId.id);
+
+        await suite.client.role.delete(byName.id);
+        await suite.client.role.delete(byId.id);
+    });
+
     it('should keep the owning client of a role on update', async () => {
         const { data: owner } = await suite.client.client.create(createFakeClient());
         const { data: other } = await suite.client.client.create(createFakeClient());

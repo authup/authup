@@ -121,7 +121,7 @@ export class OAuth2EndSessionService implements IOAuth2EndSessionService {
         // client's id. Fail closed: an aud-less hint, or a name that did not
         // resolve, counts as unverified.
         if (hintVerified && data.client_id) {
-            const expected = isUUID(data.client_id) ? data.client_id : client?.id;
+            const expected = client?.id ?? (isUUID(data.client_id) ? data.client_id : undefined);
 
             if (!expected || audiences.length === 0 || !audiences.includes(expected)) {
                 hintVerified = false;

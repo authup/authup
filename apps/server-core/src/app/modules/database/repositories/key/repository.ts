@@ -376,9 +376,15 @@ export class KeyRepositoryAdapter implements IKeyRepository, IKeyStore {
     }
 
     async findOneByIdOrName(idOrName: string, realm?: string): Promise<Key | null> {
-        return isUUID(idOrName) ?
-            this.findOneById(idOrName) :
-            this.findOneByName(idOrName, realm);
+        if (isUUID(idOrName)) {
+            const entity = await this.findOneById(idOrName);
+
+            if (entity) {
+                return entity;
+            }
+        }
+
+        return this.findOneByName(idOrName, realm);
     }
 
     async findManyBy(where: Record<string, any>): Promise<Key[]> {

@@ -7,7 +7,6 @@
 
 import { PolicyData, definePolicyEvaluationContext } from '@authup/access';
 import type { Result } from '@authup/kit';
-import { isUUID } from '@authup/kit';
 import { EntityNotFoundError, normalizeError } from '@authup/errors';
 import type { ActorContext } from '@authup/server-kit';
 import { PolicyEngine } from '../../../security/policy/engine.ts';
@@ -16,6 +15,7 @@ import type {
     IPolicyCheckerService,
     PolicyCheckerServiceContext,
 } from './types.ts';
+import { findOneByIdOrNameKey } from '../../../entities/id-or-name.ts';
 
 export class PolicyCheckerService implements IPolicyCheckerService {
     protected ctx: PolicyCheckerServiceContext;
@@ -58,14 +58,10 @@ export class PolicyCheckerService implements IPolicyCheckerService {
         input: Record<string, any>,
         realm: string | undefined,
     ): Promise<void> {
-        let criteria: Record<string, any>;
+        const entity = await findOneByIdOrNameKey(idOrName, this.ctx.repository, async (key) => {
+            const criteria: Record<string, any> = { ...key };
 
-        if (isUUID(idOrName)) {
-            criteria = { id: idOrName };
-        } else {
-            criteria = { name: idOrName };
-
-            if (realm) {
+            if (realm && key.name) {
                 const realmId = await this.ctx.realmRepository.resolveId(realm);
 
                 if (!realmId) {
@@ -74,9 +70,9 @@ export class PolicyCheckerService implements IPolicyCheckerService {
 
                 criteria.realmId = realmId;
             }
-        }
 
-        const entity = await this.ctx.repository.findOneBy(criteria);
+            return this.ctx.repository.findOneBy(criteria);
+        });
 
         if (!entity) {
             throw new EntityNotFoundError();

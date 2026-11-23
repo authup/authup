@@ -97,7 +97,7 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         // but a row written elsewhere (a provisioning MERGE) does not, so the
         // chain is stopped here too.
         const identity = payload.sub && payload.sub_kind ?
-            await this.identityResolver.resolve(payload.sub_kind, payload.sub) :
+            await this.identityResolver.resolveById(payload.sub_kind, payload.sub) :
             null;
 
         if (!isTokenSubjectActive(identity, payload)) {

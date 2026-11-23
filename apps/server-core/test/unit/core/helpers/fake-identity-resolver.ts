@@ -30,4 +30,14 @@ export class FakeIdentityResolver implements IIdentityResolver {
 
         return this.identity;
     }
+
+    /**
+     * By id only, like the real resolver: the set identity answers its own
+     * id, nothing else.
+     */
+    async resolveById(type: `${IdentityType}`, id: string): Promise<Identity | null> {
+        this.resolveCalls.push({ type, key: id });
+
+        return this.identity && this.identity.data.id === id ? this.identity : null;
+    }
 }

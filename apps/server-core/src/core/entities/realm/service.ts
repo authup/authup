@@ -20,6 +20,7 @@ import type { IRealmProvisioner } from '../../provisioning/types.ts';
 import type { IRealmRepository, IRealmService } from './types.ts';
 import { decodeQuery } from '../../query/index.ts';
 import { realmSchema } from './schema.ts';
+import { findOneByIdOrNameKey } from '../id-or-name.ts';
 
 export type RealmServiceContext = {
     repository: IRealmRepository;
@@ -100,19 +101,15 @@ export class RealmService extends AbstractEntityService implements IRealmService
         let entity: Realm | null | undefined;
 
         if (idOrName) {
-            const where: Record<string, any> = {};
+            entity = await findOneByIdOrNameKey(idOrName, this.repository, async (key) => {
+                const where: Record<string, any> = { ...key };
 
-            if (isUUID(idOrName)) {
-                where.id = idOrName;
-            } else {
-                where.name = idOrName;
-            }
+                return await this.repository.findOneBy(where);
+            });
 
-            entity = await this.repository.findOneBy(where);
-
-            // Only a NAME key may upsert-create. A UUID addresses one specific
-            // row, so a miss is a 404 (creating would write a different id).
-            if (!entity && (options.updateOnly || where.id)) {
+            // Only a NAME key may upsert-create. A uuid key matching neither
+            // an id nor a name is a 404 (creating would write a different id).
+            if (!entity && (options.updateOnly || isUUID(idOrName))) {
                 throw new EntityNotFoundError();
             }
         } else if (options.updateOnly) {

@@ -222,7 +222,7 @@ export class OAuth2TokenExchangeGrant {
 
             await this.sessionManager.verify(session);
 
-            const identity = await this.identityResolver.resolve(payload.sub_kind, payload.sub);
+            const identity = await this.identityResolver.resolveById(payload.sub_kind, payload.sub);
 
             if (!isTokenSubjectActive(identity, payload)) {
                 throw OAuth2GrantError.invalid();

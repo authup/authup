@@ -102,8 +102,16 @@ export abstract class EntityRepositoryAdapter<
     }
 
     async findOneByIdOrName(idOrName: string, realmKey?: string): Promise<T | null> {
-        if (!this.options.realmRepository || isUUID(idOrName)) {
+        if (!this.options.realmRepository) {
             return this.findOneById(idOrName);
+        }
+
+        if (isUUID(idOrName)) {
+            const entity = await this.findOneById(idOrName);
+
+            if (entity) {
+                return entity;
+            }
         }
 
         return this.findOneByName(idOrName, realmKey);
@@ -167,19 +175,30 @@ export abstract class EntityRepositoryAdapter<
     protected async findOneWithQuery(idOrName: string, query?: IQuery, realmKey?: string): Promise<T | null> {
         const { alias } = this.options;
 
-        let qb : SelectQueryBuilder<T> | undefined;
-
         if (isUUID(idOrName)) {
-            qb = this.repository.createQueryBuilder(alias);
-            qb.where(`${alias}.id = :id`, { id: idOrName });
-        } else {
-            qb = await this.createNameQueryBuilder(idOrName, realmKey);
+            const qb = this.repository.createQueryBuilder(alias);
 
-            if (!qb) {
-                return null;
+            qb.where(`${alias}.id = :id`, { id: idOrName });
+
+            const entity = await this.fetchOneWithQuery(qb, query);
+
+            // a name may be shaped like a uuid: only an id no row has falls
+            // back to it, since the query may filter an existing row away
+            if (entity || !this.options.realmRepository || await this.findOneBy({ id: idOrName })) {
+                return entity;
             }
         }
 
+        const qb = await this.createNameQueryBuilder(idOrName, realmKey);
+
+        if (!qb) {
+            return null;
+        }
+
+        return this.fetchOneWithQuery(qb, query);
+    }
+
+    private async fetchOneWithQuery(qb: SelectQueryBuilder<T>, query?: IQuery): Promise<T | null> {
         applyQuery(qb, query);
         // the record read is checked per row as well, and `id` tells the
         // caller whether the row is its own (issue #3667)

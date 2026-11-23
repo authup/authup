@@ -11,16 +11,18 @@ import { isUUID } from '@authup/kit';
 import { buildCollectionTag, buildRecordTag } from '@rapiq/cache';
 import type { Repository } from 'typeorm';
 import { In } from 'typeorm';
-import type { IUserIdentityRepository, IdentityProviderMapperElement } from '../../../../core/index.ts';
+import type { IRealmRepository, IUserIdentityRepository, IdentityProviderMapperElement } from '../../../../core/index.ts';
 import { IdentityProviderMapperOperation } from '../../../../core/index.ts';
 import type { UserEntity, UserRepository } from '../../../../adapters/database/domains/index.ts';
 import type { IQueryCache } from '../../database/index.ts';
+import { buildIdentityQuery, findIdentityByName } from './helpers.ts';
 
 export type UserIdentityRepositoryContext = {
     repository: UserRepository,
     userPermissionRepository: Repository<UserPermission>,
     userRoleRepository: Repository<UserRole>,
     cache: IQueryCache,
+    realmRepository: Pick<IRealmRepository, 'resolveId'>,
 };
 
 export class UserIdentityRepository implements IUserIdentityRepository {
@@ -32,78 +34,76 @@ export class UserIdentityRepository implements IUserIdentityRepository {
 
     private readonly cache: IQueryCache;
 
+    private readonly realmRepository: Pick<IRealmRepository, 'resolveId'>;
+
     constructor(ctx: UserIdentityRepositoryContext) {
         this.repository = ctx.repository;
         this.userPermissionRepository = ctx.userPermissionRepository;
         this.userRoleRepository = ctx.userRoleRepository;
         this.cache = ctx.cache;
+        this.realmRepository = ctx.realmRepository;
     }
 
     async findOneById(id: string): Promise<User | null> {
-        return this.find(id);
+        return isUUID(id) ? this.findById(id) : null;
     }
 
-    async findOneByName(id: string, realm?: string): Promise<User | null> {
-        return this.find(id, realm);
+    async findOneByName(name: string, realm?: string): Promise<User | null> {
+        return this.findByName(name, realm);
     }
 
+    /**
+     * A uuid-shaped key is tried as an id first and, on a miss, as a name:
+     * a name may be shaped like a uuid. An id match wins.
+     */
     async findOneByIdOrName(idOrName: string, realm?: string): Promise<User | null> {
-        return this.find(idOrName, realm);
+        if (isUUID(idOrName)) {
+            const entity = await this.findById(idOrName);
+
+            if (entity) {
+                return entity;
+            }
+        }
+
+        return this.findByName(idOrName, realm);
     }
 
     async findOneBy(where: Record<string, any>): Promise<User | null> {
         return this.repository.findOneBy(where);
     }
 
-    private async find(input: string, realmKey?: string) : Promise<User | null> {
-        const query = this.repository.createQueryBuilder('user')
-            .leftJoinAndSelect('user.realm', 'realm');
-
+    private async findById(id: string) : Promise<User | null> {
         // A uuid compares case-insensitively on the server dialects, so it is
         // canonicalized here: one cache key serves every spelling.
-        const isId = isUUID(input);
-        const key = isId ? input.toLowerCase() : input;
-
-        if (isId) {
-            query.where('user.id = :id', { id: key });
-        } else {
-            query.where('user.name = :name', { name: key.trim().toLowerCase() });
-
-            if (realmKey) {
-                if (isUUID(realmKey)) {
-                    query.andWhere('user.realmId = :realmId', { realmId: realmKey });
-                } else {
-                    query.andWhere('realm.name = :realmName', { realmName: realmKey.trim().toLowerCase() });
-                }
-            }
-        }
-
-        const { columns } = this.repository.metadata;
-
-        for (const column of columns) {
-            if (!column.isSelect) {
-                query.addSelect(`user.${column.propertyName}`);
-            }
-        }
+        const key = id.toLowerCase();
+        const query = this.buildQuery().where('user.id = :id', { id: key });
 
         // the path unwind updates users by criteria, which bumps the collection tag alone
-        const entity = isId ?
-            await this.cache.remember(
-                `identity/user/${key}`,
-                (value) => [
-                    buildCollectionTag(EntityType.USER),
-                    ...(value ? [buildRecordTag(EntityType.REALM, value.realmId)] : []),
-                ],
-                () => query.getOne(),
-                { manager: this.repository.manager },
-            ) :
-            await query.getOne();
+        const entity = await this.cache.remember(
+            `identity/user/${key}`,
+            (value) => [
+                buildCollectionTag(EntityType.USER),
+                ...(value ? [buildRecordTag(EntityType.REALM, value.realmId)] : []),
+            ],
+            () => query.getOne(),
+            { manager: this.repository.manager },
+        );
 
-        if (entity) {
-            return this.repository.extendOneWithEA(entity);
-        }
+        return entity ? this.repository.extendOneWithEA(entity) : null;
+    }
 
-        return null;
+    private async findByName(name: string, realmKey?: string) : Promise<User | null> {
+        const entity = await findIdentityByName({
+            repository: this.repository,
+            alias: 'user',
+            realmRepository: this.realmRepository,
+        }, name, realmKey);
+
+        return entity ? this.repository.extendOneWithEA(entity) : null;
+    }
+
+    private buildQuery() {
+        return buildIdentityQuery(this.repository, 'user');
     }
 
     async saveOneWithEA(user: Partial<User>, extraAttributes: Record<string, any>): Promise<User> {
