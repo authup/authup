@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.0-beta.77](https://github.com/authup/authup/compare/v1.0.0-beta.76...v1.0.0-beta.77) (2026-11-23)
+
+
+### Bug Fixes
+
+* **deps:** bump all dependencies except typescript and envix ([#3880](https://github.com/authup/authup/issues/3880)) ([7e85d52](https://github.com/authup/authup/commit/7e85d52b0e89e63f715aa80ab5469e3e0047c0f4))
+* resolve uuid-shaped names after an id miss, token subjects by id only ([#3896](https://github.com/authup/authup/issues/3896)) ([f7a2438](https://github.com/authup/authup/commit/f7a2438476571126148827a0c9ee92dd6c053bf8)), closes [#3848](https://github.com/authup/authup/issues/3848)
+* write explicit extensions on relative imports ([f08d954](https://github.com/authup/authup/commit/f08d954210d0da91b9513f416e863c2e230a61c0)), closes [#3843](https://github.com/authup/authup/issues/3843)
+
 ## [1.0.0-beta.76](https://github.com/authup/authup/compare/v1.0.0-beta.75...v1.0.0-beta.76) (2026-11-13)
 
 

@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.0.0-beta.77](https://github.com/authup/authup/compare/v1.0.0-beta.76...v1.0.0-beta.77) (2026-11-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* APathPicker, APolicyPicker, AClientPicker and ARealmPicker (the form picker) are renamed to AForm<Entity>Picker; ARealmGrid is renamed to ARealmPicker.
+* **server-adapter-kit:** RedisTokenCache is no longer exported by @authup/server-adapter-kit; import it from @authup/server-adapter-redis.
+
+### Features
+
+* encode kit path ids, realm picker layouts, error and cache fixes ([#3900](https://github.com/authup/authup/issues/3900)) ([4245ac2](https://github.com/authup/authup/commit/4245ac22ef95120853b38a00c40391546ac2d4e0))
+
+
+### Bug Fixes
+
+* **deps:** bump all dependencies except typescript and envix ([#3880](https://github.com/authup/authup/issues/3880)) ([7e85d52](https://github.com/authup/authup/commit/7e85d52b0e89e63f715aa80ab5469e3e0047c0f4))
+* **server-adapter-kit:** upstream errors, redis cache package ([#3894](https://github.com/authup/authup/issues/3894)) ([8354fff](https://github.com/authup/authup/commit/8354fff1955b0bbfa6d6e40fab47b66269e4c086))
+* write explicit extensions on relative imports ([f08d954](https://github.com/authup/authup/commit/f08d954210d0da91b9513f416e863c2e230a61c0)), closes [#3843](https://github.com/authup/authup/issues/3843)
+
 ## [1.0.0-beta.76](https://github.com/authup/authup/compare/v1.0.0-beta.75...v1.0.0-beta.76) (2026-11-13)
 
 

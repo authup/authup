@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.0.0-beta.77](https://github.com/authup/authup/compare/v1.0.0-beta.76...v1.0.0-beta.77) (2026-11-23)
+
+
+### Bug Fixes
+
+* **deps:** bump all dependencies except typescript and envix ([#3880](https://github.com/authup/authup/issues/3880)) ([7e85d52](https://github.com/authup/authup/commit/7e85d52b0e89e63f715aa80ab5469e3e0047c0f4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.76 to ^1.0.0-beta.77
+    * @authup/client-web-kit bumped from ^1.0.0-beta.76 to ^1.0.0-beta.77
+    * @authup/core-http-kit bumped from ^1.0.0-beta.76 to ^1.0.0-beta.77
+    * @authup/kit bumped from ^1.0.0-beta.76 to ^1.0.0-beta.77
+
 ## [1.0.0-beta.76](https://github.com/authup/authup/compare/v1.0.0-beta.75...v1.0.0-beta.76) (2026-11-13)
 
 

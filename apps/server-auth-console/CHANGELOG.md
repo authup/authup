@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.0.0-beta.77](https://github.com/authup/authup/compare/v1.0.0-beta.76...v1.0.0-beta.77) (2026-11-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* APathPicker, APolicyPicker, AClientPicker and ARealmPicker (the form picker) are renamed to AForm<Entity>Picker; ARealmGrid is renamed to ARealmPicker.
+
+### Features
+
+* encode kit path ids, realm picker layouts, error and cache fixes ([#3900](https://github.com/authup/authup/issues/3900)) ([4245ac2](https://github.com/authup/authup/commit/4245ac22ef95120853b38a00c40391546ac2d4e0))
+
+
+### Bug Fixes
+
+* **deps:** bump all dependencies except typescript and envix ([#3880](https://github.com/authup/authup/issues/3880)) ([7e85d52](https://github.com/authup/authup/commit/7e85d52b0e89e63f715aa80ab5469e3e0047c0f4))
+* **deps:** bump routup to 6.5 and the routup plugins ([#3883](https://github.com/authup/authup/issues/3883)) ([6412493](https://github.com/authup/authup/commit/6412493b07c253592837d00fadc595c444dff43b))
+* write explicit extensions on relative imports ([f08d954](https://github.com/authup/authup/commit/f08d954210d0da91b9513f416e863c2e230a61c0)), closes [#3843](https://github.com/authup/authup/issues/3843)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-auth-console bumped from ^1.0.0-beta.76 to ^1.0.0-beta.77
+    * @authup/core-http-kit bumped from ^1.0.0-beta.76 to ^1.0.0-beta.77
+    * @authup/errors bumped from ^1.0.0-beta.76 to ^1.0.0-beta.77
+    * @authup/kit bumped from ^1.0.0-beta.76 to ^1.0.0-beta.77
+    * @authup/server-config bumped from ^1.0.0-beta.76 to ^1.0.0-beta.77
+    * @authup/server-config-kit bumped from ^1.0.0-beta.76 to ^1.0.0-beta.77
+    * @authup/server-console-kit bumped from ^1.0.0-beta.76 to ^1.0.0-beta.77
+    * @authup/specs bumped from ^1.0.0-beta.76 to ^1.0.0-beta.77
+
 ## [1.0.0-beta.76](https://github.com/authup/authup/compare/v1.0.0-beta.75...v1.0.0-beta.76) (2026-11-13)
 
 
