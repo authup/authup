@@ -7,6 +7,7 @@
 
 import { EnvironmentName } from '@authup/kit';
 import type { DatabaseConnectionOptions } from '@authup/server-config';
+import type { DataSourceOptions } from 'typeorm';
 import { createDatabase, dropDatabase, readDataSourceOptionsFromEnv } from 'typeorm-extension';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -56,6 +57,16 @@ function applyDatabaseConnectionEnv() {
     process.env.DB_USERNAME = connection.username;
     process.env.DB_PASSWORD = connection.password;
     process.env.DB_DATABASE = connection.database;
+}
+
+/**
+ * The server database of a mysql/postgres run, for a spec that opens its own
+ * connections. `undefined` on sqlite.
+ */
+export function readTestServerDataSourceOptions(): DataSourceOptions | undefined {
+    applyDatabaseConnectionEnv();
+
+    return readDataSourceOptionsFromEnv() ?? undefined;
 }
 
 async function resolveDataSourceOptions(container: IContainer, database: string) {

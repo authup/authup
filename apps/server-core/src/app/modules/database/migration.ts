@@ -8,7 +8,32 @@
 import { AuthupError } from '@authup/errors';
 import type { Logger } from '@authup/server-kit';
 import type { DataSource } from 'typeorm';
-import { synchronizeDatabaseSchema } from 'typeorm-extension';
+import { synchronizeDatabaseSchema, withDatabaseLock } from 'typeorm-extension';
+import { DATABASE_LOCK_OPTIONS, MIGRATION_DATABASE_LOCK } from './constants.ts';
+
+/**
+ * Run a schema change under the migration lock. The boot path and the
+ * migration CLI both take it: a lock only one side takes serializes nothing,
+ * so a `migration run` next to a booting replica would apply the same pending
+ * migration twice (#3847).
+ */
+export async function withMigrationLock<T>(
+    dataSource: DataSource,
+    fn: () => Promise<T>,
+): Promise<T> {
+    const queryRunner = dataSource.createQueryRunner();
+
+    try {
+        return await withDatabaseLock(
+            queryRunner,
+            MIGRATION_DATABASE_LOCK,
+            fn,
+            DATABASE_LOCK_OPTIONS,
+        );
+    } finally {
+        await queryRunner.release();
+    }
+}
 
 /**
  * Verify the database schema is current without running any DDL.

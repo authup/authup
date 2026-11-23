@@ -20,7 +20,6 @@ import {
     checkDatabase,
     createDatabase,
     synchronizeDatabaseSchema,
-    withDatabaseLock,
 } from 'typeorm-extension';
 import {
     DataSourceOptionsBuilder,
@@ -34,7 +33,7 @@ import { EntityEventHandler, EventService, schemaRegistry } from '../../../core/
 import { useRequestEventContext } from '../../../adapters/http/request/index.ts';
 import { EventRepositoryAdapter } from './repositories/index.ts';
 import { validateEntitySchemas } from './repositories/schema-validation.ts';
-import { verifySchemaOrSynchronize } from './migration.ts';
+import { verifySchemaOrSynchronize, withMigrationLock } from './migration.ts';
 import { describeError } from '../../../utils/index.ts';
 import {
     TAGGED_CACHE_ERROR_LOG_INTERVAL,
@@ -44,7 +43,7 @@ import {
 import { QUERY_CACHE_SCOPED_VALUE_NORMALIZER, QueryCache, resolveCacheSchemaName } from './cache/index.ts';
 import type { IModule, ModuleDependency } from 'orkos';
 import { ModuleName } from '../constants.ts';
-import { DATABASE_LOCK_OPTIONS, DatabaseInjectionKey, MIGRATION_DATABASE_LOCK } from './constants.ts';
+import { DatabaseInjectionKey } from './constants.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 import type { IContainer } from 'eldin';
 import { LoggerInjectionKey } from '../logger/index.ts';
@@ -204,18 +203,7 @@ export class DatabaseModule implements IModule {
         // wait and then find nothing pending.
         logger.debug('Migrating database...');
 
-        const queryRunner = dataSource.createQueryRunner();
-
-        try {
-            await withDatabaseLock(
-                queryRunner,
-                MIGRATION_DATABASE_LOCK,
-                () => synchronizeDatabaseSchema(dataSource),
-                DATABASE_LOCK_OPTIONS,
-            );
-        } finally {
-            await queryRunner.release();
-        }
+        await withMigrationLock(dataSource, () => synchronizeDatabaseSchema(dataSource));
 
         logger.debug('Migrated database');
     }

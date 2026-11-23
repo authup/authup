@@ -17,6 +17,7 @@ import {
 } from 'typeorm-extension';
 import { DataSource, type DataSourceOptions } from 'typeorm';
 import { DataSourceOptionsBuilder } from '../../adapters/database/index.ts';
+import { withMigrationLock } from '../../app/modules/database/index.ts';
 import type { ConfigReadFsOptions } from '@authup/server-config';
 import type { Config } from '../../app/index.ts';
 import {
@@ -30,7 +31,7 @@ import { CODE_PATH } from '../../path.ts';
 import { createCLIConfigModule } from './config.ts';
 import type { CLIMigrationCommandOptions } from './types.ts';
 
-enum MigrationOperation {
+export enum MigrationOperation {
     GENERATE = 'generate',
     REVERT = 'revert',
     STATUS = 'status',
@@ -45,6 +46,31 @@ const OPERATOR_OPERATIONS = OPERATIONS.filter((op) => op !== MigrationOperation.
 
 function isMigrationOperation(value: string, operations: MigrationOperation[]) : value is MigrationOperation {
     return (operations as string[]).includes(value);
+}
+
+/**
+ * `run` and `revert` hold the lock the boot path migrates under, so they
+ * cannot race a starting replica or another migration job (#3847). `revert`
+ * reads the executed migrations inside it, so the check and the undo see one
+ * state. `status` changes nothing and stays unlocked.
+ */
+export async function executeMigrationOperation(
+    dataSource: DataSource,
+    operation: MigrationOperation,
+): Promise<void> {
+    if (operation === MigrationOperation.STATUS) {
+        await dataSource.showMigrations();
+
+        return;
+    }
+
+    await withMigrationLock(dataSource, async () => {
+        if (operation === MigrationOperation.REVERT) {
+            await dataSource.undoLastMigration();
+        } else {
+            await dataSource.runMigrations();
+        }
+    });
 }
 
 async function runMigrationOperation(
@@ -98,13 +124,7 @@ async function runMigrationOperation(
     try {
         await dataSource.initialize();
 
-        if (operation === MigrationOperation.REVERT) {
-            await dataSource.undoLastMigration();
-        } else if (operation === MigrationOperation.STATUS) {
-            await dataSource.showMigrations();
-        } else {
-            await dataSource.runMigrations();
-        }
+        await executeMigrationOperation(dataSource, operation);
     } finally {
         if (dataSource.isInitialized) {
             try {
