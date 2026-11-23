@@ -10,7 +10,7 @@ import type { Client } from '@authup/core-kit';
 
 export function createFakeClient(data: Partial<Client> = {}) {
     return {
-        name: faker.internet.username().toLowerCase(),
+        name: `${faker.internet.username().toLowerCase()}-${faker.string.alphanumeric({ length: 8, casing: 'lower' })}`,
         displayName: faker.internet.displayName(),
         secret: faker.string.alpha({ length: 10 }),
         redirectUri: 'https://example.com/**',

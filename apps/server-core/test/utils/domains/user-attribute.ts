@@ -10,7 +10,7 @@ import type { UserAttribute } from '@authup/core-kit';
 
 export function createFakeUserAttribute(data: Partial<UserAttribute> = {}) {
     return {
-        name: faker.internet.username().toLowerCase(),
+        name: `${faker.internet.username().toLowerCase()}-${faker.string.alphanumeric({ length: 8, casing: 'lower' })}`,
         value: faker.string.alphanumeric({ length: 64 }),
         ...data,
     } satisfies Partial<UserAttribute>;
