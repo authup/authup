@@ -21,6 +21,7 @@ export * from './oauth2/index.ts';
 export * from './path/index.ts';
 export * from './permission-check/index.ts';
 export * from './socket-manager/index.ts';
+export * from './scope.ts';
 export * from './store/index.ts';
 export * from './slot.ts';
 export * from './translator/index.ts';

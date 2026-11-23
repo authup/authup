@@ -17,6 +17,7 @@ import {
     injectStore,
     install,
     loadAuthorizationRequest,
+    runInAppScope,
     syncTranslatorLocaleFromManager,
 } from '@authup/client-web-kit';
 import { matchLocale } from '@authup/i18n';
@@ -260,9 +261,9 @@ install(app, {
 // One-way: ilingo (authup catalogs) follows vuecs's resolved locale.
 syncTranslatorLocaleFromManager(app);
 
-// `buildVuecsInstallOptions()` calls `useTranslation` → `injectIlingo`,
-// which needs an active injection context — hence `app.runWithContext()`.
-const vuecsOptions = app.runWithContext(() => buildVuecsInstallOptions({ themes: [clientWebKitTheme(), clientWebTheme()] }));
+// `buildVuecsInstallOptions()` calls `useTranslation`, which needs the app's
+// injection context and an effect scope the app stops on unmount.
+const vuecsOptions = runInAppScope(app, () => buildVuecsInstallOptions({ themes: [clientWebKitTheme(), clientWebTheme()] }));
 
 // Install vuecs BEFORE the per-package plugins so the theme manager carries
 // authup's themes before they run.
