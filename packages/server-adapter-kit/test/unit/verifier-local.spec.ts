@@ -119,6 +119,14 @@ describe('verifier local', () => {
 
             return jwk;
         }],
+        ['a key without its key material', async () => {
+            const jwk : Partial<OAuth2JsonWebKey> = { ...await faker.useJwk() };
+
+            delete jwk.n;
+
+            return jwk;
+        }],
+        ['a key of an unsupported type', async () => ({ ...await faker.useJwk(), kty: 'oct' })],
     ])('should reject a key endpoint answering %s with an upstream error, never a JWTError', async (_label, build) => {
         getJwk.mockResolvedValueOnce(await build());
 

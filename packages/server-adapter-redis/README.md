@@ -53,10 +53,11 @@ const verifier = new TokenVerifier({
 | Export | Kind | Purpose |
 |---|---|---|
 | `RedisTokenCache` | class | Redis-backed `ITokenCache` of `@authup/server-adapter-kit` |
+| `REDIS_TOKEN_CACHE_CLIENT_OPTIONS` | const | `ioredis` options of the client it creates itself |
 
 ## Notes
 
-- **An outage reads as a miss.** A failing `get` (unreachable Redis, a key of another type, a value that is no JSON) answers `undefined`, so the token is verified again instead of the request failing.
+- **An outage reads as a miss.** A failing `get` (unreachable Redis, a key of another type, a value that is no JSON) answers `undefined`, so the token is verified again instead of the request failing. A client the cache creates itself (from a connection string or nothing) runs with `REDIS_TOKEN_CACHE_CLIENT_OPTIONS`: no offline queue, one retry and a 500 ms command timeout, so a read during an outage gives up within about a second. A client you pass in keeps its own options.
 - **Signing keys are not stored here.** The verifier keeps them in process memory, since a `CryptoKey` cannot be serialized.
 
 ## License

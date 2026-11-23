@@ -5,9 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client } from 'redis-extension';
+import type { Client, ClientOptions } from 'redis-extension';
 import { ValueStore, createClient } from 'redis-extension';
 import type { ITokenCache, TokenCacheEntry } from '@authup/server-adapter-kit';
+
+/**
+ * A cache outage must fall through to verification fast, never queue or
+ * hang: one retry, no offline queue, a 500 ms command timeout.
+ */
+export const REDIS_TOKEN_CACHE_CLIENT_OPTIONS = {
+    maxRetriesPerRequest: 1,
+    enableOfflineQueue: false,
+    commandTimeout: 500,
+    retryStrategy: (times: number) => Math.min(times * 50, 2_000),
+} satisfies ClientOptions;
 
 /**
  * vouchly's token cache on redis. The key vouchly hands over is already a
@@ -20,9 +31,9 @@ export class RedisTokenCache implements ITokenCache {
         let client: Client;
 
         if (!input) {
-            client = createClient();
+            client = createClient({ options: REDIS_TOKEN_CACHE_CLIENT_OPTIONS });
         } else if (typeof input === 'string') {
-            client = createClient({ url: input });
+            client = createClient({ url: input, options: REDIS_TOKEN_CACHE_CLIENT_OPTIONS });
         } else {
             client = input;
         }

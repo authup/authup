@@ -91,12 +91,32 @@ function createKeyLoader(client: Client) : KeyLoader {
         // without kty) is not about the token. authup always names the
         // algorithm of a realm key; a key without one would be imported with
         // whatever the token header claims.
-        if (!isObject(jwk) || typeof jwk.kty !== 'string' || !jwk.kty || typeof jwk.alg !== 'string' || !jwk.alg) {
+        if (!isObject(jwk) || typeof jwk.alg !== 'string' || !jwk.alg || !hasKeyMaterial(jwk)) {
             throw new UpstreamError({ message: 'The auth server answered no usable key.' });
         }
 
         return jwk as Awaited<ReturnType<KeyLoader>>;
     };
+}
+
+/**
+ * The members a public key of the given type cannot be imported without.
+ * A realm key authup serves is one of these three types.
+ */
+const KEY_MATERIAL: Record<string, string[]> = {
+    RSA: ['n', 'e'],
+    EC: ['crv', 'x', 'y'],
+    OKP: ['crv', 'x'],
+};
+
+function hasKeyMaterial(jwk: Record<string, unknown>): boolean {
+    const members = typeof jwk.kty === 'string' ? KEY_MATERIAL[jwk.kty] : undefined;
+
+    if (!members) {
+        return false;
+    }
+
+    return members.every((member) => typeof jwk[member] === 'string' && jwk[member] !== '');
 }
 
 export function createAuthupIssuer(ctx: AuthupIssuerContext) : Issuer {
