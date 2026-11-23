@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode, isUpstreamTimeoutError } from '@authup/errors';
+import {
+    ErrorCode,
+    UpstreamError,
+    isUpstreamError,
+    isUpstreamTimeoutError,
+} from '@authup/errors';
 import { JWTError, isJWTError } from '@authup/specs';
 import { VouchlyError, VouchlyErrorCode, isVouchlyError } from 'vouchly';
 import { describe, expect, it } from 'vitest';
@@ -48,7 +53,8 @@ describe('toVerificationError', () => {
 
     it.each(Object.values(VouchlyErrorCode).filter((code) => code !== VouchlyErrorCode.TOKEN_EXPIRED &&
         code !== VouchlyErrorCode.TOKEN_INACTIVE &&
-        code !== VouchlyErrorCode.TIMEOUT))('maps %s onto invalid_token with the vouchly message', (code) => {
+        code !== VouchlyErrorCode.TIMEOUT &&
+        code !== VouchlyErrorCode.INTROSPECTION_FAILED))('maps %s onto invalid_token with the vouchly message', (code) => {
         const output = toVerificationError(new VouchlyError(code, `message of ${code}`));
 
         expect(output).toBeInstanceOf(JWTError);
@@ -92,22 +98,60 @@ describe('toVerificationError', () => {
         expect(output).toMatchObject({ cause: input });
     });
 
-    it('maps a client timeout wrapped by the key loader onto an upstream timeout', async () => {
+    it('maps a client timeout wrapped by the key loader onto an upstream timeout, before the upstream error', async () => {
         const timeout = await createClientTimeoutError();
-        const wrapped = new JWTError({ message: 'Failed to fetch JWK from auth server.', cause: timeout as Error });
+        const wrapped = new UpstreamError({ message: 'Failed to fetch JWK from auth server.', cause: timeout });
         const input = new VouchlyError(VouchlyErrorCode.KEY_UNAVAILABLE, 'unavailable', { cause: wrapped });
 
         const output = toVerificationError(input);
 
         expect(isUpstreamTimeoutError(output)).toBe(true);
+        expect(isUpstreamError(output)).toBe(false);
         expect(isJWTError(output)).toBe(false);
     });
 
-    it('keeps a client failure that is no timeout a JWTError', () => {
-        const wrapped = new JWTError({ message: 'Failed to fetch JWK from auth server.', cause: new Error('refused') });
+    it('surfaces an upstream error the key loader raised as is', () => {
+        const wrapped = new UpstreamError({ message: 'Failed to fetch JWK from auth server.', cause: new Error('refused') });
         const input = new VouchlyError(VouchlyErrorCode.KEY_UNAVAILABLE, 'unavailable', { cause: wrapped });
 
         expect(toVerificationError(input)).toBe(wrapped);
+    });
+
+    it('maps an introspection request that failed onto an upstream error, not a JWTError', () => {
+        const input = new VouchlyError(VouchlyErrorCode.INTROSPECTION_FAILED, 'The introspection request failed.', { cause: new TypeError('fetch failed') });
+        const output = toVerificationError(input);
+
+        expect(isUpstreamError(output)).toBe(true);
+        expect(isJWTError(output)).toBe(false);
+        expect(output).toMatchObject({
+            code: ErrorCode.UPSTREAM_ERROR,
+            message: 'The introspection request failed.',
+            cause: input,
+        });
+    });
+
+    it('maps a failed introspection authorization onto an upstream error', () => {
+        const input = new VouchlyError(VouchlyErrorCode.INTROSPECTION_FAILED, 'The introspection authorization could not be resolved.', { cause: new Error('invalid_client') });
+
+        expect(isUpstreamError(toVerificationError(input))).toBe(true);
+    });
+
+    it.each([401, 403, 404, 500, 502, 503])('maps an introspection answered %s onto an upstream error', (status) => {
+        const input = new VouchlyError(VouchlyErrorCode.INTROSPECTION_FAILED, `The introspection endpoint answered ${status}.`, { status });
+        const output = toVerificationError(input);
+
+        expect(isUpstreamError(output)).toBe(true);
+        expect(isJWTError(output)).toBe(false);
+        expect(output).toMatchObject({ cause: input });
+    });
+
+    it('maps an introspection answered 400 onto invalid_token, since the request carries nothing but the token', () => {
+        const input = new VouchlyError(VouchlyErrorCode.INTROSPECTION_FAILED, 'The introspection endpoint answered 400.', { status: 400 });
+        const output = toVerificationError(input);
+
+        expect(isJWTError(output)).toBe(true);
+        expect(isUpstreamError(output)).toBe(false);
+        expect(output).toMatchObject({ code: ErrorCode.JWT_INVALID, cause: input });
     });
 
     it('passes the reason of an aborted caller signal on as is', () => {

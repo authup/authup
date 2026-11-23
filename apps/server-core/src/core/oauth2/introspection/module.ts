@@ -8,7 +8,6 @@
 import { buildPermissionKey, normalizeRealmScope } from '@authup/access';
 import { ScopeName } from '@authup/core-kit';
 import type { OAuth2TokenPermission } from '@authup/specs';
-import { OAuth2RequestError } from '@authup/specs';
 import { readPolicyId } from '../../authorization/module.ts';
 import { OAuth2OpenIDClaimsBuilder } from '../openid/claims.ts';
 import { isTokenSubject } from '../token/subject.ts';
@@ -42,8 +41,7 @@ import type {
  * (#3597), and a credential whose scopes lack `global` reports none, since a
  * request made with it evaluates none (#3749).
  *
- * @returns null when the subject is not of the token's realm.
- * @throws OAuth2RequestError when the subject no longer resolves.
+ * @returns null when the subject no longer resolves or is not of the token's realm.
  */
 export async function resolveIntrospectionSubject(
     ctx: OAuth2IntrospectionSubjectContext,
@@ -51,14 +49,10 @@ export async function resolveIntrospectionSubject(
 ) : Promise<OAuth2IntrospectionSubject | null> {
     const identity = await ctx.identityResolver.resolve(input.token.sub_kind, input.token.sub);
 
-    if (!identity) {
-        // todo: differentiate between client & user
-        throw OAuth2RequestError.identityInvalid();
-    }
-
-    // A subject of another realm than the token names is not the token's
-    // subject at all, so nothing about it may be reported.
-    if (!isTokenSubject(identity, input.token)) {
+    // A subject that no longer exists, or one of another realm than the
+    // token names, is not the token's subject at all: nothing about it may be
+    // reported, and the token is not active (RFC 7662 §2.2).
+    if (!identity || !isTokenSubject(identity, input.token)) {
         return null;
     }
 

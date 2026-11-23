@@ -6,7 +6,7 @@
  */
 
 import { Client } from '@authup/core-http-kit';
-import { ErrorCode } from '@authup/errors';
+import { ErrorCode, isUpstreamError } from '@authup/errors';
 import { isJWTError } from '@authup/specs';
 import {
     afterEach,
@@ -191,17 +191,73 @@ describe('verifier remote', () => {
         expect(error.code).toEqual(ErrorCode.JWT_INACTIVE);
     });
 
-    it('reports a failed introspection as invalid, naming the status', async () => {
+    it('reports an introspection answered 5xx as an upstream error, naming the status', async () => {
         fetchMock.mockResolvedValue(respond(503));
 
         const verifier = createRemote();
 
         const error = await verifier.verify(token).catch((e) => e);
 
-        expect(isJWTError(error)).toBe(true);
+        expect(isUpstreamError(error)).toBe(true);
+        expect(isJWTError(error)).toBe(false);
         expect(isVouchlyError(error)).toBe(false);
-        expect(error.code).toEqual(ErrorCode.JWT_INVALID);
+        expect(error.code).toEqual(ErrorCode.UPSTREAM_ERROR);
         expect(error.message).toContain('503');
+        expect(isVouchlyError(error.cause)).toBe(true);
+    });
+
+    it('reports an introspection still answered 401 after the re-mint as an upstream error', async () => {
+        fetchMock.mockResolvedValue(respond(401));
+
+        const verifier = createRemote();
+
+        const error = await verifier.verify(token).catch((e) => e);
+
+        expect(isUpstreamError(error)).toBe(true);
+        expect(isJWTError(error)).toBe(false);
+    });
+
+    it('reports an introspection answered 400 as an invalid token', async () => {
+        fetchMock.mockResolvedValue(respond(400));
+
+        const verifier = createRemote();
+
+        const error = await verifier.verify(token).catch((e) => e);
+
+        expect(isJWTError(error)).toBe(true);
+        expect(isUpstreamError(error)).toBe(false);
+        expect(error.code).toEqual(ErrorCode.JWT_INVALID);
+    });
+
+    it('reports an unreachable introspection endpoint as an upstream error', async () => {
+        const cause = new TypeError('fetch failed', { cause: Object.assign(new Error('connect ECONNREFUSED'), { code: 'ECONNREFUSED' }) });
+
+        fetchMock.mockRejectedValue(cause);
+
+        const verifier = createRemote();
+
+        const error = await verifier.verify(token).catch((e) => e);
+
+        expect(isUpstreamError(error)).toBe(true);
+        expect(isJWTError(error)).toBe(false);
+        expect(error.cause.cause).toBe(cause);
+    });
+
+    it('reports a failed client credentials mint as an upstream error', async () => {
+        const cause = new Error('invalid_client');
+
+        const verifier = createRemote({
+            creator: vitest.fn(async () => {
+                throw cause; 
+            }), 
+        });
+
+        const error = await verifier.verify(token).catch((e) => e);
+
+        expect(fetchMock).not.toHaveBeenCalled();
+        expect(isUpstreamError(error)).toBe(true);
+        expect(isJWTError(error)).toBe(false);
+        expect(error.cause.cause).toBe(cause);
     });
 
     it('bounds the cached introspection result by maxRemoteCacheTTL', async () => {

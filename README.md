@@ -190,6 +190,7 @@ Optional packages for JavaScript and TypeScript, for when you want typed calls i
 |---|---|
 | [`@authup/core-http-kit`](https://github.com/authup/authup/tree/master/packages/core-http-kit) | A typed client for every endpoint, with token refresh |
 | [`@authup/server-adapter-node`](https://github.com/authup/authup/tree/master/packages/server-adapter-node), [`-socket-io`](https://github.com/authup/authup/tree/master/packages/server-adapter-socket-io), [`-web`](https://github.com/authup/authup/tree/master/packages/server-adapter-web) | Token verification middleware for your APIs |
+| [`@authup/server-adapter-redis`](https://github.com/authup/authup/tree/master/packages/server-adapter-redis) | Redis-backed result cache for the token verifier |
 | [`@authup/access`](https://github.com/authup/authup/tree/master/packages/access) | Permission and policy evaluation in your own service |
 | [`@authup/client-web-kit`](https://github.com/authup/authup/tree/master/packages/client-web-kit), [`@authup/client-web-nuxt`](https://github.com/authup/authup/tree/master/packages/client-web-nuxt) | Vue components and a Nuxt module for sign-in and administration |
 

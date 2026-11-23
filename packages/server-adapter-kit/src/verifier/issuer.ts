@@ -6,6 +6,7 @@
  */
 
 import type { Client } from '@authup/core-http-kit';
+import { UpstreamError } from '@authup/errors';
 import { isObject, isUUID } from '@authup/kit';
 import type { OAuth2JsonWebKey } from '@authup/specs';
 import { JWTError, OAuth2TokenKind } from '@authup/specs';
@@ -79,20 +80,43 @@ function createKeyLoader(client: Client) : KeyLoader {
                 throw JWTError.payloadPropertyInvalid('kid');
             }
 
-            throw new JWTError({
+            // not about the token: authup is unreachable or failing
+            throw new UpstreamError({
                 message: 'Failed to fetch JWK from auth server.',
-                cause: e as Error,
+                cause: e,
             });
         }
 
-        // authup always names the algorithm of a realm key; a key without one
-        // would be imported with whatever the token header claims.
-        if (!jwk.alg) {
-            throw JWTError.payloadInvalid('The jwt key is not valid.');
+        // A 200 that is no usable key (an html page of a proxy, an object
+        // without kty) is not about the token. authup always names the
+        // algorithm of a realm key; a key without one would be imported with
+        // whatever the token header claims.
+        if (!isObject(jwk) || typeof jwk.alg !== 'string' || !jwk.alg || !hasKeyMaterial(jwk)) {
+            throw new UpstreamError({ message: 'The auth server answered no usable key.' });
         }
 
         return jwk as Awaited<ReturnType<KeyLoader>>;
     };
+}
+
+/**
+ * The members a public key of the given type cannot be imported without.
+ * A realm key authup serves is one of these three types.
+ */
+const KEY_MATERIAL: Record<string, string[]> = {
+    RSA: ['n', 'e'],
+    EC: ['crv', 'x', 'y'],
+    OKP: ['crv', 'x'],
+};
+
+function hasKeyMaterial(jwk: Record<string, unknown>): boolean {
+    const members = typeof jwk.kty === 'string' ? KEY_MATERIAL[jwk.kty] : undefined;
+
+    if (!members) {
+        return false;
+    }
+
+    return members.every((member) => typeof jwk[member] === 'string' && jwk[member] !== '');
 }
 
 export function createAuthupIssuer(ctx: AuthupIssuerContext) : Issuer {

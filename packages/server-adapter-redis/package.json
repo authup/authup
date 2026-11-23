@@ -1,0 +1,68 @@
+{
+    "name": "@authup/server-adapter-redis",
+    "type": "module",
+    "version": "1.0.0-beta.76",
+    "description": "Share verified Authup token results between processes through Redis.",
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs"
+        }
+    },
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist/"
+    ],
+    "engines": {
+        "node": ">=26.0.0"
+    },
+    "scripts": {
+        "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
+        "build:js": "tsdown",
+        "build": "rimraf ./dist && npm run build:js && npm run build:types",
+        "check:types": "tsc -p tsconfig.test.json",
+        "test": "cross-env NODE_ENV=test vitest run test/unit",
+        "test:coverage": "cross-env NODE_ENV=test vitest run --coverage"
+    },
+    "keywords": [
+        "auth",
+        "authentication",
+        "token-verification",
+        "cache",
+        "redis",
+        "ioredis",
+        "server",
+        "adapter"
+    ],
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/authup/authup.git",
+        "directory": "packages/server-adapter-redis"
+    },
+    "bugs": {
+        "url": "https://github.com/authup/authup/issues"
+    },
+    "homepage": "https://github.com/authup/authup#readme",
+    "dependencies": {
+        "@authup/server-adapter-kit": "^1.0.0-beta.76",
+        "redis-extension": "^3.0.0"
+    },
+    "devDependencies": {
+        "ioredis": "^6.0.0",
+        "vitest": "^5.1.1"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "peerDependencies": {
+        "ioredis": "^6.0.0"
+    }
+}

@@ -17,8 +17,8 @@ import {
     it,
     vi,
 } from 'vitest';
-import type { TokenVerifierContext } from '../../src/index.ts';
-import { RedisTokenCache, TokenVerifier } from '../../src/index.ts';
+import type { ITokenCache, TokenVerifierContext } from '../../src/index.ts';
+import { TokenVerifier } from '../../src/index.ts';
 import { TokenPayload } from '../data/token.ts';
 import { Faker } from '../utils/index.ts';
 
@@ -123,11 +123,11 @@ describe('jwk cache', () => {
         expect(getJwk).toHaveBeenCalledTimes(2);
     });
 
-    it('keeps keys in memory for the redis cache', async () => {
-        const cache = new RedisTokenCache({} as ConstructorParameters<typeof RedisTokenCache>[0]);
-
-        vi.spyOn(cache, 'get').mockResolvedValue(undefined);
-        vi.spyOn(cache, 'set').mockResolvedValue(undefined);
+    it('keeps keys in memory for an external result cache', async () => {
+        const cache : ITokenCache = {
+            get: vi.fn(async () => undefined),
+            set: vi.fn(async () => undefined),
+        };
 
         const verifier = new TokenVerifier({ baseURL: 'http://localhost:3001', cache });
         const token = await sign();

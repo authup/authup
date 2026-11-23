@@ -46,6 +46,7 @@ Contract:
 | Malformed `Authorization` header     | rejects with `BearerTokenMalformedError`       |
 | `tokenVerifier.verify` rejects       | rejects with the underlying verifier error     |
 | authup does not answer in time       | rejects with `UpstreamTimeoutError`            |
+| authup is unreachable or failing     | rejects with `UpstreamError`                   |
 
 The optional `tokenByRequest` callback runs only when the `Authorization` header is absent. The consumer
 extracts the token from wherever they like (cookie, custom header, query string): the adapter does not parse cookies.
@@ -78,10 +79,12 @@ A `TokenVerifier` verifies every request anew unless you pass a `cache`. With on
 kept until the token expires and served without asking authup again, so it outlives a disabled
 signing key (local verification) or a revoked token (remote verification, with `creator`).
 `maxRemoteCacheTTL` bounds how long an introspection answer is kept. Pass a `MemoryTokenCache`
-for one process, or a `RedisTokenCache` to share results between processes:
+for one process, or a `RedisTokenCache` from `@authup/server-adapter-redis` to share results
+between processes:
 
 ```typescript
-import { RedisTokenCache, TokenVerifier } from '@authup/server-adapter-kit';
+import { TokenVerifier } from '@authup/server-adapter-kit';
+import { RedisTokenCache } from '@authup/server-adapter-redis';
 
 const tokenVerifier = new TokenVerifier({
     baseURL: 'http://localhost:3000/',
@@ -95,7 +98,10 @@ other's results. Verifiers sharing a `cacheNamespace` must be configured identic
 
 Remote verification introspects with the token `creator` mints and keeps it until authup answers
 `401`; it then mints a new one and asks once more. An inactive token is rejected with
-`inactive_token`, a failed introspection with `invalid_token` naming the status authup answered.
+`inactive_token` and an introspection answered 400 with `invalid_token`. Any other failed
+introspection, a failed mint, an unreachable authup and a key fetch failing other than with 404
+or answering no usable key reject with `UpstreamError` (`upstream_error`, HTTP 502), carrying the
+original failure as `cause`. When authup answered the introspection, the message names the status.
 
 ## Timeouts
 

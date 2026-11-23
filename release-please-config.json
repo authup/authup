@@ -25,6 +25,7 @@
         "packages/kit": {"component": "kit"},
         "packages/server-adapter-kit": {"component": "server-adapter-kit"},
         "packages/server-adapter-node": {"component": "server-adapter-node"},
+        "packages/server-adapter-redis": {"component": "server-adapter-redis"},
         "packages/server-adapter-socket-io": {"component": "server-adapter-socket-io"},
         "packages/server-adapter-web": {"component": "server-adapter-web"},
         "packages/server-config-kit": {"component": "server-config-kit"},
@@ -73,6 +74,7 @@
 
                 "server-adapter-kit",
                 "server-adapter-node",
+                "server-adapter-redis",
                 "server-adapter-socket-io",
                 "server-adapter-web",
                 "server-config-kit",

@@ -333,8 +333,9 @@ export class TokenController {
                 scopes: payload.scope ? deserializeOAuth2Scope(payload.scope) : [],
             });
 
-            // A subject of another realm than the token names: the token is
-            // no report about anyone, so it is reported bare.
+            // A subject that no longer exists, or one of another realm than
+            // the token names: the token is no report about anyone, so it is
+            // reported bare (RFC 7662 §2.2).
             if (!subject) {
                 return { active: false };
             }

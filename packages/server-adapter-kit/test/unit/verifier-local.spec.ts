@@ -6,7 +6,7 @@
  */
 
 import { Client } from '@authup/core-http-kit';
-import { ErrorCode } from '@authup/errors';
+import { ErrorCode, isUpstreamError } from '@authup/errors';
 import type { OAuth2JsonWebKey } from '@authup/specs';
 import { isJWTError } from '@authup/specs';
 import {
@@ -102,13 +102,38 @@ describe('verifier local', () => {
         expect(getJwk).not.toHaveBeenCalled();
     });
 
-    it('should reject a realm key without an algorithm with a JWTError', async () => {
-        const jwk : Partial<OAuth2JsonWebKey> = { ...await faker.useJwk() };
+    it.each([
+        ['an html page', async () => '<!doctype html><html></html>'],
+        ['null', async () => null],
+        ['an object without kty', async () => {
+            const jwk : Partial<OAuth2JsonWebKey> = { ...await faker.useJwk() };
 
-        delete jwk.alg;
-        getJwk.mockResolvedValueOnce(jwk);
+            delete jwk.kty;
 
-        await expect(verifier.verify(await faker.sign(buildPayload()))).rejects.toSatisfy(isJWTError);
+            return jwk;
+        }],
+        ['a realm key without an algorithm', async () => {
+            const jwk : Partial<OAuth2JsonWebKey> = { ...await faker.useJwk() };
+
+            delete jwk.alg;
+
+            return jwk;
+        }],
+        ['a key without its key material', async () => {
+            const jwk : Partial<OAuth2JsonWebKey> = { ...await faker.useJwk() };
+
+            delete jwk.n;
+
+            return jwk;
+        }],
+        ['a key of an unsupported type', async () => ({ ...await faker.useJwk(), kty: 'oct' })],
+    ])('should reject a key endpoint answering %s with an upstream error, never a JWTError', async (_label, build) => {
+        getJwk.mockResolvedValueOnce(await build());
+
+        await expect(verifier.verify(await faker.sign(buildPayload()))).rejects.toSatisfy(
+            (e: unknown) => isUpstreamError(e) && !isJWTError(e) &&
+                (e as Error).message === 'The auth server answered no usable key.',
+        );
     });
 
     it('should reject an RSA realm key shorter than 2048 bits with a JWTError naming the cause', async () => {
@@ -238,11 +263,6 @@ describe('verifier local', () => {
 
             return faker.sign(buildPayload());
         }],
-        ['a failed key fetch', async () => {
-            getJwk.mockRejectedValueOnce(new Error('ECONNRESET'));
-
-            return faker.sign(buildPayload());
-        }],
         ['a forged signature', async () => {
             getJwk.mockResolvedValueOnce(await new Faker().useJwk());
 
@@ -268,6 +288,14 @@ describe('verifier local', () => {
 
         await expect(verifier.verify(token)).rejects.toSatisfy(
             (e: unknown) => isJWTError(e) && !isVouchlyError(e),
+        );
+    });
+
+    it('should reject a failed key fetch with an upstream error, never a JWTError', async () => {
+        getJwk.mockRejectedValueOnce(new Error('ECONNRESET'));
+
+        await expect(verifier.verify(await faker.sign(buildPayload()))).rejects.toSatisfy(
+            (e: unknown) => isUpstreamError(e) && !isJWTError(e) && !isVouchlyError(e),
         );
     });
 
