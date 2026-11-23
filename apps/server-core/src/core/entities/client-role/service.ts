@@ -42,7 +42,7 @@ export type ClientRoleServiceContext = {
 };
 
 export class ClientRoleService extends JunctionEntityService implements IClientRoleService {
-    protected readonly ownerRealmKey = 'clientRealmId';
+    protected readonly ownerRealm = { key: 'clientRealmId' } as const;
 
     protected repository: IClientRoleRepository;
 
@@ -69,7 +69,7 @@ export class ClientRoleService extends JunctionEntityService implements IClientR
         // the OWNER realm key — a junction row carries no `realmId` (issue #3594).
         const compiled = await actor.permissionEvaluator.compile({
             name: READ_PERMISSION_NAMES,
-            realmAttributeName: this.ownerRealmKey,
+            realmAttributeName: this.ownerRealm.key,
         });
 
         if (compiled.verdict === 'deny') {
@@ -78,7 +78,7 @@ export class ClientRoleService extends JunctionEntityService implements IClientR
             parsed = appendQueryConditions(parsed, compiled.condition);
         } else if (compiled.verdict === 'post') {
             // the rows are evaluated one by one, each on its whole default row
-            parsed = widenSparseRootProjection(parsed, clientRoleSchema, [this.ownerRealmKey]);
+            parsed = widenSparseRootProjection(parsed, clientRoleSchema, [this.ownerRealm.key]);
         }
 
         const { data: entities, meta } = await this.repository.findMany(parsed);

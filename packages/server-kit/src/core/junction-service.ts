@@ -6,6 +6,7 @@
  */
 
 import { AbstractEntityService } from './service.ts';
+import type { JunctionOwnerRealm, JunctionOwnerRealmResolved } from './types.ts';
 
 /**
  * Base class for junction/association entity services (role-permission, user-role,
@@ -17,13 +18,17 @@ import { AbstractEntityService } from './service.ts';
  */
 export abstract class JunctionEntityService extends AbstractEntityService {
     /**
-     * Attribute carrying the OWNER entity's realm — the realm-bound entity whose
-     * sub-resource this junction manages (e.g. `roleRealmId` for role-permission,
-     * `userRealmId` for user-role). `abstract` => every junction service MUST declare
-     * it; a missing declaration is a compile error, which is what closes the fail-open
-     * gap (a structural guard, not a convention).
+     * Where the OWNER entity's realm comes from: the realm-bound entity whose
+     * sub-resource this junction manages. Either a column of the junction row
+     * (`{ key: 'roleRealmId' }` for role-permission, `{ key: 'userRealmId' }`
+     * for user-role), or, for an owner pinned to one realm that carries no
+     * realm column, the realm itself (`{ realm: 'blog' }`) or a resolver per
+     * row (`{ realm: (entity) => ... }`). `abstract` and exclusive: every
+     * junction service must declare exactly one of the two, and a missing
+     * declaration is a compile error, which is what closes the fail-open gap
+     * (a structural guard, not a convention).
      */
-    protected abstract readonly ownerRealmKey: string;
+    protected abstract readonly ownerRealm: JunctionOwnerRealm;
 
     /**
      * The junction's genuine attributes for a record check: a COPY of the row (never the
@@ -36,12 +41,19 @@ export abstract class JunctionEntityService extends AbstractEntityService {
 
     /**
      * The OWNER realm, handed to a record check as its `realm`. A `null` owner (global) is
-     * matched (and `own` correctly denies it). The column is read raw: a row missing it
+     * matched (and `own` correctly denies it). A column is read raw: a row missing it
      * (a projection that stripped it) yields `undefined`, which the record check throws on
-     * rather than reading as a global row. Reading `ownerRealmKey` keeps the compile-time
-     * guard: a junction cannot silently skip its realm.
+     * rather than reading as a global row.
      */
     protected junctionResourceRealm(entity: Record<string, any>): string | null {
-        return entity[this.ownerRealmKey];
+        const owner = this.ownerRealm;
+
+        if (typeof owner.key === 'string') {
+            return entity[owner.key];
+        }
+
+        const { realm } = owner as JunctionOwnerRealmResolved;
+
+        return typeof realm === 'function' ? realm(entity) : realm;
     }
 }

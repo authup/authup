@@ -54,8 +54,10 @@ The relations read gate (#3295) runs `preEvaluateOneOf` without `realmMatch`, so
 it never checks a row's realm; without this gate any holder of the target
 permission read other realms' junction rows.
 
-- A junction row has no `realmId`. Each service passes `this.ownerRealmKey`
-  (abstract on `JunctionEntityService`, `packages/server-kit`) as
+- A junction row has no `realmId`. Each service passes `this.ownerRealm.key`
+  (`ownerRealm` is abstract on `JunctionEntityService`, `packages/server-kit`:
+  a column `{ key }` or, for an owner pinned to one realm, `{ realm }`, never
+  both, #3866) as
   `realmAttributeName` to `compile`, which lowers the reach onto that column.
   It never changes an `evaluate()` outcome.
 - **A declared `realmAttributeName` refuses to lower the grant's own policy**

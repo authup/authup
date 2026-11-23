@@ -595,7 +595,7 @@ expresses a pending policy as a rapiq `ICondition` over row attributes, opt-in v
   compiling `USER_UPDATE` only), UserAuthenticator (`userId`), IdentityProviderAccount
   (`userId`, reach on `userRealmId`, #3601). Pure gates: Key, TrustAnchor, RoleAttribute,
   the four global-capable entities (#3574) and the eight junction services, which pass
-  `realmAttributeName: this.ownerRealmKey` (#3594).
+  `realmAttributeName: this.ownerRealm.key` (#3594).
 - `EventService.resolveReadVisibility` (foreign-realm probing) survives only as the `post`
   fallback.
 - The client secret gate is on the client SCHEMA (`secretReadGate`, `fields.validateMany`,

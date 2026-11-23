@@ -40,7 +40,7 @@ export type ClientScopeServiceContext = {
 };
 
 export class ClientScopeService extends JunctionEntityService implements IClientScopeService {
-    protected readonly ownerRealmKey = 'clientRealmId';
+    protected readonly ownerRealm = { key: 'clientRealmId' } as const;
 
     protected repository: IClientScopeRepository;
 
@@ -64,7 +64,7 @@ export class ClientScopeService extends JunctionEntityService implements IClient
         // the OWNER realm key — a junction row carries no `realmId` (issue #3594).
         const compiled = await actor.permissionEvaluator.compile({
             name: READ_PERMISSION_NAMES,
-            realmAttributeName: this.ownerRealmKey,
+            realmAttributeName: this.ownerRealm.key,
         });
 
         if (compiled.verdict === 'deny') {
@@ -73,7 +73,7 @@ export class ClientScopeService extends JunctionEntityService implements IClient
             parsed = appendQueryConditions(parsed, compiled.condition);
         } else if (compiled.verdict === 'post') {
             // the rows are evaluated one by one, each on its whole default row
-            parsed = widenSparseRootProjection(parsed, clientScopeSchema, [this.ownerRealmKey]);
+            parsed = widenSparseRootProjection(parsed, clientScopeSchema, [this.ownerRealm.key]);
         }
 
         const { data: entities, meta } = await this.repository.findMany(parsed);

@@ -56,3 +56,21 @@ export type EntityUpdateEvaluationResolvers = {
     /** The record's realm (`null` = global row) for this row. */
     realm: (row: Record<string, any>) => RecordRealm,
 };
+
+/** A junction's owner realm, read from a column of the junction row. */
+export type JunctionOwnerRealmColumn = {
+    key: string,
+    realm?: never,
+};
+
+/**
+ * A junction's owner realm for an owner pinned to one realm that carries no
+ * realm column: the realm itself, or a resolver per row.
+ */
+export type JunctionOwnerRealmResolved = {
+    realm: string | null | ((entity: Record<string, any>) => string | null),
+    key?: never,
+};
+
+/** Where `JunctionEntityService` reads the owner realm of a row from. */
+export type JunctionOwnerRealm = JunctionOwnerRealmColumn | JunctionOwnerRealmResolved;
