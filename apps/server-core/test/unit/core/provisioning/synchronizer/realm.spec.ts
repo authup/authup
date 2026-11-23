@@ -85,4 +85,37 @@ describe('core/provisioning/synchronizer/realm', () => {
             'third-user',
         ]);
     });
+
+    it('should run the bindings queued before an entity that fails to save', async () => {
+        const bound: string[] = [];
+        const failingUsers: IProvisioningSynchronizer<Named> = {
+            synchronize: async () => {
+                throw new Error('user save failed');
+            },
+            synchronizeMany: async () => {
+                throw new Error('user save failed');
+            },
+        };
+
+        const synchronizer = new RealmProvisioningSynchronizer({
+            repository: new FakeRealmRepository(),
+            clientSynchronizer: createDeferring(bound),
+            roleSynchronizer: createDeferring(bound),
+            userSynchronizer: failingUsers,
+            permissionSynchronizer: createPassthrough(),
+            scopeSynchronizer: createPassthrough(),
+            pathSynchronizer: createPassthrough(),
+        });
+
+        await expect(synchronizer.synchronize({
+            attributes: { name: 'acme' },
+            relations: {
+                roles: [{ attributes: { name: 'ops' } }],
+                clients: [{ attributes: { name: 'first-client' } }],
+                users: [{ attributes: { name: 'first-user' } }],
+            },
+        })).rejects.toThrow('user save failed');
+
+        expect(bound).toEqual(['ops', 'first-client']);
+    });
 });

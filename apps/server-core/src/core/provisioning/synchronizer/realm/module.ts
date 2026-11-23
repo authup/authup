@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Realm } from '@authup/core-kit';
 import { pickRecord } from '@authup/kit';
 import type { IRealmRepository } from '../../../entities/index.ts';
 import type { ClientProvisioningEntity, ScopeProvisioningEntity } from '../../entities/index.ts';
@@ -96,6 +97,49 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             },
         };
 
+        // A failing entity still lets the bindings queued before it run:
+        // the entities saved so far were created on this pass, and a
+        // createOnly entity is never bound on a later one.
+        let entityError: unknown;
+
+        try {
+            await this.synchronizeEntities(input, attributes, context);
+        } catch (e) {
+            entityError = e;
+        }
+
+        // Every binding runs even when one fails: a createOnly entity created
+        // on this pass is never bound on a later one, so a binding skipped
+        // now would stay missing for good. The first failure fails the pass.
+        const errors: unknown[] = [];
+
+        for (const task of deferred) {
+            try {
+                await task();
+            } catch (e) {
+                errors.push(e);
+            }
+        }
+
+        if (typeof entityError !== 'undefined') {
+            throw entityError;
+        }
+
+        if (errors.length > 0) {
+            throw errors[0];
+        }
+
+        return {
+            ...input,
+            attributes,
+        };
+    }
+
+    protected async synchronizeEntities(
+        input: RealmProvisioningEntity,
+        attributes: Realm,
+        context: ProvisioningSynchronizeContext,
+    ): Promise<void> {
         // Scopes first: they are leaf entities carrying no relations of their
         // own, and a client below may bind them through `realmScopes`.
         if (input.relations && input.relations.scopes) {
@@ -157,37 +201,17 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             await this.clientSynchronizer.synchronizeMany(clients, context);
         }
 
-        if (input.relations && input.relations.users) {
-            const users = input.relations.users.map((child) => {
-                child.attributes.realmId = attributes.id;
-                child.attributes.realm = attributes;
-
-                return child;
-            });
-
-            await this.userSynchronizer.synchronizeMany(users, context);
+        if (!input.relations || !input.relations.users) {
+            return;
         }
 
-        // Every binding runs even when one fails: a createOnly entity created
-        // on this pass is never bound on a later one, so a binding skipped
-        // now would stay missing for good. The first failure fails the pass.
-        const errors: unknown[] = [];
+        const users = input.relations.users.map((child) => {
+            child.attributes.realmId = attributes.id;
+            child.attributes.realm = attributes;
 
-        for (const task of deferred) {
-            try {
-                await task();
-            } catch (e) {
-                errors.push(e);
-            }
-        }
+            return child;
+        });
 
-        if (errors.length > 0) {
-            throw errors[0];
-        }
-
-        return {
-            ...input,
-            attributes,
-        };
+        await this.userSynchronizer.synchronizeMany(users, context);
     }
 }
