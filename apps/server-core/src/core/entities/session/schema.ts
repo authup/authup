@@ -54,6 +54,7 @@ export const sessionSchema = defineSchema<Session>({
         ],
     },
     filters: {
+        arrays: [],
         allowed: [...SESSION_FILTER_KEYS, 'expiresAt', 'seenAt', 'createdAt', 'updatedAt'],
         indexed: true,
         validate: createTimestampFiltersGate(),

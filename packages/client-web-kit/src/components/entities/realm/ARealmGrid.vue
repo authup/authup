@@ -16,12 +16,16 @@ import {
     TranslatorTranslationCommonKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
-import { VCAlert } from '@vuecs/elements';
+import { VCAlert, VCEmptyState } from '@vuecs/elements';
 import { VCIcon } from '@vuecs/icon';
 import { injectHTTPClient, useTranslations } from '../../../core/index.ts';
 
 export default defineComponent({
-    components: { VCAlert, VCIcon },
+    components: {
+        VCAlert,
+        VCEmptyState,
+        VCIcon,
+    },
     props: {
         // When exactly one realm is available, emit `select` for it
         // immediately instead of rendering a single-tile chooser. Lets the
@@ -99,6 +103,8 @@ export default defineComponent({
 
         const showSearch = computed(() => items.value.length > props.searchThreshold);
 
+        const searching = computed(() => search.value.trim().length > 0);
+
         const filtered = computed(() => {
             const term = search.value.trim().toLowerCase();
 
@@ -143,6 +149,7 @@ export default defineComponent({
             search,
             redirecting,
             showSearch,
+            searching,
             filtered,
             translations,
             labelFor,
@@ -193,16 +200,25 @@ export default defineComponent({
                 >
             </div>
 
-            <div
-                v-if="filtered.length === 0"
-                class="a-realm-empty"
+            <VCEmptyState
+                v-if="filtered.length === 0 && searching"
+                variant="noResults"
+                :title="translations.noResults"
+                @action="search = ''"
             >
-                <VCIcon
-                    name="fa6-solid:folder-open"
-                    class="a-realm-empty-icon"
-                />
-                <span>{{ translations.noResults }}</span>
-            </div>
+                <template #icon>
+                    <VCIcon name="fa6-solid:folder-open" />
+                </template>
+            </VCEmptyState>
+
+            <VCEmptyState
+                v-else-if="filtered.length === 0"
+                :description="translations.noResults"
+            >
+                <template #icon>
+                    <VCIcon name="fa6-solid:folder-open" />
+                </template>
+            </VCEmptyState>
 
             <div
                 v-else

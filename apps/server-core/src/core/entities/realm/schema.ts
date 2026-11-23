@@ -32,6 +32,7 @@ export const realmSchema = defineSchema<Realm>({
         ],
     },
     filters: {
+        arrays: [],
         allowed: ['id', 'builtIn', 'displayName', 'name', 'createdAt', 'updatedAt'],
         indexed: true,
         validate: createTimestampFiltersGate(),

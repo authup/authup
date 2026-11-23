@@ -57,6 +57,7 @@ export const sessionTokenSchema = defineSchema<SessionToken>({
     // back-channel logout audience), and the pair scopes a per-application
     // revoke to one session.
     filters: {
+        arrays: [],
         allowed: [
             'id',
             'sessionId',

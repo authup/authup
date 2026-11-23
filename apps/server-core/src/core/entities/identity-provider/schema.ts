@@ -39,6 +39,7 @@ export const identityProviderSchema = defineSchema<IdentityProvider>({
         ],
     },
     filters: {
+        arrays: [],
         allowed: ['name', 'displayName', 'protocol', 'enabled', 'realmId', 'id', 'createdAt', 'updatedAt'],
         indexed: true,
         validate: createTimestampFiltersGate(),

@@ -38,6 +38,7 @@ export const clientTokenExchangeCapabilitySchema = defineSchema<ClientTokenExcha
         ],
     },
     filters: {
+        arrays: [],
         allowed: ['id', 'audience', 'clientId', 'realmId', 'createdAt', 'updatedAt'],
         indexed: true,
         validate: createTimestampFiltersGate(),

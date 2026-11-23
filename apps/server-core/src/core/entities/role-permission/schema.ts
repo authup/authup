@@ -40,6 +40,7 @@ export const rolePermissionSchema = defineSchema<RolePermission>({
         ],
     },
     filters: {
+        arrays: [],
         allowed: ['roleId', 'permissionId', 'id', 'roleRealmId', 'permissionRealmId', 'policyId', 'createdAt', 'updatedAt'],
         indexed: true,
         validate: createTimestampFiltersGate(),

@@ -39,6 +39,7 @@ export const userAuthenticatorSchema = defineSchema<UserAuthenticator>({
         ],
     },
     filters: {
+        arrays: [],
         allowed: ['id', 'kind', 'confirmed', 'userId', 'realmId', 'lastUsedAt', 'createdAt', 'updatedAt'],
         indexed: true,
         validate: createTimestampFiltersGate(),

@@ -144,21 +144,6 @@
         animation: a-realm-skeleton 1.4s ease infinite;
     }
 
-    .a-realm-empty {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.65rem;
-        padding: 2.5rem 1rem;
-        color: var(--authup-auth-surface-color-muted);
-        text-align: center;
-    }
-
-    .a-realm-empty-icon {
-        font-size: 1.75rem;
-        opacity: 0.6;
-    }
-
     @keyframes a-realm-border-pan {
         to {
             background-position: 200% 0;

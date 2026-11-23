@@ -54,8 +54,8 @@
     "@vuecs/button": "^1.4.4",
     "@vuecs/core": "^3.6.1",
     "@vuecs/design": "^1.2.2",
-    "@vuecs/forms": "^5.4.4",
-    "@vuecs/theme-tailwind": "^6.6.0",
+    "@vuecs/forms": "^5.5.0",
+    "@vuecs/theme-tailwind": "^6.7.0",
     "@vuecs/tree": "^1.0.1",
     "tailwindcss": "^4.3.5"
   },
@@ -63,7 +63,7 @@
     "@authup/client-web-kit": "^1.0.0-beta.76",
     "@vuecs/core": "^3.6.1",
     "@vuecs/design": "^1.2.2",
-    "@vuecs/theme-tailwind": "^6.6.0",
+    "@vuecs/theme-tailwind": "^6.7.0",
     "@vuecs/tree": "^1.0.1",
     "tailwindcss": "^4.3.5"
   },

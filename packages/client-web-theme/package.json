@@ -58,13 +58,13 @@
     "@vuecs/design": "^1.2.2",
     "@vuecs/navigation": "^4.5.2",
     "@vuecs/table": "^1.6.3",
-    "@vuecs/theme-tailwind": "^6.6.0",
+    "@vuecs/theme-tailwind": "^6.7.0",
     "tailwindcss": "^4.3.5"
   },
   "peerDependencies": {
     "@vuecs/core": "^3.6.1",
     "@vuecs/design": "^1.2.2",
-    "@vuecs/theme-tailwind": "^6.6.0",
+    "@vuecs/theme-tailwind": "^6.7.0",
     "tailwindcss": "^4.3.5"
   },
   "publishConfig": {

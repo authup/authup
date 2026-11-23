@@ -22,7 +22,7 @@ import {
     useTranslationsForNamespace,
 } from '@authup/client-web-kit';
 import { and, gt, inArray } from '@rapiq/core';
-import { VCAlert } from '@vuecs/elements';
+import { VCAlert, VCEmptyState } from '@vuecs/elements';
 import { VCIcon } from '@vuecs/icon';
 import { VCLink } from '@vuecs/link';
 import { storeToRefs } from 'pinia';
@@ -85,6 +85,7 @@ export default defineComponent({
         EventVolumeChart,
         StatsWindowSwitch,
         VCAlert,
+        VCEmptyState,
         VCIcon,
         VCLink,
     },
@@ -498,12 +499,10 @@ export default defineComponent({
                     <h2 class="mb-2 text-sm font-semibold text-fg-muted">
                         {{ translations.dashboardEventsByType }}
                     </h2>
-                    <p
+                    <VCEmptyState
                         v-if="ranked.length === 0 && !busy"
-                        class="text-sm text-fg-muted"
-                    >
-                        {{ translations.dashboardEmpty }}
-                    </p>
+                        :description="translations.dashboardEmpty"
+                    />
                     <ul
                         v-else
                         class="m-0 flex list-none flex-col gap-2 p-0"

@@ -40,6 +40,7 @@ export const clientPermissionSchema = defineSchema<ClientPermission>({
         ],
     },
     filters: {
+        arrays: [],
         allowed: ['clientId', 'permissionId', 'id', 'clientRealmId', 'permissionRealmId', 'policyId', 'createdAt', 'updatedAt'],
         indexed: true,
         validate: createTimestampFiltersGate(),

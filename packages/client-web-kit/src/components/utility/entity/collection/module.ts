@@ -8,10 +8,10 @@
 import { hasOwnProperty } from '@authup/kit';
 import { buildQueryString, pickEntityAPI } from '@authup/core-http-kit';
 import type { EntityTypeMap } from '@authup/core-kit';
+import { VCEmptyState } from '@vuecs/elements';
 import {
     VCList,
     VCListBody,
-    VCListEmpty,
     VCListItem,
     VCListLoading,
 } from '@vuecs/list';
@@ -452,18 +452,26 @@ function create<
     });
 
     const {
-        data, 
-        busy, 
-        total, 
+        data,
+        busy,
+        loading,
+        total,
     } = source;
 
     // The pagination UI reads total and busy off the meta object, so the
     // exposed meta folds the source's own state into the bag it keeps.
+    // Its `busy` is the newest load only: a superseded one is discarded.
     const meta = computed<ListMeta>(() => ({
         pagination: source.meta.pagination,
         total: total.value,
-        busy: busy.value,
+        busy: loading.value,
     }));
+
+    const hasInteractiveFilters = () => {
+        const { interactive } = source.meta;
+
+        return !!interactive && serializeFilters(interactive) !== serializeFilters(new Query());
+    };
 
     // Composes the query against the source's draft (the state of the load
     // still in flight, else the committed one), so a sort or page change
@@ -637,7 +645,7 @@ function create<
         // event twice (silent data-corruption risk on entity mutations).
         const slotProps = (): ListSlotProps<RECORD> => ({
             data: data.value,
-            busy: busy.value,
+            busy: loading.value,
             total: total.value,
             load,
             meta: meta.value,
@@ -680,7 +688,7 @@ function create<
         // not from the children passed to VCListBody.
         const listProps = {
             data: data.value,
-            busy: busy.value,
+            busy: loading.value,
             total: total.value,
             meta: meta.value,
         };
@@ -733,16 +741,12 @@ function create<
                         return h(VCListLoading, { overlay });
                     };
 
-                    // First-load: data is empty AND busy → show loading in place.
-                    if (busy.value && data.value.length === 0) {
+                    // First-load: data is empty AND loading → show loading in place.
+                    if (loading.value && data.value.length === 0) {
                         return renderLoadingBand(false);
                     }
 
-                    if (data.value.length === 0) {
-                        return h(VCListEmpty);
-                    }
-
-                    // Refresh path: data shown AND busy → overlay loading on top
+                    // Refresh path: data shown AND loading → overlay loading on top
                     // of existing rows so consumers still see refresh feedback
                     // (the old buildList rendered an overlay here; without it
                     // there's no signal that an in-flight reload is happening).
@@ -752,7 +756,7 @@ function create<
                         const itemSlotProps: ListItemSlotProps<RECORD> = {
                             data: item,
                             index,
-                            busy: busy.value,
+                            busy: loading.value,
                             updated: (next: RECORD) => updated(next),
                             deleted: (next: RECORD) => deleted(next),
                         };
@@ -823,7 +827,7 @@ function create<
                         });
                     });
 
-                    if (busy.value) {
+                    if (loading.value) {
                         return [rows, renderLoadingBand(true)];
                     }
 
@@ -831,27 +835,29 @@ function create<
                 }));
             }
 
-            // "No more" — empty-list indicator. Matches legacy
-            // `@vuecs/list-controls@2.x` `buildListNoMore` semantics:
-            // rendered ONLY when the list is empty (`total === 0`) and
-            // not currently loading. Entity wrappers (AIdentityProviders,
-            // AClients, …) pass `noMore: { content: translation.value }`
-            // expecting it to fire as the "no items available" message;
-            // it should NOT fire when the list has items (that would
-            // produce a stray "no more entries" tag below a populated
-            // list — pre-PR behaviour did not do that). When a custom
-            // <template #body> renders the data, noMore is the only
-            // empty-state indicator the renderer emits; the default
-            // (no-body-slot) path additionally renders <VCListEmpty>.
+            // "No more" is the list's one empty-state indicator, rendered
+            // ONLY when the list is empty (`total === 0`) and not loading.
+            // Entity wrappers (AIdentityProviders, AClients, ...) pass
+            // `noMore: { content: translation.value }` as its text.
+            // <VCListBody> renders nothing for an empty list, so this
+            // holds for the default body and a custom #body alike.
             if (
                 renderOptions.noMore !== false &&
-                !busy.value &&
+                !loading.value &&
                 total.value === 0
             ) {
-                const noMoreVNode = renderChrome(EntityCollectionSlotName.NO_MORE, noMoreOpt, 'vc-list-no-more', false);
+                const noMoreSlot = slots[EntityCollectionSlotName.NO_MORE];
+                const noMoreContent = noMoreSlot ? noMoreSlot(undefined) : noMoreOpt?.content;
 
-                if (noMoreVNode) {
-                    children.push(noMoreVNode);
+                if (noMoreContent) {
+                    // `actionLabel: ''` suppresses the noResults "Reset"
+                    // button: the search input owns the term, not this list.
+                    children.push(h(VCEmptyState, {
+                        as: noMoreOpt?.tag ?? 'div',
+                        class: 'vc-list-no-more',
+                        variant: hasInteractiveFilters() ? 'noResults' : 'empty',
+                        actionLabel: '',
+                    }, { default: () => noMoreContent }));
                 }
             }
 
@@ -917,6 +923,7 @@ function create<
     return {
         data,
         busy,
+        loading,
         meta,
         total,
 

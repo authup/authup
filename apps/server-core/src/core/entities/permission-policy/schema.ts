@@ -37,6 +37,7 @@ export const permissionPolicySchema = defineSchema<PermissionPolicy>({
         ],
     },
     filters: {
+        arrays: [],
         allowed: ['permissionId', 'policyId', 'id', 'permissionRealmId', 'policyRealmId', 'createdAt', 'updatedAt'],
         indexed: true,
         validate: createTimestampFiltersGate(),

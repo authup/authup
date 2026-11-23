@@ -57,6 +57,10 @@ export default function clientWebKitTheme() {
             // by default, so a raw `'mb-3'` would drop `flex flex-col gap-1`
             // and the form-group children render inline.
             formGroup: { classes: { root: extend('mb-3') } },
+            // theme-tailwind's segmented radio face carries no cursor and no
+            // disabled cue; a disabled segment looked selectable.
+            // Upstream: tada5hi/vuecs#1792
+            formRadio: { classes: { segment: extend('cursor-pointer disabled:cursor-not-allowed disabled:opacity-60') } },
         },
     });
 }

@@ -270,6 +270,79 @@ describe('defineEntityCollectionManager (data source)', () => {
         expect(manager?.meta.value.pagination?.offset).toEqual(0);
     });
 
+    it('a superseded load still running leaves the list out of its loading state', async () => {
+        let manager : EntityCollectionManager<Role> | undefined;
+
+        const { promise: blocked, resolve: release } = Promise.withResolvers<void>();
+
+        const { wrapper } = mountKitComponent(
+            createCollection((value) => {
+                manager = value;
+            }),
+            { loadOnSetup: false },
+            {
+                'GET /roles': async (req: FakeRequest) => {
+                    const url = new URL(req.url, 'http://fake.test');
+
+                    if (url.searchParams.get('page[offset]') === '20') {
+                        await blocked;
+
+                        return respond([{ id: 'stale', name: 'stale' }]);
+                    }
+
+                    return respond([{ id: 'latest', name: 'latest' }]);
+                },
+            },
+        );
+
+        const first = (wrapper.vm as any).load({ pagination: { offset: 20 } });
+
+        await flushPromises();
+
+        expect(manager?.loading.value).toBe(true);
+
+        const second = (wrapper.vm as any).load({ pagination: { offset: 0 } });
+
+        await second;
+        await flushPromises();
+
+        expect(manager?.busy.value).toBe(true);
+        expect(manager?.loading.value).toBe(false);
+        expect(manager?.meta.value.busy).toBe(false);
+        expect(wrapper.find('.vc-list-loading').exists()).toBe(false);
+        expect(wrapper.text()).toContain('latest');
+
+        release();
+        await first;
+        await flushPromises();
+
+        expect(manager?.busy.value).toBe(false);
+        expect(manager?.data.value.map((row) => row.id)).toEqual(['latest']);
+    });
+
+    it('renders the empty state with its noResults variant while a search is active', async () => {
+        const { wrapper } = mountKitComponent(
+            createCollection(() => undefined),
+            { noMore: { content: 'nothing here' } },
+            { 'GET /roles': () => respond([]) },
+        );
+
+        await flushPromises();
+
+        const empty = wrapper.find('.vc-list-no-more');
+
+        expect(empty.exists()).toBe(true);
+        expect(empty.text()).toContain('nothing here');
+        expect(empty.find('button').exists()).toBe(false);
+
+        await (wrapper.vm as any).load({ filters: { name: 'needle' } });
+        await flushPromises();
+
+        expect(wrapper.find('.vc-list-no-more').text()).toContain('nothing here');
+        expect(wrapper.find('.vc-list-no-more h3').exists()).toBe(true);
+        expect(wrapper.find('.vc-list-no-more button').exists()).toBe(false);
+    });
+
     it('a socket insert adjusts the total', async () => {
         let manager : EntityCollectionManager<Role> | undefined;
         const listeners : Record<string, SocketListener> = {};

@@ -75,6 +75,16 @@ describe('src/http/controllers/entities (query decode errors)', () => {
         expect((await revoke.json()).code).toEqual(ErrorCode.BAD_REQUEST);
     });
 
+    // Every schema declares `filters.arrays: []`, so an array operator on a
+    // scalar column is refused at decode time; undeclared, `size` reached
+    // adapter-sql, which cannot render it, and answered 500.
+    it('should answer 400 for an array operator on a scalar column', async () => {
+        const response = await httpRequest(suite, 'GET', "/roles?codec=url-expression&filter=size(name,'3')", { headers: { Authorization: basic } });
+
+        expect(response.status).toEqual(400);
+        expect((await response.json()).code).toEqual(ErrorCode.BAD_REQUEST);
+    });
+
     it('should keep serving a well-formed query', async () => {
         const response = await httpRequest(suite, 'GET', '/roles?page[limit]=10&sort=-createdAt', { headers: { Authorization: basic } });
 

@@ -71,7 +71,7 @@
         "@isaacs/ttlcache": "^2.1.5",
         "@node-rs/bcrypt": "^2.0.0",
         "@node-rs/jsonwebtoken": "^0.5.11",
-        "@rapiq/core": "^2.5.0",
+        "@rapiq/core": "^2.5.1",
         "@socket.io/redis-emitter": "^5.1.0",
         "redis-extension": "^3.0.0",
         "smob": "^1.6.2",

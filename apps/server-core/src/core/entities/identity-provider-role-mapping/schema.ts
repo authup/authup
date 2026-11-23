@@ -41,6 +41,7 @@ export const identityProviderRoleMappingSchema = defineSchema<IdentityProviderRo
         ],
     },
     filters: {
+        arrays: [],
         allowed: ['roleId', 'providerId', 'id', 'providerRealmId', 'roleRealmId', 'createdAt', 'updatedAt'],
         indexed: true,
         validate: createTimestampFiltersGate(),
