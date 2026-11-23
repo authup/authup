@@ -13,7 +13,7 @@ import {
     it,
     vi,
 } from 'vitest';
-import type { TokenCacheEntry } from 'vouchly';
+import type { TokenCacheEntry } from '@authup/server-adapter-kit';
 import { RedisTokenCache } from '../../src/index.ts';
 
 const entry : TokenCacheEntry = {

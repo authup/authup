@@ -36,6 +36,7 @@ graph TD
 
     subgraph Layer 5
         server-adapter-node
+        server-adapter-redis
         server-adapter-socket-io
         server-adapter-web
     end
@@ -109,6 +110,7 @@ graph TD
     %% Layer 5
     server-adapter-node --> errors
     server-adapter-node --> server-adapter-kit
+    server-adapter-redis --> server-adapter-kit
     server-adapter-socket-io --> errors
     server-adapter-socket-io --> server-adapter-kit
     server-adapter-web --> errors

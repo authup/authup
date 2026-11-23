@@ -126,6 +126,16 @@ reported `inactive_token`.
 **May need action:** recognize the outage with `isUpstreamError` from `@authup/errors` and
 answer 502 or 503 instead of 401.
 
+### `RedisTokenCache` moves to `@authup/server-adapter-redis`
+
+`@authup/server-adapter-kit` no longer exports `RedisTokenCache` and no longer declares `ioredis`
+as a peer dependency, so a resource server using only `MemoryTokenCache` does not install
+`ioredis`. The class lives in the new package `@authup/server-adapter-redis`, unchanged, with
+`ioredis` (`^6.0.0`) as its peer dependency.
+
+**Action required:** A resource server using `RedisTokenCache` installs
+`@authup/server-adapter-redis` and imports the class from there.
+
 ### The kit refreshes a token on a client of its own
 
 `install()` of `@authup/client-web-kit` accepts `httpClient` as one instance or as a function

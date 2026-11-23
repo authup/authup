@@ -7,7 +7,7 @@
 
 import type { Client } from 'redis-extension';
 import { ValueStore, createClient } from 'redis-extension';
-import type { ITokenCache, TokenCacheEntry } from 'vouchly';
+import type { ITokenCache, TokenCacheEntry } from '@authup/server-adapter-kit';
 
 /**
  * vouchly's token cache on redis. The key vouchly hands over is already a

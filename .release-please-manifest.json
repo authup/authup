@@ -22,6 +22,7 @@
     "packages/kit": "1.0.0-beta.76",
     "packages/server-adapter-kit": "1.0.0-beta.76",
     "packages/server-adapter-node": "1.0.0-beta.76",
+    "packages/server-adapter-redis": "1.0.0-beta.76",
     "packages/server-adapter-socket-io": "1.0.0-beta.76",
     "packages/server-adapter-web": "1.0.0-beta.76",
     "packages/server-config-kit": "1.0.0-beta.76",

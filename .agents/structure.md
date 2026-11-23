@@ -41,7 +41,8 @@ It follows hexagonal architecture principles, separating core business logic, ad
 | [i18n](../packages/i18n) | Library | Framework-agnostic translation catalogs (ilingo `CatalogNode`) and the locale registry. Rules below. |
 | [kit](../packages/kit) | Library | General, context-independent utilities. |
 | [specs](../packages/specs) | Library | Constants, interfaces and utils for external specifications (OAuth2, OIDC, JWK). |
-| [server-adapter-kit](../packages/server-adapter-kit) | Library | Authup layer over vouchly for resource servers: `TokenVerifier` (authup issuer matched on string `realm_id`, keys from the per-realm key endpoint, access-token `kind` gate, remote mode via `creator`, failures mapped onto `JWTError`) and `RedisTokenCache`. Must not inherit server-kit's native jsonwebtoken, winston or redis. |
+| [server-adapter-kit](../packages/server-adapter-kit) | Library | Authup layer over vouchly for resource servers: `TokenVerifier` (authup issuer matched on string `realm_id`, keys from the per-realm key endpoint, access-token `kind` gate, remote mode via `creator`, failures mapped onto `JWTError`, `UpstreamTimeoutError` or `UpstreamError`) and the vouchly cache contract. Must not inherit server-kit's native jsonwebtoken, winston or redis, and declares no `ioredis` (#3853). |
+| [server-adapter-redis](../packages/server-adapter-redis) | Library | `RedisTokenCache`, the Redis-backed `ITokenCache` of server-adapter-kit, over redis-extension. Its own package so that only a consumer of it installs `ioredis` (a peer, as redis-extension requires). |
 | [server-adapter-node](../packages/server-adapter-node) | Library | Node `IncomingMessage` middleware adapter for token verification. |
 | [server-adapter-socket-io](../packages/server-adapter-socket-io) | Library | socket.io middleware adapter for token verification. |
 | [server-adapter-web](../packages/server-adapter-web) | Library | Transport-neutral Web `Request` adapter for token verification. |
@@ -149,12 +150,13 @@ Layer 3:
   core-http-kit     → access, kit, core-kit, specs (errors devDep-only)
   i18n              → access, core-kit, errors (+ ilingo; validup optional peer for its
                       re-exposed `declare module`; access/core-kit key the identifier catalogs)
-  server-adapter-kit → kit, errors, specs, core-http-kit (+ vouchly, redis-extension;
+  server-adapter-kit → kit, errors, specs, core-http-kit (+ vouchly;
                       server-kit and jose devDep-only: adapters must not inherit server-kit's tail)
   server-test-kit   → access, core-kit, kit, server-kit, @rapiq/core (types re-exposed by the fakes)
 
 Layer 4:
   server-adapter-node      → server-adapter-kit
+  server-adapter-redis     → server-adapter-kit (+ redis-extension; ioredis peer)
   server-adapter-socket-io → server-adapter-kit (errors devDep-only)
   server-adapter-web       → server-adapter-kit (errors, core-http-kit, server-kit, specs devDep-only)
 

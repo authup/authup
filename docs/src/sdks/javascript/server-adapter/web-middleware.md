@@ -79,10 +79,12 @@ A `TokenVerifier` verifies every request anew unless you pass a `cache`. With on
 kept until the token expires and served without asking authup again, so it outlives a disabled
 signing key (local verification) or a revoked token (remote verification, with `creator`).
 `maxRemoteCacheTTL` bounds how long an introspection answer is kept. Pass a `MemoryTokenCache`
-for one process, or a `RedisTokenCache` to share results between processes:
+for one process, or a `RedisTokenCache` from `@authup/server-adapter-redis` to share results
+between processes:
 
 ```typescript
-import { RedisTokenCache, TokenVerifier } from '@authup/server-adapter-kit';
+import { TokenVerifier } from '@authup/server-adapter-kit';
+import { RedisTokenCache } from '@authup/server-adapter-redis';
 
 const tokenVerifier = new TokenVerifier({
     baseURL: 'http://localhost:3000/',
