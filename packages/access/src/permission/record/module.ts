@@ -56,7 +56,9 @@ function buildRecordData(name: string | string[], target: RecordTarget): PolicyD
         throw new Error(`The policy data for permission ${describeName(name)} must not carry ${BuiltInPolicyType.REALM_MATCH}.`);
     }
 
-    data.set(BuiltInPolicyType.REALM_MATCH, target.realm);
+    if (target.realm !== false) {
+        data.set(BuiltInPolicyType.REALM_MATCH, target.realm);
+    }
 
     return data;
 }

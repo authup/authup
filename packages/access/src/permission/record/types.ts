@@ -23,9 +23,11 @@ export type RecordTarget = {
      * It is distinct from `PermissionEvaluationContext.realmId`, which is the
      * realm the PERMISSION is bound to. Required: `undefined` throws, so a
      * caller cannot drop the realm by omission and neutral-pass every grant's
-     * `realm_scope`.
+     * `realm_scope`. `false` opts a resource that belongs to no realm out of
+     * realm matching: no grant's `realm_scope` is matched and the `data` is
+     * evaluated alone.
      */
-    realm: RecordRealm;
+    realm: RecordRealm | false;
     /**
      * The policy data the record is evaluated with: the row under
      * `attributes` (for attribute policies on the grant; never synthesized,
