@@ -630,6 +630,12 @@
                     "default": true,
                     "x-authup-env": "ADMIN_CONSOLE_ENABLED"
                 },
+                "cspEnabled": {
+                    "type": "boolean",
+                    "description": "Send a content security policy restricting the console shell to its own scripts plus the injected config script (by hash), and its requests and form posts to its own origin plus the API's. Off, only framing is denied. Never applied while theme.fragmentsEnabled is on, since a head fragment may carry scripts.",
+                    "default": true,
+                    "x-authup-env": "ADMIN_CONSOLE_CSP_ENABLED"
+                },
                 "path": {
                     "type": "string",
                     "description": "Package directory of a substituted @authup/client-admin-console, consulted before the node_modules resolution walk; an empty value resolves the package from node_modules.",
@@ -674,6 +680,12 @@
                     "description": "Serve the account self-service console at /console/account (profile, password, authenticators, sessions, applications). Operators with their own self-service portal can disable it.",
                     "default": true,
                     "x-authup-env": "ACCOUNT_CONSOLE_ENABLED"
+                },
+                "cspEnabled": {
+                    "type": "boolean",
+                    "description": "Send a content security policy restricting the console shell to its own scripts plus the injected config script (by hash), and its requests and form posts to its own origin plus the API's. Off, only framing is denied. Never applied while theme.fragmentsEnabled is on, since a head fragment may carry scripts.",
+                    "default": true,
+                    "x-authup-env": "ACCOUNT_CONSOLE_CSP_ENABLED"
                 },
                 "path": {
                     "type": "string",
