@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { User } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils/index.ts';
 import { BaseAPI } from '../../base.ts';
@@ -57,7 +57,7 @@ export class UserAPI extends BaseAPI implements IUserAPI {
         requestOptions?: APIRequestOptions,
     ): Promise<EntityRecordResponse<User>> {
         const response = await this.client
-            .get(`users/${id}${buildQueryString(options)}`, buildRequestConfig(requestOptions));
+            .get(`users/${encodePathSegment(id)}${buildQueryString(options)}`, buildRequestConfig(requestOptions));
 
         return response.data;
     }
@@ -67,7 +67,7 @@ export class UserAPI extends BaseAPI implements IUserAPI {
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<User>> {
         const response = await this.client
-            .delete(`users/${id}`, buildRequestConfig(options));
+            .delete(`users/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -87,7 +87,7 @@ export class UserAPI extends BaseAPI implements IUserAPI {
         data: UserUpdatePayload,
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<User>> {
-        const response = await this.client.post(`users/${id}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.post(`users/${encodePathSegment(id)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
@@ -97,7 +97,7 @@ export class UserAPI extends BaseAPI implements IUserAPI {
         data: UserSavePayload,
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<User>> {
-        const response = await this.client.put(`users/${idOrName}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.put(`users/${encodePathSegment(idOrName)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }

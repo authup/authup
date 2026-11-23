@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { UserPermission } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils/index.ts';
 import { BaseAPI } from '../../base.ts';
@@ -33,13 +33,13 @@ export class UserPermissionAPI extends BaseAPI implements IUserPermissionAPI {
     }
 
     async getOne(id: UserPermission['id'], record?: EntityQueryInput<UserPermission>, options?: APIRequestOptions) : Promise<EntityRecordResponse<UserPermission>> {
-        const response = await this.client.get(`user-permissions/${id}${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`user-permissions/${encodePathSegment(id)}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async delete(id: UserPermission['id'], options?: APIRequestOptions) : Promise<EntityRecordResponse<UserPermission>> {
-        const response = await this.client.delete(`user-permissions/${id}`, buildRequestConfig(options));
+        const response = await this.client.delete(`user-permissions/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -51,7 +51,7 @@ export class UserPermissionAPI extends BaseAPI implements IUserPermissionAPI {
     }
 
     async update(id: UserPermission['id'], data: UserPermissionUpdatePayload, options?: APIRequestOptions) : Promise<EntityRecordResponse<UserPermission>> {
-        const response = await this.client.post(`user-permissions/${id}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.post(`user-permissions/${encodePathSegment(id)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }

@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils/index.ts';
 import { BaseAPI } from '../../base.ts';
@@ -36,13 +36,13 @@ export class IdentityProviderRoleMappingAPI extends BaseAPI implements IIdentity
     }
 
     async getOne(id: IdentityProviderRoleMapping['id'], record?: EntityQueryInput<IdentityProviderRoleMapping>, options?: APIRequestOptions): Promise<EntityRecordResponse<IdentityProviderRoleMapping>> {
-        const response = await this.client.get(`identity-provider-role-mappings/${id}${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`identity-provider-role-mappings/${encodePathSegment(id)}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async delete(id: IdentityProviderRoleMapping['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<IdentityProviderRoleMapping>> {
-        const response = await this.client.delete(`identity-provider-role-mappings/${id}`, buildRequestConfig(options));
+        const response = await this.client.delete(`identity-provider-role-mappings/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -61,7 +61,7 @@ export class IdentityProviderRoleMappingAPI extends BaseAPI implements IIdentity
         data: IdentityProviderRoleMappingUpdatePayload,
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<IdentityProviderRoleMapping>> {
-        const response = await this.client.post(`identity-provider-role-mappings/${id}`, data, buildRequestConfig(options));
+        const response = await this.client.post(`identity-provider-role-mappings/${encodePathSegment(id)}`, data, buildRequestConfig(options));
 
         return response.data;
     }

@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { Event } from '@authup/core-kit';
 import { BaseAPI } from '../../base.ts';
 import { buildStatsURL } from '../../stats/index.ts';
@@ -35,7 +35,7 @@ export class EventAPI extends BaseAPI implements IEventAPI {
     }
 
     async getOne(id: Event['id'], record?: EntityQueryInput<Event>, options?: APIRequestOptions): Promise<EntityRecordResponse<Event>> {
-        const response = await this.client.get(`events/${id}${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`events/${encodePathSegment(id)}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }

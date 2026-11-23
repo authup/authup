@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { ClientRole } from '@authup/core-kit';
 import { BaseAPI } from '../../base.ts';
 import type { EntitySchemaResponse } from '../../stats/index.ts';
@@ -31,13 +31,13 @@ export class ClientRoleAPI extends BaseAPI implements IClientRoleAPI {
     }
 
     async getOne(id: ClientRole['id'], record?: EntityQueryInput<ClientRole>, options?: APIRequestOptions): Promise<EntityRecordResponse<ClientRole>> {
-        const response = await this.client.get(`client-roles/${id}${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`client-roles/${encodePathSegment(id)}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async delete(id: ClientRole['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<ClientRole>> {
-        const response = await this.client.delete(`client-roles/${id}`, buildRequestConfig(options));
+        const response = await this.client.delete(`client-roles/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }

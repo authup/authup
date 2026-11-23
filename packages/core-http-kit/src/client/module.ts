@@ -48,6 +48,7 @@ import {
 } from '../domains/index.ts';
 import type { APIRequestOptions, OAuth2APIOptions } from '../domains/index.ts';
 import { buildRequestConfig } from '../domains/utils.ts';
+import { encodePathSegment } from '../helpers/index.ts';
 import type { ClientOptions, IClient } from './type.ts';
 
 export class Client extends BaseClient implements IClient {
@@ -234,9 +235,9 @@ export class Client extends BaseClient implements IClient {
     }
 
     async getJwk(id: string, realmId?: string, options?: APIRequestOptions) : Promise<OAuth2JsonWebKey> {
-        const path = `jwks/${encodeURIComponent(id)}`;
+        const path = `jwks/${encodePathSegment(id)}`;
         const response = await this.get(
-            realmId ? `realms/${encodeURIComponent(realmId)}/${path}` : path,
+            realmId ? `realms/${encodePathSegment(realmId)}/${path}` : path,
             buildRequestConfig(options),
         );
 

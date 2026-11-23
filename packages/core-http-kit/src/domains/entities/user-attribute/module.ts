@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { UserAttribute } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils/index.ts';
 import { BaseAPI } from '../../base.ts';
@@ -33,13 +33,13 @@ export class UserAttributeAPI extends BaseAPI implements IUserAttributeAPI {
     }
 
     async getOne(roleId: UserAttribute['id'], record?: EntityQueryInput<UserAttribute>, options?: APIRequestOptions): Promise<EntityRecordResponse<UserAttribute>> {
-        const response = await this.client.get(`user-attributes/${roleId}${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`user-attributes/${encodePathSegment(roleId)}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async delete(roleId: UserAttribute['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<UserAttribute>> {
-        const response = await this.client.delete(`user-attributes/${roleId}`, buildRequestConfig(options));
+        const response = await this.client.delete(`user-attributes/${encodePathSegment(roleId)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -51,7 +51,7 @@ export class UserAttributeAPI extends BaseAPI implements IUserAttributeAPI {
     }
 
     async update(id: UserAttribute['id'], data: UserAttributeUpdatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<UserAttribute>> {
-        const response = await this.client.post(`user-attributes/${id}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.post(`user-attributes/${encodePathSegment(id)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }

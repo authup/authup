@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { Consent } from '@authup/core-kit';
 import { BaseAPI } from '../../base.ts';
 import type { EntitySchemaResponse } from '../../stats/index.ts';
@@ -28,13 +28,13 @@ export class ConsentAPI extends BaseAPI implements IConsentAPI {
     }
 
     async getOne(id: Consent['id'], record?: EntityQueryInput<Consent>, options?: APIRequestOptions): Promise<EntityRecordResponse<Consent>> {
-        const response = await this.client.get(`consents/${id}${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`consents/${encodePathSegment(id)}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async delete(id: Consent['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<Consent>> {
-        const response = await this.client.delete(`consents/${id}`, buildRequestConfig(options));
+        const response = await this.client.delete(`consents/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }

@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { ClientPermission } from '@authup/core-kit';
 import { BaseAPI } from '../../base.ts';
 import type { EntitySchemaResponse } from '../../stats/index.ts';
@@ -32,13 +32,13 @@ export class ClientPermissionAPI extends BaseAPI implements IClientPermissionAPI
     }
 
     async getOne(id: ClientPermission['id'], data?: EntityQueryInput<ClientPermission>, options?: APIRequestOptions) : Promise<EntityRecordResponse<ClientPermission>> {
-        const response = await this.client.get(`client-permissions/${id}${buildQueryString(data)}`, buildRequestConfig(options));
+        const response = await this.client.get(`client-permissions/${encodePathSegment(id)}${buildQueryString(data)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async delete(id: ClientPermission['id'], options?: APIRequestOptions) : Promise<EntityRecordResponse<ClientPermission>> {
-        const response = await this.client.delete(`client-permissions/${id}`, buildRequestConfig(options));
+        const response = await this.client.delete(`client-permissions/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -50,7 +50,7 @@ export class ClientPermissionAPI extends BaseAPI implements IClientPermissionAPI
     }
 
     async update(id: ClientPermission['id'], data: ClientPermissionUpdatePayload, options?: APIRequestOptions) : Promise<EntityRecordResponse<ClientPermission>> {
-        const response = await this.client.post(`client-permissions/${id}`, data, buildRequestConfig(options));
+        const response = await this.client.post(`client-permissions/${encodePathSegment(id)}`, data, buildRequestConfig(options));
 
         return response.data;
     }

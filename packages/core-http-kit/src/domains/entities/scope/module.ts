@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { Scope } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils/index.ts';
 import { BaseAPI } from '../../base.ts';
@@ -41,13 +41,13 @@ export class ScopeAPI extends BaseAPI implements IScopeAPI {
     }
 
     async getOne(id: Scope['id'], record?: EntityQueryInput<Scope>, options?: APIRequestOptions): Promise<EntityRecordResponse<Scope>> {
-        const response = await this.client.get(`scopes/${id}${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`scopes/${encodePathSegment(id)}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async delete(id: Scope['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<Scope>> {
-        const response = await this.client.delete(`scopes/${id}`, buildRequestConfig(options));
+        const response = await this.client.delete(`scopes/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -59,7 +59,7 @@ export class ScopeAPI extends BaseAPI implements IScopeAPI {
     }
 
     async update(id: Scope['id'], data: ScopeUpdatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<Scope>> {
-        const response = await this.client.post(`scopes/${id}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.post(`scopes/${encodePathSegment(id)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
@@ -69,7 +69,7 @@ export class ScopeAPI extends BaseAPI implements IScopeAPI {
         data: ScopeSavePayload,
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<Scope>> {
-        const response = await this.client.put(`scopes/${idOrName}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.put(`scopes/${encodePathSegment(idOrName)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }

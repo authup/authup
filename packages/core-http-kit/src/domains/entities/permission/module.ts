@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { Permission } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils/index.ts';
 import { BaseAPI } from '../../base.ts';
@@ -42,13 +42,13 @@ export class PermissionAPI extends BaseAPI implements IPermissionAPI {
     }
 
     async delete(id: Permission['id'], options?: APIRequestOptions): Promise<EntityRecordResponse<Permission>> {
-        const response = await this.client.delete(`permissions/${id}`, buildRequestConfig(options));
+        const response = await this.client.delete(`permissions/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async getOne(id: Permission['id'], record?: EntityQueryInput<Permission>, options?: APIRequestOptions): Promise<EntityRecordResponse<Permission>> {
-        const response = await this.client.get(`permissions/${id}${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`permissions/${encodePathSegment(id)}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -60,7 +60,7 @@ export class PermissionAPI extends BaseAPI implements IPermissionAPI {
     }
 
     async update(id: Permission['id'], data: PermissionUpdatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<Permission>> {
-        const response = await this.client.post(`permissions/${id}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.post(`permissions/${encodePathSegment(id)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
@@ -70,7 +70,7 @@ export class PermissionAPI extends BaseAPI implements IPermissionAPI {
         data: PermissionSavePayload,
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<Permission>> {
-        const response = await this.client.put(`permissions/${idOrName}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.put(`permissions/${encodePathSegment(idOrName)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
@@ -81,7 +81,7 @@ export class PermissionAPI extends BaseAPI implements IPermissionAPI {
         options?: APIRequestOptions,
     ) : Promise<PermissionAPICheckResponse> {
         const response = await this.client.post(
-            `permissions/${idOrName}/check`,
+            `permissions/${encodePathSegment(idOrName)}/check`,
             nullifyEmptyObjectProperties(data),
             buildRequestConfig(options),
         );

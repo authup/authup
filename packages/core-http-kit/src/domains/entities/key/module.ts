@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { Key } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils/index.ts';
 import { BaseAPI } from '../../base.ts';
@@ -41,7 +41,7 @@ export class KeyAPI extends BaseAPI implements IKeyAPI {
     }
 
     async getOne(id: Key['id'], record?: EntityQueryInput<Key>, options?: APIRequestOptions): Promise<EntityRecordResponse<Key>> {
-        const response = await this.client.get(`keys/${id}${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`keys/${encodePathSegment(id)}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -53,13 +53,13 @@ export class KeyAPI extends BaseAPI implements IKeyAPI {
     }
 
     async update(id: Key['id'], data: KeyUpdatePayload, options?: APIRequestOptions): Promise<EntityRecordResponse<Key>> {
-        const response = await this.client.post(`keys/${id}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.post(`keys/${encodePathSegment(id)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
 
     async delete(id: Key['id'], options?: KeyDeleteOptions): Promise<EntityRecordResponse<Key>> {
-        const response = await this.client.delete(`keys/${id}${options && options.force ? '?force=true' : ''}`, buildRequestConfig(options));
+        const response = await this.client.delete(`keys/${encodePathSegment(id)}${options && options.force ? '?force=true' : ''}`, buildRequestConfig(options));
 
         return response.data;
     }

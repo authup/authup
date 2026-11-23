@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { Client } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils/index.ts';
 import { BaseAPI } from '../../base.ts';
@@ -52,7 +52,7 @@ export class ClientAPI extends BaseAPI implements IClientAPI {
         requestOptions?: APIRequestOptions,
     ): Promise<EntityRecordResponse<Client>> {
         const response = await this.client
-            .get(`clients/${id}${buildQueryString(options)}`, buildRequestConfig(requestOptions));
+            .get(`clients/${encodePathSegment(id)}${buildQueryString(options)}`, buildRequestConfig(requestOptions));
 
         return response.data;
     }
@@ -62,7 +62,7 @@ export class ClientAPI extends BaseAPI implements IClientAPI {
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<Client>> {
         const response = await this.client
-            .delete(`clients/${id}`, buildRequestConfig(options));
+            .delete(`clients/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -82,7 +82,7 @@ export class ClientAPI extends BaseAPI implements IClientAPI {
         data: ClientUpdatePayload,
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<Client>> {
-        const response = await this.client.post(`clients/${id}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.post(`clients/${encodePathSegment(id)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
@@ -92,7 +92,7 @@ export class ClientAPI extends BaseAPI implements IClientAPI {
         data: ClientSavePayload,
         options?: APIRequestOptions,
     ): Promise<EntityRecordResponse<Client>> {
-        const response = await this.client.put(`clients/${idOrName}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
+        const response = await this.client.put(`clients/${encodePathSegment(idOrName)}`, nullifyEmptyObjectProperties(data), buildRequestConfig(options));
 
         return response.data;
     }
@@ -102,7 +102,7 @@ export class ClientAPI extends BaseAPI implements IClientAPI {
         data: ClientSecretRotatePayload = {},
         options?: APIRequestOptions,
     ): Promise<ClientSecretRotateResponse> {
-        const response = await this.client.post(`clients/${id}/secret`, data, buildRequestConfig(options));
+        const response = await this.client.post(`clients/${encodePathSegment(id)}/secret`, data, buildRequestConfig(options));
 
         return response.data;
     }

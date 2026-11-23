@@ -6,7 +6,7 @@
  */
 
 import type { EntityQueryInput } from '../../../helpers/index.ts';
-import { buildQueryString } from '../../../helpers/index.ts';
+import { buildQueryString, encodePathSegment } from '../../../helpers/index.ts';
 import type { RolePermission } from '@authup/core-kit';
 import { BaseAPI } from '../../base.ts';
 import type { EntitySchemaResponse } from '../../stats/index.ts';
@@ -32,13 +32,13 @@ export class RolePermissionAPI extends BaseAPI implements IRolePermissionAPI {
     }
 
     async getOne(id: RolePermission['id'], record?: EntityQueryInput<RolePermission>, options?: APIRequestOptions) : Promise<EntityRecordResponse<RolePermission>> {
-        const response = await this.client.get(`role-permissions/${id}${buildQueryString(record)}`, buildRequestConfig(options));
+        const response = await this.client.get(`role-permissions/${encodePathSegment(id)}${buildQueryString(record)}`, buildRequestConfig(options));
 
         return response.data;
     }
 
     async delete(id: RolePermission['id'], options?: APIRequestOptions) : Promise<EntityRecordResponse<RolePermission>> {
-        const response = await this.client.delete(`role-permissions/${id}`, buildRequestConfig(options));
+        const response = await this.client.delete(`role-permissions/${encodePathSegment(id)}`, buildRequestConfig(options));
 
         return response.data;
     }
@@ -50,7 +50,7 @@ export class RolePermissionAPI extends BaseAPI implements IRolePermissionAPI {
     }
 
     async update(id: RolePermission['id'], data: RolePermissionUpdatePayload, options?: APIRequestOptions) : Promise<EntityRecordResponse<RolePermission>> {
-        const response = await this.client.post(`role-permissions/${id}`, data, buildRequestConfig(options));
+        const response = await this.client.post(`role-permissions/${encodePathSegment(id)}`, data, buildRequestConfig(options));
 
         return response.data;
     }
