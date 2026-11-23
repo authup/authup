@@ -206,7 +206,10 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             realmScope,
             ...(policies ? { policies } : {}),
         });
-        const ownedBy = (realmId: string) : PermissionPolicyBinding[] => [
+        const ownedBy = (
+            realmId: string,
+            clientOwnedReach: `${RealmScope}` = RealmScope.ANY,
+        ) : PermissionPolicyBinding[] => [
             {
                 permission: {
                     name: 'p1', 
@@ -220,7 +223,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                     realmId, 
                     clientId: 'client-1', 
                 },
-                realmScope: RealmScope.ANY,
+                realmScope: clientOwnedReach,
             },
         ];
 
@@ -236,10 +239,19 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
         it('lets an actor managing its own realm assign a role over that realm\'s permissions', async () => {
             const provider = createProvider({
                 parent: [manager(RealmScope.OWN)],
-                child: ownedBy(realmA),
+                child: ownedBy(realmA, RealmScope.OWN),
             });
 
             await expect(isRoleSuperset(provider, realmA)).resolves.toBe(true);
+        });
+
+        it('refuses an actor managing its own realm a role granting wider reach than its own', async () => {
+            const provider = createProvider({
+                parent: [manager(RealmScope.OWN)],
+                child: ownedBy(realmA, RealmScope.ANY),
+            });
+
+            await expect(isRoleSuperset(provider, realmA)).resolves.toBe(false);
         });
 
         it('refuses an actor managing its own realm a role over another realm\'s permissions', async () => {

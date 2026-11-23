@@ -401,7 +401,7 @@ Disjunction- and policy-aware (#3158): every child grant must be dominated by so
 grant. Exception (#3855): a child grant on a realm- or client-owned permission is covered
 when the actor holds the global `permission_update` policy-free at a reach covering that
 permission's realm (`realmScopeMatches` against the actor realm the caller passes as
-`isSuperset`'s third argument). Holding it, the actor defines that permission (its policies,
+`isSuperset`'s third argument) and at least as wide as each of the role's grants of it. Holding it, the actor defines that permission (its policies,
 so who passes it); without the exception a provisioned realm permission, which no admin role
 holds, could not be delegated at all. Global permissions keep strict dominance.
 

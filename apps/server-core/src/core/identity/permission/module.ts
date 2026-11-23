@@ -70,11 +70,16 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             .map((grant) => grant.realmScope);
 
         for (const childItem of childAggregated) {
+            // Every grant of the role must also stay within the manager's reach, so an
+            // `own` manager cannot hand out a realm permission at `any` reach.
             const owned = !!childItem.permission.realmId || !!childItem.permission.clientId;
-            const managed = owned && managerReach.some((realmScope) => realmScopeMatches(
-                realmScope,
-                childItem.permission.realmId ?? null,
-                actor.realmId,
+            const managed = owned && childItem.grants.every((childGrant) => managerReach.some(
+                (realmScope) => compareRealmScope(realmScope, childGrant.realmScope) >= 0 &&
+                    realmScopeMatches(
+                        realmScope,
+                        childItem.permission.realmId ?? null,
+                        actor.realmId,
+                    ),
             ));
 
             if (managed) {
