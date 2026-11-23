@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, SystemPolicyName } from '@authup/access';
-import type { ClientPermission, Policy } from '@authup/core-kit';
+import type { Policy } from '@authup/core-kit';
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import { APermissionPolicyBindingButton } from '../../../../../src/components/entities/permission-policy-binding/index.ts';
@@ -135,10 +135,9 @@ describe('APermissionPolicyBindingButton', () => {
             buildPolicy({ id: '2', name: 'reports' }),
         ];
 
-        const entity : Partial<ClientPermission> = { clientId: 'client-1', permissionId: 'permission-1' };
         const { wrapper } = mountKitComponent(APermissionPolicyBindingButton, {
             entityType: 'clientPermission',
-            entity,
+            entity: { clientId: 'client-1', permissionId: 'permission-1' },
         }, {
             'GET /policies': () => ({
                 data: policies,

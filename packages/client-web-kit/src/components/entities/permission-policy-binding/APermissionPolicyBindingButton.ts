@@ -7,10 +7,12 @@
 
 import { pickEntityAPI } from '@authup/core-http-kit';
 import type {
+    ClientPermission,
     EntityTypeMap,
-    PermissionRelation,
     Policy,
     RealmScopeValue,
+    RolePermission,
+    UserPermission,
 } from '@authup/core-kit';
 import { EntityType, REALM_SCOPE } from '@authup/core-kit';
 import { defineQuery } from '@rapiq/core';
@@ -44,7 +46,8 @@ import { APolicies } from '../policy/APolicies.ts';
 import APolicyInlineInfo from '../policy/APolicyInlineInfo.vue';
 import APolicySummary from '../policy/APolicySummary.vue';
 
-type PermissionBindingEntity = PermissionRelation & { id: string };
+// A binding junction: the template of a new one carries its owner FK.
+type PermissionBindingEntity = ClientPermission | RolePermission | UserPermission;
 
 export const APermissionPolicyBindingButton = defineComponent({
     props: {
