@@ -53,7 +53,7 @@ export class ClientMatchPolicyEvaluator implements IPolicyEvaluator {
         }
 
         const field = ctx.clientAttributeName;
-        const clientId = identity.clientId ?? null;
+        const clientId = identity.type === 'client' ? identity.clientId ?? null : null;
         const condition = clientId === null ?
             inArray(field, []) :
             eq(field, clientId);
@@ -111,7 +111,7 @@ export class ClientMatchPolicyEvaluator implements IPolicyEvaluator {
         }
 
         const owner = ctx.data.get<string | null>(BuiltInPolicyType.CLIENT_MATCH) ?? null;
-        const clientId = identity.clientId ?? null;
+        const clientId = identity.type === 'client' ? identity.clientId ?? null : null;
 
         return {
             success: maybeInvertPolicyOutcome(

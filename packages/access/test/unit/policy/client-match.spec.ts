@@ -87,6 +87,23 @@ describe('src/policy/client-match', () => {
         expect(outcome.success).toBe(false);
     });
 
+    it('fails for a user identity carrying the owner as its client', async () => {
+        const identity = { ...userIdentity, clientId: C1 };
+        const outcome = await run({}, {
+            [BuiltInPolicyType.IDENTITY]: identity,
+            [BuiltInPolicyType.CLIENT_MATCH]: C1,
+        });
+
+        expect(outcome.success).toBe(false);
+
+        const lowered = await run({}, { [BuiltInPolicyType.IDENTITY]: identity }, {
+            withConditions: true,
+            clientAttributeName: 'clientId',
+        });
+
+        expect(lowered.condition).toEqual(inArray('clientId', []));
+    });
+
     it('applies invert to a present owner', async () => {
         const foreign = await run({ invert: true }, {
             [BuiltInPolicyType.IDENTITY]: clientIdentity,
