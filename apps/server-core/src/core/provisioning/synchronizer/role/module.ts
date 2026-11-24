@@ -153,37 +153,33 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             await this.permissionResolver.resolveRealm(relations.realmPermissions, attributes.realmId) :
             [];
 
-        const permissions = [
-            ...globalPermissions,
-            ...realmPermissions,
-        ];
+        const defaultScope = relations.globalPermissionsRealmScope;
+        const overrides = this.buildRealmScopeOverrides(input);
 
-        if (permissions.length > 0) {
-            const defaultScope = relations.globalPermissionsRealmScope;
+        const bind = async (permissions: Permission[], bindPolicy: boolean) => {
+            for (const permission of permissions) {
+                const extra: Record<string, unknown> = {};
 
-            if (defaultScope) {
-                const overrides = this.buildRealmScopeOverrides(input);
-
-                for (const permission of permissions) {
-                    const realmScope = overrides.get(permission.name) ?? defaultScope;
-
-                    await this.permissionJunction.synchronize(
-                        attributes,
-                        [permission],
-                        'permissionId',
-                        'permissionRealmId',
-                        { realmScope, ...(policyId ? { policyId } : {}) },
-                    );
+                if (defaultScope) {
+                    extra.realmScope = overrides.get(permission.name) ?? defaultScope;
                 }
-            } else {
+
+                if (bindPolicy && policyId) {
+                    extra.policyId = policyId;
+                }
+
                 await this.permissionJunction.synchronize(
                     attributes,
-                    permissions,
+                    [permission],
                     'permissionId',
                     'permissionRealmId',
+                    extra,
                 );
             }
-        }
+        };
+
+        await bind(globalPermissions, true);
+        await bind(realmPermissions, false);
 
         // Permissions owned by any client of the role's realm, bound at the
         // junction's default reach.

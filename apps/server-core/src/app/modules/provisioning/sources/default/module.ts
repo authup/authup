@@ -75,10 +75,6 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     },
                 ],
             },
-            // Self-manage policies use ATTRIBUTE_NAMES + invert: true (denylist).
-            // Each `names` entry is what self-edit must REJECT; everything else
-            // is permitted. New columns added to the entity are self-editable
-            // by default — extend the denylist when adding admin-only state.
             {
                 attributes: {
                     name: SystemPolicyName.CLIENT_OWNED,
@@ -87,6 +83,10 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     realmId: null,
                 },
             },
+            // Self-manage policies use ATTRIBUTE_NAMES + invert: true (denylist).
+            // Each `names` entry is what self-edit must REJECT; everything else
+            // is permitted. New columns added to the entity are self-editable
+            // by default — extend the denylist when adding admin-only state.
             {
                 attributes: {
                     name: SystemPolicyName.CLIENT_NAMES_SELF_MANAGE,

@@ -138,4 +138,20 @@ describe('core/provisioning/synchronizer/role', () => {
             },
         } as RoleProvisioningEntity)).rejects.toThrow(/missing/);
     });
+
+    it('should stamp the named policy when no reach is declared', async () => {
+        const policy = policyRepository.seed({ name: 'p', realmId: null });
+
+        await synchronizer.synchronize({
+            attributes: { name: 'ops', realmId },
+            relations: {
+                globalPermissions: ['*'],
+                globalPermissionsPolicy: 'p',
+            },
+        } as RoleProvisioningEntity);
+
+        expect(rolePermissionRepository.getAll()).toEqual([
+            expect.objectContaining({ policyId: policy.id }),
+        ]);
+    });
 });
