@@ -5,30 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IEntityRepository } from '@authup/server-kit';
-
-type OwnedDefinition = {
-    id: string,
-    clientId?: string | null,
-};
-
-/**
- * The definition (permission or role) a junction row binds, whose owning
- * client is the owner of the junction's record checks.
- */
-export type JunctionDefinition = {
-    /**
-     * The junction column holding the definition id (`roleId`).
-     */
-    key: string,
-    /**
-     * The junction relation holding the definition (`role`).
-     */
-    relation: string,
-    repository: Pick<IEntityRepository<OwnedDefinition>, 'findManyBy'>,
-};
-
-export type JunctionOwners = Map<string, string | null>;
+import type { JunctionDefinition, JunctionOwners } from './types.ts';
 
 function readLoadedOwner(row: Record<string, any>, definition: JunctionDefinition): string | null | undefined {
     const loaded = row[definition.relation];

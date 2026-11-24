@@ -22,8 +22,8 @@ import type { IIdentityPermissionProvider } from '../../identity/permission/type
 import { applyJunctionCreateGrant, buildJunctionUpdateData } from '../../identity/permission/junction-grant.ts';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
-import { loadJunctionOwners, readJunctionOwner } from '../junction-owner.ts';
-import type { JunctionDefinition, JunctionOwners } from '../junction-owner.ts';
+import { loadJunctionOwners, readJunctionOwner } from '../junction-owner/index.ts';
+import type { JunctionDefinition, JunctionOwners } from '../junction-owner/index.ts';
 import type { IClientPermissionRepository, IClientPermissionService } from './types.ts';
 import {
     decodeQuery,

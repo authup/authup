@@ -19,8 +19,8 @@ import { PermissionName, PermissionPolicyValidator } from '@authup/core-kit';
 import type { Permission, PermissionPolicy } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
-import { loadJunctionOwners, readJunctionOwner } from '../junction-owner.ts';
-import type { JunctionDefinition, JunctionOwners } from '../junction-owner.ts';
+import { loadJunctionOwners, readJunctionOwner } from '../junction-owner/index.ts';
+import type { JunctionDefinition, JunctionOwners } from '../junction-owner/index.ts';
 import type { IPermissionPolicyRepository, IPermissionPolicyService } from './types.ts';
 import {
     decodeQuery,

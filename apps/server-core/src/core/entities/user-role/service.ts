@@ -20,8 +20,8 @@ import { PermissionName, UserRoleValidator } from '@authup/core-kit';
 import type { Role, UserRole } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
-import { loadJunctionOwners, readJunctionOwner } from '../junction-owner.ts';
-import type { JunctionDefinition, JunctionOwners } from '../junction-owner.ts';
+import { loadJunctionOwners, readJunctionOwner } from '../junction-owner/index.ts';
+import type { JunctionDefinition, JunctionOwners } from '../junction-owner/index.ts';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { IUserRoleRepository, IUserRoleService } from './types.ts';
 import {
