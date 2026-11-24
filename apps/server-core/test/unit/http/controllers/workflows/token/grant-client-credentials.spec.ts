@@ -11,10 +11,14 @@ import {
     expect,
     it,
 } from 'vitest';
-import type { Client } from '@authup/core-kit';
+import type { Client, Realm } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
-import { createFakeClient, expectClientError } from '../../../../../utils/index.ts';
+import { createFakeClient, createFakeRealm, expectClientError } from '../../../../../utils/index.ts';
 import { createTestApplication } from '../../../../../app/index.ts';
+
+function decodePayload(token: string) : Record<string, any> {
+    return JSON.parse(new TextDecoder().decode(Uint8Array.fromBase64(token.split('.')[1], { alphabet: 'base64url' })));
+}
 
 describe('refresh-token', () => {
     const suite = createTestApplication();
@@ -76,5 +80,71 @@ describe('refresh-token', () => {
             }),
             { status: 401, code: ErrorCode.OAUTH_CLIENT_INVALID },
         );
+    });
+
+    describe('a client named in several realms', () => {
+        let realmA : Realm;
+        let realmB : Realm;
+        let clientA : Client;
+        let clientB : Client;
+
+        beforeAll(async () => {
+            realmA = (await suite.client.realm.create(createFakeRealm())).data;
+            realmB = (await suite.client.realm.create(createFakeRealm())).data;
+
+            const { name } = createFakeClient();
+            const create = async (realm: Realm) => (await suite.client.client.create({
+                ...createFakeClient({ name, realmId: realm.id }),
+                active: true,
+                secretHashed: false,
+                secretEncrypted: false,
+            })).data;
+
+            clientA = await create(realmA);
+            clientB = await create(realmB);
+        });
+
+        it('should resolve the name in the realm given by realm_name', async () => {
+            for (const [realm, client] of [[realmA, clientA], [realmB, clientB]] as const) {
+                const response = await suite.client.token.createWithClientCredentials({
+                    client_id: client.name,
+                    client_secret: client.secret!,
+                    realm_name: realm.name,
+                });
+
+                const payload = decodePayload(response.access_token);
+
+                expect(payload.realm_id).toEqual(realm.id);
+                expect(payload.sub).toEqual(client.id);
+            }
+        });
+
+        it('should resolve the name in the realm given by realm_id', async () => {
+            for (const [realm, client] of [[realmA, clientA], [realmB, clientB]] as const) {
+                const response = await suite.client.token.createWithClientCredentials({
+                    client_id: client.name,
+                    client_secret: client.secret!,
+                    realm_id: realm.id,
+                });
+
+                const payload = decodePayload(response.access_token);
+
+                expect(payload.realm_id).toEqual(realm.id);
+                expect(payload.sub).toEqual(client.id);
+            }
+        });
+
+        it('should not grant with the secret of the same-named client in another realm', async () => {
+            for (const [realm, client] of [[realmA, clientB], [realmB, clientA]] as const) {
+                await expectClientError(
+                    () => suite.client.token.createWithClientCredentials({
+                        client_id: client.name,
+                        client_secret: client.secret!,
+                        realm_name: realm.name,
+                    }),
+                    { status: 401, code: ErrorCode.OAUTH_CLIENT_INVALID },
+                );
+            }
+        });
     });
 });

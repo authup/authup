@@ -42,7 +42,7 @@ back to a secret.
 
 ### Token endpoint realm resolution
 
-- `password`, `authorization_code` and `refresh_token` share `readRealmHint`
+- `password`, `authorization_code`, `refresh_token` and `client_credentials` share `readRealmHint`
   (`adapters/http/adapters/oauth2/grant-types/utils/realm.ts`): `realm_id ??
   realm_name` (UUID or name), body wins over query, canonicalized at ingress
   since no validator runs on the token body.
@@ -55,7 +55,9 @@ back to a secret.
   console cookie stays denied there. Discovery advertises the flat `/token`.
 - Absent or unknown hint resolves to the master realm
   (`IRealmRepository.resolve(hint, true)`); a missing master row is an
-  `InternalError`. A bare refresh does no realm lookup.
+  `InternalError`. A bare refresh does no realm lookup. `client_credentials`
+  has no master fallback: without a hint a client name is looked up in every
+  realm, and a hint naming no realm matches nothing (`invalid_client`).
 - The realm scopes NAME resolution only: on `password` the user leg (incl. the
   LDAP `findByProtocol`) and the client leg; on code/refresh the client leg.
   Every realm carries same-named system clients, so an unscoped name lookup
