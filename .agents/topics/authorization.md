@@ -546,12 +546,15 @@ Defaults (declared in `app/modules/provisioning/sources/default/module.ts`):
     `preEvaluate`; an uninverted `any` still passes): passed there, an inverted ancestor settles a deny
     the row's realm overturns. A binding node keeps such a reach unknown on both sides.
   - clientMatch (#3907) -> `[IDENTITY]`: passes when the record owner's
-    `clientId`, under the `clientMatch` data key, equals the actor's `identity.clientId ?? null`.
+    `clientId`, under the `clientMatch` data key, is non-null and equals the acting client's id
+    (a global row never matches).
     Every gated site supplies the key (`RecordTarget.owner`, `EntityUpdateEvaluationResolvers.owner`:
     a permission or role row's own `clientId`, a junction's definition owner, for role-permission
     the ROLE). Absent in a settled evaluation it is unevaluable and fails, never inverted;
-    in a preliminary one it pends. Meant for clients: on a user it matches only a row owned by
-    the user's token client. Backs the built-in `system.client_owned` policy.
+    in a preliminary one it pends. Never matches a user. Backs the built-in `system.client_owned`
+    policy. A grant carrying it is delegable like any held grant and keeps the policy, which
+    then reads the new holder's definitions: a `client_admin` client can make another client
+    admin of its own definitions, and revoking the first does not revoke the copy.
 - Composites treat pending children as unknown and settle only when no resolution could
   change the outcome. **`invert` is never applied to a pending result.**
 - **The third outcome is `unevaluable` (#3817)**, on `success: false`, never with `pending`
