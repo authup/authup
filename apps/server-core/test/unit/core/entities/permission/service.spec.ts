@@ -17,6 +17,7 @@ import {
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import {
     BuiltInPolicyType,
@@ -25,7 +26,10 @@ import {
     SystemPolicyName,
 } from '@authup/access';
 import { ErrorCode } from '@authup/errors';
+import { applyQuery } from '@rapiq/adapter-memory';
+import { permissionSchema } from '../../../../../src/core/entities/permission/schema.ts';
 import { PermissionService } from '../../../../../src/core/entities/permission/service.ts';
+import { decodeQuery } from '../../../../../src/core/query/index.ts';
 import {
     FakeEntityRepository,
     createAllowAllActor,
@@ -35,7 +39,7 @@ import {
 } from '@authup/server-test-kit';
 import { FakePolicyRepository } from '../policy/fake-repository.ts';
 import { FakeRealmRepository } from '../realm/fake-repository.ts';
-import { readEvaluatedRecordRealms } from '../../helpers/index.ts';
+import { createClientMatchActor, readEvaluatedRecordRealms } from '../../helpers/index.ts';
 import { FakeRoleRepository } from '../role/fake-repository.ts';
 import { FakePermissionRepository } from './fake-repository.ts';
 import { createFakePermission } from '../../../../utils/domains/index.ts';
@@ -629,6 +633,170 @@ describe('core/entities/permission/service', () => {
 
             await expect(service.save('name-owned', { clientId: randomUUID() }, createDenyAllActor())).rejects.toThrow();
             expect(lookups).toBe(0);
+        });
+    });
+    describe('owning client (clientMatch)', () => {
+        const realmId = randomUUID();
+        const otherRealmId = randomUUID();
+        const clientId = randomUUID();
+        const otherClientId = randomUUID();
+        const otherRealmClientId = randomUUID();
+
+        const names = [
+            PermissionName.PERMISSION_CREATE,
+            PermissionName.PERMISSION_READ,
+            PermissionName.PERMISSION_UPDATE,
+            PermissionName.PERMISSION_DELETE,
+        ];
+
+        const clientRealms: Record<string, string> = {
+            [clientId]: realmId,
+            [otherClientId]: realmId,
+            [otherRealmClientId]: otherRealmId,
+        };
+
+        let owned: Permission;
+        let foreign: Permission;
+        let global: Permission;
+        let otherRealm: Permission;
+
+        beforeEach(() => {
+            repository.onValidateJoinColumns((input) => {
+                if (typeof input.clientId === 'string' && clientRealms[input.clientId]) {
+                    input.client = { id: input.clientId, realmId: clientRealms[input.clientId] } as Permission['client'];
+                }
+            });
+
+            vi.spyOn(repository, 'findMany').mockImplementation(async (query) => {
+                const { data } = applyQuery(query, repository.getAll());
+
+                return {
+                    data,
+                    meta: {
+                        total: data.length,
+                        offset: 0,
+                        limit: 50,
+                    },
+                };
+            });
+
+            [owned, foreign, global, otherRealm] = repository.seed([
+                createFakePermission({ realmId, clientId }),
+                createFakePermission({ realmId, clientId: otherClientId }),
+                createFakePermission({ realmId: null, clientId: null }),
+                createFakePermission({ realmId: otherRealmId, clientId: otherRealmClientId }),
+            ]);
+        });
+
+        const createActor = (unrestricted?: boolean) => createClientMatchActor({
+            clientId,
+            realmId,
+            names,
+            unrestricted,
+        });
+
+        it('should create a permission the actor owns', async () => {
+            const entity = await service.create({ name: 'owned-create', clientId }, await createActor());
+
+            expect(entity.clientId).toEqual(clientId);
+            expect(entity.realmId).toEqual(realmId);
+        });
+
+        it('should refuse a permission another client owns', async () => {
+            await expect(service.create({ name: 'foreign-create', clientId: otherClientId }, await createActor()))
+                .rejects.toThrow(PermissionError);
+        });
+
+        it('should refuse a permission no client owns', async () => {
+            await expect(service.create({ name: 'unowned-create', realmId }, await createActor()))
+                .rejects.toThrow(PermissionError);
+        });
+
+        it('should update an owned permission', async () => {
+            const entity = await service.update(owned.id, { description: 'changed by owner' }, await createActor());
+
+            expect(entity.description).toEqual('changed by owner');
+        });
+
+        it('should refuse to update a foreign or global permission', async () => {
+            const actor = await createActor();
+
+            await expect(service.update(foreign.id, { description: 'changed by stranger' }, actor))
+                .rejects.toThrow(PermissionError);
+            await expect(service.update(global.id, { description: 'changed by stranger' }, actor))
+                .rejects.toThrow(PermissionError);
+        });
+
+        it('should not move the ownership on update', async () => {
+            const entity = await service.update(owned.id, { clientId: otherClientId }, await createActor());
+
+            expect(entity.clientId).toEqual(clientId);
+
+            expect((await repository.findOneById(owned.id))!.clientId).toEqual(clientId);
+        });
+
+        it('should delete an owned permission', async () => {
+            await service.delete(owned.id, await createActor());
+
+            expect(await repository.findOneById(owned.id)).toBeNull();
+        });
+
+        it('should refuse to delete a foreign or global permission', async () => {
+            const actor = await createActor();
+
+            await expect(service.delete(foreign.id, actor)).rejects.toThrow(PermissionError);
+            await expect(service.delete(global.id, actor)).rejects.toThrow(PermissionError);
+        });
+
+        it('should list only owned permissions', async () => {
+            const actor = await createActor();
+            const scope = await service.scopeRead(await decodeQuery({}, { schema: permissionSchema, actor }), actor);
+
+            expect(scope.post).toBe(false);
+
+            const result = await service.getMany({}, actor);
+
+            expect(result.data.map((row) => row.id)).toEqual([owned.id]);
+        });
+
+        it('should list only owned permissions under a projection', async () => {
+            const result = await service.getMany({ fields: 'name' }, await createActor());
+
+            expect(result.data.map((row) => row.name)).toEqual([owned.name]);
+        });
+
+        it('should list every reached permission for an unrestricted grant', async () => {
+            const result = await service.getMany({}, await createActor(true));
+
+            expect(result.data.map((row) => row.id).sort()).toEqual([owned.id, foreign.id].sort());
+            expect(result.data.map((row) => row.id)).not.toContain(otherRealm.id);
+        });
+
+        it('should read an owned permission only', async () => {
+            const actor = await createActor();
+
+            expect((await service.getOne(owned.id, actor)).id).toEqual(owned.id);
+            await expect(service.getOne(foreign.id, actor)).rejects.toThrow(PermissionError);
+        });
+
+        it('should carry the owner on every record check', async () => {
+            const actor = createAllowAllActor();
+
+            await service.getMany({}, actor);
+            await service.getOne(foreign.id, actor);
+            await service.create({ name: 'owner-carried', clientId }, actor);
+            await service.update(foreign.id, { description: 'changed by admin' }, actor);
+            await service.delete(foreign.id, actor);
+
+            const owners = [
+                ...actor.permissionEvaluator.evaluateOneOfCalls,
+                ...actor.permissionEvaluator.evaluateCalls,
+            ].map((call) => call.data!.get(BuiltInPolicyType.CLIENT_MATCH));
+
+            expect(owners).not.toContain(undefined);
+            expect(owners).toContain(clientId);
+            expect(owners).toContain(null);
+            expect(actor.permissionEvaluator.compileCalls[0]!.clientAttributeName).toEqual('clientId');
         });
     });
 });
