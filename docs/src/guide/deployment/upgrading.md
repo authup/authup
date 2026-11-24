@@ -5,7 +5,11 @@ Entries are grouped by release, newest first. Routine changes (features, fixes) 
 [changelog](https://github.com/authup/authup/blob/master/CHANGELOG.md); anything listed here
 either requires operator action or deliberately changes behavior.
 
-## Next release (after v1.0.0-beta.76)
+## Next release (after v1.0.0-beta.77)
+
+Nothing yet.
+
+## v1.0.0-beta.77 (was: next release after v1.0.0-beta.76)
 
 ### Provisioning binds a realm's relations after its entities
 
@@ -18,6 +22,11 @@ the role, user, client and identity-provider assignments and policy bindings tha
 **Action required:** none for a fresh deployment. A client or user created by an earlier boot
 under `createOnly` keeps the assignments it got then: give its entry `strategy: { type: merge }`
 for one boot (or bind the permissions through the API) to add the ones the old order missed.
+
+**May need action:** a permission is identified by its name, realm and client together. A
+resource server that checks a provisioned client permission by `{ name, clientId }` alone matched
+the permission without a realm; after the first boot it must pass the client's `realmId` too, or
+the check finds no such permission and denies.
 
 ### A permission manager may assign roles over realm- and client-owned permissions
 
@@ -81,6 +90,17 @@ as a peer dependency, so a resource server using only `MemoryTokenCache` does no
 
 **Action required:** A resource server using `RedisTokenCache` installs
 `@authup/server-adapter-redis` and imports the class from there.
+
+### `@authup/client-web-kit` renames its pickers
+
+The form pickers carry a `Form` infix: `APathPicker` and `AClientPicker` are
+`AFormPathPicker` and `AFormClientPicker`, and the realm form picker
+`ARealmPicker` is `AFormRealmPicker`. The login realm chooser `ARealmGrid` takes the freed name
+and is `ARealmPicker`.
+
+**Action required:** an application rendering the kit's pickers renames them. Rename the realm
+form picker before the chooser: an unchanged `<ARealmPicker :value @change>` still resolves, now
+to the chooser, which ignores `value` and emits `select` instead of `change`.
 
 ### `JunctionEntityService` declares `ownerRealm` instead of `ownerRealmKey`
 
