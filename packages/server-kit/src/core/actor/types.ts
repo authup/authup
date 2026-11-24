@@ -22,12 +22,22 @@ export type ActorIdentity = {
 };
 
 /**
+ * An evaluator that can hand out a copy of itself holding only those of
+ * its own grants that one of `grants` names (same permission, reach and
+ * policy), so never more than the actor holds. Lets a service tell which
+ * grant passes a gate.
+ */
+export interface INarrowablePermissionEvaluator extends IPermissionEvaluator {
+    narrowGrants(grants: PermissionPolicyBinding[]): IPermissionEvaluator;
+}
+
+/**
  * What a service receives instead of a request. The identity defaults to
  * the full user or client row (server-core); a resource server uses
  * `ActorContext<ActorIdentity>`.
  */
 export type ActorContext<TIdentity = Identity> = {
-    permissionEvaluator: IPermissionEvaluator;
+    permissionEvaluator: INarrowablePermissionEvaluator;
     identity?: TIdentity;
     /**
      * The actor's own grants, as its request resolved them (for a token, the
@@ -35,10 +45,4 @@ export type ActorContext<TIdentity = Identity> = {
      * these, so it checks exactly what the actor's gates evaluated.
      */
     grants?: () => Promise<PermissionPolicyBinding[]>;
-    /**
-     * The actor's evaluator holding only those of its own grants that one of
-     * `grants` names (same permission, reach and policy), so never more than
-     * the actor holds. Lets a service tell which grant passes a gate.
-     */
-    narrowGrants?: (grants: PermissionPolicyBinding[]) => IPermissionEvaluator;
 };

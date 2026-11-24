@@ -10,8 +10,10 @@ import type {
     PermissionCompileContext,
     PermissionCompileResult,
     PermissionEvaluationContext,
+    PermissionPolicyBinding,
 } from '@authup/access';
 import { PermissionError } from '@authup/access';
+import type { INarrowablePermissionEvaluator } from '@authup/server-kit';
 
 export type EvaluatorMethodName = 'evaluate' | 'evaluateOneOf' | 'preEvaluate' | 'preEvaluateOneOf';
 
@@ -22,7 +24,9 @@ export type EvaluatorCall = {
 
 export type EvaluatorBehavior = (call: EvaluatorCall) => void | Promise<void>;
 
-export class FakePermissionEvaluator implements IPermissionEvaluator {
+export type EvaluatorNarrowing = (grants: PermissionPolicyBinding[]) => IPermissionEvaluator;
+
+export class FakePermissionEvaluator implements INarrowablePermissionEvaluator {
     public evaluateCalls: PermissionEvaluationContext[] = [];
 
     public evaluateOneOfCalls: PermissionEvaluationContext[] = [];
@@ -36,6 +40,14 @@ export class FakePermissionEvaluator implements IPermissionEvaluator {
     private compileResult: PermissionCompileResult = { verdict: 'post' };
 
     private behavior: EvaluatorBehavior;
+
+    private narrowing: EvaluatorNarrowing = () => {
+        const narrowed = new FakePermissionEvaluator();
+
+        narrowed.denyAll();
+
+        return narrowed;
+    };
 
     constructor(behavior: EvaluatorBehavior = () => {}) {
         this.behavior = behavior;
@@ -70,6 +82,19 @@ export class FakePermissionEvaluator implements IPermissionEvaluator {
         this.compileCalls.push(ctx);
 
         return this.compileResult;
+    }
+
+    /**
+     * Defaults to an evaluator denying everything: the fake knows no grants,
+     * so none of them passes a gate on its own. Override per test via
+     * {@link setNarrowing}.
+     */
+    narrowGrants(grants: PermissionPolicyBinding[]): IPermissionEvaluator {
+        return this.narrowing(grants);
+    }
+
+    setNarrowing(narrowing: EvaluatorNarrowing) {
+        this.narrowing = narrowing;
     }
 
     setCompileResult(result: PermissionCompileResult) {

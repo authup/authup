@@ -412,7 +412,7 @@ permission directly (user, client or role permission) requires holding it
 **Manager grant (#3907).** `resolveManagerGrant` (`core/identity/permission/module.ts`) picks the
 actor's grants of `permission_update` that are policy-free or carry exactly ONE non-inverted `clientMatch` policy;
 any other policy-bound grant is excluded. Each candidate is gated alone through
-`ActorContext.narrowGrants` (the evaluator over only that grant), and the reach is the widest
+the actor evaluator's `narrowGrants` (the evaluator over only that grant), and the reach is the widest
 among those that pass. It applies to the superset check and to DIRECT binds (user-, client- and
 role-permission), so a manager may bind a permission it manages without holding it,
 through ANY client's token: #3597 narrows which HELD client-owned grants apply, not which

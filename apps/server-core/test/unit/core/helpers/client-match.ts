@@ -21,6 +21,7 @@ import type { IRoleRepository } from '../../../../src/core/entities/role/types.t
 import type { IUserRepository } from '../../../../src/core/entities/user/types.ts';
 import { IdentityPermissionProvider } from '../../../../src/core/identity/permission/module.ts';
 import type { IIdentityRoleProvider } from '../../../../src/core/identity/role/types.ts';
+import { toNarrowable } from './narrowable.ts';
 
 export type ClientMatchActorGrant = {
     name: string,
@@ -52,7 +53,7 @@ export type ClientMatchActorOptions = {
 /**
  * A client actor evaluated by the real engine: every name is granted at
  * `own` reach and bound to a `clientMatch` policy. Its `grants` resolver
- * answers the same grants as bindings, and `narrowGrants` evaluates with
+ * answers the same grants as bindings, and its evaluator's `narrowGrants` evaluates with
  * only the bindings it is handed.
  */
 export async function createClientMatchActor(options: ClientMatchActorOptions): Promise<ActorContext> {
@@ -124,19 +125,18 @@ export async function createClientMatchActor(options: ClientMatchActorOptions): 
     }
 
     return {
-        permissionEvaluator: evaluator,
-        identity: {
-            type: IdentityType.CLIENT,
-            data: { id: options.clientId, realmId: options.realmId } as Client,
-        },
-        grants: async () => bindings,
-        narrowGrants: (named) => {
+        permissionEvaluator: toNarrowable(evaluator, (named) => {
             if (named.length !== 1) {
                 throw new Error('The actor narrows to exactly one binding.');
             }
 
             return narrowed.get(JSON.stringify(named[0])) ?? none;
+        }),
+        identity: {
+            type: IdentityType.CLIENT,
+            data: { id: options.clientId, realmId: options.realmId } as Client,
         },
+        grants: async () => bindings,
     };
 }
 

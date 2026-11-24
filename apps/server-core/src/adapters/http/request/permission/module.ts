@@ -21,11 +21,12 @@ import {
     grantDominates,
     isPermissionPolicyBindingEqual,
 } from '@authup/access';
+import type { INarrowablePermissionEvaluator } from '@authup/server-kit';
 import type { IAppEvent } from 'routup';
 import type { RequestIdentity } from '../helpers/index.ts';
 import { useRequestGrants, useRequestIdentity, useRequestScopes } from '../helpers/index.ts';
 
-export class RequestPermissionEvaluator implements IPermissionEvaluator {
+export class RequestPermissionEvaluator implements INarrowablePermissionEvaluator {
     protected event: IAppEvent;
 
     protected evaluator: IPermissionEvaluator;

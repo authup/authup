@@ -91,7 +91,7 @@ export type IdentityPermissionSubject = Pick<IdentityPolicyData, 'type' | 'id'>;
  * the `permission_update` gate on a realm- or client-owned permission,
  * narrowed to one manager grant at a time.
  */
-export type SupersetActor = Pick<ActorContext, 'permissionEvaluator' | 'narrowGrants'>;
+export type SupersetActor = Pick<ActorContext, 'permissionEvaluator'>;
 
 export interface IIdentityPermissionProvider {
     getFor(identity: IdentityPermissionSubject): Promise<PermissionPolicyBinding[]>;

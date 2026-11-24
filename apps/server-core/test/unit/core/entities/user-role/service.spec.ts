@@ -128,7 +128,7 @@ describe('core/entities/user-role/service', () => {
             }, actor);
 
             expect(identityPermissionProvider.supersetActors).toEqual([
-                { permissionEvaluator: actor.permissionEvaluator },
+                expect.objectContaining({ permissionEvaluator: actor.permissionEvaluator }),
             ]);
         });
 
@@ -291,10 +291,10 @@ describe('core/entities/user-role/service', () => {
 
             actor.grants = async () => grants;
             actor.permissionEvaluator.setBehavior(createGate(realmId, grants));
-            actor.narrowGrants = (named) => new FakePermissionEvaluator(createGate(
+            actor.permissionEvaluator.setNarrowing((named) => new FakePermissionEvaluator(createGate(
                 realmId,
                 grants.filter((grant) => named.includes(grant)),
-            ));
+            )));
 
             return actor;
         }

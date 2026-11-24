@@ -31,7 +31,7 @@ import { IdentityPermissionProvider } from '../../../../../src/core/identity/per
 import type { IIdentityPermissionProvider, SupersetActor } from '../../../../../src/core/identity/permission/types.ts';
 import { IdentityRoleProvider } from '../../../../../src/core/identity/role/module.ts';
 import type { ClientMatchActorGrant } from '../../helpers/index.ts';
-import { createClientMatchActor } from '../../helpers/index.ts';
+import { createClientMatchActor, toNarrowable } from '../../helpers/index.ts';
 
 /**
  * Direct coverage of the REAL disjunction-aware isSuperset + resolveJunctionGrant
@@ -61,7 +61,7 @@ function toActor(gate: IPermissionEvaluator | SupersetActor): SupersetActor {
         return gate;
     }
 
-    return { permissionEvaluator: gate, narrowGrants: () => gate };
+    return { permissionEvaluator: toNarrowable(gate, () => gate) };
 }
 
 async function isRoleSuperset(

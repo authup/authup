@@ -126,10 +126,6 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             return null;
         }
 
-        if (!actor.narrowGrants) {
-            return null;
-        }
-
         // Each manager grant is gated on its own, so the reach handed out is
         // that of a grant which itself reaches the row: one passing grant must
         // not vouch for another's wider reach, nor a non-manager grant for a
@@ -144,7 +140,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             .sort((a, b) => compareRealmScope(b.grant.realmScope, a.grant.realmScope));
 
         for (const manager of managers) {
-            const reached = await reachesRecord(actor.narrowGrants([manager.binding]), {
+            const reached = await reachesRecord(actor.permissionEvaluator.narrowGrants([manager.binding]), {
                 name: PermissionName.PERMISSION_UPDATE,
                 realm: permission.realmId ?? null,
                 owner: permission.clientId ?? null,

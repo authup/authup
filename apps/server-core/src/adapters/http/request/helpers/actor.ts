@@ -17,7 +17,6 @@ export function buildActorContext(event: IAppEvent): ActorContext {
 
     return {
         permissionEvaluator,
-        narrowGrants: (grants) => permissionEvaluator.narrowGrants(grants),
         identity: identity ? identity.raw : undefined,
         grants: identity ?
             // scope-gated: a token without `global` delegates nothing

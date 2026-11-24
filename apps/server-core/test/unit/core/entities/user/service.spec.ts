@@ -43,7 +43,7 @@ import {
 } from '@authup/server-test-kit';
 import type { FakeActorContext } from '@authup/server-test-kit';
 import { FakeRealmRepository } from '../realm/fake-repository.ts';
-import { readEvaluatedRecordRealms } from '../../helpers/index.ts';
+import { readEvaluatedRecordRealms, toNarrowable } from '../../helpers/index.ts';
 import { FakePathRepository } from '../path/fake-repository.ts';
 import { FakeUserRepository } from './fake-repository.ts';
 import { createFakePath, createFakeUser } from '../../../../utils/domains/index.ts';
@@ -297,7 +297,7 @@ describe('core/entities/user/service', () => {
         describe('field projection', () => {
             // a read grant that withholds one column
             const buildActor = (): ActorContext => ({
-                permissionEvaluator: new PermissionEvaluator({
+                permissionEvaluator: toNarrowable(new PermissionEvaluator({
                     provider: new PermissionMemoryProvider([{
                         permission: { name: PermissionName.USER_READ },
                         realmScope: RealmScope.ANY,
@@ -309,7 +309,7 @@ describe('core/entities/user/service', () => {
                         ],
                     }]),
                     policyEngine: new PolicyEngine(PolicyDefaultEvaluators),
-                }),
+                })),
             });
 
             const seedUser = () => repository.seed(createFakeUser({ realmId: randomUUID() }));

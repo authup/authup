@@ -116,7 +116,7 @@ describe('core/entities/client-role/service', () => {
             }, actor);
 
             expect(identityPermissionProvider.supersetActors).toEqual([
-                { permissionEvaluator: actor.permissionEvaluator },
+                expect.objectContaining({ permissionEvaluator: actor.permissionEvaluator }),
             ]);
         });
 
