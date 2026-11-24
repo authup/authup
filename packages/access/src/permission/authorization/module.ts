@@ -681,6 +681,7 @@ function createBindingEvaluator(
                 clientId: ctx.clientId,
                 data: withIdentity(ctx.data),
                 realmAttributeName: ctx.realmAttributeName,
+                clientAttributeName: ctx.clientAttributeName,
                 ...(typeof ctx.realm !== 'undefined' ? { realm: ctx.realm } : {}),
             });
         },

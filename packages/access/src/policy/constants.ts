@@ -11,6 +11,8 @@ import {
     AttributesPolicyEvaluator,
     AttributesPolicyValidator,
     BuiltInPolicyType,
+    ClientMatchPolicyEvaluator,
+    ClientMatchPolicyValidator,
     CompositePolicyEvaluator,
     CompositePolicyValidator,
     DatePolicyEvaluator,
@@ -34,6 +36,7 @@ export const PolicyDefaultEvaluators = {
     [BuiltInPolicyType.IDENTITY]: new IdentityPolicyEvaluator(),
     [BuiltInPolicyType.PERMISSION_BINDING]: new PermissionBindingPolicyEvaluator(),
     [BuiltInPolicyType.REALM_MATCH]: new RealmMatchPolicyEvaluator(),
+    [BuiltInPolicyType.CLIENT_MATCH]: new ClientMatchPolicyEvaluator(),
     [BuiltInPolicyType.TIME]: new TimePolicyEvaluator(),
 } as const;
 
@@ -54,5 +57,6 @@ export const PolicyDefaultValidators : Readonly<PolicyValidators> = Object.freez
     [BuiltInPolicyType.IDENTITY]: new IdentityPolicyValidator(),
     [BuiltInPolicyType.PERMISSION_BINDING]: new PermissionBindingPolicyValidator(),
     [BuiltInPolicyType.REALM_MATCH]: new RealmMatchPolicyValidator(),
+    [BuiltInPolicyType.CLIENT_MATCH]: new ClientMatchPolicyValidator(),
     [BuiltInPolicyType.TIME]: new TimePolicyValidator(),
 });

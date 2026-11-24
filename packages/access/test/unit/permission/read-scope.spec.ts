@@ -330,6 +330,92 @@ describe('scopeReadQuery', () => {
         await expect(scopeReadQuery(query, evaluator, { names: ['post_read'], realm: false }))
             .rejects.toThrow();
     });
+
+    describe('a clientMatch grant', () => {
+        const realmId = 'c641912c-21e5-4cb4-84b6-169e2b2bb023';
+        const clientId = '7d3f6a1e-9b2c-4f5d-8e1a-2c3b4d5e6f70';
+
+        const create = () => createAuthorizationEvaluator({
+            catalog: {
+                policies: {
+                    binding: { type: 'permissionBinding' },
+                    owned: { type: 'clientMatch' },
+                },
+                permissions: [{
+                    name: 'permission_read',
+                    realmId: null,
+                    clientId: null,
+                    decisionStrategy: null,
+                    policies: ['binding'],
+                }],
+            },
+            grants: [{
+                name: 'permission_read',
+                realm_id: null,
+                client_id: null,
+                realm_scope: 'own',
+                policies: ['owned'],
+            }],
+            identity: {
+                id: clientId,
+                type: 'client',
+                realmId,
+                realmName: 'master',
+                clientId,
+            },
+        });
+
+        it('lowers onto the named owner column', async () => {
+            const evaluator = await create();
+
+            const scope = await scopeReadQuery(new Query({}), evaluator, {
+                names: ['permission_read'],
+                realm: false,
+                clientAttributeName: 'clientId',
+            });
+
+            expect(scope.post).toBe(false);
+            expect(collect(scope.query.filters)).toEqual([['clientId', clientId]]);
+        });
+
+        it('falls back to a per-row check without an owner column', async () => {
+            const evaluator = await create();
+            const calls: string[][] = [];
+
+            const scope = await scopeReadQuery(new Query({}), evaluator, {
+                names: ['permission_read'],
+                realm: false,
+                retain: ['id'],
+                widen: (input: IQuery, retain: string[]) => {
+                    calls.push(retain);
+
+                    return input;
+                },
+            });
+
+            expect(scope.post).toBe(true);
+            expect(calls).toEqual([['id']]);
+        });
+    });
+
+    it('retains the owner column of a post verdict', async () => {
+        const evaluator = new RecordingEvaluator({ verdict: 'post' });
+        const calls: string[][] = [];
+
+        await scopeReadQuery(new Query({}), evaluator, {
+            names: NAMES,
+            realm: false,
+            clientAttributeName: 'clientId',
+            widen: (input: IQuery, retain: string[]) => {
+                calls.push(retain);
+
+                return input;
+            },
+        });
+
+        expect(evaluator.compileCalls[0]!.clientAttributeName).toEqual('clientId');
+        expect(calls).toEqual([['clientId']]);
+    });
 });
 
 describe('narrowReadScope', () => {

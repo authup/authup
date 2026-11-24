@@ -301,6 +301,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
                     data,
                     withConditions: true,
                     realmAttributeName: ctx.realmAttributeName,
+                    clientAttributeName: ctx.clientAttributeName,
                     realmless: ctx.realm === false,
                 }),
             );

@@ -88,6 +88,7 @@ export async function scopeReadQuery(
         name: options.names,
         ...owner,
         ...(options.realmAttributeName ? { realmAttributeName: options.realmAttributeName } : {}),
+        ...(options.clientAttributeName ? { clientAttributeName: options.clientAttributeName } : {}),
         ...(typeof options.realm !== 'undefined' ? { realm: options.realm } : {}),
     });
 
@@ -117,6 +118,7 @@ export async function scopeReadQuery(
         default: {
             const retain = [
                 ...(typeof options.realm === 'undefined' ? [options.realmAttributeName ?? 'realmId'] : []),
+                ...(options.clientAttributeName ? [options.clientAttributeName] : []),
                 ...(options.retain ?? []),
             ];
 
