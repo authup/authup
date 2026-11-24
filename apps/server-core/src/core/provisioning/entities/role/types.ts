@@ -33,6 +33,12 @@ export type RoleProvisioningRelations = {
     globalPermissionsRealmScopeOverrides?: Partial<Record<RealmScope, string[]>>,
 
     /**
+     * Name of a global policy stamped as `policyId` on every role-permission
+     * row generated from globalPermissions.
+     */
+    globalPermissionsPolicy?: string,
+
+    /**
      * Assign role to realm permissions.
      */
     realmPermissions?: string[],

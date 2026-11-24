@@ -18,6 +18,7 @@ import type {
     PermissionPolicy,
     Realm,
     Role,
+    RolePermission,
 } from '@authup/core-kit';
 import {
     CLIENT_ACCOUNT_CONSOLE_NAME,
@@ -25,6 +26,7 @@ import {
     ClientAuthMethod,
     ClientTokenBindingMethod,
     REALM_MASTER_NAME,
+    ROLE_CLIENT_ADMIN_NAME,
 } from '@authup/core-kit';
 import type { DataSource, Repository } from 'typeorm';
 import { IsNull } from 'typeorm';
@@ -120,6 +122,24 @@ describe('app/modules/provisioning', () => {
         await expect(source.load()).rejects.toThrow(
             /realms\[0]\.relations\.clients\[0]\.attributes\.name/,
         );
+    });
+
+    it('should provision system.client_owned and the client_admin role bound to it', async () => {
+        const policy = await policyRepositoryAdapter.findOneByName(SystemPolicyName.CLIENT_OWNED);
+
+        expect(policy?.type).toBe(BuiltInPolicyType.CLIENT_MATCH);
+        expect(policy?.builtIn).toBe(true);
+
+        const roleRepository = di.resolve<Repository<Role>>(RoleEntity);
+        const role = await roleRepository.findOneBy({ name: ROLE_CLIENT_ADMIN_NAME, realmId: IsNull() });
+
+        expect(role?.builtIn).toBe(true);
+
+        const bindings = await di.resolve<Repository<RolePermission>>(RolePermissionEntity)
+            .findBy({ roleId: role!.id });
+
+        expect(bindings).toHaveLength(28);
+        expect(bindings.every((b) => b.policyId === policy!.id && b.realmScope === 'own')).toBe(true);
     });
 
     it('should load provisioning data', async () => {

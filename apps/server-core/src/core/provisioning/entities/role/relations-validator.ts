@@ -39,6 +39,10 @@ export class RoleProvisioningRelationsValidator extends Container<RoleProvisioni
             z.enum(RealmScope),
         ));
 
+        this.mount('globalPermissionsPolicy', { optional: true }, createValidator(
+            z.string(),
+        ));
+
         this.mount('globalPermissionsRealmScopeOverrides', { optional: true }, createValidator(
             z.partialRecord(z.enum(RealmScope), z.array(z.string())),
         ));

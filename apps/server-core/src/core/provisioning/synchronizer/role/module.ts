@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { ValidationError } from '@authup/errors';
 import { pickRecord } from '@authup/kit';
 import type { Permission, Role, RolePermission } from '@authup/core-kit';
-import type { IClientRepository, IRoleRepository } from '../../../entities/index.ts';
+import type { IClientRepository, IPolicyRepository, IRoleRepository } from '../../../entities/index.ts';
 import type { RoleProvisioningEntity, RoleProvisioningRelations } from '../../entities/role/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
 import type { IProvisioningRealmRepairer, ProvisioningSynchronizeContext } from '../../types.ts';
@@ -24,6 +25,8 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
 
     protected clientRepository: IClientRepository;
 
+    protected policyRepository: IPolicyRepository;
+
     protected permissionResolver : ProvisioningEntityResolver<Permission>;
 
     protected permissionJunction: ProvisioningJunctionSynchronizer<RolePermission>;
@@ -34,6 +37,7 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         this.repository = ctx.repository;
         this.realmRepairer = ctx.realmRepairer;
         this.clientRepository = ctx.clientRepository;
+        this.policyRepository = ctx.policyRepository;
         this.permissionResolver = new ProvisioningEntityResolver(ctx.permissionRepository);
         this.permissionJunction = new ProvisioningJunctionSynchronizer({
             repository: ctx.rolePermissionRepository,
@@ -130,6 +134,21 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             globalPermissions = globalPermissions.filter((p) => !excludeSet.has(p.name));
         }
 
+        let policyId: string | undefined;
+
+        if (relations.globalPermissionsPolicy) {
+            const policy = await this.policyRepository.findOneBy({
+                name: relations.globalPermissionsPolicy,
+                realmId: null,
+            });
+
+            if (!policy) {
+                throw new ValidationError(`The global policy ${relations.globalPermissionsPolicy} does not exist.`);
+            }
+
+            policyId = policy.id;
+        }
+
         const realmPermissions = attributes.realmId ?
             await this.permissionResolver.resolveRealm(relations.realmPermissions, attributes.realmId) :
             [];
@@ -153,7 +172,7 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
                         [permission],
                         'permissionId',
                         'permissionRealmId',
-                        { realmScope },
+                        { realmScope, ...(policyId ? { policyId } : {}) },
                     );
                 }
             } else {

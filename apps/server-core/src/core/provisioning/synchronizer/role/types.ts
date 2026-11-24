@@ -8,6 +8,7 @@
 import type {
     IClientRepository,
     IPermissionRepository,
+    IPolicyRepository,
     IRolePermissionRepository,
     IRoleRepository,
 } from '../../../entities/index.ts';
@@ -16,6 +17,11 @@ import type { IProvisioningRealmRepairer } from '../../types.ts';
 export type RoleProvisioningSynchronizerContext = {
     repository: IRoleRepository,
     permissionRepository: IPermissionRepository,
+
+    /**
+     * Resolves the global policy a `relations.globalPermissionsPolicy` names.
+     */
+    policyRepository: IPolicyRepository,
     rolePermissionRepository: IRolePermissionRepository,
 
     /**

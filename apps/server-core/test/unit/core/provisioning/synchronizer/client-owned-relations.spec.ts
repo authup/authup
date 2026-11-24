@@ -35,6 +35,7 @@ import { PermissionProvisioningSynchronizer } from '../../../../../src/core/prov
 import { RoleProvisioningSynchronizer } from '../../../../../src/core/provisioning/synchronizer/role/module.ts';
 import { FakeClientRepository } from '../../entities/client/fake-repository.ts';
 import { FakePermissionRepository } from '../../entities/permission/fake-repository.ts';
+import { FakePolicyRepository } from '../../entities/policy/fake-repository.ts';
 import { FakeRoleRepository } from '../../entities/role/fake-repository.ts';
 
 /**
@@ -78,6 +79,7 @@ describe('core/provisioning/synchronizer client-owned relations', () => {
             repository: roleRepository,
             realmRepairer,
             clientRepository,
+            policyRepository: new FakePolicyRepository(),
             permissionRepository,
             rolePermissionRepository: rolePermissionRepository as
                 FakeEntityRepository<RolePermission> & IRolePermissionRepository,

@@ -248,6 +248,7 @@ export class ProvisionerModule implements IModule {
             repository: roleRepository,
             realmRepairer,
             clientRepository,
+            policyRepository,
             permissionRepository,
             rolePermissionRepository: new RolePermissionRepositoryAdapter(
                 container.resolve<Repository<RolePermission>>(RolePermissionEntity),

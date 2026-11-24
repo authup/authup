@@ -20,6 +20,7 @@ import {
     PermissionName,
     REALM_MASTER_NAME,
     ROLE_ADMIN_NAME,
+    ROLE_CLIENT_ADMIN_NAME,
     ROLE_REALM_ADMIN_NAME,
     ScopeName,
     buildUserFakeEmail,
@@ -78,6 +79,14 @@ export class DefaultProvisioningSource implements IProvisioningSource {
             // Each `names` entry is what self-edit must REJECT; everything else
             // is permitted. New columns added to the entity are self-editable
             // by default — extend the denylist when adding admin-only state.
+            {
+                attributes: {
+                    name: SystemPolicyName.CLIENT_OWNED,
+                    type: BuiltInPolicyType.CLIENT_MATCH,
+                    builtIn: true,
+                    realmId: null,
+                },
+            },
             {
                 attributes: {
                     name: SystemPolicyName.CLIENT_NAMES_SELF_MANAGE,
@@ -215,6 +224,50 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     // direct entity CUD (cannot create/modify global entities).
                     globalPermissionsRealmScope: RealmScope.OWN_OR_NULL,
                     globalPermissionsRealmScopeOverrides: { [RealmScope.OWN]: REALM_ADMIN_OWN_REACH_PERMISSIONS },
+                },
+            },
+            {
+                strategy: {
+                    type: ProvisioningEntityStrategyType.MERGE,
+                    attributes: ['builtIn'] as (keyof Role)[],
+                },
+                attributes: {
+                    name: ROLE_CLIENT_ADMIN_NAME,
+                    builtIn: true,
+                },
+                relations: {
+                    globalPermissions: [
+                        PermissionName.PERMISSION_CREATE,
+                        PermissionName.PERMISSION_READ,
+                        PermissionName.PERMISSION_UPDATE,
+                        PermissionName.PERMISSION_DELETE,
+                        PermissionName.ROLE_CREATE,
+                        PermissionName.ROLE_READ,
+                        PermissionName.ROLE_UPDATE,
+                        PermissionName.ROLE_DELETE,
+                        PermissionName.ROLE_PERMISSION_CREATE,
+                        PermissionName.ROLE_PERMISSION_READ,
+                        PermissionName.ROLE_PERMISSION_UPDATE,
+                        PermissionName.ROLE_PERMISSION_DELETE,
+                        PermissionName.USER_PERMISSION_CREATE,
+                        PermissionName.USER_PERMISSION_READ,
+                        PermissionName.USER_PERMISSION_UPDATE,
+                        PermissionName.USER_PERMISSION_DELETE,
+                        PermissionName.USER_ROLE_CREATE,
+                        PermissionName.USER_ROLE_READ,
+                        PermissionName.USER_ROLE_UPDATE,
+                        PermissionName.USER_ROLE_DELETE,
+                        PermissionName.CLIENT_PERMISSION_CREATE,
+                        PermissionName.CLIENT_PERMISSION_READ,
+                        PermissionName.CLIENT_PERMISSION_UPDATE,
+                        PermissionName.CLIENT_PERMISSION_DELETE,
+                        PermissionName.CLIENT_ROLE_CREATE,
+                        PermissionName.CLIENT_ROLE_READ,
+                        PermissionName.CLIENT_ROLE_UPDATE,
+                        PermissionName.CLIENT_ROLE_DELETE,
+                    ],
+                    globalPermissionsRealmScope: RealmScope.OWN,
+                    globalPermissionsPolicy: SystemPolicyName.CLIENT_OWNED,
                 },
             },
         ];
