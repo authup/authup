@@ -865,6 +865,14 @@
           "title": "service",
           "type": "object"
         },
+        "shutdownDelay": {
+          "default": 5,
+          "description": "Seconds the console keeps serving after SIGTERM while GET /readyz answers 503 (SHUTDOWN_DELAY); must stay below terminationGracePeriodSeconds",
+          "minimum": 0,
+          "required": [],
+          "title": "shutdownDelay",
+          "type": "integer"
+        },
         "sidecars": {
           "description": "Sidecar containers (tpl-rendered)",
           "items": {
@@ -1865,6 +1873,14 @@
           ],
           "title": "service",
           "type": "object"
+        },
+        "shutdownDelay": {
+          "default": 5,
+          "description": "Seconds the console keeps serving after SIGTERM while GET /readyz answers 503 (SHUTDOWN_DELAY); must stay below terminationGracePeriodSeconds",
+          "minimum": 0,
+          "required": [],
+          "title": "shutdownDelay",
+          "type": "integer"
         },
         "sidecars": {
           "description": "Sidecar containers (tpl-rendered)",
@@ -2975,6 +2991,14 @@
           ],
           "title": "service",
           "type": "object"
+        },
+        "shutdownDelay": {
+          "default": 5,
+          "description": "Seconds the console keeps serving after SIGTERM while GET /readyz answers 503 (SHUTDOWN_DELAY); must stay below terminationGracePeriodSeconds",
+          "minimum": 0,
+          "required": [],
+          "title": "shutdownDelay",
+          "type": "integer"
         },
         "sidecars": {
           "description": "Sidecar containers (tpl-rendered)",
@@ -4534,7 +4558,7 @@
           "properties": {
             "enabled": {
               "default": true,
-              "description": "Enable the liveness probe (GET / status endpoint)",
+              "description": "Enable the liveness probe (GET /livez, which checks no dependency)",
               "required": [],
               "title": "enabled",
               "type": "boolean"
@@ -4949,7 +4973,7 @@
           "properties": {
             "enabled": {
               "default": true,
-              "description": "Enable the readiness probe (GET / status endpoint)",
+              "description": "Enable the readiness probe (GET /readyz: the database answers and the pod is not draining)",
               "required": [],
               "title": "enabled",
               "type": "boolean"
@@ -5245,6 +5269,14 @@
           "title": "service",
           "type": "object"
         },
+        "shutdownDelay": {
+          "default": 5,
+          "description": "Seconds the API keeps serving after SIGTERM while GET /readyz answers 503 (SHUTDOWN_DELAY); must stay below terminationGracePeriodSeconds",
+          "minimum": 0,
+          "required": [],
+          "title": "shutdownDelay",
+          "type": "integer"
+        },
         "sidecars": {
           "description": "Sidecar containers (tpl-rendered)",
           "items": {
@@ -5266,7 +5298,7 @@
           "properties": {
             "enabled": {
               "default": true,
-              "description": "Enable the startup probe (first boot runs database creation, migrations and provisioning)",
+              "description": "Enable the startup probe on GET /livez (first boot runs database creation, migrations and provisioning)",
               "required": [],
               "title": "enabled",
               "type": "boolean"
@@ -5315,7 +5347,7 @@
         },
         "terminationGracePeriodSeconds": {
           "default": 30,
-          "description": "Pod termination grace period (server-core tears down within ~10s after signal)",
+          "description": "Pod termination grace period (server-core tears down within ~10s after signal and shutdownDelay)",
           "required": [],
           "title": "terminationGracePeriodSeconds",
           "type": "integer"
@@ -6079,6 +6111,57 @@
           ],
           "title": "containerSecurityContext"
         },
+        "customLivenessProbe": {
+          "additionalProperties": true,
+          "description": "Custom liveness probe with exactly one handler (overrides livenessProbe)",
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "required": []
+            },
+            {
+              "required": [
+                "httpGet"
+              ]
+            },
+            {
+              "required": [
+                "tcpSocket"
+              ]
+            },
+            {
+              "required": [
+                "exec"
+              ]
+            },
+            {
+              "required": [
+                "grpc"
+              ]
+            }
+          ],
+          "properties": {
+            "exec": {
+              "required": [],
+              "type": "object"
+            },
+            "grpc": {
+              "required": [],
+              "type": "object"
+            },
+            "httpGet": {
+              "required": [],
+              "type": "object"
+            },
+            "tcpSocket": {
+              "required": [],
+              "type": "object"
+            }
+          },
+          "required": [],
+          "title": "customLivenessProbe",
+          "type": "object"
+        },
         "customReadinessProbe": {
           "additionalProperties": true,
           "description": "Custom readiness probe with exactly one handler (overrides readinessProbe)",
@@ -6128,6 +6211,57 @@
           },
           "required": [],
           "title": "customReadinessProbe",
+          "type": "object"
+        },
+        "customStartupProbe": {
+          "additionalProperties": true,
+          "description": "Custom startup probe with exactly one handler (overrides startupProbe)",
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "required": []
+            },
+            {
+              "required": [
+                "httpGet"
+              ]
+            },
+            {
+              "required": [
+                "tcpSocket"
+              ]
+            },
+            {
+              "required": [
+                "exec"
+              ]
+            },
+            {
+              "required": [
+                "grpc"
+              ]
+            }
+          ],
+          "properties": {
+            "exec": {
+              "required": [],
+              "type": "object"
+            },
+            "grpc": {
+              "required": [],
+              "type": "object"
+            },
+            "httpGet": {
+              "required": [],
+              "type": "object"
+            },
+            "tcpSocket": {
+              "required": [],
+              "type": "object"
+            }
+          },
+          "required": [],
+          "title": "customStartupProbe",
           "type": "object"
         },
         "disableRestartOnChanges": {
@@ -6208,6 +6342,58 @@
           "description": "Container lifecycle hooks",
           "required": [],
           "title": "lifecycleHooks"
+        },
+        "livenessProbe": {
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "default": true,
+              "description": "Restart the worker when a sweep pass hangs for over 30 minutes (GET /livez; a database outage does not fail it)",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "failureThreshold": {
+              "default": 3,
+              "required": [],
+              "title": "failureThreshold",
+              "type": "integer"
+            },
+            "initialDelaySeconds": {
+              "default": 0,
+              "required": [],
+              "title": "initialDelaySeconds",
+              "type": "integer"
+            },
+            "periodSeconds": {
+              "default": 30,
+              "required": [],
+              "title": "periodSeconds",
+              "type": "integer"
+            },
+            "successThreshold": {
+              "default": 1,
+              "required": [],
+              "title": "successThreshold",
+              "type": "integer"
+            },
+            "timeoutSeconds": {
+              "default": 5,
+              "required": [],
+              "title": "timeoutSeconds",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "enabled",
+            "initialDelaySeconds",
+            "periodSeconds",
+            "timeoutSeconds",
+            "failureThreshold",
+            "successThreshold"
+          ],
+          "title": "livenessProbe",
+          "type": "object"
         },
         "networkPolicy": {
           "additionalProperties": false,
@@ -6337,7 +6523,7 @@
           "properties": {
             "enabled": {
               "default": true,
-              "description": "Check sweep health without restarting the worker on database outages",
+              "description": "Check sweep health without restarting the worker on database outages (GET /readyz)",
               "required": [],
               "title": "enabled",
               "type": "boolean"
@@ -6459,6 +6645,58 @@
           "title": "sidecars",
           "type": "array"
         },
+        "startupProbe": {
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "default": true,
+              "description": "Enable the startup probe on GET /livez (the listener binds after the schema check)",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "failureThreshold": {
+              "default": 24,
+              "required": [],
+              "title": "failureThreshold",
+              "type": "integer"
+            },
+            "initialDelaySeconds": {
+              "default": 5,
+              "required": [],
+              "title": "initialDelaySeconds",
+              "type": "integer"
+            },
+            "periodSeconds": {
+              "default": 5,
+              "required": [],
+              "title": "periodSeconds",
+              "type": "integer"
+            },
+            "successThreshold": {
+              "default": 1,
+              "required": [],
+              "title": "successThreshold",
+              "type": "integer"
+            },
+            "timeoutSeconds": {
+              "default": 5,
+              "required": [],
+              "title": "timeoutSeconds",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "enabled",
+            "initialDelaySeconds",
+            "periodSeconds",
+            "timeoutSeconds",
+            "failureThreshold",
+            "successThreshold"
+          ],
+          "title": "startupProbe",
+          "type": "object"
+        },
         "terminationGracePeriodSeconds": {
           "default": 30,
           "description": "Pod termination grace period",
@@ -6505,6 +6743,8 @@
         "enabled",
         "replicaCount",
         "containerPorts",
+        "startupProbe",
+        "livenessProbe",
         "readinessProbe",
         "command",
         "args",
