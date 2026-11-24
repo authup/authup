@@ -61,7 +61,7 @@
     },
     "devDependencies": {
         "@authup/server-kit": "^1.0.0-beta.77",
-        "hapic": "^3.1.0",
+        "hapic": "^3.2.0",
         "jose": "^6.2.18",
         "vitest": "^5.1.1"
     },

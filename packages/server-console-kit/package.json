@@ -63,7 +63,7 @@
     },
     "devDependencies": {
         "@routup/assets": "^6.1.0",
-        "@types/node": "^26.6.6",
+        "@types/node": "^26.6.7",
         "cross-env": "^10.1.0",
         "routup": "^6.5.0",
         "vitest": "^5.1.1"
