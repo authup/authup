@@ -67,10 +67,12 @@ export type OAuth2TokenDeviceCodeGrantParameters = TokenDeviceCodeGrantParameter
     realm_name?: string,
 };
 /**
- * The device access token request polled until it is approved. It carries
- * no `realm_name`: @hapic/oauth2 sends only the RFC 8628 parameters.
+ * The device access token request polled until it is approved, with the
+ * same `realm_name` hint riding every poll.
  */
-export type OAuth2TokenDeviceCodePollParameters = TokenDeviceCodePollParameters;
+export type OAuth2TokenDeviceCodePollParameters = TokenDeviceCodePollParameters<{
+    realm_name?: string,
+}>;
 export type OAuth2TokenGrantParameters = TokenGrantParameters | OAuth2TokenDeviceCodeGrantParameters;
 
 /**

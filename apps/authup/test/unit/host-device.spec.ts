@@ -7,7 +7,6 @@
 
 import { Client } from '@authup/core-http-kit';
 import { OAuth2AccessDeniedError, OAuth2DeviceAuthorizationError, OAuth2GrantError } from '@authup/specs';
-import { setTimeout } from 'node:timers/promises';
 import {
     afterEach,
     beforeEach,
@@ -19,8 +18,6 @@ import {
 import { runDeviceLogin } from '../../src/host/device.ts';
 import { createHostTransport } from '../utils/host.ts';
 import type { HostRoute } from '../utils/host.ts';
-
-vi.mock('node:timers/promises', () => ({ setTimeout: vi.fn() }));
 
 const host = 'https://auth.example.com';
 
@@ -45,16 +42,21 @@ function wire(error: unknown) {
 }
 
 describe('runDeviceLogin', () => {
-    let now : number;
     let notices : string[];
+    let delays : number[];
 
     beforeEach(() => {
-        now = 1_000_000;
         notices = [];
-        vi.spyOn(Date, 'now').mockImplementation(() => now);
-        vi.mocked(setTimeout).mockImplementation(async (delay) => {
-            now += Number(delay);
-        });
+        delays = [];
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+
+        const schedule = setTimeout;
+
+        vi.spyOn(globalThis, 'setTimeout').mockImplementation(((handler: () => void, delay?: number) => {
+            delays.push(Number(delay ?? 0));
+
+            return schedule(handler, delay);
+        }) as typeof globalThis.setTimeout);
         vi.spyOn(process.stderr, 'write').mockImplementation((chunk) => {
             notices.push(String(chunk));
 
@@ -64,7 +66,25 @@ describe('runDeviceLogin', () => {
 
     afterEach(() => {
         vi.restoreAllMocks();
+        vi.useRealTimers();
     });
+
+    async function settle<T>(promise: Promise<T>) : Promise<T> {
+        const guarded = promise.then(
+            (value) => ({ value }),
+            (error: unknown) => ({ error }),
+        );
+
+        await vi.runAllTimersAsync();
+
+        const outcome = await guarded;
+
+        if ('error' in outcome) {
+            throw outcome.error;
+        }
+
+        return outcome.value;
+    }
 
     function run(tokenAnswers: ReturnType<HostRoute>[], deviceAnswer: ReturnType<HostRoute> = { body: device }) {
         const forms : Record<string, string>[] = [];
@@ -84,11 +104,11 @@ describe('runDeviceLogin', () => {
 
         return {
             forms,
-            promise: runDeviceLogin(client, {
+            promise: settle(runDeviceLogin(client, {
                 clientId: 'cli',
                 realm: 'master',
                 scope: 'global openid',
-            }),
+            })),
         };
     }
 
@@ -102,7 +122,7 @@ describe('runDeviceLogin', () => {
 
         await expect(promise).resolves.toEqual(grant);
 
-        expect(vi.mocked(setTimeout).mock.calls.map(([delay]) => delay)).toEqual([5000, 5000, 10000, 10000]);
+        expect(delays.filter((delay) => delay >= 1000)).toEqual([5000, 5000, 10000, 10000]);
         expect(forms[0]).toEqual({
             client_id: 'cli',
             realm_name: 'master',
@@ -138,7 +158,7 @@ describe('runDeviceLogin', () => {
             },
         });
 
-        await runDeviceLogin(new Client({ baseURL: host, transport }), { clientId: 'cli', realm: realmId });
+        await settle(runDeviceLogin(new Client({ baseURL: host, transport }), { clientId: 'cli', realm: realmId }));
 
         expect(forms[0]).toEqual({ client_id: 'cli', realm_id: realmId });
         expect(forms[1]).toEqual({
@@ -152,7 +172,7 @@ describe('runDeviceLogin', () => {
     it('names the missing grant when the server has no device endpoint', async () => {
         const transport = createHostTransport({});
 
-        await expect(runDeviceLogin(new Client({ baseURL: host, transport }), { clientId: 'cli' }))
+        await expect(settle(runDeviceLogin(new Client({ baseURL: host, transport }), { clientId: 'cli' })))
             .rejects.toThrow(/does not offer the device authorization grant/);
     });
 
