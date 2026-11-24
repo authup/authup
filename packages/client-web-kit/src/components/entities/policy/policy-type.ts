@@ -15,6 +15,7 @@ export const POLICY_TYPE_TRANSLATION_KEYS = {
     [BuiltInPolicyType.ATTRIBUTE_NAMES]: TranslatorTranslationClientKey.POLICY_TYPE_ATTRIBUTE_NAMES,
     [BuiltInPolicyType.ATTRIBUTES]: TranslatorTranslationClientKey.POLICY_TYPE_ATTRIBUTES,
     [BuiltInPolicyType.REALM_MATCH]: TranslatorTranslationClientKey.POLICY_TYPE_REALM_MATCH,
+    [BuiltInPolicyType.CLIENT_MATCH]: TranslatorTranslationClientKey.POLICY_TYPE_CLIENT_MATCH,
     [BuiltInPolicyType.IDENTITY]: TranslatorTranslationClientKey.POLICY_TYPE_IDENTITY,
     [BuiltInPolicyType.PERMISSION_BINDING]: TranslatorTranslationClientKey.POLICY_TYPE_PERMISSION_BINDING,
 } as const;

@@ -6,6 +6,7 @@
  */
 
 export { default as AAttributeNamesPolicyForm } from './attribute-names/AAttributeNamesPolicyForm.vue';
+export { default as AClientMatchPolicyForm } from './client-match/AClientMatchPolicyForm.vue';
 export { default as ACompositePolicyForm } from './composite/ACompositePolicyForm.vue';
 export { default as ADatePolicyForm } from './date/ADatePolicyForm.vue';
 export { default as AIdentityPolicyForm } from './identity/AIdentityPolicyForm.vue';
