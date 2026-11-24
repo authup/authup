@@ -141,6 +141,24 @@ describe('core/provisioning/synchronizer/role', () => {
         expect(roleRepository.getAll()).toEqual([]);
     });
 
+    it('should ignore an unknown policy name of an existing role under createOnly', async () => {
+        roleRepository.seed({
+            name: 'ops',
+            realmId,
+            clientId: null,
+        });
+
+        await synchronizer.synchronize({
+            attributes: { name: 'ops', realmId },
+            relations: {
+                globalPermissions: ['*'],
+                globalPermissionsPolicy: 'missing',
+            },
+        } as RoleProvisioningEntity);
+
+        expect(rolePermissionRepository.getAll()).toHaveLength(0);
+    });
+
     it('should stamp the named policy when no reach is declared', async () => {
         const policy = policyRepository.seed({ name: 'p', realmId: null });
 

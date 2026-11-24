@@ -75,13 +75,19 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             };
         }
 
+        // createOnly leaves a row it did not create alone, its permission
+        // bindings included, unless the row is built in: only provisioning
+        // writes one, so its bindings are the file's to extend.
+        const bindRelations = !attributes ||
+            !!attributes.builtIn ||
+            strategy.type !== ProvisioningEntityStrategyType.CREATE_ONLY;
+
         // resolved before any write: a role saved ahead of a failed lookup
         // would be skipped by the next createOnly pass, its bindings lost
-        const policyId = input.relations ?
+        const policyId = bindRelations && input.relations ?
             await this.resolvePolicyId(input.relations) :
             undefined;
 
-        let created = false;
 
         if (attributes) {
             switch (strategy.type) {
@@ -104,15 +110,7 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             }
         } else {
             attributes = await this.repository.save(this.repository.create(input.attributes));
-            created = true;
         }
-
-        // createOnly leaves a row it did not create alone, its permission
-        // bindings included, unless the row is built in: only provisioning
-        // writes one, so its bindings are the file's to extend.
-        const bindRelations = created ||
-            !!attributes.builtIn ||
-            strategy.type !== ProvisioningEntityStrategyType.CREATE_ONLY;
 
         if (bindRelations && input.relations) {
             const role = attributes;
