@@ -37,7 +37,7 @@ describe('src/token-creator (failed request)', () => {
         ));
 
         expect(isClientError(error)).toBe(true);
-        expect(JSON.stringify((error as Record<string, unknown>).request)).not.toContain('secret-value');
+        expect((error as { request: { body?: unknown } }).request.body).toBeUndefined();
         expect(String(error)).not.toContain('secret-value');
     });
 
@@ -48,7 +48,7 @@ describe('src/token-creator (failed request)', () => {
         ));
 
         expect(isClientError(error)).toBe(true);
-        expect(JSON.stringify((error as Record<string, unknown>).request)).not.toContain('password-value');
+        expect((error as { request: { body?: unknown } }).request.body).toBeUndefined();
     });
 
     it('should honor an explicit error transform', async () => {

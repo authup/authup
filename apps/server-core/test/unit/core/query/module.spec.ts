@@ -273,6 +273,9 @@ describe('core/query', () => {
                     throw new Error('denied');
                 }
             });
+            // an unrestricted reach keeps a related key (see above), so only
+            // the USER_READ denial can prune it here
+            evaluator.setCompileResult({ verdict: 'allow' });
 
             const parsed = await decodeQuery(
                 {
@@ -286,6 +289,11 @@ describe('core/query', () => {
             expect(collectFieldConditions(parsed.filters)).toEqual([]);
             expect(parsed.sorts.value).toEqual([]);
             expect(parsed.relations.value.map((relation) => relation.name)).toEqual(['role']);
+            expect(evaluator.preEvaluateOneOfCalls.map((call) => call.name)).toContainEqual([
+                PermissionName.USER_READ,
+                PermissionName.USER_UPDATE,
+                PermissionName.USER_DELETE,
+            ]);
         });
 
         it('should not gate an ungated target', async () => {
