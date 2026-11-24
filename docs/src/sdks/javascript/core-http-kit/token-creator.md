@@ -32,6 +32,7 @@ console.log(tokenPayload);
 ## Client Strategy
 
 Uses the OAuth2 client credentials grant to obtain a token.
+A client given by name is looked up in the realm named by `realmId` or `realmName`; set one whenever the same client name may exist in more than one realm.
 
 ```typescript
 import type { TokenCreator } from '@authup/core-http-kit';
@@ -40,6 +41,8 @@ import { createClientTokenCreator } from '@authup/core-http-kit';
 const creator: TokenCreator = createClientTokenCreator({
     id: 'xxx',
     secret: 'xxx',
+    // realmId: 'xxx',
+    // realmName: 'xxx',
 }, {
     client: { baseURL: 'http://localhost:3000' },
 });

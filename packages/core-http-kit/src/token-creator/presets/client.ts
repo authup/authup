@@ -16,6 +16,8 @@ export type ClientTokenCreatorOptions = {
 export type ClientTokenCreatorCredentials = {
     id: string,
     secret: string,
+    realmId?: string,
+    realmName?: string,
 };
 
 /**
@@ -33,5 +35,7 @@ export function createClientTokenCreator(
     return async () => client.token.createWithClientCredentials({
         client_id: credentials.id,
         client_secret: credentials.secret,
+        ...(credentials.realmId ? { realm_id: credentials.realmId } : {}),
+        ...(credentials.realmName ? { realm_name: credentials.realmName } : {}),
     });
 }

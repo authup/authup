@@ -25,7 +25,7 @@ const tokenGrantResponse : OAuth2TokenGrantResponse = {
     expires_in: 3600,
 };
 
-vi.spyOn(OAuth2TokenAPI.prototype, 'createWithClientCredentials')
+const createWithClientCredentials = vi.spyOn(OAuth2TokenAPI.prototype, 'createWithClientCredentials')
     .mockImplementation(() => Promise.resolve(tokenGrantResponse));
 
 vi.spyOn(OAuth2TokenAPI.prototype, 'createWithPassword')
@@ -58,5 +58,34 @@ describe('src/creator', () => {
         const output = await creator();
 
         expect(output).toEqual(tokenGrantResponse);
+    });
+
+    it('should send the realm of a client', async () => {
+        createWithClientCredentials.mockClear();
+
+        await createClientTokenCreator({
+            id: 'system',
+            secret: 'start123',
+            realmId: 'foo',
+            realmName: 'bar',
+        })();
+
+        expect(createWithClientCredentials).toHaveBeenCalledWith({
+            client_id: 'system',
+            client_secret: 'start123',
+            realm_id: 'foo',
+            realm_name: 'bar',
+        });
+    });
+
+    it('should send no realm of a client when none is given', async () => {
+        createWithClientCredentials.mockClear();
+
+        await createClientTokenCreator({ id: 'system', secret: 'start123' })();
+
+        expect(createWithClientCredentials).toHaveBeenCalledWith({
+            client_id: 'system',
+            client_secret: 'start123',
+        });
     });
 });
