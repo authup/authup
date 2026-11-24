@@ -13,12 +13,18 @@ import {
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { ClientPermissionService } from '../../../../../src/core/entities/client-permission/service.ts';
 import { FakeEntityRepository, createAllowAllActor, createDenyAllActor } from '@authup/server-test-kit';
-import { FakeIdentityPermissionProvider, readEvaluatedRecordRealms } from '../../helpers/index.ts';
+import {
+    FakeIdentityPermissionProvider,
+    createClientMatchActor,
+    readEvaluatedRecordRealms,
+    withHeldPermissions,
+} from '../../helpers/index.ts';
 
 describe('core/entities/client-permission/service', () => {
     let repository: FakeEntityRepository<ClientPermission>;
@@ -279,5 +285,143 @@ describe('core/entities/client-permission/service', () => {
             await service.delete(entity.id, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.CLIENT_PERMISSION_DELETE });
         });
+    });
+});
+
+describe('core/entities/client-permission/service: owning client (clientMatch)', () => {
+    const realmId = randomUUID();
+    const clientId = randomUUID();
+    const otherClientId = randomUUID();
+
+    const names = [
+        PermissionName.CLIENT_PERMISSION_CREATE,
+        PermissionName.CLIENT_PERMISSION_UPDATE,
+        PermissionName.CLIENT_PERMISSION_DELETE,
+    ];
+
+    let repository: FakeEntityRepository<ClientPermission>;
+    let permissionRepository: FakeEntityRepository<Permission>;
+    let service: ClientPermissionService;
+
+    let owned: Permission;
+    let foreign: Permission;
+    let global: Permission;
+
+    beforeEach(() => {
+        repository = new FakeEntityRepository<ClientPermission>({ defaults: { clientRealmId: realmId } });
+        permissionRepository = new FakeEntityRepository<Permission>();
+        service = new ClientPermissionService({
+            repository,
+            permissionRepository,
+            identityPermissionProvider: new FakeIdentityPermissionProvider(),
+        });
+
+        [owned, foreign, global] = permissionRepository.seed([
+            {
+                name: 'owned', 
+                realmId, 
+                clientId, 
+            },
+            {
+                name: 'foreign', 
+                realmId, 
+                clientId: otherClientId, 
+            },
+            {
+                name: 'global', 
+                realmId: null, 
+                clientId: null, 
+            },
+        ]);
+
+        repository.onValidateJoinColumns((data: any) => {
+            data.client = { realmId };
+            data.permission = permissionRepository.getAll().find((permission) => permission.id === data.permissionId);
+        });
+    });
+
+    const createActor = async () => withHeldPermissions(
+        await createClientMatchActor({
+            clientId, 
+            realmId, 
+            names, 
+        }),
+        names,
+    );
+
+    // the receiving client is the actor itself, which must not count as ownership
+    const bind = (permission: Permission) => repository.seed({
+        clientId,
+        permissionId: permission.id,
+        permissionRealmId: permission.realmId,
+    });
+
+    it('should bind an owned permission only', async () => {
+        const actor = await createActor();
+
+        await expect(service.create({ clientId: randomUUID(), permissionId: owned.id }, actor)).resolves.toBeDefined();
+        await expect(service.create({ clientId: randomUUID(), permissionId: foreign.id }, actor))
+            .rejects.toThrow(PermissionError);
+        await expect(service.create({ clientId: randomUUID(), permissionId: global.id }, actor))
+            .rejects.toThrow(PermissionError);
+    });
+
+    it('should read a binding of an owned permission only', async () => {
+        const actor = await createActor();
+        const ownedBinding = bind(owned);
+
+        expect((await service.getOne(ownedBinding.id, actor)).id).toEqual(ownedBinding.id);
+        await expect(service.getOne(bind(foreign).id, actor)).rejects.toThrow(PermissionError);
+        await expect(service.getOne(bind(global).id, actor)).rejects.toThrow(PermissionError);
+    });
+
+    it('should list bindings of owned permissions only, with one lookup', async () => {
+        bind(owned);
+        bind(foreign);
+        bind(global);
+        bind(owned);
+
+        const lookup = vi.spyOn(permissionRepository, 'findManyBy');
+
+        const result = await service.getMany({}, await createActor());
+
+        expect(result.data.map((row) => row.permissionId)).toEqual([owned.id, owned.id]);
+        expect(lookup).toHaveBeenCalledTimes(1);
+    });
+
+    it('should update a binding of an owned permission only', async () => {
+        const actor = await createActor();
+
+        await expect(service.update(bind(owned).id, { policyId: null }, actor)).resolves.toBeDefined();
+        await expect(service.update(bind(foreign).id, { policyId: null }, actor)).rejects.toThrow(PermissionError);
+    });
+
+    it('should delete a binding of an owned permission only', async () => {
+        const actor = await createActor();
+
+        await expect(service.delete(bind(owned).id, actor)).resolves.toBeDefined();
+        await expect(service.delete(bind(foreign).id, actor)).rejects.toThrow(PermissionError);
+        await expect(service.delete(bind(global).id, actor)).rejects.toThrow(PermissionError);
+    });
+
+    it('should carry the owner on every record check', async () => {
+        const actor = createAllowAllActor();
+        const foreignBinding = bind(foreign);
+
+        await service.getMany({}, actor);
+        await service.getOne(foreignBinding.id, actor);
+        await service.create({ clientId: randomUUID(), permissionId: owned.id }, actor);
+        await service.update(foreignBinding.id, { policyId: null }, actor);
+        await service.delete(bind(global).id, actor);
+
+        const owners = [
+            ...actor.permissionEvaluator.evaluateOneOfCalls,
+            ...actor.permissionEvaluator.evaluateCalls,
+        ].map((call) => call.data!.get(BuiltInPolicyType.CLIENT_MATCH));
+
+        expect(owners).not.toContain(undefined);
+        expect(owners).toContain(clientId);
+        expect(owners).toContain(otherClientId);
+        expect(owners).toContain(null);
     });
 });

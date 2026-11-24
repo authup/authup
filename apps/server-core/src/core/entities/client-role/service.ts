@@ -17,9 +17,11 @@ import { inArray } from '@rapiq/core';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
 import { ClientRoleValidator, PermissionName } from '@authup/core-kit';
-import type { ClientRole } from '@authup/core-kit';
-import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
+import type { ClientRole, Role } from '@authup/core-kit';
+import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
+import { loadJunctionOwners, readJunctionOwner } from '../junction-owner.ts';
+import type { JunctionDefinition, JunctionOwners } from '../junction-owner.ts';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { IClientRoleRepository, IClientRoleService } from './types.ts';
 import {
@@ -38,11 +40,14 @@ const READ_PERMISSION_NAMES = [
 
 export type ClientRoleServiceContext = {
     repository: IClientRoleRepository;
+    roleRepository: IEntityRepository<Role>;
     identityPermissionProvider: IIdentityPermissionProvider;
 };
 
 export class ClientRoleService extends JunctionEntityService implements IClientRoleService {
     protected readonly ownerRealm = { key: 'clientRealmId' } as const;
+
+    protected readonly definition: JunctionDefinition;
 
     protected repository: IClientRoleRepository;
 
@@ -53,8 +58,17 @@ export class ClientRoleService extends JunctionEntityService implements IClientR
     constructor(ctx: ClientRoleServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.definition = {
+            key: 'roleId', 
+            relation: 'role', 
+            repository: ctx.roleRepository, 
+        };
         this.identityPermissionProvider = ctx.identityPermissionProvider;
         this.validator = new ClientRoleValidator();
+    }
+
+    protected junctionOwner(row: Record<string, any>, owners?: JunctionOwners): string | null {
+        return readJunctionOwner(row, this.definition, owners);
     }
 
     async getMany(
@@ -87,12 +101,15 @@ export class ClientRoleService extends JunctionEntityService implements IClientR
             return { data: await redactUnreachedRelations(entities, parsed, clientRoleSchema, actor), meta };
         }
 
+        const owners = await loadJunctionOwners(entities, this.definition);
+
         const data: ClientRole[] = [];
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
                 name: READ_PERMISSION_NAMES,
                 realm: this.junctionResourceRealm(entity),
+                owner: this.junctionOwner(entity, owners),
                 data: {
                     [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
                     [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, parsed),
@@ -124,6 +141,7 @@ export class ClientRoleService extends JunctionEntityService implements IClientR
         await evaluateRecordOneOf(actor.permissionEvaluator, {
             name: READ_PERMISSION_NAMES,
             realm: this.junctionResourceRealm(entity),
+            owner: this.junctionOwner(entity, await loadJunctionOwners([entity], this.definition)),
             data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
         });
 
@@ -176,6 +194,7 @@ export class ClientRoleService extends JunctionEntityService implements IClientR
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.CLIENT_ROLE_CREATE,
             realm: this.junctionResourceRealm(validated),
+            owner: this.junctionOwner(validated),
             data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated) },
         });
 
@@ -202,6 +221,7 @@ export class ClientRoleService extends JunctionEntityService implements IClientR
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.CLIENT_ROLE_DELETE,
             realm: this.junctionResourceRealm(entity),
+            owner: this.junctionOwner(entity, await loadJunctionOwners([entity], this.definition)),
             data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
         });
 

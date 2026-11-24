@@ -22,6 +22,8 @@ import type { IIdentityPermissionProvider } from '../../identity/permission/type
 import { applyJunctionCreateGrant, buildJunctionUpdateData } from '../../identity/permission/junction-grant.ts';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
+import { loadJunctionOwners, readJunctionOwner } from '../junction-owner.ts';
+import type { JunctionDefinition, JunctionOwners } from '../junction-owner.ts';
 import type { IClientPermissionRepository, IClientPermissionService } from './types.ts';
 import {
     decodeQuery,
@@ -45,6 +47,8 @@ export type ClientPermissionServiceContext = {
 export class ClientPermissionService extends JunctionEntityService implements IClientPermissionService {
     protected readonly ownerRealm = { key: 'clientRealmId' } as const;
 
+    protected readonly definition: JunctionDefinition;
+
     protected repository: IClientPermissionRepository;
 
     protected permissionRepository: IEntityRepository<Permission>;
@@ -56,9 +60,18 @@ export class ClientPermissionService extends JunctionEntityService implements IC
     constructor(ctx: ClientPermissionServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.definition = {
+            key: 'permissionId', 
+            relation: 'permission', 
+            repository: ctx.permissionRepository, 
+        };
         this.permissionRepository = ctx.permissionRepository;
         this.identityPermissionProvider = ctx.identityPermissionProvider;
         this.validator = new ClientPermissionValidator();
+    }
+
+    protected junctionOwner(row: Record<string, any>, owners?: JunctionOwners): string | null {
+        return readJunctionOwner(row, this.definition, owners);
     }
 
     async getMany(
@@ -91,12 +104,15 @@ export class ClientPermissionService extends JunctionEntityService implements IC
             return { data: await redactUnreachedRelations(entities, parsed, clientPermissionSchema, actor), meta };
         }
 
+        const owners = await loadJunctionOwners(entities, this.definition);
+
         const data: ClientPermission[] = [];
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
                 name: READ_PERMISSION_NAMES,
                 realm: this.junctionResourceRealm(entity),
+                owner: this.junctionOwner(entity, owners),
                 data: {
                     [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
                     [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, parsed),
@@ -128,6 +144,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
         await evaluateRecordOneOf(actor.permissionEvaluator, {
             name: READ_PERMISSION_NAMES,
             realm: this.junctionResourceRealm(entity),
+            owner: this.junctionOwner(entity, await loadJunctionOwners([entity], this.definition)),
             data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
         });
 
@@ -184,6 +201,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.CLIENT_PERMISSION_CREATE,
             realm: this.junctionResourceRealm(validated),
+            owner: this.junctionOwner(validated),
             data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated) },
         });
 
@@ -261,7 +279,10 @@ export class ClientPermissionService extends JunctionEntityService implements IC
             PermissionName.CLIENT_PERMISSION_UPDATE,
             current,
             this.junctionAttributes(merged),
-            { realm: (row) => this.junctionResourceRealm(row) },
+            {
+                realm: (row) => this.junctionResourceRealm(row),
+                owner: () => permission?.clientId ?? null,
+            },
         );
 
         return this.repository.save(merged);
@@ -282,6 +303,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.CLIENT_PERMISSION_DELETE,
             realm: this.junctionResourceRealm(entity),
+            owner: this.junctionOwner(entity, await loadJunctionOwners([entity], this.definition)),
             data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
         });
 

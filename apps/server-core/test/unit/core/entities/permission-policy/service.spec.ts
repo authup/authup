@@ -7,16 +7,19 @@
 
 import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
-import type { PermissionPolicy } from '@authup/core-kit';
+import type { Permission, PermissionPolicy } from '@authup/core-kit';
 import {
     beforeEach,
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
+import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { PermissionPolicyService } from '../../../../../src/core/entities/permission-policy/service.ts';
 import { FakeEntityRepository, createAllowAllActor, createDenyAllActor } from '@authup/server-test-kit';
+import { createClientMatchActor } from '../../helpers/index.ts';
 
 describe('core/entities/permission-policy/service', () => {
     let repository: FakeEntityRepository<PermissionPolicy>;
@@ -29,7 +32,7 @@ describe('core/entities/permission-policy/service', () => {
         repository.onValidateJoinColumns((data: any) => {
             data.permission = { realmId: null };
         });
-        service = new PermissionPolicyService({ repository });
+        service = new PermissionPolicyService({ repository, permissionRepository: new FakeEntityRepository<Permission>() });
     });
 
     describe('getMany', () => {
@@ -215,5 +218,127 @@ describe('core/entities/permission-policy/service', () => {
             await service.delete(entity.id, actor);
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.PERMISSION_UPDATE });
         });
+    });
+});
+
+describe('core/entities/permission-policy/service: owning client (clientMatch)', () => {
+    const realmId = randomUUID();
+    const clientId = randomUUID();
+    const otherClientId = randomUUID();
+    const policyId = randomUUID();
+
+    const names = [
+        PermissionName.PERMISSION_READ,
+        PermissionName.PERMISSION_UPDATE,
+    ];
+
+    let repository: FakeEntityRepository<PermissionPolicy>;
+    let permissionRepository: FakeEntityRepository<Permission>;
+    let service: PermissionPolicyService;
+
+    let owned: Permission;
+    let foreign: Permission;
+    let global: Permission;
+
+    beforeEach(() => {
+        repository = new FakeEntityRepository<PermissionPolicy>();
+        permissionRepository = new FakeEntityRepository<Permission>();
+        service = new PermissionPolicyService({ repository, permissionRepository });
+
+        [owned, foreign, global] = permissionRepository.seed([
+            {
+                name: 'owned', 
+                realmId, 
+                clientId, 
+            },
+            {
+                name: 'foreign', 
+                realmId, 
+                clientId: otherClientId, 
+            },
+            {
+                name: 'global', 
+                realmId: null, 
+                clientId: null, 
+            },
+        ]);
+
+        repository.onValidateJoinColumns((data: any) => {
+            data.permission = permissionRepository.getAll().find((permission) => permission.id === data.permissionId);
+            data.policy = { id: data.policyId, realmId };
+        });
+    });
+
+    const createActor = () => createClientMatchActor({
+        clientId, 
+        realmId, 
+        names, 
+    });
+
+    // a global permission cannot sit in the actor's realm, so it is bound in it
+    // to prove the owner gate refuses it, not the realm gate
+    const attach = (permission: Permission) => repository.seed({
+        permissionId: permission.id,
+        permissionRealmId: realmId,
+        policyId,
+        policyRealmId: realmId,
+    });
+
+    it('should attach a policy to an owned permission only', async () => {
+        const actor = await createActor();
+
+        await expect(service.create({ permissionId: owned.id, policyId }, actor)).resolves.toBeDefined();
+        await expect(service.create({ permissionId: foreign.id, policyId }, actor))
+            .rejects.toThrow(PermissionError);
+    });
+
+    it('should read an attachment of an owned permission only', async () => {
+        const actor = await createActor();
+        const ownedAttachment = attach(owned);
+
+        expect((await service.getOne(ownedAttachment.id, actor)).id).toEqual(ownedAttachment.id);
+        await expect(service.getOne(attach(foreign).id, actor)).rejects.toThrow(PermissionError);
+        await expect(service.getOne(attach(global).id, actor)).rejects.toThrow(PermissionError);
+    });
+
+    it('should list attachments of owned permissions only, with one lookup', async () => {
+        attach(owned);
+        attach(foreign);
+        attach(global);
+        attach(owned);
+
+        const lookup = vi.spyOn(permissionRepository, 'findManyBy');
+
+        const result = await service.getMany({}, await createActor());
+
+        expect(result.data.map((row) => row.permissionId)).toEqual([owned.id, owned.id]);
+        expect(lookup).toHaveBeenCalledTimes(1);
+    });
+
+    it('should detach a policy from an owned permission only', async () => {
+        const actor = await createActor();
+
+        await expect(service.delete(attach(owned).id, actor)).resolves.toBeDefined();
+        await expect(service.delete(attach(foreign).id, actor)).rejects.toThrow(PermissionError);
+        await expect(service.delete(attach(global).id, actor)).rejects.toThrow(PermissionError);
+    });
+
+    it('should carry the owner on every record check', async () => {
+        const actor = createAllowAllActor();
+
+        await service.getMany({}, actor);
+        await service.getOne(attach(foreign).id, actor);
+        await service.create({ permissionId: owned.id, policyId: randomUUID() }, actor);
+        await service.delete(attach(global).id, actor);
+
+        const owners = [
+            ...actor.permissionEvaluator.evaluateOneOfCalls,
+            ...actor.permissionEvaluator.evaluateCalls,
+        ].map((call) => call.data!.get(BuiltInPolicyType.CLIENT_MATCH));
+
+        expect(owners).not.toContain(undefined);
+        expect(owners).toContain(clientId);
+        expect(owners).toContain(otherClientId);
+        expect(owners).toContain(null);
     });
 });

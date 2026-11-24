@@ -46,6 +46,7 @@ describe('core/entities (junction delegation checks the actor grants)', () => {
             const service = new Service({
                 repository,
                 permissionRepository: new FakeEntityRepository<Permission>(),
+                roleRepository: new FakeEntityRepository<Role>(),
                 identityPermissionProvider: provider,
             });
 
@@ -63,6 +64,7 @@ describe('core/entities (junction delegation checks the actor grants)', () => {
             const service = new Service({
                 repository,
                 permissionRepository,
+                roleRepository: new FakeEntityRepository<Role>(),
                 identityPermissionProvider: provider,
             });
 
@@ -80,7 +82,11 @@ describe('core/entities (junction delegation checks the actor grants)', () => {
                 data[owner] = { realmId: null };
             });
 
-            const service = new Service({ repository, identityPermissionProvider: provider });
+            const service = new Service({
+                repository,
+                roleRepository: new FakeEntityRepository<Role>(),
+                identityPermissionProvider: provider,
+            });
 
             return service.create({ [`${owner}Id`]: randomUUID(), roleId: randomUUID() }, actor());
         },

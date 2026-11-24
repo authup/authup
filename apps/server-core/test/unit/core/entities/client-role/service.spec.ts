@@ -7,14 +7,16 @@
 
 import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
-import type { ClientRole } from '@authup/core-kit';
+import type { ClientRole, Role } from '@authup/core-kit';
 import {
     beforeEach,
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
+import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { ClientRoleService } from '../../../../../src/core/entities/client-role/service.ts';
 import {
     FakeEntityRepository,
@@ -23,6 +25,7 @@ import {
     createMasterRealmActor,
 } from '@authup/server-test-kit';
 import { FakeIdentityPermissionProvider } from '../../helpers/fake-identity-permission-provider.ts';
+import { createClientMatchActor } from '../../helpers/index.ts';
 
 describe('core/entities/client-role/service', () => {
     let repository: FakeEntityRepository<ClientRole>;
@@ -38,7 +41,11 @@ describe('core/entities/client-role/service', () => {
             data.client = { realmId: null };
         });
         identityPermissionProvider = new FakeIdentityPermissionProvider();
-        service = new ClientRoleService({ repository, identityPermissionProvider });
+        service = new ClientRoleService({
+            repository, 
+            roleRepository: new FakeEntityRepository<Role>(), 
+            identityPermissionProvider, 
+        });
     });
 
     describe('getMany', () => {
@@ -155,7 +162,11 @@ describe('core/entities/client-role/service', () => {
 
             identityPermissionProviderDeny.setSuperset(false);
 
-            const svc = new ClientRoleService({ repository, identityPermissionProvider: identityPermissionProviderDeny });
+            const svc = new ClientRoleService({
+                repository, 
+                roleRepository: new FakeEntityRepository<Role>(), 
+                identityPermissionProvider: identityPermissionProviderDeny, 
+            });
 
             repository.onValidateJoinColumns((data: any) => {
                 data.role = { realmId: null, clientId: null };
@@ -201,5 +212,131 @@ describe('core/entities/client-role/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(service.delete('non-existent-id', createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
+    });
+});
+
+describe('core/entities/client-role/service: owning client (clientMatch)', () => {
+    const realmId = randomUUID();
+    const clientId = randomUUID();
+    const otherClientId = randomUUID();
+
+    const names = [
+        PermissionName.CLIENT_ROLE_CREATE,
+        PermissionName.CLIENT_ROLE_READ,
+        PermissionName.CLIENT_ROLE_UPDATE,
+        PermissionName.CLIENT_ROLE_DELETE,
+    ];
+
+    let repository: FakeEntityRepository<ClientRole>;
+    let roleRepository: FakeEntityRepository<Role>;
+    let service: ClientRoleService;
+
+    let owned: Role;
+    let foreign: Role;
+    let global: Role;
+
+    beforeEach(() => {
+        repository = new FakeEntityRepository<ClientRole>({ defaults: { clientRealmId: realmId } });
+        roleRepository = new FakeEntityRepository<Role>();
+        service = new ClientRoleService({
+            repository,
+            roleRepository,
+            identityPermissionProvider: new FakeIdentityPermissionProvider(),
+        });
+
+        [owned, foreign, global] = roleRepository.seed([
+            {
+                name: 'owned', 
+                realmId, 
+                clientId, 
+            },
+            {
+                name: 'foreign', 
+                realmId, 
+                clientId: otherClientId, 
+            },
+            {
+                name: 'global', 
+                realmId: null, 
+                clientId: null, 
+            },
+        ]);
+
+        repository.onValidateJoinColumns((data: any) => {
+            data.client = { realmId };
+            data.role = roleRepository.getAll().find((role) => role.id === data.roleId);
+        });
+    });
+
+    const createActor = () => createClientMatchActor({
+        clientId, 
+        realmId, 
+        names, 
+    });
+
+    const bind = (role: Role) => repository.seed({
+        clientId: randomUUID(),
+        roleId: role.id,
+        roleRealmId: role.realmId,
+    });
+
+    it('should assign an owned role only', async () => {
+        const actor = await createActor();
+
+        await expect(service.create({ clientId: randomUUID(), roleId: owned.id }, actor)).resolves.toBeDefined();
+        await expect(service.create({ clientId: randomUUID(), roleId: foreign.id }, actor))
+            .rejects.toThrow(PermissionError);
+        await expect(service.create({ clientId: randomUUID(), roleId: global.id }, actor))
+            .rejects.toThrow(PermissionError);
+    });
+
+    it('should read an assignment of an owned role only', async () => {
+        const actor = await createActor();
+        const ownedBinding = bind(owned);
+
+        expect((await service.getOne(ownedBinding.id, actor)).id).toEqual(ownedBinding.id);
+        await expect(service.getOne(bind(foreign).id, actor)).rejects.toThrow(PermissionError);
+        await expect(service.getOne(bind(global).id, actor)).rejects.toThrow(PermissionError);
+    });
+
+    it('should list assignments of owned roles only, with one lookup', async () => {
+        bind(owned);
+        bind(foreign);
+        bind(global);
+        bind(owned);
+
+        const lookup = vi.spyOn(roleRepository, 'findManyBy');
+
+        const result = await service.getMany({}, await createActor());
+
+        expect(result.data.map((row) => row.roleId)).toEqual([owned.id, owned.id]);
+        expect(lookup).toHaveBeenCalledTimes(1);
+    });
+
+    it('should delete an assignment of an owned role only', async () => {
+        const actor = await createActor();
+
+        await expect(service.delete(bind(owned).id, actor)).resolves.toBeDefined();
+        await expect(service.delete(bind(foreign).id, actor)).rejects.toThrow(PermissionError);
+        await expect(service.delete(bind(global).id, actor)).rejects.toThrow(PermissionError);
+    });
+
+    it('should carry the owner on every record check', async () => {
+        const actor = createAllowAllActor();
+
+        await service.getMany({}, actor);
+        await service.getOne(bind(foreign).id, actor);
+        await service.create({ clientId: randomUUID(), roleId: owned.id }, actor);
+        await service.delete(bind(global).id, actor);
+
+        const owners = [
+            ...actor.permissionEvaluator.evaluateOneOfCalls,
+            ...actor.permissionEvaluator.evaluateCalls,
+        ].map((call) => call.data!.get(BuiltInPolicyType.CLIENT_MATCH));
+
+        expect(owners).not.toContain(undefined);
+        expect(owners).toContain(clientId);
+        expect(owners).toContain(otherClientId);
+        expect(owners).toContain(null);
     });
 });

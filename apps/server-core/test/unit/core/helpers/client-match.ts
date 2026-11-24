@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuthorizationPolicy } from '@authup/access';
+import type { AuthorizationPolicy, PermissionEvaluationContext } from '@authup/access';
 import { BuiltInPolicyType, RealmScope, createAuthorizationEvaluator } from '@authup/access';
 import { IdentityType } from '@authup/core-kit';
 import type { ActorContext } from '@authup/server-kit';
@@ -70,4 +70,34 @@ export async function createClientMatchActor(options: ClientMatchActorOptions): 
     });
 
     return { permissionEvaluator: evaluator };
+}
+
+/**
+ * Hold every bound permission outside `names`, so a junction write tests
+ * the junction's own gate rather than the hold rule on its definition.
+ */
+export function withHeldPermissions(actor: ActorContext, names: string[]): ActorContext {
+    const evaluator = actor.permissionEvaluator;
+
+    return {
+        ...actor,
+        permissionEvaluator: new Proxy(evaluator, {
+            get(target, property) {
+                if (property === 'preEvaluate') {
+                    return async (ctx: PermissionEvaluationContext) => {
+                        const requested = Array.isArray(ctx.name) ? ctx.name : [ctx.name];
+                        const gated = requested.some((name) => names.includes(name));
+
+                        if (gated) {
+                            await target.preEvaluate(ctx);
+                        }
+                    };
+                }
+
+                const value = Reflect.get(target, property, target);
+
+                return typeof value === 'function' ? value.bind(target) : value;
+            },
+        }),
+    };
 }

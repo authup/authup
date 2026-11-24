@@ -20,11 +20,13 @@ import {
     PermissionName,
     RolePermissionValidator,
 } from '@authup/core-kit';
-import type { Permission, RolePermission } from '@authup/core-kit';
+import type { Permission, Role, RolePermission } from '@authup/core-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import { applyJunctionCreateGrant, buildJunctionUpdateData } from '../../identity/permission/junction-grant.ts';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
+import { loadJunctionOwners, readJunctionOwner } from '../junction-owner.ts';
+import type { JunctionDefinition, JunctionOwners } from '../junction-owner.ts';
 import type { IRolePermissionRepository, IRolePermissionService } from './types.ts';
 import {
     decodeQuery,
@@ -41,12 +43,15 @@ const READ_PERMISSION_NAMES = [
 
 export type RolePermissionServiceContext = {
     repository: IRolePermissionRepository;
+    roleRepository: IEntityRepository<Role>;
     permissionRepository: IEntityRepository<Permission>;
     identityPermissionProvider: IIdentityPermissionProvider;
 };
 
 export class RolePermissionService extends JunctionEntityService implements IRolePermissionService {
     protected readonly ownerRealm = { key: 'roleRealmId' } as const;
+
+    protected readonly definition: JunctionDefinition;
 
     protected repository: IRolePermissionRepository;
 
@@ -59,9 +64,18 @@ export class RolePermissionService extends JunctionEntityService implements IRol
     constructor(ctx: RolePermissionServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.definition = {
+            key: 'roleId', 
+            relation: 'role', 
+            repository: ctx.roleRepository, 
+        };
         this.permissionRepository = ctx.permissionRepository;
         this.identityPermissionProvider = ctx.identityPermissionProvider;
         this.validator = new RolePermissionValidator();
+    }
+
+    protected junctionOwner(row: Record<string, any>, owners?: JunctionOwners): string | null {
+        return readJunctionOwner(row, this.definition, owners);
     }
 
     async getMany(
@@ -94,12 +108,15 @@ export class RolePermissionService extends JunctionEntityService implements IRol
             return { data: await redactUnreachedRelations(entities, parsed, rolePermissionSchema, actor), meta };
         }
 
+        const owners = await loadJunctionOwners(entities, this.definition);
+
         const data: RolePermission[] = [];
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
                 name: READ_PERMISSION_NAMES,
                 realm: this.junctionResourceRealm(entity),
+                owner: this.junctionOwner(entity, owners),
                 data: {
                     [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
                     [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, parsed),
@@ -131,6 +148,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
         await evaluateRecordOneOf(actor.permissionEvaluator, {
             name: READ_PERMISSION_NAMES,
             realm: this.junctionResourceRealm(entity),
+            owner: this.junctionOwner(entity, await loadJunctionOwners([entity], this.definition)),
             data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
         });
 
@@ -190,6 +208,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.ROLE_PERMISSION_CREATE,
             realm: this.junctionResourceRealm(validated),
+            owner: this.junctionOwner(validated),
             data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated) },
         });
 
@@ -263,6 +282,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
 
         await this.repository.validateJoinColumns(updateData);
 
+        const owners = await loadJunctionOwners([entity], this.definition);
         const current = this.junctionAttributes(entity);
         const merged = this.repository.merge(entity, updateData);
 
@@ -271,7 +291,10 @@ export class RolePermissionService extends JunctionEntityService implements IRol
             PermissionName.ROLE_PERMISSION_UPDATE,
             current,
             this.junctionAttributes(merged),
-            { realm: (row) => this.junctionResourceRealm(row) },
+            {
+                realm: (row) => this.junctionResourceRealm(row),
+                owner: (row) => this.junctionOwner(row, owners),
+            },
         );
 
         return this.repository.save(merged);
@@ -292,6 +315,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.ROLE_PERMISSION_DELETE,
             realm: this.junctionResourceRealm(entity),
+            owner: this.junctionOwner(entity, await loadJunctionOwners([entity], this.definition)),
             data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
         });
 

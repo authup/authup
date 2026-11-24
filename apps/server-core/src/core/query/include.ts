@@ -32,6 +32,10 @@ function isOwnIdentity(actor: ActorContext, target: string, row: Record<string, 
     ) && actor.identity.data.id === row.id;
 }
 
+function isOwnedDefinition(target: string): boolean {
+    return target === EntityType.PERMISSION || target === EntityType.ROLE;
+}
+
 async function reachesJoinedRow(
     actor: ActorContext,
     target: string,
@@ -58,6 +62,7 @@ async function reachesJoinedRow(
     const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
         name: names,
         realm: row.realmId,
+        ...(isOwnedDefinition(target) && typeof row.clientId !== 'undefined' ? { owner: row.clientId } : {}),
         data: { [BuiltInPolicyType.ATTRIBUTES]: row },
     });
 

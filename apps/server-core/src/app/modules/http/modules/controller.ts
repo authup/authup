@@ -868,7 +868,11 @@ export class HTTPControllerModule {
             container.resolve<Repository<ClientRole>>(ClientRoleEntity),
         );
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
-        const service = new ClientRoleService({ repository, identityPermissionProvider });
+        const service = new ClientRoleService({
+            repository,
+            roleRepository: this.createRoleRepository(container),
+            identityPermissionProvider,
+        });
 
         return new ClientRoleController({ service });
     }
@@ -916,6 +920,7 @@ export class HTTPControllerModule {
         const service = new RolePermissionService({
             repository,
             permissionRepository,
+            roleRepository: this.createRoleRepository(container),
             identityPermissionProvider,
         });
 
@@ -926,7 +931,10 @@ export class HTTPControllerModule {
         const repository = new PermissionPolicyRepositoryAdapter(
             container.resolve<Repository<PermissionPolicy>>(PermissionPolicyEntity),
         );
-        const service = new PermissionPolicyService({ repository });
+        const service = new PermissionPolicyService({
+            repository,
+            permissionRepository: this.createPermissionRepository(container),
+        });
 
         return new PermissionPolicyController({ service });
     }
@@ -1358,7 +1366,11 @@ export class HTTPControllerModule {
             container.resolve<Repository<UserRole>>(UserRoleEntity),
         );
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
-        const service = new UserRoleService({ repository, identityPermissionProvider });
+        const service = new UserRoleService({
+            repository,
+            roleRepository: this.createRoleRepository(container),
+            identityPermissionProvider,
+        });
 
         return new UserRoleController({ service });
     }

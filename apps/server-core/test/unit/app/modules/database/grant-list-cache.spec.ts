@@ -333,6 +333,7 @@ describe('app/modules/database/repositories grant lists (#3688)', () => {
 
         const service = new UserRoleService({
             repository: new UserRoleRepositoryAdapter(suite.dataSource.getRepository(UserRoleEntity)),
+            roleRepository: roles,
             identityPermissionProvider: suite.container.resolve(IdentityInjectionKey.PermissionProvider),
         });
 
