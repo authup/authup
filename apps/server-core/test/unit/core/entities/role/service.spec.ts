@@ -863,6 +863,33 @@ describe('core/entities/role/service', () => {
             expect(result.data.map((row) => row.name)).toEqual([owned.name]);
         });
 
+        it('should list only owned roles under a projection checked per row', async () => {
+            const actor = await createClientMatchActor({
+                clientId,
+                realmId,
+                names,
+                policy: {
+                    type: BuiltInPolicyType.COMPOSITE,
+                    children: [
+                        { type: BuiltInPolicyType.CLIENT_MATCH },
+                        {
+                            type: BuiltInPolicyType.ATTRIBUTE_NAMES, 
+                            invert: true, 
+                            names: ['secret'], 
+                        },
+                    ],
+                },
+            });
+            const scope = await service.scopeRead(await decodeQuery({ fields: 'name' }, { schema: roleSchema, actor }), actor);
+
+            expect(scope.post).toBe(true);
+
+            const result = await service.getMany({ fields: 'name' }, actor);
+
+            expect(result.data.map((row) => row.name)).toEqual([owned.name]);
+            expect(result.data[0]).toHaveProperty('clientId', clientId);
+        });
+
         it('should list every reached role for an unrestricted grant', async () => {
             const result = await service.getMany({}, await createActor(true));
 

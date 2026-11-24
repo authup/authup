@@ -32,8 +32,8 @@ export class RoleRepositoryAdapter extends EntityRepositoryAdapter<Role> impleme
             alias: 'role',
             target: RoleEntity,
             entity: 'role',
-            // the per-row realm gate reads `realmId` (issue #3574)
-            realmScope: {},
+            // the per-row gate reads `realmId` (issue #3574) and the owning client (#3907)
+            realmScope: { extraColumns: ['clientId'] },
             realmRepository: new RealmRepositoryAdapter(ctx.realmRepository, cache),
         });
 

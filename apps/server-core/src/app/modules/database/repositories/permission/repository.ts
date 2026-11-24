@@ -23,8 +23,8 @@ export class PermissionRepositoryAdapter extends EntityRepositoryAdapter<Permiss
             alias: 'permission',
             target: PermissionEntity,
             entity: 'permission',
-            // the per-row realm gate reads `realmId` (issue #3574)
-            realmScope: {},
+            // the per-row gate reads `realmId` (issue #3574) and the owning client (#3907)
+            realmScope: { extraColumns: ['clientId'] },
             realmRepository: createRealmNameResolver(ctx.realmRepository),
         });
     }

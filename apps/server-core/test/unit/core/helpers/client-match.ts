@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { AuthorizationPolicy } from '@authup/access';
 import { BuiltInPolicyType, RealmScope, createAuthorizationEvaluator } from '@authup/access';
 import { IdentityType } from '@authup/core-kit';
 import type { ActorContext } from '@authup/server-kit';
@@ -17,6 +18,10 @@ export type ClientMatchActorOptions = {
      * Also hold every name without a junction policy.
      */
     unrestricted?: boolean,
+    /**
+     * The junction policy, `clientMatch` unless given.
+     */
+    policy?: AuthorizationPolicy,
 };
 
 /**
@@ -28,7 +33,7 @@ export async function createClientMatchActor(options: ClientMatchActorOptions): 
         catalog: {
             policies: {
                 binding: { type: BuiltInPolicyType.PERMISSION_BINDING },
-                owned: { type: BuiltInPolicyType.CLIENT_MATCH },
+                owned: options.policy ?? { type: BuiltInPolicyType.CLIENT_MATCH },
             },
             permissions: options.names.map((name) => ({
                 name,
