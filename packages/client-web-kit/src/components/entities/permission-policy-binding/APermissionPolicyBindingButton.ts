@@ -292,7 +292,6 @@ export const APermissionPolicyBindingButton = defineComponent({
 
         const renderCloseIcon = () => h(VCModalClose, {
             icon: true,
-            class: 'cursor-pointer',
             'aria-label': translationClose.value,
         }, () => h(VCIcon, { name: 'fa6-solid:xmark' }));
 

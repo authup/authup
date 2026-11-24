@@ -246,7 +246,6 @@ export default defineComponent({
                     <VCModalTitle>{{ translations.mfaEnrollTitle }}</VCModalTitle>
                     <VCModalClose
                         icon
-                        class="cursor-pointer"
                         :aria-label="translations.close"
                     >
                         <VCIcon name="fa6-solid:xmark" />
