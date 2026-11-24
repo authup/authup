@@ -52,4 +52,31 @@ describe('src/domains/workflows/oauth2/token', () => {
             otp: '123456',
         });
     });
+
+    it('should send a token exchange with authup\'s cap and expires_in', async () => {
+        const transport = new MemoryTransport({ fetch: () => ({ body: TOKEN_RESPONSE }) });
+        const client = new Client({
+            baseURL: 'http://fake.test/',
+            transport,
+        });
+
+        await client.token.createWithTokenExchange({
+            subject_token: 'subject',
+            subject_token_type: 'urn:ietf:params:oauth:token-type:access_token',
+            audience: 'storage',
+            cap: ['storage:read', 'storage:write'],
+            expires_in: 300,
+        });
+
+        const [request] = transport.requests;
+
+        expect(readForm(request)).toEqual({
+            grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange',
+            subject_token: 'subject',
+            subject_token_type: 'urn:ietf:params:oauth:token-type:access_token',
+            audience: 'storage',
+            cap: 'storage:read storage:write',
+            expires_in: '300',
+        });
+    });
 });

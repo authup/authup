@@ -30,6 +30,7 @@ import type {
     TokenPasswordGrantParameters,
     TokenRefreshTokenGrantParameters,
     TokenRevokeParameters,
+    TokenTokenExchangeParameters,
 } from '@hapic/oauth2';
 import type { AuthorizationHeader, Response } from 'hapic';
 import type { APIRequestOptions } from '../../types-base.ts';
@@ -72,6 +73,15 @@ export type OAuth2TokenDeviceCodeGrantParameters = TokenDeviceCodeGrantParameter
  */
 export type OAuth2TokenDeviceCodePollParameters = TokenDeviceCodePollParameters<{
     realm_name?: string,
+}>;
+/**
+ * The RFC 8693 token exchange request plus authup's required `cap` (the
+ * capabilities the exchanged token carries; a list is joined with spaces)
+ * and an optional `expires_in` in seconds.
+ */
+export type OAuth2TokenExchangeParameters = TokenTokenExchangeParameters<{
+    cap: string | string[],
+    expires_in?: number,
 }>;
 export type OAuth2TokenGrantParameters = TokenGrantParameters | OAuth2TokenDeviceCodeGrantParameters;
 
@@ -252,6 +262,11 @@ export interface IOAuth2TokenAPI {
 
     pollWithDeviceCode(
         parameters: OAuth2TokenDeviceCodePollParameters,
+        options?: OAuth2TokenRequestOptions,
+    ) : Promise<OAuth2TokenGrantResponse>;
+
+    createWithTokenExchange(
+        parameters: OAuth2TokenExchangeParameters,
         options?: OAuth2TokenRequestOptions,
     ) : Promise<OAuth2TokenGrantResponse>;
 
