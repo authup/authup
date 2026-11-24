@@ -18,6 +18,7 @@ import type { CertificateSource } from '../../../request/index.ts';
 import {
     extractClientCredentialsFromRequest,
     extractOAuth2ClientCertificateEvidence,
+    readRealmHint,
 } from './utils/index.ts';
 
 export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implements IHTTPOAuth2Grant {
@@ -35,7 +36,7 @@ export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implement
     async runWithRequest(event: IAppEvent): Promise<OAuth2TokenGrantResponse> {
         const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);
         const body = await readRequestBody(event);
-        const realmId = body?.realm_id;
+        const realmId = readRealmHint(body);
 
         if (!clientId) {
             throw OAuth2ClientError.invalid();
