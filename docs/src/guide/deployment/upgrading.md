@@ -93,8 +93,8 @@ as a peer dependency, so a resource server using only `MemoryTokenCache` does no
 
 ### `@authup/client-web-kit` renames its pickers
 
-The form pickers carry a `Form` infix: `APathPicker`, `APolicyPicker` and `AClientPicker` are
-`AFormPathPicker`, `AFormPolicyPicker` and `AFormClientPicker`, and the realm form picker
+The form pickers carry a `Form` infix: `APathPicker` and `AClientPicker` are
+`AFormPathPicker` and `AFormClientPicker`, and the realm form picker
 `ARealmPicker` is `AFormRealmPicker`. The login realm chooser `ARealmGrid` takes the freed name
 and is `ARealmPicker`.
 
