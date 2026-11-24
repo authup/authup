@@ -30,7 +30,7 @@ services:
         ports:
             -  '8090:8090'
     ldap:
-        image: osixia/openldap:latest
+        image: osixia/openldap:1.5.0
         ports:
             - '389:389'
             - '636:636'

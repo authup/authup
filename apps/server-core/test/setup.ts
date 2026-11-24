@@ -74,7 +74,7 @@ const DATABASE_CONTAINERS: Record<string, DatabaseContainerConfig> = {
 };
 
 const LDAP_CONTAINER: ContainerConfig = {
-    image: 'osixia/openldap',
+    image: 'osixia/openldap:1.5.0',
     port: 389,
     environment: {
         LDAP_ORGANISATION: 'example',
