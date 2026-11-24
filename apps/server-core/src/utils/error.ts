@@ -20,9 +20,13 @@ import {
     ParseError,
     ErrorCode as QueryErrorCode,
 } from '@rapiq/core';
-import { EntityRelationLookupError } from 'typeorm-extension';
+import {
+    EntityRelationLookupError,
+    isDatabaseUniqueViolationError,
+    readDatabaseErrorCode,
+} from 'typeorm-extension';
 import { buildErrorMessageForAttributes, isValidupError, stringifyPath } from 'validup';
-import { hasOwnProperty, isObject } from '@authup/kit';
+import { isObject } from '@authup/kit';
 
 /**
  * Normalize an unknown error to an AuthupError. Recognised shapes:
@@ -121,24 +125,18 @@ export function sanitizeError(input: unknown): AuthupError {
     }
 
     if (isObject(input)) {
-        const code = hasOwnProperty(input, 'code') &&
-        typeof input.code === 'string' ?
-            input.code :
-            undefined;
+        if (isDatabaseUniqueViolationError(input)) {
+            return new AuthupError({
+                code: ErrorCode.ENTITY_CONFLICT,
+                message: 'An entry with some unique attributes already exists.',
+                stack: input.stack as string | undefined,
+            });
+        }
 
         /**
          * @see https://dev.mysql.com/doc/mysql-errors/8.0/en/server-error-reference.html
          */
-        switch (code) {
-            case '23505':
-            case 'ER_DUP_ENTRY':
-            case 'SQLITE_CONSTRAINT_UNIQUE': {
-                return new AuthupError({
-                    code: ErrorCode.ENTITY_CONFLICT,
-                    message: 'An entry with some unique attributes already exists.',
-                    stack: input.stack as string | undefined,
-                });
-            }
+        switch (readDatabaseErrorCode(input)) {
             /**
              * postgres `invalid_text_representation`: a bound value the
              * column type cannot parse. Filter operands (refused by the

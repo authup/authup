@@ -11,6 +11,7 @@ import { NotFoundError } from '@ebec/http';
 import type { Response as HapicResponse, RequestOptions } from 'hapic';
 import { createClientError, isClientErrorDueTimeout } from 'hapic';
 import { AdapterError } from '@rapiq/core';
+import { QueryFailedError } from 'typeorm';
 import { describeError, sanitizeError } from '../../../src/utils/index.ts';
 
 const UPSTREAM_URL = 'https://upstream.test/token';
@@ -75,6 +76,31 @@ describe('src/utils/error', () => {
             const error = sanitizeError({ code: '22P02', message: 'invalid input syntax for type uuid: "x"' });
 
             expect(error.code).toEqual(ErrorCode.BAD_REQUEST);
+        });
+
+        it.each([
+            { code: '23505' },
+            { code: 'ER_DUP_ENTRY', errno: 1062 },
+            { code: 'SQLITE_CONSTRAINT_UNIQUE' },
+            { code: 'SQLITE_CONSTRAINT_PRIMARYKEY' },
+        ])('should map the unique violation $code to a conflict', (input) => {
+            const error = sanitizeError({ ...input, message: 'duplicate key value' });
+
+            expect(error.code).toEqual(ErrorCode.ENTITY_CONFLICT);
+            expect(error.message).not.toContain('duplicate key value');
+        });
+
+        it('should map a typeorm query failure by its driver code', () => {
+            const driverError = Object.assign(new Error('No space left on device'), { code: 'ER_DISK_FULL', errno: 1021 });
+            const error = sanitizeError(new QueryFailedError('INSERT ...', [], driverError));
+
+            expect(error.code).toEqual(ErrorCode.STORAGE_INSUFFICIENT);
+        });
+
+        it('should not read a code which is not a plain token', () => {
+            const error = sanitizeError({ code: '22P02 invalid input', message: 'x' });
+
+            expect(error.code).toEqual(ErrorCode.INTERNAL_ERROR);
         });
 
         it('should keep a server-authored adapter refusal internal', () => {
