@@ -7,7 +7,6 @@
 
 import {
     BuiltInPolicyType,
-    RealmScope,
     appendQueryConditions,
     evaluateRecord,
     evaluateRecordOneOf,
@@ -19,7 +18,10 @@ import { ValidatorGroup } from '@authup/kit';
 import { PermissionName, UserPermissionValidator } from '@authup/core-kit';
 import type { Permission, UserPermission } from '@authup/core-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
-import { applyJunctionCreateGrant, buildJunctionUpdateData } from '../../identity/permission/junction-grant.ts';
+import {
+    authorizePermissionJunctionCreate,
+    authorizePermissionJunctionUpdate,
+} from '../../identity/permission/junction-grant.ts';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
 import { loadJunctionOwners, readJunctionOwner } from '../junction-owner/index.ts';
@@ -174,29 +176,15 @@ export class UserPermissionService extends JunctionEntityService implements IUse
         if (validated.permission) {
             validated.permissionRealmId = validated.permission.realmId;
 
-            await actor.permissionEvaluator.preEvaluate({
-                name: validated.permission.name,
-                realmId: validated.permission.realmId,
-                clientId: validated.permission.clientId,
-            });
+            await authorizePermissionJunctionCreate({
+                provider: this.identityPermissionProvider,
+                actor,
+                permission: validated.permission,
+            }, validated);
         }
 
         if (validated.user) {
             validated.userRealmId = validated.user.realmId;
-        }
-
-        if (validated.permission && actor.identity) {
-            const grant = await this.identityPermissionProvider.resolveJunctionGrant(
-                await this.getActorGrants(actor),
-                {
-                    name: validated.permission.name,
-                    realmId: validated.permission.realmId,
-                    clientId: validated.permission.clientId,
-                    realmScope: validated.realmScope ?? RealmScope.OWN,
-                },
-            );
-
-            applyJunctionCreateGrant(validated, grant);
         }
 
         await evaluateRecord(actor.permissionEvaluator, {
@@ -230,45 +218,11 @@ export class UserPermissionService extends JunctionEntityService implements IUse
 
         const permission = await this.permissionRepository.findOneById(entity.permissionId);
 
-        if (permission) {
-            // Member-permission gate: an actor may only modify a binding for a permission it
-            // holds (mirrors create()).
-            await actor.permissionEvaluator.preEvaluate({
-                name: permission.name,
-                realmId: permission.realmId,
-                clientId: permission.clientId,
-            });
-        }
-
-        let actorScope: `${RealmScope}` = RealmScope.ANY;
-        let actorPolicyFree = true;
-        let actorPolicyId: string | null = null;
-
-        if (permission && actor.identity) {
-            const grant = await this.identityPermissionProvider.resolveJunctionGrant(
-                await this.getActorGrants(actor),
-                {
-                    name: permission.name,
-                    realmId: permission.realmId,
-                    clientId: permission.clientId,
-                    realmScope: validated.realmScope ?? entity.realmScope,
-                },
-            );
-
-            actorScope = grant.realmScope;
-            actorPolicyFree = !grant.policy;
-            actorPolicyId = grant.policy ? grant.policy.id : null;
-        } else if (actor.identity) {
-            actorScope = RealmScope.OWN;
-        }
-
-        const updateData = buildJunctionUpdateData({
-            data: validated,
-            existingScope: entity.realmScope,
-            actorScope,
-            actorPolicyFree,
-            actorPolicyId,
-        });
+        const updateData = await authorizePermissionJunctionUpdate({
+            provider: this.identityPermissionProvider,
+            actor,
+            permission,
+        }, validated, entity.realmScope);
 
         await this.repository.validateJoinColumns(updateData);
 

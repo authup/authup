@@ -5,10 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuthorizationPolicy, PermissionEvaluationContext } from '@authup/access';
+import type {
+    AuthorizationPolicy,
+    BasePolicy,
+    PermissionEvaluationContext,
+    PermissionPolicyBinding,
+} from '@authup/access';
 import { BuiltInPolicyType, RealmScope, createAuthorizationEvaluator } from '@authup/access';
 import { IdentityType } from '@authup/core-kit';
 import type { ActorContext } from '@authup/server-kit';
+import type { IClientRepository } from '../../../../src/core/entities/client/types.ts';
+import type { IRoleRepository } from '../../../../src/core/entities/role/types.ts';
+import type { IUserRepository } from '../../../../src/core/entities/user/types.ts';
+import { IdentityPermissionProvider } from '../../../../src/core/identity/permission/module.ts';
+import type { IIdentityRoleProvider } from '../../../../src/core/identity/role/types.ts';
 
 export type ClientMatchActorOptions = {
     clientId: string,
@@ -26,14 +36,38 @@ export type ClientMatchActorOptions = {
 
 /**
  * A client actor evaluated by the real engine: every name is granted at
- * `own` reach and bound to a `clientMatch` policy.
+ * `own` reach and bound to a `clientMatch` policy. Its `grants` resolver
+ * answers the same grants as bindings.
  */
 export async function createClientMatchActor(options: ClientMatchActorOptions): Promise<ActorContext> {
+    const policy = options.policy ?? { type: BuiltInPolicyType.CLIENT_MATCH };
+    const bindings: PermissionPolicyBinding[] = options.names.flatMap((name) => [
+        {
+            permission: {
+                name, 
+                realmId: null, 
+                clientId: null, 
+            },
+            realmScope: RealmScope.OWN,
+            policies: [policy as BasePolicy],
+        },
+        ...(options.unrestricted ?
+            [{
+                permission: {
+                    name, 
+                    realmId: null, 
+                    clientId: null, 
+                },
+                realmScope: RealmScope.OWN, 
+            }] :
+            []),
+    ]);
+
     const evaluator = await createAuthorizationEvaluator({
         catalog: {
             policies: {
                 binding: { type: BuiltInPolicyType.PERMISSION_BINDING },
-                owned: options.policy ?? { type: BuiltInPolicyType.CLIENT_MATCH },
+                owned: policy,
             },
             permissions: options.names.map((name) => ({
                 name,
@@ -69,7 +103,23 @@ export async function createClientMatchActor(options: ClientMatchActorOptions): 
         },
     });
 
-    return { permissionEvaluator: evaluator };
+    return {
+        permissionEvaluator: evaluator,
+        grants: async () => bindings,
+    };
+}
+
+/**
+ * The real permission provider, for a spec that decides delegation on the
+ * actor's own grants only (no subject is looked up).
+ */
+export function createIdentityPermissionProvider(): IdentityPermissionProvider {
+    return new IdentityPermissionProvider({
+        clientRepository: {} as IClientRepository,
+        userRepository: {} as IUserRepository,
+        roleRepository: {} as IRoleRepository,
+        roleProvider: {} as IIdentityRoleProvider,
+    });
 }
 
 /**

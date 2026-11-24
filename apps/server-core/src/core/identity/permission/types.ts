@@ -7,11 +7,13 @@
 
 import type { Policy } from '@authup/core-kit';
 import type {
+    BasePermission,
     IPermissionEvaluator,
     IdentityPolicyData,
     PermissionPolicyBinding,
     RealmScope,
 } from '@authup/access';
+import type { ActorContext } from '@authup/server-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import type { IClientRepository } from '../../entities/client/types.ts';
 import type { IRoleRepository } from '../../entities/role/types.ts';
@@ -46,6 +48,36 @@ export type ResolveJunctionGrantResult = {
 };
 
 /**
+ * The widest reach of the actor's manager grants over a realm- or
+ * client-owned permission (#3855, #3907).
+ */
+export type ResolveManagerGrantResult = {
+    realmScope: `${RealmScope}`;
+};
+
+/**
+ * The permission a manager grant is resolved for: its identity and the row
+ * the `permission_update` gate evaluates.
+ */
+export type ManagedPermission = Pick<BasePermission, 'name' | 'realmId' | 'clientId'> & Record<string, any>;
+
+/**
+ * A permission-junction write: the actor and the permission it binds.
+ */
+export type PermissionJunctionContext = {
+    provider: IIdentityPermissionProvider;
+    actor: ActorContext;
+    permission: ManagedPermission;
+};
+
+/**
+ * A permission-junction update, whose stored permission may be gone.
+ */
+export type PermissionJunctionUpdateContext = Omit<PermissionJunctionContext, 'permission'> & {
+    permission?: ManagedPermission | null;
+};
+
+/**
  * The part of a token its grants are resolved from: whose it is, and the
  * client it was issued to.
  */
@@ -68,14 +100,27 @@ export interface IIdentityPermissionProvider {
      * Whether `parent` covers every grant in `child`. A caller passes the
      * actor's own grants as its request resolved them, so an assignment is
      * checked against exactly what the actor's gates evaluated. A realm- or
-     * client-owned permission is also covered when `parent` holds the
-     * permission-management permission policy-free over its realm (#3855).
+     * client-owned permission is also covered when the actor manages it
+     * (`resolveManagerGrant`) at least as wide as each of its grants (#3855).
      */
     isSuperset(
         parent: PermissionPolicyBinding[],
         child: PermissionPolicyBinding[],
         actor: SupersetActor,
     ): Promise<boolean>;
+    /**
+     * Whether the actor manages a realm- or client-owned permission, and so
+     * may delegate it without holding it: `parent` holds a manager grant
+     * (global `permission_update`, policy-free or bound to exactly one
+     * non-inverted `clientMatch` policy) and the actor passes the
+     * `permission_update` gate on the permission row with its realm and
+     * owner. Answers the widest manager reach, or `null`.
+     */
+    resolveManagerGrant(
+        parent: PermissionPolicyBinding[],
+        permission: ManagedPermission,
+        actor: SupersetActor,
+    ): Promise<ResolveManagerGrantResult | null>;
     resolveJunctionGrant(bindings: PermissionPolicyBinding[], options: ResolveJunctionPolicyOptions): Promise<ResolveJunctionGrantResult>;
 }
 

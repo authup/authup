@@ -17,6 +17,7 @@ import {
     RealmScope,
     realmScopeMatches,
 } from '@authup/access';
+import { randomUUID } from 'node:crypto';
 import { FakePermissionEvaluator } from '@authup/server-test-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
@@ -28,6 +29,7 @@ import {
 import { IdentityPermissionProvider } from '../../../../../src/core/identity/permission/module.ts';
 import type { IIdentityPermissionProvider } from '../../../../../src/core/identity/permission/types.ts';
 import { IdentityRoleProvider } from '../../../../../src/core/identity/role/module.ts';
+import { createClientMatchActor } from '../../helpers/index.ts';
 
 /**
  * Direct coverage of the REAL disjunction-aware isSuperset + resolveJunctionGrant
@@ -384,6 +386,161 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             });
 
             await expect(isRoleSuperset(provider, gate)).rejects.toThrow('database down');
+        });
+    });
+
+    // A manager grant bound to exactly one clientMatch policy manages the
+    // permissions its client owns, and so may delegate them (#3907).
+    describe('clientMatch-bound managers (#3907)', () => {
+        const realmId = randomUUID();
+        const clientId = randomUUID();
+        const otherClientId = randomUUID();
+
+        const manager = (policy?: Record<string, any>) : PermissionPolicyBinding => ({
+            permission: {
+                name: PermissionName.PERMISSION_UPDATE,
+                realmId: null,
+                clientId: null,
+            },
+            realmScope: RealmScope.OWN,
+            ...(policy ? { policies: [policy as any] } : {}),
+        });
+        const owned = (owner: string) : PermissionPolicyBinding => ({
+            permission: {
+                name: 'p2',
+                realmId,
+                clientId: owner,
+            },
+            realmScope: RealmScope.OWN,
+        });
+        const createActor = () => createClientMatchActor({
+            clientId,
+            realmId,
+            names: [PermissionName.PERMISSION_UPDATE],
+        });
+
+        it('covers a role holding a permission the actor client owns', async () => {
+            const provider = createProvider({
+                parent: [manager({ type: BuiltInPolicyType.CLIENT_MATCH })],
+                child: [owned(clientId)],
+            });
+            const actor = await createActor();
+
+            await expect(isRoleSuperset(provider, actor.permissionEvaluator)).resolves.toBe(true);
+        });
+
+        it('does not cover a permission another client owns', async () => {
+            const provider = createProvider({
+                parent: [manager({ type: BuiltInPolicyType.CLIENT_MATCH })],
+                child: [owned(otherClientId)],
+            });
+            const actor = await createActor();
+
+            await expect(isRoleSuperset(provider, actor.permissionEvaluator)).resolves.toBe(false);
+        });
+
+        it('does not count an attributes-bound manager grant', async () => {
+            const provider = createProvider({
+                parent: [manager({ type: BuiltInPolicyType.ATTRIBUTES, query: { realmId } })],
+                child: [owned(clientId)],
+            });
+
+            await expect(isRoleSuperset(provider, new FakePermissionEvaluator())).resolves.toBe(false);
+        });
+
+        it('does not count an inverted clientMatch manager grant', async () => {
+            const provider = createProvider({
+                parent: [manager({ type: BuiltInPolicyType.CLIENT_MATCH, invert: true })],
+                child: [owned(clientId)],
+            });
+
+            await expect(isRoleSuperset(provider, new FakePermissionEvaluator())).resolves.toBe(false);
+        });
+
+        it('does not count a composite policy containing clientMatch', async () => {
+            const provider = createProvider({
+                parent: [manager({
+                    type: BuiltInPolicyType.COMPOSITE,
+                    children: [{ type: BuiltInPolicyType.CLIENT_MATCH }],
+                })],
+                child: [owned(clientId)],
+            });
+
+            await expect(isRoleSuperset(provider, new FakePermissionEvaluator())).resolves.toBe(false);
+        });
+
+        describe('resolveManagerGrant', () => {
+            const provider = createProvider({});
+            const permission = (owner: string | null, realm: string | null = realmId) => ({
+                name: 'p2',
+                realmId: realm,
+                clientId: owner,
+            });
+
+            it('answers the manager reach for an owned permission', async () => {
+                const actor = await createActor();
+
+                await expect(provider.resolveManagerGrant(
+                    [manager({ type: BuiltInPolicyType.CLIENT_MATCH })],
+                    permission(clientId),
+                    actor,
+                )).resolves.toEqual({ realmScope: RealmScope.OWN });
+            });
+
+            it('answers the widest manager reach', async () => {
+                await expect(provider.resolveManagerGrant(
+                    [
+                        manager({ type: BuiltInPolicyType.CLIENT_MATCH }),
+                        { ...manager(), realmScope: RealmScope.ANY },
+                    ],
+                    permission(clientId),
+                    { permissionEvaluator: new FakePermissionEvaluator() },
+                )).resolves.toEqual({ realmScope: RealmScope.ANY });
+            });
+
+            it('passes the owner and realm to the permission_update gate', async () => {
+                const gate = new FakePermissionEvaluator();
+
+                await provider.resolveManagerGrant(
+                    [manager({ type: BuiltInPolicyType.CLIENT_MATCH })],
+                    permission(clientId),
+                    { permissionEvaluator: gate },
+                );
+
+                expect(gate.evaluateCalls).toHaveLength(1);
+
+                const data = gate.evaluateCalls[0]!.data as PolicyData;
+
+                expect(gate.evaluateCalls[0]!.name).toEqual(PermissionName.PERMISSION_UPDATE);
+                expect(data.get(BuiltInPolicyType.CLIENT_MATCH)).toEqual(clientId);
+                expect(data.get(BuiltInPolicyType.REALM_MATCH)).toEqual(realmId);
+            });
+
+            it('answers null for a permission another client owns', async () => {
+                const actor = await createActor();
+
+                await expect(provider.resolveManagerGrant(
+                    [manager({ type: BuiltInPolicyType.CLIENT_MATCH })],
+                    permission(otherClientId),
+                    actor,
+                )).resolves.toBeNull();
+            });
+
+            it('answers null for a global permission', async () => {
+                await expect(provider.resolveManagerGrant(
+                    [manager()],
+                    permission(null, null),
+                    { permissionEvaluator: new FakePermissionEvaluator() },
+                )).resolves.toBeNull();
+            });
+
+            it('answers null without a manager grant', async () => {
+                await expect(provider.resolveManagerGrant(
+                    [manager({ type: BuiltInPolicyType.ATTRIBUTES, query: { realmId } })],
+                    permission(clientId),
+                    { permissionEvaluator: new FakePermissionEvaluator() },
+                )).resolves.toBeNull();
+            });
         });
     });
 

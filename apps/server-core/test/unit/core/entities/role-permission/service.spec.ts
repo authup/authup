@@ -30,6 +30,7 @@ import {
 import {
     FakeIdentityPermissionProvider,
     createClientMatchActor,
+    createIdentityPermissionProvider,
     readEvaluatedRecordRealms,
     withHeldPermissions,
 } from '../../helpers/index.ts';
@@ -539,5 +540,145 @@ describe('core/entities/role-permission/service: owning client (clientMatch)', (
         expect(owners).toContain(clientId);
         expect(owners).toContain(otherClientId);
         expect(owners).toContain(null);
+    });
+});
+
+describe('core/entities/role-permission/service: a manager delegates owned permissions (#3907)', () => {
+    const realmId = randomUUID();
+    const clientId = randomUUID();
+    const otherClientId = randomUUID();
+    const policyId = randomUUID();
+
+    const names = [
+        PermissionName.ROLE_PERMISSION_CREATE,
+        PermissionName.ROLE_PERMISSION_UPDATE,
+        PermissionName.PERMISSION_UPDATE,
+    ];
+
+    let repository: FakeEntityRepository<RolePermission>;
+    let permissionRepository: FakeEntityRepository<Permission>;
+    let roleRepository: FakeEntityRepository<Role>;
+    let service: RolePermissionService;
+
+    let owned: Permission;
+    let foreign: Permission;
+    let global: Permission;
+    let role: Role;
+    let foreignRole: Role;
+
+    beforeEach(() => {
+        repository = new FakeEntityRepository<RolePermission>();
+        permissionRepository = new FakeEntityRepository<Permission>();
+        roleRepository = new FakeEntityRepository<Role>();
+        service = new RolePermissionService({
+            repository,
+            permissionRepository,
+            roleRepository,
+            identityPermissionProvider: createIdentityPermissionProvider(),
+        });
+
+        [owned, foreign, global] = permissionRepository.seed([
+            {
+                name: 'owned',
+                realmId,
+                clientId,
+            },
+            {
+                name: 'foreign',
+                realmId,
+                clientId: otherClientId,
+            },
+            {
+                name: 'global',
+                realmId: null,
+                clientId: null,
+            },
+        ]);
+
+        [role, foreignRole] = roleRepository.seed([
+            {
+                name: 'owned',
+                realmId,
+                clientId,
+            },
+            {
+                name: 'foreign',
+                realmId,
+                clientId: otherClientId,
+            },
+        ]);
+
+        repository.onValidateJoinColumns((data: any) => {
+            data.role = roleRepository.getAll().find((entry) => entry.id === data.roleId);
+            data.permission = permissionRepository.getAll().find((entry) => entry.id === data.permissionId);
+        });
+    });
+
+    const createActor = (held: string[] = names) => createClientMatchActor({
+        clientId,
+        realmId,
+        names: held,
+    });
+
+    it('should bind an owned permission it does not hold to an owned role, capped to the manager reach', async () => {
+        const entity = await service.create({
+            roleId: role.id,
+            permissionId: owned.id,
+            realmScope: RealmScope.ANY,
+            policyId,
+        }, await createActor());
+
+        expect(entity.realmScope).toEqual(RealmScope.OWN);
+        expect(entity.policyId).toEqual(policyId);
+    });
+
+    it('should not bind an owned permission to a role another client owns', async () => {
+        await expect(service.create({ roleId: foreignRole.id, permissionId: owned.id }, await createActor()))
+            .rejects.toThrow(PermissionError);
+    });
+
+    it('should not bind an owned permission without managing permissions', async () => {
+        const actor = await createActor(names.filter((name) => name !== PermissionName.PERMISSION_UPDATE));
+
+        await expect(service.create({ roleId: role.id, permissionId: owned.id }, actor))
+            .rejects.toThrow(PermissionError);
+    });
+
+    it('should not bind a permission another client owns', async () => {
+        await expect(service.create({ roleId: role.id, permissionId: foreign.id }, await createActor()))
+            .rejects.toThrow(PermissionError);
+    });
+
+    it('should not bind a global permission it does not hold', async () => {
+        await expect(service.create({ roleId: role.id, permissionId: global.id }, await createActor()))
+            .rejects.toThrow(PermissionError);
+    });
+
+    it('should update a binding of an owned permission, capped to the manager reach', async () => {
+        const binding = repository.seed({
+            roleId: role.id,
+            roleRealmId: realmId,
+            permissionId: owned.id,
+            permissionRealmId: realmId,
+            realmScope: RealmScope.ANY,
+            policyId: null,
+        });
+
+        const entity = await service.update(binding.id, { policyId }, await createActor());
+
+        expect(entity.realmScope).toEqual(RealmScope.OWN);
+        expect(entity.policyId).toEqual(policyId);
+    });
+
+    it('should not update a binding of a permission another client owns', async () => {
+        const binding = repository.seed({
+            roleId: role.id,
+            roleRealmId: realmId,
+            permissionId: foreign.id,
+            permissionRealmId: realmId,
+        });
+
+        await expect(service.update(binding.id, { policyId }, await createActor()))
+            .rejects.toThrow(PermissionError);
     });
 });
