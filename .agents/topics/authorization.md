@@ -551,7 +551,7 @@ Defaults (declared in `app/modules/provisioning/sources/default/module.ts`):
     Every gated site supplies the key (`RecordTarget.owner`, `EntityUpdateEvaluationResolvers.owner`:
     a permission or role row's own `clientId`, a junction's definition owner, for role-permission
     the ROLE). Absent in a settled evaluation it is unevaluable and fails, never inverted;
-    in a preliminary one it pends. Never matches a user. Backs the built-in `system.client_owned`
+    in a preliminary one it pends. Never matches a user. Backs the built-in `system.client-owned`
     policy. A grant carrying it is delegable like any held grant and keeps the policy, which
     then reads the new holder's definitions: a `client_admin` client can make another client
     admin of its own definitions, and revoking the first does not revoke the copy.

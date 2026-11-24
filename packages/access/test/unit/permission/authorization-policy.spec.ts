@@ -51,7 +51,7 @@ describe('permission/authorization/policy', () => {
     it('keeps a clientMatch node', async () => {
         expect(await projectAuthorizationPolicy({
             id: 'p1',
-            name: 'system.client_owned',
+            name: 'system.client-owned',
             type: 'clientMatch',
             invert: true,
         })).toEqual({ type: 'clientMatch', invert: true });

@@ -124,7 +124,7 @@ describe('app/modules/provisioning', () => {
         );
     });
 
-    it('should provision system.client_owned and the client_admin role bound to it', async () => {
+    it('should provision system.client-owned and the client_admin role bound to it', async () => {
         const policy = await policyRepositoryAdapter.findOneByName(SystemPolicyName.CLIENT_OWNED);
 
         expect(policy?.type).toBe(BuiltInPolicyType.CLIENT_MATCH);

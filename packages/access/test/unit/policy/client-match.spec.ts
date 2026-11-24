@@ -46,7 +46,7 @@ describe('src/policy/client-match', () => {
 
     it('exposes the type and system policy name', () => {
         expect(BuiltInPolicyType.CLIENT_MATCH).toEqual('clientMatch');
-        expect(SystemPolicyName.CLIENT_OWNED).toEqual('system.client_owned');
+        expect(SystemPolicyName.CLIENT_OWNED).toEqual('system.client-owned');
         expect(PolicyDefaultEvaluators[BuiltInPolicyType.CLIENT_MATCH]).toBeInstanceOf(ClientMatchPolicyEvaluator);
         expect(PolicyDefaultValidators[BuiltInPolicyType.CLIENT_MATCH]).toBeInstanceOf(ClientMatchPolicyValidator);
     });

@@ -58,7 +58,7 @@ These are created and maintained automatically on startup:
 
 - `system.default`: a composite policy (UNANIMOUS) that bundles the standard restrictions
 - `system.identity`: requires a valid identity (user or client)
-- `system.client_owned`: a `clientMatch` policy that passes when the actor is a client and owns the record (a permission, a role, or the definition a junction row binds). It never matches a user or a global record. It is bound to every permission of the built-in `client_admin` role
+- `system.client-owned`: a `clientMatch` policy that passes when the actor is a client and owns the record (a permission, a role, or the definition a junction row binds). It never matches a user or a global record. It is bound to every permission of the built-in `client_admin` role
 - `system.permission-binding`: checks that the identity has the permission assigned, and enforces the grant's **realm reach** (see [Realm Scoping](#realm-scoping))
 
 > Realm isolation is **no longer a policy**. It lives on each permission grant as the
@@ -202,9 +202,9 @@ This means an `admin` (every permission at `any`, policy-free) can assign any ro
 `realm_admin` (confined to `own`/`ownOrNull` reach) cannot assign the `admin` role: the
 admin role confers wider reach than the realm_admin owns.
 
-A holder of `permission_update` (policy-free, or bound to exactly one non-inverted `clientMatch` policy such as `system.client_owned`) manages the permissions it may update: it can assign a role carrying them and bind them directly to a user, client or role without holding them itself. This works through any client's token. A `realm_admin` can therefore bind any permission of its realm.
+A holder of `permission_update` (policy-free, or bound to exactly one non-inverted `clientMatch` policy such as `system.client-owned`) manages the permissions it may update: it can assign a role carrying them and bind them directly to a user, client or role without holding them itself. This works through any client's token. A `realm_admin` can therefore bind any permission of its realm.
 
-The built-in `client_admin` role holds the create, read, update and delete permissions of permissions, roles and their assignments (role-permission, user-permission, user-role, client-permission, client-role) at `own` reach, each bound to `system.client_owned`. It manages the permissions and roles a client owns, and nothing else. A client holding it can pass it on to another client, which then manages its own definitions; revoking the role from the first client does not revoke it from the second.
+The built-in `client_admin` role holds the create, read, update and delete permissions of permissions, roles and their assignments (role-permission, user-permission, user-role, client-permission, client-role) at `own` reach, each bound to `system.client-owned`. It manages the permissions and roles a client owns, and nothing else. A client holding it can pass it on to another client, which then manages its own definitions; revoking the role from the first client does not revoke it from the second.
 
 The actor's grants are the ones its token reaches. A user's permissions and roles owned
 by a client apply only through a token issued to that client, so through another client's
