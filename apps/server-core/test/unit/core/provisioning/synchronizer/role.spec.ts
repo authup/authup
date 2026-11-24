@@ -137,6 +137,8 @@ describe('core/provisioning/synchronizer/role', () => {
                 globalPermissionsPolicy: 'missing',
             },
         } as RoleProvisioningEntity)).rejects.toThrow(/missing/);
+
+        expect(roleRepository.getAll()).toEqual([]);
     });
 
     it('should stamp the named policy when no reach is declared', async () => {

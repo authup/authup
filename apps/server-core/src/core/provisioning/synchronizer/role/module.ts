@@ -75,6 +75,12 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             };
         }
 
+        // resolved before any write: a role saved ahead of a failed lookup
+        // would be skipped by the next createOnly pass, its bindings lost
+        const policyId = input.relations ?
+            await this.resolvePolicyId(input.relations) :
+            undefined;
+
         let created = false;
 
         if (attributes) {
@@ -112,7 +118,7 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             const role = attributes;
             const { relations } = input;
 
-            await this.bind(() => this.synchronizeRelations(role, input, relations), context);
+            await this.bind(() => this.synchronizeRelations(role, input, relations, policyId), context);
         }
 
         return {
@@ -121,10 +127,28 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         };
     }
 
+    protected async resolvePolicyId(relations: RoleProvisioningRelations): Promise<string | undefined> {
+        if (!relations.globalPermissionsPolicy) {
+            return undefined;
+        }
+
+        const policy = await this.policyRepository.findOneBy({
+            name: relations.globalPermissionsPolicy,
+            realmId: null,
+        });
+
+        if (!policy) {
+            throw new ValidationError(`The global policy ${relations.globalPermissionsPolicy} does not exist.`);
+        }
+
+        return policy.id;
+    }
+
     protected async synchronizeRelations(
         attributes: Role,
         input: RoleProvisioningEntity,
         relations: RoleProvisioningRelations,
+        policyId?: string,
     ): Promise<void> {
         let globalPermissions = await this.permissionResolver.resolveGlobal(relations.globalPermissions);
 
@@ -132,21 +156,6 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             const excludeSet = new Set(relations.globalPermissionsExclude);
 
             globalPermissions = globalPermissions.filter((p) => !excludeSet.has(p.name));
-        }
-
-        let policyId: string | undefined;
-
-        if (relations.globalPermissionsPolicy) {
-            const policy = await this.policyRepository.findOneBy({
-                name: relations.globalPermissionsPolicy,
-                realmId: null,
-            });
-
-            if (!policy) {
-                throw new ValidationError(`The global policy ${relations.globalPermissionsPolicy} does not exist.`);
-            }
-
-            policyId = policy.id;
         }
 
         const realmPermissions = attributes.realmId ?
