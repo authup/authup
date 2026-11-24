@@ -208,7 +208,8 @@ The built-in `client_admin` role holds the create, read, update and delete permi
 
 The actor's grants are the ones its token reaches. A user's permissions and roles owned
 by a client apply only through a token issued to that client, so through another client's
-token even an `admin` cannot assign a role carrying them. Basic authentication, a password
+token the user cannot pass them on by holding them. A manager of those permissions (see
+above) still can. Basic authentication, a password
 grant sent without a client and the served console's session cookie are not narrowed.
 
 ### Junction Policy Propagation
