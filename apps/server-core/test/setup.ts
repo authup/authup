@@ -74,14 +74,14 @@ const DATABASE_CONTAINERS: Record<string, DatabaseContainerConfig> = {
 };
 
 const LDAP_CONTAINER: ContainerConfig = {
-    image: 'osixia/openldap:1.5.0',
-    port: 389,
+    image: 'osixia/openldap:2.6.15',
+    port: 3890,
     environment: {
-        LDAP_ORGANISATION: 'example',
-        LDAP_DOMAIN: 'example.com',
-        LDAP_ADMIN_USERNAME: 'admin',
-        LDAP_ADMIN_PASSWORD: 'password',
-        LDAP_BASE_DN: 'dc=example,dc=com',
+        OPENLDAP_BOOTSTRAP_SUFFIX: 'dc=example,dc=com',
+        OPENLDAP_BOOTSTRAP_ORGANIZATION: 'example',
+        OPENLDAP_BOOTSTRAP_DATA_ROOT_DN: 'cn=admin,dc=example,dc=com',
+        // slappasswd -s password
+        OPENLDAP_BOOTSTRAP_DATA_ROOT_PASSWORD_HASHED: '{SSHA}Cov5aqo617uVQRRXIED+aQyyGLqHvITL',
     },
 };
 

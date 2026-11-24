@@ -306,7 +306,7 @@ Integration tests use the services in `docker-compose.yml`:
 | PostgreSQL | 5432      |
 | Redis      | 6379      |
 | Vault      | 8090      |
-| LDAP       | 389 / 636 |
+| LDAP       | 3890 / 6360 |
 
 ## Migration Tests
 
