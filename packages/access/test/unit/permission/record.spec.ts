@@ -169,6 +169,66 @@ describe('src/permission/record', () => {
         })).rejects.toThrow('event_read');
     });
 
+    describe('owner', () => {
+        const ownerA = 'c641912c-21e5-4cb4-84b6-169e2b2bb031';
+        const ownerB = 'c641912c-21e5-4cb4-84b6-169e2b2bb032';
+
+        function recorder() {
+            const calls: (PolicyData | undefined)[] = [];
+            const evaluator = {
+                evaluate: async (ctx: { data?: PolicyData }) => {
+                    calls.push(ctx.data);
+                },
+            } as unknown as IPermissionEvaluator;
+
+            return { calls, evaluator };
+        }
+
+        it('sets clientMatch from the owner, null included, and leaves it absent without one', async () => {
+            const { calls, evaluator } = recorder();
+
+            await evaluateRecord(evaluator, {
+                name: 'event_read', 
+                realm: realmA, 
+                owner: ownerA, 
+            });
+            await evaluateRecord(evaluator, {
+                name: 'event_read', 
+                realm: realmA, 
+                owner: null, 
+            });
+            await evaluateRecord(evaluator, { name: 'event_read', realm: realmA });
+
+            expect(calls[0]?.get(BuiltInPolicyType.CLIENT_MATCH)).toEqual(ownerA);
+            expect(calls[1]?.has(BuiltInPolicyType.CLIENT_MATCH)).toBe(true);
+            expect(calls[1]?.get(BuiltInPolicyType.CLIENT_MATCH)).toBeNull();
+            expect(calls[2]?.has(BuiltInPolicyType.CLIENT_MATCH)).toBe(false);
+        });
+
+        it('throws when the data already carries clientMatch', async () => {
+            const { evaluator } = recorder();
+
+            await expect(evaluateRecord(evaluator, {
+                name: 'event_read',
+                realm: realmA,
+                owner: ownerA,
+                data: { [BuiltInPolicyType.CLIENT_MATCH]: ownerB },
+            })).rejects.toThrow('must not carry clientMatch');
+        });
+
+        it('applies each update target its own owner', async () => {
+            const { calls, evaluator } = recorder();
+
+            await evaluateRecordUpdate(evaluator, {
+                name: 'event_read',
+                current: { realm: realmA, owner: ownerA },
+                next: { realm: realmA, owner: ownerB },
+            });
+
+            expect(calls.map((d) => d?.get(BuiltInPolicyType.CLIENT_MATCH))).toEqual([ownerA, ownerB]);
+        });
+    });
+
     it('never mutates the caller data', async () => {
         const evaluator = await build([{ name: 'event_read', realm_scope: 'own' }]);
         const data = new PolicyData({ custom: true });

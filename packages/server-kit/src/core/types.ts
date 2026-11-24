@@ -55,6 +55,8 @@ export interface IEntityRepository<
 export type EntityUpdateEvaluationResolvers = {
     /** The record's realm (`null` = global row, `false` = a resource of no realm) for this row. */
     realm: (row: Record<string, any>) => RecordRealm | false,
+    /** The client owning this row (`null` = none); absent leaves `clientMatch` unset. */
+    owner?: (row: Record<string, any>) => string | null,
 };
 
 /** A junction's owner realm, read from a column of the junction row. */

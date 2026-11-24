@@ -60,6 +60,14 @@ function buildRecordData(name: string | string[], target: RecordTarget): PolicyD
         data.set(BuiltInPolicyType.REALM_MATCH, target.realm);
     }
 
+    if (data.has(BuiltInPolicyType.CLIENT_MATCH)) {
+        throw new Error(`The policy data for permission ${describeName(name)} must not carry ${BuiltInPolicyType.CLIENT_MATCH}.`);
+    }
+
+    if (typeof target.owner !== 'undefined') {
+        data.set(BuiltInPolicyType.CLIENT_MATCH, target.owner);
+    }
+
     return data;
 }
 
@@ -141,6 +149,7 @@ export async function evaluateRecordUpdate(
     await evaluateRecord(evaluator, {
         realm: ctx.current.realm,
         data: ctx.current.data,
+        owner: ctx.current.owner,
         name: ctx.name,
         realmId: ctx.realmId,
         clientId: ctx.clientId,
@@ -149,6 +158,7 @@ export async function evaluateRecordUpdate(
     await evaluateRecord(evaluator, {
         realm: ctx.next.realm,
         data: ctx.next.data,
+        owner: ctx.next.owner,
         name: ctx.name,
         realmId: ctx.realmId,
         clientId: ctx.clientId,

@@ -68,6 +68,7 @@ export abstract class AbstractEntityService {
     ): Promise<void> {
         const target = (row: Record<string, any>) => ({
             realm: resolvers.realm(row),
+            ...(resolvers.owner ? { owner: resolvers.owner(row) } : {}),
             data: { [BuiltInPolicyType.ATTRIBUTES]: row },
         });
 

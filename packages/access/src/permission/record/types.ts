@@ -36,6 +36,13 @@ export type RecordTarget = {
      * `realm`.
      */
     data?: PolicyData | PolicyInput;
+    /**
+     * The client OWNING the record (`null` = no client owns it). Sets
+     * `clientMatch`, which a `clientMatch` policy compares with the acting
+     * client. Absent = unknown: the key stays unset and such a policy fails
+     * closed. `data` must not carry `clientMatch`.
+     */
+    owner?: string | null;
 };
 
 /** The permission a single-record check evaluates. */
