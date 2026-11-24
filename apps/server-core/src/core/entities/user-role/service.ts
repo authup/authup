@@ -182,7 +182,7 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
                     type: 'role',
                     id: validated.roleId,
                 }),
-                { permissionEvaluator: actor.permissionEvaluator },
+                { permissionEvaluator: actor.permissionEvaluator, narrowGrants: actor.narrowGrants },
             );
 
             if (!hasPermissions) {

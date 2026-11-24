@@ -35,4 +35,10 @@ export type ActorContext<TIdentity = Identity> = {
      * these, so it checks exactly what the actor's gates evaluated.
      */
     grants?: () => Promise<PermissionPolicyBinding[]>;
+    /**
+     * The actor's evaluator holding only those of its own grants that one of
+     * `grants` names (same permission, reach and policy), so never more than
+     * the actor holds. Lets a service tell which grant passes a gate.
+     */
+    narrowGrants?: (grants: PermissionPolicyBinding[]) => IPermissionEvaluator;
 };

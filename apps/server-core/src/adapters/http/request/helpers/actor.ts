@@ -13,9 +13,11 @@ import { useRequestIdentity } from './identity.ts';
 
 export function buildActorContext(event: IAppEvent): ActorContext {
     const identity = useRequestIdentity(event);
+    const permissionEvaluator = useRequestPermissionEvaluator(event);
 
     return {
-        permissionEvaluator: useRequestPermissionEvaluator(event),
+        permissionEvaluator,
+        narrowGrants: (grants) => permissionEvaluator.narrowGrants(grants),
         identity: identity ? identity.raw : undefined,
         grants: identity ?
             // scope-gated: a token without `global` delegates nothing

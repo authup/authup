@@ -670,6 +670,22 @@ describe('core/entities/role-permission/service: a manager delegates owned permi
         expect(entity.policyId).toEqual(policyId);
     });
 
+    it('should clear the policy of a binding of an owned permission', async () => {
+        const binding = repository.seed({
+            roleId: role.id,
+            roleRealmId: realmId,
+            permissionId: owned.id,
+            permissionRealmId: realmId,
+            realmScope: RealmScope.OWN,
+            policyId,
+        });
+
+        const entity = await service.update(binding.id, { policyId: null }, await createActor());
+
+        expect(entity.policyId).toBeNull();
+        expect(entity.realmScope).toEqual(RealmScope.OWN);
+    });
+
     it('should not update a binding of a permission another client owns', async () => {
         const binding = repository.seed({
             roleId: role.id,

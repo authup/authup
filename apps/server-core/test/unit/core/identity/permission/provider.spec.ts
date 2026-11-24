@@ -15,6 +15,7 @@ import {
     BuiltInPolicyType,
     PermissionError,
     RealmScope,
+    reachesRecord,
     realmScopeMatches,
 } from '@authup/access';
 import { randomUUID } from 'node:crypto';
@@ -27,8 +28,9 @@ import {
     it,
 } from 'vitest';
 import { IdentityPermissionProvider } from '../../../../../src/core/identity/permission/module.ts';
-import type { IIdentityPermissionProvider } from '../../../../../src/core/identity/permission/types.ts';
+import type { IIdentityPermissionProvider, SupersetActor } from '../../../../../src/core/identity/permission/types.ts';
 import { IdentityRoleProvider } from '../../../../../src/core/identity/role/module.ts';
+import type { ClientMatchActorGrant } from '../../helpers/index.ts';
 import { createClientMatchActor } from '../../helpers/index.ts';
 
 /**
@@ -50,14 +52,26 @@ function createProvider(bindingsById: Record<string, PermissionPolicyBinding[]>)
     });
 }
 
+/**
+ * A gate that does not tell grants apart answers the same for every grant
+ * the provider narrows it to.
+ */
+function toActor(gate: IPermissionEvaluator | SupersetActor): SupersetActor {
+    if ('permissionEvaluator' in gate) {
+        return gate;
+    }
+
+    return { permissionEvaluator: gate, narrowGrants: () => gate };
+}
+
 async function isRoleSuperset(
     provider: IdentityPermissionProvider,
-    permissionEvaluator: IPermissionEvaluator = new FakePermissionEvaluator(),
+    gate: IPermissionEvaluator | SupersetActor = new FakePermissionEvaluator(),
 ) {
     return provider.isSuperset(
         await provider.getFor({ type: 'role', id: 'parent' }),
         await provider.getFor({ type: 'role', id: 'child' }),
-        { permissionEvaluator },
+        toActor(gate),
     );
 }
 
@@ -426,7 +440,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             });
             const actor = await createActor();
 
-            await expect(isRoleSuperset(provider, actor.permissionEvaluator)).resolves.toBe(true);
+            await expect(isRoleSuperset(provider, actor)).resolves.toBe(true);
         });
 
         it('does not cover a permission another client owns', async () => {
@@ -436,7 +450,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
             });
             const actor = await createActor();
 
-            await expect(isRoleSuperset(provider, actor.permissionEvaluator)).resolves.toBe(false);
+            await expect(isRoleSuperset(provider, actor)).resolves.toBe(false);
         });
 
         it('does not count an attributes-bound manager grant', async () => {
@@ -487,15 +501,104 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 )).resolves.toEqual({ realmScope: RealmScope.OWN });
             });
 
-            it('answers the widest manager reach', async () => {
+            // Mixed grants on the real engine: each manager grant is gated on
+            // its own, so a reach comes only from a grant that reaches the row.
+            const createMixedActor = (grants: ClientMatchActorGrant[]) => createClientMatchActor({
+                clientId,
+                realmId,
+                names: [],
+                grants,
+            });
+            const policyFreeOwnAndClientMatchAny = () => createMixedActor([
+                { name: PermissionName.PERMISSION_UPDATE, realmScope: RealmScope.OWN },
+                {
+                    name: PermissionName.PERMISSION_UPDATE,
+                    realmScope: RealmScope.ANY,
+                    policy: { type: BuiltInPolicyType.CLIENT_MATCH },
+                },
+            ]);
+
+            it('answers the widest reach among the manager grants reaching the row', async () => {
+                const actor = await policyFreeOwnAndClientMatchAny();
+
+                await expect(provider.resolveManagerGrant(await actor.grants!(), permission(clientId), actor))
+                    .resolves.toEqual({ realmScope: RealmScope.ANY });
+            });
+
+            it('answers only the reach of the policy-free grant on a row another client owns', async () => {
+                const actor = await policyFreeOwnAndClientMatchAny();
+
+                await expect(provider.resolveManagerGrant(await actor.grants!(), permission(otherClientId), actor))
+                    .resolves.toEqual({ realmScope: RealmScope.OWN });
+            });
+
+            it('answers null when no manager grant reaches the row', async () => {
+                const actor = await policyFreeOwnAndClientMatchAny();
+
                 await expect(provider.resolveManagerGrant(
-                    [
-                        manager({ type: BuiltInPolicyType.CLIENT_MATCH }),
-                        { ...manager(), realmScope: RealmScope.ANY },
-                    ],
+                    await actor.grants!(),
+                    permission(otherClientId, randomUUID()),
+                    actor,
+                )).resolves.toBeNull();
+            });
+
+            it('does not let an excluded grant passing the gate vouch for a manager grant', async () => {
+                const actor = await createMixedActor([
+                    {
+                        name: PermissionName.PERMISSION_UPDATE,
+                        realmScope: RealmScope.ANY,
+                        policy: { type: BuiltInPolicyType.ATTRIBUTES, query: { name: 'p2' } },
+                    },
+                    {
+                        name: PermissionName.PERMISSION_UPDATE,
+                        realmScope: RealmScope.OWN,
+                        policy: { type: BuiltInPolicyType.CLIENT_MATCH },
+                    },
+                ]);
+
+                // the attributes-bound grant alone passes the gate on that row
+                await expect(reachesRecord(actor.permissionEvaluator, {
+                    name: PermissionName.PERMISSION_UPDATE,
+                    realm: realmId,
+                    owner: otherClientId,
+                    data: { [BuiltInPolicyType.ATTRIBUTES]: permission(otherClientId) },
+                })).resolves.toBe(true);
+
+                await expect(provider.resolveManagerGrant(await actor.grants!(), permission(otherClientId), actor))
+                    .resolves.toBeNull();
+
+                const superset = createProvider({
+                    parent: await actor.grants!(),
+                    child: [owned(otherClientId)],
+                });
+
+                await expect(isRoleSuperset(superset, actor)).resolves.toBe(false);
+            });
+
+            it('covers a role only up to the reach of the grant reaching its row', async () => {
+                const actor = await policyFreeOwnAndClientMatchAny();
+                const parent = await actor.grants!();
+
+                await expect(isRoleSuperset(createProvider({
+                    parent,
+                    child: [owned(otherClientId)],
+                }), actor)).resolves.toBe(true);
+                await expect(isRoleSuperset(createProvider({
+                    parent,
+                    child: [{ ...owned(otherClientId), realmScope: RealmScope.ANY }],
+                }), actor)).resolves.toBe(false);
+                await expect(isRoleSuperset(createProvider({
+                    parent,
+                    child: [{ ...owned(clientId), realmScope: RealmScope.ANY }],
+                }), actor)).resolves.toBe(true);
+            });
+
+            it('answers null for an actor that cannot narrow its grants', async () => {
+                await expect(provider.resolveManagerGrant(
+                    [manager()],
                     permission(clientId),
                     { permissionEvaluator: new FakePermissionEvaluator() },
-                )).resolves.toEqual({ realmScope: RealmScope.ANY });
+                )).resolves.toBeNull();
             });
 
             it('passes the owner and realm to the permission_update gate', async () => {
@@ -504,7 +607,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 await provider.resolveManagerGrant(
                     [manager({ type: BuiltInPolicyType.CLIENT_MATCH })],
                     permission(clientId),
-                    { permissionEvaluator: gate },
+                    toActor(gate),
                 );
 
                 expect(gate.evaluateCalls).toHaveLength(1);
@@ -530,7 +633,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 await expect(provider.resolveManagerGrant(
                     [manager()],
                     permission(null, null),
-                    { permissionEvaluator: new FakePermissionEvaluator() },
+                    toActor(new FakePermissionEvaluator()),
                 )).resolves.toBeNull();
             });
 
@@ -538,7 +641,7 @@ describe('core/identity/permission — IdentityPermissionProvider disjunction (#
                 await expect(provider.resolveManagerGrant(
                     [manager({ type: BuiltInPolicyType.ATTRIBUTES, query: { realmId } })],
                     permission(clientId),
-                    { permissionEvaluator: new FakePermissionEvaluator() },
+                    toActor(new FakePermissionEvaluator()),
                 )).resolves.toBeNull();
             });
         });
@@ -832,13 +935,13 @@ describe('core/identity/permission — the grants a token carries (#3597)', () =
             sub: 'u',
             sub_kind: 'user',
             client_id: X,
-        }), await provider.getFor(child), { permissionEvaluator: new FakePermissionEvaluator() }))
+        }), await provider.getFor(child), toActor(new FakePermissionEvaluator())))
             .resolves.toBe(false);
         await expect(provider.isSuperset(await provider.getForToken({
             sub: 'u',
             sub_kind: 'user',
             client_id: Z,
-        }), await provider.getFor(child), { permissionEvaluator: new FakePermissionEvaluator() }))
+        }), await provider.getFor(child), toActor(new FakePermissionEvaluator())))
             .resolves.toBe(true);
     });
 });

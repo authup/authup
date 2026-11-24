@@ -174,6 +174,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
 
             await authorizePermissionJunctionCreate({
                 provider: this.identityPermissionProvider,
+                grants: await this.getActorGrants(actor),
                 actor,
                 permission: validated.permission,
             }, validated);
@@ -216,6 +217,7 @@ export class ClientPermissionService extends JunctionEntityService implements IC
 
         const updateData = await authorizePermissionJunctionUpdate({
             provider: this.identityPermissionProvider,
+            grants: await this.getActorGrants(actor),
             actor,
             permission,
         }, validated, entity.realmScope);

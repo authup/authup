@@ -178,6 +178,7 @@ export class UserPermissionService extends JunctionEntityService implements IUse
 
             await authorizePermissionJunctionCreate({
                 provider: this.identityPermissionProvider,
+                grants: await this.getActorGrants(actor),
                 actor,
                 permission: validated.permission,
             }, validated);
@@ -220,6 +221,7 @@ export class UserPermissionService extends JunctionEntityService implements IUse
 
         const updateData = await authorizePermissionJunctionUpdate({
             provider: this.identityPermissionProvider,
+            grants: await this.getActorGrants(actor),
             actor,
             permission,
         }, validated, entity.realmScope);

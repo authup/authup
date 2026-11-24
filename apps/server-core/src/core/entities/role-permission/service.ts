@@ -179,6 +179,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
             // Q4: the superset gate runs uniformly — no ROLE_ADMIN_NAME bypass.
             await authorizePermissionJunctionCreate({
                 provider: this.identityPermissionProvider,
+                grants: await this.getActorGrants(actor),
                 actor,
                 permission: validated.permission,
             }, validated);
@@ -227,6 +228,7 @@ export class RolePermissionService extends JunctionEntityService implements IRol
         // authorized by the evaluate() below.
         const updateData = await authorizePermissionJunctionUpdate({
             provider: this.identityPermissionProvider,
+            grants: await this.getActorGrants(actor),
             actor,
             permission,
         }, validated, entity.realmScope);

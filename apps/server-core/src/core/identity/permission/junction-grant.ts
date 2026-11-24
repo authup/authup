@@ -62,12 +62,12 @@ export async function authorizePermissionJunctionCreate(
     validated: Record<string, any>,
 ): Promise<void> {
     const {
-        actor, 
+        actor,
+        grants,
         permission, 
         provider, 
     } = ctx;
 
-    const grants = actor.grants ? await actor.grants() : [];
     const manager = await provider.resolveManagerGrant(grants, permission, actor);
 
     if (manager) {
@@ -108,12 +108,12 @@ export async function authorizePermissionJunctionUpdate(
     existingScope: `${RealmScope}`,
 ): Promise<Record<string, any>> {
     const {
-        actor, 
+        actor,
+        grants,
         permission, 
         provider, 
     } = ctx;
 
-    const grants = actor.grants ? await actor.grants() : [];
 
     const manager = permission ?
         await provider.resolveManagerGrant(grants, permission, actor) :

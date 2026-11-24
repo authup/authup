@@ -19,11 +19,13 @@ import { ErrorCode } from '@authup/errors';
 import { UserRoleService } from '../../../../../src/core/entities/user-role/service.ts';
 import {
     FakeEntityRepository,
+    FakePermissionEvaluator,
     createAllowAllActor,
     createDenyAllActor,
     createMasterRealmActor,
     createNonMasterRealmActor,
 } from '@authup/server-test-kit';
+import type { EvaluatorBehavior } from '@authup/server-test-kit';
 import type { PermissionPolicyBinding, PolicyData } from '@authup/access';
 import {
     BuiltInPolicyType,
@@ -268,23 +270,31 @@ describe('core/entities/user-role/service', () => {
 
         // The request evaluator's permission_update gate, as system.default
         // decides it: some grant of the actor reaches the permission's realm.
-        function createActor(realmId: string, grants: PermissionPolicyBinding[]) {
-            const actor = createNonMasterRealmActor(realmId);
-
-            actor.grants = async () => grants;
-            actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
+        function createGate(realmId: string, held: PermissionPolicyBinding[]): EvaluatorBehavior {
+            return ({ method, ctx }) => {
                 if (method !== 'evaluate' || ctx.name !== PermissionName.PERMISSION_UPDATE) {
                     return;
                 }
 
                 const realm = (ctx.data as PolicyData).get(BuiltInPolicyType.REALM_MATCH) as string | null;
-                const reached = grants.some((grant) => grant.permission.name === PermissionName.PERMISSION_UPDATE &&
+                const reached = held.some((grant) => grant.permission.name === PermissionName.PERMISSION_UPDATE &&
                     realmScopeMatches(grant.realmScope, realm, realmId));
 
                 if (!reached) {
                     throw PermissionError.denied(PermissionName.PERMISSION_UPDATE);
                 }
-            });
+            };
+        }
+
+        function createActor(realmId: string, grants: PermissionPolicyBinding[]) {
+            const actor = createNonMasterRealmActor(realmId);
+
+            actor.grants = async () => grants;
+            actor.permissionEvaluator.setBehavior(createGate(realmId, grants));
+            actor.narrowGrants = (named) => new FakePermissionEvaluator(createGate(
+                realmId,
+                grants.filter((grant) => named.includes(grant)),
+            ));
 
             return actor;
         }

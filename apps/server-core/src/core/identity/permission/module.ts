@@ -17,7 +17,6 @@ import {
     compareRealmScope,
     grantDominates,
     isPermissionPolicyBindingEqual,
-    maxRealmScope,
     minRealmScope,
     reachesRecord,
 } from '@authup/access';
@@ -127,30 +126,37 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             return null;
         }
 
-        const reach = aggregatePermissionPolicyBindings(parent)
-            .filter((item) => item.permission.name === PermissionName.PERMISSION_UPDATE &&
-                !item.permission.realmId &&
-                !item.permission.clientId)
-            .flatMap((item) => item.grants)
-            .filter((grant) => isManagerGrant(grant))
-            .map((grant) => grant.realmScope);
-
-        if (reach.length === 0) {
+        if (!actor.narrowGrants) {
             return null;
         }
 
-        const reached = await reachesRecord(actor.permissionEvaluator, {
-            name: PermissionName.PERMISSION_UPDATE,
-            realm: permission.realmId ?? null,
-            owner: permission.clientId ?? null,
-            data: { [BuiltInPolicyType.ATTRIBUTES]: permission },
-        });
+        // Each manager grant is gated on its own, so the reach handed out is
+        // that of a grant which itself reaches the row: one passing grant must
+        // not vouch for another's wider reach, nor a non-manager grant for a
+        // manager grant that does not reach the row.
+        const managers = parent
+            .map((binding) => ({ binding, grant: aggregatePermissionPolicyBindings([binding])[0]?.grants[0] }))
+            .filter((item): item is { binding: PermissionPolicyBinding, grant: PermissionGrant } => !!item.grant &&
+                item.binding.permission.name === PermissionName.PERMISSION_UPDATE &&
+                !item.binding.permission.realmId &&
+                !item.binding.permission.clientId &&
+                isManagerGrant(item.grant))
+            .sort((a, b) => compareRealmScope(b.grant.realmScope, a.grant.realmScope));
 
-        if (!reached) {
-            return null;
+        for (const manager of managers) {
+            const reached = await reachesRecord(actor.narrowGrants([manager.binding]), {
+                name: PermissionName.PERMISSION_UPDATE,
+                realm: permission.realmId ?? null,
+                owner: permission.clientId ?? null,
+                data: { [BuiltInPolicyType.ATTRIBUTES]: permission },
+            });
+
+            if (reached) {
+                return { realmScope: manager.grant.realmScope };
+            }
         }
 
-        return { realmScope: maxRealmScope(reach) };
+        return null;
     }
 
     async resolveJunctionGrant(

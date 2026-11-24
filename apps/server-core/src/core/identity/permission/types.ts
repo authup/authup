@@ -8,7 +8,6 @@
 import type { Policy } from '@authup/core-kit';
 import type {
     BasePermission,
-    IPermissionEvaluator,
     IdentityPolicyData,
     PermissionPolicyBinding,
     RealmScope,
@@ -62,11 +61,13 @@ export type ResolveManagerGrantResult = {
 export type ManagedPermission = Pick<BasePermission, 'name' | 'realmId' | 'clientId'> & Record<string, any>;
 
 /**
- * A permission-junction write: the actor and the permission it binds.
+ * A permission-junction write: the actor, its own grants as its request
+ * resolved them, and the permission it binds.
  */
 export type PermissionJunctionContext = {
     provider: IIdentityPermissionProvider;
     actor: ActorContext;
+    grants: PermissionPolicyBinding[];
     permission: ManagedPermission;
 };
 
@@ -87,11 +88,10 @@ export type IdentityPermissionSubject = Pick<IdentityPolicyData, 'type' | 'id'>;
 
 /**
  * The actor a superset check runs for, beside its grants: its evaluator runs
- * the `permission_update` gate on a realm- or client-owned permission.
+ * the `permission_update` gate on a realm- or client-owned permission,
+ * narrowed to one manager grant at a time.
  */
-export type SupersetActor = {
-    permissionEvaluator: IPermissionEvaluator;
-};
+export type SupersetActor = Pick<ActorContext, 'permissionEvaluator' | 'narrowGrants'>;
 
 export interface IIdentityPermissionProvider {
     getFor(identity: IdentityPermissionSubject): Promise<PermissionPolicyBinding[]>;
@@ -112,9 +112,10 @@ export interface IIdentityPermissionProvider {
      * Whether the actor manages a realm- or client-owned permission, and so
      * may delegate it without holding it: `parent` holds a manager grant
      * (global `permission_update`, policy-free or bound to exactly one
-     * non-inverted `clientMatch` policy) and the actor passes the
+     * non-inverted `clientMatch` policy) that, holding it alone, passes the
      * `permission_update` gate on the permission row with its realm and
-     * owner. Answers the widest manager reach, or `null`.
+     * owner. Answers the widest reach of such a grant, or `null` (also for
+     * an actor that cannot narrow its grants).
      */
     resolveManagerGrant(
         parent: PermissionPolicyBinding[],
