@@ -177,13 +177,6 @@ Services receive an `ActorContext` instead of a raw HTTP request. This decouples
 
 ```typescript
 // @authup/server-kit (packages/server-kit/src/core/actor/types.ts)
-import type { IPermissionEvaluator, PermissionPolicyBinding } from '@authup/access';
-import type { Identity } from '@authup/core-kit';
-
-export interface INarrowablePermissionEvaluator extends IPermissionEvaluator {
-    narrowGrants(grants: PermissionPolicyBinding[]): IPermissionEvaluator;
-}
-
 export type ActorContext = {
     permissionEvaluator: INarrowablePermissionEvaluator;
     identity?: Identity;
@@ -191,7 +184,7 @@ export type ActorContext = {
 };
 ```
 
-- `permissionEvaluator`: evaluates permissions (`evaluate`, `preEvaluate`, `evaluateOneOf`, `preEvaluateOneOf`); `narrowGrants` is the evaluator over only the given grants (#3907)
+- `permissionEvaluator`: evaluates permissions (`evaluate`, `preEvaluate`, `evaluateOneOf`, `preEvaluateOneOf`) plus `narrowGrants`: an evaluator over only the given grants (#3907)
 - `identity`: the actor's identity (user, client)
 - `grants`: the actor's own grants as its request resolved them (for a token, the grants that token carries). `isSuperset` and `resolveJunctionGrant` read them through `getActorGrants`, so they check what the gates evaluated; a missing resolver yields none
 
