@@ -13,6 +13,7 @@ import type {
     PermissionPolicyBinding,
 } from '@authup/access';
 import { BuiltInPolicyType, RealmScope, createAuthorizationEvaluator } from '@authup/access';
+import type { Client } from '@authup/core-kit';
 import { IdentityType } from '@authup/core-kit';
 import type { ActorContext } from '@authup/server-kit';
 import type { IClientRepository } from '../../../../src/core/entities/client/types.ts';
@@ -124,6 +125,10 @@ export async function createClientMatchActor(options: ClientMatchActorOptions): 
 
     return {
         permissionEvaluator: evaluator,
+        identity: {
+            type: IdentityType.CLIENT,
+            data: { id: options.clientId, realmId: options.realmId } as Client,
+        },
         grants: async () => bindings,
         narrowGrants: (named) => {
             if (named.length !== 1) {
