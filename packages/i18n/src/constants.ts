@@ -108,6 +108,7 @@ export enum TranslatorTranslationClientKey {
     POLICY_TYPE_ATTRIBUTE_NAMES = 'policyTypeAttributeNames',
     POLICY_TYPE_ATTRIBUTES = 'policyTypeAttributes',
     POLICY_TYPE_REALM_MATCH = 'policyTypeRealmMatch',
+    POLICY_TYPE_CLIENT_MATCH = 'policyTypeClientMatch',
     POLICY_TYPE_IDENTITY = 'policyTypeIdentity',
     POLICY_TYPE_PERMISSION_BINDING = 'policyTypePermissionBinding',
 
