@@ -241,6 +241,24 @@ describe('SCHEMA', () => {
         expect(defaults.authConsole?.url).toEqual('');
     });
 
+    it('defaults to development only when NODE_ENV is unset', () => {
+        const previous = process.env.NODE_ENV;
+
+        try {
+            delete process.env.NODE_ENV;
+            expect(buildSchemaDefaults<AuthupConfig>(SCHEMA).env).toEqual('development');
+
+            process.env.NODE_ENV = 'production';
+            expect(buildSchemaDefaults<AuthupConfig>(SCHEMA).env).toEqual('production');
+        } finally {
+            if (typeof previous === 'undefined') {
+                delete process.env.NODE_ENV;
+            } else {
+                process.env.NODE_ENV = previous;
+            }
+        }
+    });
+
     /**
      * The array default is one literal shared by every reader, so a caller
      * mutating what it got back must not reach the next one.
