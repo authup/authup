@@ -336,6 +336,14 @@ export interface RealmMatchPolicy {
 }
 ```
 
+## ClientMatch
+
+The ClientMatch Policy passes when the client that owns the record, supplied under the
+`clientMatch` policy-data key, equals the identity's `clientId` (`null` for an identity
+without one). When the key is absent in a full evaluation the policy fails and is never
+inverted; in `preEvaluate` it stays pending. It lowers to a query condition only when the
+caller passes `clientAttributeName`. It is meant for client identities.
+
 ## Time
 
 The Time Policy works similarly to the [Date](#date) Policy.

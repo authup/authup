@@ -135,11 +135,12 @@ describe('record policy (field projection)', () => {
             });
 
             expect(data).toHaveLength(1);
-            expect(Object.keys(data[0]!).sort()).toEqual(['description', 'id', 'realmId']);
+            expect(Object.keys(data[0]!).sort()).toEqual(['clientId', 'description', 'id', 'realmId']);
             expect(data[0]).toEqual({
                 id: readable.id,
                 description: readable.description,
                 realmId,
+                clientId: null,
             });
         });
     });

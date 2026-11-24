@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionPolicyBinding } from '@authup/access';
+import type { IdentityPolicyData, PermissionPolicyBinding } from '@authup/access';
 import {
     BuiltInPolicyType,
     PolicyData,
@@ -94,6 +94,47 @@ describe('RequestPermissionEvaluator', () => {
 
         await expect(evaluator.preEvaluate({ name: 'test' })).rejects.toThrow('grant load failed');
         expect(base.preEvaluateCalls).toHaveLength(0);
+    });
+
+    it('should narrow the grants to those named, and never beyond the request\'s own', async () => {
+        const held : PermissionPolicyBinding[] = [
+            { permission: { name: 'test' }, realmScope: 'own' },
+            {
+                permission: { name: 'test' },
+                realmScope: 'any',
+                policies: [{ type: BuiltInPolicyType.CLIENT_MATCH }],
+            },
+        ];
+        const event = createEvent();
+
+        setRequestScopes(event, [ScopeName.GLOBAL]);
+        setRequestIdentity(event, clientIdentity({ id: 'c1' }));
+        setRequestGrantsResolver(event, async () => held);
+
+        const base = new FakePermissionEvaluator();
+        const evaluator = new RequestPermissionEvaluator(event, base);
+
+        const readGrants = async (narrowed: RequestPermissionEvaluator) => {
+            const data = new PolicyData();
+
+            await narrowed.evaluate({ name: 'test', data });
+
+            return data.get<IdentityPolicyData>(BuiltInPolicyType.IDENTITY).grants;
+        };
+
+        await expect(readGrants(evaluator.narrowGrants([{
+            permission: { name: 'test' },
+            realmScope: 'any',
+            policies: [{ type: BuiltInPolicyType.CLIENT_MATCH }],
+        }]))).resolves.toEqual([held[1]]);
+
+        await expect(readGrants(evaluator.narrowGrants([
+            { permission: { name: 'test' }, realmScope: 'any' },
+            { permission: { name: 'other' }, realmScope: 'any' },
+        ]))).resolves.toEqual([]);
+
+        await expect(readGrants(evaluator.narrowGrants(held).narrowGrants([held[0]!])))
+            .resolves.toEqual([held[0]]);
     });
 
     // A token's scopes restrict what the identity may DO, never who it is:

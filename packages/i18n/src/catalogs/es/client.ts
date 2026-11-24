@@ -79,6 +79,7 @@ export const TranslatorTranslationClientSpanish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.POLICY_TYPE_ATTRIBUTE_NAMES]: 'Nombres de atributos',
     [TranslatorTranslationClientKey.POLICY_TYPE_ATTRIBUTES]: 'Atributos',
     [TranslatorTranslationClientKey.POLICY_TYPE_REALM_MATCH]: 'Coincidencia de realm',
+    [TranslatorTranslationClientKey.POLICY_TYPE_CLIENT_MATCH]: 'Coincidencia de cliente',
     [TranslatorTranslationClientKey.POLICY_TYPE_IDENTITY]: 'Identidad',
     [TranslatorTranslationClientKey.POLICY_TYPE_PERMISSION_BINDING]: 'Vinculación de permiso',
 

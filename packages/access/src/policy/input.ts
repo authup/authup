@@ -21,6 +21,7 @@ export interface PolicyInput {
     [BuiltInPolicyType.IDENTITY]?: IdentityPolicyData;
     [BuiltInPolicyType.ATTRIBUTES]?: Record<string, any>;
     [BuiltInPolicyType.REALM_MATCH]?: string | string[] | null;
+    [BuiltInPolicyType.CLIENT_MATCH]?: string | null;
     [key: string]: any;
 }
 

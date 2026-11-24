@@ -19,22 +19,26 @@ import type { RoleProvisioningEntity } from '../../../../../src/core/provisionin
 import { ProvisioningEntityStrategyType } from '../../../../../src/core/provisioning/strategy/index.ts';
 import type { IPermissionRepository, IRolePermissionRepository } from '../../../../../src/core/entities/index.ts';
 import { FakeClientRepository } from '../../entities/client/fake-repository.ts';
+import { FakePolicyRepository } from '../../entities/policy/fake-repository.ts';
 import { FakeRoleRepository } from '../../entities/role/fake-repository.ts';
 
 describe('core/provisioning/synchronizer/role', () => {
     let roleRepository: FakeRoleRepository;
     let permissionRepository: FakeEntityRepository<Permission>;
     let rolePermissionRepository: FakeEntityRepository<RolePermission>;
+    let policyRepository: FakePolicyRepository;
     let synchronizer: RoleProvisioningSynchronizer;
     const realmId = randomUUID();
 
     beforeEach(() => {
         roleRepository = new FakeRoleRepository();
+        policyRepository = new FakePolicyRepository();
         permissionRepository = new FakeEntityRepository<Permission>();
         rolePermissionRepository = new FakeEntityRepository<RolePermission>();
         synchronizer = new RoleProvisioningSynchronizer({
             repository: roleRepository,
             clientRepository: new FakeClientRepository(),
+            policyRepository,
             permissionRepository: permissionRepository as
                 FakeEntityRepository<Permission> & IPermissionRepository,
             rolePermissionRepository: rolePermissionRepository as
@@ -104,6 +108,70 @@ describe('core/provisioning/synchronizer/role', () => {
 
         expect(rolePermissionRepository.getAll()).toEqual([
             expect.objectContaining({ roleId: existing.id }),
+        ]);
+    });
+
+    it('should stamp the named global policy and reach on every generated binding', async () => {
+        const policy = policyRepository.seed({ name: 'p', realmId: null });
+
+        await synchronizer.synchronize({
+            attributes: { name: 'ops', realmId },
+            relations: {
+                globalPermissions: ['*'],
+                globalPermissionsRealmScope: 'own',
+                globalPermissionsPolicy: 'p',
+            },
+        } as RoleProvisioningEntity);
+
+        expect(rolePermissionRepository.getAll()).toEqual([
+            expect.objectContaining({ realmScope: 'own', policyId: policy.id }),
+        ]);
+    });
+
+    it('should refuse an unknown policy name', async () => {
+        await expect(synchronizer.synchronize({
+            attributes: { name: 'ops', realmId },
+            relations: {
+                globalPermissions: ['*'],
+                globalPermissionsRealmScope: 'own',
+                globalPermissionsPolicy: 'missing',
+            },
+        } as RoleProvisioningEntity)).rejects.toThrow(/missing/);
+
+        expect(roleRepository.getAll()).toEqual([]);
+    });
+
+    it('should ignore an unknown policy name of an existing role under createOnly', async () => {
+        roleRepository.seed({
+            name: 'ops',
+            realmId,
+            clientId: null,
+        });
+
+        await synchronizer.synchronize({
+            attributes: { name: 'ops', realmId },
+            relations: {
+                globalPermissions: ['*'],
+                globalPermissionsPolicy: 'missing',
+            },
+        } as RoleProvisioningEntity);
+
+        expect(rolePermissionRepository.getAll()).toHaveLength(0);
+    });
+
+    it('should stamp the named policy when no reach is declared', async () => {
+        const policy = policyRepository.seed({ name: 'p', realmId: null });
+
+        await synchronizer.synchronize({
+            attributes: { name: 'ops', realmId },
+            relations: {
+                globalPermissions: ['*'],
+                globalPermissionsPolicy: 'p',
+            },
+        } as RoleProvisioningEntity);
+
+        expect(rolePermissionRepository.getAll()).toEqual([
+            expect.objectContaining({ policyId: policy.id }),
         ]);
     });
 });

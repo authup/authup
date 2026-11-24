@@ -61,7 +61,11 @@ export class RoleService extends AbstractEntityService implements IRoleService {
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
-        return scopeReadQuery(query, actor.permissionEvaluator, { names: PERMISSION_NAMES, widen: widenToSchema(roleSchema) });
+        return scopeReadQuery(query, actor.permissionEvaluator, {
+            names: PERMISSION_NAMES,
+            widen: widenToSchema(roleSchema),
+            clientAttributeName: 'clientId',
+        });
     }
 
     async getMany(
@@ -86,6 +90,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
                 name: PERMISSION_NAMES,
                 realm: entity.realmId,
+                owner: entity.clientId ?? null,
                 data: {
                     [BuiltInPolicyType.ATTRIBUTES]: entity,
                     [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, scope.query),
@@ -122,6 +127,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         await evaluateRecordOneOf(actor.permissionEvaluator, {
             name: PERMISSION_NAMES,
             realm: entity.realmId,
+            owner: entity.clientId ?? null,
             data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 
@@ -201,7 +207,10 @@ export class RoleService extends AbstractEntityService implements IRoleService {
                     ...entity,
                     ...validated,
                 },
-                { realm: (row) => row.realmId },
+                {
+                    realm: (row) => row.realmId,
+                    owner: (row) => row.clientId ?? null,
+                },
             );
 
             entity = this.repository.merge(entity, validated);
@@ -224,6 +233,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.ROLE_CREATE,
             realm,
+            owner: validated.clientId ?? null,
             data: { [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realmId: realm } },
         });
 
@@ -260,6 +270,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.ROLE_DELETE,
             realm: entity.realmId,
+            owner: entity.clientId ?? null,
             data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 

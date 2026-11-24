@@ -17,9 +17,11 @@ import { inArray } from '@rapiq/core';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
 import { PermissionName, UserRoleValidator } from '@authup/core-kit';
-import type { UserRole } from '@authup/core-kit';
-import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
+import type { Role, UserRole } from '@authup/core-kit';
+import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
+import { loadJunctionOwners, readJunctionOwner } from '../junction-owner/index.ts';
+import type { JunctionDefinition, JunctionOwners } from '../junction-owner/index.ts';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { IUserRoleRepository, IUserRoleService } from './types.ts';
 import {
@@ -38,11 +40,14 @@ const READ_PERMISSION_NAMES = [
 
 export type UserRoleServiceContext = {
     repository: IUserRoleRepository;
+    roleRepository: IEntityRepository<Role>;
     identityPermissionProvider: IIdentityPermissionProvider;
 };
 
 export class UserRoleService extends JunctionEntityService implements IUserRoleService {
     protected readonly ownerRealm = { key: 'userRealmId' } as const;
+
+    protected readonly definition: JunctionDefinition;
 
     protected repository: IUserRoleRepository;
 
@@ -53,8 +58,17 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
     constructor(ctx: UserRoleServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.definition = {
+            key: 'roleId', 
+            relation: 'role', 
+            repository: ctx.roleRepository, 
+        };
         this.identityPermissionProvider = ctx.identityPermissionProvider;
         this.validator = new UserRoleValidator();
+    }
+
+    protected junctionOwner(row: Record<string, any>, owners?: JunctionOwners): string | null {
+        return readJunctionOwner(row, this.definition, owners);
     }
 
     async getMany(
@@ -87,12 +101,15 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
             return { data: await redactUnreachedRelations(entities, parsed, userRoleSchema, actor), meta };
         }
 
+        const owners = await loadJunctionOwners(entities, this.definition);
+
         const data: UserRole[] = [];
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
                 name: READ_PERMISSION_NAMES,
                 realm: this.junctionResourceRealm(entity),
+                owner: this.junctionOwner(entity, owners),
                 data: {
                     [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
                     [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, parsed),
@@ -124,6 +141,7 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
         await evaluateRecordOneOf(actor.permissionEvaluator, {
             name: READ_PERMISSION_NAMES,
             realm: this.junctionResourceRealm(entity),
+            owner: this.junctionOwner(entity, await loadJunctionOwners([entity], this.definition)),
             data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
         });
 
@@ -164,7 +182,7 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
                     type: 'role',
                     id: validated.roleId,
                 }),
-                { permissionEvaluator: actor.permissionEvaluator },
+                actor,
             );
 
             if (!hasPermissions) {
@@ -176,6 +194,7 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.USER_ROLE_CREATE,
             realm: this.junctionResourceRealm(validated),
+            owner: this.junctionOwner(validated),
             data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated) },
         });
 
@@ -202,6 +221,7 @@ export class UserRoleService extends JunctionEntityService implements IUserRoleS
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.USER_ROLE_DELETE,
             realm: this.junctionResourceRealm(entity),
+            owner: this.junctionOwner(entity, await loadJunctionOwners([entity], this.definition)),
             data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
         });
 

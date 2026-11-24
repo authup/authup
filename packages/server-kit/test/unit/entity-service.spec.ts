@@ -55,6 +55,29 @@ describe('AbstractEntityService.evaluateUpdate (#3654)', () => {
         expect(calls.map((c) => c.data?.get(BuiltInPolicyType.REALM_MATCH))).toEqual(['stored', 'next']);
     });
 
+    it('should forward the owner resolver to each row, and leave it absent without one', async () => {
+        const calls: PermissionEvaluationContext[] = [];
+
+        await new Service().run(
+            createActor(calls),
+            'client_update',
+            { clientId: 'stored', realmId: null },
+            { clientId: 'next', realmId: null },
+            { realm: (row) => row.realmId, owner: (row) => row.clientId },
+        );
+        await new Service().run(
+            createActor(calls),
+            'client_update',
+            { realmId: null },
+            { realmId: null },
+            { realm: (row) => row.realmId },
+        );
+
+        expect(calls.map((c) => (c.data?.has(BuiltInPolicyType.CLIENT_MATCH) ? c.data.get(BuiltInPolicyType.CLIENT_MATCH) : undefined)))
+            .toEqual(['stored', 'next', undefined, undefined]);
+        expect(calls.map((c) => c.data?.has(BuiltInPolicyType.CLIENT_MATCH))).toEqual([true, true, false, false]);
+    });
+
     it('should stop at a refused stored row', async () => {
         const calls: string[] = [];
         const actor = {

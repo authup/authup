@@ -7,6 +7,7 @@
 
 export * from './attribute-names/index.ts';
 export * from './attributes/index.ts';
+export * from './client-match/index.ts';
 export * from './composite/index.ts';
 export * from './date/index.ts';
 export * from './identity/index.ts';

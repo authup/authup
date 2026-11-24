@@ -85,6 +85,11 @@ export type PermissionCompileContext = {
      */
     realmAttributeName?: string,
     /**
+     * Row column holding the owning client, which a `clientMatch` grant policy
+     * is lowered onto. Unset, such a grant is checked per row (`post`).
+     */
+    clientAttributeName?: string,
+    /**
      * The realm every row of the compilation belongs to, for a resource whose
      * rows carry no realm column. A realm (id, name, `null` for global, or a
      * list every entry of which must be reached) settles each grant's realm

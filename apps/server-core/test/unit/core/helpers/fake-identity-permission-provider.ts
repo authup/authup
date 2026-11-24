@@ -12,8 +12,10 @@ import type {
     IIdentityPermissionProvider,
     IdentityPermissionSubject,
     IdentityToken,
+    ManagedPermission,
     ResolveJunctionGrantResult,
     ResolveJunctionPolicyOptions,
+    ResolveManagerGrantResult,
     SupersetActor,
 } from '../../../../src/core/identity/permission/types.ts';
 
@@ -79,6 +81,17 @@ export class FakeIdentityPermissionProvider implements IIdentityPermissionProvid
         this.supersetActors.push(actor);
 
         return this.supersetResult;
+    }
+
+    /**
+     * Manages nothing, so a junction write runs the hold rule.
+     */
+    async resolveManagerGrant(
+        _parent: PermissionPolicyBinding[],
+        _permission: ManagedPermission,
+        _actor: SupersetActor,
+    ): Promise<ResolveManagerGrantResult | null> {
+        return null;
     }
 
     async resolveJunctionGrant(

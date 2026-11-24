@@ -32,6 +32,11 @@ export enum BuiltInPolicyType {
     REALM_MATCH = 'realmMatch',
 
     /**
+     * The actor's client owns the definition acted on.
+     */
+    CLIENT_MATCH = 'clientMatch',
+
+    /**
      * Restriction based on identity (type, id, ...)
      */
     IDENTITY = 'identity',
@@ -50,6 +55,7 @@ export const SystemPolicyName = {
     IDENTITY: 'system.identity',
     PERMISSION_BINDING: 'system.permission-binding',
     REALM_MATCH: 'system.realm-match',
+    CLIENT_OWNED: 'system.client-owned',
     CLIENT_NAMES_SELF_MANAGE: 'system.client-names-self-manage',
     USER_NAMES_SELF_MANAGE: 'system.user-names-self-manage',
 } as const;

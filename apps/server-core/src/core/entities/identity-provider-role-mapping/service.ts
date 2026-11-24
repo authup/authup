@@ -177,7 +177,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
                     type: 'role',
                     id: validated.roleId,
                 }),
-                { permissionEvaluator: actor.permissionEvaluator },
+                actor,
             );
 
             if (!hasPermissions) {
@@ -230,7 +230,7 @@ export class IdentityProviderRoleMappingService extends JunctionEntityService im
                     type: 'role',
                     id: role.id,
                 }),
-                { permissionEvaluator: actor.permissionEvaluator },
+                actor,
             );
 
             if (!hasPermissions) {

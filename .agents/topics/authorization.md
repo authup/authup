@@ -406,8 +406,18 @@ policy-free at least as wide as each of the role's grants of it (the gate checks
 not how far the role reaches). Holding it, the actor defines that permission (its policies,
 so who passes it); without the exception a provisioned realm permission, which no admin role
 holds, could not be delegated at all. Global permissions keep strict dominance. Binding a
-permission directly (user, client or role permission) still requires holding it
-(`preEvaluate` plus `resolveJunctionGrant`); only role assignment has the exception.
+permission directly (user, client or role permission) requires holding it
+(`preEvaluate` plus `resolveJunctionGrant`), except through a manager grant (below).
+
+**Manager grant (#3907).** `resolveManagerGrant` (`core/identity/permission/module.ts`) picks the
+actor's grants of `permission_update` that are policy-free or carry exactly ONE non-inverted `clientMatch` policy;
+any other policy-bound grant is excluded. Each candidate is gated alone through
+the actor evaluator's `narrowGrants` (the evaluator over only that grant), and the reach is the widest
+among those that pass. It applies to the superset check and to DIRECT binds (user-, client- and
+role-permission), so a manager may bind a permission it manages without holding it,
+through ANY client's token: #3597 narrows which HELD client-owned grants apply, not which
+definitions an actor manages. Consequence: `realm_admin` (policy-free `permission_update` at
+realm reach) can directly bind any permission of its realm without holding it.
 
 `grantDominates(parent, child)` (`packages/access/src/permission/helpers/grant.ts`):
 
@@ -535,6 +545,16 @@ Defaults (declared in `app/modules/provisioning/sources/default/module.ts`):
     resource has no realm) and PENDS at the pre-gate (`ctx.preliminary`, set by
     `preEvaluate`; an uninverted `any` still passes): passed there, an inverted ancestor settles a deny
     the row's realm overturns. A binding node keeps such a reach unknown on both sides.
+  - clientMatch (#3907) -> `[IDENTITY]`: passes when the record owner's
+    `clientId`, under the `clientMatch` data key, is non-null and equals the acting client's id
+    (a global row never matches).
+    Every gated site supplies the key (`RecordTarget.owner`, `EntityUpdateEvaluationResolvers.owner`:
+    a permission or role row's own `clientId`, a junction's definition owner, for role-permission
+    the ROLE). Absent in a settled evaluation it is unevaluable and fails, never inverted;
+    in a preliminary one it pends. Never matches a user. Backs the built-in `system.client-owned`
+    policy. A grant carrying it is delegable like any held grant and keeps the policy, which
+    then reads the new holder's definitions: a `client_admin` client can make another client
+    admin of its own definitions, and revoking the first does not revoke the copy.
 - Composites treat pending children as unknown and settle only when no resolution could
   change the outcome. **`invert` is never applied to a pending result.**
 - **The third outcome is `unevaluable` (#3817)**, on `success: false`, never with `pending`
@@ -574,7 +594,8 @@ expresses a pending policy as a rapiq `ICondition` over row attributes, opt-in v
   CONSENSUS never lowers; `invert` swaps the two sides. rapiq `not()` (null-inclusive)
   only derives a leaf's fail side.
 - The condition is exact: row matches iff the pending subtree settles true on it.
-- Lowerable: `attributes`, `realmMatch` scope mode (field `attributeName`, default
+- Lowerable: `clientMatch` only when the caller passes `clientAttributeName` (the
+  permission and role list reads pass `'clientId'`), `attributes`, `realmMatch` scope mode (field `attributeName`, default
   `realmId`; under `withConditions` an absent `realmMatch` key PENDS instead of
   neutral-passing), strict single-key attribute mode. Anything else is a per-row
   post-check.

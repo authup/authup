@@ -7,6 +7,7 @@
 
 import type { AttributeNamesPolicy } from './attribute-names/index.ts';
 import type { AttributesPolicy } from './attributes/index.ts';
+import type { ClientMatchPolicy } from './client-match/index.ts';
 import type { BuiltInPolicyType } from './constants.ts';
 import type { DatePolicy } from './date/index.ts';
 import type { CompositePolicy } from './composite/index.ts';
@@ -23,7 +24,8 @@ type BuiltInPolicyTypeMapRaw<T extends Record<string, any> = Record<string, any>
     [BuiltInPolicyType.TIME]: TimePolicy,
     [BuiltInPolicyType.IDENTITY]: IdentityPolicy,
     [BuiltInPolicyType.PERMISSION_BINDING]: PermissionBindingPolicy,
-    [BuiltInPolicyType.REALM_MATCH]: RealmMatchPolicy
+    [BuiltInPolicyType.REALM_MATCH]: RealmMatchPolicy,
+    [BuiltInPolicyType.CLIENT_MATCH]: ClientMatchPolicy
 };
 
 export type BuiltInPolicyTypeMap<T extends Record<string, any> = Record<string, any>> = {

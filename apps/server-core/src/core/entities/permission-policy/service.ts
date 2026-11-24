@@ -16,9 +16,11 @@ import { inArray } from '@rapiq/core';
 import { EntityConflictError, EntityNotFoundError, ValidationError } from '@authup/errors';
 import { ValidatorGroup } from '@authup/kit';
 import { PermissionName, PermissionPolicyValidator } from '@authup/core-kit';
-import type { PermissionPolicy } from '@authup/core-kit';
-import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
+import type { Permission, PermissionPolicy } from '@authup/core-kit';
+import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository } from '@authup/server-kit';
 import { JunctionEntityService } from '@authup/server-kit';
+import { loadJunctionOwners, readJunctionOwner } from '../junction-owner/index.ts';
+import type { JunctionDefinition, JunctionOwners } from '../junction-owner/index.ts';
 import type { IPermissionPolicyRepository, IPermissionPolicyService } from './types.ts';
 import {
     decodeQuery,
@@ -36,10 +38,13 @@ const READ_PERMISSION_NAMES = [
 
 export type PermissionPolicyServiceContext = {
     repository: IPermissionPolicyRepository;
+    permissionRepository: IEntityRepository<Permission>;
 };
 
 export class PermissionPolicyService extends JunctionEntityService implements IPermissionPolicyService {
     protected readonly ownerRealm = { key: 'permissionRealmId' } as const;
+
+    protected readonly definition: JunctionDefinition;
 
     protected repository: IPermissionPolicyRepository;
 
@@ -48,7 +53,16 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
     constructor(ctx: PermissionPolicyServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.definition = {
+            key: 'permissionId', 
+            relation: 'permission', 
+            repository: ctx.permissionRepository, 
+        };
         this.validator = new PermissionPolicyValidator();
+    }
+
+    protected junctionOwner(row: Record<string, any>, owners?: JunctionOwners): string | null {
+        return readJunctionOwner(row, this.definition, owners);
     }
 
     async getMany(
@@ -81,12 +95,15 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
             return { data: await redactUnreachedRelations(entities, parsed, permissionPolicySchema, actor), meta };
         }
 
+        const owners = await loadJunctionOwners(entities, this.definition);
+
         const data: PermissionPolicy[] = [];
 
         for (const entity of entities) {
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
                 name: READ_PERMISSION_NAMES,
                 realm: this.junctionResourceRealm(entity),
+                owner: this.junctionOwner(entity, owners),
                 data: {
                     [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity),
                     [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, parsed),
@@ -118,6 +135,7 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
         await evaluateRecordOneOf(actor.permissionEvaluator, {
             name: READ_PERMISSION_NAMES,
             realm: this.junctionResourceRealm(entity),
+            owner: this.junctionOwner(entity, await loadJunctionOwners([entity], this.definition)),
             data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
         });
 
@@ -159,6 +177,7 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.PERMISSION_UPDATE,
             realm: this.junctionResourceRealm(validated),
+            owner: this.junctionOwner(validated),
             data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(validated) },
         });
 
@@ -185,6 +204,7 @@ export class PermissionPolicyService extends JunctionEntityService implements IP
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.PERMISSION_UPDATE,
             realm: this.junctionResourceRealm(entity),
+            owner: this.junctionOwner(entity, await loadJunctionOwners([entity], this.definition)),
             data: { [BuiltInPolicyType.ATTRIBUTES]: this.junctionAttributes(entity) },
         });
 

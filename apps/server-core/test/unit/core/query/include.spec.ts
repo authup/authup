@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomUUID } from 'node:crypto';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import { IdentityType, PermissionName } from '@authup/core-kit';
 import type { Client } from '@authup/core-kit';
@@ -14,7 +15,9 @@ import { Query, Relation, Relations } from '@rapiq/core';
 import { describe, expect, it } from 'vitest';
 import { redactUnreachedRelations } from '../../../../src/core/query/include.ts';
 import { sessionSchema } from '../../../../src/core/entities/session/schema.ts';
+import { userPermissionSchema } from '../../../../src/core/entities/user-permission/schema.ts';
 import { userRoleSchema } from '../../../../src/core/entities/user-role/schema.ts';
+import { createClientMatchActor } from '../helpers/index.ts';
 
 function include(...names: string[]) {
     return new Query({ relations: new Relations(names.map((name) => new Relation(name))) });
@@ -142,5 +145,77 @@ describe('core/query/include', () => {
 
         expect(rows[0].realm).toBeDefined();
         expect(evaluator.compileCalls).toHaveLength(0);
+    });
+
+    describe('owning client (clientMatch)', () => {
+        const realmId = randomUUID();
+        const clientId = randomUUID();
+        const otherClientId = randomUUID();
+
+        it('should keep a joined role the actor owns and strip a foreign one', async () => {
+            const actor = await createClientMatchActor({
+                clientId, 
+                realmId, 
+                names: [PermissionName.ROLE_READ], 
+            });
+
+            const rows: Record<string, any>[] = [
+                {
+                    id: randomUUID(),
+                    role: {
+                        id: randomUUID(), 
+                        realmId, 
+                        clientId, 
+                    }, 
+                },
+                {
+                    id: randomUUID(),
+                    role: {
+                        id: randomUUID(), 
+                        realmId, 
+                        clientId: otherClientId, 
+                    }, 
+                },
+                { id: randomUUID(), role: { id: randomUUID(), realmId } },
+            ];
+
+            await redactUnreachedRelations(rows, include('role'), userRoleSchema, actor);
+
+            expect(rows[0].role).toBeDefined();
+            expect(rows[1].role).toBeUndefined();
+            expect(rows[2].role).toBeUndefined();
+        });
+
+        it('should keep a joined permission the actor owns and strip a foreign one', async () => {
+            const actor = await createClientMatchActor({
+                clientId, 
+                realmId, 
+                names: [PermissionName.PERMISSION_READ], 
+            });
+
+            const rows: Record<string, any>[] = [
+                {
+                    id: randomUUID(),
+                    permission: {
+                        id: randomUUID(), 
+                        realmId, 
+                        clientId, 
+                    }, 
+                },
+                {
+                    id: randomUUID(),
+                    permission: {
+                        id: randomUUID(), 
+                        realmId, 
+                        clientId: otherClientId, 
+                    }, 
+                },
+            ];
+
+            await redactUnreachedRelations(rows, include('permission'), userPermissionSchema, actor);
+
+            expect(rows[0].permission).toBeDefined();
+            expect(rows[1].permission).toBeUndefined();
+        });
     });
 });

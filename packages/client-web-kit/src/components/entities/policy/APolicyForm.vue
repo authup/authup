@@ -22,6 +22,7 @@ import APolicyTypePicker from './APolicyTypePicker.vue';
 import AAttributeNamesPolicyForm from './attribute-names/AAttributeNamesPolicyForm.vue';
 import ACompositePolicyForm from './composite/ACompositePolicyForm.vue';
 import ADatePolicyForm from './date/ADatePolicyForm.vue';
+import AClientMatchPolicyForm from './client-match/AClientMatchPolicyForm.vue';
 import ARealmMatchPolicyForm from './realm-match/ARealmMatchPolicyForm.vue';
 import ATimePolicyForm from './time/ATimePolicyForm.vue';
 import AIdentityPolicyForm from './identity/AIdentityPolicyForm.vue';
@@ -41,6 +42,7 @@ export default defineComponent({
         const typeComponents: Record<string, any> = {
             [BuiltInPolicyType.IDENTITY]: AIdentityPolicyForm,
             [BuiltInPolicyType.REALM_MATCH]: ARealmMatchPolicyForm,
+            [BuiltInPolicyType.CLIENT_MATCH]: AClientMatchPolicyForm,
             [BuiltInPolicyType.COMPOSITE]: ACompositePolicyForm,
             [BuiltInPolicyType.DATE]: ADatePolicyForm,
             [BuiltInPolicyType.TIME]: ATimePolicyForm,

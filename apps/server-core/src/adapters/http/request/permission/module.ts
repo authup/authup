@@ -17,19 +17,43 @@ import type {
 import {
     BuiltInPolicyType,
     PolicyData,
+    aggregatePermissionPolicyBindings,
+    grantDominates,
+    isPermissionPolicyBindingEqual,
 } from '@authup/access';
+import type { INarrowablePermissionEvaluator } from '@authup/server-kit';
 import type { IAppEvent } from 'routup';
 import type { RequestIdentity } from '../helpers/index.ts';
 import { useRequestGrants, useRequestIdentity, useRequestScopes } from '../helpers/index.ts';
 
-export class RequestPermissionEvaluator implements IPermissionEvaluator {
+export class RequestPermissionEvaluator implements INarrowablePermissionEvaluator {
     protected event: IAppEvent;
 
     protected evaluator: IPermissionEvaluator;
 
-    constructor(event: IAppEvent, evaluator: IPermissionEvaluator) {
+    protected keepGrant: (grant: PermissionPolicyBinding) => boolean;
+
+    constructor(
+        event: IAppEvent,
+        evaluator: IPermissionEvaluator,
+        keepGrant: (grant: PermissionPolicyBinding) => boolean = () => true,
+    ) {
         this.event = event;
         this.evaluator = evaluator;
+        this.keepGrant = keepGrant;
+    }
+
+    /**
+     * This evaluator holding only those of the request's grants that one of
+     * `grants` names: a filter over what the request resolved, so it can
+     * only narrow.
+     */
+    narrowGrants(grants: PermissionPolicyBinding[]) : RequestPermissionEvaluator {
+        return new RequestPermissionEvaluator(
+            this.event,
+            this.evaluator,
+            (grant) => this.keepGrant(grant) && grants.some((named) => isSameGrant(named, grant)),
+        );
     }
 
     // --------------------------------------------------------------
@@ -70,7 +94,8 @@ export class RequestPermissionEvaluator implements IPermissionEvaluator {
             // permission denial. The load is the request's own (#3597), so a
             // token's grants stay narrowed to its client, and scope-gated, so
             // a token without `global` evaluates as its identity holding none.
-            const grants = await useRequestPolicyGrants(this.event, identity);
+            const grants = (await useRequestPolicyGrants(this.event, identity))
+                .filter((grant) => this.keepGrant(grant));
 
             ctx.data = ctx.data || new PolicyData();
             // a plain object: RequestIdentity exposes its fields as getters,
@@ -133,4 +158,20 @@ export async function useRequestPolicyGrants(
     }
 
     return useRequestGrants(event, identity);
+}
+
+function isSameGrant(a: PermissionPolicyBinding, b: PermissionPolicyBinding) : boolean {
+    if (!isPermissionPolicyBindingEqual(a, b)) {
+        return false;
+    }
+
+    const [left] = aggregatePermissionPolicyBindings([a]);
+    const [right] = aggregatePermissionPolicyBindings([b]);
+
+    if (!left?.grants[0] || !right?.grants[0]) {
+        return false;
+    }
+
+    return grantDominates(left.grants[0], right.grants[0]) &&
+        grantDominates(right.grants[0], left.grants[0]);
 }

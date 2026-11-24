@@ -403,21 +403,28 @@ describe('http/controllers/security (token client narrowing)', () => {
             expect((await assign(tokens.x)).status).toEqual(201);
         });
 
+        const bind = async (token: string) => {
+            const { data: target } = await suite.client.user.create(createFakeUser());
+
+            return httpRequest(suite, 'POST', '/user-permissions', {
+                headers: { ...bearer(token), 'content-type': 'application/json' },
+                body: JSON.stringify({ userId: target.id, permissionId: permissionX.id }),
+            });
+        };
+
         it('should not bind a client-owned permission through another client\'s token', async () => {
+            const { data: userPermissionCreate } = await suite.client.permission.getOne(PermissionName.USER_PERMISSION_CREATE);
+
+            await suite.client.userPermission.create({ userId: user.id, permissionId: userPermissionCreate.id });
+
+            expect((await bind(tokens.y)).status).toEqual(403);
+            expect((await bind(tokens.x)).status).toEqual(201);
+        });
+
+        it('should let a manager of a client-owned permission bind it through any client\'s token', async () => {
             const adminY = await passwordToken('admin', 'start123', clientY);
-            const adminX = await passwordToken('admin', 'start123', clientX);
 
-            const bind = async (token: string) => {
-                const { data: target } = await suite.client.user.create(createFakeUser());
-
-                return httpRequest(suite, 'POST', '/user-permissions', {
-                    headers: { ...bearer(token), 'content-type': 'application/json' },
-                    body: JSON.stringify({ userId: target.id, permissionId: permissionX.id }),
-                });
-            };
-
-            expect((await bind(adminY)).status).toEqual(403);
-            expect((await bind(adminX)).status).toEqual(201);
+            expect((await bind(adminY)).status).toEqual(201);
         });
     });
 

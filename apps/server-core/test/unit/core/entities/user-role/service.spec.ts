@@ -7,22 +7,25 @@
 
 import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
-import type { UserRole } from '@authup/core-kit';
+import type { Role, UserRole } from '@authup/core-kit';
 import {
     beforeEach,
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { UserRoleService } from '../../../../../src/core/entities/user-role/service.ts';
 import {
     FakeEntityRepository,
+    FakePermissionEvaluator,
     createAllowAllActor,
     createDenyAllActor,
     createMasterRealmActor,
     createNonMasterRealmActor,
 } from '@authup/server-test-kit';
+import type { EvaluatorBehavior } from '@authup/server-test-kit';
 import type { PermissionPolicyBinding, PolicyData } from '@authup/access';
 import {
     BuiltInPolicyType,
@@ -34,6 +37,7 @@ import type { IClientRepository, IRoleRepository, IUserRepository } from '../../
 import { IdentityPermissionProvider } from '../../../../../src/core/identity/permission/module.ts';
 import type { IIdentityRoleProvider } from '../../../../../src/core/identity/role/types.ts';
 import { FakeIdentityPermissionProvider } from '../../helpers/fake-identity-permission-provider.ts';
+import { createClientMatchActor } from '../../helpers/index.ts';
 
 describe('core/entities/user-role/service', () => {
     let repository: FakeEntityRepository<UserRole>;
@@ -49,7 +53,11 @@ describe('core/entities/user-role/service', () => {
             data.user = { realmId: null };
         });
         identityPermissionProvider = new FakeIdentityPermissionProvider();
-        service = new UserRoleService({ repository, identityPermissionProvider });
+        service = new UserRoleService({
+            repository, 
+            roleRepository: new FakeEntityRepository<Role>(), 
+            identityPermissionProvider, 
+        });
     });
 
     describe('getMany', () => {
@@ -120,7 +128,7 @@ describe('core/entities/user-role/service', () => {
             }, actor);
 
             expect(identityPermissionProvider.supersetActors).toEqual([
-                { permissionEvaluator: actor.permissionEvaluator },
+                expect.objectContaining({ permissionEvaluator: actor.permissionEvaluator }),
             ]);
         });
 
@@ -166,7 +174,11 @@ describe('core/entities/user-role/service', () => {
 
             identityPermissionProviderDeny.setSuperset(false);
 
-            const svc = new UserRoleService({ repository, identityPermissionProvider: identityPermissionProviderDeny });
+            const svc = new UserRoleService({
+                repository, 
+                roleRepository: new FakeEntityRepository<Role>(), 
+                identityPermissionProvider: identityPermissionProviderDeny, 
+            });
 
             repository.onValidateJoinColumns((data: any) => {
                 data.role = { realmId: null, clientId: null };
@@ -224,6 +236,7 @@ describe('core/entities/user-role/service', () => {
         function createService(roleBindings: PermissionPolicyBinding[]) {
             return new UserRoleService({
                 repository,
+                roleRepository: new FakeEntityRepository<Role>(),
                 identityPermissionProvider: new IdentityPermissionProvider({
                     roleRepository: {
                         getBoundPermissions: async () => roleBindings,
@@ -257,23 +270,31 @@ describe('core/entities/user-role/service', () => {
 
         // The request evaluator's permission_update gate, as system.default
         // decides it: some grant of the actor reaches the permission's realm.
-        function createActor(realmId: string, grants: PermissionPolicyBinding[]) {
-            const actor = createNonMasterRealmActor(realmId);
-
-            actor.grants = async () => grants;
-            actor.permissionEvaluator.setBehavior(({ method, ctx }) => {
+        function createGate(realmId: string, held: PermissionPolicyBinding[]): EvaluatorBehavior {
+            return ({ method, ctx }) => {
                 if (method !== 'evaluate' || ctx.name !== PermissionName.PERMISSION_UPDATE) {
                     return;
                 }
 
                 const realm = (ctx.data as PolicyData).get(BuiltInPolicyType.REALM_MATCH) as string | null;
-                const reached = grants.some((grant) => grant.permission.name === PermissionName.PERMISSION_UPDATE &&
+                const reached = held.some((grant) => grant.permission.name === PermissionName.PERMISSION_UPDATE &&
                     realmScopeMatches(grant.realmScope, realm, realmId));
 
                 if (!reached) {
                     throw PermissionError.denied(PermissionName.PERMISSION_UPDATE);
                 }
-            });
+            };
+        }
+
+        function createActor(realmId: string, grants: PermissionPolicyBinding[]) {
+            const actor = createNonMasterRealmActor(realmId);
+
+            actor.grants = async () => grants;
+            actor.permissionEvaluator.setBehavior(createGate(realmId, grants));
+            actor.permissionEvaluator.setNarrowing((named) => new FakePermissionEvaluator(createGate(
+                realmId,
+                grants.filter((grant) => named.includes(grant)),
+            )));
 
             return actor;
         }
@@ -353,5 +374,131 @@ describe('core/entities/user-role/service', () => {
                 createActor(realmA, [managing(RealmScope.ANY)]),
             )).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
+    });
+});
+
+describe('core/entities/user-role/service: owning client (clientMatch)', () => {
+    const realmId = randomUUID();
+    const clientId = randomUUID();
+    const otherClientId = randomUUID();
+
+    const names = [
+        PermissionName.USER_ROLE_CREATE,
+        PermissionName.USER_ROLE_READ,
+        PermissionName.USER_ROLE_UPDATE,
+        PermissionName.USER_ROLE_DELETE,
+    ];
+
+    let repository: FakeEntityRepository<UserRole>;
+    let roleRepository: FakeEntityRepository<Role>;
+    let service: UserRoleService;
+
+    let owned: Role;
+    let foreign: Role;
+    let global: Role;
+
+    beforeEach(() => {
+        repository = new FakeEntityRepository<UserRole>({ defaults: { userRealmId: realmId } });
+        roleRepository = new FakeEntityRepository<Role>();
+        service = new UserRoleService({
+            repository,
+            roleRepository,
+            identityPermissionProvider: new FakeIdentityPermissionProvider(),
+        });
+
+        [owned, foreign, global] = roleRepository.seed([
+            {
+                name: 'owned', 
+                realmId, 
+                clientId, 
+            },
+            {
+                name: 'foreign', 
+                realmId, 
+                clientId: otherClientId, 
+            },
+            {
+                name: 'global', 
+                realmId: null, 
+                clientId: null, 
+            },
+        ]);
+
+        repository.onValidateJoinColumns((data: any) => {
+            data.user = { realmId };
+            data.role = roleRepository.getAll().find((role) => role.id === data.roleId);
+        });
+    });
+
+    const createActor = () => createClientMatchActor({
+        clientId, 
+        realmId, 
+        names, 
+    });
+
+    const bind = (role: Role) => repository.seed({
+        userId: randomUUID(),
+        roleId: role.id,
+        roleRealmId: role.realmId,
+    });
+
+    it('should assign an owned role only', async () => {
+        const actor = await createActor();
+
+        await expect(service.create({ userId: randomUUID(), roleId: owned.id }, actor)).resolves.toBeDefined();
+        await expect(service.create({ userId: randomUUID(), roleId: foreign.id }, actor))
+            .rejects.toThrow(PermissionError);
+        await expect(service.create({ userId: randomUUID(), roleId: global.id }, actor))
+            .rejects.toThrow(PermissionError);
+    });
+
+    it('should read an assignment of an owned role only', async () => {
+        const actor = await createActor();
+        const ownedBinding = bind(owned);
+
+        expect((await service.getOne(ownedBinding.id, actor)).id).toEqual(ownedBinding.id);
+        await expect(service.getOne(bind(foreign).id, actor)).rejects.toThrow(PermissionError);
+        await expect(service.getOne(bind(global).id, actor)).rejects.toThrow(PermissionError);
+    });
+
+    it('should list assignments of owned roles only, with one lookup', async () => {
+        bind(owned);
+        bind(foreign);
+        bind(global);
+        bind(owned);
+
+        const lookup = vi.spyOn(roleRepository, 'findManyBy');
+
+        const result = await service.getMany({}, await createActor());
+
+        expect(result.data.map((row) => row.roleId)).toEqual([owned.id, owned.id]);
+        expect(lookup).toHaveBeenCalledTimes(1);
+    });
+
+    it('should delete an assignment of an owned role only', async () => {
+        const actor = await createActor();
+
+        await expect(service.delete(bind(owned).id, actor)).resolves.toBeDefined();
+        await expect(service.delete(bind(foreign).id, actor)).rejects.toThrow(PermissionError);
+        await expect(service.delete(bind(global).id, actor)).rejects.toThrow(PermissionError);
+    });
+
+    it('should carry the owner on every record check', async () => {
+        const actor = createAllowAllActor();
+
+        await service.getMany({}, actor);
+        await service.getOne(bind(foreign).id, actor);
+        await service.create({ userId: randomUUID(), roleId: owned.id }, actor);
+        await service.delete(bind(global).id, actor);
+
+        const owners = [
+            ...actor.permissionEvaluator.evaluateOneOfCalls,
+            ...actor.permissionEvaluator.evaluateCalls,
+        ].map((call) => call.data!.get(BuiltInPolicyType.CLIENT_MATCH));
+
+        expect(owners).not.toContain(undefined);
+        expect(owners).toContain(clientId);
+        expect(owners).toContain(otherClientId);
+        expect(owners).toContain(null);
     });
 });

@@ -22,3 +22,5 @@ export * from './fake-authorization-catalog-repository.ts';
 export * from './fake-session-manager.ts';
 export * from './fake-session-token-repository.ts';
 export * from './record-realm.ts';
+export * from './client-match.ts';
+export * from './narrowable.ts';

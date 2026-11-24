@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { ValidationError } from '@authup/errors';
 import { pickRecord } from '@authup/kit';
 import type { Permission, Role, RolePermission } from '@authup/core-kit';
-import type { IClientRepository, IRoleRepository } from '../../../entities/index.ts';
+import type { IClientRepository, IPolicyRepository, IRoleRepository } from '../../../entities/index.ts';
 import type { RoleProvisioningEntity, RoleProvisioningRelations } from '../../entities/role/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
 import type { IProvisioningRealmRepairer, ProvisioningSynchronizeContext } from '../../types.ts';
@@ -24,6 +25,8 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
 
     protected clientRepository: IClientRepository;
 
+    protected policyRepository: IPolicyRepository;
+
     protected permissionResolver : ProvisioningEntityResolver<Permission>;
 
     protected permissionJunction: ProvisioningJunctionSynchronizer<RolePermission>;
@@ -34,6 +37,7 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         this.repository = ctx.repository;
         this.realmRepairer = ctx.realmRepairer;
         this.clientRepository = ctx.clientRepository;
+        this.policyRepository = ctx.policyRepository;
         this.permissionResolver = new ProvisioningEntityResolver(ctx.permissionRepository);
         this.permissionJunction = new ProvisioningJunctionSynchronizer({
             repository: ctx.rolePermissionRepository,
@@ -71,7 +75,19 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             };
         }
 
-        let created = false;
+        // createOnly leaves a row it did not create alone, its permission
+        // bindings included, unless the row is built in: only provisioning
+        // writes one, so its bindings are the file's to extend.
+        const bindRelations = !attributes ||
+            !!attributes.builtIn ||
+            strategy.type !== ProvisioningEntityStrategyType.CREATE_ONLY;
+
+        // resolved before any write: a role saved ahead of a failed lookup
+        // would be skipped by the next createOnly pass, its bindings lost
+        const policyId = bindRelations && input.relations ?
+            await this.resolvePolicyId(input.relations) :
+            undefined;
+
 
         if (attributes) {
             switch (strategy.type) {
@@ -94,21 +110,13 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             }
         } else {
             attributes = await this.repository.save(this.repository.create(input.attributes));
-            created = true;
         }
-
-        // createOnly leaves a row it did not create alone, its permission
-        // bindings included, unless the row is built in: only provisioning
-        // writes one, so its bindings are the file's to extend.
-        const bindRelations = created ||
-            !!attributes.builtIn ||
-            strategy.type !== ProvisioningEntityStrategyType.CREATE_ONLY;
 
         if (bindRelations && input.relations) {
             const role = attributes;
             const { relations } = input;
 
-            await this.bind(() => this.synchronizeRelations(role, input, relations), context);
+            await this.bind(() => this.synchronizeRelations(role, input, relations, policyId), context);
         }
 
         return {
@@ -117,10 +125,28 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         };
     }
 
+    protected async resolvePolicyId(relations: RoleProvisioningRelations): Promise<string | undefined> {
+        if (!relations.globalPermissionsPolicy) {
+            return undefined;
+        }
+
+        const policy = await this.policyRepository.findOneBy({
+            name: relations.globalPermissionsPolicy,
+            realmId: null,
+        });
+
+        if (!policy) {
+            throw new ValidationError(`The global policy ${relations.globalPermissionsPolicy} does not exist.`);
+        }
+
+        return policy.id;
+    }
+
     protected async synchronizeRelations(
         attributes: Role,
         input: RoleProvisioningEntity,
         relations: RoleProvisioningRelations,
+        policyId?: string,
     ): Promise<void> {
         let globalPermissions = await this.permissionResolver.resolveGlobal(relations.globalPermissions);
 
@@ -134,37 +160,33 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             await this.permissionResolver.resolveRealm(relations.realmPermissions, attributes.realmId) :
             [];
 
-        const permissions = [
-            ...globalPermissions,
-            ...realmPermissions,
-        ];
+        const defaultScope = relations.globalPermissionsRealmScope;
+        const overrides = this.buildRealmScopeOverrides(input);
 
-        if (permissions.length > 0) {
-            const defaultScope = relations.globalPermissionsRealmScope;
+        const bind = async (permissions: Permission[], bindPolicy: boolean) => {
+            for (const permission of permissions) {
+                const extra: Record<string, unknown> = {};
 
-            if (defaultScope) {
-                const overrides = this.buildRealmScopeOverrides(input);
-
-                for (const permission of permissions) {
-                    const realmScope = overrides.get(permission.name) ?? defaultScope;
-
-                    await this.permissionJunction.synchronize(
-                        attributes,
-                        [permission],
-                        'permissionId',
-                        'permissionRealmId',
-                        { realmScope },
-                    );
+                if (defaultScope) {
+                    extra.realmScope = overrides.get(permission.name) ?? defaultScope;
                 }
-            } else {
+
+                if (bindPolicy && policyId) {
+                    extra.policyId = policyId;
+                }
+
                 await this.permissionJunction.synchronize(
                     attributes,
-                    permissions,
+                    [permission],
                     'permissionId',
                     'permissionRealmId',
+                    extra,
                 );
             }
-        }
+        };
+
+        await bind(globalPermissions, true);
+        await bind(realmPermissions, false);
 
         // Permissions owned by any client of the role's realm, bound at the
         // junction's default reach.

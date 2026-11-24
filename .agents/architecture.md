@@ -177,34 +177,31 @@ Services receive an `ActorContext` instead of a raw HTTP request. This decouples
 
 ```typescript
 // @authup/server-kit (packages/server-kit/src/core/actor/types.ts)
-import type { IPermissionEvaluator, PermissionPolicyBinding } from '@authup/access';
-import type { Identity } from '@authup/core-kit';
-
 export type ActorContext = {
-    permissionEvaluator: IPermissionEvaluator;
+    permissionEvaluator: INarrowablePermissionEvaluator;
     identity?: Identity;
     grants?: () => Promise<PermissionPolicyBinding[]>;
 };
 ```
 
-- `permissionEvaluator`: evaluates permissions (`evaluate`, `preEvaluate`, `evaluateOneOf`, `preEvaluateOneOf`)
+- `permissionEvaluator`: evaluates permissions (`evaluate`, `preEvaluate`, `evaluateOneOf`, `preEvaluateOneOf`) plus `narrowGrants`: an evaluator over only the given grants (#3907)
 - `identity`: the actor's identity (user, client)
-- `grants`: the actor's own grants as its request resolved them (for a token, the grants that token carries). A service delegating the actor's grants (`isSuperset`, `resolveJunctionGrant`) reads them through `getActorGrants`, so it checks exactly what the gates evaluated; a missing resolver yields none
+- `grants`: the actor's own grants as its request resolved them (for a token, the grants that token carries). `isSuperset` and `resolveJunctionGrant` read them through `getActorGrants`, so they check what the gates evaluated; a missing resolver yields none
 
 #### RequestPermissionEvaluator
 
-The HTTP adapter provides `RequestPermissionEvaluator`: the concrete `IPermissionEvaluator` implementation for HTTP requests. It wraps the base `PermissionEvaluator` with request-scoped identity/scope enrichment. The authorization middleware composes one per request, over an engine that reads the request's grants (see *A user's client-owned grants apply through that client's tokens*).
+The HTTP adapter provides `RequestPermissionEvaluator`: the concrete `IPermissionEvaluator` implementation for HTTP requests. It wraps the base `PermissionEvaluator` with request-scoped identity/scope enrichment. The authorization middleware composes one per request over an engine reading the request's grants (see *A user's client-owned grants apply through that client's tokens*).
 
 **`extendContext` is SYMMETRICAL, and `useRequestPolicyGrants(event, identity)` is the one place the `global`-scope condition is spelled (#3723).** A token's scope restricts what its identity may do, never who it is: `useRequestPolicyIdentity(event)` answers the request's own identity whenever one resolved, and `useRequestPolicyGrants` answers that identity's grants under `global` and none otherwise. `extendContext` sets `IDENTITY` to the identity when there is one (overwriting whatever a caller put there, so an identity can never be injected past the resolution), and DELETES the key when no identity resolved. A caller may therefore fill the bag itself (the batch authorization check does, so every identity-reading policy in a tree gets the data) without restating the scope rule. An attach-only version silently held the gate for callers that left the key empty and lost it for any that did not, which is one edit away at every new call site. The identity carries its grants (`identity.grants`, see *Grants are policy data*), loaded through `useRequestPolicyGrants`, so overwriting or deleting the key governs both, and without `global` every grant-bound permission denies while identity-reading policies still see who is asking. The identity is built as a plain object, since `RequestIdentity` exposes its fields as getters a spread would drop. The load runs BEFORE the inner evaluator, so a failed read fails the request as itself instead of being flattened into a permission denial inside the engine. Only that key is governed; the rest of the caller's bag rides through untouched.
 
-**The two single-subject check routes read WHO to check from the data's own `identity` key, and never remove it (#3604).** Both controllers pass the body through unchanged, with the actor `buildActorContext(event)` builds (its `grants` resolver is `useRequestPolicyGrants`), and both checkers keep `master`'s signature `check(idOrName, data, actor, realm)`. `buildPermissionCheckerData` (`core/identity/permission/checker/data.ts`) turns the key into the data both routes evaluate, on a plain evaluator (the permission route) or engine (the policy route), since the data already says who is evaluated:
+**The two single-subject check routes read WHO to check from the data's own `identity` key, and never remove it (#3604).** Both controllers pass the body through unchanged with the actor `buildActorContext(event)` builds (its `grants` resolver is `useRequestPolicyGrants`), and both checkers keep the signature `check(idOrName, data, actor, realm)`. `buildPermissionCheckerData` (`core/identity/permission/checker/data.ts`) turns the key into the data both routes evaluate, on a plain evaluator (the permission route) or engine (the policy route), since the data already says who is evaluated:
 
 - **No `identity`: the requester.** The actor's `IdentityPolicyData` goes into the data, with the grants the actor's scopes allow: a token without `global` is checked as itself with no grants.
 - **`identity: null`: no identity at all**, as the caller asked.
 - **An identity: that identity, as given.** When it is not the actor's own (by `type` and `id`), the actor must hold `PERMISSION_CHECK`: pre-evaluated first (403), so a caller holding no grant learns nothing about which subjects exist, then the subject is looked up (404) and the permission evaluated for the actor with only its `identity` and the subject's STORED realm under `realmMatch`. The check data belongs to the permission or policy being checked, so none of it reaches the gate, and the gate carries no `attributes`. The realm comes from the lookup because the grant lookup loads by `id` alone, so a realm written into the data could not bound the gate; a `realm_admin` therefore checks subjects of its own realm only. A foreign identity is named by UUID (400 otherwise), since names repeat across realms. Naming the actor's own identity skips the gate whatever the token's scopes, since it reveals only the actor's own (scope-gated) grants. Being refused throws from `safeCheck` rather than answering `status: "error"`, since it answers the request, not the check.
 - **The resolved permission row is evaluated**, with its `realmId` and `clientId` on the evaluation context, not a global permission of the same name.
 
-The gate exists because the permission-binding evaluator loads the grants of whatever identity it is handed, and on the policy route the caller also supplies `permissionBinding`, so an ungated subject would let any authenticated caller read anyone's authorization. It is a dedicated permission rather than the grant-read permissions (`user_permission_read`, `user_role_read`, `role_permission_read`) that already reveal the same facts, because answering it by hand takes many calls and relations, and one grant is what an operator can reason about. Wrapping the policy in a memory-provider `PermissionEvaluator` so both routes share one path was rejected: it overwrites a caller's `permissionBinding` and turns `PolicyError` into `PermissionError`.
+The gate exists because the permission-binding evaluator loads the grants of whatever identity it is handed, and the policy route's caller also supplies `permissionBinding`, so an ungated subject would let any caller read anyone's authorization. It is a dedicated permission rather than the grant-read permissions (`user_permission_read`, `user_role_read`, `role_permission_read`) that reveal the same facts, because one grant is what an operator can reason about. Wrapping the policy in a memory-provider `PermissionEvaluator` to share one path was rejected: it overwrites a caller's `permissionBinding` and turns `PolicyError` into `PermissionError`.
 
 ```typescript
 // adapters/http/request/helpers/actor.ts

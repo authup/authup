@@ -13,6 +13,7 @@ import type {
     AAttributeNamesPolicyForm,
     AClient,
     AClientForm,
+    AClientMatchPolicyForm,
     AClientPermissionAssignment,
     AClientPermissionAssignments,
     AClientRoleAssignment,
@@ -212,6 +213,7 @@ declare module 'vue' {
         ACompositePolicyForm: typeof ACompositePolicyForm;
         ADatePolicyForm: typeof ADatePolicyForm;
         AIdentityPolicyForm: typeof AIdentityPolicyForm;
+        AClientMatchPolicyForm: typeof AClientMatchPolicyForm;
         ARealmMatchPolicyForm: typeof ARealmMatchPolicyForm;
         ATimePolicyForm: typeof ATimePolicyForm;
 

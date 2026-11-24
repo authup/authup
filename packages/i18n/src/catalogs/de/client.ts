@@ -79,6 +79,7 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.POLICY_TYPE_ATTRIBUTE_NAMES]: 'Attributnamen',
     [TranslatorTranslationClientKey.POLICY_TYPE_ATTRIBUTES]: 'Attribute',
     [TranslatorTranslationClientKey.POLICY_TYPE_REALM_MATCH]: 'Realm-Abgleich',
+    [TranslatorTranslationClientKey.POLICY_TYPE_CLIENT_MATCH]: 'Client-Abgleich',
     [TranslatorTranslationClientKey.POLICY_TYPE_IDENTITY]: 'Identität',
     [TranslatorTranslationClientKey.POLICY_TYPE_PERMISSION_BINDING]: 'Berechtigungsbindung',
 

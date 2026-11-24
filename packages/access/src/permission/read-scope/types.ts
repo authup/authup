@@ -43,6 +43,11 @@ export type ReadScopeOptions = {
      */
     realmAttributeName?: string,
     /**
+     * The row's owning-client column, for a list whose `clientMatch` grants
+     * should lower to a query condition.
+     */
+    clientAttributeName?: string,
+    /**
      * The realm every row belongs to, for rows that carry no realm column:
      * a realm settles the reach, `false` names a resource of no realm.
      * See `PermissionCompileContext.realm`.

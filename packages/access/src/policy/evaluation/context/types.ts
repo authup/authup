@@ -43,6 +43,12 @@ export type PolicyEvaluationContext = {
      */
     readonly realmAttributeName?: string,
     /**
+     * Row column holding the owning client of a definition, which a
+     * `clientMatch` policy is LOWERED onto. Unset, that policy lowers to no
+     * condition: a junction's `clientId` is the receiving client, not the owner.
+     */
+    readonly clientAttributeName?: string,
+    /**
      * The resource belongs to no realm. An absent `realmMatch` key then
      * neutral-passes the realm reach while lowering too, so a compilation
      * emits no realm term, exactly as a full evaluation without the key

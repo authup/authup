@@ -67,6 +67,7 @@ export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.POLICY_TYPE_ATTRIBUTE_NAMES]: 'Attr Names',
     [TranslatorTranslationClientKey.POLICY_TYPE_ATTRIBUTES]: 'Attributes',
     [TranslatorTranslationClientKey.POLICY_TYPE_REALM_MATCH]: 'Realm Match',
+    [TranslatorTranslationClientKey.POLICY_TYPE_CLIENT_MATCH]: 'Client Match',
     [TranslatorTranslationClientKey.POLICY_TYPE_IDENTITY]: 'Identity',
     [TranslatorTranslationClientKey.POLICY_TYPE_PERMISSION_BINDING]: 'Perm Binding',
 

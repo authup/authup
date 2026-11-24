@@ -49,16 +49,22 @@ The actor context an entity service receives instead of a raw HTTP request. It c
 
 **Type**
 ```ts
-import type { IPermissionEvaluator } from '@authup/access';
+import type { IPermissionEvaluator, PermissionPolicyBinding } from '@authup/access';
 import type { Identity } from '@authup/core-kit';
 
+export interface INarrowablePermissionEvaluator extends IPermissionEvaluator {
+    narrowGrants(grants: PermissionPolicyBinding[]): IPermissionEvaluator;
+}
+
 export type ActorContext = {
-    permissionEvaluator: IPermissionEvaluator;
+    permissionEvaluator: INarrowablePermissionEvaluator;
     identity?: Identity;
+    grants?: () => Promise<PermissionPolicyBinding[]>;
 };
 ```
 
-- `permissionEvaluator`: evaluates permissions (`evaluate`, `preEvaluate`, `evaluateOneOf`, `preEvaluateOneOf`).
+- `permissionEvaluator`: evaluates permissions (`evaluate`, `preEvaluate`, `evaluateOneOf`, `preEvaluateOneOf`). `narrowGrants` returns an evaluator over only those of the caller's own grants that the given list names.
+- `grants`: the caller's own grants, as its request resolved them.
 - `identity`: the actor's identity (`user`, `client`), present on authenticated requests.
 
 **Example**

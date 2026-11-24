@@ -33,6 +33,7 @@ export default defineComponent({
                 { key: TranslatorTranslationClientKey.POLICY_TYPE_ATTRIBUTE_NAMES },
                 { key: TranslatorTranslationClientKey.POLICY_TYPE_ATTRIBUTES },
                 { key: TranslatorTranslationClientKey.POLICY_TYPE_REALM_MATCH },
+                { key: TranslatorTranslationClientKey.POLICY_TYPE_CLIENT_MATCH },
                 { key: TranslatorTranslationClientKey.POLICY_TYPE_IDENTITY },
                 { key: TranslatorTranslationClientKey.POLICY_TYPE_PERMISSION_BINDING },
             ],

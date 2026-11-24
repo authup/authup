@@ -13,6 +13,7 @@ export const TranslatorTranslationPolicyGerman : NamespaceTranslations<SystemPol
     [SystemPolicyName.IDENTITY]: 'Identitätsrichtlinie',
     [SystemPolicyName.PERMISSION_BINDING]: 'Berechtigungsbindungsrichtlinie',
     [SystemPolicyName.REALM_MATCH]: 'Organisationsabgleichsrichtlinie',
+    [SystemPolicyName.CLIENT_OWNED]: 'Richtlinie für client-eigene Definitionen',
     [SystemPolicyName.CLIENT_NAMES_SELF_MANAGE]: 'Für die Client-Selbstverwaltung gesperrte Felder',
     [SystemPolicyName.USER_NAMES_SELF_MANAGE]: 'Für die Benutzer-Selbstverwaltung gesperrte Felder',
 };

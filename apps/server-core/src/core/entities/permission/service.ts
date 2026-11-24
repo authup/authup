@@ -86,7 +86,11 @@ export class PermissionService extends AbstractEntityService implements IPermiss
     }
 
     async scopeRead(query: IQuery, actor: ActorContext): Promise<ReadScope> {
-        return scopeReadQuery(query, actor.permissionEvaluator, { names: PERMISSION_NAMES, widen: widenToSchema(permissionSchema) });
+        return scopeReadQuery(query, actor.permissionEvaluator, {
+            names: PERMISSION_NAMES,
+            widen: widenToSchema(permissionSchema),
+            clientAttributeName: 'clientId',
+        });
     }
 
     async getMany(
@@ -111,6 +115,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             const reached = await reachesRecordOneOf(actor.permissionEvaluator, {
                 name: PERMISSION_NAMES,
                 realm: entity.realmId,
+                owner: entity.clientId ?? null,
                 data: {
                     [BuiltInPolicyType.ATTRIBUTES]: entity,
                     [BuiltInPolicyType.ATTRIBUTE_NAMES]: readResponseAttributeNames(entity, scope.query),
@@ -148,6 +153,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         await evaluateRecordOneOf(actor.permissionEvaluator, {
             name: PERMISSION_NAMES,
             realm: entity.realmId,
+            owner: entity.clientId ?? null,
             data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 
@@ -232,7 +238,10 @@ export class PermissionService extends AbstractEntityService implements IPermiss
                 PermissionName.PERMISSION_UPDATE,
                 entity,
                 { ...entity, ...validated },
-                { realm: (row) => row.realmId },
+                {
+                    realm: (row) => row.realmId,
+                    owner: (row) => row.clientId ?? null,
+                },
             );
 
             await this.repository.checkUniqueness(validated, entity);
@@ -257,6 +266,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.PERMISSION_CREATE,
             realm,
+            owner: validated.clientId ?? null,
             data: { [BuiltInPolicyType.ATTRIBUTES]: { ...validated, realmId: realm } },
         });
 
@@ -317,6 +327,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         await evaluateRecord(actor.permissionEvaluator, {
             name: PermissionName.PERMISSION_DELETE,
             realm: entity.realmId,
+            owner: entity.clientId ?? null,
             data: { [BuiltInPolicyType.ATTRIBUTES]: entity },
         });
 

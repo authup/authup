@@ -13,6 +13,7 @@ export const TranslatorTranslationPolicyFrench : NamespaceTranslations<SystemPol
     [SystemPolicyName.IDENTITY]: 'Politique d\'identité',
     [SystemPolicyName.PERMISSION_BINDING]: 'Politique de liaison des permissions',
     [SystemPolicyName.REALM_MATCH]: 'Politique de correspondance de domaine',
+    [SystemPolicyName.CLIENT_OWNED]: 'Politique des définitions propres au client',
     [SystemPolicyName.CLIENT_NAMES_SELF_MANAGE]: 'Champs verrouillés pour l\'autogestion des clients',
     [SystemPolicyName.USER_NAMES_SELF_MANAGE]: 'Champs verrouillés pour l\'autogestion des utilisateurs',
 };
