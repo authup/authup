@@ -24,6 +24,9 @@ export const TAGGED_CACHE_REDIS_OPTIONS = {
     maxRetriesPerRequest: 1,
     enableOfflineQueue: false,
     commandTimeout: 500,
+    // ioredis relaxes the command timeout to this value during a Redis
+    // maintenance window (default 10 s), which a fall-through cache must not wait for.
+    maintRelaxedCommandTimeout: 500,
     // ioredis 6 backs off to 5 s by default; a recovered cache should be picked up sooner.
     retryStrategy: (times: number) => Math.min(times * 50, 2_000),
 } satisfies RedisOptions;

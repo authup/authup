@@ -125,7 +125,6 @@ export default defineComponent({
                     <VCModalTitle>{{ policyLabel(detailPolicy) }}</VCModalTitle>
                     <VCModalClose
                         icon
-                        class="cursor-pointer"
                         :aria-label="translationsAction.close"
                     >
                         <VCIcon name="fa6-solid:xmark" />

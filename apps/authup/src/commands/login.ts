@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { stripClientError } from 'hapic';
 import { Client } from '@authup/core-http-kit';
 import { defineCommand } from 'citty';
 import {
@@ -63,7 +64,11 @@ export function defineCLILoginCommand(context: HostCommandContext = {}) {
             const storage : HostStorage = args['insecure-storage'] ? 'file' : 'keychain';
 
             const grant = await runDeviceLogin(
-                new Client({ baseURL: host, transport: context.transport }),
+                new Client({
+                    baseURL: host, 
+                    transport: context.transport, 
+                    errorTransform: stripClientError, 
+                }),
                 {
                     clientId,
                     realm,

@@ -82,6 +82,11 @@ const METHODS : Record<string, MethodTable> = {
         createWithAuthorizationCode: (o) => [{ code: 'code', redirect_uri: 'https://app.test/cb' }, o],
         createWithDeviceCode: (o) => [{ device_code: 'dc' }, o],
         pollWithDeviceCode: (o) => [{ device_code: 'dc', interval: 0.001 }, o],
+        createWithTokenExchange: (o) => [{
+            subject_token: 'tok', 
+            subject_token_type: 'urn:ietf:params:oauth:token-type:access_token', 
+            cap: 'a', 
+        }, o],
         create: (o) => [{ grant_type: 'client_credentials' }, o],
         revoke: (o) => [{ token: 'tok' }, o],
         introspect: (o) => [{ token: 'tok' }, o],

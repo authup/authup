@@ -65,7 +65,7 @@
         "@vuecs/theme-tailwind": "^6.7.0",
         "@vuecs/timeago": "^2.2.2",
         "@vuecs/tree": "^1.0.1",
-        "chart.js": "^4.6.1",
+        "chart.js": "^4.6.2",
         "cross-env": "^10.1.0",
         "date-fns": "^4.4.0",
         "happy-dom": "^21.0.4",

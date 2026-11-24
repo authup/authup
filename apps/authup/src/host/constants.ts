@@ -17,6 +17,4 @@ export const HOSTS_LOCK_POLL_MS = 100;
 
 export const KEYCHAIN_SERVICE_NAME = 'authup';
 
-export const DEVICE_SLOW_DOWN_MS = 5_000;
-
 export const LOOPBACK_HOSTNAMES = ['localhost', '127.0.0.1', '[::1]'];

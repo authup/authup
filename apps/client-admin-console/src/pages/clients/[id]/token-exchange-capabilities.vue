@@ -236,7 +236,6 @@ export default defineComponent({
                         <VCModalTitle>{{ editing ? editing.audience : translations.clientTokenExchangeCapability }}</VCModalTitle>
                         <VCModalClose
                             icon
-                            class="cursor-pointer"
                             :aria-label="translations.close"
                         >
                             <VCIcon name="fa6-solid:xmark" />

@@ -58,7 +58,8 @@ const device = {
     verification_uri: `${host}/device`,
     verification_uri_complete: `${host}/device?user_code=BCDF-GHJK`,
     expires_in: 600,
-    interval: 5,
+    // hapic waits on its own timer before each poll; keep the spec fast
+    interval: 0.001,
 };
 
 const grant = {

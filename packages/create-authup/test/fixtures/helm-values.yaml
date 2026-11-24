@@ -574,8 +574,14 @@ server:
   lifecycleHooks: {}
   # -- Pod host aliases
   hostAliases: []
-  # -- Pod termination grace period (server-core tears down within ~10s after signal)
+  # -- Pod termination grace period (server-core tears down within ~10s after signal and shutdownDelay)
   terminationGracePeriodSeconds: 30
+  # @schema
+  # type: integer
+  # minimum: 0
+  # @schema
+  # -- Seconds the API keeps serving after SIGTERM while GET /readyz answers 503 (SHUTDOWN_DELAY); must stay below terminationGracePeriodSeconds
+  shutdownDelay: 5
   # @schema
   # additionalProperties: true
   # @schema
@@ -636,7 +642,7 @@ server:
     limits:
       memory: 2Gi
   startupProbe:
-    # -- Enable the startup probe (first boot runs database creation, migrations and provisioning)
+    # -- Enable the startup probe on GET /livez (first boot runs database creation, migrations and provisioning)
     enabled: true
     initialDelaySeconds: 5
     periodSeconds: 5
@@ -644,7 +650,7 @@ server:
     failureThreshold: 60
     successThreshold: 1
   livenessProbe:
-    # -- Enable the liveness probe (GET / status endpoint)
+    # -- Enable the liveness probe (GET /livez, which checks no dependency)
     enabled: true
     initialDelaySeconds: 0
     periodSeconds: 30
@@ -652,7 +658,7 @@ server:
     failureThreshold: 3
     successThreshold: 1
   readinessProbe:
-    # -- Enable the readiness probe (GET / status endpoint)
+    # -- Enable the readiness probe (GET /readyz: the database answers and the pod is not draining)
     enabled: true
     initialDelaySeconds: 0
     periodSeconds: 10
@@ -892,6 +898,12 @@ authConsole:
   hostAliases: []
   # -- Pod termination grace period
   terminationGracePeriodSeconds: 30
+  # @schema
+  # type: integer
+  # minimum: 0
+  # @schema
+  # -- Seconds the console keeps serving after SIGTERM while GET /readyz answers 503 (SHUTDOWN_DELAY); must stay below terminationGracePeriodSeconds
+  shutdownDelay: 5
   # @schema
   # additionalProperties: true
   # @schema
@@ -1163,6 +1175,12 @@ adminConsole:
   # -- Pod termination grace period
   terminationGracePeriodSeconds: 30
   # @schema
+  # type: integer
+  # minimum: 0
+  # @schema
+  # -- Seconds the console keeps serving after SIGTERM while GET /readyz answers 503 (SHUTDOWN_DELAY); must stay below terminationGracePeriodSeconds
+  shutdownDelay: 5
+  # @schema
   # additionalProperties: true
   # @schema
   # -- Deployment update strategy
@@ -1433,6 +1451,12 @@ accountConsole:
   # -- Pod termination grace period
   terminationGracePeriodSeconds: 30
   # @schema
+  # type: integer
+  # minimum: 0
+  # @schema
+  # -- Seconds the console keeps serving after SIGTERM while GET /readyz answers 503 (SHUTDOWN_DELAY); must stay below terminationGracePeriodSeconds
+  shutdownDelay: 5
+  # @schema
   # additionalProperties: true
   # @schema
   # -- Deployment update strategy
@@ -1679,8 +1703,24 @@ worker:
     # @schema
     # -- Worker health listener port (WORKER_PORT)
     http: 3000
+  startupProbe:
+    # -- Enable the startup probe on GET /livez (the listener binds after the schema check)
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 5
+    failureThreshold: 24
+    successThreshold: 1
+  livenessProbe:
+    # -- Restart the worker when a sweep pass hangs for over 30 minutes (GET /livez; a database outage does not fail it)
+    enabled: true
+    initialDelaySeconds: 0
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
   readinessProbe:
-    # -- Check sweep health without restarting the worker on database outages
+    # -- Check sweep health without restarting the worker on database outages (GET /readyz)
     enabled: true
     initialDelaySeconds: 0
     periodSeconds: 30
@@ -1704,6 +1744,40 @@ worker:
   # @schema
   # -- Custom readiness probe with exactly one handler (overrides readinessProbe)
   customReadinessProbe: {}
+  # @schema
+  # additionalProperties: true
+  # type: object
+  # properties:
+  #   httpGet: {type: object}
+  #   tcpSocket: {type: object}
+  #   exec: {type: object}
+  #   grpc: {type: object}
+  # oneOf:
+  #   - additionalProperties: false
+  #   - required: [httpGet]
+  #   - required: [tcpSocket]
+  #   - required: [exec]
+  #   - required: [grpc]
+  # @schema
+  # -- Custom startup probe with exactly one handler (overrides startupProbe)
+  customStartupProbe: {}
+  # @schema
+  # additionalProperties: true
+  # type: object
+  # properties:
+  #   httpGet: {type: object}
+  #   tcpSocket: {type: object}
+  #   exec: {type: object}
+  #   grpc: {type: object}
+  # oneOf:
+  #   - additionalProperties: false
+  #   - required: [httpGet]
+  #   - required: [tcpSocket]
+  #   - required: [exec]
+  #   - required: [grpc]
+  # @schema
+  # -- Custom liveness probe with exactly one handler (overrides livenessProbe)
+  customLivenessProbe: {}
   # -- Override the container command
   command: []
   # -- Override the container args

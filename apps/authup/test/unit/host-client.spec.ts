@@ -23,6 +23,7 @@ import {
 } from '../../src/host/store/index.ts';
 import type { HostTokens, IHostStore } from '../../src/host/store/index.ts';
 import { createHostTransport } from '../utils/host.ts';
+import type { HostRoute } from '../utils/host.ts';
 
 const host = 'https://auth.example.com';
 
@@ -171,6 +172,27 @@ describe('createHostClient', () => {
         });
 
         await expect(client.user.getMany()).rejects.toThrow(/unknown/);
+    });
+
+    it.each([
+        ['refresh', { 'GET /users': () => expired, 'POST /token': () => ({ status: 400, body: { code: 'invalid_grant', message: 'unknown' } }) }],
+        ['bearer', { 'GET /users': () => ({ status: 500, body: { code: 'internal_error', message: 'boom' } }) }],
+    ] as [string, Record<string, HostRoute>][])('keeps the tokens out of a failed %s request\'s error', async (_name, routes) => {
+        const client = createHostClient({
+            host,
+            tokens: { ...tokens, expiresAt: Date.now() + 900_000 },
+            storage: createFileTokenStorage(store),
+            directory: store.directory,
+            transport: createHostTransport(routes),
+        });
+
+        const error = await client.user.getMany().then(() => undefined, (e: unknown) => e) as {
+            request?: { body?: unknown, headers?: unknown },
+        };
+
+        expect(error).toBeInstanceOf(Error);
+        expect(String(error.request?.body ?? '')).not.toContain('old-refresh');
+        expect(new Headers(error.request?.headers as HeadersInit | undefined).get('authorization')).toBeNull();
     });
 
     it('derives the tokens from a grant', () => {

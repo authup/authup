@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { stripClientError } from 'hapic';
 import { Client } from '@authup/core-http-kit';
 import { defineCommand } from 'citty';
 import {
@@ -47,7 +48,11 @@ export function defineCLILogoutCommand(context: HostCommandContext = {}) {
             const tokens = await storage.read(host);
 
             if (tokens) {
-                const client = new Client({ baseURL: host, transport: context.transport });
+                const client = new Client({
+                    baseURL: host, 
+                    transport: context.transport, 
+                    errorTransform: stripClientError, 
+                });
                 const revocations : [string | undefined, 'refresh_token' | 'access_token'][] = [
                     [tokens.refreshToken, 'refresh_token'],
                     [tokens.accessToken, 'access_token'],

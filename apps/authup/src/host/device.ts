@@ -11,8 +11,6 @@ import { ErrorCode } from '@authup/errors';
 import { isUUID } from '@authup/kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { isClientErrorWithStatusCode } from 'hapic';
-import { setTimeout } from 'node:timers/promises';
-import { DEVICE_SLOW_DOWN_MS } from './constants.ts';
 import { writeNotice } from './output.ts';
 import type { DeviceLoginOptions } from './types.ts';
 
@@ -46,34 +44,24 @@ export async function runDeviceLogin(client: Client, options: DeviceLoginOptions
     writeNotice(`Open ${device.verification_uri_complete}`);
     writeNotice(`and confirm the code ${device.user_code}.`);
 
-    const deadline = Date.now() + device.expires_in * 1000;
-    let interval = device.interval * 1000;
+    try {
+        return await client.token.pollWithDeviceCode({
+            ...device,
+            client_id: options.clientId,
+            ...realm,
+        });
+    } catch (e) {
+        // hapic rejects with the last pending or slow_down answer only once
+        // the device code's expires_in has run out.
+        const code = getClientErrorCode(e);
 
-    while (Date.now() < deadline) {
-        await setTimeout(interval);
-
-        try {
-            return await client.token.createWithDeviceCode({
-                client_id: options.clientId,
-                device_code: device.device_code,
-                ...realm,
-            });
-        } catch (e) {
-            const code = getClientErrorCode(e);
-
-            if (code === ErrorCode.OAUTH_AUTHORIZATION_PENDING) {
-                continue;
-            }
-
-            if (code === ErrorCode.OAUTH_SLOW_DOWN) {
-                interval += DEVICE_SLOW_DOWN_MS;
-
-                continue;
-            }
-
-            throw e;
+        if (
+            code === ErrorCode.OAUTH_AUTHORIZATION_PENDING ||
+            code === ErrorCode.OAUTH_SLOW_DOWN
+        ) {
+            throw new Error('The device code expired before the login was confirmed. Run `authup login` again.', { cause: e });
         }
-    }
 
-    throw new Error('The device code expired before the login was confirmed. Run `authup login` again.');
+        throw e;
+    }
 }

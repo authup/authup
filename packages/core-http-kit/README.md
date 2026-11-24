@@ -174,7 +174,7 @@ const grant = await client.token.pollWithDeviceCode({
 });
 ```
 
-`pollWithDeviceCode` (from `@hapic/oauth2`) waits the response's `interval` before each request, keeps polling on `authorization_pending`, adds five seconds on `slow_down`, and rejects with the last pending error once `expires_in` has run out. It sends only `device_code`, `client_id`, `client_secret` and `realm_id`: a client named by name outside the master realm needs `createWithDeviceCode` with `realm_name` instead.
+`pollWithDeviceCode` (from `@hapic/oauth2`) waits the response's `interval` before each request, keeps polling on `authorization_pending`, adds five seconds on `slow_down`, and rejects with the last pending error once `expires_in` has run out. Extension parameters ride every poll, so a client named by name outside the master realm passes `realm_name` (or `realm_id`) alongside `client_id`. Pass `{ signal }` as the second argument to stop polling.
 
 `client.deviceAuthorization.lookup / approve / deny({ user_code })` are the calls of the page that approves the code; they ride the client's own bearer.
 

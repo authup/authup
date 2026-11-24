@@ -219,6 +219,83 @@ describe('core/query', () => {
             expect(evaluator.preEvaluateOneOfCalls).toHaveLength(1);
         });
 
+        it.each([
+            {
+                codec: undefined, 
+                filter: { 'user.name': 'admin' }, 
+                include: 'role', 
+            },
+            {
+                codec: 'url-expression', 
+                filter: "eq(user.name,'admin')", 
+                include: 'role', 
+            },
+            {
+                codec: undefined, 
+                filter: { 'user.name': 'admin' }, 
+                include: 'user', 
+            },
+            {
+                codec: undefined, 
+                filter: { 'user.name': 'admin' }, 
+                include: undefined, 
+            },
+        ])('should keep a related filter and sort whatever is included ($codec, include=$include)', async (input) => {
+            const evaluator = new FakePermissionEvaluator();
+
+            evaluator.setCompileResult({ verdict: 'allow' });
+
+            const parsed = await decodeQuery(
+                {
+                    ...(input.codec ? { codec: input.codec } : {}),
+                    filter: input.filter,
+                    sort: '-user.name',
+                    ...(input.include ? { include: input.include } : {}),
+                },
+                { schema: userRoleSchema, actor: buildActor(evaluator) },
+            );
+
+            const conditions = collectFieldConditions(parsed.filters);
+
+            expect(conditions).toHaveLength(1);
+            expect(conditions[0][1]).toEqual('admin');
+            expect(parsed.sorts.value.map((sort) => sort.name)).toEqual(['user.name']);
+            expect(parsed.relations.value.map((relation) => relation.name)).toEqual(input.include ? [input.include] : []);
+        });
+
+        it('should prune a related filter and sort for a denied target while another relation is included', async () => {
+            const evaluator = new FakePermissionEvaluator();
+
+            evaluator.setBehavior(({ ctx }) => {
+                const names = Array.isArray(ctx.name) ? ctx.name : [ctx.name];
+
+                if (names.includes(PermissionName.USER_READ)) {
+                    throw new Error('denied');
+                }
+            });
+            // an unrestricted reach keeps a related key (see above), so only
+            // the USER_READ denial can prune it here
+            evaluator.setCompileResult({ verdict: 'allow' });
+
+            const parsed = await decodeQuery(
+                {
+                    filter: { 'user.name': 'admin' }, 
+                    sort: '-user.name', 
+                    include: 'role', 
+                },
+                { schema: userRoleSchema, actor: buildActor(evaluator) },
+            );
+
+            expect(collectFieldConditions(parsed.filters)).toEqual([]);
+            expect(parsed.sorts.value).toEqual([]);
+            expect(parsed.relations.value.map((relation) => relation.name)).toEqual(['role']);
+            expect(evaluator.preEvaluateOneOfCalls.map((call) => call.name)).toContainEqual([
+                PermissionName.USER_READ,
+                PermissionName.USER_UPDATE,
+                PermissionName.USER_DELETE,
+            ]);
+        });
+
         it('should not gate an ungated target', async () => {
             const evaluator = new FakePermissionEvaluator();
 
