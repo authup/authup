@@ -51,14 +51,14 @@ describe('src/token-creator (failed request)', () => {
         expect(JSON.stringify((error as Record<string, unknown>).request)).not.toContain('password-value');
     });
 
-    it('should honor an explicit errors option', async () => {
+    it('should honor an explicit error transform', async () => {
         const error = await catchError(createClientTokenCreator(
             { id: 'system', secret: 'secret-value' },
             {
                 client: {
                     baseURL: 'http://authup.test',
                     transport: createRefusingTransport(),
-                    errors: { request: true },
+                    errorTransform: (error) => error,
                 },
             },
         ));

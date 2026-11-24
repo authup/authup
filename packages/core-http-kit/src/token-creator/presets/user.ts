@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { stripClientError } from 'hapic';
 import type { ClientOptions } from '../../client/index.ts';
 import { Client } from '../../client/index.ts';
 import type { TokenCreator } from '../type.ts';
@@ -33,7 +34,7 @@ export function createUserTokenCreator(
     // A failed request keeps the method and url only: the form carries the
     // password, and the error travels on as a cause into logs.
     const client = new Client({
-        errors: { request: false },
+        errorTransform: stripClientError,
         ...options.client,
     });
 

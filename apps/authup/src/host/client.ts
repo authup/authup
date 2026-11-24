@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { stripClientError } from 'hapic';
 import { Client, ClientAuthenticationHook } from '@authup/core-http-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { withHostLock } from './lock.ts';
@@ -34,8 +35,16 @@ function grantFromTokens(tokens: HostTokens, now = Date.now()) : OAuth2TokenGran
  * promise is the one awaiting that very request.
  */
 export function createHostClient(context: HostClientContext) : Client {
-    const client = new Client({ baseURL: context.host, transport: context.transport });
-    const tokenClient = new Client({ baseURL: context.host, transport: context.transport });
+    const client = new Client({
+        baseURL: context.host, 
+        transport: context.transport, 
+        errorTransform: stripClientError, 
+    });
+    const tokenClient = new Client({
+        baseURL: context.host, 
+        transport: context.transport, 
+        errorTransform: stripClientError, 
+    });
 
     let { tokens } = context;
 
