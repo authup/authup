@@ -17,6 +17,9 @@ export const REDIS_TOKEN_CACHE_CLIENT_OPTIONS = {
     maxRetriesPerRequest: 1,
     enableOfflineQueue: false,
     commandTimeout: 500,
+    // ioredis relaxes the command timeout to this value during a Redis
+    // maintenance window (default 10 s), which a fall-through cache must not wait for.
+    maintRelaxedCommandTimeout: 500,
     retryStrategy: (times: number) => Math.min(times * 50, 2_000),
 } satisfies ClientOptions;
 
