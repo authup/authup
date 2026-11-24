@@ -124,7 +124,10 @@ describe('http/controllers/client-admin', () => {
 
     it('should list only its own permissions, roles and user roles', async () => {
         await suite.client.permission.create(createFakePermission({ realmId: r1.id, clientId: c2.id }));
-        await suite.client.role.create(createFakeRole({ realmId: r1.id, clientId: c2.id }));
+
+        const { data: foreign } = await suite.client.role.create(createFakeRole({ realmId: r1.id, clientId: c2.id }));
+
+        await suite.client.userRole.create({ userId: u1.id, roleId: foreign.id });
 
         const { data: permissions } = await c1Client.permission.getMany();
 
@@ -137,10 +140,11 @@ describe('http/controllers/client-admin', () => {
         expect(roles.length).toBeGreaterThan(0);
         expect(roles.every((entity) => entity.clientId === c1.id)).toBe(true);
 
-        const { data: userRoles } = await c1Client.userRole.getMany();
+        // a user-role list is evaluated per row after paging, so the shared
+        // server databases need the filter to keep both rows on one page
+        const { data: userRoles } = await c1Client.userRole.getMany({ filters: { userId: u1.id } });
 
-        expect(userRoles.length).toBeGreaterThan(0);
-        expect(userRoles.every((entity) => entity.roleId === role.id)).toBe(true);
+        expect(userRoles.map((entity) => entity.roleId)).toEqual([role.id]);
     });
 
     it('should list only its own permissions through a field projection', async () => {
