@@ -64,6 +64,16 @@ describe('createUUIDv7', () => {
         expect([...ids].sort()).toEqual(ids);
     });
 
+    it('stays ordered across counter overflow by advancing the millisecond', () => {
+        const timestamp = 0x0190_5000_0000;
+        const ids = Array.from({ length: 10000 }, () => createUUIDv7(timestamp));
+        const prefix = (id: string) => id.replaceAll('-', '').slice(0, 12);
+
+        expect(new Set(ids).size).toBe(10000);
+        expect([...ids].sort()).toEqual(ids);
+        expect(prefix(ids[ids.length - 1]) > prefix(ids[0])).toBe(true);
+    });
+
     it('is increasing across milliseconds', () => {
         const timestamp = 0x0190_3000_0000;
 

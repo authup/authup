@@ -14,6 +14,7 @@ export function isUUID(input: string) : boolean {
 const COUNTER_MAX = 0xFFF;
 
 let lastTimestamp = -1;
+let lastRequested = -1;
 let lastCounter = 0;
 
 function formatUUIDv7(timestamp: number, counter: number, tail: Uint8Array) : string {
@@ -47,9 +48,15 @@ function randomCounter() : number {
 export function createUUIDv7(timestamp?: number) : string {
     const tail = crypto.getRandomValues(new Uint8Array(8));
 
-    const ts = timestamp === undefined ?
-        Math.max(Date.now(), lastTimestamp) :
-        timestamp;
+    const requested = timestamp ?? Date.now();
+
+    let ts = requested;
+
+    if (requested === lastRequested || (timestamp === undefined && requested < lastTimestamp)) {
+        ts = lastTimestamp;
+    }
+
+    lastRequested = requested;
 
     if (ts === lastTimestamp) {
         lastCounter += 1;
