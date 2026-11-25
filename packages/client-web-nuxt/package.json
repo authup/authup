@@ -37,6 +37,7 @@
         "@authup/core-http-kit": "^1.0.0-beta.77",
         "@authup/kit": "^1.0.0-beta.77",
         "@nuxt/kit": "^4.7.0",
+        "h3": "^1.15.11",
         "pathtrace": "^2.2.3",
         "smob": "^1.6.2"
     },

@@ -8,6 +8,7 @@
 import {
     addPlugin,
     addRouteMiddleware,
+    addServerHandler,
     addTemplate,
     createResolver,
     defineNuxtModule,
@@ -81,6 +82,14 @@ export default defineNuxtModule<ModuleOptions>({
             name: 'authup',
             path: resolver.resolve('./runtime/middleware/00.root'),
             global: true,
+        });
+
+        // A request only a token refresh could serve renders client-only: the
+        // server never refreshes (#3925), the browser does it under its
+        // cross-tab lock.
+        addServerHandler({
+            handler: resolver.resolve('./runtime/server/middleware/render-defer'),
+            middleware: true,
         });
     },
 });
