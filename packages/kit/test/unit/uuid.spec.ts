@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { isUUID } from '../../src/index.ts';
+import { buildUUIDv7LowerBound, createUUIDv7, isUUID } from '../../src/index.ts';
 
 describe('isUUID', () => {
     it('accepts a v4 id', () => {
@@ -43,5 +43,44 @@ describe('isUUID', () => {
         expect(isUUID('admin')).toBe(false);
         expect(isUUID('019b0000000070008000000000000001')).toBe(false);
         expect(isUUID('019b0000-0000-7000-8000-0000000000011')).toBe(false);
+    });
+});
+
+describe('createUUIDv7', () => {
+    const FORMAT = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+    it('produces a lowercase v7 uuid', () => {
+        const id = createUUIDv7();
+
+        expect(id).toMatch(FORMAT);
+        expect(isUUID(id)).toBe(true);
+    });
+
+    it('is strictly increasing within one millisecond', () => {
+        const timestamp = 0x0190_2000_0000;
+        const ids = Array.from({ length: 1000 }, () => createUUIDv7(timestamp));
+
+        expect(new Set(ids).size).toBe(1000);
+        expect([...ids].sort()).toEqual(ids);
+    });
+
+    it('is increasing across milliseconds', () => {
+        const timestamp = 0x0190_3000_0000;
+
+        expect(createUUIDv7(timestamp) < createUUIDv7(timestamp + 1)).toBe(true);
+    });
+});
+
+describe('buildUUIDv7LowerBound', () => {
+    it('zeroes every random bit', () => {
+        expect(buildUUIDv7LowerBound(0x0190_1234_5678)).toBe('01901234-5678-7000-8000-000000000000');
+    });
+
+    it('bounds the ids of its millisecond from below', () => {
+        const timestamp = 0x0190_4000_0000;
+        const bound = buildUUIDv7LowerBound(timestamp);
+
+        expect(bound <= createUUIDv7(timestamp)).toBe(true);
+        expect(createUUIDv7(timestamp - 1) < bound).toBe(true);
     });
 });
