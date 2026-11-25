@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.0-beta.77](https://github.com/authup/authup/compare/v1.0.0-beta.77...v1.0.0-beta.77) (2026-11-25)
+
+
+### Features
+
+* bump dependencies and adopt their new features ([#3914](https://github.com/authup/authup/issues/3914)) ([aaf787b](https://github.com/authup/authup/commit/aaf787b98e6409c8f3e68e54a051d37f3093f551))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/server-config-kit bumped from ^1.0.0-beta.77 to ^1.0.1-beta.77
+
 ## [1.0.0-beta.77](https://github.com/authup/authup/compare/v1.0.0-beta.76...v1.0.0-beta.77) (2026-11-23)
 
 

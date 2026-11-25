@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-beta.77](https://github.com/authup/authup/compare/v1.0.0-beta.77...v1.0.0-beta.77) (2026-11-25)
+
+
+### Features
+
+* clientMatch policy and client_admin role ([#3913](https://github.com/authup/authup/issues/3913)) ([29b08be](https://github.com/authup/authup/commit/29b08be9bfc970248dab41ae6f376bd3f13a689f))
+
 ## [1.0.0-beta.77](https://github.com/authup/authup/compare/v1.0.0-beta.76...v1.0.0-beta.77) (2026-11-23)
 
 

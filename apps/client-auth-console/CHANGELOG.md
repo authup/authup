@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.1-beta.77](https://github.com/authup/authup/compare/v1.0.0-beta.77...v1.0.1-beta.77) (2026-11-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-theme bumped from ^1.0.0-beta.77 to ^1.0.1-beta.77
+
 ## [1.0.0-beta.77](https://github.com/authup/authup/compare/v1.0.0-beta.76...v1.0.0-beta.77) (2026-11-23)
 
 

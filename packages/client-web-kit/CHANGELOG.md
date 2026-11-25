@@ -1,5 +1,26 @@
 # Change Log
 
+## [1.0.0-beta.77](https://github.com/authup/authup/compare/v1.0.0-beta.77...v1.0.0-beta.77) (2026-11-25)
+
+
+### Features
+
+* bump dependencies and adopt their new features ([#3914](https://github.com/authup/authup/issues/3914)) ([aaf787b](https://github.com/authup/authup/commit/aaf787b98e6409c8f3e68e54a051d37f3093f551))
+* clientMatch policy and client_admin role ([#3913](https://github.com/authup/authup/issues/3913)) ([29b08be](https://github.com/authup/authup/commit/29b08be9bfc970248dab41ae6f376bd3f13a689f))
+
+
+### Bug Fixes
+
+* **client-web-kit:** never refresh from the authentication hook during a server render ([#3926](https://github.com/authup/authup/issues/3926)) ([92966c4](https://github.com/authup/authup/commit/92966c4755cbb6cba1277136c3fd6e047e566d5e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.77 to ^1.0.1-beta.77
+    * @authup/specs bumped from ^1.0.0-beta.77 to ^1.0.1-beta.77
+
 ## [1.0.0-beta.77](https://github.com/authup/authup/compare/v1.0.0-beta.76...v1.0.0-beta.77) (2026-11-23)
 
 

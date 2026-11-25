@@ -1,5 +1,26 @@
 # Change Log
 
+## [1.0.0-beta.77](https://github.com/authup/authup/compare/v1.0.0-beta.77...v1.0.0-beta.77) (2026-11-25)
+
+
+### Features
+
+* bump dependencies and adopt their new features ([#3914](https://github.com/authup/authup/issues/3914)) ([aaf787b](https://github.com/authup/authup/commit/aaf787b98e6409c8f3e68e54a051d37f3093f551))
+* **core-http-kit:** realm for createClientTokenCreator ([#3912](https://github.com/authup/authup/issues/3912)) ([cafe55f](https://github.com/authup/authup/commit/cafe55ffd380df90f91ac1234d9a96a60f9b1d72)), closes [#3908](https://github.com/authup/authup/issues/3908)
+* entity change feed for durable delivery of domain events ([#3919](https://github.com/authup/authup/issues/3919)) ([287ec70](https://github.com/authup/authup/commit/287ec70c3757e99a9d061f0ab10fb8a889ba4ba0))
+
+
+### Bug Fixes
+
+* **client-web-kit:** never refresh from the authentication hook during a server render ([#3926](https://github.com/authup/authup/issues/3926)) ([92966c4](https://github.com/authup/authup/commit/92966c4755cbb6cba1277136c3fd6e047e566d5e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/specs bumped from ^1.0.0-beta.77 to ^1.0.1-beta.77
+
 ## [1.0.0-beta.77](https://github.com/authup/authup/compare/v1.0.0-beta.76...v1.0.0-beta.77) (2026-11-23)
 
 

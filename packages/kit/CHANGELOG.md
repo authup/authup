@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-beta.77](https://github.com/authup/authup/compare/v1.0.0-beta.77...v1.0.0-beta.77) (2026-11-25)
+
+
+### Features
+
+* entity change feed for durable delivery of domain events ([#3919](https://github.com/authup/authup/issues/3919)) ([287ec70](https://github.com/authup/authup/commit/287ec70c3757e99a9d061f0ab10fb8a889ba4ba0))
+
 ## [1.0.0-beta.77](https://github.com/authup/authup/compare/v1.0.0-beta.76...v1.0.0-beta.77) (2026-11-23)
 
 
