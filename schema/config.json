@@ -418,6 +418,14 @@
                     "default": 7,
                     "x-authup-env": "EVENT_LOG_ENTITY_RETENTION_DAYS"
                 },
+                "eventLogFeedSettleSeconds": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "description": "Seconds an entity change is withheld from the event feed (GET /events/@feed) after it was recorded, so a consumer's cursor never passes a change whose transaction has not committed yet. Must exceed the longest write transaction plus the maximum clock skew between replicas, with a margin.",
+                    "default": 10,
+                    "x-authup-env": "EVENT_LOG_FEED_SETTLE_SECONDS"
+                },
                 "eventLogAggregateRetentionDays": {
                     "type": "number",
                     "minimum": 0,
