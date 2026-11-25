@@ -18,6 +18,7 @@ import type { IQuery } from '@rapiq/core';
 import { PermissionName } from '@authup/core-kit';
 import type { Event } from '@authup/core-kit';
 import { EntityNotFoundError } from '@authup/errors';
+import { createUUIDv7 } from '@authup/kit';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { ActorContext, EntityRepositoryFindManyResult, Logger } from '@authup/server-kit';
 import { EVENT_ACTOR_NAME_MAX_LENGTH, EVENT_LOG_RETENTION_DAYS_DEFAULT } from './constants.ts';
@@ -141,7 +142,7 @@ export class EventService extends AbstractEntityService implements IEventService
             const retentionDays = input.retentionDays ?? this.options.retentionDays ?? EVENT_LOG_RETENTION_DAYS_DEFAULT;
 
             const entity = this.repository.create({
-                id: randomUUID(),
+                id: createUUIDv7(),
                 scope: input.scope,
                 name: input.name,
                 refType: truncate(input.refType, 64),

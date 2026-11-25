@@ -118,6 +118,28 @@ describe('src/http/controllers/entities/event', () => {
         expect(filtered.every((entry) => entry.sessionId === row.sessionId)).toBe(true);
     });
 
+    it('mints time-ordered v7 ids and sorts by id', async () => {
+        const { data: first } = await suite.client.user.create(createFakeUser());
+        const { data: second } = await suite.client.user.create(createFakeUser());
+
+        const { data } = await suite.client.event.getMany({
+            filters: {
+                scope: EventScope.ENTITY, 
+                refType: 'user', 
+                name: EventName.CREATED, 
+            },
+            sort: { id: 'ASC' },
+        });
+
+        expect(data.length).toBeGreaterThanOrEqual(2);
+        expect(data.every((row) => row.id[14] === '7')).toBe(true);
+
+        const refs = data.map((row) => row.refId);
+
+        expect(refs.indexOf(second.id)).toBeGreaterThan(refs.indexOf(first.id));
+        expect(refs.indexOf(first.id)).toBeGreaterThanOrEqual(0);
+    });
+
     it('reads a single audit event', async () => {
         const { data } = await suite.client.event.getMany({ filters: { name: EventName.LOGIN, actorId: userId } });
 
