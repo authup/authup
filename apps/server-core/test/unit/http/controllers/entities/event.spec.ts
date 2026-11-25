@@ -124,9 +124,9 @@ describe('src/http/controllers/entities/event', () => {
 
         const { data } = await suite.client.event.getMany({
             filters: {
-                scope: EventScope.ENTITY, 
-                refType: 'user', 
-                name: EventName.CREATED, 
+                scope: EventScope.ENTITY,
+                refType: 'user',
+                name: EventName.CREATED,
             },
             sort: { id: 'ASC' },
         });

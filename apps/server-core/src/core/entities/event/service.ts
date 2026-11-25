@@ -30,7 +30,11 @@ import { EntityNotFoundError } from '@authup/errors';
 import { buildUUIDv7LowerBound, createUUIDv7 } from '@authup/kit';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { ActorContext, EntityRepositoryFindManyResult, Logger } from '@authup/server-kit';
-import { EVENT_ACTOR_NAME_MAX_LENGTH, EVENT_LOG_RETENTION_DAYS_DEFAULT } from './constants.ts';
+import {
+    EVENT_ACTOR_NAME_MAX_LENGTH,
+    EVENT_LOG_FEED_SETTLE_SECONDS_DEFAULT,
+    EVENT_LOG_RETENTION_DAYS_DEFAULT,
+} from './constants.ts';
 import { sanitizeEventData } from './sanitize.ts';
 import type {
     EventReadVisibility,
@@ -56,8 +60,6 @@ export type EventServiceContext = {
 };
 
 const DAY_IN_MS = 86_400_000;
-
-const FEED_SETTLE_SECONDS_DEFAULT = 10;
 
 export class EventService extends AbstractEntityService implements IEventService {
     protected repository: IEventRepository;
@@ -262,17 +264,27 @@ export class EventService extends AbstractEntityService implements IEventService
     ): Promise<EntityRepositoryFindManyResult<Event>> {
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.EVENT_READ });
 
+        // A dropped filter leaf would restart the cursor or widen the page, so
+        // filters are refused instead; a limit above the maximum stays capped.
+        await decodeQuery(query, {
+            schema: eventSchema,
+            actor,
+            parameters: ['filters'],
+            throwOnFailure: true,
+        });
+
         const parsed = await decodeQuery(query, { schema: eventSchema, actor });
 
         // A per-row filtered page could drop every row, which reads as
         // "caught up" and leaves the consumer no id to advance past.
         const scope = await this.scopeRead(parsed, actor);
 
+        // A `deny` verdict lowers to ownership only, not a refusal: ReadScope exposes no verdict.
         if (scope.post) {
             throw new PermissionError({ message: `The event feed requires a ${PermissionName.EVENT_READ} reach expressible as a row condition.` });
         }
 
-        const settleSeconds = this.options.feedSettleSeconds ?? FEED_SETTLE_SECONDS_DEFAULT;
+        const settleSeconds = this.options.feedSettleSeconds ?? EVENT_LOG_FEED_SETTLE_SECONDS_DEFAULT;
         const sorted = new Query({
             fields: scope.query.fields,
             filters: scope.query.filters,

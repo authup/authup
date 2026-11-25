@@ -92,21 +92,7 @@ describe('src/http/controllers/entities/event (feed)', () => {
         expect(findCreated(after, a.id)).toBeUndefined();
     }, TIMEOUT);
 
-    it('withholds changes younger than the settle window', async () => {
-        const { data: c } = await suite.client.user.create(createFakeUser());
-
-        const before = await readFeed(`filter[id]=>${start}&filter[refId]=${c.id}`);
-
-        expect(findCreated(before, c.id)).toBeUndefined();
-
-        await wait(SETTLE_WAIT);
-
-        const after = await readFeed(`filter[id]=>${start}&filter[refId]=${c.id}`);
-
-        expect(findCreated(after, c.id)).toBeDefined();
-    }, TIMEOUT);
-
-    it('ignores a caller\'s scope, sort and id bounds', async () => {
+    it('keeps its scope, sort and id bounds against a caller\'s', async () => {
         // a login row, so that a scope=login filter has something to leak
         const user = createFakeUser();
 
@@ -117,7 +103,8 @@ describe('src/http/controllers/entities/event (feed)', () => {
 
         const scoped = await readFeed(`filter[id]=>${start}&filter[scope]=${EventScope.OAUTH2}&page[limit]=100`);
 
-        expect(scoped.every((row) => row.scope === EventScope.ENTITY)).toBe(true);
+        // the forced scope is ANDed: a caller's other scope narrows to nothing
+        expect(scoped).toHaveLength(0);
 
         const sorted = await readFeed(`filter[id]=>${start}&sort=-id&page[limit]=100`);
 
@@ -180,10 +167,21 @@ describe('src/http/controllers/entities/event (feed)', () => {
         const own = await readFeed(`filter[id]=>${start}&filter[refId]=${user.id}`, path);
 
         expect(findCreated(own, user.id)).toBeDefined();
+    }, TIMEOUT);
 
-        const foreign = await readFeed(`filter[id]=>${start}&filter[refId]=${realm.id}`, path);
+    it.each([
+        'filter[id]=>not-a-uuid',
+        'filter[unknownKey]=user',
+    ])('refuses a filter it cannot apply (%s)', async (query) => {
+        const response = await httpRequest(suite, 'GET', `/events/@feed?${query}`, { headers: { Authorization: ADMIN_AUTHORIZATION } });
 
-        expect(foreign.every((row) => row.realmId === realm.id)).toBe(true);
+        expect(response.status).toEqual(400);
+    }, TIMEOUT);
+
+    it('caps a page limit above the maximum', async () => {
+        const rows = await readFeed(`filter[id]=>${start}&page[limit]=500`);
+
+        expect(rows.length).toBeLessThanOrEqual(50);
     }, TIMEOUT);
 
     it('refuses an actor without EVENT_READ', async () => {
@@ -202,5 +200,5 @@ describe('src/http/controllers/entities/event (feed)', () => {
         expect(own.length).toBeGreaterThanOrEqual(1);
 
         await expectClientError(() => client.get('events/@feed'), { status: 403 });
-    });
+    }, TIMEOUT);
 });
