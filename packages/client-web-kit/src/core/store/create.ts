@@ -1178,10 +1178,21 @@ export function createStore(context: StoreCreateContext) {
             return;
         }
 
+        // A server render never refreshes (#3925): two renders of one browser
+        // session would present the same refresh token and the second trips
+        // replay detection, and a rotated token written after the response is
+        // committed never reaches the browser. The store stays RESTORING and
+        // the browser refreshes after hydration.
+        const isServer = isServerRuntime();
+
         if (
             !accessToken.value &&
             refreshToken.value
         ) {
+            if (isServer) {
+                return;
+            }
+
             await refreshSession();
         }
 
@@ -1192,6 +1203,10 @@ export function createStore(context: StoreCreateContext) {
             try {
                 await revalidate();
             } catch (e) {
+                if (isServer && refreshToken.value) {
+                    return;
+                }
+
                 // a still-valid refresh token may recover the session
                 if (refreshToken.value) {
                     await refreshSession();

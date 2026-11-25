@@ -42,9 +42,20 @@ function createRoute(input: Partial<RouteLocationNormalized> & { path: string })
     } as unknown as RouteLocationNormalized;
 }
 
-function createInterceptor(overrides: Partial<StoreStub> = {}) {
+class ServerRoutingInterceptor extends RoutingInterceptor {
+    protected override isServer() : boolean {
+        return true;
+    }
+}
+
+type InterceptorOptions = {
+    server?: boolean,
+    status?: StoreAuthStatus
+};
+
+function createInterceptor(overrides: Partial<StoreStub> = {}, options: InterceptorOptions = {}) {
     const store = {
-        status: ref(StoreAuthStatus.AUTHENTICATED),
+        status: ref(options.status ?? StoreAuthStatus.AUTHENTICATED),
         userId: ref('user-1'),
         resolve: vi.fn(async () => {}),
         logout: vi.fn(async () => {}),
@@ -63,7 +74,11 @@ function createInterceptor(overrides: Partial<StoreStub> = {}) {
         $config: { public: { authup: {} } },
     } as unknown as NuxtApp;
 
-    return { interceptor: new RoutingInterceptor(nuxtApp), store };
+    const interceptor = options.server ?
+        new ServerRoutingInterceptor(nuxtApp) :
+        new RoutingInterceptor(nuxtApp);
+
+    return { interceptor, store };
 }
 
 // The saved request carries no destination: the destination comes off the
@@ -380,5 +395,63 @@ describe('RoutingInterceptor', () => {
             }));
         });
     });
-});
 
+    describe('server render while the session restores', () => {
+        const loggedInRoute = () => createRoute({
+            path: '/users',
+            matched: [{ meta: { [RouteMetaKey.REQUIRE_LOGGED_IN]: true } }] as never,
+        });
+
+        const loggedOutRoute = () => createRoute({
+            path: '/login',
+            matched: [{ meta: { [RouteMetaKey.REQUIRE_LOGGED_OUT]: true } }] as never,
+        });
+
+        it('should defer a logged-in route to the browser', async () => {
+            const { interceptor, store } = createInterceptor({}, {
+                server: true,
+                status: StoreAuthStatus.RESTORING,
+            });
+
+            const result = await interceptor.execute(loggedInRoute(), createRoute({ path: '/' }));
+
+            expect(result).toBeUndefined();
+            expect(store.logout).not.toHaveBeenCalled();
+        });
+
+        it('should defer a logged-out route to the browser', async () => {
+            const { interceptor, store } = createInterceptor({}, {
+                server: true,
+                status: StoreAuthStatus.RESTORING,
+            });
+
+            const result = await interceptor.execute(loggedOutRoute(), createRoute({ path: '/' }));
+
+            expect(result).toBeUndefined();
+            expect(store.logout).not.toHaveBeenCalled();
+        });
+
+        it('should defer a permission-gated route to the browser', async () => {
+            const { interceptor, store } = createInterceptor({}, {
+                server: true,
+                status: StoreAuthStatus.RESTORING,
+            });
+
+            const result = await interceptor.execute(createRoute({
+                path: '/users',
+                matched: [{ meta: { [RouteMetaKey.REQUIRE_PERMISSIONS]: ['user_read'] } }] as never,
+            }), createRoute({ path: '/' }));
+
+            expect(result).toBeUndefined();
+            expect(store.permissionEvaluator.preEvaluateOneOf).not.toHaveBeenCalled();
+        });
+
+        it('should still bounce a restoring session in the browser', async () => {
+            const { interceptor } = createInterceptor({}, { status: StoreAuthStatus.RESTORING });
+
+            const result = await interceptor.execute(loggedInRoute(), createRoute({ path: '/' }));
+
+            expect(result?.path).toEqual('/login');
+        });
+    });
+});
