@@ -7,7 +7,7 @@
 
 import type { Event } from '@authup/core-kit';
 import { EventName, EventScope } from '@authup/core-kit';
-import { Client as HTTPClient } from '@authup/core-http-kit';
+import { Client as HTTPClient, drainEventFeed } from '@authup/core-http-kit';
 import { buildUUIDv7LowerBound } from '@authup/kit';
 import {
     afterAll,
@@ -167,6 +167,61 @@ describe('src/http/controllers/entities/event (feed)', () => {
         const own = await readFeed(`filter[id]=>${start}&filter[refId]=${user.id}`, path);
 
         expect(findCreated(own, user.id)).toBeDefined();
+    }, TIMEOUT);
+
+    it('drains the feed page by page through the kit', async () => {
+        const ids: string[] = [];
+
+        for (let i = 0; i < 3; i++) {
+            const { data } = await suite.client.user.create(createFakeUser());
+
+            ids.push(data.id);
+        }
+
+        await wait(SETTLE_WAIT);
+
+        const filters = { refType: 'user', refId: ids };
+        const seen: Event[] = [];
+        const persisted: string[] = [];
+
+        const cursor = await drainEventFeed(suite.client, {
+            limit: 1,
+            filters,
+            handle: async (events) => {
+                expect(events).toHaveLength(1);
+                seen.push(...events);
+            },
+            persist: async (value) => {
+                persisted.push(value);
+            },
+        });
+
+        expect(seen.map((row) => row.refId)).toEqual(ids);
+        expect(persisted).toEqual(seen.map((row) => row.id));
+        expect(cursor).toEqual(persisted[2]);
+
+        const resumed: Event[] = [];
+
+        await drainEventFeed(suite.client, {
+            limit: 1,
+            filters,
+            cursor: persisted[1],
+            handle: async (events) => {
+                resumed.push(...events);
+            },
+        });
+
+        expect(resumed.map((row) => row.id)).toEqual([persisted[2]]);
+    }, TIMEOUT);
+
+    it('keeps the id in a projected row', async () => {
+        const rows = await readFeed(`filter[id]=>${start}&fields=name&page[limit]=5`);
+
+        expect(rows.length).toBeGreaterThan(0);
+
+        for (const row of rows) {
+            expect(typeof row.id).toEqual('string');
+        }
     }, TIMEOUT);
 
     it.each([
