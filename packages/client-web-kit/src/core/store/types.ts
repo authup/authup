@@ -95,7 +95,11 @@ export type StoreTokenGrantAcquisition = {
  * The part of the Web Locks API a refresh holds.
  */
 export type RefreshLockManager = {
-    request: <T>(name: string, callback: () => Promise<T>) => Promise<T>
+    request: <T>(
+        name: string,
+        options: { signal?: AbortSignal },
+        callback: () => Promise<T>,
+    ) => Promise<T>
 };
 
 export type StoreLoginContext = {

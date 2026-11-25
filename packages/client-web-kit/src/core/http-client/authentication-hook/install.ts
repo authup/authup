@@ -91,6 +91,12 @@ export function installHTTPClientAuthenticationHook(
     let isSelfCallee = false;
 
     hook.on(ClientAuthenticationHookEventName.HEADER_UNSET, () => {
+        // A refresh refused because the session already ended (a logout
+        // while it waited for the lock) is no involuntary expiry.
+        if (!store.accessToken && !store.refreshToken) {
+            return;
+        }
+
         if (!isSelfCallee) {
             // A background refresh failed (not a store-driven token clear):
             // tear the session down and signal an involuntary expiry so the

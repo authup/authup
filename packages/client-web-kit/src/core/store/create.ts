@@ -1047,6 +1047,30 @@ export function createStore(context: StoreCreateContext) {
      * The grant another tab already rotated the presented token into, read
      * from the shared cookies, or undefined when there is none to adopt.
      */
+    const readCookieRefreshToken = () : string | undefined => {
+        const value = context.readCookie ?
+            context.readCookie(CookieName.REFRESH_TOKEN) :
+            undefined;
+
+        return typeof value === 'string' && value ? value : undefined;
+    };
+
+    /**
+     * The grant this instance holds, or undefined when it holds none.
+     */
+    const readCurrentGrant = () : OAuth2TokenGrantResponse | undefined => {
+        if (!accessToken.value || !refreshToken.value || !accessTokenExpireDate.value) {
+            return undefined;
+        }
+
+        return {
+            access_token: accessToken.value,
+            refresh_token: refreshToken.value,
+            expires_in: Math.max(1, Math.floor((new Date(accessTokenExpireDate.value).getTime() - Date.now()) / 1000)),
+            token_type: 'Bearer',
+        };
+    };
+
     const readAdoptableGrant = (presented: string) : OAuth2TokenGrantResponse | undefined => {
         if (!context.readCookie) {
             return undefined;
@@ -1092,34 +1116,58 @@ export function createStore(context: StoreCreateContext) {
     const acquireTokenGrant = async (
         presented: string,
         exchange: (refreshToken: string) => Promise<OAuth2TokenGrantResponse>,
-    ) : Promise<StoreTokenGrantAcquisition> => runWithRefreshLock(async () => {
+    ) : Promise<StoreTokenGrantAcquisition> => {
+        // Captured before the wait: a logout while another holder refreshes
+        // must stop this one from presenting a token it already revoked.
         const generation = tokenGeneration.value;
 
-        const adopted = readAdoptableGrant(presented);
-        const response = adopted || await exchange(presented);
+        return runWithRefreshLock(async () => {
+            if (generation !== tokenGeneration.value) {
+                throw new OAuth2Error('The session was torn down before the token could be refreshed.');
+            }
 
-        // Zombie-commit guard (same contract as commitSession): a logout
-        // that landed while the round-trip was in flight stays final, and a
-        // session that replaced this one keeps its tokens. The dropped grant
-        // was never written, so nothing else could revoke it. An adopted
-        // grant is the cookies' current session and never dropped.
-        if (
-            !adopted &&
-            (generation !== tokenGeneration.value || refreshToken.value !== presented)
-        ) {
-            await revokeStagedGrant(response);
+            // Another refresh of this instance landed while this one waited:
+            // its grant is the current one.
+            if (refreshToken.value !== presented) {
+                const current = readCurrentGrant();
 
-            return { response, applied: false };
-        }
+                if (!current) {
+                    throw new OAuth2Error('The session was torn down before the token could be refreshed.');
+                }
 
-        if (generation !== tokenGeneration.value) {
-            return { response, applied: false };
-        }
+                return { response: current, applied: true };
+            }
 
-        applyTokenGrantResponse(response);
+            const adopted = readAdoptableGrant(presented);
 
-        return { response, applied: true };
-    });
+            // A tab that slept through another tab's rotation, after the
+            // access token lapsed, has nothing to adopt but must still never
+            // present its consumed token: the cookies hold the current one.
+            const response = adopted || await exchange(readCookieRefreshToken() || presented);
+
+            // Zombie-commit guard (same contract as commitSession): a logout
+            // that landed while the round-trip was in flight stays final, and
+            // a session that replaced this one keeps its tokens. The dropped
+            // grant was never written, so nothing else could revoke it. An
+            // adopted grant is the cookies' current session and never dropped.
+            if (
+                !adopted &&
+                (generation !== tokenGeneration.value || refreshToken.value !== presented)
+            ) {
+                await revokeStagedGrant(response);
+
+                return { response, applied: false };
+            }
+
+            if (generation !== tokenGeneration.value) {
+                return { response, applied: false };
+            }
+
+            applyTokenGrantResponse(response);
+
+            return { response, applied: true };
+        });
+    };
 
     const refreshSession = createPromiseShareWrapperFn(
         async (): Promise<void> => {

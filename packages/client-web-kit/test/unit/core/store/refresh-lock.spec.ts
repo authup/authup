@@ -15,15 +15,22 @@ import {
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import { createApp, h } from 'vue';
 import { injectHTTPClientAuthenticationHook, installHTTPClientAuthenticationHook } from '../../../../src/core/http-client/index.ts';
-import { injectStore, installStore } from '../../../../src/core/store/index.ts';
+import { REFRESH_LOCK_WAIT_MS } from '../../../../src/core/store/refresh-lock.ts';
+import {
+    StoreDispatcherEventName,
+    injectStore,
+    injectStoreDispatcher,
+    installStore,
+} from '../../../../src/core/store/index.ts';
 
 type Transport = NonNullable<ClientOptions['transport']>;
 
 type LockManagerStub = {
-    request: <T>(name: string, fn: () => Promise<T>) => Promise<T>
+    request: <T>(name: string, options: { signal?: AbortSignal }, fn: () => Promise<T>) => Promise<T>
 };
 
 function readForm(request: TransportRequest) : URLSearchParams {
@@ -47,6 +54,8 @@ function createServer() {
     let counter = 1;
 
     let gate : Promise<void> | undefined;
+    let unauthorized = false;
+    let introspectionRefused = false;
 
     const respond = (status: number, body: unknown) => new Response(JSON.stringify(body), {
         status,
@@ -66,6 +75,10 @@ function createServer() {
                 return respond(200, {});
             }
 
+            if (pathname === '/token/introspect' && introspectionRefused) {
+                return respond(400, { message: 'The introspection failed.' });
+            }
+
             if (pathname === '/token/introspect') {
                 return respond(200, {
                     active: true,
@@ -82,6 +95,10 @@ function createServer() {
             if (pathname === '/token') {
                 if (gate) {
                     await gate;
+                }
+
+                if (unauthorized) {
+                    return respond(401, { message: 'Unauthorized.' });
                 }
 
                 const presented = body.get('refresh_token') || '';
@@ -110,6 +127,12 @@ function createServer() {
         requests,
         revoked,
         tokenRequests: () => requests.filter((request) => new URL(request.url).pathname === '/token'),
+        refuseTokens: () => {
+            unauthorized = true;
+        },
+        refuseIntrospection: () => {
+            introspectionRefused = true;
+        },
         hold: () => {
             const { promise, resolve } = Promise.withResolvers<void>();
 
@@ -129,8 +152,20 @@ function createJar(seed: Record<string, string> = {}) {
     return new Map<string, string>(Object.entries(seed));
 }
 
-function buildTab(server: Server, jar: Map<string, string>, options: { hook?: boolean } = {}) {
-    const createClient = () => new Client({ baseURL: 'http://fake.test/', transport: server.transport });
+type TabOptions = {
+    hook?: boolean,
+    /**
+     * One client instance shared by the store and the hook, with the hook
+     * attached to it, as a host passing `httpClient` as an instance gets.
+     */
+    sharedClient?: boolean
+};
+
+function buildTab(server: Server, jar: Map<string, string>, options: TabOptions = {}) {
+    const shared = options.sharedClient ?
+        new Client({ baseURL: 'http://fake.test/', transport: server.transport }) :
+        undefined;
+    const createClient = () => shared || new Client({ baseURL: 'http://fake.test/', transport: server.transport });
 
     const pinia = createPinia();
     const app = createApp({ render: () => h('div') });
@@ -138,7 +173,7 @@ function buildTab(server: Server, jar: Map<string, string>, options: { hook?: bo
     app.use(pinia);
 
     installStore(app, {
-        httpClient: createClient,
+        httpClient: shared || createClient,
         pinia,
         cookieGet: (key) => jar.get(key),
         cookieSet: (key, value) => {
@@ -157,16 +192,22 @@ function buildTab(server: Server, jar: Map<string, string>, options: { hook?: bo
 
     if (options.hook) {
         installHTTPClientAuthenticationHook(app, {
-            httpClient: createClient,
+            httpClient: shared || createClient,
             pinia,
             isServer: false,
         });
+
+        if (shared) {
+            injectHTTPClientAuthenticationHook(app).attach(shared);
+        }
     }
 
     const store = injectStore(pinia, app);
+    const dispatcher = injectStoreDispatcher(app);
 
     return {
         store,
+        dispatcher,
         hook: () => injectHTTPClientAuthenticationHook(app),
     };
 }
@@ -180,9 +221,20 @@ function createLocks(jar: Map<string, string>) {
     const released : (string | undefined)[] = [];
 
     const locks : LockManagerStub = {
-        request: <T>(name: string, fn: () => Promise<T>) => {
+        request: <T>(name: string, options: { signal?: AbortSignal }, fn: () => Promise<T>) => {
             const previous = chains.get(name) || Promise.resolve();
-            const run = previous.then(async () => {
+
+            // A request aborted before it is granted rejects and never runs,
+            // and the queue moves on without it.
+            const aborted = new Promise<never>((_resolve, reject) => {
+                options.signal?.addEventListener('abort', () => {
+                    reject(new DOMException('The lock request was aborted.', 'AbortError'));
+                });
+            });
+
+            const granted = Promise.race([previous.then(() => true), aborted]);
+
+            const run = granted.then(async () => {
                 try {
                     return await fn();
                 } finally {
@@ -190,13 +242,28 @@ function createLocks(jar: Map<string, string>) {
                 }
             });
 
-            chains.set(name, run.catch(() => undefined));
+            // The next request waits for this one to finish, or, when this
+            // one was aborted, for whatever it was waiting on.
+            chains.set(name, granted.then(() => run.catch(() => undefined), () => previous));
 
             return run;
         },
     };
 
-    return { locks, released };
+    // Hold the lock from outside, as another tab mid-refresh does.
+    const occupy = () => {
+        const { promise, resolve } = Promise.withResolvers<void>();
+
+        locks.request(`authup:${CookieName.REFRESH_TOKEN}`, {}, () => promise);
+
+        return resolve;
+    };
+
+    return {
+        locks, 
+        released, 
+        occupy, 
+    };
 }
 
 function setLocks(locks: LockManagerStub | undefined) {
@@ -322,5 +389,89 @@ describe('core/store (refresh across tabs)', () => {
 
         expect(server.tokenRequests()).toHaveLength(1);
         expect(b.store.refreshToken).toEqual('rt-2');
+    });
+
+    it('presents the cookie\'s token when a tab slept through another tab\'s rotation', async () => {
+        const server = createServer();
+        const jar = createJar(EXPIRED_SEED);
+
+        setLocks(createLocks(jar).locks);
+
+        const sleeper = buildTab(server, jar);
+        const active = buildTab(server, jar);
+
+        await active.store.resolve();
+
+        // the access token lapsed by its maxAge while the sleeper was frozen
+        jar.delete(CookieName.ACCESS_TOKEN);
+        jar.delete(CookieName.ACCESS_TOKEN_EXPIRE_DATE);
+
+        await sleeper.store.resolve();
+
+        expect(server.tokenRequests()).toHaveLength(2);
+        expect(sleeper.store.refreshToken).toEqual('rt-3');
+        expect(jar.get(CookieName.REFRESH_TOKEN)).toEqual('rt-3');
+    });
+
+    it('presents nothing when a logout lands while waiting for the lock', async () => {
+        const server = createServer();
+        const jar = createJar(EXPIRED_SEED);
+        const { locks, occupy } = createLocks(jar);
+
+        setLocks(locks);
+
+        const tab = buildTab(server, jar, { hook: true });
+
+        let expired = 0;
+
+        tab.dispatcher.on(StoreDispatcherEventName.SESSION_EXPIRED, () => {
+            expired++;
+        });
+
+        const release = occupy();
+        const pending = tab.hook().refresh().catch(() => undefined);
+
+        await new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
+        await tab.store.logout();
+        release();
+        await pending;
+        await new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
+
+        expect(server.tokenRequests()).toHaveLength(0);
+        expect(expired).toEqual(0);
+        expect(tab.store.refreshToken).toBeNull();
+    });
+
+    it('does not wait on its own lock when the refresh is refused with a plain 401', async () => {
+        const server = createServer();
+        // A held access token enables the hook on the shared client, and a
+        // failed revalidation makes the store refresh through that client.
+        const jar = createJar({
+            ...EXPIRED_SEED,
+            [CookieName.ACCESS_TOKEN]: 'at-1',
+            [CookieName.ACCESS_TOKEN_EXPIRE_DATE]: new Date(Date.now() + 3600 * 1000).toISOString(),
+        });
+
+        setLocks(createLocks(jar).locks);
+
+        const tab = buildTab(server, jar, { hook: true, sharedClient: true });
+
+        server.refuseIntrospection();
+        server.refuseTokens();
+
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+
+        try {
+            const pending = expect(tab.store.resolve()).rejects.toThrow();
+
+            await vi.advanceTimersByTimeAsync(REFRESH_LOCK_WAIT_MS);
+            await pending;
+        } finally {
+            vi.useRealTimers();
+        }
     });
 });
