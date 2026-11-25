@@ -7,6 +7,7 @@
 
 import {
     DBody,
+    DConsumes,
     DContext,
     DController,
     DDelete,
@@ -14,6 +15,7 @@ import {
     DPath,
     DPost,
     DPut,
+    DReturns,
     DStatus,
     DTags,
 } from '@routup/decorators';
@@ -69,6 +71,7 @@ export type RealmControllerContext = {
 };
 
 @DTags('realm')
+@DConsumes('application/json', 'application/x-www-form-urlencoded')
 @DController('/realms')
 export class RealmController {
     protected options: RealmControllerOptions;
@@ -299,6 +302,8 @@ export class RealmController {
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
+    @DStatus(201)
+    @DReturns<EntityRecordResponse<Realm>>(202)
     async put(
         @DPath('id') id: string,
         @DBody() data: RealmSavePayload,

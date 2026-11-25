@@ -19,6 +19,7 @@ import { EntityType } from '@authup/core-kit';
 import { serializeError } from '@authup/errors';
 import {
     DBody,
+    DConsumes,
     DContext,
     DController,
     DDelete,
@@ -26,6 +27,7 @@ import {
     DPath,
     DPost,
     DPut,
+    DReturns,
     DStatus,
     DTags,
 } from '@routup/decorators';
@@ -58,6 +60,7 @@ export type PolicyControllerContext = {
 };
 
 @DTags('policy')
+@DConsumes('application/json', 'application/x-www-form-urlencoded')
 @DController(['/policies', '/realms/:realmId/policies'])
 export class PolicyController {
     protected service: IPolicyService;
@@ -182,6 +185,8 @@ export class PolicyController {
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
+    @DStatus(201)
+    @DReturns<EntityRecordResponse<PolicyResponse>>(202)
     async replace(
         @DPath('id') id: string,
         @DBody() data: PolicySavePayload,

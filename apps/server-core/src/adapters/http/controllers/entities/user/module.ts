@@ -7,6 +7,7 @@
 
 import {
     DBody,
+    DConsumes,
     DContext,
     DController,
     DDelete,
@@ -14,6 +15,7 @@ import {
     DPath,
     DPost,
     DPut,
+    DReturns,
     DStatus,
     DTags,
 } from '@routup/decorators';
@@ -52,6 +54,7 @@ export type UserControllerContext = {
 };
 
 @DTags('user')
+@DConsumes('application/json', 'application/x-www-form-urlencoded')
 @DController(['/users', '/realms/:realmId/users'])
 export class UserController {
     protected service: IUserService;
@@ -160,6 +163,8 @@ export class UserController {
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
+    @DStatus(201)
+    @DReturns<EntityRecordResponse<User>>(202)
     async put(
         @DPath('id') id: string,
         @DBody() data: UserSavePayload,

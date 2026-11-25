@@ -35,6 +35,8 @@ export const TranslatorTranslationErrorFrench : NamespaceTranslations<`${ErrorCo
     [ErrorCode.IDENTITY_PROVIDER_ACCOUNT_ALREADY_LINKED]: 'Ce compte externe est déjà lié à un autre utilisateur.',
     [ErrorCode.IDENTITY_PROVIDER_ACCOUNT_UNLINK_BLOCKED]: "C'est le dernier moyen de connexion de ce compte. Définissez un mot de passe avant de le déconnecter.",
 
+    [ErrorCode.UNSUPPORTED_MEDIA_TYPE]: 'Le corps de la requête a un format que cette action n\'accepte pas.',
+
     [ErrorCode.STORAGE_INSUFFICIENT]: 'L\'espace de stockage disponible est insuffisant pour effectuer cette action.',
 
     [ErrorCode.JWK_INVALID]: 'La clé web JSON est invalide.',

@@ -35,6 +35,8 @@ export const TranslatorTranslationErrorEnglish : NamespaceTranslations<`${ErrorC
     [ErrorCode.IDENTITY_PROVIDER_ACCOUNT_ALREADY_LINKED]: 'This external account is already connected to another user.',
     [ErrorCode.IDENTITY_PROVIDER_ACCOUNT_UNLINK_BLOCKED]: 'This is the last way to sign in to this account. Set a password before disconnecting it.',
 
+    [ErrorCode.UNSUPPORTED_MEDIA_TYPE]: 'The request body has a format this action does not accept.',
+
     [ErrorCode.STORAGE_INSUFFICIENT]: 'There is not enough storage available to complete this action.',
 
     [ErrorCode.JWK_INVALID]: 'The JSON web key is invalid.',

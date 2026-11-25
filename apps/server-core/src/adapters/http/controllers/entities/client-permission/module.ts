@@ -7,6 +7,7 @@
 
 import {
     DBody,
+    DConsumes,
     DContext,
     DController,
     DDelete,
@@ -41,6 +42,7 @@ export type ClientPermissionControllerContext = {
 };
 
 @DTags('client')
+@DConsumes('application/json', 'application/x-www-form-urlencoded')
 @DController('/client-permissions')
 export class ClientPermissionController {
     protected service: IClientPermissionService;

@@ -35,6 +35,8 @@ export const TranslatorTranslationErrorGerman : NamespaceTranslations<`${ErrorCo
     [ErrorCode.IDENTITY_PROVIDER_ACCOUNT_ALREADY_LINKED]: 'Dieses externe Konto ist bereits mit einem anderen Benutzer verknüpft.',
     [ErrorCode.IDENTITY_PROVIDER_ACCOUNT_UNLINK_BLOCKED]: 'Dies ist die letzte Anmeldemöglichkeit für dieses Konto. Lege zuerst ein Passwort fest.',
 
+    [ErrorCode.UNSUPPORTED_MEDIA_TYPE]: 'Der Inhalt der Anfrage hat ein Format, das diese Aktion nicht akzeptiert.',
+
     [ErrorCode.STORAGE_INSUFFICIENT]: 'Es ist nicht genügend Speicherplatz verfügbar, um diese Aktion auszuführen.',
 
     [ErrorCode.JWK_INVALID]: 'Der JSON Web Key ist ungültig.',

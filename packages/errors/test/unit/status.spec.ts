@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { ErrorCode, httpStatusFromCode } from '../../src/index.ts';
+import { ErrorCode, codeFromHttpStatus, httpStatusFromCode } from '../../src/index.ts';
 
 describe('src/status', () => {
     it('should serve an upstream failure as a bad gateway', () => {
@@ -28,6 +28,11 @@ describe('src/status', () => {
         ErrorCode.IDENTITY_UNAUTHORIZED,
     ])('should serve %s as unauthorized', (code) => {
         expect(httpStatusFromCode(code)).toEqual(401);
+    });
+
+    it('should round-trip an unsupported media type as 415', () => {
+        expect(codeFromHttpStatus(415)).toEqual(ErrorCode.UNSUPPORTED_MEDIA_TYPE);
+        expect(httpStatusFromCode(ErrorCode.UNSUPPORTED_MEDIA_TYPE)).toEqual(415);
     });
 
     it('should serve a throttled device verification as too many requests', () => {

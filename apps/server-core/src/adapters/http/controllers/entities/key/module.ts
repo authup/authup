@@ -7,6 +7,7 @@
 
 import {
     DBody,
+    DConsumes,
     DContext,
     DController,
     DDelete,
@@ -49,6 +50,7 @@ export type KeyControllerContext = {
 };
 
 @DTags('key')
+@DConsumes('application/json', 'application/x-www-form-urlencoded')
 @DController(['/keys', '/realms/:realmId/keys'])
 export class KeyController {
     protected service: IKeyService;

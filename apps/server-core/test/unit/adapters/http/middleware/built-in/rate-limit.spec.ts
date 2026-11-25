@@ -8,7 +8,13 @@
 import { UnauthorizedError } from '@authup/errors';
 import { JWTError, OAuth2ClientError } from '@authup/specs';
 import { App, defineCoreHandler } from 'routup';
-import { describe, expect, it } from 'vitest';
+import {
+    afterEach,
+    describe,
+    expect,
+    it,
+    vi,
+} from 'vitest';
 import { registerErrorMiddleware } from '../../../../../../src/adapters/http/middleware/built-in/error.ts';
 import {
     RATE_LIMIT_FAILED_AUTHENTICATION_MAX,
@@ -265,6 +271,83 @@ describe('registerRateLimitMiddleware', () => {
         }
 
         expect(statuses.every((status) => status === 401)).toBeTruthy();
+    });
+});
+
+describe('registerRateLimitMiddleware across a window reset', () => {
+    const FORGED_TOKEN = { authorization: 'Bearer forged', 'x-fail': '1' };
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    // The first stage with a route that holds a successful response open
+    // until `release` is called, so it completes in a later window than the
+    // one that counted it.
+    function createHoldingApp() {
+        const { promise: held, resolve: reached } = Promise.withResolvers<void>();
+        const { promise: released, resolve: release } = Promise.withResolvers<void>();
+
+        const app = new App();
+
+        registerRateLimitMiddleware(app);
+        app.get('/authorize/info', defineCoreHandler(async (event) => {
+            if (event.request.headers.get('x-hold')) {
+                reached();
+                await released;
+
+                return 'ok';
+            }
+
+            if (event.request.headers.get('x-fail')) {
+                throw JWTError.invalid();
+            }
+
+            return 'ok';
+        }));
+        registerErrorMiddleware(app);
+
+        return {
+            app,
+            held,
+            release,
+        };
+    }
+
+    it('should not refund a successful response of an ended window into the new one', async () => {
+        // Only the window timer and the clock are faked: the store resets its
+        // window on `setInterval`, and the reset header reads `Date`.
+        vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+
+        const ip = '203.0.113.20';
+        const {
+            app,
+            held,
+            release,
+        } = createHoldingApp();
+
+        const pending = app.fetch(createRequest(ip, { 'x-hold': '1' }));
+
+        await held;
+
+        vi.advanceTimersByTime(60 * 1000);
+
+        for (let i = 0; i < RATE_LIMIT_FAILED_AUTHENTICATION_MAX; i++) {
+            const response = await app.fetch(createRequest(ip, FORGED_TOKEN));
+
+            expect(response.status).toEqual(401);
+        }
+
+        release();
+
+        const response = await pending;
+
+        expect(response.status).toEqual(200);
+        // the quota the new window has left, not what the ended one had
+        expect(response.headers.get('ratelimit-remaining')).toEqual('0');
+
+        // the new window's failures still count in full
+        expect((await app.fetch(createRequest(ip, FORGED_TOKEN))).status).toEqual(429);
     });
 });
 

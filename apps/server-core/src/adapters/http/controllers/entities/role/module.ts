@@ -7,6 +7,7 @@
 
 import {
     DBody,
+    DConsumes,
     DContext,
     DController,
     DDelete,
@@ -14,6 +15,7 @@ import {
     DPath,
     DPost,
     DPut,
+    DReturns,
     DStatus,
     DTags,
 } from '@routup/decorators';
@@ -47,6 +49,7 @@ export type RoleControllerContext = {
 };
 
 @DTags('role')
+@DConsumes('application/json', 'application/x-www-form-urlencoded')
 @DController('/roles')
 export class RoleController {
     protected service: IRoleService;
@@ -115,6 +118,8 @@ export class RoleController {
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
+    @DStatus(201)
+    @DReturns<EntityRecordResponse<Role>>(202)
     async put(
         @DPath('id') id: string,
         @DBody() data: RoleSavePayload,

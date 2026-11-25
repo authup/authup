@@ -7,6 +7,7 @@
 
 import {
     DBody,
+    DConsumes,
     DContext,
     DController,
     DDelete,
@@ -40,6 +41,7 @@ export type ClientScopeControllerContext = {
 };
 
 @DTags('client', 'scope')
+@DConsumes('application/json', 'application/x-www-form-urlencoded')
 @DController('/client-scopes')
 export class ClientScopeController {
     protected service: IClientScopeService;

@@ -508,14 +508,14 @@ Controller conventions:
 - Body parameter type is the concrete payload type (`@DBody() data: RoleCreatePayload`): sourced from `@authup/core-http-kit`. Naming convention: `<Entity>CreatePayload` for POST, `<Entity>UpdatePayload` for POST `/:id`, `<Entity>SavePayload` for PUT `/:id`. Response shapes that genuinely diverge from the domain entity (e.g. `PolicyResponse`, `RegisterResponse`, `PasswordForgotResponse`) keep a named alias; trivial passthrough aliases are not introduced.
 - **No business logic**: no permission checks, no validation, no entity manipulation
 - Read the routup event via `@DContext() event: IAppEvent`
-- Read the body via `@DBody() data: <RequestType>` (decorator awaits `readRequestBody` internally)
+- Read the body via `@DBody() data: <RequestType>`. A body-taking entity controller carries class-level `@DConsumes` (json, urlencoded; 415 otherwise, #3916); browser-facing workflow controllers carry none
 - Read query via `useRequestQuery(event)` from `@routup/basic/query`
 - A method that decodes one additionally carries `@DQuerySchema(<EntityType>, 'collection' | 'record' | 'filters')` next to its `@DGet` (or its `@DDelete`, for the two bulk revokes). It is a build-time marker with no runtime effect, and it is what puts the endpoint's query parameters into the OpenAPI document; a `describeQuerySchema` call in an unmarked method fails the build. See *Query vocabulary discovery*.
 - Read path params via `@DPath('id') id: string` or `event.params.id`
 - Build actor via `buildActorContext(event)`
 - For realm-scoped writes (create / update / save) on controllers that are dual-mounted at `/realms/:realmId/<entity>`, call `applyRouteRealmIDToBody(event, data)` before delegating: route realm wins silently over body realm. For realm-scoped reads, pass `getRequestRealmID(event)` as the realm key argument. See *Realm Scoping Model → Nested Route Mounting*.
 - Delegate all work to `this.service.*()` methods
-- A method that always answers a non-200 status declares it with `@DStatus(201)` / `@DStatus(202)`, which also documents the return type under that status. Set `event.response.status` only when the status depends on the outcome (a `PUT` upsert answers `created ? 201 : 202`); a status the method sets differs from the default and wins over the decorator, so such a method carries no `@DStatus`. Never use `sendCreated`/`sendAccepted` because they erase the typed return value that trapi extracts.
+- A method that always answers a non-200 status declares it with `@DStatus(201)` / `@DStatus(202)`, which also documents the return type under that status. Set `event.response.status` only when the status depends on the outcome (a `PUT` upsert answers `created ? 201 : 202`); the method's status wins at runtime, so it documents both with `@DStatus(201)` + `@DReturns<...>(202)`. Never use `sendCreated`/`sendAccepted` because they erase the typed return value that trapi extracts.
 
 Exceptions where controllers retain some logic:
 - **Self-access resolution** (client, user): Resolve `@me`/`@self` tokens to actual IDs before delegating

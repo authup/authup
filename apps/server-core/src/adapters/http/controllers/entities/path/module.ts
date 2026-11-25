@@ -7,6 +7,7 @@
 
 import {
     DBody,
+    DConsumes,
     DContext,
     DController,
     DDelete,
@@ -49,6 +50,7 @@ export type PathControllerContext = {
 };
 
 @DTags('path')
+@DConsumes('application/json', 'application/x-www-form-urlencoded')
 @DController(['/paths', '/realms/:realmId/paths'])
 export class PathController {
     protected service: IPathService;
