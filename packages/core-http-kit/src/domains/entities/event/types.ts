@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { QueryBuildInput } from '@rapiq/core';
 import type { EntityQueryInput } from '../../../helpers/index.ts';
 import type {
     Event,
@@ -83,4 +84,14 @@ export interface IEventAPI extends IEntitySchemaAPI,
     getMany(data?: EntityQueryInput<Event>, options?: APIRequestOptions): Promise<EntityCollectionResponse<Event>>;
 
     getOne(id: Event['id'], record?: EntityQueryInput<Event>, options?: APIRequestOptions): Promise<EntityRecordResponse<Event>>;
+
+    getFeed(data?: EntityQueryInput<Event>, options?: APIRequestOptions): Promise<EntityCollectionResponse<Event>>;
 }
+
+export type EventFeedDrainOptions = {
+    cursor?: string | null,
+    limit?: number,
+    filters?: Pick<QueryBuildInput<Event>, 'filters'>['filters'],
+    handle: (events: Event[]) => Promise<void>,
+    signal?: AbortSignal,
+};
