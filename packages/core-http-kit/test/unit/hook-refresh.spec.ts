@@ -7,7 +7,7 @@
 
 import type { TransportRequest } from 'hapic';
 import { describe, expect, it } from 'vitest';
-import { Client, ClientAuthenticationHook } from '../../src/index.ts';
+import { Client, ClientAuthenticationHook, ClientAuthenticationHookEventName } from '../../src/index.ts';
 import type { ClientOptions } from '../../src/index.ts';
 
 type Transport = NonNullable<ClientOptions['transport']>;
@@ -85,12 +85,13 @@ function tokenGranted(accessToken: string) : Answer {
  * The token creator posts /token on the very client the hook is
  * attached to, which is the shape that used to deadlock.
  */
-function createHookedClient(handler: Handler) {
+function createHookedClient(handler: Handler, options: { retry?: boolean } = {}) {
     const { transport, requests } = createTransport(handler);
     const client = new Client({ baseURL: 'http://fake.test/', transport });
 
     const hook = new ClientAuthenticationHook({
         timer: false,
+        ...options,
         tokenCreator: () => client.token.createWithRefreshToken({ refresh_token: 'rt' }),
     });
 
@@ -196,5 +197,67 @@ describe('src/hook (refresh on the hooked client)', () => {
         expect(await settlesWithin(first, 1000)).toEqual('resolved');
         expect(await settlesWithin(second, 1000)).toEqual('resolved');
         expect(requests.filter(isTokenRequest)).toHaveLength(1);
+    });
+});
+
+describe('src/hook (retry disabled)', () => {
+    function createNonRetryingClient(answer: Answer) {
+        const context = createHookedClient(
+            (request) => (isTokenRequest(request) ? tokenGranted('at-1') : answer),
+            { retry: false },
+        );
+
+        const events : string[] = [];
+
+        context.hook.on(ClientAuthenticationHookEventName.REFRESH_FAILED, () => {
+            events.push('refreshFailed');
+        });
+        context.hook.on(ClientAuthenticationHookEventName.HEADER_UNSET, () => {
+            events.push('headerUnset');
+        });
+
+        return { ...context, events };
+    }
+
+    it.each([
+        ['a jwt code', TOKEN_EXPIRED],
+        ['a plain 401', { status: 401, body: { message: 'Unauthorized' } }],
+    ])('should reject a request answered with %s without refreshing', async (_, answer) => {
+        const {
+            client,
+            requests,
+            events,
+        } = createNonRetryingClient(answer);
+
+        await expect(client.realm.getMany()).rejects.toMatchObject({ response: { status: 401 } });
+
+        expect(requests.filter(isTokenRequest)).toHaveLength(0);
+        expect(events).toEqual([]);
+        expect(client.getAuthorizationHeader()).toEqual('Bearer at-0');
+    });
+
+    it('should reject a 403 sent without a bearer without refreshing', async () => {
+        const { client, requests } = createNonRetryingClient({
+            status: 403,
+            body: { message: 'Forbidden' },
+        });
+
+        client.unsetAuthorizationHeader();
+
+        await expect(client.realm.getMany()).rejects.toMatchObject({ response: { status: 403 } });
+
+        expect(requests.filter(isTokenRequest)).toHaveLength(0);
+    });
+
+    it('should reject a request answered with a jwk code without unsetting the header', async () => {
+        const { client, events } = createNonRetryingClient({
+            status: 404,
+            body: { code: 'jwk_not_found', message: 'The key was not found.' },
+        });
+
+        await expect(client.realm.getMany()).rejects.toMatchObject({ response: { status: 404 } });
+
+        expect(events).toEqual([]);
+        expect(client.getAuthorizationHeader()).toEqual('Bearer at-0');
     });
 });

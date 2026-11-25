@@ -82,8 +82,9 @@ function buildApp(transport: Transport, options: { shared?: boolean } = {}) {
         cookieUnset: noop,
     });
 
-    // A server render restores the session from the cookies before the hook
-    // installs, which is what turns the hook on.
+    // The session is restored from the cookies before the hook installs,
+    // which is what turns the hook on. A browser install: the hook retries
+    // a 401 only there (#3924), and without an expiry date it arms no timer.
     const store = injectStore(pinia, app);
 
     store.accessToken = 'at-1';
@@ -92,13 +93,13 @@ function buildApp(transport: Transport, options: { shared?: boolean } = {}) {
     installHTTPClientAuthenticationHook(app, {
         httpClient,
         pinia,
-        isServer: true,
+        isServer: false,
     });
 
     installHTTPClient(app, {
         httpClient,
         pinia,
-        isServer: true,
+        isServer: false,
     });
 
     return {

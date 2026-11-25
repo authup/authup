@@ -55,6 +55,7 @@ export class ClientAuthenticationHook extends EventEmitter<{
         this.clients = [];
 
         options.timer ??= true;
+        options.retry ??= true;
         this.options = options;
 
         this.creator = options.tokenCreator;
@@ -116,7 +117,7 @@ export class ClientAuthenticationHook extends EventEmitter<{
                 [HOOK_SYMBOL]: client.on(
                     HookName.RESPONSE_ERROR,
                     (err) => {
-                        if (!this.isActive) {
+                        if (!this.isActive || !this.options.retry) {
                             return Promise.reject(err);
                         }
 
