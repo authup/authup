@@ -51,6 +51,9 @@ export enum ErrorCode {
     IDENTITY_PROVIDER_ACCOUNT_ALREADY_LINKED = 'identity_provider_account_already_linked',
     IDENTITY_PROVIDER_ACCOUNT_UNLINK_BLOCKED = 'identity_provider_account_unlink_blocked',
 
+    // Request Codes
+    UNSUPPORTED_MEDIA_TYPE = 'unsupported_media_type',
+
     // Storage Codes
     STORAGE_INSUFFICIENT = 'storage_insufficient',
 

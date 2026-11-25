@@ -35,6 +35,8 @@ export const TranslatorTranslationErrorSpanish : NamespaceTranslations<`${ErrorC
     [ErrorCode.IDENTITY_PROVIDER_ACCOUNT_ALREADY_LINKED]: 'Esta cuenta externa ya está vinculada a otro usuario.',
     [ErrorCode.IDENTITY_PROVIDER_ACCOUNT_UNLINK_BLOCKED]: 'Es la última forma de iniciar sesión en esta cuenta. Establezca una contraseña antes de desconectarla.',
 
+    [ErrorCode.UNSUPPORTED_MEDIA_TYPE]: 'El cuerpo de la solicitud tiene un formato que esta acción no acepta.',
+
     [ErrorCode.STORAGE_INSUFFICIENT]: 'No hay suficiente almacenamiento disponible para completar esta acción.',
 
     [ErrorCode.JWK_INVALID]: 'La clave web JSON no es válida.',

@@ -54,6 +54,9 @@ export const ERROR_CODE_TO_STATUS: Readonly<Partial<Record<`${ErrorCode}`, numbe
     // 409
     [ErrorCode.ENTITY_CONFLICT]: 409,
 
+    // 415
+    [ErrorCode.UNSUPPORTED_MEDIA_TYPE]: 415,
+
     // 429
     [ErrorCode.LOGIN_ATTEMPT_THROTTLED]: 429,
     [ErrorCode.MFA_ATTEMPT_THROTTLED]: 429,
@@ -105,6 +108,10 @@ export function codeFromHttpStatus(status: number): ErrorCode {
 
     if (status === 403) {
         return ErrorCode.PERMISSION_DENIED;
+    }
+
+    if (status === 415) {
+        return ErrorCode.UNSUPPORTED_MEDIA_TYPE;
     }
 
     if (status === 429) {
