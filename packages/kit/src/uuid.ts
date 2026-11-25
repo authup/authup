@@ -42,8 +42,9 @@ function randomCounter() : number {
 
 /**
  * RFC 9562 UUIDv7 (method 1): ids minted in one process sort in creation order,
- * also within one millisecond. Only the clock is clamped against going back;
- * an explicit timestamp is taken as given.
+ * also within one millisecond. A repeated timestamp continues the stored one,
+ * which is clamped ahead of it once the counter overflowed. Only the clock is
+ * clamped against going back; an explicit timestamp is taken as given.
  */
 export function createUUIDv7(timestamp?: number) : string {
     const tail = crypto.getRandomValues(new Uint8Array(8));

@@ -5,7 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { describe, expect, it } from 'vitest';
+import {
+    afterEach,
+    describe,
+    expect,
+    it,
+    vi,
+} from 'vitest';
 import { buildUUIDv7LowerBound, createUUIDv7, isUUID } from '../../src/index.ts';
 
 describe('isUUID', () => {
@@ -72,6 +78,37 @@ describe('createUUIDv7', () => {
         expect(new Set(ids).size).toBe(10000);
         expect([...ids].sort()).toEqual(ids);
         expect(prefix(ids[ids.length - 1]) > prefix(ids[0])).toBe(true);
+    });
+
+    describe('without a timestamp', () => {
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        it('stays ordered across a burst beyond the counter in one millisecond', () => {
+            vi.spyOn(Date, 'now').mockReturnValue(0x0190_7000_0000);
+
+            const ids = Array.from({ length: 5000 }, () => createUUIDv7());
+
+            expect(new Set(ids).size).toBe(5000);
+            expect([...ids].sort()).toEqual(ids);
+        });
+
+        it('stays ordered when the clock steps back', () => {
+            const now = vi.spyOn(Date, 'now');
+
+            now.mockReturnValue(0x0190_8000_0000);
+
+            const first = createUUIDv7();
+
+            now.mockReturnValue(0x0190_8000_0000 - 5000);
+
+            const second = createUUIDv7();
+            const third = createUUIDv7();
+
+            expect(first < second).toBe(true);
+            expect(second < third).toBe(true);
+        });
     });
 
     it('is increasing across milliseconds', () => {
