@@ -117,7 +117,7 @@ export class ClientAuthenticationHook extends EventEmitter<{
                 [HOOK_SYMBOL]: client.on(
                     HookName.RESPONSE_ERROR,
                     (err) => {
-                        if (!this.isActive) {
+                        if (!this.isActive || !this.options.retry) {
                             return Promise.reject(err);
                         }
 
@@ -149,10 +149,6 @@ export class ClientAuthenticationHook extends EventEmitter<{
                                 );
                             }
 
-                            return Promise.reject(err);
-                        }
-
-                        if (!this.options.retry) {
                             return Promise.reject(err);
                         }
 

@@ -248,4 +248,16 @@ describe('src/hook (retry disabled)', () => {
 
         expect(requests.filter(isTokenRequest)).toHaveLength(0);
     });
+
+    it('should reject a request answered with a jwk code without unsetting the header', async () => {
+        const { client, events } = createNonRetryingClient({
+            status: 404,
+            body: { code: 'jwk_not_found', message: 'The key was not found.' },
+        });
+
+        await expect(client.realm.getMany()).rejects.toMatchObject({ response: { status: 404 } });
+
+        expect(events).toEqual([]);
+        expect(client.getAuthorizationHeader()).toEqual('Bearer at-0');
+    });
 });
