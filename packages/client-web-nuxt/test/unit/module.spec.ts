@@ -79,7 +79,9 @@ describe('module', () => {
         await module({}, createNuxt() as unknown as Nuxt);
 
         expect(addServerHandler).toHaveBeenCalledWith({
-            handler: './runtime/server/middleware/render-defer',
+            // the builder-agnostic `nuxt/server` API: nitro 2, nitro 3 and the
+            // vite server builder all run it
+            handler: { nuxt: './runtime/server/middleware/render-defer' },
             middleware: true,
         });
     });

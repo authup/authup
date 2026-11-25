@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { defineEventHandler, getCookie } from 'h3';
-import { useRuntimeConfig } from '#imports';
+import { defineHandler, getCookie, useRuntimeConfig } from 'nuxt/server';
 import { shouldDeferRender } from '../../helpers/render-defer';
 import type { RuntimeOptions } from '../../types';
 
@@ -15,7 +14,7 @@ import type { RuntimeOptions } from '../../types';
  * session (#3925). It reads cookies and writes nothing, so the refresh-token
  * cookie the browser holds stays the one it will present.
  */
-export default defineEventHandler((event) => {
+export default defineHandler((event) => {
     const options = useRuntimeConfig().public.authup as RuntimeOptions | undefined;
     const prefix = options?.cookiePrefix || '';
 

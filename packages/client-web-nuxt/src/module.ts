@@ -88,7 +88,7 @@ export default defineNuxtModule<ModuleOptions>({
         // server never refreshes (#3925), the browser does it under its
         // cross-tab lock.
         addServerHandler({
-            handler: resolver.resolve('./runtime/server/middleware/render-defer'),
+            handler: { nuxt: resolver.resolve('./runtime/server/middleware/render-defer') },
             middleware: true,
         });
     },

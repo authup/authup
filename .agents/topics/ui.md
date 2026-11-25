@@ -186,6 +186,10 @@ presented twice, so a refresh must be the only one using its token.
   `render-defer` server middleware sets `event.context.nuxt.noSSR` when a
   refresh token is present and the access token is missing or within 30s of
   expiry, and the interceptor's server pass applies no guard while RESTORING.
+  The middleware is written against `nuxt/server` and registered as the `nuxt`
+  server-API variant, so nitro 2 and nitro 3 run it without an h3 dependency.
+  The experimental vite server builder runs no server middleware; there only
+  the interceptor's deferral applies.
   Rejected: a server render without a session, which loads protected data
   anonymously, can land on Nuxt's error page and hydrates anonymous verdicts.
 - **Every browser refresh goes through `acquireTokenGrant`** (store
