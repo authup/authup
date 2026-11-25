@@ -127,11 +127,12 @@ describe('src/http/controllers/entities/event', () => {
                 scope: EventScope.ENTITY,
                 refType: 'user',
                 name: EventName.CREATED,
+                refId: [first.id, second.id],
             },
             sort: { id: 'ASC' },
         });
 
-        expect(data.length).toBeGreaterThanOrEqual(2);
+        expect(data).toHaveLength(2);
         expect(data.every((row) => row.id[14] === '7')).toBe(true);
 
         const refs = data.map((row) => row.refId);
