@@ -148,3 +148,29 @@ Two consequences to plan for:
   browser closes, and the bare `access_token` pair carries the access token's
   own lifetime, 15 minutes by default. Clear them for the domain by hand if
   you would rather not wait.
+
+## Server rendering and token refresh
+
+The server never refreshes a token. A refresh rotates the refresh token, and
+two server renders of one browser session (two restored tabs, a prefetch next
+to a navigation) would both present the same one. With strict replay
+detection, the second use revokes the session and the user is signed out.
+
+Instead, a request whose access token is missing or about to expire, while a
+refresh token is still there, is rendered client-only. The browser refreshes
+first, then the route middleware runs its checks, so the user stays signed in
+and is never sent to the login route because of it. This happens once after
+the access token expired, for example when a user comes back to the app after
+a while. Every other request renders on the server as before.
+
+In the browser, every refresh holds a [Web Lock](https://developer.mozilla.org/docs/Web/API/Web_Locks_API)
+shared by all tabs of the origin. A tab that waited for another tab's refresh
+picks up the rotated tokens from the cookies instead of presenting its own
+refresh token again.
+
+Two cases stay outside the lock: a browser without the Web Locks API, and apps
+on different subdomains that share the session cookies through
+`cookieDomain`, since a lock is held per origin. For those, give the server a
+short [`tokenRefreshGracePeriod`](../../../guide/deployment/configuration-server-core.md),
+for example `10` seconds, so a refresh token reused right after its rotation
+is accepted instead of being treated as a replay.
