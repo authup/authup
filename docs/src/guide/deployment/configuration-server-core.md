@@ -476,7 +476,10 @@ export default {
         /**
          * Grace period (seconds) during which a just-rotated refresh token is
          * still accepted, minting new chain-linked tokens instead of triggering
-         * replay detection. Absorbs multi-tab / mobile refresh races.
+         * replay detection. Absorbs multi-tab / mobile refresh races. A few
+         * seconds (e.g. 10) suit apps whose clients refresh outside one
+         * browser lock: apps sharing a session across subdomains, or
+         * browsers without the Web Locks API.
          * env: TOKEN_REFRESH_GRACE_PERIOD
          * default: 0 (strict: first-use-wins)
          */

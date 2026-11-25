@@ -27,7 +27,9 @@ export function installHTTPClientAuthenticationHook(
 
     const { refreshToken } = storeToRefs(store);
 
-    let refreshTokenInUse : string | null = null;
+    // Whether the last acquisition wrote its grant to the store. A refresh
+    // is single-flight in the hook, so one slot is enough.
+    let refreshApplied = false;
 
     // Never the client the hook is attached to: a 401 from `/token` would
     // wait on the very refresh it belongs to. A client function answers a
@@ -44,16 +46,24 @@ export function installHTTPClientAuthenticationHook(
     };
 
     const hook = new ClientAuthenticationHook({
-        tokenCreator: () => {
+        tokenCreator: async () => {
             if (!refreshToken.value) {
                 throw new Error('No refresh token available.');
             }
 
-            refreshTokenInUse = refreshToken.value;
+            // Through the store's locked acquisition, so a timer or a 401 in
+            // one tab never presents a token another tab already rotated
+            // (#3925). The store writes the grant itself, inside the lock,
+            // and drops (and revokes) one a logout or a newer session
+            // overtook while it was in flight.
+            const { response, applied } = await store.acquireTokenGrant(
+                refreshToken.value,
+                (token) => buildClient().token.createWithRefreshToken({ refresh_token: token }),
+            );
 
-            const client = buildClient();
+            refreshApplied = applied;
 
-            return client.token.createWithRefreshToken({ refresh_token: refreshTokenInUse });
+            return response;
         },
         timer: !options.isServer,
         // A server render cannot persist a rotated refresh token once its
@@ -66,48 +76,27 @@ export function installHTTPClientAuthenticationHook(
 
     const storeDispatcher = injectStoreDispatcher(app);
 
-    hook.on(ClientAuthenticationHookEventName.REFRESH_FINISHED, (response) => {
-        // Drop a stale refresh: when the store's refresh token changed while
-        // the grant was in flight (a logout tore the session down, or an
-        // interactive login/exchange replaced it), applying the response
-        // would resurrect torn-down state or overwrite the new session's
-        // tokens with the old session's.
-        if (
-            refreshTokenInUse === null ||
-            store.refreshToken !== refreshTokenInUse
-        ) {
-            // The hook already applied the stale response to itself (header +
-            // timer) — re-sync it from the store's current state so attached
-            // clients never keep the dropped session's bearer.
-            handleAccessTokenEvent();
-            handleAccessTokenExpireDateEvent();
-
-            // The dropped grant's tokens were never written to the store, so
-            // no later logout() could reach them — revoke them best-effort
-            // instead of orphaning a live server session.
-            const client = buildClient();
-
-            Promise.resolve()
-                .then(() => client.token.revoke({ token: response.access_token }))
-                .catch(() => { /* best-effort */ });
-
-            if (response.refresh_token) {
-                const refresh = response.refresh_token;
-
-                Promise.resolve()
-                    .then(() => client.token.revoke({ token: refresh }))
-                    .catch(() => { /* best-effort */ });
-            }
-
+    hook.on(ClientAuthenticationHookEventName.REFRESH_FINISHED, () => {
+        if (refreshApplied) {
             return;
         }
 
-        store.applyTokenGrantResponse(response);
+        // The store dropped the grant, but the hook already applied it to
+        // itself (header + timer): re-sync it from the store's current state
+        // so attached clients never keep the dropped session's bearer.
+        handleAccessTokenEvent();
+        handleAccessTokenExpireDateEvent();
     });
 
     let isSelfCallee = false;
 
     hook.on(ClientAuthenticationHookEventName.HEADER_UNSET, () => {
+        // A refresh refused because the session already ended (a logout
+        // while it waited for the lock) is no involuntary expiry.
+        if (!store.accessToken && !store.refreshToken) {
+            return;
+        }
+
         if (!isSelfCallee) {
             // A background refresh failed (not a store-driven token clear):
             // tear the session down and signal an involuntary expiry so the

@@ -57,6 +57,7 @@
     },
     "peerDependencies": {
         "@pinia/nuxt": "*",
+        "nuxt": "^4.7.0",
         "pinia": "^4.1.0"
     },
     "keywords": [

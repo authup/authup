@@ -22,6 +22,7 @@ import type {
     OAuth2TokenIntrospectionResponse,
 } from '@authup/specs';
 import { REALM_MASTER_NAME } from '@authup/core-kit';
+import { CookieName } from '@authup/core-http-kit';
 import { extractErrorContext } from '../error/index.ts';
 import { buildHTTPClient } from '../http-client/build.ts';
 import { isServerRuntime } from '../hydration/value.ts';
@@ -29,11 +30,13 @@ import { StoreAuthOrigin, StoreAuthStatus } from './constants.ts';
 import { StoreDispatcherEventName } from './dispatcher/index.ts';
 import { StorePermissionEvaluator, createDenyAllPermissionEvaluator } from './permission-evaluator.ts';
 import { createStorePreferenceSync } from './preferences.ts';
+import { runWithRefreshLock } from './refresh-lock.ts';
 import type {
     RealmMinimal,
     StoreCreateContext,
     StoreLoginContext,
     StoreLogoutOptions,
+    StoreTokenGrantAcquisition,
     UserMinimal,
 } from './types.ts';
 
@@ -1040,6 +1043,132 @@ export function createStore(context: StoreCreateContext) {
 
     // --------------------------------------------------------------------
 
+    /**
+     * The grant another tab already rotated the presented token into, read
+     * from the shared cookies, or undefined when there is none to adopt.
+     */
+    const readCookieRefreshToken = () : string | undefined => {
+        const value = context.readCookie ?
+            context.readCookie(CookieName.REFRESH_TOKEN) :
+            undefined;
+
+        return typeof value === 'string' && value ? value : undefined;
+    };
+
+    /**
+     * The grant this instance holds, or undefined when it holds none.
+     */
+    const readCurrentGrant = () : OAuth2TokenGrantResponse | undefined => {
+        if (!accessToken.value || !refreshToken.value || !accessTokenExpireDate.value) {
+            return undefined;
+        }
+
+        return {
+            access_token: accessToken.value,
+            refresh_token: refreshToken.value,
+            expires_in: Math.max(1, Math.floor((new Date(accessTokenExpireDate.value).getTime() - Date.now()) / 1000)),
+            token_type: 'Bearer',
+        };
+    };
+
+    const readAdoptableGrant = (presented: string) : OAuth2TokenGrantResponse | undefined => {
+        if (!context.readCookie) {
+            return undefined;
+        }
+
+        const cookieRefreshToken = context.readCookie(CookieName.REFRESH_TOKEN);
+        const cookieAccessToken = context.readCookie(CookieName.ACCESS_TOKEN);
+        const cookieExpireDate = context.readCookie(CookieName.ACCESS_TOKEN_EXPIRE_DATE);
+
+        if (
+            typeof cookieRefreshToken !== 'string' ||
+            !cookieRefreshToken ||
+            cookieRefreshToken === presented ||
+            typeof cookieAccessToken !== 'string' ||
+            !cookieAccessToken ||
+            !cookieExpireDate
+        ) {
+            return undefined;
+        }
+
+        const expireTime = new Date(cookieExpireDate).getTime();
+
+        if (Number.isNaN(expireTime)) {
+            return undefined;
+        }
+
+        return {
+            access_token: cookieAccessToken,
+            refresh_token: cookieRefreshToken,
+            expires_in: Math.max(1, Math.floor((expireTime - Date.now()) / 1000)),
+            token_type: 'Bearer',
+        };
+    };
+
+    /**
+     * Turn a refresh token into a grant and apply it, holding the
+     * origin-wide refresh lock (#3925). A token another tab already rotated
+     * is adopted from the cookies instead of being presented again, which
+     * strict replay detection would answer by revoking the session. The
+     * grant is applied before the lock is released, so the next holder reads
+     * the rotated cookies.
+     */
+    const acquireTokenGrant = async (
+        presented: string,
+        exchange: (refreshToken: string) => Promise<OAuth2TokenGrantResponse>,
+    ) : Promise<StoreTokenGrantAcquisition> => {
+        // Captured before the wait: a logout while another holder refreshes
+        // must stop this one from presenting a token it already revoked.
+        const generation = tokenGeneration.value;
+
+        return runWithRefreshLock(async () => {
+            if (generation !== tokenGeneration.value) {
+                throw new OAuth2Error('The session was torn down before the token could be refreshed.');
+            }
+
+            // Another refresh of this instance landed while this one waited:
+            // its grant is the current one.
+            if (refreshToken.value !== presented) {
+                const current = readCurrentGrant();
+
+                if (!current) {
+                    throw new OAuth2Error('The session was torn down before the token could be refreshed.');
+                }
+
+                return { response: current, applied: true };
+            }
+
+            const adopted = readAdoptableGrant(presented);
+
+            // A tab that slept through another tab's rotation, after the
+            // access token lapsed, has nothing to adopt but must still never
+            // present its consumed token: the cookies hold the current one.
+            const response = adopted || await exchange(readCookieRefreshToken() || presented);
+
+            // Zombie-commit guard (same contract as commitSession): a logout
+            // that landed while the round-trip was in flight stays final, and
+            // a session that replaced this one keeps its tokens. The dropped
+            // grant was never written, so nothing else could revoke it. An
+            // adopted grant is the cookies' current session and never dropped.
+            if (
+                !adopted &&
+                (generation !== tokenGeneration.value || refreshToken.value !== presented)
+            ) {
+                await revokeStagedGrant(response);
+
+                return { response, applied: false };
+            }
+
+            if (generation !== tokenGeneration.value) {
+                return { response, applied: false };
+            }
+
+            applyTokenGrantResponse(response);
+
+            return { response, applied: true };
+        });
+    };
+
     const refreshSession = createPromiseShareWrapperFn(
         async (): Promise<void> => {
             if (!refreshToken.value) {
@@ -1048,10 +1177,13 @@ export function createStore(context: StoreCreateContext) {
 
             const generation = tokenGeneration.value;
 
-            let response : OAuth2TokenGrantResponse;
+            let acquisition : StoreTokenGrantAcquisition;
 
             try {
-                response = await client.token.createWithRefreshToken({ refresh_token: refreshToken.value });
+                acquisition = await acquireTokenGrant(
+                    refreshToken.value,
+                    (token) => client.token.createWithRefreshToken({ refresh_token: token }),
+                );
             } catch (e) {
                 // a cleanup() that interleaved with the round-trip already
                 // tore the state down — don't tear it down a second time.
@@ -1062,19 +1194,9 @@ export function createStore(context: StoreCreateContext) {
                 throw e;
             }
 
-            // Zombie-commit guard (same contract as commitSession): a logout
-            // that landed while the refresh round-trip was in flight stays
-            // final — the late grant is dropped and revoked best-effort (it
-            // was never written, so no later logout() could reach it).
-            if (generation !== tokenGeneration.value) {
-                await revokeStagedGrant(response);
-
+            if (!acquisition.applied && generation !== tokenGeneration.value) {
                 throw new OAuth2Error('The session was torn down before the token could be refreshed.');
             }
-
-            // marks the resolution stale: status stays authenticated,
-            // the next resolve() revalidates (awaited).
-            applyTokenGrantResponse(response);
         },
     );
 
@@ -1178,10 +1300,21 @@ export function createStore(context: StoreCreateContext) {
             return;
         }
 
+        // A server render never refreshes (#3925): two renders of one browser
+        // session would present the same refresh token and the second trips
+        // replay detection, and a rotated token written after the response is
+        // committed never reaches the browser. The store stays RESTORING and
+        // the browser refreshes after hydration.
+        const isServer = isServerRuntime();
+
         if (
             !accessToken.value &&
             refreshToken.value
         ) {
+            if (isServer) {
+                return;
+            }
+
             await refreshSession();
         }
 
@@ -1192,6 +1325,10 @@ export function createStore(context: StoreCreateContext) {
             try {
                 await revalidate();
             } catch (e) {
+                if (isServer && refreshToken.value) {
+                    return;
+                }
+
                 // a still-valid refresh token may recover the session
                 if (refreshToken.value) {
                     await refreshSession();
@@ -1380,6 +1517,7 @@ export function createStore(context: StoreCreateContext) {
         exchangeAuthorizationCode,
 
         applyTokenGrantResponse,
+        acquireTokenGrant,
         accessToken,
         accessTokenExpireDate,
         refreshToken,

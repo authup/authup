@@ -682,4 +682,4 @@ These are NOT loaded into every session. Before changing an area, read its file.
 - [topics/sessions.md](topics/sessions.md): Session Management API; Session continuity: one session per interactive login
 - [topics/mfa.md](topics/mfa.md): MFA: Authenticator Devices; Auth-Method Claims: amr / acr / step-up
 - [topics/key-store.md](topics/key-store.md): Realm Key Store
-- [topics/ui.md](topics/ui.md): UI Layer; What the kit store persists; Post-login destination: the `redirect` round-trip; vuecs 1.x SFC integration; SSR data handoff; Table usage; Theme and Tailwind rules
+- [topics/ui.md](topics/ui.md): UI Layer; What the kit store persists; Token refresh; Post-login destination; vuecs 1.x SFC integration; SSR data handoff; Table usage; Theme and Tailwind rules

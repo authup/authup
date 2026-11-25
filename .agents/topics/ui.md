@@ -173,6 +173,42 @@ assigns `realm.value` from the introspection), so a cookie restore reports
 directly rather than through the emitting setters, so it writes nothing back;
 the authentication hook syncs from those refs when it installs.
 
+### Token refresh: never on the server, one tab at a time (#3924, #3925)
+
+Strict replay detection revokes the session when one refresh token is
+presented twice, so a refresh must be the only one using its token.
+
+- **The server never refreshes.** `resolve()` leaves a session that needs one
+  RESTORING; the hook neither retries a 401 nor arms a timer there. Two server
+  renders of one browser session would present the same token, and a token
+  rotated after the response is committed never reaches the browser.
+- **client-web-nuxt renders such a request client-only**: the
+  `render-defer` server middleware sets `event.context.nuxt.noSSR` when a
+  refresh token is present and the access token is missing or within 30s of
+  expiry, and the interceptor's server pass applies no guard while RESTORING.
+  The middleware is written against `nuxt/server` and registered as the `nuxt`
+  server-API variant, so nitro 2 and nitro 3 run it without an h3 dependency.
+  The experimental vite server builder runs no server middleware; there only
+  the interceptor's deferral applies.
+  Rejected: a server render without a session, which loads protected data
+  anonymously, can land on Nuxt's error page and hydrates anonymous verdicts.
+- **Every browser refresh goes through `acquireTokenGrant`** (store
+  `refreshSession()` and the hook's `tokenCreator`): it holds the Web Lock
+  `authup:refresh_token`, adopts a pair another tab already wrote to the
+  cookies (through the host's `cookieGet`), and applies its grant BEFORE the
+  lock is released. Applying after lets the next tab read the consumed token.
+  With no pair to adopt it presents the COOKIE's refresh token when that
+  differs from its own (a tab that slept through another's rotation holds a
+  consumed one). The generation is captured before the wait, so a logout
+  while waiting presents nothing. A grant a logout or newer session overtook
+  is answered `applied: false` (and revoked when freshly exchanged); the hook
+  then only re-syncs its header.
+- **The wait is bounded** (`REFRESH_LOCK_WAIT_MS`, then unlocked): within one
+  tab a refresh the holder's own `/token` 401 started cannot be told from a
+  concurrent one, and Web Locks are not reentrant, so an unbounded wait
+  stalls every tab. A lock is per origin, so apps sharing cookies across
+  subdomains still need `tokenRefreshGracePeriod`.
+
 ### Post-login destination: the `redirect` round-trip
 
 An RP that bounces a visitor to the login flow has to get them back to the page

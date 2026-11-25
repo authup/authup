@@ -12,9 +12,11 @@ import {
     it,
     vi,
 } from 'vitest';
+import { addServerHandler } from '@nuxt/kit';
 import module from '../../src/module';
 
 vi.mock('@nuxt/kit', () => ({
+    addServerHandler: vi.fn(),
     defineNuxtModule: (definition: { setup: unknown }) => definition.setup,
     installModule: vi.fn(),
     addPlugin: vi.fn(),
@@ -71,5 +73,16 @@ describe('module', () => {
 
         expect(nuxt.options.runtimeConfig.public.authup).toEqual({ apiURL: 'https://auth.example.com' });
         expect(nuxt.options.runtimeConfig.authup).toEqual({ serverApiURL: '' });
+    });
+
+    it('registers the server middleware that defers a render needing a refresh', async () => {
+        await module({}, createNuxt() as unknown as Nuxt);
+
+        expect(addServerHandler).toHaveBeenCalledWith({
+            // the builder-agnostic `nuxt/server` API: nitro 2, nitro 3 and the
+            // vite server builder all run it
+            handler: { nuxt: './runtime/server/middleware/render-defer' },
+            middleware: true,
+        });
     });
 });

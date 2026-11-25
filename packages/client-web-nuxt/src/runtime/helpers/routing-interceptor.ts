@@ -61,7 +61,7 @@ export class RoutingInterceptor {
             // and burning the single-use code before the client can retry.
             // Defer entirely to the client pass; the callback route is
             // client-only (routeRules) so SSR never reaches here in practice.
-            if (import.meta.server) {
+            if (this.isServer()) {
                 return undefined;
             }
 
@@ -164,6 +164,17 @@ export class RoutingInterceptor {
             };
         }
 
+        // A server render never refreshes (#3925), so a session that needs
+        // one is still restoring here. Its guards belong to the browser's
+        // pass, which refreshes first: deciding now would bounce a signed-in
+        // user to the login route.
+        if (
+            this.isServer() &&
+            this.storeRefs.status.value === StoreAuthStatus.RESTORING
+        ) {
+            return undefined;
+        }
+
         let isValid = this.validateLoggedInCondition(to);
 
         if (!isValid) {
@@ -220,6 +231,10 @@ export class RoutingInterceptor {
         }
 
         return undefined;
+    }
+
+    protected isServer() : boolean {
+        return !!import.meta.server;
     }
 
     /**
