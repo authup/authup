@@ -7,6 +7,7 @@
 
 import {
     DBody,
+    DConsumes,
     DContext,
     DController,
     DDelete,
@@ -44,6 +45,7 @@ export type UserAuthenticatorControllerContext = {
 };
 
 @DTags('userAuthenticator')
+@DConsumes('application/json', 'application/x-www-form-urlencoded')
 @DController('/users/:id/authenticators')
 export class UserAuthenticatorController {
     protected service: IUserAuthenticatorService;

@@ -21,6 +21,7 @@ import {
 } from '@authup/kit';
 import {
     DBody,
+    DConsumes,
     DContext,
     DController,
     DDelete,
@@ -28,6 +29,7 @@ import {
     DPath,
     DPost,
     DPut,
+    DReturns,
     DStatus,
     DTags,
 } from '@routup/decorators';
@@ -123,6 +125,7 @@ import { serveEntityStats } from '../stats.ts';
 import { findOneByIdOrNameKey } from '../../../../../core/entities/id-or-name.ts';
 
 @DTags('identity')
+@DConsumes('application/json', 'application/x-www-form-urlencoded')
 @DController(['/identity-providers', '/realms/:realmId/identity-providers'])
 export class IdentityProviderController {
     protected options: IdentityProviderControllerOptions;
@@ -254,6 +257,8 @@ export class IdentityProviderController {
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
+    @DStatus(201)
+    @DReturns<EntityRecordResponse<IdentityProvider>>(202)
     async put(
         @DPath('id') id: string,
         @DBody() user: IdentityProviderSavePayload,

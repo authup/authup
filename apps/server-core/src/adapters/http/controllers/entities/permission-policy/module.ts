@@ -7,6 +7,7 @@
 
 import {
     DBody,
+    DConsumes,
     DContext,
     DController,
     DDelete,
@@ -40,6 +41,7 @@ export type PermissionPolicyControllerContext = {
 };
 
 @DTags('permission')
+@DConsumes('application/json', 'application/x-www-form-urlencoded')
 @DController('/permission-policies')
 export class PermissionPolicyController {
     protected service: IPermissionPolicyService;

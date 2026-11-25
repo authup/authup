@@ -17,6 +17,7 @@ import { EntityType } from '@authup/core-kit';
 import { useRequestQuery } from '@routup/basic/query';
 import {
     DBody,
+    DConsumes,
     DContext,
     DController,
     DDelete,
@@ -49,6 +50,7 @@ export type TrustAnchorControllerContext = {
 };
 
 @DTags('trust-anchor')
+@DConsumes('application/json', 'application/x-www-form-urlencoded')
 @DController(['/trust-anchors', '/realms/:realmId/trust-anchors'])
 export class TrustAnchorController {
     protected service: ITrustAnchorService;

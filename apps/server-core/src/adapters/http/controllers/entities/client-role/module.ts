@@ -7,6 +7,7 @@
 
 import {
     DBody,
+    DConsumes,
     DContext,
     DController,
     DDelete,
@@ -42,6 +43,7 @@ export type ClientRoleControllerContext = {
 };
 
 @DTags('client')
+@DConsumes('application/json', 'application/x-www-form-urlencoded')
 @DController('/client-roles')
 export class ClientRoleController {
     protected service: IClientRoleService;

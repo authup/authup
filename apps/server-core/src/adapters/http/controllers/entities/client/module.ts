@@ -8,6 +8,7 @@
 import { OAuth2SubKind } from '@authup/specs';
 import {
     DBody,
+    DConsumes,
     DContext,
     DController,
     DDelete,
@@ -15,6 +16,7 @@ import {
     DPath,
     DPost,
     DPut,
+    DReturns,
     DStatus,
     DTags,
 } from '@routup/decorators';
@@ -60,6 +62,7 @@ export type ClientControllerContext = {
 };
 
 @DTags('oauth2')
+@DConsumes('application/json', 'application/x-www-form-urlencoded')
 @DController(['/clients', '/realms/:realmId/clients'])
 export class ClientController {
     protected service: IClientService;
@@ -197,6 +200,8 @@ export class ClientController {
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
+    @DStatus(201)
+    @DReturns<EntityRecordResponse<Client>>(202)
     async put(
         @DPath('id') id: string,
         @DBody() data: ClientSavePayload,

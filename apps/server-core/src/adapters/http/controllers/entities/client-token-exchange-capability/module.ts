@@ -7,6 +7,7 @@
 
 import {
     DBody,
+    DConsumes,
     DContext,
     DController,
     DDelete,
@@ -41,6 +42,7 @@ export type ClientTokenExchangeCapabilityControllerContext = {
 };
 
 @DTags('client')
+@DConsumes('application/json', 'application/x-www-form-urlencoded')
 @DController('/client-token-exchange-capabilities')
 export class ClientTokenExchangeCapabilityController {
     protected service: IClientTokenExchangeCapabilityService;

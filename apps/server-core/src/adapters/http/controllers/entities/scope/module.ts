@@ -7,6 +7,7 @@
 
 import {
     DBody,
+    DConsumes,
     DContext,
     DController,
     DDelete,
@@ -14,6 +15,7 @@ import {
     DPath,
     DPost,
     DPut,
+    DReturns,
     DStatus,
     DTags,
 } from '@routup/decorators';
@@ -47,6 +49,7 @@ export type ScopeControllerContext = {
 };
 
 @DTags('scope')
+@DConsumes('application/json', 'application/x-www-form-urlencoded')
 @DController('/scopes')
 export class ScopeController {
     protected service: IScopeService;
@@ -139,6 +142,8 @@ export class ScopeController {
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
+    @DStatus(201)
+    @DReturns<EntityRecordResponse<Scope>>(202)
     async put(
         @DPath('id') id: string,
         @DBody() data: ScopeSavePayload,

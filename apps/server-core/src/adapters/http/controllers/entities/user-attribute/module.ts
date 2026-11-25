@@ -7,6 +7,7 @@
 
 import {
     DBody,
+    DConsumes,
     DContext,
     DController,
     DDelete,
@@ -41,6 +42,7 @@ export type UserAttributeControllerContext = {
 };
 
 @DTags('user')
+@DConsumes('application/json', 'application/x-www-form-urlencoded')
 @DController('/user-attributes')
 export class UserAttributeController {
     protected service: IUserAttributeService;

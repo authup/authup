@@ -7,6 +7,7 @@
 
 import {
     DBody,
+    DConsumes,
     DContext,
     DController,
     DDelete,
@@ -45,6 +46,7 @@ export type IdentityProviderRoleMappingControllerContext = {
 };
 
 @DTags('identity-provider')
+@DConsumes('application/json', 'application/x-www-form-urlencoded')
 @DController('/identity-provider-role-mappings')
 export class IdentityProviderRoleMappingController {
     protected service: IIdentityProviderRoleMappingService;

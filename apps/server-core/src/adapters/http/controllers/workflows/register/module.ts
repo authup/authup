@@ -8,6 +8,7 @@
 import type { RegisterPayload, RegisterResponse } from '@authup/core-http-kit';
 import {
     DBody,
+    DConsumes,
     DContext,
     DController,
     DGet,
@@ -28,6 +29,7 @@ export type RegisterControllerContext = {
     service: IRegistrationService,
 };
 
+@DConsumes('application/json', 'application/x-www-form-urlencoded')
 @DController('/register')
 export class RegisterController {
     protected options: RegisterControllerOptions;
