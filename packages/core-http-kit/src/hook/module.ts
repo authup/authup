@@ -55,6 +55,7 @@ export class ClientAuthenticationHook extends EventEmitter<{
         this.clients = [];
 
         options.timer ??= true;
+        options.retry ??= true;
         this.options = options;
 
         this.creator = options.tokenCreator;
@@ -148,6 +149,10 @@ export class ClientAuthenticationHook extends EventEmitter<{
                                 );
                             }
 
+                            return Promise.reject(err);
+                        }
+
+                        if (!this.options.retry) {
                             return Promise.reject(err);
                         }
 

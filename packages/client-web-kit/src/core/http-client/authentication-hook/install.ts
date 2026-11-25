@@ -56,6 +56,12 @@ export function installHTTPClientAuthenticationHook(
             return client.token.createWithRefreshToken({ refresh_token: refreshTokenInUse });
         },
         timer: !options.isServer,
+        // A server render cannot persist a rotated refresh token once its
+        // response is committed, so a refresh there would spend the only
+        // token the browser holds (#3924). The browser refreshes after
+        // hydration; the awaited resolve() before the render is the one
+        // server-side refresh.
+        retry: !options.isServer,
     });
 
     const storeDispatcher = injectStoreDispatcher(app);

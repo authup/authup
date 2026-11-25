@@ -22,6 +22,16 @@ export type ClientAuthenticationHookOptions = {
      */
     timer?: boolean,
     /**
+     * Whether to refresh the access token and retry a request the
+     * server refused as unauthenticated. Without it, the request rejects
+     * with its own error and the hook neither refreshes nor unsets its
+     * header. Turn it off where a rotated refresh token cannot be persisted,
+     * e.g. during a server render.
+     *
+     * default: true
+     */
+    retry?: boolean,
+    /**
      * Fn to create a new token, if the previous token expired.
      */
     tokenCreator: TokenCreator,
