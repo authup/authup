@@ -6,4 +6,5 @@
  */
 
 export * from './module.ts';
+export * from './primary-key/index.ts';
 export * from './types.ts';
