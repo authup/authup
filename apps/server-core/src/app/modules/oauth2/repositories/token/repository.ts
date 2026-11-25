@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { createUUIDv7 } from '@authup/kit';
 import type { ICache } from '@authup/server-kit';
 import { buildCacheKey } from '@authup/server-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
-import { randomUUID } from 'node:crypto';
 import type { IOAuth2TokenRepository } from '../../../../../core/index.ts';
 import { CacheOAuth2Prefix } from '../constants.ts';
 
@@ -110,7 +110,7 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
     // -----------------------------------------------------
 
     async insert(payload: OAuth2TokenPayload): Promise<OAuth2TokenPayload> {
-        payload.jti = randomUUID();
+        payload.jti = createUUIDv7();
 
         await this.cache.set(
             buildCacheKey({
