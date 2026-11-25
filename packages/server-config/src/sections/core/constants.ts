@@ -28,3 +28,10 @@ export const CERTIFICATE_SOURCES = [
  * server-core's event module imports it back.
  */
 export const EVENT_LOG_RETENTION_DAYS_DEFAULT = 90;
+
+/**
+ * Default settle window of the event feed in seconds. It is the
+ * `eventLogFeedSettleSeconds` default, so it lives with the key; server-core's
+ * event module imports it back.
+ */
+export const EVENT_LOG_FEED_SETTLE_SECONDS_DEFAULT = 10;
