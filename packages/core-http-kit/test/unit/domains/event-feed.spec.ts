@@ -6,6 +6,9 @@
  */
 
 import type { Event } from '@authup/core-kit';
+import { createURLCodec } from '@rapiq/codec-url';
+import { eq, isCondition } from '@rapiq/core';
+import type { ICondition } from '@rapiq/core';
 import {
     describe,
     expect,
@@ -17,6 +20,37 @@ import { createFakeClient } from '../../../src/testing/index.ts';
 
 function page(from: number, count: number): Event[] {
     return Array.from({ length: count }, (_, i) => ({ id: `id-${String(from + i).padStart(4, '0')}` })) as Event[];
+}
+
+type Leaf = {
+    operator: string,
+    field?: string,
+    value: unknown
+};
+
+const codec = createURLCodec();
+
+function decodeLeaves(url: string): Leaf[] {
+    const query = codec.decode(new URL(url, 'http://localhost').search.slice(1));
+    const output: Leaf[] = [];
+    const walk = (condition: ICondition) => {
+        const isGroup = Array.isArray(condition.value) &&
+            condition.value.every((child) => isCondition(child));
+
+        if (isGroup) {
+            condition.value.forEach((child) => walk(child as ICondition));
+
+            return;
+        }
+
+        output.push(condition as Leaf);
+    };
+
+    if (query?.filters) {
+        walk(query.filters);
+    }
+
+    return output;
 }
 
 function build(pages: Event[][]) {
@@ -51,11 +85,18 @@ describe('src/domains/entities/event/feed', () => {
         expect(cursor).toEqual('id-0201');
         expect(client.requests).toHaveLength(3);
 
-        const second = decodeURIComponent(client.requests[1].url);
+        const second = decodeLeaves(client.requests[1].url);
 
-        expect(second).toContain('id-0049');
-        expect(second).toContain('>');
-        expect(second).toContain('scope');
+        expect(second).toContainEqual({
+            operator: 'gt',
+            field: 'id',
+            value: 'id-0049',
+        });
+        expect(second).toContainEqual({
+            operator: 'eq',
+            field: 'scope',
+            value: 'entity',
+        });
     });
 
     it('should clamp the limit to the server maximum', async () => {
@@ -90,24 +131,105 @@ describe('src/domains/entities/event/feed', () => {
 
         await drainEventFeed(client, { handle: async () => {}, cursor: 'id-0007' });
 
-        const first = decodeURIComponent(client.requests[0].url);
-
-        expect(first).toContain('>id-0007');
+        expect(decodeLeaves(client.requests[0].url)).toEqual([
+            {
+                operator: 'gt',
+                field: 'id',
+                value: 'id-0007',
+            },
+        ]);
     });
 
-    it('should let the cursor win over a caller id filter', async () => {
+    it('should send the caller filters unchanged without a cursor', async () => {
+        const client = build([[]]);
+
+        await drainEventFeed(client, { handle: async () => {}, filters: { scope: 'entity' } });
+
+        expect(decodeLeaves(client.requests[0].url)).toEqual([
+            {
+                operator: 'eq',
+                field: 'scope',
+                value: 'entity',
+            },
+        ]);
+    });
+
+    it('should apply a caller id filter and the cursor together', async () => {
         const client = build([page(0, 2)]);
 
         await drainEventFeed(client, {
             handle: async () => {},
             cursor: 'id-0007',
-            filters: { id: '>id-9999' },
+            filters: { id: ['id-0008', 'id-0009'] },
         });
 
-        const first = decodeURIComponent(client.requests[0].url);
+        const leaves = decodeLeaves(client.requests[0].url);
 
-        expect(first).toContain('>id-0007');
-        expect(first).not.toContain('id-9999');
+        expect(leaves).toHaveLength(2);
+        expect(leaves).toContainEqual({
+            operator: 'in',
+            field: 'id',
+            value: ['id-0008', 'id-0009'],
+        });
+        expect(leaves).toContainEqual({
+            operator: 'gt',
+            field: 'id',
+            value: 'id-0007',
+        });
+    });
+
+    it('should accept a condition as filters', async () => {
+        const client = build([page(0, EVENT_FEED_PAGE_LIMIT), []]);
+
+        await drainEventFeed(client, { handle: async () => {}, filters: eq('refType', 'realm') });
+
+        expect(decodeLeaves(client.requests[0].url)).toEqual([
+            {
+                operator: 'eq',
+                field: 'refType',
+                value: 'realm',
+            },
+        ]);
+
+        const second = decodeLeaves(client.requests[1].url);
+
+        expect(second).toHaveLength(2);
+        expect(second).toContainEqual({
+            operator: 'eq',
+            field: 'refType',
+            value: 'realm',
+        });
+        expect(second).toContainEqual({
+            operator: 'gt',
+            field: 'id',
+            value: 'id-0049',
+        });
+    });
+
+    it('should read the page before handle consumes it', async () => {
+        const client = build([
+            page(0, EVENT_FEED_PAGE_LIMIT),
+            page(100, 2),
+        ]);
+        const persist = vi.fn(async () => {});
+
+        const cursor = await drainEventFeed(client, {
+            handle: async (events) => {
+                events.length = 0;
+            },
+            persist,
+        });
+
+        expect(cursor).toEqual('id-0101');
+        expect(persist.mock.calls).toEqual([['id-0049'], ['id-0101']]);
+        expect(client.requests).toHaveLength(2);
+        expect(decodeLeaves(client.requests[1].url)).toEqual([
+            {
+                operator: 'gt',
+                field: 'id',
+                value: 'id-0049',
+            },
+        ]);
     });
 
     it('should pass the signal to every request', async () => {

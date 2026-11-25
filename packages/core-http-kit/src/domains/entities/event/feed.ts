@@ -5,6 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Event } from '@authup/core-kit';
+import { and, defineFilters, gt } from '@rapiq/core';
+import type { ICondition } from '@rapiq/core';
 import type { IClient } from '../../../client/index.ts';
 import type { EventFeedDrainOptions } from './types.ts';
 
@@ -14,11 +17,15 @@ export async function drainEventFeed(client: IClient, options: EventFeedDrainOpt
     const limit = Math.max(1, Math.min(options.limit ?? EVENT_FEED_PAGE_LIMIT, EVENT_FEED_PAGE_LIMIT));
     let cursor = options.cursor ?? null;
 
+    const base = options.filters ? defineFilters<Event>(options.filters) : undefined;
+
     while (true) {
-        const filters = { ...options.filters };
+        let filters: ICondition | undefined = base;
 
         if (cursor) {
-            Object.assign(filters, { id: `>${cursor}` });
+            filters = base ?
+                and(base, gt<Event>('id', cursor)) :
+                gt<Event>('id', cursor);
         }
 
         const { data } = await client.event.getFeed({
@@ -26,16 +33,20 @@ export async function drainEventFeed(client: IClient, options: EventFeedDrainOpt
             pagination: { limit },
         }, { signal: options.signal });
 
-        if (data.length > 0) {
+        const count = data.length;
+
+        if (count > 0) {
+            const last = data[count - 1].id;
+
             await options.handle(data);
-            cursor = data[data.length - 1].id;
+            cursor = last;
 
             if (options.persist) {
                 await options.persist(cursor);
             }
         }
 
-        if (data.length < limit) {
+        if (count < limit) {
             return cursor;
         }
     }
