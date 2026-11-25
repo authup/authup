@@ -201,6 +201,17 @@ central PII write boundary.
   session-service shape: without it, own rows only (`actorId` + `actorType`);
   reach applied before pagination; the repository force-selects the gate
   columns. `admin` = `any`, `realm_admin` = `ownOrNull`.
+- **Entity change feed (#3734).** `GET /events/@feed` (+ realm mount) is the
+  at-least-once pull source for services built on authup. Event ids are UUIDv7
+  (monotonic per process), so `id` is the order and the cursor. It forces
+  `scope = entity` and `id` ascending, and APPENDS the settle bound
+  `id < v7(now - eventLogFeedSettleSeconds)` so a caller cannot widen it; the
+  bound assumes no write transaction (ids mint inside it) or replica clock skew
+  outlives the window. It requires `EVENT_READ` (no own-rows fallback) and
+  REFUSES a reach that compiles only to a per-row (`post`) verdict: a page of
+  dropped rows reads as "caught up". It exists only while `eventLogEnabled` and
+  `eventLogEntityEnabled` are on and within `eventLogEntityRetentionDays`;
+  database-cascaded child deletes emit no row.
 - **Dashboard statistic.** `GET /events/@stats` is the event instance of the
   generic statistic. `meta.enabled` mirrors `eventLogEnabled`, which keeps
   that fact off the anonymous `GET /`. Without `EVENT_READ` it counts own rows,

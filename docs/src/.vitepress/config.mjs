@@ -419,6 +419,10 @@ export default defineConfig({
                             link: '/guide/development/sdks', 
                         },
                         {
+                            text: 'Entity Change Feed',
+                            link: '/guide/development/event-feed',
+                        },
+                        {
                             text: 'Projects (Showcases)',
                             link: '/guide/development/projects', 
                         },
