@@ -437,6 +437,11 @@ owns one seam and stays framework-agnostic; each host supplies the bucket:
   loads at all**, because the response could not reach the client and firing it would
   only waste a round trip (the pre-#2773 behaviour: every collection fired a
   request during SSR whose result was discarded when the render flushed).
+- **No refresh on the server.** The renewal hook is installed with
+  `retry: !isServer` (#3924): a refresh finishing after the response is
+  committed rotates a token the browser never receives, and its next
+  refresh trips replay detection. The awaited `resolve()` before the render
+  is the one server-side refresh; a 401 during the render rejects.
 - **Hosts.** A Nuxt consumer on `@authup/client-web-nuxt` (hub) gets it from the `authup:kit` Nuxt plugin
   over `nuxtApp.payload.data` (the same bucket `useAsyncData` transports
   through); `apps/client-auth-console` wires it over `HydrationPayload.hydration`, which
