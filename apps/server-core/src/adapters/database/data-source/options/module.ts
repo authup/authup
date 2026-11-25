@@ -75,6 +75,7 @@ import {
     UserRoleSubscriber,
     UserSubscriber,
 } from '../../domains/index.ts';
+import { PrimaryKeySubscriber } from '../../subscriber/index.ts';
 import { DIST_PATH, SRC_PATH } from '../../../../path.ts';
 
 const DATABASE_TYPE_HINT = 'Set DB_TYPE to "postgres" or "mysql", together with DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD and DB_DATABASE.';
@@ -225,6 +226,7 @@ export class DataSourceOptionsBuilder {
             migrationsTransactionMode: 'each',
             subscribers: [
                 ...(options.subscribers || []) as string[],
+                PrimaryKeySubscriber,
                 ClientSubscriber,
                 ClientPermissionSubscriber,
                 ClientRoleSubscriber,

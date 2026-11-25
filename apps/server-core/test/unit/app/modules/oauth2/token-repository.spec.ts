@@ -6,6 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import { isUUID } from '@authup/kit';
 import type { CacheSetOptions } from '@authup/server-kit';
 import { MemoryCache } from '@authup/server-kit';
 import { describe, expect, it } from 'vitest';
@@ -66,5 +67,14 @@ describe('OAuth2TokenRepository', () => {
         };
 
         await expect(repository.isInactive(jti)).rejects.toThrow('Connection is closed.');
+    });
+
+    it('should mint the jti as a UUIDv7', async () => {
+        const repository = new OAuth2TokenRepository(new MemoryCache());
+        const payload = await repository.insert({ exp: Math.floor(Date.now() / 1000) + 60 });
+
+        expect(isUUID(payload.jti as string)).toBe(true);
+        expect((payload.jti as string)[14]).toBe('7');
+        expect(await repository.findOneById(payload.jti as string)).toEqual(payload);
     });
 });
