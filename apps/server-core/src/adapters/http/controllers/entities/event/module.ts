@@ -70,6 +70,33 @@ export class EventController {
         );
     }
 
+    /**
+     * Declared before the record read for the same reason as `@stats`.
+     */
+    @DQuerySchema(EntityType.EVENT, 'collection')
+    @DGet('/@feed', [ForceLoggedInMiddleware])
+    async getFeed(
+        @DContext() event: IAppEvent,
+    ): Promise<EntityCollectionResponse<Event>> {
+        const actor = buildActorContext(event);
+        const {
+            data,
+            meta,
+        } = await this.service.getFeed(
+            useRequestQuery(event),
+            actor,
+            { realmId: getRequestRealmID(event) },
+        );
+
+        return {
+            data,
+            meta: {
+                ...meta,
+                schema: describeQuerySchema(eventSchema),
+            },
+        };
+    }
+
     @DQuerySchema(EntityType.EVENT, 'collection')
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(

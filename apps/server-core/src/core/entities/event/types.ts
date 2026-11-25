@@ -188,6 +188,17 @@ export interface IEventService extends IReadScoper {
     ): Promise<EntityRepositoryFindManyResult<Event>>;
 
     /**
+     * Read the entity change feed: committed `entity` rows in ascending id
+     * order, withholding rows younger than the settle window. Requires
+     * EVENT_READ with a reach expressible as a row condition.
+     */
+    getFeed(
+        query: Record<string, any>,
+        actor: ActorContext,
+        options?: EventServiceReadOptions,
+    ): Promise<EntityRepositoryFindManyResult<Event>>;
+
+    /**
      * Read a single audit event. Own rows need no permission.
      */
     getOne(id: string, actor: ActorContext, options?: EventServiceReadOptions): Promise<Event>;

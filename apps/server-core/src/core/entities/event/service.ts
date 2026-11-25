@@ -9,16 +9,25 @@ import type { ReadScope } from '@authup/access';
 import { randomUUID } from 'node:crypto';
 import {
     BuiltInPolicyType,
+    PermissionError,
+    appendQueryConditions,
     evaluateRecord,
     reachesRecord,
     scopeReadQuery,
 } from '@authup/access';
-import { and, eq } from '@rapiq/core';
+import {
+    Query,
+    Sort,
+    Sorts,
+    and,
+    eq,
+    lt,
+} from '@rapiq/core';
 import type { IQuery } from '@rapiq/core';
-import { PermissionName } from '@authup/core-kit';
+import { EventScope, PermissionName } from '@authup/core-kit';
 import type { Event } from '@authup/core-kit';
 import { EntityNotFoundError } from '@authup/errors';
-import { createUUIDv7 } from '@authup/kit';
+import { buildUUIDv7LowerBound, createUUIDv7 } from '@authup/kit';
 import { AbstractEntityService } from '@authup/server-kit';
 import type { ActorContext, EntityRepositoryFindManyResult, Logger } from '@authup/server-kit';
 import { EVENT_ACTOR_NAME_MAX_LENGTH, EVENT_LOG_RETENTION_DAYS_DEFAULT } from './constants.ts';
@@ -43,9 +52,12 @@ export type EventServiceContext = {
     repository: IEventRepository,
     options?: EventServiceOptions,
     logger?: Logger,
+    clock?: () => number,
 };
 
 const DAY_IN_MS = 86_400_000;
+
+const FEED_SETTLE_SECONDS_DEFAULT = 10;
 
 export class EventService extends AbstractEntityService implements IEventService {
     protected repository: IEventRepository;
@@ -54,12 +66,15 @@ export class EventService extends AbstractEntityService implements IEventService
 
     protected logger?: Logger;
 
+    protected clock: () => number;
+
     constructor(ctx: EventServiceContext) {
         super();
 
         this.repository = ctx.repository;
         this.options = ctx.options ?? {};
         this.logger = ctx.logger;
+        this.clock = ctx.clock ?? Date.now;
     }
 
     protected isOwnedBy(entity: Event, actor: ActorContext): boolean {
@@ -238,6 +253,44 @@ export class EventService extends AbstractEntityService implements IEventService
             data,
             meta,
         };
+    }
+
+    async getFeed(
+        query: Record<string, any>,
+        actor: ActorContext,
+        options: EventServiceReadOptions = {},
+    ): Promise<EntityRepositoryFindManyResult<Event>> {
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.EVENT_READ });
+
+        const parsed = await decodeQuery(query, { schema: eventSchema, actor });
+
+        // A per-row filtered page could drop every row, which reads as
+        // "caught up" and leaves the consumer no id to advance past.
+        const scope = await this.scopeRead(parsed, actor);
+
+        if (scope.post) {
+            throw new PermissionError({ message: `The event feed requires a ${PermissionName.EVENT_READ} reach expressible as a row condition.` });
+        }
+
+        const settleSeconds = this.options.feedSettleSeconds ?? FEED_SETTLE_SECONDS_DEFAULT;
+        const sorted = new Query({
+            fields: scope.query.fields,
+            filters: scope.query.filters,
+            relations: scope.query.relations,
+            pagination: scope.query.pagination,
+            sorts: new Sorts([new Sort('id', 'ASC')]),
+            groups: scope.query.groups,
+            aggregates: scope.query.aggregates,
+        });
+
+        return this.repository.findMany(
+            appendQueryConditions(
+                sorted,
+                eq('scope', EventScope.ENTITY),
+                lt('id', buildUUIDv7LowerBound(this.clock() - (settleSeconds * 1000))),
+            ),
+            options.realmId ? { realmId: options.realmId } : {},
+        );
     }
 
     async getOne(id: string, actor: ActorContext, options: EventServiceReadOptions = {}): Promise<Event> {
