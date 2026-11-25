@@ -7,10 +7,13 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { getControllerRoutes } from '@routup/decorators';
 import { describe, expect, it } from 'vitest';
+import * as Controllers from '../../../src/adapters/http/controllers/index.ts';
 import { PACKAGE_PATH } from '../../../src/path.ts';
 
 const CONTROLLERS_PATH = path.join(PACKAGE_PATH, 'src', 'adapters', 'http', 'controllers');
+const CONTROLLER_MODULE_PATH = path.join(PACKAGE_PATH, 'src', 'app', 'modules', 'http', 'modules', 'controller.ts');
 const ENTITIES_PATH = path.join(PACKAGE_PATH, 'src', 'core', 'entities');
 const DOCUMENT_PATH = path.join(PACKAGE_PATH, 'dist', 'swagger.json');
 
@@ -41,6 +44,13 @@ const MARKERS_WITHOUT_DESCRIBE = [
  * document.
  */
 const COLLECTION_COVERAGE_EXCLUSIONS : string[] = [];
+
+/**
+ * Routes the server answers but the document deliberately omits (`@DHidden`),
+ * as `METHOD /template`. Empty: no controller hides a route. A hidden route
+ * belongs here, and an entry the document does list fails.
+ */
+const HIDDEN_ROUTES : string[] = [];
 
 type OpenAPIDocument = {
     paths?: Record<string, Record<string, any>>,
@@ -126,7 +136,77 @@ function pathVariables(template: string) : string[] {
         .toArray();
 }
 
+/**
+ * The controller classes `ControllerModule.mount` hands the decorators
+ * plugin, read off the `new <Name>Controller(` expressions of its factories
+ * rather than restated here, so a newly registered controller is covered
+ * without touching this file.
+ */
+function readRegisteredControllerNames() : string[] {
+    const source = fs.readFileSync(CONTROLLER_MODULE_PATH, 'utf8');
+
+    return [...new Set(source.matchAll(/\bnew (\w+Controller)\(/g).map((match) => match[1]))].sort();
+}
+
+type ControllerClass = Parameters<typeof getControllerRoutes>[0];
+
+/**
+ * The class the controllers barrel exports under `name`, if it is one.
+ */
+function resolveControllerClass(name: string) : ControllerClass | undefined {
+    const target : unknown = (Controllers as Record<string, unknown>)[name];
+
+    return typeof target === 'function' ? target as ControllerClass : undefined;
+}
+
+/**
+ * A routup path as an OpenAPI template: `:id` becomes `{id}`, and the
+ * trailing slash a method path of `''` can leave is dropped.
+ */
+function toTemplate(input: string) : string {
+    const output = input.replace(/:(\w+)/g, '{$1}');
+
+    if (output.length > 1 && output.endsWith('/')) {
+        return output.slice(0, -1);
+    }
+
+    return output;
+}
+
+/**
+ * Every route the registered controllers answer at runtime, as
+ * `METHOD /template`. `getControllerRoutes` reads the decorator metadata off
+ * the class, so nothing is instantiated, and it lists one entry per base
+ * path, so the dual `/realms/:realmId/...` mounts are routes of their own.
+ */
+function readRuntimeRoutes() : { controller: string, route: string }[] {
+    const output : { controller: string, route: string }[] = [];
+
+    for (const name of readRegisteredControllerNames()) {
+        const target = resolveControllerClass(name);
+
+        if (!target) {
+            continue;
+        }
+
+        for (const entry of getControllerRoutes(target)) {
+            output.push({
+                controller: name,
+                route: `${entry.method.toUpperCase()} ${toTemplate(entry.path)}`,
+            });
+        }
+    }
+
+    return output;
+}
+
 const document = readDocument();
+
+if (!document) {
+    // Written to the stream rather than through `console`, which this runner
+    // swallows whole.
+    process.stderr.write(`[openapi] ${DOCUMENT_PATH} is absent, so the half of this spec that reads it is skipped. Build it with "npm run build --workspace=apps/server-core".\n`);
+}
 
 /**
  * The marker, the `meta.schema` a route answers with, and the emitted document
@@ -226,6 +306,77 @@ describe('openapi query surface coverage', () => {
 
             for (const key of excused) {
                 failures.push(`MARKERS_WITHOUT_DESCRIBE holds '${key}', which now describes a schema of its own or no longer carries a marker; drop the entry.`);
+            }
+
+            expect(failures).toEqual([]);
+        });
+    });
+
+    describe('controllers', () => {
+        it('should resolve every registered controller to a class answering routes', () => {
+            const names = readRegisteredControllerNames();
+            const failures : string[] = [];
+
+            expect(names).toContain('UserController');
+            expect(names).toContain('TokenController');
+
+            for (const name of names) {
+                const target = resolveControllerClass(name);
+
+                if (!target) {
+                    failures.push(`${name} is constructed by the controller module but not exported by the controllers barrel.`);
+                } else if (getControllerRoutes(target).length === 0) {
+                    failures.push(`${name} answers no route.`);
+                }
+            }
+
+            expect(failures).toEqual([]);
+        });
+
+        it('should list both mounts of a dual-mounted controller', () => {
+            const routes = getControllerRoutes(Controllers.UserController)
+                .map((entry) => `${entry.method} ${toTemplate(entry.path)}`);
+
+            expect(routes).toContain('GET /users/{id}');
+            expect(routes).toContain('GET /realms/{realmId}/users/{id}');
+        });
+    });
+
+    describe.skipIf(!document)('controllers and document', () => {
+        it('should document every route a registered controller answers', () => {
+            const hidden = new Set(HIDDEN_ROUTES);
+            const failures : string[] = [];
+
+            for (const { controller, route } of readRuntimeRoutes()) {
+                const [method, template] = route.split(' ');
+                const documented = !!document!.paths?.[template]?.[method.toLowerCase()];
+
+                if (hidden.has(route)) {
+                    if (documented) {
+                        failures.push(`HIDDEN_ROUTES holds '${route}' (${controller}), which the document lists; drop the entry.`);
+                    }
+
+                    continue;
+                }
+
+                if (!documented) {
+                    failures.push(`${route} (${controller}) is served but absent from the document.`);
+                }
+            }
+
+            expect(failures).toEqual([]);
+        });
+
+        it('should serve every documented operation', () => {
+            const served = new Set(readRuntimeRoutes().map((entry) => entry.route));
+            const failures : string[] = [];
+
+            for (const { template, method } of operations(document!)) {
+                const route = `${method.toUpperCase()} ${template}`;
+
+                if (!served.has(route)) {
+                    failures.push(`${route} is documented but no registered controller serves it.`);
+                }
             }
 
             expect(failures).toEqual([]);

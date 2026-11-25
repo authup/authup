@@ -17,6 +17,14 @@ import { createTestApplication } from '../../../app/index.ts';
 import { httpRequest } from '../../../utils/index.ts';
 
 const FOREIGN_ORIGIN = 'https://app.example.com';
+const ALLOWED_ORIGIN = 'https://allowed.example.com';
+
+function varyNames(response: Response) : string[] {
+    return (response.headers.get('vary') ?? '')
+        .split(',')
+        .map((entry) => entry.trim().toLowerCase())
+        .filter((entry) => entry.length > 0);
+}
 
 /**
  * `Allow-Origin` keeps reflecting every origin: OAuth2 clients are registered
@@ -73,5 +81,50 @@ describe('cors middleware', () => {
         });
 
         expect(own.headers.get('access-control-allow-credentials')).toEqual('true');
+    });
+
+    // The reflected `Allow-Origin` depends on the request, so a shared cache
+    // must key the response by `Origin`, also the one answered without it.
+    it('varies by origin for a request carrying no origin', async () => {
+        const response = await httpRequest(suite, 'GET', '/');
+
+        expect(varyNames(response)).toContain('origin');
+    });
+});
+
+describe('cors middleware with an origin allow-list', () => {
+    const suite = createTestApplication({
+        config: (config) => {
+            config.middlewareCors = { origin: [ALLOWED_ORIGIN] };
+        },
+    });
+
+    beforeAll(async () => {
+        await suite.setup();
+    });
+
+    afterAll(async () => {
+        await suite.teardown();
+    });
+
+    it('varies by origin for a request carrying no origin', async () => {
+        const response = await httpRequest(suite, 'GET', '/');
+
+        expect(response.headers.get('access-control-allow-origin')).toBeNull();
+        expect(varyNames(response)).toContain('origin');
+    });
+
+    it('varies by origin for a rejected origin', async () => {
+        const response = await httpRequest(suite, 'GET', '/', { headers: { origin: FOREIGN_ORIGIN } });
+
+        expect(response.headers.get('access-control-allow-origin')).toBeNull();
+        expect(varyNames(response)).toContain('origin');
+    });
+
+    it('varies by origin for an allowed origin', async () => {
+        const response = await httpRequest(suite, 'GET', '/', { headers: { origin: ALLOWED_ORIGIN } });
+
+        expect(response.headers.get('access-control-allow-origin')).toEqual(ALLOWED_ORIGIN);
+        expect(varyNames(response)).toContain('origin');
     });
 });
