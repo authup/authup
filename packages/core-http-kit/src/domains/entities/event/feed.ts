@@ -21,7 +21,6 @@ export async function drainEventFeed(client: IClient, options: EventFeedDrainOpt
             Object.assign(filters, { id: `>${cursor}` });
         }
 
-         
         const { data } = await client.event.getFeed({
             filters,
             pagination: { limit },
@@ -30,6 +29,10 @@ export async function drainEventFeed(client: IClient, options: EventFeedDrainOpt
         if (data.length > 0) {
             await options.handle(data);
             cursor = data[data.length - 1].id;
+
+            if (options.persist) {
+                await options.persist(cursor);
+            }
         }
 
         if (data.length < limit) {

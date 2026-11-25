@@ -93,5 +93,9 @@ export type EventFeedDrainOptions = {
     limit?: number,
     filters?: Pick<QueryBuildInput<Event>, 'filters'>['filters'],
     handle: (events: Event[]) => Promise<void>,
+    /**
+     * Awaited after each page's handle resolved, with that page's last id.
+     */
+    persist?: (cursor: string) => Promise<void>,
     signal?: AbortSignal,
 };
