@@ -334,6 +334,13 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
             env: EnvironmentVariable.EVENT_LOG_ENTITY_RETENTION_DAYS,
             readEnv: readEnvInt,
         },
+        eventLogFeedSettleSeconds: {
+            type: positiveIntegerType,
+            default: 10,
+            description: "Seconds an entity change is withheld from the event feed (GET /events/@feed) after it was recorded, so a consumer's cursor never passes a change whose transaction has not committed yet. Must exceed the longest write transaction and the clock skew between replicas.",
+            env: EnvironmentVariable.EVENT_LOG_FEED_SETTLE_SECONDS,
+            readEnv: readEnvInt,
+        },
         eventLogAggregateRetentionDays: {
             type: nonNegativeNumberType,
             default: 0,

@@ -133,6 +133,11 @@ export type EventServiceOptions = {
      * at write time; 0 = keep forever (expiring stays false, expiresAt null).
      */
     retentionDays?: number,
+    /**
+     * config.eventLogFeedSettleSeconds: how long an entity change is withheld
+     * from the event feed after it was recorded.
+     */
+    feedSettleSeconds?: number,
 };
 
 export type EventServiceReadOptions = {

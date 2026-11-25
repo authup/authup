@@ -569,6 +569,17 @@ export default {
         eventLogEntityRetentionDays: 7,
 
         /**
+         * Seconds an entity change is withheld from the event feed
+         * (GET /events/@feed) after it was recorded, so a consumer's cursor
+         * never passes a change whose transaction has not committed yet.
+         * Must exceed the longest write transaction and the clock skew
+         * between replicas.
+         * env: EVENT_LOG_FEED_SETTLE_SECONDS
+         * default: 10
+         */
+        eventLogFeedSettleSeconds: 10,
+
+        /**
          * Retention for the daily event rollups (auth_event_aggregates) in
          * days. They hold counts only and back the day and month event
          * statistics, so they may outlive the events. 0 = keep forever.
@@ -808,6 +819,7 @@ core:
   eventLogRetentionDays: 90
   eventLogEntityEnabled: true
   eventLogEntityRetentionDays: 7
+  eventLogFeedSettleSeconds: 10
   eventLogAggregateRetentionDays: 0
   loginAttemptThrottleEnabled: false
   loginAttemptThreshold: 5
@@ -861,6 +873,7 @@ EVENT_LOG_ENABLED=true
 EVENT_LOG_RETENTION_DAYS=90
 EVENT_LOG_ENTITY_ENABLED=true
 EVENT_LOG_ENTITY_RETENTION_DAYS=7
+EVENT_LOG_FEED_SETTLE_SECONDS=10
 EVENT_LOG_AGGREGATE_RETENTION_DAYS=0
 LOGIN_ATTEMPT_THROTTLE_ENABLED=false
 LOGIN_ATTEMPT_THRESHOLD=5

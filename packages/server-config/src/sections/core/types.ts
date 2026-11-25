@@ -328,6 +328,15 @@ export type CoreConfig = {
     eventLogEntityRetentionDays: number,
 
     /**
+     * Seconds an entity change is withheld from the event feed after it was
+     * recorded, so a consumer's cursor never passes a change whose
+     * transaction has not committed yet. Must exceed the longest write
+     * transaction and the clock skew between replicas.
+     * default: 10
+     */
+    eventLogFeedSettleSeconds: number,
+
+    /**
      * Retention for the daily event rollups (auth_event_aggregates) in
      * days. 0 = keep forever. Rollups hold counts only, no personal data.
      * default: 0
