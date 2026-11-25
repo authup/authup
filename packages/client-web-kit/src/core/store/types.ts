@@ -14,6 +14,7 @@ import type {
     _ExtractStateFromSetupStore,
 } from 'pinia';
 import type { Realm, User } from '@authup/core-kit';
+import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { IClient } from '@authup/core-http-kit';
 import type { HTTPClientInput } from '../http-client/types.ts';
 import type { Ref } from 'vue';
@@ -72,7 +73,29 @@ export type StoreCreateContext = {
      * pair (plan 088). See the install option of the same name.
      */
     cookieSession?: boolean,
-    preferences?: StorePreferences
+    preferences?: StorePreferences,
+    /**
+     * Reads a store cookie as it is now. A refresh reads the token pair
+     * another tab may have rotated meanwhile and adopts it instead of
+     * presenting a consumed refresh token (#3925).
+     */
+    readCookie?: CookieGetFn
+};
+
+export type StoreTokenGrantAcquisition = {
+    response: OAuth2TokenGrantResponse,
+    /**
+     * False when a logout or a newer session landed meanwhile: the grant
+     * was not written (and was revoked when it was freshly exchanged).
+     */
+    applied: boolean
+};
+
+/**
+ * The part of the Web Locks API a refresh holds.
+ */
+export type RefreshLockManager = {
+    request: <T>(name: string, callback: () => Promise<T>) => Promise<T>
 };
 
 export type StoreLoginContext = {

@@ -39,9 +39,10 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
             dispatcher: storeDispatcher,
             cookieSession: options.cookieSession,
             preferences: options.preferences,
+            // Cookie mode holds no token pair to adopt.
+            readCookie: options.cookieSession ? undefined : (key) => cookieGet(key),
         }),
     );
-    const store = storeFactory(options.pinia);
 
     let cookieGet : CookieGetFn;
 
@@ -52,6 +53,8 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
 
         cookieGet = cookies.get;
     }
+
+    const store = storeFactory(options.pinia);
 
     let cookieSet: CookieSetFn;
 
