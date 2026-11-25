@@ -55,6 +55,10 @@ describe('isUUID', () => {
 describe('createUUIDv7', () => {
     const FORMAT = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     it('produces a lowercase v7 uuid', () => {
         const id = createUUIDv7();
 
@@ -62,72 +66,63 @@ describe('createUUIDv7', () => {
         expect(isUUID(id)).toBe(true);
     });
 
-    it('is strictly increasing within one millisecond', () => {
-        const timestamp = 0x0190_2000_0000;
-        const ids = Array.from({ length: 1000 }, () => createUUIDv7(timestamp));
+    it('stays ordered across a burst in one millisecond', () => {
+        vi.spyOn(Date, 'now').mockReturnValue(0x0200_1000_0000);
 
-        expect(new Set(ids).size).toBe(1000);
-        expect([...ids].sort()).toEqual(ids);
-    });
-
-    it('stays ordered across counter overflow by advancing the millisecond', () => {
-        const timestamp = 0x0190_5000_0000;
-        const ids = Array.from({ length: 10000 }, () => createUUIDv7(timestamp));
-        const prefix = (id: string) => id.replaceAll('-', '').slice(0, 12);
+        const ids = Array.from({ length: 10000 }, () => createUUIDv7());
 
         expect(new Set(ids).size).toBe(10000);
         expect([...ids].sort()).toEqual(ids);
-        expect(prefix(ids[ids.length - 1]) > prefix(ids[0])).toBe(true);
     });
 
-    describe('without a timestamp', () => {
-        afterEach(() => {
-            vi.restoreAllMocks();
-        });
+    it('stays ordered when the clock steps back beyond the default rollback allowance', () => {
+        const now = vi.spyOn(Date, 'now');
 
-        it('stays ordered across a burst beyond the counter in one millisecond', () => {
-            vi.spyOn(Date, 'now').mockReturnValue(0x0190_7000_0000);
+        now.mockReturnValue(0x0200_2000_0000);
 
-            const ids = Array.from({ length: 5000 }, () => createUUIDv7());
+        const first = createUUIDv7();
 
-            expect(new Set(ids).size).toBe(5000);
-            expect([...ids].sort()).toEqual(ids);
-        });
+        now.mockReturnValue(0x0200_2000_0000 - 60_000);
 
-        it('stays ordered when the clock steps back', () => {
-            const now = vi.spyOn(Date, 'now');
+        const second = createUUIDv7();
+        const third = createUUIDv7();
 
-            now.mockReturnValue(0x0190_8000_0000);
-
-            const first = createUUIDv7();
-
-            now.mockReturnValue(0x0190_8000_0000 - 5000);
-
-            const second = createUUIDv7();
-            const third = createUUIDv7();
-
-            expect(first < second).toBe(true);
-            expect(second < third).toBe(true);
-        });
+        expect(first < second).toBe(true);
+        expect(second < third).toBe(true);
     });
 
     it('is increasing across milliseconds', () => {
-        const timestamp = 0x0190_3000_0000;
+        const now = vi.spyOn(Date, 'now');
 
-        expect(createUUIDv7(timestamp) < createUUIDv7(timestamp + 1)).toBe(true);
+        now.mockReturnValue(0x0200_3000_0000);
+
+        const first = createUUIDv7();
+
+        now.mockReturnValue(0x0200_3000_0001);
+
+        const second = createUUIDv7();
+
+        expect(first < second).toBe(true);
     });
 });
 
 describe('buildUUIDv7LowerBound', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     it('zeroes every random bit', () => {
         expect(buildUUIDv7LowerBound(0x0190_1234_5678)).toBe('01901234-5678-7000-8000-000000000000');
     });
 
     it('bounds the ids of its millisecond from below', () => {
-        const timestamp = 0x0190_4000_0000;
-        const bound = buildUUIDv7LowerBound(timestamp);
+        const timestamp = 0x0200_4000_0000;
 
-        expect(bound <= createUUIDv7(timestamp)).toBe(true);
-        expect(createUUIDv7(timestamp - 1) < bound).toBe(true);
+        vi.spyOn(Date, 'now').mockReturnValue(timestamp);
+
+        const id = createUUIDv7();
+
+        expect(buildUUIDv7LowerBound(timestamp) <= id).toBe(true);
+        expect(id < buildUUIDv7LowerBound(timestamp + 1)).toBe(true);
     });
 });

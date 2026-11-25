@@ -54,7 +54,8 @@
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "destr": "^2.0.5",
-        "nanoid": "^6.0.2"
+        "nanoid": "^6.0.2",
+        "uuidv7": "^1.2.1"
     },
     "devDependencies": {
         "vitest": "^5.1.1"
