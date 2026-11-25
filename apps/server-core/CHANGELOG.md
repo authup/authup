@@ -1,5 +1,30 @@
 # Change Log
 
+## [1.0.0-beta.77](https://github.com/authup/authup/compare/v1.0.0-beta.77...v1.0.0-beta.77) (2026-11-25)
+
+
+### Features
+
+* adopt routup body media types, upsert responses and route coverage ([#3920](https://github.com/authup/authup/issues/3920)) ([64cc972](https://github.com/authup/authup/commit/64cc972fd306a55effbf2b17051fdf981d27fc3b))
+* bump dependencies and adopt their new features ([#3914](https://github.com/authup/authup/issues/3914)) ([aaf787b](https://github.com/authup/authup/commit/aaf787b98e6409c8f3e68e54a051d37f3093f551))
+* clientMatch policy and client_admin role ([#3913](https://github.com/authup/authup/issues/3913)) ([29b08be](https://github.com/authup/authup/commit/29b08be9bfc970248dab41ae6f376bd3f13a689f))
+* **core-http-kit:** realm for createClientTokenCreator ([#3912](https://github.com/authup/authup/issues/3912)) ([cafe55f](https://github.com/authup/authup/commit/cafe55ffd380df90f91ac1234d9a96a60f9b1d72)), closes [#3908](https://github.com/authup/authup/issues/3908)
+* entity change feed for durable delivery of domain events ([#3919](https://github.com/authup/authup/issues/3919)) ([287ec70](https://github.com/authup/authup/commit/287ec70c3757e99a9d061f0ab10fb8a889ba4ba0))
+* **server-core:** mint entity ids as UUIDv7 ([#3923](https://github.com/authup/authup/issues/3923)) ([2ffe117](https://github.com/authup/authup/commit/2ffe11725bde51fc8764d0c9a9eee3c428ea106c)), closes [#3918](https://github.com/authup/authup/issues/3918)
+
+
+### Bug Fixes
+
+* beta.77 review follow-ups (delegation spec, upgrade notes, release config) ([#3901](https://github.com/authup/authup/issues/3901)) ([091464b](https://github.com/authup/authup/commit/091464be7f1202c6766bffbaff6e0a31d2620fc9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/server-config-kit bumped from ^1.0.0-beta.77 to ^1.0.1-beta.77
+    * @authup/specs bumped from ^1.0.0-beta.77 to ^1.0.1-beta.77
+
 ## [1.0.0-beta.77](https://github.com/authup/authup/compare/v1.0.0-beta.76...v1.0.0-beta.77) (2026-11-23)
 
 

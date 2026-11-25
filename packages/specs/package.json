@@ -1,7 +1,7 @@
 {
     "name": "@authup/specs",
     "type": "module",
-    "version": "1.0.0-beta.77",
+    "version": "1.0.1-beta.77",
     "description": "Constants, types and error classes for OAuth 2.0, OpenID Connect, JWT and JWK, as Authup uses them.",
     "license": "Apache-2.0",
     "exports": {
