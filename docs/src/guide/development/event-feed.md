@@ -45,7 +45,7 @@ const client = new Client({ baseURL: 'https://auth.example.com' });
 async function poll() {
     const stored = await storage.get('authup-feed-cursor'); // string | null
 
-    const cursor = await drainEventFeed(client, {
+    await drainEventFeed(client, {
         cursor: stored,
         filters: { refType: 'realm' },
         handle: async (events) => {
@@ -61,7 +61,17 @@ async function poll() {
     });
 }
 
-setInterval(poll, 5_000);
+async function run() {
+    try {
+        await poll();
+    } catch (error) {
+        console.error(error); // the batch is retried on the next run
+    } finally {
+        setTimeout(run, 5_000); // never two drains at once
+    }
+}
+
+run();
 ```
 
 The consumer owns cursor storage. Persisting through `persist` after every batch means a crash mid-drain repeats at most one batch.
