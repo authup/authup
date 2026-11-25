@@ -80,7 +80,7 @@ The consumer owns cursor storage. Persisting through `persist` after every batch
 
 An event id is minted while the write's transaction is still open, so an id can commit after a higher one. To keep a cursor from passing a change that has not committed yet, the feed withholds rows younger than the settle window (`eventLogFeedSettleSeconds`, default 10 seconds, see [Server Configuration](../deployment/configuration-server-core)). The bound uses the server's clock, never the consumer's.
 
-This rests on an assumption: no write transaction stays open longer than the window, and the clocks of replicas agree within it. Raise the window if a deployment runs long transactions or its replicas drift further apart. A server clock stepping backwards delays rows, it does not lose them.
+This rests on an assumption: the window exceeds the longest write transaction **plus** the maximum clock skew between replicas, with a margin. The two add up: a replica whose clock runs behind mints an id that already looks older than it is, and that id then stays uncommitted for as long as its transaction runs. Raise the window if a deployment runs long transactions or its replicas drift further apart. A server clock stepping backwards delays rows, it does not lose them.
 
 ## Retention and reconcile
 
@@ -89,7 +89,7 @@ The feed reads the entity mirror of the event log, so it depends on these settin
 - `eventLogEnabled` and `eventLogEntityEnabled` must be `true` (both default to `true`). Turning either off stops new changes from reaching the feed.
 - `eventLogEntityRetentionDays` (default 7) bounds how far back a consumer can resume.
 
-If your stored cursor is older than the retention (the consumer was down longer), changes were dropped. To detect it, read the cursor's time: the first 48 bits of a UUIDv7 (the first 12 hex digits, hyphen removed) are its unix time in milliseconds. Compare it with `eventLogEntityRetentionDays` (0 keeps rows forever), which a reader holding `EVENT_READ` finds as `meta.entityRetentionDays` on `GET /events/@stats`.
+If your stored cursor is older than the retention (the consumer was down longer), changes were dropped. A heuristic to detect it is to read the cursor's time: the first 48 bits of a UUIDv7 (the first 12 hex digits, hyphen removed) are its unix time in milliseconds. Compare it with `eventLogEntityRetentionDays` (0 keeps rows forever), which a reader holding `EVENT_READ` finds as `meta.entityRetentionDays` on `GET /events/@stats`.
 
 ```typescript
 const createdAt = Number.parseInt(cursor.replaceAll('-', '').slice(0, 12), 16);
@@ -97,7 +97,9 @@ const expired = entityRetentionDays > 0 &&
     Date.now() - createdAt > entityRetentionDays * 86_400_000;
 ```
 
-When it is expired, do a **full reconcile** against the entities instead of relying on the feed. Take the time `T` before the reconcile starts and resume with the cursor `buildUUIDv7LowerBound(T)` from `@authup/kit`, so every change from the reconcile onward is replayed.
+This check only holds while `eventLogEntityRetentionDays` is unchanged. The expiry is stamped on each row when it is written, so the current setting says nothing about rows written under an earlier one: raising the retention, or setting it to 0, does not bring back rows that were already pruned. When you cannot tell whether the retention covered your cursor (for example after the setting changed while your consumer was down), treat the cursor as expired.
+
+When it is expired, do a **full reconcile** against the entities instead of relying on the feed. Take the time `T` before the reconcile starts and resume with the cursor `buildUUIDv7LowerBound(T - settleWindowMs)` from `@authup/kit`, where `settleWindowMs` is `eventLogFeedSettleSeconds` in milliseconds. A change minted before `T` can still commit after the reconcile read past it; resuming from `T` would skip it. Under the settle assumption, every change minted before `T - settleWindowMs` has committed by `T`, so the reconcile saw it, and every later one is replayed (your handler is idempotent).
 
 ## Limits
 

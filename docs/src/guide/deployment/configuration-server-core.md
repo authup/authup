@@ -572,8 +572,8 @@ export default {
          * Seconds an entity change is withheld from the event feed
          * (GET /events/@feed) after it was recorded, so a consumer's cursor
          * never passes a change whose transaction has not committed yet.
-         * Must exceed the longest write transaction and the clock skew
-         * between replicas.
+         * Must exceed the longest write transaction plus the maximum clock
+         * skew between replicas, with a margin.
          * env: EVENT_LOG_FEED_SETTLE_SECONDS
          * default: 10
          */

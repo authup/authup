@@ -206,8 +206,8 @@ central PII write boundary.
   (monotonic per process), so `id` is the order and the cursor. It forces
   `scope = entity` and `id` ascending, and APPENDS the settle bound
   `id < v7(now - eventLogFeedSettleSeconds)` so a caller cannot widen it; the
-  bound assumes no write transaction (ids mint inside it) or replica clock skew
-  outlives the window. It requires `EVENT_READ` (no own-rows fallback) and
+  bound assumes the longest write transaction (ids mint inside it) PLUS the
+  maximum replica clock skew stays inside the window; the two add up. It requires `EVENT_READ` (no own-rows fallback) and
   REFUSES a reach that compiles only to a per-row (`post`) verdict: a page of
   dropped rows reads as "caught up". It exists only while `eventLogEnabled` and
   `eventLogEntityEnabled` are on and within `eventLogEntityRetentionDays`;

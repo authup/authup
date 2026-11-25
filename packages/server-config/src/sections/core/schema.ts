@@ -341,7 +341,7 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
         eventLogFeedSettleSeconds: {
             type: positiveIntegerType,
             default: EVENT_LOG_FEED_SETTLE_SECONDS_DEFAULT,
-            description: "Seconds an entity change is withheld from the event feed (GET /events/@feed) after it was recorded, so a consumer's cursor never passes a change whose transaction has not committed yet. Must exceed the longest write transaction and the clock skew between replicas.",
+            description: "Seconds an entity change is withheld from the event feed (GET /events/@feed) after it was recorded, so a consumer's cursor never passes a change whose transaction has not committed yet. Must exceed the longest write transaction plus the maximum clock skew between replicas, with a margin.",
             env: EnvironmentVariable.EVENT_LOG_FEED_SETTLE_SECONDS,
             readEnv: readEnvInt,
         },
