@@ -127,6 +127,7 @@ describe('src/http/controllers/entities/event', () => {
                 scope: EventScope.ENTITY,
                 refType: 'user',
                 name: EventName.CREATED,
+                refId: [first.id, second.id],
             },
             sort: { id: 'ASC' },
         });
