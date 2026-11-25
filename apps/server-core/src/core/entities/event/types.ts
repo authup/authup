@@ -133,6 +133,11 @@ export type EventServiceOptions = {
      * at write time; 0 = keep forever (expiring stays false, expiresAt null).
      */
     retentionDays?: number,
+    /**
+     * config.eventLogFeedSettleSeconds: how long an entity change is withheld
+     * from the event feed after it was recorded.
+     */
+    feedSettleSeconds?: number,
 };
 
 export type EventServiceReadOptions = {
@@ -177,6 +182,17 @@ export interface IEventService extends IReadScoper {
      * its realm reach permits.
      */
     getMany(
+        query: Record<string, any>,
+        actor: ActorContext,
+        options?: EventServiceReadOptions,
+    ): Promise<EntityRepositoryFindManyResult<Event>>;
+
+    /**
+     * Read the entity change feed: committed `entity` rows in ascending id
+     * order, withholding rows younger than the settle window. Requires
+     * EVENT_READ with a reach expressible as a row condition.
+     */
+    getFeed(
         query: Record<string, any>,
         actor: ActorContext,
         options?: EventServiceReadOptions,

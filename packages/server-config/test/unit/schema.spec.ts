@@ -263,6 +263,16 @@ describe('SCHEMA', () => {
         expect(type.safeParse(['ftp://example.com']).success).toBe(false);
     });
 
+    it('reads the event feed settle window as an integer of at least one', () => {
+        const entry = CORE_SCHEMA.eventLogFeedSettleSeconds;
+
+        expect(entry.default).toEqual(10);
+        expect(entry.readEnv?.('30', 'EVENT_LOG_FEED_SETTLE_SECONDS')).toEqual(30);
+        expect(entry.type.safeParse(30).success).toBe(true);
+        expect(entry.type.safeParse(0).success).toBe(false);
+        expect(entry.type.safeParse(1.5).success).toBe(false);
+    });
+
     it('rejects a mis-typed trustProxy allowlist entry', () => {
         const { type } = CORE_SCHEMA.trustProxy;
 
@@ -365,6 +375,13 @@ describe('buildSchemaJSONSchema(SCHEMA)', () => {
 
         expect(retention['x-authup-env']).toEqual('EVENT_LOG_AGGREGATE_RETENTION_DAYS');
         expect(retention.default).toEqual(0);
+    });
+
+    it('publishes the event feed settle window, ten seconds by default', () => {
+        const settle = resolveProperty('core.eventLogFeedSettleSeconds');
+
+        expect(settle['x-authup-env']).toEqual('EVENT_LOG_FEED_SETTLE_SECONDS');
+        expect(settle.default).toEqual(10);
     });
 
     it('represents an enum type', () => {

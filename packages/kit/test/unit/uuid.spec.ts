@@ -5,8 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { describe, expect, it } from 'vitest';
-import { isUUID } from '../../src/index.ts';
+import {
+    afterEach,
+    describe,
+    expect,
+    it,
+    vi,
+} from 'vitest';
+import { buildUUIDv7LowerBound, createUUIDv7, isUUID } from '../../src/index.ts';
 
 describe('isUUID', () => {
     it('accepts a v4 id', () => {
@@ -43,5 +49,80 @@ describe('isUUID', () => {
         expect(isUUID('admin')).toBe(false);
         expect(isUUID('019b0000000070008000000000000001')).toBe(false);
         expect(isUUID('019b0000-0000-7000-8000-0000000000011')).toBe(false);
+    });
+});
+
+describe('createUUIDv7', () => {
+    const FORMAT = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it('produces a lowercase v7 uuid', () => {
+        const id = createUUIDv7();
+
+        expect(id).toMatch(FORMAT);
+        expect(isUUID(id)).toBe(true);
+    });
+
+    it('stays ordered across a burst in one millisecond', () => {
+        vi.spyOn(Date, 'now').mockReturnValue(0x0200_1000_0000);
+
+        const ids = Array.from({ length: 10000 }, () => createUUIDv7());
+
+        expect(new Set(ids).size).toBe(10000);
+        expect([...ids].sort()).toEqual(ids);
+    });
+
+    it('stays ordered when the clock steps back beyond the default rollback allowance', () => {
+        const now = vi.spyOn(Date, 'now');
+
+        now.mockReturnValue(0x0200_2000_0000);
+
+        const first = createUUIDv7();
+
+        now.mockReturnValue(0x0200_2000_0000 - 60_000);
+
+        const second = createUUIDv7();
+        const third = createUUIDv7();
+
+        expect(first < second).toBe(true);
+        expect(second < third).toBe(true);
+    });
+
+    it('is increasing across milliseconds', () => {
+        const now = vi.spyOn(Date, 'now');
+
+        now.mockReturnValue(0x0200_3000_0000);
+
+        const first = createUUIDv7();
+
+        now.mockReturnValue(0x0200_3000_0001);
+
+        const second = createUUIDv7();
+
+        expect(first < second).toBe(true);
+    });
+});
+
+describe('buildUUIDv7LowerBound', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it('zeroes every random bit', () => {
+        expect(buildUUIDv7LowerBound(0x0190_1234_5678)).toBe('01901234-5678-7000-8000-000000000000');
+    });
+
+    it('bounds the ids of its millisecond from below', () => {
+        const timestamp = 0x0200_4000_0000;
+
+        vi.spyOn(Date, 'now').mockReturnValue(timestamp);
+
+        const id = createUUIDv7();
+
+        expect(buildUUIDv7LowerBound(timestamp) <= id).toBe(true);
+        expect(id < buildUUIDv7LowerBound(timestamp + 1)).toBe(true);
     });
 });

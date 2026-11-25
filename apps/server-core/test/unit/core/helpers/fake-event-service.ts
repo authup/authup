@@ -40,6 +40,10 @@ export class FakeEventService implements IEventService {
         };
     }
 
+    async getFeed(): Promise<EntityRepositoryFindManyResult<Event>> {
+        return this.getMany();
+    }
+
     async getOne(): Promise<Event> {
         throw new Error('not implemented');
     }

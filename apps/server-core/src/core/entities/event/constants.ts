@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-// The default retention for persisted security events is declared with the
-// key it is the default of (eventLogRetentionDays, in
+// The defaults for persisted security events are declared with the keys they
+// are the defaults of (eventLogRetentionDays, eventLogFeedSettleSeconds, in
 // `@authup/server-config`), and re-exported here for this module's own
 // consumers.
-export { EVENT_LOG_RETENTION_DAYS_DEFAULT } from '@authup/server-config';
+export { EVENT_LOG_FEED_SETTLE_SECONDS_DEFAULT, EVENT_LOG_RETENTION_DAYS_DEFAULT } from '@authup/server-config';
 
 /**
  * Rows removed per statement by the retention sweep. The sweep runs every

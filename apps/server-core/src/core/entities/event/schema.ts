@@ -74,7 +74,7 @@ export const eventSchema = defineSchema<Event>({
         validate: createTimestampFiltersGate(),
     },
     relations: { allowed: [] },
-    sorts: { allowed: ['createdAt'], indexed: true },
+    sorts: { allowed: ['createdAt', 'id'], indexed: true },
     groups: {
         allowed: ['scope', 'name', 'refType'],
         functions: { bucket: { allowed: ['createdAt'] } },

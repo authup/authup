@@ -104,7 +104,7 @@ export class EventRepositoryAdapter implements IEventRepository {
 
         const { pagination } = applyQuery(qb, query);
 
-        applyRealmScopeSelect(qb, 'event', ['actorId', 'actorType']);
+        applyRealmScopeSelect(qb, 'event', ['id', 'actorId', 'actorType']);
 
         if (options.owner) {
             // mandatory constraint — not overridable by a rapiq filter

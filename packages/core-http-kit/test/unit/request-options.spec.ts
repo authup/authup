@@ -52,6 +52,7 @@ const METHODS : Record<string, MethodTable> = {
         confirm: (o) => [{}, o],
     },
     client: { rotateSecret: (o) => [ID, undefined, o] },
+    event: { getFeed: (o) => [undefined, o] },
     deviceAuthorization: {
         create: (o) => [{ client_id: 'cli' }, o],
         lookup: (o) => [{ user_code: 'ABCD-EFGH' }, o],

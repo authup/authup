@@ -20,7 +20,11 @@ import { resolveRootRelativePath } from '../../helpers/index.ts';
 import { assertSecretsEncryptionKey } from './secrets-encryption-key.ts';
 import { canonicalizeTrustProxyValue } from './trust-proxy-canonicalize.ts';
 import { EnvironmentVariable } from '../../constants.ts';
-import { CERTIFICATE_SOURCES, EVENT_LOG_RETENTION_DAYS_DEFAULT } from './constants.ts';
+import {
+    CERTIFICATE_SOURCES,
+    EVENT_LOG_FEED_SETTLE_SECONDS_DEFAULT,
+    EVENT_LOG_RETENTION_DAYS_DEFAULT,
+} from './constants.ts';
 import { isValidTrustProxyListEntry } from './trust-proxy.ts';
 import type { CoreConfig, CoreWorkerConfig, MiddlewareOptions } from './types.ts';
 
@@ -332,6 +336,13 @@ export const CORE_SCHEMA = defineSchema<CoreConfig, never, EnvironmentVariable>(
             default: 7,
             description: 'Per-row retention for entity-CRUD audit events in days, deliberately short so entity churn self-prunes. Zero keeps rows forever.',
             env: EnvironmentVariable.EVENT_LOG_ENTITY_RETENTION_DAYS,
+            readEnv: readEnvInt,
+        },
+        eventLogFeedSettleSeconds: {
+            type: positiveIntegerType,
+            default: EVENT_LOG_FEED_SETTLE_SECONDS_DEFAULT,
+            description: "Seconds an entity change is withheld from the event feed (GET /events/@feed) after it was recorded, so a consumer's cursor never passes a change whose transaction has not committed yet. Must exceed the longest write transaction plus the maximum clock skew between replicas, with a margin.",
+            env: EnvironmentVariable.EVENT_LOG_FEED_SETTLE_SECONDS,
             readEnv: readEnvInt,
         },
         eventLogAggregateRetentionDays: {

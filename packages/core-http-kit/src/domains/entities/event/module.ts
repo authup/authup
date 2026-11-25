@@ -34,6 +34,12 @@ export class EventAPI extends BaseAPI implements IEventAPI {
         return response.data;
     }
 
+    async getFeed(data?: EntityQueryInput<Event>, options?: APIRequestOptions): Promise<EntityCollectionResponse<Event>> {
+        const response = await this.client.get(`events/@feed${buildQueryString(data)}`, buildRequestConfig(options));
+
+        return response.data;
+    }
+
     async getOne(id: Event['id'], record?: EntityQueryInput<Event>, options?: APIRequestOptions): Promise<EntityRecordResponse<Event>> {
         const response = await this.client.get(`events/${encodePathSegment(id)}${buildQueryString(record)}`, buildRequestConfig(options));
 

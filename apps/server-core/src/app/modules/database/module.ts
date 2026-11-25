@@ -335,6 +335,7 @@ export class DatabaseModule implements IModule {
             options: {
                 enabled: config.eventLogEnabled,
                 retentionDays: config.eventLogRetentionDays,
+                feedSettleSeconds: config.eventLogFeedSettleSeconds,
             },
             logger,
         });
