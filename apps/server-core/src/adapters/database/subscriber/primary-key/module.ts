@@ -17,7 +17,10 @@ import { EventSubscriber } from 'typeorm';
  *
  * The entities keep @PrimaryGeneratedColumn('uuid'): a plain uuid primary
  * column is varchar(255) on mysql instead of varchar(36), which the generated
- * migration answers by dropping and re-adding every id column.
+ * migration answers by dropping and re-adding every id column, and typeorm
+ * stops installing uuid-ossp, whose uuid_generate_v4() the released postgres
+ * migrations call. A DataSource built without DataSourceOptionsBuilder lacks
+ * this subscriber and falls back to v4.
  */
 @EventSubscriber()
 export class PrimaryKeySubscriber implements EntitySubscriberInterface {
