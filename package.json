@@ -55,7 +55,7 @@
         "nx": "^24.0.6",
         "rimraf": "^6.1.4",
         "tsdown": "^0.23.7",
-        "typescript": "6.0.3",
+        "typescript": "7.0.2",
         "typescript-eslint": "^8.74.0",
         "unplugin-swc": "^2.0.0",
         "vitest": "^5.1.1"
